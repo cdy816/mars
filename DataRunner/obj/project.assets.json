@@ -1,0 +1,123 @@
+{
+  "version": 3,
+  "targets": {
+    ".NETCoreApp,Version=v3.0": {
+      "Cdy.Tag/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.0",
+        "compile": {
+          "bin/placeholder/Cdy.Tag.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Cdy.Tag.dll": {}
+        }
+      },
+      "Cdy.Tag.Common/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.0",
+        "compile": {
+          "bin/placeholder/Cdy.Tag.Common.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Cdy.Tag.Common.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Cdy.Tag/1.0.0": {
+      "type": "project",
+      "path": "../Cdy.Tag/Cdy.Tag.csproj",
+      "msbuildProject": "../Cdy.Tag/Cdy.Tag.csproj"
+    },
+    "Cdy.Tag.Common/1.0.0": {
+      "type": "project",
+      "path": "../Cdy.Tag.Common/Cdy.Tag.Common.csproj",
+      "msbuildProject": "../Cdy.Tag.Common/Cdy.Tag.Common.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    ".NETCoreApp,Version=v3.0": [
+      "Cdy.Tag >= 1.0.0",
+      "Cdy.Tag.Common >= 1.0.0"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\chongdaoyang\\.nuget\\packages\\": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "D:\\Project\\Galaxy\\DataRunner\\DataRunner.csproj",
+      "projectName": "DataRunner",
+      "projectPath": "D:\\Project\\Galaxy\\DataRunner\\DataRunner.csproj",
+      "packagesPath": "C:\\Users\\chongdaoyang\\.nuget\\packages\\",
+      "outputPath": "D:\\Project\\Galaxy\\DataRunner\\obj\\",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "C:\\Users\\chongdaoyang\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\DevExpress 18.2.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "netcoreapp3.0"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\DevExpress 18.2\\Components\\System\\Components\\Packages": {},
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "netcoreapp3.0": {
+          "projectReferences": {
+            "D:\\Project\\Galaxy\\Cdy.Tag.Common\\Cdy.Tag.Common.csproj": {
+              "projectPath": "D:\\Project\\Galaxy\\Cdy.Tag.Common\\Cdy.Tag.Common.csproj"
+            },
+            "D:\\Project\\Galaxy\\Cdy.Tag\\Cdy.Tag.csproj": {
+              "projectPath": "D:\\Project\\Galaxy\\Cdy.Tag\\Cdy.Tag.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      }
+    },
+    "frameworks": {
+      "netcoreapp3.0": {
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[3.0.1, 3.0.1]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[3.0.0, 3.0.0]"
+          },
+          {
+            "name": "Microsoft.WindowsDesktop.App.Ref",
+            "version": "[3.0.0, 3.0.0]"
+          }
+        ],
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.100\\RuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}

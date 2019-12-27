@@ -1,0 +1,136 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Xml.Linq;
+
+namespace Cdy.Tag
+{
+    /// <summary>
+    /// 
+    /// </summary>
+    public class HisDatabaseManager
+    {
+
+        #region ... Variables  ...
+        /// <summary>
+        /// 
+        /// </summary>
+        public static HisDatabaseManager Manager = new HisDatabaseManager();
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+        /// <summary>
+        /// 
+        /// </summary>
+        public HisDatabase Database { get; set; }
+
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public HisDatabase Load()
+        {
+            return Load(PathHelper.helper.GetDataPath("local.hdb"));
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        public void LoadByName(string name)
+        {
+            Load(PathHelper.helper.GetDataPath(name + ".hdb"));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public HisDatabase Load(string file)
+        {
+            HisDatabase db = new HisDatabase();
+            if (System.IO.File.Exists(file))
+            {
+                XElement xe = XElement.Load(file);
+
+                db.Name = xe.Attribute("Name").Value;
+                db.Version = xe.Attribute("Version").Value;
+
+                if (xe.Element("Tags") != null)
+                {
+                    foreach (var vv in xe.Element("Tags").Elements())
+                    {
+                        var tag = vv.LoadHisTagFromXML();
+                        db.HisTags.Add(tag.Id, tag);
+                    }
+                }
+
+                if(xe.Element("HisSetting") !=null)
+                {
+                    db.Setting = xe.Element("HisSetting").LoadHisSettingDocFromXML();
+                }
+            }
+            this.Database = db;
+            return db;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Save()
+        {
+            Save(PathHelper.helper.GetDataPath(this.Database.Name + ".hdb"));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        public void SaveAs(string name)
+        {
+            Save(PathHelper.helper.GetDataPath(name + ".hdb"));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="file"></param>
+        public void Save(string file)
+        {
+            XElement xe = new XElement("HisDatabase");
+            xe.SetAttributeValue("Version", Database.Version);
+            xe.SetAttributeValue("Name", Database.Name);
+            xe.SetAttributeValue("Auther", "cdy");
+
+            XElement xx = new XElement("Tags");
+
+            foreach(var vv in Database.HisTags)
+            {
+                xx.Add(vv.Value.SaveToXML());
+            }
+            xe.Add(xx);
+
+            xe.Add(Database.Setting.SaveToXML());
+
+            xe.Save(file);
+        }
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+}

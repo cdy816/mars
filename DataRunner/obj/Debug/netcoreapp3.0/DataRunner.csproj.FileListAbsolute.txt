@@ -1,0 +1,13 @@
+D:\Project\Galaxy\DataRunner\bin\Debug\netcoreapp3.0\DataRunner.deps.json
+D:\Project\Galaxy\DataRunner\bin\Debug\netcoreapp3.0\DataRunner.dll
+D:\Project\Galaxy\DataRunner\bin\Debug\netcoreapp3.0\DataRunner.pdb
+D:\Project\Galaxy\DataRunner\bin\Debug\netcoreapp3.0\Cdy.Tag.Common.dll
+D:\Project\Galaxy\DataRunner\bin\Debug\netcoreapp3.0\Cdy.Tag.dll
+D:\Project\Galaxy\DataRunner\bin\Debug\netcoreapp3.0\Cdy.Tag.Common.pdb
+D:\Project\Galaxy\DataRunner\bin\Debug\netcoreapp3.0\Cdy.Tag.pdb
+D:\Project\Galaxy\DataRunner\obj\Debug\netcoreapp3.0\DataRunner.csprojAssemblyReference.cache
+D:\Project\Galaxy\DataRunner\obj\Debug\netcoreapp3.0\DataRunner.AssemblyInfoInputs.cache
+D:\Project\Galaxy\DataRunner\obj\Debug\netcoreapp3.0\DataRunner.AssemblyInfo.cs
+D:\Project\Galaxy\DataRunner\obj\Debug\netcoreapp3.0\DataRunner.csproj.CopyComplete
+D:\Project\Galaxy\DataRunner\obj\Debug\netcoreapp3.0\DataRunner.dll
+D:\Project\Galaxy\DataRunner\obj\Debug\netcoreapp3.0\DataRunner.pdb

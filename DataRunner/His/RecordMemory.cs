@@ -747,6 +747,24 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="memory"></param>
+        /// <param name="offset"></param>
+        /// <param name="encoding"></param>
+        /// <returns></returns>
+        public static List<string> ToStringList(this RecordMemory memory,int offset, Encoding encoding)
+        {
+            List<string> re = new List<string>();
+            memory.Position = offset;
+            while (memory.Position < memory.Length)
+            {
+                re.Add(memory.ReadString(encoding));
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
         public static void MakeMemoryBusy(this RecordMemory memory)
         {
             memory.IsBusy = true;

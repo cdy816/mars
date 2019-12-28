@@ -177,9 +177,46 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="value"></param>
+
+        public void Write(ulong value)
+        {
+            WriteULong(mPosition, value);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
         public void Write(int value)
         {
             WriteInt(mPosition, value);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public void Write(uint value)
+        {
+            WriteUInt(mPosition, value);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public void Write(short value)
+        {
+            WriteShort(mPosition, value);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public void Write(ushort value)
+        {
+            WriteUShort(mPosition, value);
         }
 
         /// <summary>
@@ -210,6 +247,15 @@ namespace Cdy.Tag
         public void Write(string value,Encoding encoding)
         {
             WriteString(mPosition, value, encoding);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public void Write(string value)
+        {
+            WriteString(mPosition, value, Encoding.Unicode);
         }
 
         /// <summary>
@@ -250,6 +296,17 @@ namespace Cdy.Tag
         {
             MemoryHelper.WriteInt64(handle, offset, value);
             mPosition = offset + sizeof(long);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="value"></param>
+        public void WriteULong(long offset, ulong value)
+        {
+            MemoryHelper.WriteUInt64(handle, offset, value);
+            mPosition = offset + sizeof(ulong);
         }
 
         /// <summary>
@@ -345,10 +402,32 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
+        public void WriteUInt(long offset, uint value)
+        {
+            MemoryHelper.WriteUInt32(handle, offset, value);
+            mPosition = offset + sizeof(uint);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="value"></param>
         public void WriteShort(long offset, short value)
         {
             MemoryHelper.WriteShort(handle, offset, value);
             mPosition = offset + sizeof(short);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="value"></param>
+        public void WriteUShort(long offset, ushort value)
+        {
+            MemoryHelper.WriteUShort(handle, offset, value);
+            mPosition = offset + sizeof(ushort);
         }
 
         /// <summary>
@@ -492,6 +571,16 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
+        public string ReadString(long offset)
+        {
+            return ReadString(offset, Encoding.Unicode);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <returns></returns>
         public byte[] ReadBytes(long offset,int len)
         {
             byte[] re = new byte[len];
@@ -522,9 +611,27 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <returns></returns>
+        public ulong ReadULong()
+        {
+            return ReadULong(mPosition);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public int ReadInt()
         {
             return ReadInt(mPosition);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public uint ReadUInt()
+        {
+            return ReadUInt(mPosition);
         }
 
         /// <summary>
@@ -580,6 +687,15 @@ namespace Cdy.Tag
         public string ReadString(Encoding encoding)
         {
             return ReadString(mPosition,encoding);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public string ReadString()
+        {
+            return ReadString(mPosition, Encoding.Unicode);
         }
 
         /// <summary>

@@ -283,8 +283,8 @@ namespace Cdy.Tag
         /// <returns></returns>
         private int GetFileHeaderLength()
         {
-            //头部结构：Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+ tagcount(4)+file duration(4)+block duration(4)+Time tick duration(4)
-            return 8 + 8 + 8 + 4 + 4 + 4 + 4;
+            //头部结构：Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+ tagcount(4)+ tagid sum(8)+file duration(4)+block duration(4)+Time tick duration(4)
+            return 8 + 8 + 8 + 4 + 8 + 4 + 4 + 4;
         }
 
         ///// <summary>

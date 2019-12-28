@@ -34,7 +34,7 @@ namespace Cdy.Tag
         /// 每个变量在内存中保留的历史记录历史的长度
         /// 单位s
         /// </summary>
-        public const int MemoryCachTime = 60 * 5;
+        public int MemoryCachTime = 60 * 5;
 
         /// <summary>
         /// 历史记录时间最短间隔

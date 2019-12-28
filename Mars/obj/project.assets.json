@@ -1,11 +1,64 @@
 {
   "version": 3,
   "targets": {
-    ".NETCoreApp,Version=v3.0": {}
+    ".NETCoreApp,Version=v3.0": {
+      "Cdy.Tag/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.0",
+        "compile": {
+          "bin/placeholder/Cdy.Tag.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Cdy.Tag.dll": {}
+        }
+      },
+      "Cdy.Tag.Common/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.0",
+        "compile": {
+          "bin/placeholder/Cdy.Tag.Common.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Cdy.Tag.Common.dll": {}
+        }
+      },
+      "DataRunner/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v3.0",
+        "dependencies": {
+          "Cdy.Tag": "1.0.0",
+          "Cdy.Tag.Common": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/DataRunner.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/DataRunner.dll": {}
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "Cdy.Tag/1.0.0": {
+      "type": "project",
+      "path": "../Cdy.Tag/Cdy.Tag.csproj",
+      "msbuildProject": "../Cdy.Tag/Cdy.Tag.csproj"
+    },
+    "Cdy.Tag.Common/1.0.0": {
+      "type": "project",
+      "path": "../Cdy.Tag.Common/Cdy.Tag.Common.csproj",
+      "msbuildProject": "../Cdy.Tag.Common/Cdy.Tag.Common.csproj"
+    },
+    "DataRunner/1.0.0": {
+      "type": "project",
+      "path": "../DataRunner/DataRunner.csproj",
+      "msbuildProject": "../DataRunner/DataRunner.csproj"
+    }
+  },
   "projectFileDependencyGroups": {
-    ".NETCoreApp,Version=v3.0": []
+    ".NETCoreApp,Version=v3.0": [
+      "DataRunner >= 1.0.0"
+    ]
   },
   "packageFolders": {
     "C:\\Users\\chongdaoyang\\.nuget\\packages\\": {}
@@ -34,7 +87,11 @@
       },
       "frameworks": {
         "netcoreapp3.0": {
-          "projectReferences": {}
+          "projectReferences": {
+            "D:\\Project\\Galaxy\\DataRunner\\DataRunner.csproj": {
+              "projectPath": "D:\\Project\\Galaxy\\DataRunner\\DataRunner.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

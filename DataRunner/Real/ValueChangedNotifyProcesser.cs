@@ -91,8 +91,6 @@ namespace Cdy.Tag
         /// </summary>
         public void Start()
         {
-
-
             mChangedIds = new long[(int)(mRegistorTagIds.Count * 1.2)];
             mProcessThread = new Thread(ThreadProcess);
             mProcessThread.IsBackground = true;

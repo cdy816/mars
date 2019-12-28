@@ -72,6 +72,18 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public int BufferSize
+        {
+            get
+            {
+                return mLenght;
+            }
+        }
+
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -96,7 +108,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="time"></param>
         /// <param name="qulity"></param>
-        internal void Add(object value,DateTime time,byte qulity)
+        public void Add(object value,DateTime time,byte qulity)
         {
 
             if(mCount>=mLimite)
@@ -168,7 +180,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="time"></param>
         /// <param name="qulity"></param>
-        internal void Add(bool value, DateTime time, byte qulity)
+        public void Add(bool value, DateTime time, byte qulity)
         {
             if (mCount >= mLimite)
             {
@@ -189,7 +201,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="time"></param>
         /// <param name="qulity"></param>
-        internal void Add(byte value, DateTime time, byte qulity)
+        public void Add(byte value, DateTime time, byte qulity)
         {
             if (mCount >= mLimite)
             {
@@ -205,7 +217,7 @@ namespace Cdy.Tag
         }
 
 
-        internal void Add(short value, DateTime time, byte qulity)
+        public void Add(short value, DateTime time, byte qulity)
         {
             if (mCount >= mLimite)
             {
@@ -220,7 +232,7 @@ namespace Cdy.Tag
             mCount++;
         }
 
-        internal void Add(ushort value, DateTime time, byte qulity)
+        public void Add(ushort value, DateTime time, byte qulity)
         {
             if (mCount >= mLimite)
             {
@@ -235,7 +247,7 @@ namespace Cdy.Tag
             mCount++;
         }
 
-        internal void Add(int value, DateTime time, byte qulity)
+        public void Add(int value, DateTime time, byte qulity)
         {
             if (mCount >= mLimite)
             {
@@ -251,7 +263,7 @@ namespace Cdy.Tag
         }
 
 
-        internal void Add(uint value, DateTime time, byte qulity)
+        public void Add(uint value, DateTime time, byte qulity)
         {
             if (mCount >= mLimite)
             {
@@ -267,7 +279,7 @@ namespace Cdy.Tag
         }
 
 
-        internal void Add(long value, DateTime time, byte qulity)
+        public void Add(long value, DateTime time, byte qulity)
         {
             if (mCount >= mLimite)
             {
@@ -283,7 +295,7 @@ namespace Cdy.Tag
         }
 
 
-        internal void Add(ulong value, DateTime time, byte qulity)
+        public void Add(ulong value, DateTime time, byte qulity)
         {
             if (mCount >= mLimite)
             {
@@ -304,7 +316,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="time"></param>
         /// <param name="qulity"></param>
-        internal void Add(float value, DateTime time, byte qulity)
+        public void Add(float value, DateTime time, byte qulity)
         {
             if (mCount >= mLimite)
             {
@@ -325,7 +337,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="time"></param>
         /// <param name="qulity"></param>
-        internal void Add(double value, DateTime time, byte qulity)
+        public void Add(double value, DateTime time, byte qulity)
         {
             if (mCount >= mLimite)
             {
@@ -346,7 +358,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="time"></param>
         /// <param name="qulity"></param>
-        internal void Add(DateTime value, DateTime time, byte qulity)
+        public void Add(DateTime value, DateTime time, byte qulity)
         {
             if (mCount >= mLimite)
             {
@@ -367,7 +379,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="time"></param>
         /// <param name="qulity"></param>
-        internal void Add(string value, DateTime time, byte qulity)
+        public void Add(string value, DateTime time, byte qulity)
         {
             if (mCount >= mLimite)
             {
@@ -397,8 +409,10 @@ namespace Cdy.Tag
             switch (mDataType)
             {
                 case 0:
+                    re = Convert.ToBoolean(mDataBuffer[index]);
+                    break;
                 case 1:
-                    re = mDataBuffer[mPosition];
+                    re = mDataBuffer[index];
                     break;
                 case 2:
                     re = MemoryHelper.ReadShort(handle, index*2);
@@ -447,6 +461,8 @@ namespace Cdy.Tag
             time = MemoryHelper.ReadDateTime(handle, index * 8 + mTimeAddr);
             qulity = mDataBuffer[mQulityAddr + index];
 
+           
+
             return (T)re;
         }
 
@@ -455,11 +471,16 @@ namespace Cdy.Tag
         /// </summary>
         public void Resize(int count)
         {
-            var mDataBuffern = new byte[count * (9 + mDataSize)];
+
+            var newsize = count * (9 + mDataSize);
+
+            if (newsize == mLenght) return;
+
+            var mDataBuffern = new byte[newsize];
             var mTimeAddrn = count * mDataSize;
             var mQulityAddrn = count * (mDataSize + 8);
 
-            Buffer.BlockCopy(mDataBuffer, 0, mDataBuffern, 0, mPosition);
+            Buffer.BlockCopy(mDataBuffer, 0, mDataBuffern, 0, this.mTimeAddr);
 
             Buffer.BlockCopy(mDataBuffer, mTimeAddr, mDataBuffern, mTimeAddrn, mCount*8);
 
@@ -468,6 +489,10 @@ namespace Cdy.Tag
             mDataBuffer = mDataBuffern;
             mTimeAddr = mTimeAddrn;
             mQulityAddr = mQulityAddrn;
+
+            handle = mDataBuffer.AsMemory().Pin().Pointer;
+            mLimite = count;
+
         }
 
         /// <summary>
@@ -476,35 +501,35 @@ namespace Cdy.Tag
         /// <returns></returns>
         private int GetDataLen()
         {
-            var sname = typeof(T).Name;
+            var sname = typeof(T).Name.ToLower();
             
             switch(sname)
             {
-                case "bool":
+                case "boolean":
                     mDataType = 0;
                     return 1;
                 case "byte":
                     mDataType = 1;
                     return 1;
-                case "short":
+                case "int16":
                     mDataType = 2;
                     return 2;
-                case "ushort":
+                case "uint16":
                     mDataType = 3;
                     return 2;
-                case "int":
+                case "int32":
                     mDataType = 4;
                     return 4;
-                case "uint":
+                case "uint32":
                     mDataType = 5;
                     return 4;
-                case "long":
+                case "int64":
                     mDataType = 6;
                     return 8;
-                case "ulong":
+                case "uint64":
                     mDataType = 7;
                     return 8;
-                case "float":
+                case "single":
                     mDataType = 8;
                     return 4;
                 case "double":
@@ -536,6 +561,8 @@ namespace Cdy.Tag
         /// <param name="target"></param>
         public void CloneTo(HisQueryResult<T> target)
         {
+            if (target.mLimite < this.mLimite) target.Resize(this.mLimite);
+
             Array.Copy(mDataBuffer, 0, target.mDataBuffer, 0, mDataBuffer.Length);
             target.mCount = this.mCount;
             target.mPosition = this.mPosition;

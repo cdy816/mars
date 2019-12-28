@@ -40,7 +40,7 @@ namespace Cdy.Tag
         public PathHelper()
         {
             mAppPath = System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location);
-            mDataPath = mAppPath;
+            mDataPath = System.IO.Path.Combine(mAppPath,"Data");
         }
 
         #endregion ...Constructor...
@@ -57,7 +57,25 @@ namespace Cdy.Tag
         /// <param name="path"></param>
         public void SetDataBasePath(string path)
         {
-            this.mDataPath = path;
+            if (System.IO.Path.IsPathRooted(path))
+            {
+                this.mDataPath = path;
+            }
+            else
+            {
+                this.mDataPath = System.IO.Path.Combine(mDataPath, path);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void CheckDataPathExist()
+        {
+            if(!System.IO.Directory.Exists(mDataPath))
+            {
+                System.IO.Directory.CreateDirectory(mDataPath);
+            }
         }
 
         /// <summary>

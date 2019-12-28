@@ -15,8 +15,26 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class QuerySerivce
+    public class QuerySerivce: IHisQuery
     {
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public QuerySerivce()
+        {
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="databaseName"></param>
+        public QuerySerivce(string databaseName)
+        {
+            Database = databaseName;
+        }
 
         public string Database { get; set; }
 
@@ -3098,33 +3116,45 @@ namespace Cdy.Tag
         /// <returns></returns>
         public static Dictionary<int, long> CheckBlockHeadCach(this DataFileSeriserbase datafile, long offset, out int fileDuration, out int blockDuration, out int timetick)
         {
+            //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+tagcount(4)+ tagid sum(8) +file duration(4)+ block duration(4)+Time tick duration(4)+ { + tagid1+tagid2+...+tagidn }+ {tag1 block point1(8) + block size(4) + tag1 block point2(8)+ block size(4) + tag1 block point3(8)+ block size(4)+...+tag1 block pointn(8)+ block size(4) + tag2 block point1 (8)+ block size(4)+ tag2 block point2(8)+ block size(4)+....}
             var dataoffset = offset + 24;
+            //读取变量个数
             int count = datafile.ReadInit(dataoffset);
             dataoffset += 4;
 
+            //读取校验和
             long idsum = datafile.ReadLong(dataoffset);
             dataoffset += 8;
 
+            //读取单个文件的时长
             fileDuration = datafile.ReadInit(dataoffset);
             dataoffset += 4;
+            //读取数据块时长
             blockDuration = datafile.ReadInit(dataoffset);
             dataoffset += 4;
+            //读取时钟周期
             timetick = datafile.ReadInit(dataoffset);
             dataoffset += 4;
+
             lock (TagHeadOffsetManager.manager)
             {
                 if (!TagHeadOffsetManager.manager.Contains(idsum, count))
                 {
-
-                    var ids = datafile.Read(dataoffset, count * 8);
-                    var ltmp = ids.ToIntList();
-                    var dtmp = new Dictionary<int, long>();
-                    for (int i = 0; i < ltmp.Count; i++)
+                    //Tag id 列表经过压缩，内容格式为:DataSize + Data
+                    var dsize = datafile.ReadInit(dataoffset);
+                    dataoffset += 4;
+                    using (var dd = datafile.Read(dataoffset, dsize))
                     {
-                        dtmp.Add(ltmp[i], i);
+                        VarintCodeMemory vcm = new VarintCodeMemory(dd.Memory);
+                        var ltmp = vcm.ToIntList();
+                        var dtmp = new Dictionary<int, long>();
+                        for (int i = 0; i < ltmp.Count; i++)
+                        {
+                            dtmp.Add(ltmp[i], i);
+                        }
+                        TagHeadOffsetManager.manager.Add(idsum, count, dtmp);
+                        return dtmp;
                     }
-                    TagHeadOffsetManager.manager.Add(idsum, count, dtmp);
-                    return dtmp;
                 }
                 else
                 {

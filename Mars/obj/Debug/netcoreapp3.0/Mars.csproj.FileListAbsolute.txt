@@ -9,3 +9,10 @@ D:\Project\Galaxy\Mars\obj\Debug\netcoreapp3.0\Mars.AssemblyInfoInputs.cache
 D:\Project\Galaxy\Mars\obj\Debug\netcoreapp3.0\Mars.AssemblyInfo.cs
 D:\Project\Galaxy\Mars\obj\Debug\netcoreapp3.0\Mars.dll
 D:\Project\Galaxy\Mars\obj\Debug\netcoreapp3.0\Mars.pdb
+D:\Project\Galaxy\Mars\bin\Debug\netcoreapp3.0\Cdy.Tag.Common.dll
+D:\Project\Galaxy\Mars\bin\Debug\netcoreapp3.0\Cdy.Tag.dll
+D:\Project\Galaxy\Mars\bin\Debug\netcoreapp3.0\DataRunner.dll
+D:\Project\Galaxy\Mars\bin\Debug\netcoreapp3.0\DataRunner.pdb
+D:\Project\Galaxy\Mars\bin\Debug\netcoreapp3.0\Cdy.Tag.pdb
+D:\Project\Galaxy\Mars\bin\Debug\netcoreapp3.0\Cdy.Tag.Common.pdb
+D:\Project\Galaxy\Mars\obj\Debug\netcoreapp3.0\Mars.csproj.CopyComplete

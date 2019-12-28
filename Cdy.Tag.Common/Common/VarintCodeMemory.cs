@@ -362,7 +362,10 @@ namespace Cdy.Tag
             return (uint)result;
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public ulong ReadRawVarint64()
         {
             int shift = 0;
@@ -455,5 +458,43 @@ namespace Cdy.Tag
         #region ... Interfaces ...
 
         #endregion ...Interfaces...
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public static class VarintCodeMemoryExtends
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <returns></returns>
+        public static List<int> ToIntList(this VarintCodeMemory memory)
+        {
+            List<int> re = new List<int>();
+            memory.Position = 0;
+            while(memory.Position < memory.Length)
+            {
+                re.Add(memory.ReadInt32());
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <returns></returns>
+        public static List<long> ToLongList(this VarintCodeMemory memory)
+        {
+            List<long> re = new List<long>();
+            memory.Position = 0;
+            while (memory.Position < memory.Length)
+            {
+                re.Add(memory.ReadInt64());
+            }
+            return re;
+        }
     }
 }

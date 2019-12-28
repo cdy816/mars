@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Cdy.Tag
 {
@@ -51,16 +52,16 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public void Int()
+        public async Task Int()
         {
-            Scan(PathHelper.helper.GetDataPath(this.mDatabaseName));
+           await Scan(PathHelper.helper.GetDataPath(this.mDatabaseName));
         }
 
         /// <summary>
         /// 搜索文件
         /// </summary>
         /// <param name="path"></param>
-        public void Scan(string path)
+        public async Task Scan(string path)
         {
             System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(path);
             foreach(var vv in dir.GetFiles())
@@ -72,7 +73,7 @@ namespace Cdy.Tag
             }
             foreach(var vv in dir.GetDirectories())
             {
-                Scan(vv.FullName);
+                await Scan(vv.FullName);
             }
         }
 

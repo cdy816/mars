@@ -1,7 +1,6 @@
 D:\Project\Galaxy\Cdy.Tag\bin\Debug\netstandard2.0\Cdy.Tag.deps.json
 D:\Project\Galaxy\Cdy.Tag\bin\Debug\netstandard2.0\Cdy.Tag.dll
 D:\Project\Galaxy\Cdy.Tag\bin\Debug\netstandard2.0\Cdy.Tag.pdb
-D:\Project\Galaxy\Cdy.Tag\obj\Debug\netstandard2.0\Cdy.Tag.csprojAssemblyReference.cache
 D:\Project\Galaxy\Cdy.Tag\obj\Debug\netstandard2.0\Cdy.Tag.AssemblyInfoInputs.cache
 D:\Project\Galaxy\Cdy.Tag\obj\Debug\netstandard2.0\Cdy.Tag.AssemblyInfo.cs
 D:\Project\Galaxy\Cdy.Tag\obj\Debug\netstandard2.0\Cdy.Tag.dll

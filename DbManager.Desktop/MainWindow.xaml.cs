@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DBDevelopService;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,14 @@ namespace DbManager.Desktop
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Grpc.Net.Client.GrpcChannel grpcChannel = Grpc.Net.Client.GrpcChannel.ForAddress(@"https://localhost:5001");
+            DevelopServer.DevelopServerClient client = new DevelopServer.DevelopServerClient(grpcChannel);
+            //var res = client.Login(new DBDevelopService.LoginRequest() { UserName = "", Password = "", Database = "" });
+            //System.Windows.MessageBox.Show(res.LoginId);
         }
     }
 }

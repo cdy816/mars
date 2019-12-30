@@ -1,7 +1,6 @@
 D:\Project\Galaxy\Cdy.Tag.CoreAPI\bin\Debug\netcoreapp3.1\Cdy.Tag.CoreAPI.deps.json
 D:\Project\Galaxy\Cdy.Tag.CoreAPI\bin\Debug\netcoreapp3.1\Cdy.Tag.CoreAPI.dll
 D:\Project\Galaxy\Cdy.Tag.CoreAPI\bin\Debug\netcoreapp3.1\Cdy.Tag.CoreAPI.pdb
-D:\Project\Galaxy\Cdy.Tag.CoreAPI\obj\Debug\netcoreapp3.1\Cdy.Tag.CoreAPI.csprojAssemblyReference.cache
 D:\Project\Galaxy\Cdy.Tag.CoreAPI\obj\Debug\netcoreapp3.1\Cdy.Tag.CoreAPI.AssemblyInfoInputs.cache
 D:\Project\Galaxy\Cdy.Tag.CoreAPI\obj\Debug\netcoreapp3.1\Cdy.Tag.CoreAPI.AssemblyInfo.cs
 D:\Project\Galaxy\Cdy.Tag.CoreAPI\obj\Debug\netcoreapp3.1\Cdy.Tag.CoreAPI.dll

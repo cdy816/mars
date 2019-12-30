@@ -458,7 +458,23 @@ namespace Cdy.Tag
             foreach (var vv in mRecordTimerProcesser)
             {
                 vv.Stop();
+                vv.Dispose();
             }
+            mRecordTimerProcesser.Clear();
+
+            foreach(var vv in mValueChangedProcesser)
+            {
+                vv.Stop();
+                vv.Dispose();
+            }
+
+            mValueChangedProcesser.Clear();
+
+            mLastValueChangedProcesser = null;
+            mLastProcesser = null;
+
+            mHisTags.Clear();
+
         }
 
 

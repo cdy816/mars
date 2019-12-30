@@ -1,0 +1,146 @@
+syntax = "proto3";
+
+option csharp_namespace = "DBDevelopService";
+
+package dbDevelopService;
+
+// The greeting service definition.
+service DevelopServer {
+
+  //Login
+  rpc Login(LoginRequest) returns (LoginReply);
+
+  //添加
+  rpc AddTag(AddTagRequestMessage) returns (AddTagReplyMessage);
+
+  //删除
+  rpc RemoveTag(RemoveTagMessage) returns (BoolResultReplay);
+
+  //查询
+  rpc GetRealAllTag(GetRequest) returns (GetRealTagMessageReply);
+
+  //
+  rpc GetHisAllTag(GetRequest) returns (GetHistTagMessageReply);
+
+  //查询指定条件的变量
+  rpc QueryRealTag(QueryMessage) returns (GetRealTagMessageReply);
+
+  rpc QueryHisTag(QueryMessage) returns (GetHistTagMessageReply);
+
+  //修改实时变量
+  rpc UpdateRealTag(UpdateRealTagRequestMessage) returns (BoolResultReplay);
+
+  //修改历史变量
+  rpc UpdateHisTag(UpdateHisTagRequestMessage) returns (BoolResultReplay);
+
+  //保存
+  rpc Save(GetRequest) returns (BoolResultReplay);
+
+  //撤销
+  rpc Cancel(GetRequest) returns (BoolResultReplay);
+
+}
+
+message LoginRequest
+{
+    string userName=1;
+    string password=2;
+    string database=3;
+}
+
+message LoginReply
+{
+    string loginId=1;
+}
+
+//
+message AddTagRequestMessage
+{
+    string loginId =1;
+    RealTagMessage realTag = 2;
+    HisTagMessage hisTag = 3;
+}
+
+message UpdateRealTagRequestMessage
+{
+    string loginId=1;
+    RealTagMessage tag = 2;
+}
+
+message UpdateHisTagRequestMessage
+{
+    string loginId=1;
+    HisTagMessage tag = 2;
+}
+
+//
+message AddTagReplyMessage
+{
+    int32 TagId = 1;
+}
+
+message RemoveTagMessage
+{
+    string LoginId=1;
+    repeated int32 TagId=2;
+}
+
+//
+message QueryMessage
+{
+    string LoginId=1;
+    repeated KeyValueMessage conditions=2;
+}
+
+//
+message KeyValueMessage
+{
+    string key=1;
+    string value=2;
+}
+
+//
+message GetRequest
+{
+    string LoginId=1;
+}
+
+//
+message BoolResultReplay
+{
+    bool Result =1;
+}
+
+message GetRealTagMessageReply
+{
+    repeated RealTagMessage messages=1;
+}
+
+message GetHistTagMessageReply
+{
+    repeated HisTagMessage messages=1;
+}
+
+
+//实时变量配置
+message RealTagMessage
+{
+  uint32 Id=1;
+  uint32 TagType=2;
+  string Name = 3;
+  string Group = 4;
+  string Desc = 5;
+  string LinkAddress = 6;
+}
+
+//历史变量定义
+message HisTagMessage
+{
+ uint32 Id=1;
+ uint32 Type=2;
+ uint32 TagType=3;
+ uint32 CompressType=4;
+ float CompressParameter1=5;
+ float CompressParameter2=6;
+ float CompressParameter3=7;
+}

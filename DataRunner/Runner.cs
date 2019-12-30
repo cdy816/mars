@@ -165,6 +165,15 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        public void ReStart()
+        {
+            Stop();
+            Start();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public void Start()
         {
             StartAsync("local");

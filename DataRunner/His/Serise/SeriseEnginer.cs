@@ -153,6 +153,15 @@ namespace Cdy.Tag
             mIsClosed = false;
             resetEvent.Set();
             closedEvent.WaitOne();
+
+            mIdAddrs.Clear();
+            mFileWriter = null;
+
+            mProcessMemory = null;
+            mHeadMemory = null;
+
+            resetEvent.Dispose();
+            closedEvent.Dispose();
         }
 
         /// <summary>

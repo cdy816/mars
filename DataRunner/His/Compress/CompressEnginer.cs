@@ -98,6 +98,14 @@ namespace Cdy.Tag
             mIsClosed = false;
             resetEvent.Set();
             closedEvent.WaitOne();
+
+            mSourceMemory = null;
+            mTargetMemory = null;
+
+            this.mMemory1 = null;
+            this.mMemory2 = null;
+            resetEvent.Dispose();
+            closedEvent.Dispose();
         }
 
         /// <summary>

@@ -1,12 +1,12 @@
 ﻿//==============================================================
-//  Copyright (C) 2019  Inc. All rights reserved.
+//  Copyright (C) 2020  Inc. All rights reserved.
 //
 //==============================================================
-//  Create by 种道洋 at 2019/12/27 18:45:02.
+//  Create by 种道洋 at 2020/1/3 14:42:51.
 //  Version 1.0
 //  种道洋
 //==============================================================
-using Cdy.Tag;
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -16,14 +16,11 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class StirngHisRunTag:HisRunTag
+    public class Const
     {
         /// <summary>
-        /// 
+        /// 字符串长度
         /// </summary>
-        public override byte SizeOfValue => (byte)(Const.StringSize);
-
-        
-
+        public const int StringSize = 255;
     }
 }

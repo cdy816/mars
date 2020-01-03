@@ -40,7 +40,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="dataMemory"></param>
-        void RequestToCompress(RecordMemory dataMemory);
+        void RequestToCompress(MemoryBlock dataMemory);
 
 
         #endregion ...Methods...

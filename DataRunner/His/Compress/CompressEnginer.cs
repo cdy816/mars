@@ -31,13 +31,13 @@ namespace Cdy.Tag
 
         private bool mIsClosed = false;
 
-        private RecordMemory mSourceMemory;
+        private MemoryBlock mSourceMemory;
 
-        private RecordMemory mTargetMemory;
+        private MemoryBlock mTargetMemory;
 
-        private RecordMemory mMemory1;
+        private MemoryBlock mMemory1;
 
-        private RecordMemory mMemory2;
+        private MemoryBlock mMemory2;
 
         private DateTime mCurrentTime;
 
@@ -74,8 +74,8 @@ namespace Cdy.Tag
         /// </summary>
         public void CalMemory(long size)
         {
-            mMemory1 = new RecordMemory(size);
-            mMemory2 = new RecordMemory(size);
+            mMemory1 = new MemoryBlock(size);
+            mMemory2 = new MemoryBlock(size);
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="dataMemory"></param>
-        public void RequestToCompress(RecordMemory dataMemory)
+        public void RequestToCompress(MemoryBlock dataMemory)
         {
             mSourceMemory = dataMemory;
             mCurrentTime = dataMemory.ReadDateTime(1);
@@ -123,7 +123,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <returns></returns>
-        private RecordMemory SelectMemory()
+        private MemoryBlock SelectMemory()
         {
             if(!mMemory1.IsBusy)
             {

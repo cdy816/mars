@@ -98,7 +98,8 @@ namespace Cdy.Tag
             mTimeAddr = count * mDataSize;
             mQulityAddr = count * (mDataSize + 8);
             mLenght = mDataBuffer.Length;
-            handle = mDataBuffer.AsMemory().Pin().Pointer;
+            //handle = mDataBuffer.AsMemory().Pin().Pointer;
+            handle = (void*)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mDataBuffer, 0);
             mLimite = count;
         }
 
@@ -490,7 +491,8 @@ namespace Cdy.Tag
             mTimeAddr = mTimeAddrn;
             mQulityAddr = mQulityAddrn;
 
-            handle = mDataBuffer.AsMemory().Pin().Pointer;
+            handle = (void*)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mDataBuffer, 0);
+            // handle = mDataBuffer.AsMemory().Pin().Pointer;
             mLimite = count;
 
         }
@@ -540,7 +542,7 @@ namespace Cdy.Tag
                     return 8;
                 case "string":
                     mDataType = 11;
-                    return RealEnginer.StringSize;
+                    return Const.StringSize;
             }
             return 0;
         }

@@ -1,21 +1,20 @@
 ﻿//==============================================================
-//  Copyright (C) 2019  Inc. All rights reserved.
+//  Copyright (C) 2020  Inc. All rights reserved.
 //
 //==============================================================
-//  Create by 种道洋 at 2019/12/27 18:45:02.
+//  Create by 种道洋 at 2020/1/2 10:05:09.
 //  Version 1.0
 //  种道洋
 //==============================================================
+
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 
-namespace Cdy.Tag
+namespace DbManager.Desktop
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public interface IDataSerialize
+    public class ViewModelBase : INotifyPropertyChanged
     {
 
         #region ... Variables  ...
@@ -35,17 +34,24 @@ namespace Cdy.Tag
         #endregion ...Properties...
 
         #region ... Methods    ...
+
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="dataMemory"></param>
-        /// <param name="date"></param>
-        void RequestToSave(MemoryBlock dataMemory,DateTime date);
+        /// <param name="name"></param>
+        protected void OnPropertChanged(string name)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
 
         #endregion ...Methods...
 
         #region ... Interfaces ...
-
+        /// <summary>
+        /// 
+        /// </summary>
+        public event PropertyChangedEventHandler PropertyChanged;
         #endregion ...Interfaces...
+
     }
 }

@@ -12,10 +12,13 @@ namespace DBDevelopService
     {
 
         #region ... Variables  ...
+        
         /// <summary>
         /// 
         /// </summary>
         public static LoginManager Manager = new LoginManager();
+
+
 
         #endregion ...Variables...
 
@@ -41,7 +44,7 @@ namespace DBDevelopService
         /// <param name="userName"></param>
         /// <param name="password"></param>
         /// <returns></returns>
-        public string GetLoginId(string userName,string password)
+        public string GetLoginId(string userName,string password,string database="local")
         {
             return string.Empty;
         }

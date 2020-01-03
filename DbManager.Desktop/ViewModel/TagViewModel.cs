@@ -1,21 +1,22 @@
 ﻿//==============================================================
-//  Copyright (C) 2019  Inc. All rights reserved.
+//  Copyright (C) 2020  Inc. All rights reserved.
 //
 //==============================================================
-//  Create by 种道洋 at 2019/12/27 18:45:02.
+//  Create by 种道洋 at 2020/1/2 10:04:50.
 //  Version 1.0
 //  种道洋
 //==============================================================
+
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Cdy.Tag
+namespace DbManager.Desktop
 {
     /// <summary>
     /// 
     /// </summary>
-    public interface IDataSerialize
+    public class TagViewModel:ViewModelBase
     {
 
         #region ... Variables  ...
@@ -35,12 +36,6 @@ namespace Cdy.Tag
         #endregion ...Properties...
 
         #region ... Methods    ...
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="dataMemory"></param>
-        /// <param name="date"></param>
-        void RequestToSave(MemoryBlock dataMemory,DateTime date);
 
         #endregion ...Methods...
 

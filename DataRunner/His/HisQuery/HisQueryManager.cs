@@ -62,12 +62,12 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="name"></param>
-        public void Registor(string name)
+        public async void Registor(string name)
         {
             if (!mManagers.ContainsKey(name))
             {
                 DataFileManager dataFile = new DataFileManager(name);
-                dataFile.Int();
+                await dataFile.Int();
                 mManagers.Add(name, dataFile);
             }
         }

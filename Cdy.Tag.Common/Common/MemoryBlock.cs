@@ -16,7 +16,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 划分内存
     /// </summary>
-    public unsafe class RecordMemory:IDisposable
+    public unsafe class MemoryBlock:IDisposable
     {
 
         #region ... Variables  ...
@@ -48,7 +48,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public RecordMemory()
+        public MemoryBlock()
         {
 
         }
@@ -57,10 +57,11 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="size"></param>
-        public RecordMemory(long size)
+        public MemoryBlock(long size)
         {
             mDataBuffer = new byte[size];
-            handle = mDataBuffer.AsMemory().Pin().Pointer;
+            // handle = mDataBuffer.AsMemory().Pin().Pointer;
+            handle = (void*)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mDataBuffer, 0);
         }
 
         #endregion ...Constructor...
@@ -142,6 +143,7 @@ namespace Cdy.Tag
             var newMemory = new byte[size];
             Buffer.BlockCopy(mDataBuffer, 0, newMemory, 0, Math.Min(mDataBuffer.Length, newMemory.Length));
             mDataBuffer = newMemory;
+            handle = (void*)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mDataBuffer, 0);
             GC.Collect();
         }
 
@@ -528,6 +530,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public long ReadLong(long offset)
         {
+         
             mPosition = offset + sizeof(long);
             return MemoryHelper.ReadInt64(handle, offset);
         }
@@ -740,7 +743,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="target"></param>
-        public void CopyTo(RecordMemory target,int sourceStart,int targgetStart,int len)
+        public void CopyTo(MemoryBlock target,int sourceStart,int targgetStart,int len)
         {
             if (target == null) return;
             Buffer.BlockCopy(this.mDataBuffer, sourceStart, target.mDataBuffer, targgetStart, len);
@@ -753,14 +756,14 @@ namespace Cdy.Tag
         #endregion ...Interfaces...
     }
 
-    public static class RecordMemoryExtends
+    public static class MemoryBlockExtends
     {
         /// <summary>
         /// 
         /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public static List<long> ToLongList(this RecordMemory memory)
+        public static List<long> ToLongList(this MemoryBlock memory)
         {
             List<long> re = new List<long>(memory.Length / 8);
             memory.Position = 0;
@@ -776,7 +779,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public static List<int> ToIntList(this RecordMemory memory)
+        public static List<int> ToIntList(this MemoryBlock memory)
         {
             List<int> re = new List<int>(memory.Length / 4);
             memory.Position = 0;
@@ -792,7 +795,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public static List<double> ToDoubleList(this RecordMemory memory)
+        public static List<double> ToDoubleList(this MemoryBlock memory)
         {
             List<double> re = new List<double>(memory.Length / 8);
             memory.Position = 0;
@@ -808,7 +811,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public static List<double> ToFloatList(this RecordMemory memory)
+        public static List<double> ToFloatList(this MemoryBlock memory)
         {
             List<double> re = new List<double>(memory.Length / 4);
             memory.Position = 0;
@@ -824,7 +827,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public static List<short> ToShortList(this RecordMemory memory)
+        public static List<short> ToShortList(this MemoryBlock memory)
         {
             List<short> re = new List<short>(memory.Length / 2);
             memory.Position = 0;
@@ -840,7 +843,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public static List<DateTime> ToDatetimeList(this RecordMemory memory)
+        public static List<DateTime> ToDatetimeList(this MemoryBlock memory)
         {
             List<DateTime> re = new List<DateTime>(memory.Length / 8);
             memory.Position = 0;
@@ -856,7 +859,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public static List<string> ToStringList(this RecordMemory memory, Encoding encoding)
+        public static List<string> ToStringList(this MemoryBlock memory, Encoding encoding)
         {
             List<string> re = new List<string>();
             memory.Position = 0;
@@ -874,7 +877,7 @@ namespace Cdy.Tag
         /// <param name="offset"></param>
         /// <param name="encoding"></param>
         /// <returns></returns>
-        public static List<string> ToStringList(this RecordMemory memory,int offset, Encoding encoding)
+        public static List<string> ToStringList(this MemoryBlock memory,int offset, Encoding encoding)
         {
             List<string> re = new List<string>();
             memory.Position = offset;
@@ -889,7 +892,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="memory"></param>
-        public static void MakeMemoryBusy(this RecordMemory memory)
+        public static void MakeMemoryBusy(this MemoryBlock memory)
         {
             memory.IsBusy = true;
             memory.Memory[0] = 1;
@@ -899,7 +902,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="memory"></param>
-        public static void MakeMemoryNoBusy(this RecordMemory memory)
+        public static void MakeMemoryNoBusy(this MemoryBlock memory)
         {
             memory.IsBusy = false;
             memory.Memory[0] = 0;

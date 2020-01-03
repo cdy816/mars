@@ -32,10 +32,7 @@ namespace Cdy.Tag
         /// </summary>
         private Database mConfigDatabase=null;
 
-        /// <summary>
-        /// 字符串长度
-        /// </summary>
-        public const int StringSize = 255;
+
 
         /// <summary>
         /// 
@@ -138,7 +135,7 @@ namespace Cdy.Tag
                         msize += 17;
                         break;
                     case TagType.String:
-                        msize += (StringSize + 9);
+                        msize += (Const.StringSize + 9);
                         break;
                 }
             }
@@ -401,8 +398,8 @@ namespace Cdy.Tag
         public void SetValueByAddr(long addr, string value, byte qulity, DateTime time)
         {
             System.Buffer.BlockCopy(value.ToCharArray(), 0, mMemory, (int)addr, value.Length);
-            MemoryHelper.WriteDateTime(mMHandle, StringSize, time);
-            MemoryHelper.WriteByte(mMHandle, StringSize + 8, qulity); ;
+            MemoryHelper.WriteDateTime(mMHandle, Const.StringSize, time);
+            MemoryHelper.WriteByte(mMHandle, Const.StringSize + 8, qulity); ;
         }
 
         /// <summary>
@@ -1097,8 +1094,8 @@ namespace Cdy.Tag
         {
             int len = MemoryHelper.ReadByte((sbyte*)mMHandle, addr);
             var re = new string((sbyte*)mMHandle, (int)addr+1, len, encoding);
-            time = MemoryHelper.ReadDateTime(mMHandle, addr+StringSize);
-            qulity = MemoryHelper.ReadByte(mMHandle, addr + StringSize + 8);
+            time = MemoryHelper.ReadDateTime(mMHandle, addr+ Const.StringSize);
+            qulity = MemoryHelper.ReadByte(mMHandle, addr + Const.StringSize + 8);
             return re;
         }
 

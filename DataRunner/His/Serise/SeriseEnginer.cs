@@ -32,13 +32,13 @@ namespace Cdy.Tag
 
         private bool mIsClosed = false;
 
-        private RecordMemory mProcessMemory;
+        private MemoryBlock mProcessMemory;
 
         private DateTime mCurrentTime;
 
         private DataFileSeriserbase mFileWriter;
 
-        private RecordMemory mHeadMemory;
+        private MemoryBlock mHeadMemory;
 
         private int mTagCount = 0;
 
@@ -169,7 +169,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="dataMemory"></param>
         /// <param name="date"></param>
-        public void RequestToSave(RecordMemory dataMemory, DateTime date)
+        public void RequestToSave(MemoryBlock dataMemory, DateTime date)
         {
             mProcessMemory = dataMemory;
             mCurrentTime = date;
@@ -359,7 +359,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    mHeadMemory = new RecordMemory(len);
+                    mHeadMemory = new MemoryBlock(len);
                 }
 
                 mHeadMemory.Position = 0;

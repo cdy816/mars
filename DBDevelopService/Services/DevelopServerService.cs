@@ -23,7 +23,8 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<LoginReply> Login(LoginRequest request, ServerCallContext context)
         {
-            return base.Login(request, context);
+            LoginReply re = new LoginReply() { LoginId = LoginManager.Manager.GetLoginId(request.UserName,request.Password) };
+            return Task.FromResult(re);
         }
 
         /// <summary>

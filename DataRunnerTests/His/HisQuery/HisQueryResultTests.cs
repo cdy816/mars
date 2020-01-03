@@ -48,7 +48,7 @@ namespace Cdy.Tag.Tests
 
             Assert.IsTrue(res9.BufferSize == 170);
             Assert.IsTrue(res10.BufferSize == 130);
-            Assert.IsTrue(res11.BufferSize == (RealEnginer.StringSize + 9) *10);
+            Assert.IsTrue(res11.BufferSize == (Const.StringSize + 9) *10);
            
         }
 

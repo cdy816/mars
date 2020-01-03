@@ -47,6 +47,8 @@ namespace Cdy.Tag
 
         private QuerySerivce querySerivce;
 
+        private bool mIsStarted = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -63,6 +65,17 @@ namespace Cdy.Tag
         /// 数据库存访路径
         /// </summary>
         public string DatabasePath { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsStarted
+        {
+            get
+            {
+                return mIsStarted;
+            }
+        }
 
         #endregion ...Properties...
 
@@ -177,6 +190,7 @@ namespace Cdy.Tag
         public void Start()
         {
             StartAsync("local");
+            
         }
 
         /// <summary>
@@ -189,6 +203,7 @@ namespace Cdy.Tag
             seriseEnginer.Start();
             compressEnginer.Start();
             hisEnginer.Start();
+            mIsStarted = true;
         }
 
 
@@ -200,6 +215,7 @@ namespace Cdy.Tag
             hisEnginer.Stop();
             compressEnginer.Stop();
             seriseEnginer.Stop();
+            mIsStarted = false;
         }
 
 

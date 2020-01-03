@@ -22,7 +22,7 @@ namespace Cdy.Tag.Tests
         [TestMethod()]
         public void ReAllocTest()
         {
-            RecordMemory memory = new RecordMemory(10);
+            MemoryBlock memory = new MemoryBlock(10);
             memory.ReAlloc(20);
             Assert.IsTrue(memory.Length == 20);
         }
@@ -30,7 +30,7 @@ namespace Cdy.Tag.Tests
         [TestMethod()]
         public void ResizeTest()
         {
-            RecordMemory memory = new RecordMemory(10);
+            MemoryBlock memory = new MemoryBlock(10);
             memory.Write((int)10);
             memory.Resize(20);
             memory.Position = 0;
@@ -40,7 +40,7 @@ namespace Cdy.Tag.Tests
         [TestMethod()]
         public void ClearTest()
         {
-            RecordMemory memory = new RecordMemory(10);
+            MemoryBlock memory = new MemoryBlock(10);
             memory.Write((int)10);
             memory.Clear();
             memory.Position = 0;
@@ -52,7 +52,7 @@ namespace Cdy.Tag.Tests
         {
             DateTime date = DateTime.Now;
 
-            RecordMemory memory = new RecordMemory(100);
+            MemoryBlock memory = new MemoryBlock(100);
             memory.Write(byte.MaxValue);
             memory.Write((short)short.MaxValue);
             memory.Write((ushort)ushort.MaxValue);
@@ -94,7 +94,7 @@ namespace Cdy.Tag.Tests
         {
             DateTime date = DateTime.Now;
 
-            RecordMemory memory = new RecordMemory(100);
+            MemoryBlock memory = new MemoryBlock(100);
             memory.Write(byte.MaxValue);
             memory.Write((short)short.MaxValue);
             memory.Write((ushort)ushort.MaxValue);
@@ -111,7 +111,7 @@ namespace Cdy.Tag.Tests
 
             memory.Position = 0;
 
-            RecordMemory memory2 = new RecordMemory(100);
+            MemoryBlock memory2 = new MemoryBlock(100);
 
             memory.CopyTo(memory2,0,0,memory.Length);
 

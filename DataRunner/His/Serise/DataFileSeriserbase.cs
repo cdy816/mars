@@ -135,7 +135,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="start"></param>
         /// <param name="len"></param>
-        public abstract RecordMemory Read(long start, int len);
+        public abstract MemoryBlock Read(long start, int len);
 
 
         /// <summary>

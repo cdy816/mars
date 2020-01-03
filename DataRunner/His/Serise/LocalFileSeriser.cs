@@ -118,9 +118,9 @@ namespace Cdy.Tag
         /// <param name="start"></param>
         /// <param name="len"></param>
         /// <returns></returns>
-        public override RecordMemory Read(long start, int len)
+        public override MemoryBlock Read(long start, int len)
         {
-            RecordMemory re = new RecordMemory(len);
+            MemoryBlock re = new MemoryBlock(len);
             mStream.Position = start;
             mStream.Write(re.Memory, 0, len);
             return re;

@@ -28,9 +28,10 @@ namespace DBDevelopService
             }
 
             app.UseRouting();
-
+            
             app.UseEndpoints(endpoints =>
             {
+               
                 endpoints.MapGrpcService<DevelopServerService>();
 
                 endpoints.MapGet("/", async context =>

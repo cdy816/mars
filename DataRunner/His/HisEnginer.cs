@@ -50,17 +50,17 @@ namespace Cdy.Tag
         /// <summary>
         /// 历史记录内存1
         /// </summary>
-        private RecordMemory mMemory1;
+        private MemoryBlock mMemory1;
 
         /// <summary>
         /// 历史记录内存2
         /// </summary>
-        private RecordMemory mMemory2;
+        private MemoryBlock mMemory2;
 
         /// <summary>
         /// 当前正在使用的内存
         /// </summary>
-        private RecordMemory mCurrentMemory;
+        private MemoryBlock mCurrentMemory;
         
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 当前工作的内存区域
         /// </summary>
-        public RecordMemory CurrentMemory
+        public MemoryBlock CurrentMemory
         {
             get
             {
@@ -274,7 +274,7 @@ namespace Cdy.Tag
                     qulityOffset = regionHeadSize + count * 8;
                     return qulityOffset + count;
                 case Cdy.Tag.TagType.String:
-                    qulityOffset = regionHeadSize + count * Cdy.Tag.RealEnginer.StringSize;
+                    qulityOffset = regionHeadSize + count * Const.StringSize;
                     return qulityOffset + count;
                 default:
                     return 0;
@@ -298,8 +298,8 @@ namespace Cdy.Tag
                 vv.Value.DataSize = ss;
                 headSize += ss;
             }
-            mMemory1 = new RecordMemory(headSize);
-            mMemory2 = new RecordMemory(headSize);
+            mMemory1 = new MemoryBlock(headSize);
+            mMemory2 = new MemoryBlock(headSize);
 
             CurrentMemory = mMemory1;
             
@@ -324,7 +324,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="memory"></param>
-        private void CheckMemoryIsReady(RecordMemory memory)
+        private void CheckMemoryIsReady(MemoryBlock memory)
         {
            while( mMemory1.IsBusy) System.Threading.Thread.Sleep(1);
         }

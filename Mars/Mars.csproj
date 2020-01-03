@@ -2,11 +2,12 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DataRunner\DataRunner.csproj" />
+    <ProjectReference Include="..\DBDevelopService\DBDevelopService.csproj" />
   </ItemGroup>
 
 </Project>

@@ -122,7 +122,7 @@ namespace Cdy.Tag
         {
             MemoryBlock re = new MemoryBlock(len);
             mStream.Position = start;
-            mStream.Write(re.Memory, 0, len);
+            mStream.Write(re.StartMemory, 0, len);
             return re;
         }
 

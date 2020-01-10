@@ -3145,7 +3145,7 @@ namespace Cdy.Tag
                     dataoffset += 4;
                     using (var dd = datafile.Read(dataoffset, dsize))
                     {
-                        VarintCodeMemory vcm = new VarintCodeMemory(dd.Memory);
+                        VarintCodeMemory vcm = new VarintCodeMemory(dd.StartMemory);
                         var ltmp = vcm.ToIntList();
                         var dtmp = new Dictionary<int, long>();
                         for (int i = 0; i < ltmp.Count; i++)

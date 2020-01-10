@@ -173,6 +173,8 @@ namespace Cdy.Tag
             ServiceLocator.Locator.Registor<IDataSerialize>(seriseEnginer);
 
             ServiceLocator.Locator.Registor<IHisQuery>(querySerivce);
+
+            ServiceLocator.Locator.Registor<ITagQuery>(mDatabase);
         }
 
         /// <summary>

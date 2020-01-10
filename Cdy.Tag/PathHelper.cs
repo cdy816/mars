@@ -26,6 +26,8 @@ namespace Cdy.Tag
 
         public static PathHelper helper = new PathHelper();
 
+        private string mDatabaseName;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -63,7 +65,11 @@ namespace Cdy.Tag
             }
             else
             {
-                this.mDataPath = System.IO.Path.Combine(mDataPath, path);
+                if (mDatabaseName != path)
+                {
+                    mDatabaseName = path;
+                    this.mDataPath = System.IO.Path.Combine(mDataPath, path);
+                }
             }
         }
 

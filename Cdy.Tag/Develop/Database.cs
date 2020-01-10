@@ -43,6 +43,9 @@ namespace Cdy.Tag
         /// </summary>
         public int MaxId { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private Dictionary<string,Tagbase> NamedTags { get; set; }
 
         /// <summary>
@@ -364,17 +367,16 @@ namespace Cdy.Tag
         /// <param name="groupName">组名称,多级组之间通过"."分割</param>
         public TagGroup CheckAndAddGroup(string groupName)
         {
+            if (string.IsNullOrEmpty(groupName)) return null;
             if (!Groups.ContainsKey(groupName))
             {
-                if (string.IsNullOrEmpty(groupName)) return null;
-
                 TagGroup parent = null;
                 if (groupName.LastIndexOf(".") > 0)
                 {
                     string sparentName = groupName.Substring(0, groupName.LastIndexOf("."));
                     parent = CheckAndAddGroup(sparentName);
                 }
-                TagGroup tg = new TagGroup() { Parent = parent };
+                TagGroup tg = new TagGroup() { Parent = parent,Name = groupName };
                 Groups.Add(tg.FullName, tg);
                 return tg;
             }

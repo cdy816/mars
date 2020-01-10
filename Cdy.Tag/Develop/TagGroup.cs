@@ -31,7 +31,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public string FullName { get { return Parent != null ? Name : Parent.FullName + "." + Name; } }
+        public string FullName { get { return Parent == null ? Name : Parent.FullName + "." + Name; } }
 
         /// <summary>
         /// 用作加载时，建立父子关系
@@ -46,7 +46,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public List<Tagbase> Tags { get; set; }
+        public List<Tagbase> Tags { get; set; } = new List<Tagbase>();
 
         /// <summary>
         /// 
@@ -83,8 +83,9 @@ namespace Cdy.Tag
         {
             XElement xe = new XElement("TagGroup");
             xe.SetAttributeValue("Name", group.Name);
+            if(group.Parent!=null)
             xe.SetAttributeValue("Parent", group.Parent.FullName);
-            xe.SetAttributeValue("FullName", group.FullNameString);
+            xe.SetAttributeValue("FullName", group.FullName);
             return xe;
         }
 
@@ -97,6 +98,7 @@ namespace Cdy.Tag
         {
             TagGroup group = new TagGroup();
             group.Name = xe.Attribute("Name").Value;
+            if(xe.Attribute("Parent") !=null)
             group.ParentName = xe.Attribute("Parent").Value;
             group.FullNameString = xe.Attribute("FullName").Value;
             return group;

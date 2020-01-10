@@ -109,7 +109,7 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         public void SaveAs(string name)
         {
-            Save(PathHelper.helper.GetDataPath(name + ".hdb"));
+            Save(PathHelper.helper.GetDataPath(name+"/"+ name + ".hdb"));
         }
 
         /// <summary>

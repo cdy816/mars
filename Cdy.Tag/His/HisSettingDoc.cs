@@ -43,12 +43,12 @@ namespace Cdy.Tag
         /// 单个数据块保存数据的时长
         /// 单位分钟
         /// </summary>
-        public int DataBlockDuration { get; set; } = 5;
+        public int DataBlockDuration { get; set; } = 1;
 
         /// <summary>
         /// 数据序列化类型
         /// </summary>
-        public string DataSeriser { get; set; }
+        public string DataSeriser { get; set; } = "LocalFile";
 
         #endregion ...Properties...
 

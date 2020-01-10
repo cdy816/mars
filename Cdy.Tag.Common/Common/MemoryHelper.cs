@@ -313,6 +313,19 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static unsafe byte[] GetBytes(DateTime date)
+        {
+            byte[] bval = new byte[8];
+            var ptr = (IntPtr)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(bval, 0);
+            WriteDateTime((void*)ptr, 0, date);
+            return bval;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>

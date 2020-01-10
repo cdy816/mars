@@ -63,7 +63,7 @@ namespace Cdy.Tag
             XElement xe = new XElement("Tag");
             xe.SetAttributeValue("Id", tag.Id);
             xe.SetAttributeValue("Name", tag.Name);
-            xe.SetAttributeValue("Type", tag.Type);
+            xe.SetAttributeValue("Type", (int)tag.Type);
             xe.SetAttributeValue("Group", tag.Group);
             xe.SetAttributeValue("Desc", tag.Desc);
             xe.SetAttributeValue("LinkAddress", tag.LinkAddress);
@@ -75,7 +75,7 @@ namespace Cdy.Tag
             TagType tp = (TagType)int.Parse(xe.Attribute("Type").Value);
             Tagbase re = null;
 
-            switch(tp)
+            switch (tp)
             {
                 case TagType.Bool:
                     re = new BoolTag();
@@ -110,9 +110,9 @@ namespace Cdy.Tag
             }
             re.Id = int.Parse(xe.Attribute("Id").Value);
             re.Name = xe.Attribute("Name").Value;
-            re.Group = xe.Attribute("Group").Value;
-            re.Desc = xe.Attribute("Desc").Value;
-            re.LinkAddress = xe.Attribute("LinkAddress").Value;
+            re.Group = xe.Attribute("Group")!=null? xe.Attribute("Group").Value:"";
+            re.Desc = xe.Attribute("Desc") != null ? xe.Attribute("Desc").Value : "";
+            re.LinkAddress = xe.Attribute("LinkAddress") != null ? xe.Attribute("LinkAddress").Value : "";
             return re;
         }
     }

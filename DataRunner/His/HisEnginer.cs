@@ -34,7 +34,7 @@ namespace Cdy.Tag
         /// 每个变量在内存中保留的历史记录历史的长度
         /// 单位s
         /// </summary>
-        public int MemoryCachTime = 60 * 5;
+        public int MemoryCachTime = 60 * 1;
 
         /// <summary>
         /// 历史记录时间最短间隔
@@ -133,7 +133,7 @@ namespace Cdy.Tag
             set
             {
                 mCurrentMemory = value;
-                HisRunTag.HisAddr = mCurrentMemory.Memory;
+                HisRunTag.HisAddr = mCurrentMemory.StartMemory;
             }
         }
 
@@ -225,7 +225,7 @@ namespace Cdy.Tag
         /// 块标题大小
         /// </summary>
         /// <returns></returns>
-        private int CalHeadSize()
+        private long CalHeadSize()
         {
             //Flag + DateTime + Data Count+MemoryCachTime+MemoryTimeTick + 变量ID,数据偏移地址,数据大小
             //Flag 表示 0：空闲，1：忙
@@ -286,14 +286,14 @@ namespace Cdy.Tag
         /// </summary>
         private void AllocMemory()
         {
-            int headSize = CalHeadSize();
+            long headSize = CalHeadSize();
             int blockheadsize = CalBlockHeadSize();
             int qulityoffset = 0;
             foreach(var vv in mHisTags)
             {
                 var ss = CalBlockSize(vv.Value.TagType, out qulityoffset);
-                vv.Value.HisValueStartAddr = headSize + blockheadsize;
-                vv.Value.BlockHeadStartAddr = headSize;
+                vv.Value.HisValueStartAddr = (int)headSize + blockheadsize;
+                vv.Value.BlockHeadStartAddr = (int)headSize;
                 vv.Value.HisQulityStartAddr = qulityoffset;
                 vv.Value.DataSize = ss;
                 headSize += ss;

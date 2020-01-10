@@ -99,7 +99,7 @@ namespace Cdy.Tag
 
                 foreach(var vv in db.Groups.Values)
                 {
-                    if(db.Groups.ContainsKey(vv.ParentName))
+                    if(!string.IsNullOrEmpty(vv.ParentName) && db.Groups.ContainsKey(vv.ParentName))
                     {
                         vv.Parent = db.Groups[vv.ParentName];
                     }
@@ -116,7 +116,7 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         public void SaveAs(string name)
         {
-            Save(PathHelper.helper.GetDataPath(name + ".xdb"));
+            Save(PathHelper.helper.GetDataPath(name + "/" + name + ".xdb"));
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Save()
         {
-            Save(PathHelper.helper.GetDataPath(this.Database.Name+".xdb"));
+            Save(PathHelper.helper.GetDataPath(this.Database.Name + ".xdb"));
         }
 
         /// <summary>
@@ -151,6 +151,11 @@ namespace Cdy.Tag
             }
             doc.Add(xe);
 
+            string sd = System.IO.Path.GetDirectoryName(sfile);
+            if(!System.IO.Directory.Exists(sd))
+            {
+                System.IO.Directory.CreateDirectory(sd);
+            }
             doc.Save(sfile);
         }
 

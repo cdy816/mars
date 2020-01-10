@@ -111,9 +111,11 @@ namespace Cdy.Tag
         public void Init()
         {
             long msize = 0;
-            foreach(var vv in mConfigDatabase.Tags)
+            mIdAndAddr.Clear();
+            foreach (var vv in mConfigDatabase.Tags)
             {
                 vv.Value.ValueAddress = msize;
+                mIdAndAddr.Add(vv.Value.Id, vv.Value.ValueAddress);
                 switch (vv.Value.Type)
                 {
                     case TagType.Bool:

@@ -26,15 +26,21 @@ namespace Cdy.Tag
         /// </summary>
         private byte[] mDataBuffer;
 
+        private List<byte[]> mBuffers;
+
         /// <summary>
         /// 
         /// </summary>
         private void* handle;
+
+        private List<IntPtr> mHandles;
         
         /// <summary>
         /// 
         /// </summary>
         private long mPosition = 0;
+
+        public const int BufferItemSize = 1024 * 1024 * 500;
 
         #endregion ...Variables...
 
@@ -59,9 +65,22 @@ namespace Cdy.Tag
         /// <param name="size"></param>
         public MemoryBlock(long size)
         {
-            mDataBuffer = new byte[size];
-            // handle = mDataBuffer.AsMemory().Pin().Pointer;
-            handle = (void*)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mDataBuffer, 0);
+            int count = (int)(size / BufferItemSize) + 1;
+
+            mBuffers = new List<byte[]>(count);
+            for(int i=0;i<count;i++)
+            {
+                mBuffers.Add(new byte[BufferItemSize]);
+            }
+
+            mHandles = new List<IntPtr>();
+            for (int i = 0; i < count; i++)
+            {
+                mHandles.Add(System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mBuffers[i], 0));
+            }
+
+            mDataBuffer = mBuffers[0];
+           // handle = (void*)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mDataBuffer, 0);
         }
 
         #endregion ...Constructor...
@@ -71,11 +90,19 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public byte[] Memory
+        public byte[] StartMemory
         {
             get
             {
-                return mDataBuffer;
+                return mBuffers[0];
+            }
+        }
+
+        public byte[] EndMemory
+        {
+            get
+            {
+                return mBuffers[0];
             }
         }
 
@@ -92,7 +119,7 @@ namespace Cdy.Tag
         {
             get
             {
-                return mDataBuffer.Length;
+                return mBuffers.Count* BufferItemSize;
             }
         }
 
@@ -119,9 +146,12 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <returns></returns>
-        public MemoryStream GetStream()
+        public  IEnumerable<MemoryStream> GetStream()
         {
-            return new MemoryStream(mDataBuffer);
+            foreach(var vv in mBuffers)
+            {
+                yield return new MemoryStream(vv);
+            }
         }
 
         /// <summary>
@@ -130,7 +160,16 @@ namespace Cdy.Tag
         /// <param name="size"></param>
         public void ReAlloc(long size)
         {
-            mDataBuffer = new byte[size];
+            int count = (int)(size / BufferItemSize) + 1;
+            mBuffers = new List<byte[]>(count);
+            for (int i = 0; i < count; i++)
+            {
+                mBuffers.Add(new byte[BufferItemSize]);
+            }
+            for (int i = 0; i < count; i++)
+            {
+                mHandles.Add(System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mBuffers[i], 0));
+            }
             GC.Collect();
         }
 
@@ -140,10 +179,40 @@ namespace Cdy.Tag
         /// <param name="size"></param>
         public void Resize(long size)
         {
-            var newMemory = new byte[size];
-            Buffer.BlockCopy(mDataBuffer, 0, newMemory, 0, Math.Min(mDataBuffer.Length, newMemory.Length));
-            mDataBuffer = newMemory;
-            handle = (void*)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mDataBuffer, 0);
+            int count = (int)(size / BufferItemSize) + 1;
+            List<byte[]> nBuffers = new List<byte[]>(count);
+
+            if (count > mBuffers.Count)
+            {
+                int i = 0;
+                for (i = 0; i < mBuffers.Count; i++)
+                {
+                    nBuffers[i] = mBuffers[i];
+                }
+                for(int j=i;j<count;j++)
+                {
+                    mBuffers[j] = new byte[BufferItemSize];
+                }
+            }
+            else if (count < mBuffers.Count)
+            {
+                for(int i=0;i<count;i++)
+                {
+                    nBuffers[i] = mBuffers[i];
+                }
+            }
+
+            mBuffers = nBuffers;
+            mHandles = new List<IntPtr>();
+            for (int i = 0; i < count; i++)
+            {
+                mHandles.Add(System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mBuffers[i], 0));
+            }
+
+            //var newMemory = new byte[size];
+            //Buffer.BlockCopy(mDataBuffer, 0, newMemory, 0, Math.Min(mDataBuffer.Length, newMemory.Length));
+            //mDataBuffer = newMemory;
+            //handle = (void*)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mDataBuffer, 0);
             GC.Collect();
         }
 
@@ -152,10 +221,58 @@ namespace Cdy.Tag
         /// </summary>
         public void Clear()
         {
-            Array.Clear(mDataBuffer, 0, mDataBuffer.Length);
+            foreach (var vv in mBuffers)
+                Array.Clear(vv, 0, vv.Length);
         }
 
         #region ReadAndWrite
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="size"></param>
+        /// <param name="innerAddr"></param>
+        /// <param name="offset"></param>
+        /// <param name="curposition"></param>
+        private void GetInnerLocation(long position, int size, out IntPtr innerAddr, out long offset,out long curposition)
+        {
+            offset = position % BufferItemSize;
+            int id = (int)(position / BufferItemSize);
+            if (offset + size >= BufferItemSize)
+            {
+                //如果发现数据正好跨数据块了，则跳过块到下一个区块
+                id += 1;
+                offset = offset + size - BufferItemSize;
+            }
+            innerAddr = mHandles[id];
+            curposition = id * BufferItemSize + offset;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="size"></param>
+        /// <param name="innerAddr"></param>
+        /// <param name="offset"></param>
+        private void GetDataLocation(long position, int size, out IntPtr innerAddr, out long offset)
+        {
+            offset = position % BufferItemSize;
+            int id = (int)(position / BufferItemSize);
+            innerAddr = mHandles[id];
+        }
+
+        /// <summary>
+        /// 数据是否跨数据块
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        private bool IsTransDataBuffer(long position, int size)
+        {
+            return (position % BufferItemSize) + size >= BufferItemSize;
+        }
 
         /// <summary>
         /// 
@@ -296,8 +413,18 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void WriteLong(long offset, long value)
         {
-            MemoryHelper.WriteInt64(handle, offset, value);
-            mPosition = offset + sizeof(long);
+            IntPtr hd;
+            long ost;
+            if (IsTransDataBuffer(offset,8))
+            {
+                WriteBytes(offset, BitConverter.GetBytes(value));
+            }
+            else
+            {
+                GetDataLocation(offset, 8, out hd, out ost);
+                MemoryHelper.WriteInt64((void*)hd, ost, value);
+            }
+            mPosition = offset + 8;
         }
 
         /// <summary>
@@ -307,8 +434,18 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void WriteULong(long offset, ulong value)
         {
-            MemoryHelper.WriteUInt64(handle, offset, value);
-            mPosition = offset + sizeof(ulong);
+            IntPtr hd;
+            long ost;
+            if (IsTransDataBuffer(offset, 8))
+            {
+                WriteBytes(offset, BitConverter.GetBytes(value));
+            }
+            else
+            {
+                GetDataLocation(offset, 8, out hd, out ost);
+                MemoryHelper.WriteUInt64((void*)hd, ost, value);
+            }
+            mPosition = offset + 8;
         }
 
         /// <summary>
@@ -318,8 +455,18 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void WriteFloat(long offset, float value)
         {
-            MemoryHelper.WriteFloat(handle, offset, value);
-            mPosition = offset + sizeof(float);
+            IntPtr hd;
+            long ost;
+            if (IsTransDataBuffer(offset, 4))
+            {
+                WriteBytes(offset, BitConverter.GetBytes(value));
+            }
+            else
+            {
+                GetDataLocation(offset, 8, out hd, out ost);
+                MemoryHelper.WriteFloat((void*)hd, ost, value);
+            }
+            mPosition = offset + 4;
         }
 
         /// <summary>
@@ -329,8 +476,18 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void WriteDouble(long offset, double value)
         {
-            MemoryHelper.WriteDouble(handle, offset, value);
-            mPosition = offset + sizeof(double);
+            IntPtr hd;
+            long ost;
+            if (IsTransDataBuffer(offset, 8))
+            {
+                WriteBytes(offset, BitConverter.GetBytes(value));
+            }
+            else
+            {
+                GetDataLocation(offset, 8, out hd, out ost);
+                MemoryHelper.WriteDouble((void*)hd, ost, value);
+            }
+            mPosition = offset + 8;
         }
 
         /// <summary>
@@ -340,8 +497,58 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void WriteBytes(long offset,byte[] values)
         {
-            mPosition = offset + values.Length;
-            Buffer.BlockCopy(values, 0, this.mDataBuffer, (int)offset, values.Length);
+            WriteBytes(offset, values, 0, values.Length);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="values"></param>
+        /// <param name="valueoffset"></param>
+        /// <param name="len"></param>
+        public void WriteBytes(long offset, byte[] values, int valueoffset, int len)
+        {
+            int id = (int)(offset / BufferItemSize);
+
+            long ost = offset % BufferItemSize;
+
+            if (len + ost < BufferItemSize)
+            {
+                Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, len);
+            }
+            else
+            {
+                int ll = BufferItemSize - (int)ost;
+
+                Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, ll);
+
+                if (len - ll < BufferItemSize)
+                {
+                    id++;
+                    Buffer.BlockCopy(values, ll+ valueoffset, mBuffers[id], 0, len - ll);
+                }
+                else
+                {
+                    long ltmp = len - ll;
+                    int bcount = ll / BufferItemSize;
+                    int i = 0;
+                    for (i = 0; i < bcount; i++)
+                    {
+                        id++;
+                        Buffer.BlockCopy(values, valueoffset+ll + i * BufferItemSize, mBuffers[id], 0, BufferItemSize);
+                    }
+                    int otmp = ll % BufferItemSize;
+                    if (otmp > 0)
+                    {
+                        id++;
+                        Buffer.BlockCopy(values, valueoffset+ll + i * BufferItemSize, mBuffers[id], 0, otmp);
+                    }
+                }
+            }
+
+            mPosition = offset + len;
+         //   Buffer.BlockCopy(values, valueoffset, this.mDataBuffer, (int)offset, len);
         }
 
         /// <summary>
@@ -351,8 +558,11 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void WriteByte(long offset, byte value)
         {
+            IntPtr hd;
+            long ost;
+            GetDataLocation(offset, 1, out hd, out ost);
+            MemoryHelper.WriteByte((void*)hd, ost, value);
             mPosition = offset + 1;
-            this.mDataBuffer[offset] = value;
         }
 
         /// <summary>
@@ -364,18 +574,7 @@ namespace Cdy.Tag
             WriteByte(mPosition, value);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="values"></param>
-        /// <param name="valueoffset"></param>
-        /// <param name="len"></param>
-        public void WriteBytes(long offset, byte[] values,int valueoffset,int len)
-        {
-            mPosition = offset + len;
-            Buffer.BlockCopy(values, valueoffset, this.mDataBuffer, (int)offset, len);
-        }
+
 
 
         /// <summary>
@@ -385,8 +584,20 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void WriteDatetime(long offset, DateTime value)
         {
-            MemoryHelper.WriteDateTime(handle, offset, value);
-            mPosition = offset + sizeof(DateTime);
+            IntPtr hd;
+            long ost;
+            if (IsTransDataBuffer(offset, 8))
+            {
+                WriteBytes(offset, MemoryHelper.GetBytes(value));
+            }
+            else
+            {
+                GetDataLocation(offset, 8, out hd, out ost);
+                MemoryHelper.WriteDateTime((void*)hd, ost, value);
+            }
+            mPosition = offset + 8;
+
+           
         }
         /// <summary>
         /// 
@@ -895,7 +1106,7 @@ namespace Cdy.Tag
         public static void MakeMemoryBusy(this MemoryBlock memory)
         {
             memory.IsBusy = true;
-            memory.Memory[0] = 1;
+            memory.StartMemory[0] = 1;
         }
 
         /// <summary>
@@ -905,7 +1116,7 @@ namespace Cdy.Tag
         public static void MakeMemoryNoBusy(this MemoryBlock memory)
         {
             memory.IsBusy = false;
-            memory.Memory[0] = 0;
+            memory.StartMemory[0] = 0;
         }
     }
 

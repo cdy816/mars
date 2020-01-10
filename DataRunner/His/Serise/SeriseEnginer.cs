@@ -311,7 +311,7 @@ namespace Cdy.Tag
         private void AppendFileHeader()
         {
             GeneratorFileHeader();
-            mFileWriter.Append(mHeadMemory.Memory, 0, mHeadMemory.Length);
+            mFileWriter.Append(mHeadMemory.StartMemory, 0, mHeadMemory.Length);
             var cp = mFileWriter.CurrentPostion;
 
             if(mCurrentDataRegion>=0)
@@ -443,7 +443,7 @@ namespace Cdy.Tag
             offset = 16;
             int start = count * 8 + offset;
             var pos = this.mFileWriter.CurrentPostion;
-            this.mFileWriter.Append(mProcessMemory.Memory, start, totalsize - start);
+            this.mFileWriter.Append(mProcessMemory.StartMemory, start, totalsize - start);
             long preaddr = 0;
 
             for (int i = 0; i < count; i++)

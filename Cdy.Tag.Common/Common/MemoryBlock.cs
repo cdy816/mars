@@ -28,11 +28,6 @@ namespace Cdy.Tag
 
         private List<byte[]> mBuffers;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        private void* handle;
-
         private List<IntPtr> mHandles;
         
         /// <summary>
@@ -234,33 +229,23 @@ namespace Cdy.Tag
         /// <param name="size"></param>
         /// <param name="innerAddr"></param>
         /// <param name="offset"></param>
-        /// <param name="curposition"></param>
-        private void GetInnerLocation(long position, int size, out IntPtr innerAddr, out long offset,out long curposition)
+        private IntPtr RelocationAddress(long position, out long offset)
         {
             offset = position % BufferItemSize;
             int id = (int)(position / BufferItemSize);
-            if (offset + size >= BufferItemSize)
-            {
-                //如果发现数据正好跨数据块了，则跳过块到下一个区块
-                id += 1;
-                offset = offset + size - BufferItemSize;
-            }
-            innerAddr = mHandles[id];
-            curposition = id * BufferItemSize + offset;
+            return mHandles[id];
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="position"></param>
-        /// <param name="size"></param>
-        /// <param name="innerAddr"></param>
         /// <param name="offset"></param>
-        private void GetDataLocation(long position, int size, out IntPtr innerAddr, out long offset)
+        /// <returns></returns>
+        private int RelocationAddressToArrayIndex(long position,out long offset)
         {
             offset = position % BufferItemSize;
-            int id = (int)(position / BufferItemSize);
-            innerAddr = mHandles[id];
+            return (int)(position / BufferItemSize);
         }
 
         /// <summary>
@@ -269,7 +254,7 @@ namespace Cdy.Tag
         /// <param name="position"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        private bool IsTransDataBuffer(long position, int size)
+        private bool IsCrossDataBuffer(long position, int size)
         {
             return (position % BufferItemSize) + size >= BufferItemSize;
         }
@@ -415,16 +400,17 @@ namespace Cdy.Tag
         {
             IntPtr hd;
             long ost;
-            if (IsTransDataBuffer(offset,8))
+            if (IsCrossDataBuffer(offset,8))
             {
                 WriteBytes(offset, BitConverter.GetBytes(value));
+                mPosition = offset + 8;
             }
             else
             {
-                GetDataLocation(offset, 8, out hd, out ost);
+                hd = RelocationAddress(offset, out ost);
                 MemoryHelper.WriteInt64((void*)hd, ost, value);
             }
-            mPosition = offset + 8;
+           
         }
 
         /// <summary>
@@ -436,16 +422,18 @@ namespace Cdy.Tag
         {
             IntPtr hd;
             long ost;
-            if (IsTransDataBuffer(offset, 8))
+            if (IsCrossDataBuffer(offset, 8))
             {
                 WriteBytes(offset, BitConverter.GetBytes(value));
+               
             }
             else
             {
-                GetDataLocation(offset, 8, out hd, out ost);
+                hd = RelocationAddress(offset, out ost);
                 MemoryHelper.WriteUInt64((void*)hd, ost, value);
+                mPosition = offset + 8;
             }
-            mPosition = offset + 8;
+           
         }
 
         /// <summary>
@@ -457,16 +445,17 @@ namespace Cdy.Tag
         {
             IntPtr hd;
             long ost;
-            if (IsTransDataBuffer(offset, 4))
+            if (IsCrossDataBuffer(offset, 4))
             {
                 WriteBytes(offset, BitConverter.GetBytes(value));
             }
             else
             {
-                GetDataLocation(offset, 8, out hd, out ost);
+                hd = RelocationAddress(offset, out ost);
                 MemoryHelper.WriteFloat((void*)hd, ost, value);
+                mPosition = offset + 4;
             }
-            mPosition = offset + 4;
+            
         }
 
         /// <summary>
@@ -478,16 +467,17 @@ namespace Cdy.Tag
         {
             IntPtr hd;
             long ost;
-            if (IsTransDataBuffer(offset, 8))
+            if (IsCrossDataBuffer(offset, 8))
             {
                 WriteBytes(offset, BitConverter.GetBytes(value));
             }
             else
             {
-                GetDataLocation(offset, 8, out hd, out ost);
+                hd = RelocationAddress(offset, out ost);
                 MemoryHelper.WriteDouble((void*)hd, ost, value);
+                mPosition = offset + 8;
             }
-            mPosition = offset + 8;
+            
         }
 
         /// <summary>
@@ -507,7 +497,7 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         /// <param name="valueoffset"></param>
         /// <param name="len"></param>
-        public void WriteBytes(long offset, byte[] values, int valueoffset, int len)
+        private void WriteBytes(long offset, byte[] values, int valueoffset, int len)
         {
             int id = (int)(offset / BufferItemSize);
 
@@ -548,7 +538,6 @@ namespace Cdy.Tag
             }
 
             mPosition = offset + len;
-         //   Buffer.BlockCopy(values, valueoffset, this.mDataBuffer, (int)offset, len);
         }
 
         /// <summary>
@@ -560,7 +549,7 @@ namespace Cdy.Tag
         {
             IntPtr hd;
             long ost;
-            GetDataLocation(offset, 1, out hd, out ost);
+            hd = RelocationAddress(offset, out ost);
             MemoryHelper.WriteByte((void*)hd, ost, value);
             mPosition = offset + 1;
         }
@@ -575,8 +564,6 @@ namespace Cdy.Tag
         }
 
 
-
-
         /// <summary>
         /// 
         /// </summary>
@@ -586,16 +573,17 @@ namespace Cdy.Tag
         {
             IntPtr hd;
             long ost;
-            if (IsTransDataBuffer(offset, 8))
+            if (IsCrossDataBuffer(offset, 8))
             {
                 WriteBytes(offset, MemoryHelper.GetBytes(value));
             }
             else
             {
-                GetDataLocation(offset, 8, out hd, out ost);
+                hd = RelocationAddress(offset, out ost);
                 MemoryHelper.WriteDateTime((void*)hd, ost, value);
+                mPosition = offset + 8;
             }
-            mPosition = offset + 8;
+           
 
            
         }
@@ -606,8 +594,18 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void WriteInt(long offset, int value)
         {
-            MemoryHelper.WriteInt32(handle, offset, value);
-            mPosition = offset + sizeof(int);
+            IntPtr hd;
+            long ost;
+            if (IsCrossDataBuffer(offset, 8))
+            {
+                WriteBytes(offset, BitConverter.GetBytes(value));
+            }
+            else
+            {
+                hd = RelocationAddress(offset, out ost);
+                MemoryHelper.WriteInt32((void*)hd, ost, value);
+                mPosition = offset + sizeof(int);
+            }
         }
 
         /// <summary>
@@ -617,8 +615,18 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void WriteUInt(long offset, uint value)
         {
-            MemoryHelper.WriteUInt32(handle, offset, value);
-            mPosition = offset + sizeof(uint);
+            IntPtr hd;
+            long ost;
+            if (IsCrossDataBuffer(offset, 8))
+            {
+                WriteBytes(offset, BitConverter.GetBytes(value));
+            }
+            else
+            {
+                hd = RelocationAddress(offset, out ost);
+                MemoryHelper.WriteUInt32((void*)hd, ost, value);
+                mPosition = offset + sizeof(uint);
+            }            
         }
 
         /// <summary>
@@ -628,8 +636,18 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void WriteShort(long offset, short value)
         {
-            MemoryHelper.WriteShort(handle, offset, value);
-            mPosition = offset + sizeof(short);
+            IntPtr hd;
+            long ost;
+            if (IsCrossDataBuffer(offset, 8))
+            {
+                WriteBytes(offset, BitConverter.GetBytes(value));
+            }
+            else
+            {
+                hd = RelocationAddress(offset, out ost);
+                MemoryHelper.WriteShort((void*)hd, ost, value);
+                mPosition = offset + sizeof(short);
+            }           
         }
 
         /// <summary>
@@ -639,8 +657,18 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void WriteUShort(long offset, ushort value)
         {
-            MemoryHelper.WriteUShort(handle, offset, value);
-            mPosition = offset + sizeof(ushort);
+            IntPtr hd;
+            long ost;
+            if (IsCrossDataBuffer(offset, 8))
+            {
+                WriteBytes(offset, BitConverter.GetBytes(value));
+            }
+            else
+            {
+                hd = RelocationAddress(offset, out ost);
+                MemoryHelper.WriteUShort((void*)hd, ost, value);
+                mPosition = offset + sizeof(ushort);
+            }          
         }
 
         /// <summary>
@@ -652,8 +680,8 @@ namespace Cdy.Tag
         public void WriteString(long offset, string value, Encoding encode)
         {
             var sdata = encode.GetBytes(value);
-            MemoryHelper.WriteByte(handle, offset, (byte)sdata.Length);
-            System.Buffer.BlockCopy(sdata, 0, mDataBuffer, (int)offset + 1, sdata.Length);
+            WriteByte(offset, (byte)sdata.Length);
+            WriteBytes(offset, sdata);
             mPosition = offset + sdata.Length + 1;
         }
 
@@ -665,7 +693,19 @@ namespace Cdy.Tag
         public DateTime ReadDateTime(long offset)
         {
             mPosition = offset + sizeof(DateTime);
-            return MemoryHelper.ReadDateTime(handle, offset);
+
+            IntPtr hd;
+            long ost;
+            if (IsCrossDataBuffer(offset, 8))
+            {
+                return MemoryHelper.ReadDateTime(ReadBytesInner(offset, 8));
+               // WriteBytes(offset, MemoryHelper.GetBytes(value));
+            }
+            else
+            {
+                hd = RelocationAddress(offset, out ost);
+                return MemoryHelper.ReadDateTime((void*)hd, ost);
+            }
         }
 
         /// <summary>
@@ -677,14 +717,32 @@ namespace Cdy.Tag
         public int ReadInt(long offset)
         {
             mPosition = offset + sizeof(int);
-            return MemoryHelper.ReadInt32(handle, offset);
+            if (IsCrossDataBuffer(offset, 4))
+            {
+                return  BitConverter.ToInt32(ReadBytesInner(offset, 4),0);
+            }
+            else
+            {
+                long ost;
+                var hd = RelocationAddress(offset, out ost);
+                return MemoryHelper.ReadInt32((void*)hd, ost);
+            }
         }
 
 
         public uint ReadUInt(long offset)
         {
-            mPosition = offset + sizeof(int);
-            return MemoryHelper.ReadUInt32(handle, offset);
+            mPosition = offset + 4;
+            if (IsCrossDataBuffer(offset, 4))
+            {
+                return BitConverter.ToUInt32(ReadBytesInner(offset, 4), 0);
+            }
+            else
+            {
+                long ost;
+                var hd = RelocationAddress(offset, out ost);
+                return MemoryHelper.ReadUInt32((void*)hd, ost);
+            }
         }
 
 
@@ -695,8 +753,17 @@ namespace Cdy.Tag
         /// <returns></returns>
         public short ReadShort(long offset)
         {
-            mPosition = offset + sizeof(short);
-            return MemoryHelper.ReadShort(handle, offset);
+            mPosition = offset + 2;
+            if (IsCrossDataBuffer(offset, 2))
+            {
+                return BitConverter.ToInt16(ReadBytesInner(offset, 2), 0);
+            }
+            else
+            {
+                long ost;
+                var hd = RelocationAddress(offset, out ost);
+                return MemoryHelper.ReadShort((void*)hd, ost);
+            }
         }
 
         /// <summary>
@@ -706,8 +773,18 @@ namespace Cdy.Tag
         /// <returns></returns>
         public ushort ReadUShort(long offset)
         {
-            mPosition = offset + sizeof(short);
-            return MemoryHelper.ReadUShort(handle, offset);
+            mPosition = offset + 2;
+            if (IsCrossDataBuffer(offset, 2))
+            {
+                return BitConverter.ToUInt16(ReadBytesInner(offset, 2), 0);
+            }
+            else
+            {
+                long ost;
+                var hd = RelocationAddress(offset, out ost);
+                return MemoryHelper.ReadUShort((void*)hd, ost);
+            }
+            //return MemoryHelper.ReadUShort(handle, offset);
         }
 
 
@@ -718,8 +795,18 @@ namespace Cdy.Tag
         /// <returns></returns>
         public float ReadFloat(long offset)
         {
-            mPosition = offset + sizeof(float);
-            return MemoryHelper.ReadFloat(handle, offset);
+            mPosition = offset + 4;
+            if (IsCrossDataBuffer(offset, 4))
+            {
+                return BitConverter.ToSingle(ReadBytesInner(offset, 4), 0);
+            }
+            else
+            {
+                long ost;
+                var hd = RelocationAddress(offset, out ost);
+                return MemoryHelper.ReadFloat((void*)hd, ost);
+            }
+            //return MemoryHelper.ReadFloat(handle, offset);
         }
 
 
@@ -730,8 +817,17 @@ namespace Cdy.Tag
         /// <returns></returns>
         public double ReadDouble(long offset)
         {
-            mPosition = offset + sizeof(double);
-            return MemoryHelper.ReadDouble(handle, offset);
+            mPosition = offset + 8;
+            if (IsCrossDataBuffer(offset, 8))
+            {
+                return BitConverter.ToDouble(ReadBytesInner(offset, 8), 0);
+            }
+            else
+            {
+                long ost;
+                var hd = RelocationAddress(offset, out ost);
+                return MemoryHelper.ReadDouble((void*)hd, ost);
+            }
         }
 
         /// <summary>
@@ -741,9 +837,19 @@ namespace Cdy.Tag
         /// <returns></returns>
         public long ReadLong(long offset)
         {
-         
-            mPosition = offset + sizeof(long);
-            return MemoryHelper.ReadInt64(handle, offset);
+            mPosition = offset + 8;
+            if (IsCrossDataBuffer(offset, 8))
+            {
+                return BitConverter.ToInt64(ReadBytesInner(offset, 8), 0);
+            }
+            else
+            {
+                long ost;
+                var hd = RelocationAddress(offset, out ost);
+                return MemoryHelper.ReadInt64((void*)hd, ost);
+            }
+            //mPosition = offset + sizeof(long);
+            //return MemoryHelper.ReadInt64(handle, offset);
         }
 
         /// <summary>
@@ -753,8 +859,19 @@ namespace Cdy.Tag
         /// <returns></returns>
         public ulong ReadULong(long offset)
         {
-            mPosition = offset + sizeof(long);
-            return MemoryHelper.ReadUInt64(handle, offset);
+            mPosition = offset + 8;
+            if (IsCrossDataBuffer(offset, 8))
+            {
+                return BitConverter.ToUInt64(ReadBytesInner(offset, 8), 0);
+            }
+            else
+            {
+                long ost;
+                var hd = RelocationAddress(offset, out ost);
+                return MemoryHelper.ReadUInt64((void*)hd, ost);
+            }
+            //mPosition = offset + sizeof(long);
+            //return MemoryHelper.ReadUInt64(handle, offset);
         }
 
         /// <summary>
@@ -765,7 +882,9 @@ namespace Cdy.Tag
         public byte ReadByte(long offset)
         {
             mPosition = offset + 1;
-            return mDataBuffer[offset];
+            long ost;
+            var hd = RelocationAddress(offset, out ost);
+            return MemoryHelper.ReadByte((void*)hd, ost);
         }
 
         /// <summary>
@@ -775,9 +894,18 @@ namespace Cdy.Tag
         /// <returns></returns>
         public string ReadString(long offset, Encoding encoding)
         {
-            var len = MemoryHelper.ReadByte(handle, offset);
+            var len = ReadByte(offset);
             mPosition = offset + len + 1;
-            return new string((sbyte*)handle, (int)offset + 1, len, encoding);
+            if (IsCrossDataBuffer(offset + 1, len))
+            {
+                return encoding.GetString(ReadBytesInner(offset + 1, len));
+            }
+            else
+            {
+                long ost;
+                var hd = RelocationAddress(offset, out ost);
+                return new string((sbyte*)hd, (int)offset + 1, len, encoding);
+            }
         }
 
         /// <summary>
@@ -794,12 +922,61 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="offset"></param>
+        /// <param name="len"></param>
+        /// <returns></returns>
+        private byte[] ReadBytesInner(long offset,int len)
+        {
+            byte[] re = new byte[len];
+            int id = (int)(offset / BufferItemSize);
+
+            long ost = offset % BufferItemSize;
+
+            if (len + ost < BufferItemSize)
+            {
+                Buffer.BlockCopy(mBuffers[id], (int)ost,re, 0, len);
+            }
+            else
+            {
+                int ll = BufferItemSize - (int)ost;
+
+                Buffer.BlockCopy(mBuffers[id], (int)ost,re,0, ll);
+
+                if (len - ll < BufferItemSize)
+                {
+                    id++;
+                    Buffer.BlockCopy(mBuffers[id], 0, re, ll, len - ll);
+                }
+                else
+                {
+                    long ltmp = len - ll;
+                    int bcount = ll / BufferItemSize;
+                    int i = 0;
+                    for (i = 0; i < bcount; i++)
+                    {
+                        id++;
+                        Buffer.BlockCopy(mBuffers[id], 0, re, ll + i * BufferItemSize, BufferItemSize);
+                    }
+                    int otmp = ll % BufferItemSize;
+                    if (otmp > 0)
+                    {
+                        id++;
+                        Buffer.BlockCopy(mBuffers[id], 0,re, ll + i * BufferItemSize, otmp);
+                    }
+                }
+            }
+
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
         /// <returns></returns>
         public byte[] ReadBytes(long offset,int len)
         {
-            byte[] re = new byte[len];
-            mPosition = offset + len;
-            Buffer.BlockCopy(mDataBuffer,(int)offset, re, 0, len);
+            byte[] re = ReadBytesInner(offset, len);
+            mPosition += len;
             return re;
         }
 
@@ -930,6 +1107,8 @@ namespace Cdy.Tag
         public void Dispose()
         {
             mDataBuffer = null;
+            mBuffers.Clear();
+            mHandles.Clear();
             GC.Collect();
         }
 
@@ -942,11 +1121,15 @@ namespace Cdy.Tag
         {
             get
             {
-                return this.mDataBuffer[index];
+                long ost;
+                var hd = RelocationAddressToArrayIndex(index, out ost);
+                return this.mBuffers[hd][ost];
             }
             set
             {
-                this.mDataBuffer[index] = value;
+                long ost;
+                var hd = RelocationAddressToArrayIndex(index, out ost);
+                this.mBuffers[hd][ost] = value;
             }
         }
 
@@ -954,10 +1137,71 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="target"></param>
+        /// <param name="sourceStart"></param>
+        /// <param name="targgetStart"></param>
+        /// <param name="len"></param>
         public void CopyTo(MemoryBlock target,int sourceStart,int targgetStart,int len)
         {
             if (target == null) return;
-            Buffer.BlockCopy(this.mDataBuffer, sourceStart, target.mDataBuffer, targgetStart, len);
+
+            long osts,ostt;
+            
+            var hds = RelocationAddressToArrayIndex(sourceStart, out osts);
+
+            //计算从源数据需要读取数据块索引
+            //Array Index,Array Address,Start Index,Data Len
+            List<Tuple<int, int, int, int>> mSourceIndex = new List<Tuple<int, int, int, int>>();
+            if(osts+len<BufferItemSize)
+            {
+                mSourceIndex.Add(new Tuple<int, int, int, int>(hds, (int)osts, 0, len));
+            }
+            else
+            {
+                int ll = BufferItemSize - (int)osts;
+
+                mSourceIndex.Add(new Tuple<int, int, int, int>(hds, (int)osts, 0, ll));
+
+                if (len - ll < BufferItemSize)
+                {
+                    hds++;
+                    mSourceIndex.Add(new Tuple<int, int, int, int>(hds, 0, ll, len-len));
+                }
+                else
+                {
+                    long ltmp = len - ll;
+                    int bcount = ll / BufferItemSize;
+                    int i = 0;
+                    for (i = 0; i < bcount; i++)
+                    {
+                        hds++;
+                        mSourceIndex.Add(new Tuple<int, int, int, int>(hds, 0, ll + i * BufferItemSize, ll + BufferItemSize));
+                    }
+                    int otmp = ll % BufferItemSize;
+                    if (otmp > 0)
+                    {
+                        hds++;
+                        mSourceIndex.Add(new Tuple<int, int, int, int>(hds, 0, ll + i * BufferItemSize, ll +  otmp));
+                    }
+                }
+            }
+
+            //拷贝数据到目标数据块中
+            foreach(var vv in mSourceIndex)
+            {
+                var hdt = RelocationAddressToArrayIndex(vv.Item3, out ostt);
+                if (ostt + vv.Item4 < BufferItemSize)
+                {
+                    Buffer.BlockCopy(this.mBuffers[vv.Item1], vv.Item2, target.mBuffers[hdt], (int)ostt, vv.Item4);
+                }
+                else
+                {
+                    var count = vv.Item4 + ostt - BufferItemSize;
+                    Buffer.BlockCopy(this.mBuffers[vv.Item1], vv.Item2, target.mBuffers[hdt], (int)ostt, (int)(BufferItemSize - ostt));
+                    hdt++;
+                    Buffer.BlockCopy(this.mBuffers[vv.Item1], vv.Item2, target.mBuffers[hdt], (int)0, (int)count);
+                }
+            }
+            //Buffer.BlockCopy(this.mDataBuffer, sourceStart, target.mDataBuffer, targgetStart, len);
         }
 
         #endregion ...Methods...

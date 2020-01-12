@@ -326,6 +326,18 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="value"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public static unsafe DateTime ReadDateTime(byte[] value, int offset = 0)
+        {
+            var ptr = (IntPtr)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(value, offset);
+            return ReadDateTime((void*)ptr, 0);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>

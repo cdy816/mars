@@ -9,6 +9,7 @@
 using Cdy.Tag;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace Cdy.Tag
@@ -34,7 +35,7 @@ namespace Cdy.Tag
         /// 每个变量在内存中保留的历史记录历史的长度
         /// 单位s
         /// </summary>
-        public int MemoryCachTime = 60 * 1;
+        public int MemoryCachTime = 60;
 
         /// <summary>
         /// 历史记录时间最短间隔
@@ -91,6 +92,8 @@ namespace Cdy.Tag
 
         private int mLastProcessTick = -1;
 
+        private bool mIsBusy = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -133,7 +136,7 @@ namespace Cdy.Tag
             set
             {
                 mCurrentMemory = value;
-                HisRunTag.HisAddr = mCurrentMemory.StartMemory;
+                HisRunTag.HisAddr = mCurrentMemory;
             }
         }
 
@@ -159,7 +162,8 @@ namespace Cdy.Tag
                 mValueChangedProcesser.Clear();
                 mValueChangedProcesser.Add(mLastValueChangedProcesser);
 
-                var count = MemoryCachTime * 1000 / MemoryTimeTick;
+                // var count = MemoryCachTime * 1000 / MemoryTimeTick;
+                var count = MemoryCachTime;
                 var realbaseaddr = mRealEnginer.Memory;
                 HisRunTag mHisTag = null;
                 foreach (var vv in mManager.HisTags)
@@ -247,34 +251,39 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="tagType"></param>
         /// <returns></returns>
-        private int CalBlockSize(Cdy.Tag.TagType tagType,out int qulityOffset)
+        private int CalBlockSize(Cdy.Tag.TagType tagType,int blockSize,out int dataOffset,out int qulityOffset)
         {
+
+            //单个数据块内容包括：时间戳(2)+数值+质量戳(1)
+
             qulityOffset = 0;
-            int regionHeadSize = CalBlockHeadSize();
-            int count = MemoryCachTime * 1000 / MemoryTimeTick;
+            int regionHeadSize = blockSize;
+            // int count = MemoryCachTime * 1000 / MemoryTimeTick;
+            int count = MemoryCachTime;//
+            dataOffset = regionHeadSize + count * 2;
             switch (tagType)
             {
                 case Cdy.Tag.TagType.Byte:
                 case Cdy.Tag.TagType.Bool:
-                    qulityOffset = regionHeadSize + count;
+                    qulityOffset = dataOffset + count;
                     return qulityOffset + count;
                 case Cdy.Tag.TagType.Short:
                 case Cdy.Tag.TagType.UShort:
-                    qulityOffset = regionHeadSize + count * 2;
+                    qulityOffset = dataOffset + count * 2;
                     return qulityOffset + count;
                 case Cdy.Tag.TagType.Int:
                 case Cdy.Tag.TagType.UInt:
                 case Cdy.Tag.TagType.Float:
-                    qulityOffset = regionHeadSize + count * 4;
+                    qulityOffset = dataOffset + count * 4;
                     return qulityOffset + count;
                 case Cdy.Tag.TagType.Long:
                 case Cdy.Tag.TagType.ULong:
                 case Cdy.Tag.TagType.Double:
                 case Cdy.Tag.TagType.DateTime:
-                    qulityOffset = regionHeadSize + count * 8;
+                    qulityOffset = dataOffset + count * 8;
                     return qulityOffset + count;
                 case Cdy.Tag.TagType.String:
-                    qulityOffset = regionHeadSize + count * Const.StringSize;
+                    qulityOffset = dataOffset + count * Const.StringSize;
                     return qulityOffset + count;
                 default:
                     return 0;
@@ -286,15 +295,30 @@ namespace Cdy.Tag
         /// </summary>
         private void AllocMemory()
         {
+            /*
+               内存结构:内存头+[数据块指针]+[数据块(一个变量一个数据块)]
+               内存头:标记 + 记录时间 + 数据个数+MemoryCachTime+MemoryTimeTick
+               数据块指针:变量ID,数据偏移地址,数据大小
+               数据块:数据块头+数据
+               数据块头:数据区大小+记录类型(byte)+变量类型(byte)+压缩类型(byte)+压缩参数1(float)+压缩参数2(float)+压缩参数3(float)
+               数据:[时间戳]+[值]+[质量戳]
+             */
             long headSize = CalHeadSize();
             int blockheadsize = CalBlockHeadSize();
-            int qulityoffset = 0;
+            int qulityOffset = 0;
+            int valueOffset = 0;
             foreach(var vv in mHisTags)
             {
-                var ss = CalBlockSize(vv.Value.TagType, out qulityoffset);
-                vv.Value.HisValueStartAddr = (int)headSize + blockheadsize;
+                var ss = CalBlockSize(vv.Value.TagType,blockheadsize,out valueOffset, out qulityOffset);
+
                 vv.Value.BlockHeadStartAddr = (int)headSize;
-                vv.Value.HisQulityStartAddr = qulityoffset;
+
+                vv.Value.TimerValueStartAddr = vv.Value.BlockHeadStartAddr + blockheadsize;
+
+                vv.Value.HisValueStartAddr = vv.Value.BlockHeadStartAddr + valueOffset;
+               
+                vv.Value.HisQulityStartAddr = vv.Value.BlockHeadStartAddr + qulityOffset;
+
                 vv.Value.DataSize = ss;
                 headSize += ss;
             }
@@ -303,6 +327,33 @@ namespace Cdy.Tag
 
             CurrentMemory = mMemory1;
             
+        }
+
+        /// <summary>
+        /// 清空内存
+        /// </summary>
+        private void InitMemory()
+        {
+            mCurrentMemory.Clear();
+            //写入时间
+            mCurrentMemory.WriteDatetime(1, mLastProcessTime);
+            //写入变量个数
+            mCurrentMemory.WriteInt(9, mTagCount);
+            //写入时间内存保存数据的时间
+            mCurrentMemory.WriteInt(13, MemoryCachTime);
+            //写入最小时间间隔
+            mCurrentMemory.WriteInt(17, MemoryTimeTick);
+            int offset = 21;
+            foreach (var vv in mHisTags)
+            {
+                mCurrentMemory.WriteInt(offset, vv.Value.Id); //Tag id int(4)
+                mCurrentMemory.WriteInt(offset + 4, vv.Value.BlockHeadStartAddr); //历史数据偏移地址 int(4)
+                mCurrentMemory.WriteInt(offset + 8, vv.Value.DataSize); //历史数据大小 int(4)
+                offset += 12;
+            }
+            HisRunTag.StartTime = mLastProcessTime;
+            mMemory1.MakeMemoryBusy();
+            mMemory2.MakeMemoryNoBusy();
         }
 
         /// <summary>
@@ -317,6 +368,7 @@ namespace Cdy.Tag
             mRecordTimer = new System.Timers.Timer(MemoryTimeTick);
             mRecordTimer.Elapsed += MRecordTimer_Elapsed;
             mRecordTimer.Start();
+            mLastProcessTime = DateTime.Now;
             InitMemory();
         }
 
@@ -326,33 +378,15 @@ namespace Cdy.Tag
         /// <param name="memory"></param>
         private void CheckMemoryIsReady(MemoryBlock memory)
         {
-           while( mMemory1.IsBusy) System.Threading.Thread.Sleep(1);
-        }
-
-        /// <summary>
-        /// 清空内存
-        /// </summary>
-        private void InitMemory()
-        {
-            mCurrentMemory.Clear();
-            mCurrentMemory.WriteDatetime(1,mLastProcessTime);
-            mCurrentMemory.WriteInt(9, mTagCount);
-            mCurrentMemory.WriteInt(13, MemoryCachTime);
-            mCurrentMemory.WriteInt(17, MemoryTimeTick);
-            int offset = 21;
-            foreach(var vv in mHisTags)
+            while (memory.IsBusy)
             {
-                mCurrentMemory.WriteInt(offset, vv.Value.Id); //Tag id int(4)
-                mCurrentMemory.WriteInt(offset + 4, vv.Value.HisValueStartAddr); //历史数据地址 int(4)
-                mCurrentMemory.WriteInt(offset + 8, vv.Value.DataSize); //历史数据大小 int(4)
-                offset += 12;
+                LoggerService.Service.Info("Record", "记录出现阻塞");
+                System.Threading.Thread.Sleep(1);
             }
-
-            mMemory1.MakeMemoryBusy();
         }
 
         /// <summary>
-        /// 准备内存
+        /// 切换内存
         /// </summary>
         private void SwitchMemory()
         {
@@ -388,44 +422,54 @@ namespace Cdy.Tag
         {
             //内存块的分配，严格按照绝对的时间来执行。例如5分钟一个内存缓冲，而从0点开始每隔5分钟，切换一下内存块;
             //哪怕自启动时间以来，到一个5分钟节点间不足5分钟。
-            //这里以最快的固定频率触发事件处理每个内存块；对于定时记录情况，对于没有定时到的情况，只更新质量戳（没有值），对于定时到的情况，更新实际的数值和质量戳。
-            //对于值改变的情况，同样按照固定的频路定时更新质量戳（没有值），对于值改变的情况，记录实际数值和质量戳。由此可以值改变的频路不能够大于我们最大的频率。
+            //这里以最快的固定频率触发事件处理每个内存块；对于定时记录情况，对于没有定时到的情况，不记录，对于定时到的情况，更新实际的时间戳、数值和质量戳。
+            //对于值改变的情况，同样按照固定的频路定时更新质量戳（没有值），对于值改变的情况，记录实际时间戳、数值和质量戳。由此可以值改变的频路不能够大于我们最大的频率。
+
+            if (mIsBusy)
+            {
+                LoggerService.Service.Info("RecordTimer", "出现阻塞");
+                return;
+            }
+            mIsBusy = true;
 
             DateTime dt = DateTime.Now;
             var mm = (dt.Hour * 24 + dt.Minute * 60 + dt.Second) / MemoryCachTime;
-            if (mm!=mLastProcessTick)
+            if (mm!=mLastProcessTick )
             {
-                mLastProcessTick = mm;
-
-                //在内存尾部一次填充所有值
-                if (mCurrentMemory != null)
+                
+                if(mLastProcessTick != -1)
                 {
-                    foreach (var vv in mRecordTimerProcesser)
+                    //在内存尾部一次填充所有值
+                    if (mCurrentMemory != null)
                     {
-                        vv.RecordAllValue();
+                        foreach (var vv in mRecordTimerProcesser)
+                        {
+                            vv.RecordAllValue(dt);
+                        }
+
+                        foreach (var vv in mValueChangedProcesser)
+                        {
+                            vv.RecordAllValue(dt);
+                        }
                     }
 
-                    foreach(var vv in mValueChangedProcesser)
-                    {
-                        vv.RecordAllValue();
-                    }
+                    mLastProcessTime = dt;
+                    //将之前的Memory提交到历史存储流程中
+                    SwitchMemory();
                 }
-
-                mLastProcessTime = dt;
-                //将之前的Memory提交到历史存储流程中
-                SwitchMemory();
+                mLastProcessTick = mm;
 
                 //在内存头部一次填充所有值
                 foreach (var vv in mRecordTimerProcesser)
                 {
                     vv.WriteHeader();
-                    vv.RecordAllValue();
+                    vv.RecordAllValue(dt);
                 }
 
                 foreach (var vv in mValueChangedProcesser)
                 {
                     vv.WriteHeader();
-                    vv.RecordAllValue();
+                    vv.RecordAllValue(dt);
                 }
             }
             else
@@ -441,7 +485,8 @@ namespace Cdy.Tag
                     vv.Notify(dt);
                 }
             }
-            
+
+            mIsBusy = false;
         }
 
         /// <summary>

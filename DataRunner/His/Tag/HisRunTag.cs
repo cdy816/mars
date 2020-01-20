@@ -45,12 +45,22 @@ namespace Cdy.Tag
         /// <summary>
         /// 历史缓存数据偏移地址
         /// </summary>
-        public static byte[] HisAddr { get; set; }
+        public static MemoryBlock HisAddr { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static DateTime StartTime { get; set; }
 
         /// <summary>
         /// 头部信息起始地址
         /// </summary>
         public int BlockHeadStartAddr { get; set; }
+
+        /// <summary>
+        /// 时间戳存访地址
+        /// </summary>
+        public int TimerValueStartAddr { get; set; }
 
         /// <summary>
         /// 历史数据缓存内存起始地址
@@ -81,7 +91,8 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public virtual byte SizeOfValue { get; }
-        
+
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -111,30 +122,40 @@ namespace Cdy.Tag
         {
             //数据块头部结构
             //数据区大小(int)+记录类型(byte)+变量类型(byte)+压缩类型(byte)+压缩参数1(float)+压缩参数2(float)+压缩参数3(float)
-            var bids = BitConverter.GetBytes(this.HisQulityStartAddr - this.HisValueStartAddr);
-            Buffer.BlockCopy(HisAddr, BlockHeadStartAddr, bids, 0, bids.Length);
+            //var bids = BitConverter.GetBytes(this.HisQulityStartAddr - this.HisValueStartAddr);
+            //Buffer.BlockCopy(HisAddr, BlockHeadStartAddr, bids, 0, bids.Length);
 
-            HisAddr[BlockHeadStartAddr + 4] = (byte)this.Type;
-            HisAddr[BlockHeadStartAddr + 5] = (byte)this.TagType;
-            HisAddr[BlockHeadStartAddr + 6] = (byte)this.CompressType;
+            HisAddr.WriteInt(BlockHeadStartAddr, this.HisQulityStartAddr - this.TimerValueStartAddr);
 
-            bids = BitConverter.GetBytes(CompressParameter1);
-            Buffer.BlockCopy(HisAddr, BlockHeadStartAddr+7, bids, 0, bids.Length);
-
-            bids = BitConverter.GetBytes(CompressParameter2);
-            Buffer.BlockCopy(HisAddr, BlockHeadStartAddr + 11, bids, 0, bids.Length);
-            bids = BitConverter.GetBytes(CompressParameter3);
-            Buffer.BlockCopy(HisAddr, BlockHeadStartAddr + 15, bids, 0, bids.Length);
+            //写入记录类型
+            HisAddr.WriteByte(BlockHeadStartAddr+4, (byte)this.Type);
+            //写入变量类型
+            HisAddr.WriteByte(BlockHeadStartAddr+5, (byte)this.TagType);
+            //写入压缩类型
+            HisAddr.WriteByte(BlockHeadStartAddr+6, (byte)this.CompressType);
+            //写入压缩附属参数
+            HisAddr.WriteFloat(BlockHeadStartAddr + 7, CompressParameter1);
+            HisAddr.WriteFloat(BlockHeadStartAddr + 11, CompressParameter2);
+            HisAddr.WriteFloat(BlockHeadStartAddr + 15, CompressParameter3);
         }
 
         /// <summary>
         /// 在每个内存块的开始和结束部分插入值
         /// </summary>
-        public void AppendValue()
+        public void AppendValue(DateTime time)
         {
-            //数据内容: 数值区(value1+value2+...)+质量戳区(q1+q2+....)
+            //数据内容:时间戳(time1+time2+...) + 数值区(value1+value2+...)+质量戳区(q1+q2+....)
             //更新数值
-            Buffer.BlockCopy(RealMemoryAddr, RealValueAddr, HisAddr, HisValueStartAddr + Count * SizeOfValue, SizeOfValue);
+
+            //写入时间戳
+            int tim = (int)((time - StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
+
+            HisAddr.WriteInt(TimerValueStartAddr + Count * 2, tim);
+
+            //写入数值
+            HisAddr.WriteBytes(HisValueStartAddr + Count * SizeOfValue, RealMemoryAddr, RealValueAddr, SizeOfValue);
+
+            //Buffer.BlockCopy(RealMemoryAddr, RealValueAddr, HisAddr, HisValueStartAddr + Count * SizeOfValue, SizeOfValue);
             //更新质量戳
             //实时数据内存结构为:实时值+时间戳+质量戳
 
@@ -151,12 +172,24 @@ namespace Cdy.Tag
         /// </summary>
         public void UpdateValue(DateTime time)
         {
-            //数据内容: 数值区(value1+value2+...)+质量戳区(q1+q2+....)
+            //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
             //更新数值
-            Buffer.BlockCopy(RealMemoryAddr, RealValueAddr, HisAddr, HisValueStartAddr + Count * SizeOfValue, SizeOfValue);
+            //Buffer.BlockCopy(RealMemoryAddr, RealValueAddr, HisAddr, HisValueStartAddr + Count * SizeOfValue, SizeOfValue);
+
+            //写入时间戳
+            int tim = (int)((time - StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
+
+            HisAddr.WriteInt(TimerValueStartAddr + Count * 2, tim);
+
+            //写入数值
+            HisAddr.WriteBytes(HisValueStartAddr + Count * SizeOfValue, RealMemoryAddr, RealValueAddr, SizeOfValue);
+
             //更新质量戳
             //实时数据内存结构为:实时值+时间戳+质量戳
-            Buffer.BlockCopy(RealMemoryAddr, RealValueAddr + SizeOfValue + 8, HisAddr, HisQulityStartAddr + Count, 1);
+
+            HisAddr[HisQulityStartAddr + Count] = RealMemoryAddr[RealValueAddr + SizeOfValue + 8];
+
+           // Buffer.BlockCopy(RealMemoryAddr, RealValueAddr + SizeOfValue + 8, HisAddr, HisQulityStartAddr + Count, 1);
 
             Count = ++Count > MaxCount ? MaxCount : Count;
         }

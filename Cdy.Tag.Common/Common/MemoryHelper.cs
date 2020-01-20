@@ -49,7 +49,7 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                if ((unchecked((int)addr) & 0x3) == 0)
+                if ((unchecked((int)addr) & 0x1) == 0)
                 {
                     // aligned write
                     *((short*)addr) = val;
@@ -80,7 +80,7 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                if ((unchecked((int)addr) & 0x3) == 0)
+                if ((unchecked((int)addr) & 0x1) == 0)
                 {
                     // aligned write
                     *((ushort*)addr) = val;
@@ -210,7 +210,7 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                if ((unchecked((int)addr) & 0x3) == 0)
+                if ((unchecked((int)addr) & 0x7) == 0)
                 {
                     // aligned write
                     *((Int64*)addr) = val;
@@ -247,7 +247,7 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                if ((unchecked((int)addr) & 0x3) == 0)
+                if ((unchecked((int)addr) & 0x7) == 0)
                 {
                     // aligned write
                     *((UInt64*)addr) = val;
@@ -284,7 +284,7 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                if ((unchecked((int)addr) & 0x3) == 0)
+                if ((unchecked((int)addr) & 0x7) == 0)
                 {
                     // aligned write
                     *((Int64*)addr) = *(Int64*)(&val);
@@ -346,7 +346,7 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                if ((unchecked((int)addr) & 0x3) == 0)
+                if ((unchecked((int)addr) & 0x7) == 0)
                 {
                     // aligned write
                     *((Int64*)addr) = *(Int64*)(&val);
@@ -489,7 +489,7 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                if ((unchecked((int)addr) & 0x3) == 0)
+                if ((unchecked((int)addr) & 0x1) == 0)
                 {
                     //aligned read
                     return *((short*)addr);
@@ -522,7 +522,7 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                if ((unchecked((int)addr) & 0x3) == 0)
+                if ((unchecked((int)addr) & 0x1) == 0)
                 {
                     //aligned read
                     return *((ushort*)addr);
@@ -576,7 +576,7 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                if ((unchecked((int)addr) & 0x3) == 0)
+                if ((unchecked((int)addr) & 0x7) == 0)
                 {
                     //aligned read
                     return *((long*)addr);
@@ -612,7 +612,7 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                if ((unchecked((int)addr) & 0x3) == 0)
+                if ((unchecked((int)addr) & 0x7) == 0)
                 {
                     //aligned read
                     return *((ulong*)addr);
@@ -653,7 +653,7 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                if ((unchecked((int)addr) & 0x3) == 0)
+                if ((unchecked((int)addr) & 0x7) == 0)
                 {
                     //aligned read
                     return *((double*)addr);
@@ -694,7 +694,7 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                if ((unchecked((int)addr) & 0x3) == 0)
+                if ((unchecked((int)addr) & 0x7) == 0)
                 {
                     //aligned read
                     return *((DateTime*)addr);

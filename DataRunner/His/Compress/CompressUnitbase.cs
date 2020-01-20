@@ -106,7 +106,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         /// <param name="timeTick"></param>
         /// <returns></returns>
-        public abstract bool DeCompressBoolValue(MemoryBlock source, int sourceAddr,DateTime time,int timeTick, QueryValueMatchType type);
+        public abstract bool? DeCompressBoolValue(MemoryBlock source, int sourceAddr,DateTime time,int timeTick, QueryValueMatchType type);
 
         /// <summary>
         /// 
@@ -136,7 +136,7 @@ namespace Cdy.Tag
         /// <param name="sourceAddr"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public abstract byte DeCompressByteValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        public abstract byte? DeCompressByteValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
         /// <summary>
         /// 
@@ -166,7 +166,7 @@ namespace Cdy.Tag
         /// <param name="sourceAddr"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public abstract short DeCompressShortValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        public abstract short? DeCompressShortValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
         /// <summary>
         /// 
@@ -196,7 +196,7 @@ namespace Cdy.Tag
         /// <param name="sourceAddr"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public abstract ushort DeCompressUShortValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        public abstract ushort? DeCompressUShortValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
         /// <summary>
         /// 
@@ -226,7 +226,7 @@ namespace Cdy.Tag
         /// <param name="sourceAddr"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public abstract int DeCompressIntValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        public abstract int? DeCompressIntValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
         /// <summary>
         /// 
@@ -256,7 +256,7 @@ namespace Cdy.Tag
         /// <param name="sourceAddr"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public abstract uint DeCompressUIntValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        public abstract uint? DeCompressUIntValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
         /// <summary>
         /// 
@@ -276,7 +276,7 @@ namespace Cdy.Tag
         /// <param name="sourceAddr"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public abstract long DeCompressLongValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        public abstract long? DeCompressLongValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
         /// <summary>
         /// 
@@ -306,7 +306,7 @@ namespace Cdy.Tag
         /// <param name="sourceAddr"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public abstract ulong DeCompressULongValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        public abstract ulong? DeCompressULongValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
         /// <summary>
         /// 
@@ -337,7 +337,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         /// <param name="timeTick"></param>
         /// <returns></returns>
-        public abstract float DeCompressFloatValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        public abstract float? DeCompressFloatValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
         /// <summary>
         /// 
@@ -369,7 +369,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         /// <param name="timeTick"></param>
         /// <returns></returns>
-        public abstract double DeCompressDoubleValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        public abstract double? DeCompressDoubleValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
         /// <summary>
         /// 
@@ -400,7 +400,7 @@ namespace Cdy.Tag
         /// <param name="sourceAddr"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public abstract DateTime DeCompressDateTimeValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        public abstract DateTime? DeCompressDateTimeValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
         /// <summary>
         /// 

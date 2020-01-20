@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Linq;
 
 namespace Cdy.Tag
 {
@@ -164,11 +165,12 @@ namespace Cdy.Tag
         /// <summary>
         /// 记录所有值
         /// </summary>
-        public void RecordAllValue()
+        public void RecordAllValue(DateTime time)
         {
             try
             {
-                foreach (var vv in mCount.Keys)
+                mLastUpdateTime = time;
+                foreach (var vv in mCount.Keys.ToArray())
                 {
                     mCount[vv] += HisEnginer.MemoryTimeTick;
                     if (mCount[vv] >= vv)
@@ -201,7 +203,7 @@ namespace Cdy.Tag
                 if (mIsClosed) break;
                 try
                 {
-                    foreach (var vv in mCount.Keys)
+                    foreach (var vv in mCount.Keys.ToArray())
                     {
                         mCount[vv] += HisEnginer.MemoryTimeTick;
                         if (mCount[vv] >= vv)
@@ -209,10 +211,10 @@ namespace Cdy.Tag
                             mCount[vv] = 0;
                             ProcessTags(mTimerTags[vv]);
                         }
-                        else
-                        {
-                            ProcessTagsNone(mTimerTags[vv]);
-                        }
+                        //else
+                        //{
+                        //    ProcessTagsNone(mTimerTags[vv]);
+                        //}
                     }
                 }
                 catch
@@ -232,7 +234,7 @@ namespace Cdy.Tag
         {
             foreach (var vv in tags)
             {
-                vv.AppendValue();
+                vv.AppendValue(mLastUpdateTime);
             }
         }
 
@@ -248,17 +250,17 @@ namespace Cdy.Tag
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="tags"></param>
-        private void ProcessTagsNone(List<HisRunTag> tags)
-        {
-            foreach (var vv in tags)
-            {
-                vv.UpdateNone();
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="tags"></param>
+        //private void ProcessTagsNone(List<HisRunTag> tags)
+        //{
+        //    foreach (var vv in tags)
+        //    {
+        //        vv.UpdateNone();
+        //    }
+        //}
 
         /// <summary>
         /// 

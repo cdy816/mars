@@ -74,6 +74,11 @@ namespace Cdy.Tag
         /// </summary>
         public void CalMemory(long size)
         {
+            /* 内存结构:head+数据区指针+数据区
+               head:数据起始地址(4)+变量数量(4)+起始时间(8)
+               数据区指针:[ID(4) + address(4) + datasize(4)]
+               数据区:[data block]
+             */
             mMemory1 = new MemoryBlock(size);
             mMemory2 = new MemoryBlock(size);
         }
@@ -150,6 +155,12 @@ namespace Cdy.Tag
                     break;
 
                 mTargetMemory = SelectMemory();
+                while (mTargetMemory == null)
+                {
+                    LoggerService.Service.Info("Comperss", "压缩出现阻塞");
+                    Thread.Sleep(10);
+                    mTargetMemory = SelectMemory();
+                }
                 mTargetMemory.MakeMemoryBusy();
                 Compress();
                 mSourceMemory.MakeMemoryNoBusy();
@@ -165,31 +176,48 @@ namespace Cdy.Tag
         /// </summary>
         private void Compress()
         {
+            //读取变量个数
             int count = mSourceMemory.ReadInt(9);
+
+            //读取内存保存时间
             mMemoryCachTime = mSourceMemory.ReadInt(13);
+            //读取时间最小间隔
             mMemoryTimeTick = mSourceMemory.ReadInt(17);
 
+            //源内存数据块头部信息偏移地址
             int offset = 21;
+
+            //压缩后内存头大小
             int headoffset = 16;
-            int mTargetPosition = count * 8 + headoffset;
+
+            //数据区地址
+            int mTargetPosition = count * 12 + headoffset;
 
             for (int i=0;i<count;i++)
             {
                 var id = mSourceMemory.ReadInt(offset);
                 var qaddr = mSourceMemory.ReadInt(offset + 4);
                 var len = mSourceMemory.ReadInt(offset + 8);
+
+                //压缩数据
                 var size = CompressBlockMemory(qaddr, mTargetPosition,len);
                 
+                //更新头部指针区域数据
+                //写入变量ID
                 mTargetMemory.WriteInt(headoffset,id);
+                //写入数据区地址
                 mTargetMemory.WriteInt(headoffset + 4, mTargetPosition);
+
+                //写入数据区大小
+                mTargetMemory.WriteInt(headoffset + 8, size);
 
                 offset += 12;
 
-                headoffset += 8;
+                headoffset += 12;
                 mTargetPosition += size;
             }
             mTargetMemory.WriteInt(0, mTargetPosition);//写入数据起始地址
-            mTargetMemory.WriteInt(4, count);//写入数量
+            mTargetMemory.WriteInt(4, count);//写入变量数量
             mTargetMemory.WriteDatetime(8, mCurrentTime);//写入时间
         }
 
@@ -203,18 +231,18 @@ namespace Cdy.Tag
         private int CompressBlockMemory(int addr,int targetPosition,int len)
         {
             var qulityoffset = mSourceMemory.ReadInt(addr);
-            byte rtype = mSourceMemory[addr + 4];
-            byte tagtype = mSourceMemory[addr + 5];
-            byte comtype = mSourceMemory[addr + 6];
-            float cp1 = mSourceMemory.ReadFloat(addr + 7);
-            float cp2 = mSourceMemory.ReadFloat(addr + 11);
-            float cp3 = mSourceMemory.ReadFloat(addr + 15);
+            byte rtype = mSourceMemory[addr + 4];//记录类型
+            byte tagtype = mSourceMemory[addr + 5];//变量类型
+            byte comtype = mSourceMemory[addr + 6];//压缩类型
+            float cp1 = mSourceMemory.ReadFloat(addr + 7);//压缩附属参数
+            float cp2 = mSourceMemory.ReadFloat(addr + 11);//压缩附属参数
+            float cp3 = mSourceMemory.ReadFloat(addr + 15);//压缩附属参数
 
             //写入压缩类型
             mTargetMemory.WriteByte(targetPosition, comtype);
 
             var tp = CompressUnitManager.Manager.GetCompress(comtype);
-            if(tp!=null)
+            if (tp != null)
             {
                 tp.QulityOffset = qulityoffset;
                 tp.TagType = tagtype;
@@ -223,7 +251,7 @@ namespace Cdy.Tag
                 tp.CompressParameter1 = cp1;
                 tp.CompressParameter2 = cp2;
                 tp.CompressParameter3 = cp3;
-                return tp.Compress(mSourceMemory, addr + 19, mTargetMemory, targetPosition + 1, len-19) + 1;
+                return tp.Compress(mSourceMemory, addr + 19, mTargetMemory, targetPosition + 1, len - 19) + 1;
             }
             return 0;
         }

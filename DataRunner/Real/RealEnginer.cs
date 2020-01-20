@@ -73,7 +73,6 @@ namespace Cdy.Tag
         public RealEnginer(Database database)
         {
             this.mConfigDatabase = database;
-            Init();
         }
 
         #endregion ...Constructor...

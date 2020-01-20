@@ -76,6 +76,11 @@ namespace Cdy.Tag
             }
             else
             {
+                string dir = System.IO.Path.GetDirectoryName(filename);
+                if (!System.IO.Directory.Exists(dir))
+                {
+                    System.IO.Directory.CreateDirectory(dir);
+                }
                 mStream = System.IO.File.Create(filename, 1024,FileOptions.WriteThrough);
                 return true;
             }
@@ -87,7 +92,8 @@ namespace Cdy.Tag
         /// </summary>
         public override void Flush()
         {
-            mStream.Flush();
+            if (mStream != null)
+                mStream.Flush();
         }
 
         /// <summary>

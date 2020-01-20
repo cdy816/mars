@@ -190,7 +190,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool Append(Tagbase tag)
         {
-            tag.Id = ++MaxId;
+            tag.Id = MaxId++;
             return Add(tag);
         }
 

@@ -42,27 +42,22 @@ namespace Cdy.Tag
         /// </summary>
         public override int TypeCode => 3;
 
-        public override CompressUnitbase Clone()
-        {
-            throw new NotImplementedException();
-        }
+
 
 
         #endregion ...Properties...
 
         #region ... Methods    ...
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="target"></param>
-        /// <param name="targetAddr"></param>
-        /// <returns></returns>
+
+        public override CompressUnitbase Clone()
+        {
+            throw new NotImplementedException();
+        }
+
         public override int Compress(MemoryBlock source, int sourceAddr, MemoryBlock target, int targetAddr, int size)
         {
-            return 0;
+            throw new NotImplementedException();
         }
 
         public override int DeCompressAllValue(MemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<bool> result)
@@ -125,7 +120,7 @@ namespace Cdy.Tag
             throw new NotImplementedException();
         }
 
-        public override bool DeCompressBoolValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override bool? DeCompressBoolValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             throw new NotImplementedException();
         }
@@ -135,7 +130,7 @@ namespace Cdy.Tag
             throw new NotImplementedException();
         }
 
-        public override byte DeCompressByteValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override byte? DeCompressByteValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             throw new NotImplementedException();
         }
@@ -145,7 +140,7 @@ namespace Cdy.Tag
             throw new NotImplementedException();
         }
 
-        public override DateTime DeCompressDateTimeValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override DateTime? DeCompressDateTimeValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             throw new NotImplementedException();
         }
@@ -155,7 +150,7 @@ namespace Cdy.Tag
             throw new NotImplementedException();
         }
 
-        public override double DeCompressDoubleValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override double? DeCompressDoubleValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             throw new NotImplementedException();
         }
@@ -165,7 +160,7 @@ namespace Cdy.Tag
             throw new NotImplementedException();
         }
 
-        public override float DeCompressFloatValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override float? DeCompressFloatValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             throw new NotImplementedException();
         }
@@ -175,7 +170,7 @@ namespace Cdy.Tag
             throw new NotImplementedException();
         }
 
-        public override int DeCompressIntValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override int? DeCompressIntValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             throw new NotImplementedException();
         }
@@ -185,7 +180,7 @@ namespace Cdy.Tag
             throw new NotImplementedException();
         }
 
-        public override long DeCompressLongValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override long? DeCompressLongValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             throw new NotImplementedException();
         }
@@ -195,7 +190,7 @@ namespace Cdy.Tag
             throw new NotImplementedException();
         }
 
-        public override short DeCompressShortValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override short? DeCompressShortValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             throw new NotImplementedException();
         }
@@ -215,7 +210,7 @@ namespace Cdy.Tag
             throw new NotImplementedException();
         }
 
-        public override uint DeCompressUIntValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override uint? DeCompressUIntValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             throw new NotImplementedException();
         }
@@ -225,7 +220,7 @@ namespace Cdy.Tag
             throw new NotImplementedException();
         }
 
-        public override ulong DeCompressULongValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override ulong? DeCompressULongValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             throw new NotImplementedException();
         }
@@ -235,7 +230,7 @@ namespace Cdy.Tag
             throw new NotImplementedException();
         }
 
-        public override ushort DeCompressUShortValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override ushort? DeCompressUShortValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             throw new NotImplementedException();
         }
@@ -244,9 +239,6 @@ namespace Cdy.Tag
         {
             throw new NotImplementedException();
         }
-
-
-
 
         #endregion ...Methods...
 

@@ -166,6 +166,9 @@ namespace Cdy.Tag
         /// </summary>
         private void RegistorInterface()
         {
+            //注册日志
+            ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
+
             ServiceLocator.Locator.Registor<IRealData>(realEnginer);
             ServiceLocator.Locator.Registor<IRealDataNotify>(realEnginer);
 

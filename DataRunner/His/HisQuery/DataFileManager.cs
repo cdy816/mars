@@ -54,7 +54,7 @@ namespace Cdy.Tag
         /// </summary>
         public async Task Int()
         {
-           await Scan(PathHelper.helper.GetDataPath(this.mDatabaseName));
+           await Scan(PathHelper.helper.GetDataPath("HisData"));
         }
 
         /// <summary>
@@ -64,16 +64,19 @@ namespace Cdy.Tag
         public async Task Scan(string path)
         {
             System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(path);
-            foreach(var vv in dir.GetFiles())
+            if (dir.Exists)
             {
-                if (vv.Extension == SeriseEnginer.DataFileExtends)
+                foreach (var vv in dir.GetFiles())
                 {
-                    ParseFileName(vv);
+                    if (vv.Extension == SeriseEnginer.DataFileExtends)
+                    {
+                        ParseFileName(vv);
+                    }
                 }
-            }
-            foreach(var vv in dir.GetDirectories())
-            {
-                await Scan(vv.FullName);
+                foreach (var vv in dir.GetDirectories())
+                {
+                    await Scan(vv.FullName);
+                }
             }
         }
 

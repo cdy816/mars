@@ -16,7 +16,7 @@ using System.Text;
 namespace Cdy.Tag.Tests
 {
     [TestClass()]
-    public class RecordMemoryTests
+    public class MemoryBlockTests
     {
 
         [TestMethod()]
@@ -82,7 +82,45 @@ namespace Cdy.Tag.Tests
             Assert.IsTrue(memory.ReadString() == "WriteTest");
 
         }
-       
+
+        [TestMethod()]
+        public void WriteByMultipleBlockTest()
+        {
+            DateTime date = DateTime.Now;
+
+            MemoryBlock memory = new MemoryBlock(100,10);
+            memory.Write(byte.MaxValue);
+            memory.Write((short)short.MaxValue);
+            memory.Write((ushort)ushort.MaxValue);
+            memory.Write(int.MaxValue);
+            memory.Write(uint.MaxValue);
+            memory.Write(long.MaxValue);
+            memory.Write(ulong.MaxValue);
+
+            memory.Write(0.2f);
+            memory.Write(0.2);
+
+            memory.Write(date);
+            memory.Write("WriteTest");
+
+            memory.Position = 0;
+
+            Assert.IsTrue(memory.ReadByte() == byte.MaxValue);
+            Assert.IsTrue(memory.ReadShort() == short.MaxValue);
+            Assert.IsTrue(memory.ReadUShort() == ushort.MaxValue);
+            Assert.IsTrue(memory.ReadInt() == int.MaxValue);
+            Assert.IsTrue(memory.ReadUInt() == uint.MaxValue);
+            Assert.IsTrue(memory.ReadLong() == long.MaxValue);
+            Assert.IsTrue(memory.ReadULong() == ulong.MaxValue);
+            Assert.IsTrue(memory.ReadFloat() == 0.2f);
+            Assert.IsTrue(memory.ReadDouble() == 0.2);
+            Assert.IsTrue(memory.ReadDateTime() == date);
+            Assert.IsTrue(memory.ReadString() == "WriteTest");
+
+        }
+
+
+
         [TestMethod()]
         public void DisposeTest()
         {

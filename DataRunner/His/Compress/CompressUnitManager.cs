@@ -28,6 +28,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public static CompressUnitManager Manager = new CompressUnitManager();
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -35,6 +36,13 @@ namespace Cdy.Tag
         #endregion ...Events...
 
         #region ... Constructor...
+        /// <summary>
+        /// 
+        /// </summary>
+        public CompressUnitManager()
+        {
+            LoadDefaultUnit();
+        }
 
         #endregion ...Constructor...
 

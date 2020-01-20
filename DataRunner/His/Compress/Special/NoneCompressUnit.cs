@@ -44,134 +44,134 @@ namespace Cdy.Tag
         /// <param name="sourceAddr"></param>
         /// <param name="target"></param>
         /// <param name="targetAddr"></param>
+        /// <param name="size"></param>
         /// <returns></returns>
         public override int Compress(MemoryBlock source, int sourceAddr, MemoryBlock target, int targetAddr, int size)
         {
-
-            //写入起始时间
             target.Write(this.StartTime);
-
-            var qcount = source.Length - QulityOffset;
-            Dictionary<int, byte> mqulitys = new Dictionary<int, byte>(qcount);
-            var qulitys = source.ReadBytes(QulityOffset, qcount);
-
-            for(int i=0;i<qulitys.Length;i++)
-            {
-                if(qulitys[i]!= (byte)QulityConst.Tick)
-                {
-                    mqulitys.Add(i, qulitys[i]);
-                }
-            }
-
-            MemoryBlock bval;
-            switch(this.TagType)
-            {
-                case (byte)Cdy.Tag.TagType.Bool:
-                case (byte)Cdy.Tag.TagType.Byte:
-                    bval = new MemoryBlock(mqulitys.Count);
-                    foreach (var vv in mqulitys)
-                    {
-                        bval.Write(source.ReadByte(sourceAddr+vv.Key));
-                    }
-                    break;
-                case (byte)Cdy.Tag.TagType.Short:
-                case (byte)Cdy.Tag.TagType.UShort:
-                    bval = new MemoryBlock(mqulitys.Count*2);
-                    foreach (var vv in mqulitys)
-                    {
-                        bval.Write(source.ReadBytes(sourceAddr+vv.Key*2));
-                    }
-                    break;
-                case (byte)Cdy.Tag.TagType.Int:
-                case (byte)Cdy.Tag.TagType.UInt:
-                case (byte)Cdy.Tag.TagType.Float:
-                    bval = new MemoryBlock(mqulitys.Count * 4);
-                    foreach(var vv in mqulitys)
-                    {
-                        bval.Write(source.ReadBytes(sourceAddr + vv.Key * 4));
-                    }
-                    break;
-                case (byte)Cdy.Tag.TagType.Long:
-                case (byte)Cdy.Tag.TagType.ULong:
-                case (byte)Cdy.Tag.TagType.DateTime:
-                case (byte)Cdy.Tag.TagType.Double:
-                    bval = new MemoryBlock(mqulitys.Count * 8);
-                    foreach (var vv in mqulitys)
-                    {
-                        bval.Write(source.ReadBytes(sourceAddr + vv.Key * 8));
-                    }
-                    break;
-                case (byte)Cdy.Tag.TagType.String:
-                    bval = new MemoryBlock(mqulitys.Count * Const.StringSize);
-                    foreach (var vv in mqulitys)
-                    {
-                        bval.Write(source.ReadBytes(sourceAddr + vv.Key * 8));
-                    }
-                    break;
-                default:
-                    bval = new MemoryBlock(0);
-                    break;
-            }
-
-            long count = bval.Position;
-            //写入质量戳偏移地址
-            target.Write((int)bval.Position);
-            //写入数值
-            bval.CopyTo(target, 0, (int)target.Position, (int)count);
-            count += 4 + 8;
-
-            //写入时间戳,质量戳
-            foreach (var vv in mqulitys)
-            {
-                target.Write((ushort)vv.Key);
-                target.WriteByte(vv.Value);
-            }
-            count += mqulitys.Count * 3;
-            return (int)count;
+            target.Write((ushort)(size - this.QulityOffset));//写入值的个数
+            if (size > 0)
+                source.CopyTo(target, sourceAddr, targetAddr + 12, size);
+            return size + 10;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        private Dictionary<DateTime, byte> ReadQulity(MemoryBlock source,int sourceAddr,int timeTick, out DateTime startTime)
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="target"></param>
+        ///// <param name="targetAddr"></param>
+        ///// <returns></returns>
+        //public override int Compress(MemoryBlock source, int sourceAddr, MemoryBlock target, int targetAddr, int size)
+        //{
+
+        //    //写入起始时间
+        //    target.Write(this.StartTime);
+
+        //    var qcount = source.Length - QulityOffset;
+        //    Dictionary<int, byte> mqulitys = new Dictionary<int, byte>(qcount);
+        //    var qulitys = source.ReadBytes(QulityOffset, qcount);
+
+        //    for(int i=0;i<qulitys.Length;i++)
+        //    {
+        //        if(qulitys[i]!= (byte)QulityConst.Tick)
+        //        {
+        //            mqulitys.Add(i, qulitys[i]);
+        //        }
+        //    }
+
+        //    MemoryBlock bval;
+        //    switch(this.TagType)
+        //    {
+        //        case (byte)Cdy.Tag.TagType.Bool:
+        //        case (byte)Cdy.Tag.TagType.Byte:
+        //            bval = new MemoryBlock(mqulitys.Count);
+        //            foreach (var vv in mqulitys)
+        //            {
+        //                bval.Write(source.ReadByte(sourceAddr+vv.Key));
+        //            }
+        //            break;
+        //        case (byte)Cdy.Tag.TagType.Short:
+        //        case (byte)Cdy.Tag.TagType.UShort:
+        //            bval = new MemoryBlock(mqulitys.Count*2);
+        //            foreach (var vv in mqulitys)
+        //            {
+        //                bval.Write(source.ReadBytes(sourceAddr+vv.Key*2));
+        //            }
+        //            break;
+        //        case (byte)Cdy.Tag.TagType.Int:
+        //        case (byte)Cdy.Tag.TagType.UInt:
+        //        case (byte)Cdy.Tag.TagType.Float:
+        //            bval = new MemoryBlock(mqulitys.Count * 4);
+        //            foreach(var vv in mqulitys)
+        //            {
+        //                bval.Write(source.ReadBytes(sourceAddr + vv.Key * 4));
+        //            }
+        //            break;
+        //        case (byte)Cdy.Tag.TagType.Long:
+        //        case (byte)Cdy.Tag.TagType.ULong:
+        //        case (byte)Cdy.Tag.TagType.DateTime:
+        //        case (byte)Cdy.Tag.TagType.Double:
+        //            bval = new MemoryBlock(mqulitys.Count * 8);
+        //            foreach (var vv in mqulitys)
+        //            {
+        //                bval.Write(source.ReadBytes(sourceAddr + vv.Key * 8));
+        //            }
+        //            break;
+        //        case (byte)Cdy.Tag.TagType.String:
+        //            bval = new MemoryBlock(mqulitys.Count * Const.StringSize);
+        //            foreach (var vv in mqulitys)
+        //            {
+        //                bval.Write(source.ReadBytes(sourceAddr + vv.Key * 8));
+        //            }
+        //            break;
+        //        default:
+        //            bval = new MemoryBlock(0);
+        //            break;
+        //    }
+
+        //    long count = bval.Position;
+        //    //写入质量戳偏移地址
+        //    target.Write((int)bval.Position);
+        //    //写入数值
+        //    bval.CopyTo(target, 0, (int)target.Position, (int)count);
+        //    count += 4 + 8;
+
+        //    //写入时间戳,质量戳
+        //    foreach (var vv in mqulitys)
+        //    {
+        //        target.Write((ushort)vv.Key);
+        //        target.WriteByte(vv.Value);
+        //    }
+        //    count += mqulitys.Count * 3;
+        //    return (int)count;
+        //}
+
+        
+        private Dictionary<DateTime, int> ReadTimeQulity(MemoryBlock source, int sourceAddr, int timeTick, out DateTime startTime)
         {
             source.Position = sourceAddr;
 
             startTime = source.ReadDateTime();
 
-            //读取质量戳偏移
-            int qoffset = source.ReadInt();
+            //读取值的个数
+            int qoffset = source.ReadUShort();
 
-            Dictionary<DateTime, byte> timeQulities = new Dictionary<DateTime, byte>();
-            while(source.Position<source.Length)
+            Dictionary<DateTime, int> timeQulities = new Dictionary<DateTime, int>(qoffset);
+
+            for(int i=0;i<qoffset;i++)
             {
-                timeQulities.Add(startTime.AddTicks(source.ReadUShort()* timeTick), source.ReadByte());
+                timeQulities.Add(startTime.AddMilliseconds(source.ReadUShort() * timeTick), i);
             }
-            return timeQulities;
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="startTime"></param>
-        /// <returns></returns>
-        private Dictionary<int, byte> ReadQulity2(MemoryBlock source, int sourceAddr, out DateTime startTime)
-        {
-            source.Position = sourceAddr;
 
-            startTime = source.ReadDateTime();
-
-            //读取质量戳偏移
-            int qoffset = source.ReadInt();
-
-            Dictionary<int, byte> timeQulities = new Dictionary<int, byte>();
             while (source.Position < source.Length)
             {
-                timeQulities.Add(source.ReadUShort(), source.ReadByte());
+                timeQulities.Add(startTime.AddTicks(source.ReadUShort() * timeTick), source.ReadByte());
             }
             return timeQulities;
         }
+
 
 
         /// <summary>
@@ -187,23 +187,24 @@ namespace Cdy.Tag
         public override int DeCompressAllValue(MemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<bool> result)
         {
             DateTime time;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time);
-            
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
+
+            var qq = source.ReadBytes(qs.Count * 3, qs.Count);
+
+            var valaddr = qs.Count * 2;
+
             int i = 0;
             int rcount = 0;
             foreach(var vv in qs)
             {
-                if(vv.Value <100)
+                if(qq[vv.Value] <100)
                 {
-                    DateTime stime = vv.Key;
-                    if (stime < startTime || stime > endTime)
+                    if (vv.Key < startTime || vv.Key > endTime)
                     {
-                        i++;
                         continue;
                     }
-
-                    var bval = source.ReadByte(8 + 4 + i)>0;
-                    result.Add(bval,vv.Key, vv.Value);
+                    var bval = source.ReadByte(valaddr + i)>0;
+                    result.Add(bval,vv.Key, qq[vv.Value]);
                     rcount++;
                 }
                 i++;
@@ -224,22 +225,24 @@ namespace Cdy.Tag
         public override int DeCompressAllValue(MemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<byte> result)
         {
             DateTime time;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
+
+            var qq = source.ReadBytes(qs.Count * 3, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             int i = 0;
             int rcount = 0;
             foreach (var vv in qs)
             {
-                if (vv.Value < 100)
+                if (qq[vv.Value] < 100)
                 {
-                    DateTime stime = vv.Key;
-                    if (stime < startTime || stime > endTime)
+                    if (vv.Key < startTime || vv.Key > endTime)
                     {
-                        i++;
                         continue;
                     }
-                    var bval = source.ReadByte(8 + 4 + i);
-                    result.Add(bval, stime, vv.Value);
+                    var bval = source.ReadByte(valaddr + i);
+                    result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
                 i++;
@@ -259,23 +262,26 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override int DeCompressAllValue(MemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<short> result)
         {
+
             DateTime time;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
+
+            var qq = source.ReadBytes(qs.Count * 4, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             int i = 0;
             int rcount = 0;
             foreach (var vv in qs)
             {
-                if (vv.Value < 100)
+                if (qq[vv.Value] < 100)
                 {
-                    DateTime stime = vv.Key;
-                    if (stime < startTime || stime > endTime)
+                    if (vv.Key < startTime || vv.Key > endTime)
                     {
-                        i++;
                         continue;
                     }
-                    var bval = source.ReadShort(8 + 4 + i*2);
-                    result.Add(bval, stime, vv.Value);
+                    var bval = source.ReadShort(valaddr + i * 2);
+                    result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
                 i++;
@@ -296,22 +302,24 @@ namespace Cdy.Tag
         public override int DeCompressAllValue(MemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ushort> result)
         {
             DateTime time;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
+
+            var qq = source.ReadBytes(qs.Count * 4, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             int i = 0;
             int rcount = 0;
             foreach (var vv in qs)
             {
-                if (vv.Value < 100)
+                if (qq[vv.Value] < 100)
                 {
-                    DateTime stime = vv.Key;
-                    if (stime < startTime || stime > endTime)
+                    if (vv.Key < startTime || vv.Key > endTime)
                     {
-                        i++;
                         continue;
                     }
-                    var bval = source.ReadUShort(8 + 4 + i * 2);
-                    result.Add(bval, stime, vv.Value);
+                    var bval = source.ReadUShort(valaddr + i * 2);
+                    result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
                 i++;
@@ -332,22 +340,24 @@ namespace Cdy.Tag
         public override int DeCompressAllValue(MemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<int> result)
         {
             DateTime time;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
+
+            var qq = source.ReadBytes(qs.Count * 6, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             int i = 0;
             int rcount = 0;
             foreach (var vv in qs)
             {
-                if (vv.Value < 100)
+                if (qq[vv.Value] < 100)
                 {
-                    DateTime stime = vv.Key;
-                    if (stime < startTime || stime > endTime)
+                    if (vv.Key < startTime || vv.Key > endTime)
                     {
-                        i++;
                         continue;
                     }
-                    var bval = source.ReadInt(8 + 4 + i * 4);
-                    result.Add(bval, stime, vv.Value);
+                    var bval = source.ReadUShort(valaddr + i * 4);
+                    result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
                 i++;
@@ -368,22 +378,24 @@ namespace Cdy.Tag
         public override int DeCompressAllValue(MemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<uint> result)
         {
             DateTime time;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
+
+            var qq = source.ReadBytes(qs.Count * 6, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             int i = 0;
             int rcount = 0;
             foreach (var vv in qs)
             {
-                if (vv.Value < 100)
+                if (qq[vv.Value] < 100)
                 {
-                    DateTime stime = vv.Key;
-                    if (stime < startTime || stime > endTime)
+                    if (vv.Key < startTime || vv.Key > endTime)
                     {
-                        i++;
                         continue;
                     }
-                    var bval = source.ReadUInt(8 + 4 + i * 4);
-                    result.Add(bval, stime, vv.Value);
+                    var bval = source.ReadUShort(valaddr + i * 4);
+                    result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
                 i++;
@@ -403,23 +415,26 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override int DeCompressAllValue(MemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<long> result)
         {
+
             DateTime time;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
+
+            var qq = source.ReadBytes(qs.Count * 10, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             int i = 0;
             int rcount = 0;
             foreach (var vv in qs)
             {
-                if (vv.Value < 100)
+                if (qq[vv.Value] < 100)
                 {
-                    DateTime stime = vv.Key;
-                    if (stime < startTime || stime > endTime)
+                    if (vv.Key < startTime || vv.Key > endTime)
                     {
-                        i++;
                         continue;
                     }
-                    var bval = source.ReadLong(8 + 4 + i * 8);
-                    result.Add(bval, stime, vv.Value);
+                    var bval = source.ReadUShort(valaddr + i * 8);
+                    result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
                 i++;
@@ -440,22 +455,24 @@ namespace Cdy.Tag
         public override int DeCompressAllValue(MemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ulong> result)
         {
             DateTime time;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
+
+            var qq = source.ReadBytes(qs.Count * 10, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             int i = 0;
             int rcount = 0;
             foreach (var vv in qs)
             {
-                if (vv.Value < 100)
+                if (qq[vv.Value] < 100)
                 {
-                    DateTime stime = vv.Key;
-                    if (stime < startTime || stime > endTime)
+                    if (vv.Key < startTime || vv.Key > endTime)
                     {
-                        i++;
                         continue;
                     }
-                    var bval = source.ReadULong(8 + 4 + i * 8);
-                    result.Add(bval, stime, vv.Value);
+                    var bval = source.ReadUShort(valaddr + i * 8);
+                    result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
                 i++;
@@ -476,22 +493,24 @@ namespace Cdy.Tag
         public override int DeCompressAllValue(MemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<float> result)
         {
             DateTime time;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
+
+            var qq = source.ReadBytes(qs.Count * 6, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             int i = 0;
             int rcount = 0;
             foreach (var vv in qs)
             {
-                if (vv.Value < 100)
+                if (qq[vv.Value] < 100)
                 {
-                    DateTime stime = vv.Key;
-                    if (stime < startTime || stime > endTime)
+                    if (vv.Key < startTime || vv.Key > endTime)
                     {
-                        i++;
                         continue;
                     }
-                    var bval = source.ReadFloat(8 + 4 + i * 4);
-                    result.Add(bval, stime, vv.Value);
+                    var bval = source.ReadUShort(valaddr + i * 4);
+                    result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
                 i++;
@@ -512,22 +531,24 @@ namespace Cdy.Tag
         public override int DeCompressAllValue(MemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result)
         {
             DateTime time;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
+
+            var qq = source.ReadBytes(qs.Count * 10, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             int i = 0;
             int rcount = 0;
             foreach (var vv in qs)
             {
-                if (vv.Value < 100)
+                if (qq[vv.Value] < 100)
                 {
-                    DateTime stime = vv.Key;
-                    if (stime < startTime || stime > endTime)
+                    if (vv.Key < startTime || vv.Key > endTime)
                     {
-                        i++;
                         continue;
                     }
-                    var bval = source.ReadDouble(8 + 4 + i * 8);
-                    result.Add(bval, stime, vv.Value);
+                    var bval = source.ReadUShort(valaddr + i * 8);
+                    result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
                 i++;
@@ -548,22 +569,24 @@ namespace Cdy.Tag
         public override int DeCompressAllValue(MemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<DateTime> result)
         {
             DateTime time;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
+
+            var qq = source.ReadBytes(qs.Count * 10, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             int i = 0;
             int rcount = 0;
             foreach (var vv in qs)
             {
-                if (vv.Value < 100)
+                if (qq[vv.Value] < 100)
                 {
-                    DateTime stime = vv.Key;
-                    if (stime < startTime || stime > endTime)
+                    if (vv.Key < startTime || vv.Key > endTime)
                     {
-                        i++;
                         continue;
                     }
-                    var bval = source.ReadDateTime(8 + 4 + i * 8);
-                    result.Add(bval, stime, vv.Value);
+                    var bval = source.ReadUShort(valaddr + i * 8);
+                    result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
                 i++;
@@ -584,23 +607,36 @@ namespace Cdy.Tag
         public override int DeCompressAllValue(MemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<string> result)
         {
             DateTime time;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
+
+            var valaddr = qs.Count * 2;
 
             int i = 0;
             int rcount = 0;
-            source.Position = 12;
+
+            List<string> ls = new List<string>();
+
+            source.Position = valaddr;
+            for (int ic=0;ic<qs.Count;ic++)
+            {
+                ls.Add(source.ReadString());
+            }
+
+            var qq = source.ReadBytes(qs.Count);
+
             foreach (var vv in qs)
             {
-                if (vv.Value < 100)
+                if (qq[vv.Value] < 100)
                 {
-                    DateTime stime = vv.Key;
-                    if (stime < startTime || stime > endTime)
+                    if (vv.Key < startTime || vv.Key > endTime)
                     {
-                        i++;
                         continue;
                     }
-                    var bval = source.ReadString(Encoding.Unicode);
-                    result.Add(bval, stime, vv.Value);
+
+                    result.Add(ls[i],vv.Key,qq[vv.Value]);
+
+                    //var bval = source.ReadUShort(valaddr + i * 8);
+                    //result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
                 i++;
@@ -608,17 +644,6 @@ namespace Cdy.Tag
             return rcount;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="index"></param>
-        /// <returns></returns>
-        private bool ReadBoolValue(MemoryBlock source, int sourceAddr, int index)
-        {
-            return source.ReadByte(8 + 4 + sourceAddr + index) > 0 ? true : false;
-        }
 
         /// <summary>
         /// 
@@ -629,10 +654,12 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override bool DeCompressBoolValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override bool? DeCompressBoolValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time1);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time1);
+
+            var valaddr = qs.Count * 2;
 
             var vv = qs.ToArray();
 
@@ -644,37 +671,43 @@ namespace Cdy.Tag
 
                 if (time == skey.Key)
                 {
-                    return ReadBoolValue(source, sourceAddr, i);
+                    return source.ReadByte(valaddr + i)>0;
+                    //return  ReadBoolValue(source, sourceAddr, i);
                 }
                 else if (time > skey.Key && time < snext.Key)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            return ReadBoolValue(source, sourceAddr, i);
+                            return source.ReadByte(valaddr + i) > 0;
+                        // return ReadBoolValue(source, sourceAddr, i);
                         case QueryValueMatchType.After:
-                            return ReadBoolValue(source, sourceAddr, i + 1);
+                            return source.ReadByte(valaddr + i+1) > 0;
+                        //return ReadBoolValue(source, sourceAddr, i + 1);
                         case QueryValueMatchType.Linear:
                         case QueryValueMatchType.Closed:
                             var pval = (time - skey.Key).TotalMilliseconds;
                             var fval = (snext.Key - time).TotalMilliseconds;
                             if (pval < fval)
                             {
-                                return ReadBoolValue(source, sourceAddr, i);
+                                return source.ReadByte(valaddr + i) > 0;
+                                // return ReadBoolValue(source, sourceAddr, i);
                             }
                             else
                             {
-                                return ReadBoolValue(source, sourceAddr, i + 1);
+                                return source.ReadByte(valaddr + i + 1) > 0;
+                                //return ReadBoolValue(source, sourceAddr, i + 1);
                             }
                     }
                 }
                 else if (time == snext.Key)
                 {
-                    return ReadBoolValue(source, sourceAddr, i+1);
+                    return source.ReadByte(valaddr + i+1) > 0;
+                    //  return ReadBoolValue(source, sourceAddr, i+1);
                 }
 
             }
-            return false;
+            return null;
         }
 
         /// <summary>
@@ -690,9 +723,13 @@ namespace Cdy.Tag
         public override int DeCompressBoolValue(MemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result)
         {
             DateTime stime;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out stime);
+            var qq = source.ReadBytes(qs.Count * 3, qs.Count);
 
             var vv = qs.ToArray();
+
+            var valaddr = qs.Count * 2;
+
             int count = 0;
             foreach (var time1 in time)
             {
@@ -704,8 +741,8 @@ namespace Cdy.Tag
 
                     if (time1 == skey.Key)
                     {
-                        var val = ReadBoolValue(source, sourceAddr, i);
-                        result.Add(val, time1, skey.Value);
+                        var val = source.ReadByte(valaddr + i) > 0;
+                        result.Add(val, time1, qq[skey.Value]);
                         count++;
                         break;
                     }
@@ -715,14 +752,14 @@ namespace Cdy.Tag
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                var val = ReadBoolValue(source, sourceAddr, i);
-                                result.Add(val, time1, skey.Value);
+                                var val = source.ReadByte(valaddr + i) > 0;
+                                result.Add(val, time1, qq[skey.Value]);
                                 count++;
                                 break;
                                 
                             case QueryValueMatchType.After:
-                                val = ReadBoolValue(source, sourceAddr, i + 1);
-                                result.Add(val, time1, snext.Value);
+                                val = source.ReadByte(valaddr + i+1) > 0;
+                                result.Add(val, time1, qq[snext.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
@@ -733,14 +770,14 @@ namespace Cdy.Tag
                                 
                                 if (pval < fval)
                                 {
-                                    val = ReadBoolValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
+                                    val = source.ReadByte(valaddr + i) > 0;
+                                    result.Add(val, time1, qq[skey.Value]);
                                     break;
                                 }
                                 else
                                 {
-                                    val = ReadBoolValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
+                                    val = source.ReadByte(valaddr + i + 1) > 0;
+                                    result.Add(val, time1, qq[snext.Value]);
                                     break;
                                 }
                         }
@@ -749,8 +786,8 @@ namespace Cdy.Tag
                     }
                     else if (time1 == snext.Key)
                     {
-                        var val = ReadBoolValue(source, sourceAddr, i+1);
-                        result.Add(val, time1, snext.Value);
+                        var val = source.ReadByte(valaddr + i + 1) > 0;
+                        result.Add(val, time1, qq[snext.Value]);
                         count++;
                         break;
                     }
@@ -760,17 +797,6 @@ namespace Cdy.Tag
             return count;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="index"></param>
-        /// <returns></returns>
-        private byte ReadByteValue(MemoryBlock source, int sourceAddr, int index)
-        {
-            return source.ReadByte(8 + 4 + sourceAddr + index);
-        }
 
         /// <summary>
         /// 
@@ -781,10 +807,12 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override byte DeCompressByteValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override byte? DeCompressByteValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time1);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time1);
+
+            var valaddr = qs.Count * 2;
 
             var vv = qs.ToArray();
 
@@ -796,54 +824,37 @@ namespace Cdy.Tag
 
                 if (time == skey.Key)
                 {
-                    return ReadByteValue(source, sourceAddr, i);
+                    return source.ReadByte(valaddr + i);
                 }
                 else if (time > skey.Key && time < snext.Key)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            return ReadByteValue(source, sourceAddr, i);
+                            return source.ReadByte(valaddr + i);
                         case QueryValueMatchType.After:
-                            return ReadByteValue(source, sourceAddr, i + 1);
+                            return source.ReadByte(valaddr + i + 1);
                         case QueryValueMatchType.Linear:
-                            if (skey.Value < 20 && snext.Value < 20)
-                            {
-                                var pval1 = (time1 - skey.Key).TotalMilliseconds;
-                                var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                var sval1 = ReadByteValue(source, sourceAddr, i);
-                                var sval2 = ReadByteValue(source, sourceAddr, i + 1);
-                                return (byte)(pval1 / tval1 * (sval2 - sval1) + sval1);
-                            }
-                            else if (skey.Value < 20)
-                            {
-                                return ReadByteValue(source, sourceAddr, i);
-                            }
-                            else if (snext.Value < 20)
-                            {
-                                return ReadByteValue(source, sourceAddr, i + 1);
-                            }
-                            break;
                         case QueryValueMatchType.Closed:
                             var pval = (time - skey.Key).TotalMilliseconds;
                             var fval = (snext.Key - time).TotalMilliseconds;
                             if (pval < fval)
                             {
-                                return ReadByteValue(source, sourceAddr, i);
+                                return source.ReadByte(valaddr + i);
                             }
                             else
                             {
-                                return ReadByteValue(source, sourceAddr, i + 1);
+                                return source.ReadByte(valaddr + i + 1);
                             }
                     }
                 }
                 else if (time == snext.Key)
                 {
-                    return ReadByteValue(source, sourceAddr, i + 1);
+                    return source.ReadByte(valaddr + i + 1);
                 }
 
             }
-            return byte.MinValue;
+            return null;
         }
         /// <summary>
         /// 
@@ -858,9 +869,13 @@ namespace Cdy.Tag
         public override int DeCompressByteValue(MemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result)
         {
             DateTime stime;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out stime);
+            var qq = source.ReadBytes(qs.Count * 3, qs.Count);
 
             var vv = qs.ToArray();
+
+            var valaddr = qs.Count * 2;
+
             int count = 0;
             foreach (var time1 in time)
             {
@@ -872,8 +887,8 @@ namespace Cdy.Tag
 
                     if (time1 == skey.Key)
                     {
-                        var val = ReadByteValue(source, sourceAddr, i);
-                        result.Add(val, time1, skey.Value);
+                        var val = source.ReadByte(valaddr + i);
+                        result.Add(val, time1, qq[skey.Value]);
                         count++;
                         break;
                     }
@@ -883,56 +898,32 @@ namespace Cdy.Tag
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                var val = ReadByteValue(source, sourceAddr, i);
-                                result.Add(val, time1, skey.Value);
+                                var val = source.ReadByte(valaddr + i);
+                                result.Add(val, time1, qq[skey.Value]);
                                 count++;
                                 break;
 
                             case QueryValueMatchType.After:
-                                val = ReadByteValue(source, sourceAddr, i + 1);
-                                result.Add(val, time1, snext.Value);
+                                val = source.ReadByte(valaddr + i + 1);
+                                result.Add(val, time1, qq[snext.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (skey.Value < 20 && snext.Value < 20)
-                                {
-                                    var pval1 = (time1 - skey.Key).TotalMilliseconds;
-                                    var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                    var sval1 = ReadByteValue(source, sourceAddr, i);
-                                    var sval2 = ReadByteValue(source, sourceAddr, i + 1);
-                                    var val1 = (byte)(pval1 / tval1 * (sval2 - sval1) + sval1);
-                                    result.Add(val1, time1, 0);
-                                }
-                                else if (skey.Value < 20)
-                                {
-                                    val = ReadByteValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
-                                }
-                                else if (snext.Value < 20)
-                                {
-                                    val = ReadByteValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
-                                }
-                                else
-                                {
-                                    result.Add(0, time1, (byte)QulityConst.Null);
-                                }
-                                count++;
-                                break;
+
                             case QueryValueMatchType.Closed:
                                 var pval = (time1 - skey.Key).TotalMilliseconds;
                                 var fval = (snext.Key - time1).TotalMilliseconds;
 
                                 if (pval < fval)
                                 {
-                                    val = ReadByteValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
+                                    val = source.ReadByte(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                     break;
                                 }
                                 else
                                 {
-                                    val = ReadByteValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
+                                    val = source.ReadByte(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                     break;
                                 }
                         }
@@ -941,8 +932,8 @@ namespace Cdy.Tag
                     }
                     else if (time1 == snext.Key)
                     {
-                        var val = ReadByteValue(source, sourceAddr, i + 1);
-                        result.Add(val, time1, snext.Value);
+                        var val = source.ReadByte(valaddr + i + 1);
+                        result.Add(val, time1, qq[snext.Value]);
                         count++;
                         break;
                     }
@@ -951,17 +942,7 @@ namespace Cdy.Tag
             }
             return count;
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="index"></param>
-        /// <returns></returns>
-        private DateTime ReadDateTimeValue(MemoryBlock source, int sourceAddr, int index)
-        {
-            return source.ReadDateTime(8 + 4 + sourceAddr + index * 8);
-        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -971,10 +952,12 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override DateTime DeCompressDateTimeValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override DateTime? DeCompressDateTimeValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time1);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time1);
+
+            var valaddr = qs.Count * 2;
 
             var vv = qs.ToArray();
 
@@ -986,38 +969,37 @@ namespace Cdy.Tag
 
                 if (time == skey.Key)
                 {
-                    return ReadDateTimeValue(source, sourceAddr, i);
+                    return source.ReadDateTime(valaddr + i);
                 }
                 else if (time > skey.Key && time < snext.Key)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            return ReadDateTimeValue(source, sourceAddr, i);
+                            return source.ReadDateTime(valaddr + i);
                         case QueryValueMatchType.After:
-                            return ReadDateTimeValue(source, sourceAddr, i + 1);
+                            return source.ReadDateTime(valaddr + i + 1);
                         case QueryValueMatchType.Linear:
-                            
                         case QueryValueMatchType.Closed:
                             var pval = (time - skey.Key).TotalMilliseconds;
                             var fval = (snext.Key - time).TotalMilliseconds;
                             if (pval < fval)
                             {
-                                return ReadDateTimeValue(source, sourceAddr, i);
+                                return source.ReadDateTime(valaddr + i);
                             }
                             else
                             {
-                                return ReadDateTimeValue(source, sourceAddr, i + 1);
+                                return source.ReadDateTime(valaddr + i + 1);
                             }
                     }
                 }
                 else if (time == snext.Key)
                 {
-                    return ReadDateTimeValue(source, sourceAddr, i + 1);
+                    return source.ReadDateTime(valaddr + i + 1);
                 }
 
             }
-            return DateTime.MinValue;
+            return null;
         }
         /// <summary>
         /// 
@@ -1032,9 +1014,13 @@ namespace Cdy.Tag
         public override int DeCompressDateTimeValue(MemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result)
         {
             DateTime stime;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out stime);
+            var qq = source.ReadBytes(qs.Count * 10, qs.Count);
 
             var vv = qs.ToArray();
+
+            var valaddr = qs.Count * 2;
+
             int count = 0;
             foreach (var time1 in time)
             {
@@ -1046,8 +1032,8 @@ namespace Cdy.Tag
 
                     if (time1 == skey.Key)
                     {
-                        var val = ReadDateTimeValue(source, sourceAddr, i);
-                        result.Add(val, time1, skey.Value);
+                        var val = source.ReadDateTime(valaddr + i);
+                        result.Add(val, time1, qq[skey.Value]);
                         count++;
                         break;
                     }
@@ -1057,31 +1043,32 @@ namespace Cdy.Tag
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                var val = ReadDateTimeValue(source, sourceAddr, i);
-                                result.Add(val, time1, skey.Value);
+                                var val = source.ReadDateTime(valaddr + i);
+                                result.Add(val, time1, qq[skey.Value]);
                                 count++;
                                 break;
 
                             case QueryValueMatchType.After:
-                                val = ReadDateTimeValue(source, sourceAddr, i + 1);
-                                result.Add(val, time1, snext.Value);
+                                val = source.ReadDateTime(valaddr + i + 1);
+                                result.Add(val, time1, qq[snext.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
+
                             case QueryValueMatchType.Closed:
                                 var pval = (time1 - skey.Key).TotalMilliseconds;
                                 var fval = (snext.Key - time1).TotalMilliseconds;
 
                                 if (pval < fval)
                                 {
-                                    val = ReadDateTimeValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
+                                    val = source.ReadDateTime(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                     break;
                                 }
                                 else
                                 {
-                                    val = ReadDateTimeValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
+                                    val = source.ReadDateTime(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                     break;
                                 }
                         }
@@ -1090,8 +1077,8 @@ namespace Cdy.Tag
                     }
                     else if (time1 == snext.Key)
                     {
-                        var val = ReadDateTimeValue(source, sourceAddr, i + 1);
-                        result.Add(val, time1, snext.Value);
+                        var val = source.ReadDateTime(valaddr + i + 1);
+                        result.Add(val, time1, qq[snext.Value]);
                         count++;
                         break;
                     }
@@ -1101,17 +1088,7 @@ namespace Cdy.Tag
             return count;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="index"></param>
-        /// <returns></returns>
-        private double ReadDoubleValue(MemoryBlock source, int sourceAddr, int index)
-        {
-            return source.ReadDouble(8 + 4 + sourceAddr + index * 8);
-        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -1121,10 +1098,13 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override double DeCompressDoubleValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override double? DeCompressDoubleValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time1);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time1);
+            var qq = source.ReadBytes(qs.Count * 10, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             var vv = qs.ToArray();
 
@@ -1136,62 +1116,70 @@ namespace Cdy.Tag
 
                 if (time == skey.Key)
                 {
-                    return ReadDoubleValue(source, sourceAddr, i);
+                    return source.ReadDouble(valaddr + i);
                 }
                 else if (time > skey.Key && time < snext.Key)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            return ReadDoubleValue(source, sourceAddr, i);
+                            return source.ReadDouble(valaddr + i);
                         case QueryValueMatchType.After:
-                            return ReadDoubleValue(source, sourceAddr, i + 1);
+                            return source.ReadDouble(valaddr + i + 1);
                         case QueryValueMatchType.Linear:
-                            if (skey.Value < 20 && snext.Value < 20)
+
+                            if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
                             {
                                 var pval1 = (time1 - skey.Key).TotalMilliseconds;
                                 var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                var sval1 = ReadDoubleValue(source, sourceAddr, i);
-                                var sval2 = ReadDoubleValue(source, sourceAddr, i + 1);
+                                var sval1 = source.ReadDouble(valaddr + i);
+                                var sval2 = source.ReadDouble(valaddr + i + 1);
                                 return (double)(pval1 / tval1 * (sval2 - sval1) + sval1);
                             }
-                            else if (skey.Value < 20)
+                            else if (qq[skey.Value] < 20)
                             {
-                                return ReadDoubleValue(source, sourceAddr, i);
+                                return source.ReadDouble(valaddr + i);
                             }
-                            else if (snext.Value < 20)
+                            else if (qq[snext.Value] < 20)
                             {
-                                return ReadDoubleValue(source, sourceAddr, i + 1);
+                                return source.ReadDouble(valaddr + i + 1);
                             }
                             break;
+
                         case QueryValueMatchType.Closed:
                             var pval = (time - skey.Key).TotalMilliseconds;
                             var fval = (snext.Key - time).TotalMilliseconds;
                             if (pval < fval)
                             {
-                                return ReadDoubleValue(source, sourceAddr, i);
+                                return source.ReadDouble(valaddr + i);
                             }
                             else
                             {
-                                return ReadDoubleValue(source, sourceAddr, i + 1);
+                                return source.ReadDouble(valaddr + i + 1);
                             }
                     }
                 }
                 else if (time == snext.Key)
                 {
-                    return ReadDoubleValue(source, sourceAddr, i + 1);
+                    return source.ReadDouble(valaddr + i + 1);
                 }
 
             }
-            return double.MinValue;
+            return null;
+
+            
         }
 
         public override int DeCompressDoubleValue(MemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<double> result)
         {
             DateTime stime;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out stime);
+            var qq = source.ReadBytes(qs.Count * 10, qs.Count);
 
             var vv = qs.ToArray();
+
+            var valaddr = qs.Count * 2;
+
             int count = 0;
             foreach (var time1 in time)
             {
@@ -1203,8 +1191,8 @@ namespace Cdy.Tag
 
                     if (time1 == skey.Key)
                     {
-                        var val = ReadDoubleValue(source, sourceAddr, i);
-                        result.Add(val, time1, skey.Value);
+                        var val = source.ReadDouble(valaddr + i);
+                        result.Add(val, time1, qq[skey.Value]);
                         count++;
                         break;
                     }
@@ -1214,34 +1202,34 @@ namespace Cdy.Tag
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                var val = ReadDoubleValue(source, sourceAddr, i);
-                                result.Add(val, time1, skey.Value);
+                                var val = source.ReadDouble(valaddr + i);
+                                result.Add(val, time1, qq[skey.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                val = ReadDoubleValue(source, sourceAddr, i + 1);
-                                result.Add(val, time1, snext.Value);
+                                val = source.ReadDouble(valaddr + i + 1);
+                                result.Add(val, time1, qq[snext.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (skey.Value < 20 && snext.Value < 20)
+                                if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
                                 {
                                     var pval1 = (time1 - skey.Key).TotalMilliseconds;
                                     var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                    var sval1 = ReadDoubleValue(source, sourceAddr, i);
-                                    var sval2 = ReadDoubleValue(source, sourceAddr, i + 1);
+                                    var sval1 = source.ReadDouble(valaddr + i);
+                                    var sval2 = source.ReadDouble(valaddr + i + 1);
                                     var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
                                     result.Add(val1, time1, 0);
                                 }
-                                else if (skey.Value < 20)
+                                else if (qq[skey.Value] < 20)
                                 {
-                                    val = ReadDoubleValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
+                                    val = source.ReadDouble(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                 }
-                                else if (snext.Value < 20)
+                                else if (qq[snext.Value] < 20)
                                 {
-                                    val = ReadDoubleValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
+                                    val = source.ReadDouble(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                 }
                                 else
                                 {
@@ -1249,31 +1237,29 @@ namespace Cdy.Tag
                                 }
                                 count++;
                                 break;
-
                             case QueryValueMatchType.Closed:
                                 var pval = (time1 - skey.Key).TotalMilliseconds;
                                 var fval = (snext.Key - time1).TotalMilliseconds;
 
                                 if (pval < fval)
                                 {
-                                    val = ReadDoubleValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
-                                    break;
+                                    val = source.ReadDouble(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                 }
                                 else
                                 {
-                                    val = ReadDoubleValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
-                                    break;
+                                    val = source.ReadDouble(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                 }
+                                break;
                         }
                         count++;
                         break;
                     }
                     else if (time1 == snext.Key)
                     {
-                        var val = ReadDoubleValue(source, sourceAddr, i + 1);
-                        result.Add(val, time1, snext.Value);
+                        var val = source.ReadDouble(valaddr + i + 1);
+                        result.Add(val, time1, qq[snext.Value]);
                         count++;
                         break;
                     }
@@ -1284,15 +1270,13 @@ namespace Cdy.Tag
         }
 
 
-        private float ReadFloatValue(MemoryBlock source, int sourceAddr, int index)
-        {
-            return source.ReadFloat(8 + 4 + sourceAddr + index * 4);
-        }
-
-        public override float DeCompressFloatValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override float? DeCompressFloatValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time1);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time1);
+            var qq = source.ReadBytes(qs.Count * 6, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             var vv = qs.ToArray();
 
@@ -1304,62 +1288,78 @@ namespace Cdy.Tag
 
                 if (time == skey.Key)
                 {
-                    return ReadFloatValue(source, sourceAddr, i);
+                    return source.ReadFloat(valaddr + i);
                 }
                 else if (time > skey.Key && time < snext.Key)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            return ReadFloatValue(source, sourceAddr, i);
+                            return source.ReadFloat(valaddr + i);
                         case QueryValueMatchType.After:
-                            return ReadFloatValue(source, sourceAddr, i + 1);
+                            return source.ReadFloat(valaddr + i + 1);
                         case QueryValueMatchType.Linear:
-                            if (skey.Value < 20 && snext.Value < 20)
+
+                            if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
                             {
                                 var pval1 = (time1 - skey.Key).TotalMilliseconds;
                                 var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                var sval1 = ReadFloatValue(source, sourceAddr, i);
-                                var sval2 = ReadFloatValue(source, sourceAddr, i + 1);
+                                var sval1 = source.ReadFloat(valaddr + i);
+                                var sval2 = source.ReadFloat(valaddr + i + 1);
                                 return (float)(pval1 / tval1 * (sval2 - sval1) + sval1);
                             }
-                            else if (skey.Value < 20)
+                            else if (qq[skey.Value] < 20)
                             {
-                                return ReadFloatValue(source, sourceAddr, i);
+                                return source.ReadFloat(valaddr + i);
                             }
-                            else if (snext.Value < 20)
+                            else if (qq[snext.Value] < 20)
                             {
-                                return ReadFloatValue(source, sourceAddr, i + 1);
+                                return source.ReadFloat(valaddr + i + 1);
                             }
                             break;
+
                         case QueryValueMatchType.Closed:
                             var pval = (time - skey.Key).TotalMilliseconds;
                             var fval = (snext.Key - time).TotalMilliseconds;
                             if (pval < fval)
                             {
-                                return ReadFloatValue(source, sourceAddr, i);
+                                return source.ReadFloat(valaddr + i);
                             }
                             else
                             {
-                                return ReadFloatValue(source, sourceAddr, i + 1);
+                                return source.ReadFloat(valaddr + i + 1);
                             }
                     }
                 }
                 else if (time == snext.Key)
                 {
-                    return ReadFloatValue(source, sourceAddr, i + 1);
+                    return source.ReadFloat(valaddr + i + 1);
                 }
 
             }
-            return float.MinValue;
+            return null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
         public override int DeCompressFloatValue(MemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<float> result)
         {
             DateTime stime;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out stime);
+            var qq = source.ReadBytes(qs.Count * 6, qs.Count);
 
             var vv = qs.ToArray();
+
+            var valaddr = qs.Count * 2;
+
             int count = 0;
             foreach (var time1 in time)
             {
@@ -1371,44 +1371,45 @@ namespace Cdy.Tag
 
                     if (time1 == skey.Key)
                     {
-                        var val = ReadFloatValue(source, sourceAddr, i);
-                        result.Add(val, time1, skey.Value);
+                        var val = source.ReadFloat(valaddr + i);
+                        result.Add(val, time1, qq[skey.Value]);
                         count++;
                         break;
                     }
                     else if (time1 > skey.Key && time1 < snext.Key)
                     {
+
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                var val = ReadFloatValue(source, sourceAddr, i);
-                                result.Add(val, time1, skey.Value);
+                                var val = source.ReadFloat(valaddr + i);
+                                result.Add(val, time1, qq[skey.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                val = ReadFloatValue(source, sourceAddr, i + 1);
-                                result.Add(val, time1, snext.Value);
+                                val = source.ReadFloat(valaddr + i + 1);
+                                result.Add(val, time1, qq[snext.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (skey.Value < 20 && snext.Value < 20)
+                                if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
                                 {
                                     var pval1 = (time1 - skey.Key).TotalMilliseconds;
                                     var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                    var sval1 = ReadFloatValue(source, sourceAddr, i);
-                                    var sval2 = ReadFloatValue(source, sourceAddr, i + 1);
+                                    var sval1 = source.ReadFloat(valaddr + i);
+                                    var sval2 = source.ReadFloat(valaddr + i + 1);
                                     var val1 = (float)(pval1 / tval1 * (sval2 - sval1) + sval1);
                                     result.Add(val1, time1, 0);
                                 }
-                                else if (skey.Value < 20)
+                                else if (qq[skey.Value] < 20)
                                 {
-                                    val = ReadFloatValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
+                                    val = source.ReadFloat(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                 }
-                                else if (snext.Value < 20)
+                                else if (qq[snext.Value] < 20)
                                 {
-                                    val = ReadFloatValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
+                                    val = source.ReadFloat(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                 }
                                 else
                                 {
@@ -1416,31 +1417,29 @@ namespace Cdy.Tag
                                 }
                                 count++;
                                 break;
-
                             case QueryValueMatchType.Closed:
                                 var pval = (time1 - skey.Key).TotalMilliseconds;
                                 var fval = (snext.Key - time1).TotalMilliseconds;
 
                                 if (pval < fval)
                                 {
-                                    val = ReadFloatValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
-                                    break;
+                                    val = source.ReadFloat(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                 }
                                 else
                                 {
-                                    val = ReadFloatValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
-                                    break;
+                                    val = source.ReadFloat(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                 }
+                                break;
                         }
                         count++;
                         break;
                     }
                     else if (time1 == snext.Key)
                     {
-                        var val = ReadFloatValue(source, sourceAddr, i + 1);
-                        result.Add(val, time1, snext.Value);
+                        var val = source.ReadFloat(valaddr + i + 1);
+                        result.Add(val, time1, qq[snext.Value]);
                         count++;
                         break;
                     }
@@ -1455,17 +1454,17 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="source"></param>
         /// <param name="sourceAddr"></param>
-        /// <param name="index"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
-        private int ReadIntValue(MemoryBlock source, int sourceAddr, int index)
-        {
-            return source.ReadInt(8 + 4 + sourceAddr + index * 4);
-        }
-
-        public override int DeCompressIntValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override int? DeCompressIntValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time1);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time1);
+            var qq = source.ReadBytes(qs.Count * 6, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             var vv = qs.ToArray();
 
@@ -1477,62 +1476,78 @@ namespace Cdy.Tag
 
                 if (time == skey.Key)
                 {
-                    return ReadIntValue(source, sourceAddr, i);
+                    return source.ReadInt(valaddr + i);
                 }
                 else if (time > skey.Key && time < snext.Key)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            return ReadIntValue(source, sourceAddr, i);
+                            return source.ReadInt(valaddr + i);
                         case QueryValueMatchType.After:
-                            return ReadIntValue(source, sourceAddr, i + 1);
+                            return source.ReadInt(valaddr + i + 1);
                         case QueryValueMatchType.Linear:
-                            if (skey.Value < 20 && snext.Value < 20)
+
+                            if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
                             {
                                 var pval1 = (time1 - skey.Key).TotalMilliseconds;
                                 var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                var sval1 = ReadIntValue(source, sourceAddr, i);
-                                var sval2 = ReadIntValue(source, sourceAddr, i + 1);
+                                var sval1 = source.ReadInt(valaddr + i);
+                                var sval2 = source.ReadInt(valaddr + i + 1);
                                 return (int)(pval1 / tval1 * (sval2 - sval1) + sval1);
                             }
-                            else if (skey.Value < 20)
+                            else if (qq[skey.Value] < 20)
                             {
-                                return ReadIntValue(source, sourceAddr, i);
+                                return source.ReadInt(valaddr + i);
                             }
-                            else if (snext.Value < 20)
+                            else if (qq[snext.Value] < 20)
                             {
-                                return ReadIntValue(source, sourceAddr, i + 1);
+                                return source.ReadInt(valaddr + i + 1);
                             }
                             break;
+
                         case QueryValueMatchType.Closed:
                             var pval = (time - skey.Key).TotalMilliseconds;
                             var fval = (snext.Key - time).TotalMilliseconds;
                             if (pval < fval)
                             {
-                                return ReadIntValue(source, sourceAddr, i);
+                                return source.ReadInt(valaddr + i);
                             }
                             else
                             {
-                                return ReadIntValue(source, sourceAddr, i + 1);
+                                return source.ReadInt(valaddr + i + 1);
                             }
                     }
                 }
                 else if (time == snext.Key)
                 {
-                    return ReadIntValue(source, sourceAddr, i + 1);
+                    return source.ReadInt(valaddr + i + 1);
                 }
 
             }
-            return int.MinValue;
+            return null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
         public override int DeCompressIntValue(MemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<int> result)
         {
             DateTime stime;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out stime);
+            var qq = source.ReadBytes(qs.Count * 6, qs.Count);
 
             var vv = qs.ToArray();
+
+            var valaddr = qs.Count * 2;
+
             int count = 0;
             foreach (var time1 in time)
             {
@@ -1544,210 +1559,45 @@ namespace Cdy.Tag
 
                     if (time1 == skey.Key)
                     {
-                        var val = ReadIntValue(source, sourceAddr, i);
-                        result.Add(val, time1, skey.Value);
+                        var val = source.ReadInt(valaddr + i);
+                        result.Add(val, time1, qq[skey.Value]);
                         count++;
                         break;
                     }
                     else if (time1 > skey.Key && time1 < snext.Key)
                     {
+
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                var val = ReadIntValue(source, sourceAddr, i);
-                                result.Add(val, time1, skey.Value);
+                                var val = source.ReadInt(valaddr + i);
+                                result.Add(val, time1, qq[skey.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                val = ReadIntValue(source, sourceAddr, i + 1);
-                                result.Add(val, time1, snext.Value);
+                                val = source.ReadInt(valaddr + i + 1);
+                                result.Add(val, time1, qq[snext.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (skey.Value < 20 && snext.Value < 20)
+                                if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
                                 {
                                     var pval1 = (time1 - skey.Key).TotalMilliseconds;
                                     var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                    var sval1 = ReadIntValue(source, sourceAddr, i);
-                                    var sval2 = ReadIntValue(source, sourceAddr, i + 1);
+                                    var sval1 = source.ReadInt(valaddr + i);
+                                    var sval2 = source.ReadInt(valaddr + i + 1);
                                     var val1 = (int)(pval1 / tval1 * (sval2 - sval1) + sval1);
                                     result.Add(val1, time1, 0);
                                 }
-                                else if (skey.Value < 20)
+                                else if (qq[skey.Value] < 20)
                                 {
-                                    val = ReadIntValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
+                                    val = source.ReadInt(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                 }
-                                else if (snext.Value < 20)
+                                else if (qq[snext.Value] < 20)
                                 {
-                                    val = ReadIntValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
-                                }
-                                else
-                                {
-                                    result.Add(0, time1, (byte)QulityConst.Null);
-                                }
-                                count++;
-                                break;
-
-                            case QueryValueMatchType.Closed:
-                                var pval = (time1 - skey.Key).TotalMilliseconds;
-                                var fval = (snext.Key - time1).TotalMilliseconds;
-
-                                if (pval < fval)
-                                {
-                                    val = ReadIntValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
-                                    break;
-                                }
-                                else
-                                {
-                                    val = ReadIntValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
-                                    break;
-                                }
-                        }
-                        count++;
-                        break;
-                    }
-                    else if (time1 == snext.Key)
-                    {
-                        var val = ReadFloatValue(source, sourceAddr, i + 1);
-                        result.Add(val, time1, snext.Value);
-                        count++;
-                        break;
-                    }
-
-                }
-            }
-            return count;
-        }
-
-        private long ReadLongValue(MemoryBlock source, int sourceAddr, int index)
-        {
-            return source.ReadLong(8 + 4 + sourceAddr + index * 8);
-        }
-
-        public override long DeCompressLongValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            DateTime time1;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time1);
-
-            var vv = qs.ToArray();
-
-            for (int i = 0; i < vv.Length - 1; i++)
-            {
-                var skey = vv[i];
-
-                var snext = vv[i + 1];
-
-                if (time == skey.Key)
-                {
-                    return ReadLongValue(source, sourceAddr, i);
-                }
-                else if (time > skey.Key && time < snext.Key)
-                {
-                    switch (type)
-                    {
-                        case QueryValueMatchType.Previous:
-                            return ReadLongValue(source, sourceAddr, i);
-                        case QueryValueMatchType.After:
-                            return ReadLongValue(source, sourceAddr, i + 1);
-                        case QueryValueMatchType.Linear:
-                            if (skey.Value < 20 && snext.Value < 20)
-                            {
-                                var pval1 = (time1 - skey.Key).TotalMilliseconds;
-                                var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                var sval1 = ReadLongValue(source, sourceAddr, i);
-                                var sval2 = ReadLongValue(source, sourceAddr, i + 1);
-                                return (long)(pval1 / tval1 * (sval2 - sval1) + sval1);
-                            }
-                            else if (skey.Value < 20)
-                            {
-                                return ReadLongValue(source, sourceAddr, i);
-                            }
-                            else if (snext.Value < 20)
-                            {
-                                return ReadLongValue(source, sourceAddr, i + 1);
-                            }
-                            break;
-                        case QueryValueMatchType.Closed:
-                            var pval = (time - skey.Key).TotalMilliseconds;
-                            var fval = (snext.Key - time).TotalMilliseconds;
-                            if (pval < fval)
-                            {
-                                return ReadLongValue(source, sourceAddr, i);
-                            }
-                            else
-                            {
-                                return ReadLongValue(source, sourceAddr, i + 1);
-                            }
-                    }
-                }
-                else if (time == snext.Key)
-                {
-                    return ReadLongValue(source, sourceAddr, i + 1);
-                }
-
-            }
-            return long.MinValue;
-        }
-
-        public override int DeCompressLongValue(MemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<long> result)
-        {
-            DateTime stime;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out stime);
-
-            var vv = qs.ToArray();
-            int count = 0;
-            foreach (var time1 in time)
-            {
-                for (int i = 0; i < vv.Length - 1; i++)
-                {
-                    var skey = vv[i];
-
-                    var snext = vv[i + 1];
-
-                    if (time1 == skey.Key)
-                    {
-                        var val = ReadLongValue(source, sourceAddr, i);
-                        result.Add(val, time1, skey.Value);
-                        count++;
-                        break;
-                    }
-                    else if (time1 > skey.Key && time1 < snext.Key)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                var val = ReadLongValue(source, sourceAddr, i);
-                                result.Add(val, time1, skey.Value);
-                                count++;
-                                break;
-                            case QueryValueMatchType.After:
-                                val = ReadLongValue(source, sourceAddr, i + 1);
-                                result.Add(val, time1, snext.Value);
-                                count++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (skey.Value < 20 && snext.Value < 20)
-                                {
-                                    var pval1 = (time1 - skey.Key).TotalMilliseconds;
-                                    var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                    var sval1 = ReadLongValue(source, sourceAddr, i);
-                                    var sval2 = ReadLongValue(source, sourceAddr, i + 1);
-                                    var val1 = (long)(pval1 / tval1 * (sval2 - sval1) + sval1);
-                                    result.Add(val1, time1, 0);
-                                }
-                                else if (skey.Value < 20)
-                                {
-                                    val = ReadLongValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
-                                }
-                                else if (snext.Value < 20)
-                                {
-                                    val = ReadLongValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
+                                    val = source.ReadInt(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                 }
                                 else
                                 {
@@ -1755,31 +1605,29 @@ namespace Cdy.Tag
                                 }
                                 count++;
                                 break;
-
                             case QueryValueMatchType.Closed:
                                 var pval = (time1 - skey.Key).TotalMilliseconds;
                                 var fval = (snext.Key - time1).TotalMilliseconds;
 
                                 if (pval < fval)
                                 {
-                                    val = ReadLongValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
-                                    break;
+                                    val = source.ReadInt(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                 }
                                 else
                                 {
-                                    val = ReadLongValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
-                                    break;
+                                    val = source.ReadInt(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                 }
+                                break;
                         }
                         count++;
                         break;
                     }
                     else if (time1 == snext.Key)
                     {
-                        var val = ReadLongValue(source, sourceAddr, i + 1);
-                        result.Add(val, time1, snext.Value);
+                        var val = source.ReadInt(valaddr + i + 1);
+                        result.Add(val, time1, qq[snext.Value]);
                         count++;
                         break;
                     }
@@ -1794,17 +1642,17 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="source"></param>
         /// <param name="sourceAddr"></param>
-        /// <param name="index"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
-        private short ReadShortValue(MemoryBlock source, int sourceAddr, int index)
-        {
-            return source.ReadShort(8 + 4 + sourceAddr + index * 2);
-        }
-
-        public override short DeCompressShortValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override long? DeCompressLongValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time1);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time1);
+            var qq = source.ReadBytes(qs.Count * 10, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             var vv = qs.ToArray();
 
@@ -1816,62 +1664,257 @@ namespace Cdy.Tag
 
                 if (time == skey.Key)
                 {
-                    return ReadShortValue(source, sourceAddr, i);
+                    return source.ReadInt(valaddr + i);
                 }
                 else if (time > skey.Key && time < snext.Key)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            return ReadShortValue(source, sourceAddr, i);
+                            return source.ReadLong(valaddr + i);
                         case QueryValueMatchType.After:
-                            return ReadShortValue(source, sourceAddr, i + 1);
+                            return source.ReadLong(valaddr + i + 1);
                         case QueryValueMatchType.Linear:
-                            if (skey.Value < 20 && snext.Value < 20)
+
+                            if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
                             {
                                 var pval1 = (time1 - skey.Key).TotalMilliseconds;
                                 var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                var sval1 = ReadShortValue(source, sourceAddr, i);
-                                var sval2 = ReadShortValue(source, sourceAddr, i + 1);
-                                return (short)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                var sval1 = source.ReadLong(valaddr + i);
+                                var sval2 = source.ReadLong(valaddr + i + 1);
+                                return (long)(pval1 / tval1 * (sval2 - sval1) + sval1);
                             }
-                            else if (skey.Value < 20)
+                            else if (qq[skey.Value] < 20)
                             {
-                                return ReadShortValue(source, sourceAddr, i);
+                                return source.ReadLong(valaddr + i);
                             }
-                            else if (snext.Value < 20)
+                            else if (qq[snext.Value] < 20)
                             {
-                                return ReadShortValue(source, sourceAddr, i + 1);
+                                return source.ReadLong(valaddr + i + 1);
                             }
                             break;
+
                         case QueryValueMatchType.Closed:
                             var pval = (time - skey.Key).TotalMilliseconds;
                             var fval = (snext.Key - time).TotalMilliseconds;
                             if (pval < fval)
                             {
-                                return ReadShortValue(source, sourceAddr, i);
+                                return source.ReadLong(valaddr + i);
                             }
                             else
                             {
-                                return ReadShortValue(source, sourceAddr, i + 1);
+                                return source.ReadLong(valaddr + i + 1);
                             }
                     }
                 }
                 else if (time == snext.Key)
                 {
-                    return ReadShortValue(source, sourceAddr, i + 1);
+                    return source.ReadLong(valaddr + i + 1);
                 }
 
             }
-            return short.MinValue;
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public override int DeCompressLongValue(MemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<long> result)
+        {
+
+            DateTime stime;
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out stime);
+            var qq = source.ReadBytes(qs.Count * 10,qs.Count);
+
+            var vv = qs.ToArray();
+
+            var valaddr = qs.Count * 2;
+
+            int count = 0;
+            foreach (var time1 in time)
+            {
+                for (int i = 0; i < vv.Length - 1; i++)
+                {
+                    var skey = vv[i];
+
+                    var snext = vv[i + 1];
+
+                    if (time1 == skey.Key)
+                    {
+                        var val = source.ReadLong(valaddr + i);
+                        result.Add(val, time1, qq[skey.Value]);
+                        count++;
+                        break;
+                    }
+                    else if (time1 > skey.Key && time1 < snext.Key)
+                    {
+
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                var val = source.ReadLong(valaddr + i);
+                                result.Add(val, time1, qq[skey.Value]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                val = source.ReadLong(valaddr + i + 1);
+                                result.Add(val, time1, qq[snext.Value]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
+                                {
+                                    var pval1 = (time1 - skey.Key).TotalMilliseconds;
+                                    var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
+                                    var sval1 = source.ReadLong(valaddr + i);
+                                    var sval2 = source.ReadLong(valaddr + i + 1);
+                                    var val1 = (long)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                    result.Add(val1, time1, 0);
+                                }
+                                else if (qq[skey.Value] < 20)
+                                {
+                                    val = source.ReadLong(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
+                                }
+                                else if (qq[snext.Value] < 20)
+                                {
+                                    val = source.ReadLong(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QulityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - skey.Key).TotalMilliseconds;
+                                var fval = (snext.Key - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    val = source.ReadLong(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
+                                }
+                                else
+                                {
+                                    val = source.ReadLong(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
+                                }
+                                break;
+                        }
+                        count++;
+                        break;
+                    }
+                    else if (time1 == snext.Key)
+                    {
+                        var val = source.ReadLong(valaddr + i + 1);
+                        result.Add(val, time1, qq[snext.Value]);
+                        count++;
+                        break;
+                    }
+
+                }
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public override short? DeCompressShortValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        {
+            DateTime time1;
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time1);
+            var qq = source.ReadBytes(qs.Count * 4, qs.Count);
+
+            var valaddr = qs.Count * 2;
+
+            var vv = qs.ToArray();
+
+            for (int i = 0; i < vv.Length - 1; i++)
+            {
+                var skey = vv[i];
+
+                var snext = vv[i + 1];
+
+                if (time == skey.Key)
+                {
+                    return source.ReadShort(valaddr + i);
+                }
+                else if (time > skey.Key && time < snext.Key)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            return source.ReadShort(valaddr + i);
+                        case QueryValueMatchType.After:
+                            return source.ReadShort(valaddr + i + 1);
+                        case QueryValueMatchType.Linear:
+
+                            if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
+                            {
+                                var pval1 = (time1 - skey.Key).TotalMilliseconds;
+                                var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
+                                var sval1 = source.ReadShort(valaddr + i);
+                                var sval2 = source.ReadShort(valaddr + i + 1);
+                                return (short)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                            }
+                            else if (qq[skey.Value] < 20)
+                            {
+                                return source.ReadShort(valaddr + i);
+                            }
+                            else if (qq[snext.Value] < 20)
+                            {
+                                return source.ReadShort(valaddr + i + 1);
+                            }
+                            break;
+
+                        case QueryValueMatchType.Closed:
+                            var pval = (time - skey.Key).TotalMilliseconds;
+                            var fval = (snext.Key - time).TotalMilliseconds;
+                            if (pval < fval)
+                            {
+                                return source.ReadShort(valaddr + i);
+                            }
+                            else
+                            {
+                                return source.ReadShort(valaddr + i + 1);
+                            }
+                    }
+                }
+                else if (time == snext.Key)
+                {
+                    return source.ReadShort(valaddr + i + 1);
+                }
+
+            }
+            return null;
         }
 
         public override int DeCompressShortValue(MemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<short> result)
         {
             DateTime stime;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out stime);
+            var qq = source.ReadBytes(qs.Count * 6, qs.Count);
 
             var vv = qs.ToArray();
+
+            var valaddr = qs.Count * 2;
+
             int count = 0;
             foreach (var time1 in time)
             {
@@ -1883,44 +1926,45 @@ namespace Cdy.Tag
 
                     if (time1 == skey.Key)
                     {
-                        var val = ReadShortValue(source, sourceAddr, i);
-                        result.Add(val, time1, skey.Value);
+                        var val = source.ReadShort(valaddr + i);
+                        result.Add(val, time1, qq[skey.Value]);
                         count++;
                         break;
                     }
                     else if (time1 > skey.Key && time1 < snext.Key)
                     {
+
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                var val = ReadShortValue(source, sourceAddr, i);
-                                result.Add(val, time1, skey.Value);
+                                var val = source.ReadShort(valaddr + i);
+                                result.Add(val, time1, qq[skey.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                val = ReadShortValue(source, sourceAddr, i + 1);
-                                result.Add(val, time1, snext.Value);
+                                val = source.ReadShort(valaddr + i + 1);
+                                result.Add(val, time1, qq[snext.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (skey.Value < 20 && snext.Value < 20)
+                                if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
                                 {
                                     var pval1 = (time1 - skey.Key).TotalMilliseconds;
                                     var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                    var sval1 = ReadShortValue(source, sourceAddr, i);
-                                    var sval2 = ReadShortValue(source, sourceAddr, i + 1);
-                                    var val1 = (short)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                    var sval1 = source.ReadShort(valaddr + i);
+                                    var sval2 = source.ReadShort(valaddr + i + 1);
+                                    var val1 = (long)(pval1 / tval1 * (sval2 - sval1) + sval1);
                                     result.Add(val1, time1, 0);
                                 }
-                                else if (skey.Value < 20)
+                                else if (qq[skey.Value] < 20)
                                 {
-                                    val = ReadShortValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
+                                    val = source.ReadShort(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                 }
-                                else if (snext.Value < 20)
+                                else if (qq[snext.Value] < 20)
                                 {
-                                    val = ReadShortValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
+                                    val = source.ReadShort(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                 }
                                 else
                                 {
@@ -1928,31 +1972,29 @@ namespace Cdy.Tag
                                 }
                                 count++;
                                 break;
-
                             case QueryValueMatchType.Closed:
                                 var pval = (time1 - skey.Key).TotalMilliseconds;
                                 var fval = (snext.Key - time1).TotalMilliseconds;
 
                                 if (pval < fval)
                                 {
-                                    val = ReadShortValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
-                                    break;
+                                    val = source.ReadShort(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                 }
                                 else
                                 {
-                                    val = ReadShortValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
-                                    break;
+                                    val = source.ReadShort(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                 }
+                                break;
                         }
                         count++;
                         break;
                     }
                     else if (time1 == snext.Key)
                     {
-                        var val = ReadShortValue(source, sourceAddr, i + 1);
-                        result.Add(val, time1, snext.Value);
+                        var val = source.ReadShort(valaddr + i + 1);
+                        result.Add(val, time1, qq[snext.Value]);
                         count++;
                         break;
                     }
@@ -1974,8 +2016,17 @@ namespace Cdy.Tag
         public override string DeCompressStringValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time1);
-            var dtmp = source.ToStringList(sourceAddr + 12, Encoding.Unicode);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time1);
+            
+            var valaddr = qs.Count * 2;
+            Dictionary<int, string> dtmp = new Dictionary<int, string>();
+            source.Position = valaddr;
+
+            for(int i=0;i<qs.Count;i++)
+            {
+                dtmp.Add(i, source.ReadString());
+            }
+
             var vv = qs.ToArray();
 
             for (int i = 0; i < vv.Length - 1; i++)
@@ -2032,9 +2083,20 @@ namespace Cdy.Tag
         public override int DeCompressStringValue(MemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<string> result)
         {
             DateTime stime;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out stime);
 
-            var dtmp = source.ToStringList(sourceAddr+12,Encoding.Unicode);
+            //var dtmp = source.ToStringList(sourceAddr + 12, Encoding.Unicode);
+
+            var valaddr = qs.Count * 2;
+            Dictionary<int, string> dtmp = new Dictionary<int, string>();
+            source.Position = valaddr;
+
+            for (int i = 0; i < qs.Count; i++)
+            {
+                dtmp.Add(i, source.ReadString());
+            }
+
+            var qq = source.ReadBytes(qs.Count);
 
             var vv = qs.ToArray();
             int count = 0;
@@ -2049,7 +2111,7 @@ namespace Cdy.Tag
                     if (time1 == skey.Key)
                     {
                         var val = dtmp[i];
-                        result.Add(val, time1, skey.Value);
+                        result.Add(val, time1, qq[skey.Value]);
                         count++;
                         break;
                     }
@@ -2059,12 +2121,12 @@ namespace Cdy.Tag
                         {
                             case QueryValueMatchType.Previous:
                                 var val = dtmp[i];
-                                result.Add(val, time1, skey.Value);
+                                result.Add(val, time1, qq[skey.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
                                 val = dtmp[i+1];
-                                result.Add(val, time1, snext.Value);
+                                result.Add(val, time1, qq[snext.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
@@ -2075,13 +2137,13 @@ namespace Cdy.Tag
                                 if (pval < fval)
                                 {
                                     val = dtmp[i];
-                                    result.Add(val, time1, skey.Value);
+                                    result.Add(val, time1, qq[skey.Value]);
                                     break;
                                 }
                                 else
                                 {
                                     val = dtmp[i + 1];
-                                    result.Add(val, time1, snext.Value);
+                                    result.Add(val, time1, qq[snext.Value]);
                                     break;
                                 }
                         }
@@ -2091,7 +2153,7 @@ namespace Cdy.Tag
                     else if (time1 == snext.Key)
                     {
                         var val = dtmp[i];
-                        result.Add(val, time1, snext.Value);
+                        result.Add(val, time1, qq[snext.Value]);
                         count++;
                         break;
                     }
@@ -2099,18 +2161,6 @@ namespace Cdy.Tag
                 }
             }
             return count;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="index"></param>
-        /// <returns></returns>
-        private uint ReadUIntValue(MemoryBlock source, int sourceAddr, int index)
-        {
-            return source.ReadUInt(8 + 4 + sourceAddr + index * 4);
         }
 
 
@@ -2123,10 +2173,13 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override uint DeCompressUIntValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override uint? DeCompressUIntValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time1);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time1);
+            var qq = source.ReadBytes(qs.Count * 6, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             var vv = qs.ToArray();
 
@@ -2138,62 +2191,80 @@ namespace Cdy.Tag
 
                 if (time == skey.Key)
                 {
-                    return ReadUIntValue(source, sourceAddr, i);
+                    return source.ReadUInt(valaddr + i);
                 }
                 else if (time > skey.Key && time < snext.Key)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            return ReadUIntValue(source, sourceAddr, i);
+                            return source.ReadUInt(valaddr + i);
                         case QueryValueMatchType.After:
-                            return ReadUIntValue(source, sourceAddr, i + 1);
+                            return source.ReadUInt(valaddr + i + 1);
                         case QueryValueMatchType.Linear:
-                            if (skey.Value < 20 && snext.Value < 20)
+
+                            if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
                             {
                                 var pval1 = (time1 - skey.Key).TotalMilliseconds;
                                 var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                var sval1 = ReadUIntValue(source, sourceAddr, i);
-                                var sval2 = ReadUIntValue(source, sourceAddr, i + 1);
+                                var sval1 = source.ReadUInt(valaddr + i);
+                                var sval2 = source.ReadUInt(valaddr + i + 1);
                                 return (uint)(pval1 / tval1 * (sval2 - sval1) + sval1);
                             }
-                            else if (skey.Value < 20)
+                            else if (qq[skey.Value] < 20)
                             {
-                                return ReadUIntValue(source, sourceAddr, i);
+                                return source.ReadUInt(valaddr + i);
                             }
-                            else if (snext.Value < 20)
+                            else if (qq[snext.Value] < 20)
                             {
-                                return ReadUIntValue(source, sourceAddr, i + 1);
+                                return source.ReadUInt(valaddr + i + 1);
                             }
                             break;
+
                         case QueryValueMatchType.Closed:
                             var pval = (time - skey.Key).TotalMilliseconds;
                             var fval = (snext.Key - time).TotalMilliseconds;
                             if (pval < fval)
                             {
-                                return ReadUIntValue(source, sourceAddr, i);
+                                return source.ReadUInt(valaddr + i);
                             }
                             else
                             {
-                                return ReadUIntValue(source, sourceAddr, i + 1);
+                                return source.ReadUInt(valaddr + i + 1);
                             }
                     }
                 }
                 else if (time == snext.Key)
                 {
-                    return ReadUIntValue(source, sourceAddr, i + 1);
+                    return source.ReadUInt(valaddr + i + 1);
                 }
 
             }
-            return uint.MinValue;
+            return null;
+
+            
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
         public override int DeCompressUIntValue(MemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result)
         {
             DateTime stime;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out stime);
+            var qq = source.ReadBytes(qs.Count * 6, qs.Count);
 
             var vv = qs.ToArray();
+
+            var valaddr = qs.Count * 2;
+
             int count = 0;
             foreach (var time1 in time)
             {
@@ -2205,44 +2276,45 @@ namespace Cdy.Tag
 
                     if (time1 == skey.Key)
                     {
-                        var val =  ReadUIntValue(source, sourceAddr, i);
-                        result.Add(val, time1, skey.Value);
+                        var val = source.ReadUInt(valaddr + i);
+                        result.Add(val, time1, qq[skey.Value]);
                         count++;
                         break;
                     }
                     else if (time1 > skey.Key && time1 < snext.Key)
                     {
+
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                var val = ReadUIntValue(source, sourceAddr, i);
-                                result.Add(val, time1, skey.Value);
+                                var val = source.ReadUInt(valaddr + i);
+                                result.Add(val, time1, qq[skey.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                val = ReadUIntValue(source, sourceAddr, i + 1);
-                                result.Add(val, time1, snext.Value);
+                                val = source.ReadUInt(valaddr + i + 1);
+                                result.Add(val, time1, qq[snext.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (skey.Value < 20 && snext.Value < 20)
+                                if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
                                 {
                                     var pval1 = (time1 - skey.Key).TotalMilliseconds;
                                     var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                    var sval1 = ReadUIntValue(source, sourceAddr, i);
-                                    var sval2 = ReadUIntValue(source, sourceAddr, i + 1);
-                                    var val1 = (uint)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                    var sval1 = source.ReadUInt(valaddr + i);
+                                    var sval2 = source.ReadUInt(valaddr + i + 1);
+                                    var val1 = (long)(pval1 / tval1 * (sval2 - sval1) + sval1);
                                     result.Add(val1, time1, 0);
                                 }
-                                else if (skey.Value < 20)
+                                else if (qq[skey.Value] < 20)
                                 {
-                                    val = ReadUIntValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
+                                    val = source.ReadUInt(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                 }
-                                else if (snext.Value < 20)
+                                else if (qq[snext.Value] < 20)
                                 {
-                                    val = ReadUIntValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
+                                    val = source.ReadUInt(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                 }
                                 else
                                 {
@@ -2250,31 +2322,29 @@ namespace Cdy.Tag
                                 }
                                 count++;
                                 break;
-
                             case QueryValueMatchType.Closed:
                                 var pval = (time1 - skey.Key).TotalMilliseconds;
                                 var fval = (snext.Key - time1).TotalMilliseconds;
 
                                 if (pval < fval)
                                 {
-                                    val = ReadUIntValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
-                                    break;
+                                    val = source.ReadUInt(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                 }
                                 else
                                 {
-                                    val = ReadUIntValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
-                                    break;
+                                    val = source.ReadUInt(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                 }
+                                break;
                         }
                         count++;
                         break;
                     }
                     else if (time1 == snext.Key)
                     {
-                        var val = ReadUIntValue(source, sourceAddr, i + 1);
-                        result.Add(val, time1, snext.Value);
+                        var val = source.ReadUInt(valaddr + i + 1);
+                        result.Add(val, time1, qq[snext.Value]);
                         count++;
                         break;
                     }
@@ -2282,18 +2352,25 @@ namespace Cdy.Tag
                 }
             }
             return count;
+
         }
 
-
-        private ulong ReadULongValue(MemoryBlock source, int sourceAddr, int index)
-        {
-            return source.ReadULong(8 + 4 + sourceAddr + index * 4);
-        }
-
-        public override ulong DeCompressULongValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public override ulong? DeCompressULongValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time1);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time1);
+            var qq = source.ReadBytes(qs.Count * 10, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             var vv = qs.ToArray();
 
@@ -2305,62 +2382,78 @@ namespace Cdy.Tag
 
                 if (time == skey.Key)
                 {
-                    return ReadUIntValue(source, sourceAddr, i);
+                    return source.ReadULong(valaddr + i);
                 }
                 else if (time > skey.Key && time < snext.Key)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            return ReadULongValue(source, sourceAddr, i);
+                            return source.ReadULong(valaddr + i);
                         case QueryValueMatchType.After:
-                            return ReadULongValue(source, sourceAddr, i + 1);
+                            return source.ReadULong(valaddr + i + 1);
                         case QueryValueMatchType.Linear:
-                            if (skey.Value < 20 && snext.Value < 20)
+
+                            if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
                             {
                                 var pval1 = (time1 - skey.Key).TotalMilliseconds;
                                 var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                var sval1 = ReadULongValue(source, sourceAddr, i);
-                                var sval2 = ReadULongValue(source, sourceAddr, i + 1);
-                                return (uint)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                var sval1 = source.ReadULong(valaddr + i);
+                                var sval2 = source.ReadULong(valaddr + i + 1);
+                                return (ulong)(pval1 / tval1 * (sval2 - sval1) + sval1);
                             }
-                            else if (skey.Value < 20)
+                            else if (qq[skey.Value] < 20)
                             {
-                                return ReadULongValue(source, sourceAddr, i);
+                                return source.ReadULong(valaddr + i);
                             }
-                            else if (snext.Value < 20)
+                            else if (qq[snext.Value] < 20)
                             {
-                                return ReadULongValue(source, sourceAddr, i + 1);
+                                return source.ReadULong(valaddr + i + 1);
                             }
                             break;
+
                         case QueryValueMatchType.Closed:
                             var pval = (time - skey.Key).TotalMilliseconds;
                             var fval = (snext.Key - time).TotalMilliseconds;
                             if (pval < fval)
                             {
-                                return ReadULongValue(source, sourceAddr, i);
+                                return source.ReadULong(valaddr + i);
                             }
                             else
                             {
-                                return ReadULongValue(source, sourceAddr, i + 1);
+                                return source.ReadULong(valaddr + i + 1);
                             }
                     }
                 }
                 else if (time == snext.Key)
                 {
-                    return ReadULongValue(source, sourceAddr, i + 1);
+                    return source.ReadULong(valaddr + i + 1);
                 }
 
             }
-            return ulong.MinValue;
+            return null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
         public override int DeCompressULongValue(MemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result)
         {
             DateTime stime;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out stime);
+            var qq = source.ReadBytes(qs.Count * 10, qs.Count);
 
             var vv = qs.ToArray();
+
+            var valaddr = qs.Count * 2;
+
             int count = 0;
             foreach (var time1 in time)
             {
@@ -2372,44 +2465,45 @@ namespace Cdy.Tag
 
                     if (time1 == skey.Key)
                     {
-                        var val = ReadShortValue(source, sourceAddr, i);
-                        result.Add(val, time1, skey.Value);
+                        var val = source.ReadULong(valaddr + i);
+                        result.Add(val, time1, qq[skey.Value]);
                         count++;
                         break;
                     }
                     else if (time1 > skey.Key && time1 < snext.Key)
                     {
+
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                var val = ReadULongValue(source, sourceAddr, i);
-                                result.Add(val, time1, skey.Value);
+                                var val = source.ReadULong(valaddr + i);
+                                result.Add(val, time1, qq[skey.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                val = ReadULongValue(source, sourceAddr, i + 1);
-                                result.Add(val, time1, snext.Value);
+                                val = source.ReadULong(valaddr + i + 1);
+                                result.Add(val, time1, qq[snext.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (skey.Value < 20 && snext.Value < 20)
+                                if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
                                 {
                                     var pval1 = (time1 - skey.Key).TotalMilliseconds;
                                     var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                    var sval1 = ReadULongValue(source, sourceAddr, i);
-                                    var sval2 = ReadULongValue(source, sourceAddr, i + 1);
+                                    var sval1 = source.ReadULong(valaddr + i);
+                                    var sval2 = source.ReadULong(valaddr + i + 1);
                                     var val1 = (ulong)(pval1 / tval1 * (sval2 - sval1) + sval1);
                                     result.Add(val1, time1, 0);
                                 }
-                                else if (skey.Value < 20)
+                                else if (qq[skey.Value] < 20)
                                 {
-                                    val = ReadULongValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
+                                    val = source.ReadULong(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                 }
-                                else if (snext.Value < 20)
+                                else if (qq[snext.Value] < 20)
                                 {
-                                    val = ReadULongValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
+                                    val = source.ReadULong(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                 }
                                 else
                                 {
@@ -2417,31 +2511,29 @@ namespace Cdy.Tag
                                 }
                                 count++;
                                 break;
-
                             case QueryValueMatchType.Closed:
                                 var pval = (time1 - skey.Key).TotalMilliseconds;
                                 var fval = (snext.Key - time1).TotalMilliseconds;
 
                                 if (pval < fval)
                                 {
-                                    val = ReadULongValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
-                                    break;
+                                    val = source.ReadULong(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                 }
                                 else
                                 {
-                                    val = ReadULongValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
-                                    break;
+                                    val = source.ReadULong(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                 }
+                                break;
                         }
                         count++;
                         break;
                     }
                     else if (time1 == snext.Key)
                     {
-                        var val = ReadULongValue(source, sourceAddr, i + 1);
-                        result.Add(val, time1, snext.Value);
+                        var val = source.ReadULong(valaddr + i + 1);
+                        result.Add(val, time1, qq[snext.Value]);
                         count++;
                         break;
                     }
@@ -2456,17 +2548,17 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="source"></param>
         /// <param name="sourceAddr"></param>
-        /// <param name="index"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
-        private ushort ReadUShortValue(MemoryBlock source, int sourceAddr, int index)
-        {
-            return source.ReadUShort(8 + 4 + sourceAddr + index * 2);
-        }
-
-        public override ushort DeCompressUShortValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override ushort? DeCompressUShortValue(MemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out time1);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time1);
+            var qq = source.ReadBytes(qs.Count * 4, qs.Count);
+
+            var valaddr = qs.Count * 2;
 
             var vv = qs.ToArray();
 
@@ -2478,62 +2570,68 @@ namespace Cdy.Tag
 
                 if (time == skey.Key)
                 {
-                    return ReadUShortValue(source, sourceAddr, i);
+                    return source.ReadUShort(valaddr + i);
                 }
                 else if (time > skey.Key && time < snext.Key)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            return ReadUShortValue(source, sourceAddr, i);
+                            return source.ReadUShort(valaddr + i);
                         case QueryValueMatchType.After:
-                            return ReadUShortValue(source, sourceAddr, i + 1);
+                            return source.ReadUShort(valaddr + i + 1);
                         case QueryValueMatchType.Linear:
-                            if (skey.Value < 20 && snext.Value < 20)
+
+                            if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
                             {
                                 var pval1 = (time1 - skey.Key).TotalMilliseconds;
                                 var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                var sval1 = ReadUShortValue(source, sourceAddr, i);
-                                var sval2 = ReadUShortValue(source, sourceAddr, i + 1);
+                                var sval1 = source.ReadUShort(valaddr + i);
+                                var sval2 = source.ReadUShort(valaddr + i + 1);
                                 return (ushort)(pval1 / tval1 * (sval2 - sval1) + sval1);
                             }
-                            else if (skey.Value < 20)
+                            else if (qq[skey.Value] < 20)
                             {
-                                return ReadUShortValue(source, sourceAddr, i);
+                                return source.ReadUShort(valaddr + i);
                             }
-                            else if (snext.Value < 20)
+                            else if (qq[snext.Value] < 20)
                             {
-                                return ReadUShortValue(source, sourceAddr, i + 1);
+                                return source.ReadUShort(valaddr + i + 1);
                             }
                             break;
+
                         case QueryValueMatchType.Closed:
                             var pval = (time - skey.Key).TotalMilliseconds;
                             var fval = (snext.Key - time).TotalMilliseconds;
                             if (pval < fval)
                             {
-                                return ReadUShortValue(source, sourceAddr, i);
+                                return source.ReadUShort(valaddr + i);
                             }
                             else
                             {
-                                return ReadUShortValue(source, sourceAddr, i + 1);
+                                return source.ReadUShort(valaddr + i + 1);
                             }
                     }
                 }
                 else if (time == snext.Key)
                 {
-                    return ReadUShortValue(source, sourceAddr, i + 1);
+                    return source.ReadUShort(valaddr + i + 1);
                 }
 
             }
-            return ushort.MinValue;
+            return null;
         }
 
         public override int DeCompressUShortValue(MemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result)
         {
             DateTime stime;
-            var qs = ReadQulity(source, sourceAddr, timeTick, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out stime);
+            var qq = source.ReadBytes(qs.Count * 4, qs.Count);
 
             var vv = qs.ToArray();
+
+            var valaddr = qs.Count * 2;
+
             int count = 0;
             foreach (var time1 in time)
             {
@@ -2545,44 +2643,45 @@ namespace Cdy.Tag
 
                     if (time1 == skey.Key)
                     {
-                        var val = ReadUShortValue(source, sourceAddr, i);
-                        result.Add(val, time1, skey.Value);
+                        var val = source.ReadUShort(valaddr + i);
+                        result.Add(val, time1, qq[skey.Value]);
                         count++;
                         break;
                     }
                     else if (time1 > skey.Key && time1 < snext.Key)
                     {
+
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                var val = ReadUShortValue(source, sourceAddr, i);
-                                result.Add(val, time1, skey.Value);
+                                var val = source.ReadUShort(valaddr + i);
+                                result.Add(val, time1, qq[skey.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                val = ReadUShortValue(source, sourceAddr, i + 1);
-                                result.Add(val, time1, snext.Value);
+                                val = source.ReadUShort(valaddr + i + 1);
+                                result.Add(val, time1, qq[snext.Value]);
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (skey.Value < 20 && snext.Value < 20)
+                                if (qq[skey.Value] < 20 && qq[snext.Value] < 20)
                                 {
                                     var pval1 = (time1 - skey.Key).TotalMilliseconds;
                                     var tval1 = (snext.Key - skey.Key).TotalMilliseconds;
-                                    var sval1 = ReadUShortValue(source, sourceAddr, i);
-                                    var sval2 = ReadUShortValue(source, sourceAddr, i + 1);
+                                    var sval1 = source.ReadUShort(valaddr + i);
+                                    var sval2 = source.ReadUShort(valaddr + i + 1);
                                     var val1 = (ushort)(pval1 / tval1 * (sval2 - sval1) + sval1);
                                     result.Add(val1, time1, 0);
                                 }
-                                else if (skey.Value < 20)
+                                else if (qq[skey.Value] < 20)
                                 {
-                                    val = ReadUShortValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
+                                    val = source.ReadUShort(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                 }
-                                else if (snext.Value < 20)
+                                else if (qq[snext.Value] < 20)
                                 {
-                                    val = ReadUShortValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
+                                    val = source.ReadUShort(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                 }
                                 else
                                 {
@@ -2590,31 +2689,29 @@ namespace Cdy.Tag
                                 }
                                 count++;
                                 break;
-
                             case QueryValueMatchType.Closed:
                                 var pval = (time1 - skey.Key).TotalMilliseconds;
                                 var fval = (snext.Key - time1).TotalMilliseconds;
 
                                 if (pval < fval)
                                 {
-                                    val = ReadUShortValue(source, sourceAddr, i);
-                                    result.Add(val, time1, skey.Value);
-                                    break;
+                                    val = source.ReadUShort(valaddr + i);
+                                    result.Add(val, time1, qq[skey.Value]);
                                 }
                                 else
                                 {
-                                    val = ReadUShortValue(source, sourceAddr, i + 1);
-                                    result.Add(val, time1, snext.Value);
-                                    break;
+                                    val = source.ReadUShort(valaddr + i + 1);
+                                    result.Add(val, time1, qq[snext.Value]);
                                 }
+                                break;
                         }
                         count++;
                         break;
                     }
                     else if (time1 == snext.Key)
                     {
-                        var val = ReadUShortValue(source, sourceAddr, i + 1);
-                        result.Add(val, time1, snext.Value);
+                        var val = source.ReadUShort(valaddr + i + 1);
+                        result.Add(val, time1, qq[snext.Value]);
                         count++;
                         break;
                     }

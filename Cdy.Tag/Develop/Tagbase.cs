@@ -95,6 +95,12 @@ namespace Cdy.Tag
                 case TagType.UInt:
                     re = new UIntTag();
                     break;
+                case TagType.Long:
+                    re = new LongTag();
+                    break;
+                case TagType.ULong:
+                    re = new ULongTag();
+                    break;
                 case TagType.Float:
                     re = new FloatTag();
                     break;

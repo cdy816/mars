@@ -173,10 +173,11 @@ namespace Cdy.Tag
         /// <summary>
         /// 记录所有值
         /// </summary>
-        public void RecordAllValue()
+        public void RecordAllValue(DateTime time)
         {
             try
             {
+                mLastUpdateTime = time;
                 foreach (var vv in mTags)
                 {
                     if (mChangedTags.ContainsKey(vv.Key) && mChangedTags[vv.Key])
@@ -185,7 +186,7 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        vv.Value.AppendValue();
+                        vv.Value.AppendValue(mLastUpdateTime);
                     }
                 }
             }

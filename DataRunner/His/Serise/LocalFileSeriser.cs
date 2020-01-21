@@ -77,7 +77,7 @@ namespace Cdy.Tag
             else
             {
                 string dir = System.IO.Path.GetDirectoryName(filename);
-                if (!System.IO.Directory.Exists(dir))
+                if (!string.IsNullOrEmpty(dir) && !System.IO.Directory.Exists(dir))
                 {
                     System.IO.Directory.CreateDirectory(dir);
                 }
@@ -234,7 +234,8 @@ namespace Cdy.Tag
         /// <param name="start"></param>
         public override void Write(DateTime value, long start)
         {
-            
+            mStream.Position = start;
+            mStream.Write(MemoryHelper.GetBytes(value), 0, 8);
         }
 
         /// <summary>
@@ -318,6 +319,85 @@ namespace Cdy.Tag
                 return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override void GoToEnd()
+        {
+            mStream.Position = mStream.Length;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="start"></param>
+        public override void Write(List<byte[]> source, long start)
+        {
+            bool isNeedAllCopy = false;
+            int count = 0;
+            int precount = 0;
+            for (int i = 0; i < source.Count; i++)
+            {
+                if (isNeedAllCopy)
+                {
+                    mStream.Write(source[i], 0, source[i].Length);
+                }
+                else
+                {
+                    precount = count;
+                    count = source[i].Length + count;
+                    if (count > start)
+                    {
+                        mStream.Write(source[i], (int)(start - precount), (int)(count - start));
+                        isNeedAllCopy = true;
+                    }
+                }
+                
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="offset"></param>
+        /// <param name="len"></param>
+        public override void Append(List<byte[]> source, int offset, int len)
+        {
+            List<Tuple<int, int, int>> copyIndex = new List<Tuple<int, int, int>>();
+
+            int start = offset;
+            int count = 0;
+            int precount = 0;
+            int copyed = 0;
+            for(int i=0;i<source.Count;i++)
+            {
+                precount = count;
+                count = source[i].Length + count;
+                if (count > start)
+                {
+                    var ltmp = count - start;
+                    if (ltmp > (len - copyed))
+                    {
+                        copyIndex.Add(new Tuple<int, int, int>(i, start - precount, len - copyed));
+                        break;
+                    }
+                    else
+                    {
+                        copyIndex.Add(new Tuple<int, int, int>(i, start - precount, ltmp));
+                        start += ltmp;
+                        copyed += ltmp;
+                    }
+                }
+            }
+
+            foreach(var vv in copyIndex)
+            {
+                mStream.Write(source[vv.Item1], vv.Item2, vv.Item3);
+            }
         }
     }
 }

@@ -149,7 +149,7 @@ namespace Cdy.Tag
             compressEnginer = new CompressEnginer(hisEnginer.CurrentMemory.Length);
 
             var sf = DataFileSeriserManager.manager.GetSeriser( mHisDatabase.Setting.DataSeriser);
-            seriseEnginer = new SeriseEnginer(sf);
+            seriseEnginer = new SeriseEnginer(sf) { DatabaseName = database };
             seriseEnginer.FileDuration = mHisDatabase.Setting.FileDataDuration;
             seriseEnginer.BlockDuration = mHisDatabase.Setting.DataBlockDuration;
 

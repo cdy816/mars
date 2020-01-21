@@ -5,4 +5,3 @@ D:\Project\Galaxy\Cdy.Tag.CoreAPI\obj\Debug\netcoreapp3.1\Cdy.Tag.CoreAPI.Assemb
 D:\Project\Galaxy\Cdy.Tag.CoreAPI\obj\Debug\netcoreapp3.1\Cdy.Tag.CoreAPI.AssemblyInfo.cs
 D:\Project\Galaxy\Cdy.Tag.CoreAPI\obj\Debug\netcoreapp3.1\Cdy.Tag.CoreAPI.dll
 D:\Project\Galaxy\Cdy.Tag.CoreAPI\obj\Debug\netcoreapp3.1\Cdy.Tag.CoreAPI.pdb
-D:\Project\Galaxy\Cdy.Tag.CoreAPI\obj\Debug\netcoreapp3.1\Cdy.Tag.CoreAPI.csprojAssemblyReference.cache

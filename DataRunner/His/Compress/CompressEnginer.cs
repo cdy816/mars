@@ -78,6 +78,7 @@ namespace Cdy.Tag
                head:数据起始地址(4)+变量数量(4)+起始时间(8)
                数据区指针:[ID(4) + address(4) + datasize(4)]
                数据区:[data block]
+               data block:size+compressType+data
              */
             mMemory1 = new MemoryBlock(size);
             mMemory2 = new MemoryBlock(size);
@@ -238,8 +239,9 @@ namespace Cdy.Tag
             float cp2 = mSourceMemory.ReadFloat(addr + 11);//压缩附属参数
             float cp3 = mSourceMemory.ReadFloat(addr + 15);//压缩附属参数
 
+
             //写入压缩类型
-            mTargetMemory.WriteByte(targetPosition, comtype);
+            mTargetMemory.WriteByte(targetPosition + 4, comtype);
 
             var tp = CompressUnitManager.Manager.GetCompress(comtype);
             if (tp != null)
@@ -251,7 +253,9 @@ namespace Cdy.Tag
                 tp.CompressParameter1 = cp1;
                 tp.CompressParameter2 = cp2;
                 tp.CompressParameter3 = cp3;
-                return tp.Compress(mSourceMemory, addr + 19, mTargetMemory, targetPosition + 1, len - 19) + 1;
+                var size = tp.Compress(mSourceMemory, addr + 19, mTargetMemory, targetPosition + 5, len - 19) + 1;
+                mTargetMemory.WriteInt(targetPosition,size);
+                return size + 4;
             }
             return 0;
         }

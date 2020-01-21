@@ -3148,9 +3148,16 @@ namespace Cdy.Tag
                         VarintCodeMemory vcm = new VarintCodeMemory(dd.StartMemory);
                         var ltmp = vcm.ToIntList();
                         var dtmp = new Dictionary<int, long>();
-                        for (int i = 0; i < ltmp.Count; i++)
+                        if (ltmp.Count > 0)
                         {
-                            dtmp.Add(ltmp[i], i);
+                            int preid = ltmp[0];
+                            dtmp.Add(preid,0);
+                            for (int i = 0; i < ltmp.Count; i++)
+                            {
+                                var id = ltmp[i] + preid;
+                                dtmp.Add(id, i);
+                                preid = id;
+                            }
                         }
                         TagHeadOffsetManager.manager.Add(idsum, count, dtmp);
                         return dtmp;

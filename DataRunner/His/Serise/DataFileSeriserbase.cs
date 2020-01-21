@@ -111,7 +111,12 @@ namespace Cdy.Tag
         /// <param name="len"></param>
         public abstract void Write(byte[] source, long start);
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="start"></param>
+        public abstract void Write(List<byte[]> source, long start);
 
         /// <summary>
         /// 
@@ -120,6 +125,15 @@ namespace Cdy.Tag
         /// <param name="offset"></param>
         /// <param name="len"></param>
         public abstract void Append(byte[] source, int offset, int len);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="offset"></param>
+        /// <param name="len"></param>
+        public abstract void Append(List<byte[]> source, int offset, int len);
 
         /// <summary>
         /// 
@@ -183,6 +197,11 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public abstract long Length { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public abstract void GoToEnd();
 
         /// <summary>
         /// 刷新数据

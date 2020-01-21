@@ -13,18 +13,19 @@ using System.Threading;
 using System.Linq;
 
 /*
- * 一个文件由多个数据区组成, 一个数据区：数据区头+数据块指针区+数据块区
+ * 一个文件由文件头+多个数据区组成, 一个数据区：数据区头+数据块指针区+数据块区
  * [] 表示重复的一个或多个内容
  * 
  HisData File Structor
- [HisDataRegion] 
+ FileHead(72) + [HisDataRegion] 
 
+ FileHead: dataTime(8)+DatabaseName(64)
+ 
  HisDataRegion Structor: RegionHead + DataBlockPoint Area + DataBlock Area
 
  RegionHead:          PreDataRegionPoint(8) + NextDataRegionPoint(8) + Datatime(8)+ tagcount(4)+ tagid sum(8)+file duration(4)+block duration(4)+Time tick duration(4)
  DataBlockPoint Area: [ID]+[block Point]
- Block Point:         block location+block size  
- DataBlock Area:      [data block]
+ DataBlock Area:      [block size + data block]
 */
 
 namespace Cdy.Tag
@@ -55,10 +56,15 @@ namespace Cdy.Tag
 
         private MemoryBlock mHeadMemory;
 
+        private VarintCodeMemory mTagIdMemoryCach;
+
+        //变量ID校验和
+        private long mTagIdSum;
+
         private int mTagCount = 0;
 
         /// <summary>
-        /// 
+        /// 变量的数据指针的起始地址
         /// </summary>
         private Dictionary<int, long> mIdAddrs = new Dictionary<int, long>();
 
@@ -73,13 +79,26 @@ namespace Cdy.Tag
         private long mCurrentDataRegion = 0;
 
         /// <summary>
+        /// 上一个数据区域首地址
+        /// </summary>
+        private long mPreDataRegion = 0;
+
+        /// <summary>
         /// 
         /// </summary>
         private string mCurrentFileName = string.Empty;
 
         private int mFileStartHour = 0;
 
+        /// <summary>
+        /// 数据文件扩展名
+        /// </summary>
         public const string DataFileExtends = ".dbd";
+
+        /// <summary>
+        /// 文件头大小
+        /// </summary>
+        public const int FileHeadSize = 72;
 
         #endregion ...Variables...
 
@@ -138,7 +157,7 @@ namespace Cdy.Tag
         private void Init()
         {
             mIdAddrs.Clear();
-            int offset = GetDataRegionHeaderLength() + CalTagIdsSize();
+            int offset = GetDataRegionHeaderLength() + ProcessTagIds();
             int blockcount = FileDuration * 60 / BlockDuration;
             var vv = ServiceLocator.Locator.Resolve<ITagQuery>();
             foreach(var vtag in vv.ListAllTags().OrderBy(e=>e.Id))
@@ -152,17 +171,28 @@ namespace Cdy.Tag
         /// 计算变量Id集合所占的大小
         /// </summary>
         /// <returns></returns>
-        private int CalTagIdsSize()
+        private int ProcessTagIds()
         {
-            var ids = ServiceLocator.Locator.Resolve<ITagQuery>().ListAllTags().OrderBy(e => e.Id);
-            using (VarintCodeMemory cm = new VarintCodeMemory((int)(ids.Count() * 4 * 1.2)))
+            if (mTagIdMemoryCach != null) mTagIdMemoryCach.Dispose();
+            var aids = ServiceLocator.Locator.Resolve<ITagQuery>().ListAllTags().OrderBy(e => e.Id).ToArray();
+
+            mTagIdSum = 0;
+
+            mTagIdMemoryCach = new VarintCodeMemory((int)(aids.Count() * 4 * 1.2));
+            if (aids.Length > 0)
             {
-                foreach (var vv in ids)
+                int preids = aids[0].Id;
+                mTagIdSum += preids;
+                mTagIdMemoryCach.WriteInt32(preids);
+                for (int i = 1; i < aids.Length; i++)
                 {
-                    cm.WriteInt32(vv.Id);
+                    var id = aids[i].Id;
+                    mTagIdMemoryCach.WriteInt32(id - preids);
+                    mTagIdSum += id;
+                    preids = id;
                 }
-                return cm.Position + 4;
             }
+            return mTagIdMemoryCach.Position + 4;
         }
 
         /// <summary>
@@ -228,22 +258,28 @@ namespace Cdy.Tag
         }
 
         /// <summary>
-        /// 
+        /// 搜索最后一个数据区域
         /// </summary>
         /// <returns></returns>
-        private long SkipToLastHeader()
+        private long SearchLastDataRegion()
         {
-            long offset = 0;
+            long offset = FileHeadSize;
             while (true)
             {
-               var preaddr = mFileWriter.ReadLong(offset);
-               var nextaddr = mFileWriter.ReadLong(offset + 8);
-                if(nextaddr<=0)
+                var nextaddr = mFileWriter.ReadLong(offset + 8);
+                if (nextaddr <= 0)
                 {
                     break;
                 }
+                else
+                {
+                    offset = nextaddr;
+                }
             }
-            mCurrentDataRegion = offset;
+            mPreDataRegion = offset;
+
+            mFileWriter.GoToEnd();
+            mCurrentDataRegion = mFileWriter.Length;
 
             return 0;
         }
@@ -277,23 +313,27 @@ namespace Cdy.Tag
                 string sfile = GetDataPath(time);
                 if (mFileWriter.CreatOrOpenFile(sfile))
                 {
+                    AppendFileHeader(time, this.DatabaseName);
                     //新建文件
-                    mCurrentDataRegion = 0;
-                    AppendFileHeader();
+                    mCurrentDataRegion = FileHeadSize;
+                    mPreDataRegion = -1;
+                    AppendDataRegionHeader();
                 }
                 else
                 {
                     if (mFileWriter.Length < 8)
                     {
+                        AppendFileHeader(time, this.DatabaseName);
                         //新建文件
-                        mCurrentDataRegion = 0;
-                        AppendFileHeader();
+                        mCurrentDataRegion = FileHeadSize;
+                        mPreDataRegion = -1;
+                        AppendDataRegionHeader();
                     }
                     else
                     {
                         //打开已有文件
-                        SkipToLastHeader();
-                        AppendFileHeader();
+                        SearchLastDataRegion();
+                        AppendDataRegionHeader();
                     }
                 }
             }
@@ -302,7 +342,8 @@ namespace Cdy.Tag
                 if (mNeedUpdateTagHeads)
                 {
                     Init();
-                    AppendFileHeader();
+                    SearchLastDataRegion();
+                    AppendDataRegionHeader();
                     mNeedUpdateTagHeads = false;
                 }
             }
@@ -341,94 +382,83 @@ namespace Cdy.Tag
             return 8 + 8 + 8 + 4 + 8 + 4 + 4 + 4;
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //private void WriteFileHeaderAtBegain()
-        //{
-        //    GeneratorFileHeader();
-        //    mFileWriter.Write(mHeadMemory.Memory, 0);
-        //}
+        /// <summary>
+        /// 
+        /// </summary>
+        private void AppendFileHeader(DateTime time, string databaseName)
+        {
+            DateTime date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour/FileDuration) * FileDuration), 0, 0);
+            mFileWriter.Write(date, 0);
+            byte[] nameBytes = new byte[64];
+            var ntmp = Encoding.UTF8.GetBytes(databaseName);
+            Buffer.BlockCopy(ntmp, 0, nameBytes, 0, Math.Min(64, ntmp.Length));
+            mFileWriter.Write(nameBytes, 8);
+        }
 
         /// <summary>
         /// 
         /// </summary>
-        private void AppendFileHeader()
+        private void AppendDataRegionHeader()
         {
-            GeneratorFileHeader();
-            mFileWriter.Append(mHeadMemory.StartMemory, 0, (int)mHeadMemory.UsedSize);
-            var cp = mFileWriter.CurrentPostion;
+            var size = GeneratorDataRegionHeader();
+            mFileWriter.Append(mHeadMemory.Buffers, 0, size);
+            
             //更新上个DataRegion 的Next DataRegion Pointer 指针
-            if (mCurrentDataRegion>=0)
+            if (mPreDataRegion>=0)
             {
-                mFileWriter.Write(cp,mCurrentDataRegion + 8);
+                mFileWriter.Write(mCurrentDataRegion, mPreDataRegion + 8);
             }
-            mCurrentDataRegion = cp;
+            
+            mPreDataRegion = mCurrentDataRegion;
+
+            
         }
 
         /// <summary>
         /// 生成文件头部
         /// <paramref name="offset">偏移位置</paramref>
         /// </summary>
-        private void GeneratorFileHeader()
+        private int GeneratorDataRegionHeader()
         {
-            //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+tagcount(4)+ tagid sum(8) +file duration(4)+ block duration(4)+Time tick duration(4)+ { len + tagid1+tagid2+...+tagidn }+ {tag1 block point1(8) + block size(4) + tag1 block point2(8)+ block size(4) + tag1 block point3(8)+ block size(4)+...+tag1 block pointn(8)+ block size(4) + tag2 block point1 (8)+ block size(4)+ tag2 block point2(8)+ block size(4)+....}
+            //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+tagcount(4)+ tagid sum(8) +file duration(4)+ block duration(4)+Time tick duration(4)+ { len + [tag id]}+ [data blockpoint(8)]
             int blockcount = FileDuration * 60 / BlockDuration;
-            int len = GetDataRegionHeaderLength() + mTagCount * (blockcount * 12);
-            long IdSum = 0;
+            int len = GetDataRegionHeaderLength() + mTagCount * (blockcount * 4);
+            len += mTagIdMemoryCach.Position + 4;
 
-            foreach (var vv in mIdAddrs)
+            if (mHeadMemory != null)
             {
-                IdSum += vv.Key;
-            }
-
-            using (VarintCodeMemory cm = new VarintCodeMemory((int)(mIdAddrs.Count * 4 * 1.2)))
-            {
-                foreach (var vv in mIdAddrs)
+                if (len > mHeadMemory.Length)
                 {
-                    cm.WriteInt32(vv.Key);
-                }
-
-                len += cm.Position + 4;
-
-                if (mHeadMemory != null)
-                {
-                    if (len > mHeadMemory.Length)
-                    {
-                        mHeadMemory.ReAlloc(len);
-                    }
-                    else
-                    {
-                        mHeadMemory.Clear();
-                    }
+                    mHeadMemory.ReAlloc(len);
                 }
                 else
                 {
-                    mHeadMemory = new MemoryBlock(len);
+                    mHeadMemory.Clear();
                 }
-
-                mHeadMemory.Position = 0;
-                mHeadMemory.Write((long)mCurrentDataRegion);//更新Pre DataRegion 指针
-                mHeadMemory.Write((long)0);                  //更新Next DataRegion 指针
-                mHeadMemory.Write(mCurrentTime);            //写入时间
-                mHeadMemory.Write(mTagCount);              //写入变量个数
-
-                mHeadMemory.Write(IdSum);                  //写入Id 校验和
-
-                mHeadMemory.Write(FileDuration);           //写入文件持续时间
-                mHeadMemory.Write(BlockDuration);          //写入数据块持续时间
-                mHeadMemory.Write(HisEnginer.MemoryTimeTick); //写入时间间隔
-
-                //写入变量编号列表
-                mHeadMemory.Write(cm.Position);//写入压缩后的数组的长度
-                mHeadMemory.Write(cm.Buffer, 0, cm.Position);//写入压缩数据
+            }
+            else
+            {
+                mHeadMemory = new MemoryBlock(len);
             }
 
-            ////写入变量编号列表
-            //foreach(var vv in mIdAddrs)
-            //{
-            //    mHeadMemory.Write(vv.Key);
-            //}
+            mHeadMemory.Position = 0;
+            mHeadMemory.Write((long)mPreDataRegion);//更新Pre DataRegion 指针
+            mHeadMemory.Write((long)0);                  //更新Next DataRegion 指针
+            mHeadMemory.Write(mCurrentTime);            //写入时间
+            mHeadMemory.Write(mTagCount);              //写入变量个数
+
+            mHeadMemory.Write(mTagIdSum);                  //写入Id 校验和
+
+            mHeadMemory.Write(FileDuration);           //写入文件持续时间
+            mHeadMemory.Write(BlockDuration);          //写入数据块持续时间
+            mHeadMemory.Write(HisEnginer.MemoryTimeTick); //写入时间间隔
+
+            //写入变量编号列表
+            mHeadMemory.Write(mTagIdMemoryCach.Position);//写入压缩后的数组的长度
+            mHeadMemory.Write(mTagIdMemoryCach.Buffer, 0, mTagIdMemoryCach.Position);//写入压缩数据
+
+            return len;
+
         }
 
         /// <summary>
@@ -439,24 +469,11 @@ namespace Cdy.Tag
         public void UpdateDataBlockPointer(int id, long datapointer, int size, DateTime dateTime)
         {
             int bindex = ((dateTime.Hour - mFileStartHour) * 60 + dateTime.Minute)/ BlockDuration;
-            long ids = mCurrentDataRegion + mIdAddrs[id] + bindex * 12;
-            mFileWriter.Write(BitConverter.GetBytes(datapointer), ids);
+            long ids = mCurrentDataRegion + mIdAddrs[id] + bindex * 12; //当前数据区域地址+数据指针的起始地址+指针偏移
+            mFileWriter.Write(BitConverter.GetBytes(datapointer), ids);//
             ids += 8;
             mFileWriter.Write(BitConverter.GetBytes(size), ids);
         }
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="id"></param>
-        ///// <param name="dateTime"></param>
-        ///// <returns></returns>
-        //public long ReadDataBlockPointer(int id,DateTime dateTime)
-        //{
-        //    int bindex = dateTime.Minute / BlockDuration;
-        //    long ids = mIdAddrs[id] + bindex * 4;
-        //    return mFileWriter.Read(ids, sizeof(long)).ReadLong();
-        //}
 
         /// <summary>
         /// 执行存储到磁盘
@@ -468,7 +485,6 @@ namespace Cdy.Tag
             var time = mProcessMemory.ReadDateTime(8);
             mTagCount = count;
             mCurrentTime = time;
-
             int offset = 16;
             //判断变量的ID列表是否被修改了
             for (int i=0;i<count;i++)
@@ -479,7 +495,7 @@ namespace Cdy.Tag
                     mNeedUpdateTagHeads = true;
                     break;
                 }
-                offset += 8;
+                offset += 12;
             }
 
             if (!CheckFile(time))
@@ -487,7 +503,9 @@ namespace Cdy.Tag
 
             offset = 16;
             int start = count * 8 + offset;
-            this.mFileWriter.Append(mProcessMemory.StartMemory, start, totalsize - start);
+            this.mFileWriter.Append(mProcessMemory.Buffers, start, totalsize - start);
+
+            var pos = mFileWriter.CurrentPostion;
 
             mFileStartHour = time.Hour / FileDuration;
 
@@ -499,6 +517,8 @@ namespace Cdy.Tag
                 offset += 8;
                 UpdateDataBlockPointer(id, addr, size, time);
             }
+
+            mCurrentDataRegion = pos;
 
             Flush();
         }

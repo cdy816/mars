@@ -35,7 +35,7 @@ namespace Cdy.Tag
         /// 每个变量在内存中保留的历史记录历史的长度
         /// 单位s
         /// </summary>
-        public int MemoryCachTime = 60;
+        public int MemoryCachTime = 60*60;
 
         /// <summary>
         /// 历史记录时间最短间隔
@@ -251,7 +251,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="tagType"></param>
         /// <returns></returns>
-        private int CalBlockSize(Cdy.Tag.TagType tagType,int blockSize,out int dataOffset,out int qulityOffset)
+        private int CalBlockSize(Cdy.Tag.TagType tagType,Cdy.Tag.RecordType recordType,int blockSize,out int dataOffset,out int qulityOffset)
         {
 
             //单个数据块内容包括：时间戳(2)+数值+质量戳(1)
@@ -259,7 +259,14 @@ namespace Cdy.Tag
             qulityOffset = 0;
             int regionHeadSize = blockSize;
             // int count = MemoryCachTime * 1000 / MemoryTimeTick;
-            int count = MemoryCachTime;//
+            int count = MemoryCachTime;
+
+            //对于值改变的记录方式,提高内存分配量,以提高值改变记录的数据个数
+            if(recordType == RecordType.ValueChanged)
+            {
+                count = MemoryCachTime * 1000 / MemoryTimeTick;
+            }
+
             dataOffset = regionHeadSize + count * 2;
             switch (tagType)
             {
@@ -309,7 +316,7 @@ namespace Cdy.Tag
             int valueOffset = 0;
             foreach(var vv in mHisTags)
             {
-                var ss = CalBlockSize(vv.Value.TagType,blockheadsize,out valueOffset, out qulityOffset);
+                var ss = CalBlockSize(vv.Value.TagType,vv.Value.Type,blockheadsize,out valueOffset, out qulityOffset);
 
                 vv.Value.BlockHeadStartAddr = (int)headSize;
 

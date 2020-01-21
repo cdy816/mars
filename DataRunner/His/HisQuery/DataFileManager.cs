@@ -88,14 +88,25 @@ namespace Cdy.Tag
         {
             string sname = file.Name.Replace(SeriseEnginer.DataFileExtends,"");
             string stime = sname.Substring(sname.Length - 12, 12);
+            int yy=0, mm=0, dd=0;
 
-            int yy = int.Parse(sname.Substring(0, 4));
-            int mm = int.Parse(sname.Substring(4, 2));
-            int dd = int.Parse(sname.Substring(6, 2));
+            if (!int.TryParse(stime.Substring(0, 4),out yy))
+            {
+                return;
+            }
 
-            int hhspan = int.Parse(sname.Substring(8, 2));
+            if (!int.TryParse(stime.Substring(4, 2), out mm))
+            {
+                return;
+            }
+
+            if (!int.TryParse(stime.Substring(6, 2), out dd))
+            {
+                return;
+            }
+            int hhspan = int.Parse(stime.Substring(8, 2));
             
-            int hhind = int.Parse(sname.Substring(10, 2));
+            int hhind = int.Parse(stime.Substring(10, 2));
 
             int hh = 24 / hhspan * hhind;
 

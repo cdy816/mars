@@ -22,10 +22,10 @@ namespace Cdy.Tag
 
         #region ... Variables  ...
         
-        /// <summary>
-        /// 
-        /// </summary>
-        private byte[] mDataBuffer;
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //private byte[] mDataBuffer;
 
         private List<byte[]> mBuffers;
 
@@ -85,6 +85,18 @@ namespace Cdy.Tag
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<byte[]> Buffers
+        {
+            get
+            {
+                return mBuffers;
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -179,7 +191,7 @@ namespace Cdy.Tag
                 mHandles.Add(System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mBuffers[i], 0));
             }
             mAllocSize = size;
-            mDataBuffer = mBuffers[0];
+            //mDataBuffer = mBuffers[0];
         }
 
         /// <summary>
@@ -1181,7 +1193,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Dispose()
         {
-            mDataBuffer = null;
+            //mDataBuffer = null;
             mBuffers.Clear();
             mHandles.Clear();
             GC.Collect();

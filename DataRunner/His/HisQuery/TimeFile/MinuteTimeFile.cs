@@ -124,17 +124,17 @@ namespace Cdy.Tag
             using (var ss = DataFileSeriserManager.manager.GetDefaultFileSersie())
             {
                 ss.OpenFile(mDataFile);
-                long offset = 0;
+                long offset = SeriseEnginer.FileHeadSize;
                 DateTime time;
                 do
                 {
-                    time = ss.ReadDateTime(16);
+                    time = ss.ReadDateTime(offset + 16);
                     mSecondOffset.Add(time.Second, offset);
                     offset = ss.ReadLong(offset + 8);
                 }
                 while (offset != 0);
             }
-            mOrderSecondOffset = mSecondOffset.Keys.OrderBy(e=>e).ToList();
+            mOrderSecondOffset = mSecondOffset.Keys.OrderBy(e => e).ToList();
         }
 
         /// <summary>

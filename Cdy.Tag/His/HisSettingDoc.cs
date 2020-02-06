@@ -37,13 +37,19 @@ namespace Cdy.Tag
         /// 单个文件保存数据时长
         /// 单位小时
         /// </summary>
-        public int FileDataDuration { get; set; } = 24;
+        public int FileDataDuration { get; set; } = 4;
+
 
         /// <summary>
         /// 单个数据块保存数据的时长
         /// 单位分钟
         /// </summary>
-        public int DataBlockDuration { get; set; } = 1;
+        public int DataBlockDuration { get; set; } = 10;
+
+        /// <summary>
+        /// 一个文件中变量的个数
+        /// </summary>
+        public int TagCountOneFile { get; set; } = 100000;
 
         /// <summary>
         /// 数据序列化类型

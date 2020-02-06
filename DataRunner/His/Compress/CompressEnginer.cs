@@ -75,8 +75,8 @@ namespace Cdy.Tag
         public void CalMemory(long size)
         {
             /* 内存结构:head+数据区指针+数据区
-               head:数据起始地址(4)+变量数量(4)+起始时间(8)
-               数据区指针:[ID(4) + address(4) + datasize(4)]
+               head:数据大小(4)+变量数量(4)+起始时间(8)
+               数据区指针:[ID(4) + address(4)]
                数据区:[data block]
                data block:size+compressType+data
              */
@@ -192,7 +192,7 @@ namespace Cdy.Tag
             int headoffset = 16;
 
             //数据区地址
-            int mTargetPosition = count * 12 + headoffset;
+            int mDataPosition = count * 8 + headoffset;
 
             for (int i=0;i<count;i++)
             {
@@ -201,23 +201,23 @@ namespace Cdy.Tag
                 var len = mSourceMemory.ReadInt(offset + 8);
 
                 //压缩数据
-                var size = CompressBlockMemory(qaddr, mTargetPosition,len);
+                var size = CompressBlockMemory(qaddr, mDataPosition,len);
                 
                 //更新头部指针区域数据
                 //写入变量ID
                 mTargetMemory.WriteInt(headoffset,id);
                 //写入数据区地址
-                mTargetMemory.WriteInt(headoffset + 4, mTargetPosition);
+                mTargetMemory.WriteInt(headoffset + 4, mDataPosition);
 
-                //写入数据区大小
-                mTargetMemory.WriteInt(headoffset + 8, size);
+                ////写入数据区大小
+                //mTargetMemory.WriteInt(headoffset + 8, size);
 
                 offset += 12;
-
-                headoffset += 12;
-                mTargetPosition += size;
+                headoffset += 8;
+                //headoffset += 12;
+                mDataPosition += size;
             }
-            mTargetMemory.WriteInt(0, mTargetPosition);//写入数据起始地址
+            mTargetMemory.WriteInt(0, mDataPosition);//写入数据的大小
             mTargetMemory.WriteInt(4, count);//写入变量数量
             mTargetMemory.WriteDatetime(8, mCurrentTime);//写入时间
         }

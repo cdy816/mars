@@ -133,6 +133,7 @@ namespace Cdy.Tag
             InitPath();
 
             mHisFileManager = new DataFileManager(mDatabaseName);
+            mHisFileManager.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
 
             var task = mHisFileManager.Int();
 
@@ -147,6 +148,7 @@ namespace Cdy.Tag
             hisEnginer.Init();
 
             compressEnginer = new CompressEnginer(hisEnginer.CurrentMemory.Length);
+            compressEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
 
             seriseEnginer = new SeriseEnginer() { DatabaseName = database };
             seriseEnginer.FileDuration = mHisDatabase.Setting.FileDataDuration;

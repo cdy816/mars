@@ -21,7 +21,7 @@ namespace Cdy.Tag
 
         #region ... Variables  ...
 
-        private Dictionary<int, YearTimeFile> mTimeFileMaps = new Dictionary<int, YearTimeFile>();
+        private Dictionary<int,Dictionary<int, YearTimeFile>> mTimeFileMaps = new Dictionary<int,Dictionary<int, YearTimeFile>>();
 
         private string mDatabaseName;
 
@@ -44,6 +44,11 @@ namespace Cdy.Tag
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 单个文件内变量的个数
+        /// </summary>
+        public int TagCountOneFile { get; set; }
 
         #endregion ...Properties...
 
@@ -68,7 +73,7 @@ namespace Cdy.Tag
             {
                 foreach (var vv in dir.GetFiles())
                 {
-                    if (vv.Extension == SeriseEnginer.DataFileExtends)
+                    if (vv.Extension == SeriseFileItem.DataFileExtends)
                     {
                         ParseFileName(vv);
                     }
@@ -86,9 +91,15 @@ namespace Cdy.Tag
         /// <param name="fileName"></param>
         private void ParseFileName(System.IO.FileInfo file)
         {
-            string sname = file.Name.Replace(SeriseEnginer.DataFileExtends,"");
+            string sname = file.Name.Replace(SeriseFileItem.DataFileExtends,"");
             string stime = sname.Substring(sname.Length - 12, 12);
             int yy=0, mm=0, dd=0;
+
+            int id = -1;
+            int.TryParse(sname.Substring(sname.Length - 15, 3), out id);
+
+            if (id == -1)
+                return;
 
             if (!int.TryParse(stime.Substring(0, 4),out yy))
             {
@@ -112,14 +123,23 @@ namespace Cdy.Tag
 
             YearTimeFile yt = new YearTimeFile() { TimeKey = yy };
 
-            if (mTimeFileMaps.ContainsKey(yy))
+            if(mTimeFileMaps.ContainsKey(id))
             {
-                yt = mTimeFileMaps[yy];
+                if (mTimeFileMaps[id].ContainsKey(yy))
+                {
+                    yt = mTimeFileMaps[id][yy];
+                }
+                else
+                {
+                    mTimeFileMaps[id].Add(yy, yt);
+                }
             }
             else
             {
-                mTimeFileMaps.Add(yy, yt);
+                mTimeFileMaps.Add(id, new Dictionary<int, YearTimeFile>());
+                mTimeFileMaps[id].Add(yy, yt);
             }
+            
             yt.AddMonth(mm).AddDay(dd).AddHour(hh).AddMinutes().ForEach(e=> { e.AddFile(file.FullName); });
 
         }
@@ -129,11 +149,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="time"></param>
         /// <returns></returns>
-        public MinuteTimeFile GetFile(DateTime time)
+        public MinuteTimeFile GetFile(DateTime time,int Id)
         {
-            if(mTimeFileMaps.ContainsKey(time.Year))
+            int id = Id / TagCountOneFile;
+
+            if (mTimeFileMaps.ContainsKey(id) && mTimeFileMaps[id].ContainsKey(time.Year))
             {
-                return mTimeFileMaps[time.Year].GetFile(time);
+                return mTimeFileMaps[id][time.Year].GetFile(time);
             }
             return null;
         }
@@ -144,13 +166,13 @@ namespace Cdy.Tag
         /// <param name="starttime"></param>
         /// <param name="endtime"></param>
         /// <returns></returns>
-        public List<MinuteTimeFile> GetFiles(DateTime starttime,DateTime endtime)
+        public List<MinuteTimeFile> GetFiles(DateTime starttime,DateTime endtime,int Id)
         {
             List<MinuteTimeFile> re = new List<MinuteTimeFile>();
             DateTime sstart = starttime;
             while (sstart <= endtime)
             {
-                re.Add(GetFile(sstart));
+                re.Add(GetFile(sstart,Id));
                 sstart = sstart.AddMinutes(1);
             }
             return re;
@@ -161,12 +183,12 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="times"></param>
         /// <returns></returns>
-        public Dictionary<DateTime, MinuteTimeFile> GetFiles(List<DateTime> times)
+        public Dictionary<DateTime, MinuteTimeFile> GetFiles(List<DateTime> times,int Id)
         {
             Dictionary<DateTime,MinuteTimeFile> re = new Dictionary<DateTime, MinuteTimeFile>();
             foreach(var vv in times)
             {
-                re.Add(vv,GetFile(vv));
+                re.Add(vv,GetFile(vv,Id));
             }
             return re;
         }

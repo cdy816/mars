@@ -65,6 +65,11 @@ namespace Cdy.Tag
 
         #region ... Properties ...
 
+        /// <summary>
+        /// 单个文件内变量的个数
+        /// </summary>
+        public int TagCountOneFile { get; set; } = 100000;
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -74,8 +79,10 @@ namespace Cdy.Tag
         /// </summary>
         public void CalMemory(long size)
         {
-            /* 内存结构:head+数据区指针+数据区
-               head:数据大小(4)+变量数量(4)+起始时间(8)
+            /* 内存结构:Head+[DataRegion]
+             * Head:数据区域个数(4)+时间(8)+[区域ID(4)+区域地址(8)]
+             * DataRegion:region head+数据区指针+数据区
+               region head:数据大小(4)+变量数量(4)
                数据区指针:[ID(4) + address(4)]
                数据区:[data block]
                data block:size+compressType+data
@@ -177,6 +184,16 @@ namespace Cdy.Tag
         /// </summary>
         private void Compress()
         {
+
+            /* 内存结构:Head+[DataRegion]
+             * Head:数据区域个数(4)+时间(8)+[区域ID(4)+区域地址(8)]
+             * DataRegion:region head+数据区指针+数据区
+               region head:数据大小(4)+变量数量(4)
+               数据区指针:[ID(4) + address(4)]
+               数据区:[data block]
+               data block:size+compressType+data
+             */
+
             //读取变量个数
             int count = mSourceMemory.ReadInt(9);
 
@@ -188,11 +205,39 @@ namespace Cdy.Tag
             //源内存数据块头部信息偏移地址
             int offset = 21;
 
-            //压缩后内存头大小
-            int headoffset = 16;
+            int mLastDataRegionId = -1;
+            Dictionary<int,long> Drids = new Dictionary<int, long>();
+            //记录每个数据区域内ID的个数
+            Dictionary<int, int> mDRcount = new Dictionary<int, int>();
+            //计算数据区域个数
+            for(int i=0;i<count;i++)
+            {
+                var id = mSourceMemory.ReadInt(offset);
+                var did = id / TagCountOneFile;
+                if (mLastDataRegionId != did)
+                {
+                    Drids.Add(did, 0);
+                    mDRcount.Add(did, 1);
+                    mLastDataRegionId = did;
+                }
+                else
+                {
+                    mDRcount[did]++;
+                }
+                offset += 12;
+            }
+
+            offset = 21;
+
+            //数据区头部指针偏移
+            int headoffset = 0;
+            //数据区起始地址
+            int mHeadAddress = -1;
 
             //数据区地址
-            int mDataPosition = count * 8 + headoffset;
+            int mDataPosition = 12 + Drids.Count * 12;
+
+            mLastDataRegionId = -1;
 
             for (int i=0;i<count;i++)
             {
@@ -200,26 +245,53 @@ namespace Cdy.Tag
                 var qaddr = mSourceMemory.ReadInt(offset + 4);
                 var len = mSourceMemory.ReadInt(offset + 8);
 
+                int rid = id / TagCountOneFile;
+                int size = 0;
+                if (rid != mLastDataRegionId)
+                {
+                    //开启一个新的数据区域
+
+                    if (mHeadAddress >= 0)
+                    {
+                        mTargetMemory.WriteInt(mHeadAddress, mDataPosition);//写入上一个区域数据块的大小
+                        mTargetMemory.WriteInt(mHeadAddress + 4, mDRcount[mLastDataRegionId]);//写入变量个数
+                    }
+
+                    Drids[rid] = mHeadAddress  = mDataPosition;
+                    headoffset = mHeadAddress + 8;
+                    mDataPosition = headoffset + mDRcount[rid] * 8 + 8;
+                    mLastDataRegionId = rid;
+                }
+
                 //压缩数据
-                var size = CompressBlockMemory(qaddr, mDataPosition,len);
-                
+                size = CompressBlockMemory(qaddr, mDataPosition, len);
+
                 //更新头部指针区域数据
                 //写入变量ID
-                mTargetMemory.WriteInt(headoffset,id);
+                mTargetMemory.WriteInt(headoffset, id);
                 //写入数据区地址
                 mTargetMemory.WriteInt(headoffset + 4, mDataPosition);
 
-                ////写入数据区大小
-                //mTargetMemory.WriteInt(headoffset + 8, size);
-
-                offset += 12;
                 headoffset += 8;
-                //headoffset += 12;
+                offset += 12;
                 mDataPosition += size;
             }
-            mTargetMemory.WriteInt(0, mDataPosition);//写入数据的大小
-            mTargetMemory.WriteInt(4, count);//写入变量数量
-            mTargetMemory.WriteDatetime(8, mCurrentTime);//写入时间
+            if (count > 0)
+            {
+                mTargetMemory.WriteInt(mHeadAddress, mDataPosition);//写入上一个区域数据块的大小
+                mTargetMemory.WriteInt(mHeadAddress + 4, mDRcount[mLastDataRegionId]);//写入变量个数
+            }
+
+            mTargetMemory.WriteInt(0, Drids.Count);
+            mTargetMemory.WriteDatetime(4, mCurrentTime);
+            //更新数据区域地址
+            offset = 12;
+            foreach (var vid in Drids)
+            {
+                mTargetMemory.WriteInt(offset, vid.Key);
+                mTargetMemory.WriteLong(offset+4, vid.Value);
+                offset += 12;
+            }
         }
 
         /// <summary>

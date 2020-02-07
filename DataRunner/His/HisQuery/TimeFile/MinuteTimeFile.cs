@@ -124,7 +124,7 @@ namespace Cdy.Tag
             using (var ss = DataFileSeriserManager.manager.GetDefaultFileSersie())
             {
                 ss.OpenFile(mDataFile);
-                long offset = SeriseEnginer.FileHeadSize;
+                long offset = SeriseFileItem.FileHeadSize;
                 DateTime time;
                 do
                 {

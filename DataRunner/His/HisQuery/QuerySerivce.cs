@@ -56,7 +56,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValue(int id,List<DateTime> times,QueryValueMatchType type,HisQueryResult<bool> result)
         {
-            var vfiles = GetFileManager().GetFiles(times);
+            var vfiles = GetFileManager().GetFiles(times, id);
             MinuteTimeFile mPreFile = null;
             List<DateTime> mtime = new List<DateTime>();
             foreach(var vv in vfiles)
@@ -97,7 +97,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<byte> result)
         {
-            var vfiles = GetFileManager().GetFiles(times);
+            var vfiles = GetFileManager().GetFiles(times, id);
             MinuteTimeFile mPreFile = null;
             List<DateTime> mtime = new List<DateTime>();
             foreach (var vv in vfiles)
@@ -139,7 +139,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<short> result)
         {
-            var vfiles = GetFileManager().GetFiles(times);
+            var vfiles = GetFileManager().GetFiles(times, id);
             MinuteTimeFile mPreFile = null;
             List<DateTime> mtime = new List<DateTime>();
             foreach (var vv in vfiles)
@@ -180,7 +180,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<ushort> result)
         {
-            var vfiles = GetFileManager().GetFiles(times);
+            var vfiles = GetFileManager().GetFiles(times, id);
             MinuteTimeFile mPreFile = null;
             List<DateTime> mtime = new List<DateTime>();
             foreach (var vv in vfiles)
@@ -221,7 +221,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<int> result)
         {
-            var vfiles = GetFileManager().GetFiles(times);
+            var vfiles = GetFileManager().GetFiles(times, id);
             MinuteTimeFile mPreFile = null;
             List<DateTime> mtime = new List<DateTime>();
             foreach (var vv in vfiles)
@@ -262,7 +262,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<uint> result)
         {
-            var vfiles = GetFileManager().GetFiles(times);
+            var vfiles = GetFileManager().GetFiles(times, id);
             MinuteTimeFile mPreFile = null;
             List<DateTime> mtime = new List<DateTime>();
             foreach (var vv in vfiles)
@@ -303,7 +303,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<ulong> result)
         {
-            var vfiles = GetFileManager().GetFiles(times);
+            var vfiles = GetFileManager().GetFiles(times, id);
             MinuteTimeFile mPreFile = null;
             List<DateTime> mtime = new List<DateTime>();
             foreach (var vv in vfiles)
@@ -344,7 +344,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<long> result)
         {
-            var vfiles = GetFileManager().GetFiles(times);
+            var vfiles = GetFileManager().GetFiles(times, id);
             MinuteTimeFile mPreFile = null;
             List<DateTime> mtime = new List<DateTime>();
             foreach (var vv in vfiles)
@@ -387,7 +387,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<float> result)
         {
-            var vfiles = GetFileManager().GetFiles(times);
+            var vfiles = GetFileManager().GetFiles(times, id);
             MinuteTimeFile mPreFile = null;
             List<DateTime> mtime = new List<DateTime>();
             foreach (var vv in vfiles)
@@ -429,7 +429,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<double> result)
         {
-            var vfiles = GetFileManager().GetFiles(times);
+            var vfiles = GetFileManager().GetFiles(times, id);
             MinuteTimeFile mPreFile = null;
             List<DateTime> mtime = new List<DateTime>();
             foreach (var vv in vfiles)
@@ -471,7 +471,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<DateTime> result)
         {
-            var vfiles = GetFileManager().GetFiles(times);
+            var vfiles = GetFileManager().GetFiles(times, id);
             MinuteTimeFile mPreFile = null;
             List<DateTime> mtime = new List<DateTime>();
             foreach (var vv in vfiles)
@@ -512,7 +512,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<string> result)
         {
-            var vfiles = GetFileManager().GetFiles(times);
+            var vfiles = GetFileManager().GetFiles(times, id);
             MinuteTimeFile mPreFile = null;
             List<DateTime> mtime = new List<DateTime>();
             foreach (var vv in vfiles)
@@ -553,7 +553,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadAllValue(int id,DateTime startTime,DateTime endTime,HisQueryResult<bool> result)
         {
-            var vfiles = GetFileManager().GetFiles(startTime, endTime);
+            var vfiles = GetFileManager().GetFiles(startTime, endTime,id);
             vfiles.ForEach(e => {
                 DateTime sstart, eend;
                 e.GetTimeSpan(startTime, endTime, out sstart,out eend);    
@@ -570,7 +570,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<byte> result)
         {
-            var vfiles = GetFileManager().GetFiles(startTime, endTime);
+            var vfiles = GetFileManager().GetFiles(startTime, endTime, id);
             vfiles.ForEach(e => {
                 DateTime sstart, eend;
                 e.GetTimeSpan(startTime, endTime, out sstart, out eend);
@@ -587,7 +587,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<short> result)
         {
-            var vfiles = GetFileManager().GetFiles(startTime, endTime);
+            var vfiles = GetFileManager().GetFiles(startTime, endTime, id);
             vfiles.ForEach(e => {
                 DateTime sstart, eend;
                 e.GetTimeSpan(startTime, endTime, out sstart, out eend);
@@ -604,7 +604,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<ushort> result)
         {
-            var vfiles = GetFileManager().GetFiles(startTime, endTime);
+            var vfiles = GetFileManager().GetFiles(startTime, endTime, id);
             vfiles.ForEach(e => {
                 DateTime sstart, eend;
                 e.GetTimeSpan(startTime, endTime, out sstart, out eend);
@@ -621,7 +621,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<int> result)
         {
-            var vfiles = GetFileManager().GetFiles(startTime, endTime);
+            var vfiles = GetFileManager().GetFiles(startTime, endTime, id);
             vfiles.ForEach(e => {
                 DateTime sstart, eend;
                 e.GetTimeSpan(startTime, endTime, out sstart, out eend);
@@ -638,7 +638,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<uint> result)
         {
-            var vfiles = GetFileManager().GetFiles(startTime, endTime);
+            var vfiles = GetFileManager().GetFiles(startTime, endTime, id);
             vfiles.ForEach(e => {
                 DateTime sstart, eend;
                 e.GetTimeSpan(startTime, endTime, out sstart, out eend);
@@ -655,7 +655,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<long> result)
         {
-            var vfiles = GetFileManager().GetFiles(startTime, endTime);
+            var vfiles = GetFileManager().GetFiles(startTime, endTime, id);
             vfiles.ForEach(e => {
                 DateTime sstart, eend;
                 e.GetTimeSpan(startTime, endTime, out sstart, out eend);
@@ -672,7 +672,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<ulong> result)
         {
-            var vfiles = GetFileManager().GetFiles(startTime, endTime);
+            var vfiles = GetFileManager().GetFiles(startTime, endTime, id);
             vfiles.ForEach(e => {
                 DateTime sstart, eend;
                 e.GetTimeSpan(startTime, endTime, out sstart, out eend);
@@ -689,7 +689,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<float> result)
         {
-            var vfiles = GetFileManager().GetFiles(startTime, endTime);
+            var vfiles = GetFileManager().GetFiles(startTime, endTime, id);
             vfiles.ForEach(e => {
                 DateTime sstart, eend;
                 e.GetTimeSpan(startTime, endTime, out sstart, out eend);
@@ -706,7 +706,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<double> result)
         {
-            var vfiles = GetFileManager().GetFiles(startTime, endTime);
+            var vfiles = GetFileManager().GetFiles(startTime, endTime, id);
             vfiles.ForEach(e => {
                 DateTime sstart, eend;
                 e.GetTimeSpan(startTime, endTime, out sstart, out eend);
@@ -723,7 +723,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<DateTime> result)
         {
-            var vfiles = GetFileManager().GetFiles(startTime, endTime);
+            var vfiles = GetFileManager().GetFiles(startTime, endTime, id);
             vfiles.ForEach(e => {
                 DateTime sstart, eend;
                 e.GetTimeSpan(startTime, endTime, out sstart, out eend);
@@ -740,7 +740,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<string> result)
         {
-            var vfiles = GetFileManager().GetFiles(startTime, endTime);
+            var vfiles = GetFileManager().GetFiles(startTime, endTime, id);
             vfiles.ForEach(e => {
                 DateTime sstart, eend;
                 e.GetTimeSpan(startTime, endTime, out sstart, out eend);

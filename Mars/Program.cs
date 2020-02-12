@@ -24,6 +24,8 @@ namespace Mars
                 Console.Write(">");
                 string[] cmd = Console.ReadLine().Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
+                if (cmd.Length == 0) continue;
+
                 string scmd = cmd[0].ToLower();
                 switch (scmd)
                 {

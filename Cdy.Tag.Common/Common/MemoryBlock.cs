@@ -17,11 +17,11 @@ namespace Cdy.Tag
     /// <summary>
     /// 划分内存
     /// </summary>
-    public unsafe class MemoryBlock:IDisposable
+    public unsafe class MemoryBlock : IDisposable
     {
 
         #region ... Variables  ...
-        
+
         ///// <summary>
         ///// 
         ///// </summary>
@@ -29,8 +29,11 @@ namespace Cdy.Tag
 
         private List<byte[]> mBuffers;
 
+        /// <summary>
+        /// 
+        /// </summary>
         private List<IntPtr> mHandles;
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -67,7 +70,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="size"></param>
         /// <param name="blockSize"></param>
-        public MemoryBlock(long size,int blockSize)
+        public MemoryBlock(long size, int blockSize)
         {
             BufferItemSize = blockSize;
             Init(size);
@@ -89,11 +92,20 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public List<byte[]> Buffers
         {
             get
             {
                 return mBuffers;
+            }
+            internal set
+            {
+                mBuffers = value;
             }
         }
 
@@ -130,7 +142,7 @@ namespace Cdy.Tag
         {
             get
             {
-                return mBuffers.Count* BufferItemSize;
+                return mBuffers.Count * BufferItemSize;
             }
         }
 
@@ -161,6 +173,34 @@ namespace Cdy.Tag
             {
                 return mUsedSize;
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public long AllocSize
+        {
+            get
+            {
+                return mAllocSize;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        internal List<IntPtr> Handles
+        {
+            get
+            {
+                return mHandles;
+            }
+            set
+            {
+                mHandles = value;
+            }
+
         }
 
 
@@ -294,6 +334,8 @@ namespace Cdy.Tag
                 Array.Clear(vv, 0, vv.Length);
             mUsedSize = 0;
             mPosition = 0;
+
+            LoggerService.Service.Info("MemoryBlock", Name + " is clear !");
         }
 
         #region ReadAndWrite
@@ -1439,8 +1481,9 @@ namespace Cdy.Tag
         /// <param name="memory"></param>
         public static void MakeMemoryBusy(this MemoryBlock memory)
         {
+            LoggerService.Service.Info("MemoryBlock", memory.Name + " is busy.....");
             memory.IsBusy = true;
-            memory.StartMemory[0] = 1;
+            //memory.StartMemory[0] = 1;
         }
 
         /// <summary>
@@ -1449,9 +1492,46 @@ namespace Cdy.Tag
         /// <param name="memory"></param>
         public static void MakeMemoryNoBusy(this MemoryBlock memory)
         {
+            LoggerService.Service.Info("MemoryBlock", memory.Name+ " is ready !");
             memory.IsBusy = false;
-            memory.StartMemory[0] = 0;
+            //memory.StartMemory[0] = 0;
+        }
+
+        public static void SaveToFile(this MemoryBlock memory, string fileName)
+        {
+            var stream = System.IO.File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            stream.Write(BitConverter.GetBytes(memory.Buffers.Count),0,4);
+            stream.Write(BitConverter.GetBytes(memory.BufferItemSize), 0, 4);
+            foreach(var vv in memory.Buffers)
+            {
+                stream.Write(vv, 0, vv.Length);
+            }
+            stream.Flush();
+            stream.Close();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <param name="fileName"></param>
+        public static MemoryBlock LoadFileToMemory(this string fileName)
+        {
+            var stream = (System.IO.File.Open(fileName, FileMode.Open, FileAccess.Read));
+            byte[] bb = new byte[4];
+            stream.Read(bb, 0, 4);
+            int mbcount = BitConverter.ToInt32(bb,0);
+            stream.Read(bb, 0, 4);
+            int bufferItemSize = BitConverter.ToInt32(bb, 0);
+
+            MemoryBlock memory = new MemoryBlock(bufferItemSize * mbcount);
+            for (int i = 0; i < mbcount; i++)
+            {
+                long size = Math.Min(memory.BufferItemSize, stream.Length - stream.Position);
+                stream.Read(memory.Buffers[i], 0, (int)size);
+            }
+            stream.Close();
+            return memory;
         }
     }
-
 }

@@ -103,6 +103,7 @@ namespace Cdy.Tag
         /// <param name="start"></param>
         public abstract void Write(byte value, long start);
 
+
         /// <summary>
         /// 
         /// </summary>
@@ -117,6 +118,15 @@ namespace Cdy.Tag
         /// <param name="source"></param>
         /// <param name="start"></param>
         public abstract void Write(List<byte[]> source, long start);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="start"></param>
+        /// <param name="offset"></param>
+        /// <param name="len"></param>
+        public abstract void Write(List<byte[]> source, long start,int offset,int len);
 
         /// <summary>
         /// 

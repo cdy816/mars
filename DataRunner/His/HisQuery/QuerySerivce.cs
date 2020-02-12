@@ -3114,13 +3114,15 @@ namespace Cdy.Tag
         /// <param name="blockDuration"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static Dictionary<int, long> CheckBlockHeadCach(this DataFileSeriserbase datafile, long offset, out int fileDuration, out int blockDuration, out int timetick)
+        public static Dictionary<int, int> CheckBlockHeadCach(this DataFileSeriserbase datafile, long offset,out int tagCount, out int fileDuration, out int blockDuration, out int timetick)
         {
-            //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+tagcount(4)+ tagid sum(8) +file duration(4)+ block duration(4)+Time tick duration(4)+ { + tagid1+tagid2+...+tagidn }+ {tag1 block point1(8) + block size(4) + tag1 block point2(8)+ block size(4) + tag1 block point3(8)+ block size(4)+...+tag1 block pointn(8)+ block size(4) + tag2 block point1 (8)+ block size(4)+ tag2 block point2(8)+ block size(4)+....}
+            //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+tagcount(4)+ tagid sum(8) +file duration(4)+ block duration(4)+Time tick duration(4)+ { + tagid1+tagid2+...+tagidn }+ {[tag1 block point1(8) + tag2 block point1+ tag3 block point1+...] + [tag1 block point2(8) + tag2 block point2+ tag3 block point2+...]....}
             var dataoffset = offset + 24;
             //读取变量个数
             int count = datafile.ReadInit(dataoffset);
             dataoffset += 4;
+
+            tagCount = count;
 
             //读取校验和
             long idsum = datafile.ReadLong(dataoffset);
@@ -3147,7 +3149,8 @@ namespace Cdy.Tag
                     {
                         VarintCodeMemory vcm = new VarintCodeMemory(dd.StartMemory);
                         var ltmp = vcm.ToIntList();
-                        var dtmp = new Dictionary<int, long>();
+
+                        var dtmp = new Dictionary<int, int>();
                         if (ltmp.Count > 0)
                         {
                             int preid = ltmp[0];
@@ -3160,6 +3163,7 @@ namespace Cdy.Tag
                             }
                         }
                         TagHeadOffsetManager.manager.Add(idsum, count, dtmp);
+                        
                         return dtmp;
                     }
                 }
@@ -3171,7 +3175,7 @@ namespace Cdy.Tag
         }
 
         /// <summary>
-        /// 读取数据区域的数据头数据
+        /// 读取某个变量在头部文件种的序号
         /// </summary>
         /// <param name="datafile"></param>
         /// <param name="tid"></param>
@@ -3180,9 +3184,9 @@ namespace Cdy.Tag
         /// <param name="blockDuration"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static long ReadTargetBlockAddress(this DataFileSeriserbase datafile, int tid, long offset, out int fileDuration, out int blockDuration, out int timetick)
+        public static int ReadTagIndexInDataPointer(this DataFileSeriserbase datafile, int tid, long offset, out int tagCount,out int fileDuration, out int blockDuration, out int timetick)
         {
-            var hfile = datafile.CheckBlockHeadCach(offset, out fileDuration, out blockDuration, out timetick);
+            var hfile = datafile.CheckBlockHeadCach(offset,out tagCount ,out fileDuration, out blockDuration, out timetick);
             if (hfile.ContainsKey(tid))
             {
                 return hfile[tid];
@@ -3200,9 +3204,9 @@ namespace Cdy.Tag
         /// <param name="blockDuration"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static List<long> ReadTargetBlockAddress(this DataFileSeriserbase datafile, List<int> tid, long offset, out int fileDuration, out int blockDuration, out int timetick)
+        public static List<long> ReadTargetBlockAddress(this DataFileSeriserbase datafile, List<int> tid ,long offset,out int tagCount, out int fileDuration, out int blockDuration, out int timetick)
         {
-            var hfile = datafile.CheckBlockHeadCach(offset, out fileDuration, out blockDuration, out timetick);
+            var hfile = datafile.CheckBlockHeadCach(offset,out tagCount, out fileDuration, out blockDuration, out timetick);
             List<long> re = new List<long>();
             foreach (var vv in tid)
             {
@@ -3233,7 +3237,8 @@ namespace Cdy.Tag
         public static MemoryBlock ReadTagDataBlock(this DataFileSeriserbase datafile, int tid, long offset, DateTime dataTime, out int timetick)
         {
             int fileDuration, blockDuration = 0;
-            var blockpointer = datafile.ReadTargetBlockAddress(tid, offset, out fileDuration, out blockDuration, out timetick);
+            int tagCount = 0;
+            var blockIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick);
             int blockcount = fileDuration * 60 / blockDuration;
 
             var startTime = datafile.ReadDateTime(16);
@@ -3249,10 +3254,11 @@ namespace Cdy.Tag
                 throw new Exception("DataPointer index is out of total block number");
             }
 
-            var dataPointer = datafile.ReadLong(blockpointer + dindex * 12);
-            var datasize = datafile.ReadInit(blockpointer + dindex * 12 + 8);
+            var dataPointer = datafile.ReadLong(blockIndex * 8 + dindex * tagCount * 8); //读取DataBlock的地址
 
-            return datafile.Read(dataPointer, datasize);
+            var datasize = datafile.ReadInit(dataPointer); //读取DataBlock 的大小
+
+            return datafile.Read(dataPointer + 4, datasize);
         }
 
         /// <summary>
@@ -3267,7 +3273,8 @@ namespace Cdy.Tag
         public static Dictionary<DateTime, MemoryBlock> ReadTagDataBlock(this DataFileSeriserbase datafile, int tid, long offset, List<DateTime> dataTimes, out int timetick)
         {
             int fileDuration, blockDuration = 0;
-            var blockpointer = datafile.ReadTargetBlockAddress(tid, offset, out fileDuration, out blockDuration, out timetick);
+            int tagCount = 0;
+            var blockIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick);
             int blockcount = fileDuration * 60 / blockDuration;
 
             var startTime = datafile.ReadDateTime(16);
@@ -3290,12 +3297,13 @@ namespace Cdy.Tag
                     throw new Exception("DataPointer index is out of total block number");
                 }
 
-                var dataPointer = datafile.ReadLong(blockpointer + dindex * 12);
-                var datasize = datafile.ReadInit(blockpointer + dindex * 12 + 8);
+                var dataPointer = datafile.ReadLong(blockIndex * 8 + dindex * tagCount * 8); //读取DataBlock的地址
+
+                var datasize = datafile.ReadInit(dataPointer); //读取DataBlock 的大小
 
                 if (!rtmp.ContainsKey(dataPointer))
                 {
-                    var rmm = datafile.Read(dataPointer, datasize);
+                    var rmm = datafile.Read(dataPointer + 4, datasize);
                     re.Add(vdd, rmm);
                     rtmp.Add(dataPointer, rmm);
                 }
@@ -3319,7 +3327,8 @@ namespace Cdy.Tag
         public static Dictionary<MemoryBlock, List<DateTime>> ReadTagDataBlock2(this DataFileSeriserbase datafile, int tid, long offset, List<DateTime> dataTimes, out int timetick)
         {
             int fileDuration, blockDuration = 0;
-            var blockpointer = datafile.ReadTargetBlockAddress(tid, offset, out fileDuration, out blockDuration, out timetick);
+            int tagCount = 0;
+            var blockIndex = datafile.ReadTagIndexInDataPointer(tid, offset,out tagCount, out fileDuration, out blockDuration, out timetick);
             int blockcount = fileDuration * 60 / blockDuration;
 
             var startTime = datafile.ReadDateTime(16);
@@ -3342,8 +3351,9 @@ namespace Cdy.Tag
                     throw new Exception("DataPointer index is out of total block number");
                 }
 
-                var dataPointer = datafile.ReadLong(blockpointer + dindex * 12);
-                var datasize = datafile.ReadInit(blockpointer + dindex * 12 + 8);
+                var dataPointer = datafile.ReadLong(blockIndex * 8 + dindex * tagCount * 8); //读取DataBlock的地址
+
+                var datasize = datafile.ReadInit(dataPointer); //读取DataBlock 的大小
 
                 if (!rtmp.ContainsKey(dataPointer))
                 {
@@ -3387,7 +3397,8 @@ namespace Cdy.Tag
         public static Dictionary<MemoryBlock, Tuple<DateTime, DateTime>> ReadTagDataBlock2(this DataFileSeriserbase datafile, int tid, long offset, DateTime start,DateTime end, out int timetick)
         {
             int fileDuration, blockDuration = 0;
-            var blockpointer = datafile.ReadTargetBlockAddress(tid, offset, out fileDuration, out blockDuration, out timetick);
+            int tagCount = 0;
+            var blockIndex = datafile.ReadTagIndexInDataPointer(tid, offset,out tagCount, out fileDuration, out blockDuration, out timetick);
             int blockcount = fileDuration * 60 / blockDuration;
 
             var startTime = datafile.ReadDateTime(16);
@@ -3416,8 +3427,9 @@ namespace Cdy.Tag
                     throw new Exception("DataPointer index is out of total block number");
                 }
 
-                var dataPointer = datafile.ReadLong(blockpointer + dindex * 12);
-                var datasize = datafile.ReadInit(blockpointer + dindex * 12 + 8);
+                var dataPointer = datafile.ReadLong(blockIndex * 8 + dindex * tagCount * 8); //读取DataBlock的地址
+
+                var datasize = datafile.ReadInit(dataPointer); //读取DataBlock 的大小
 
                 var rmm = datafile.Read(dataPointer, datasize);
                 if (!re.ContainsKey(rmm))

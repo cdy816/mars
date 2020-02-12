@@ -20,6 +20,8 @@ namespace Cdy.Tag
 
         #region ... Variables  ...
 
+        private byte[] headBytes;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -97,6 +99,19 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
+        public void Init()
+        {
+            var hbyts = new List<byte>(19);
+            hbyts.AddRange(BitConverter.GetBytes(this.HisQulityStartAddr - this.TimerValueStartAddr));
+            hbyts.Add((byte)this.Type);
+            hbyts.Add((byte)this.TagType);
+            hbyts.Add((byte)this.CompressType);
+            hbyts.AddRange(BitConverter.GetBytes(CompressParameter1));
+            hbyts.AddRange(BitConverter.GetBytes(CompressParameter2));
+            hbyts.AddRange(BitConverter.GetBytes(CompressParameter3));
+            headBytes = hbyts.ToArray();
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -122,21 +137,24 @@ namespace Cdy.Tag
         {
             //数据块头部结构
             //数据区大小(int)+记录类型(byte)+变量类型(byte)+压缩类型(byte)+压缩参数1(float)+压缩参数2(float)+压缩参数3(float)
+            
             //var bids = BitConverter.GetBytes(this.HisQulityStartAddr - this.HisValueStartAddr);
             //Buffer.BlockCopy(HisAddr, BlockHeadStartAddr, bids, 0, bids.Length);
 
-            HisAddr.WriteInt(BlockHeadStartAddr, this.HisQulityStartAddr - this.TimerValueStartAddr);
+            HisAddr.WriteBytes(BlockHeadStartAddr, headBytes);
 
-            //写入记录类型
-            HisAddr.WriteByte(BlockHeadStartAddr+4, (byte)this.Type);
-            //写入变量类型
-            HisAddr.WriteByte(BlockHeadStartAddr+5, (byte)this.TagType);
-            //写入压缩类型
-            HisAddr.WriteByte(BlockHeadStartAddr+6, (byte)this.CompressType);
-            //写入压缩附属参数
-            HisAddr.WriteFloat(BlockHeadStartAddr + 7, CompressParameter1);
-            HisAddr.WriteFloat(BlockHeadStartAddr + 11, CompressParameter2);
-            HisAddr.WriteFloat(BlockHeadStartAddr + 15, CompressParameter3);
+            //HisAddr.WriteInt(BlockHeadStartAddr, this.HisQulityStartAddr - this.TimerValueStartAddr);
+
+            ////写入记录类型
+            //HisAddr.WriteByte(BlockHeadStartAddr+4, (byte)this.Type);
+            ////写入变量类型
+            //HisAddr.WriteByte(BlockHeadStartAddr+5, (byte)this.TagType);
+            ////写入压缩类型
+            //HisAddr.WriteByte(BlockHeadStartAddr+6, (byte)this.CompressType);
+            ////写入压缩附属参数
+            //HisAddr.WriteFloat(BlockHeadStartAddr + 7, CompressParameter1);
+            //HisAddr.WriteFloat(BlockHeadStartAddr + 11, CompressParameter2);
+            //HisAddr.WriteFloat(BlockHeadStartAddr + 15, CompressParameter3);
         }
 
         /// <summary>

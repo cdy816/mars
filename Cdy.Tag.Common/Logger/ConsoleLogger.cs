@@ -67,7 +67,7 @@ namespace Cdy.Tag
         /// <param name="msg"></param>
         public void Info(string name, string msg)
         {
-            Console.WriteLine(string.Format(infoFormate, DateTime.Now.ToString(), name, msg));
+            Console.WriteLine(string.Format(infoFormate, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), name, msg));
         }
 
         #endregion ...Methods...

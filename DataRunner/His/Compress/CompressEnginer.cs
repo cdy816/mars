@@ -87,8 +87,8 @@ namespace Cdy.Tag
                数据区:[data block]
                data block:size+compressType+data
              */
-            mMemory1 = new MemoryBlock(size);
-            mMemory2 = new MemoryBlock(size);
+            mMemory1 = new MemoryBlock(size) { Name = "CompressMemory1" };
+            mMemory2 = new MemoryBlock(size) { Name = "CompressMemory2" };
         }
 
         /// <summary>
@@ -161,18 +161,31 @@ namespace Cdy.Tag
                 resetEvent.Reset();
                 if (mIsClosed)
                     break;
+                LoggerService.Service.Info("Compress", "********开始执行压缩********");
+
+                var sm = mSourceMemory;
 
                 mTargetMemory = SelectMemory();
                 while (mTargetMemory == null)
                 {
-                    LoggerService.Service.Info("Comperss", "压缩出现阻塞");
+                    LoggerService.Service.Info("Compress", "压缩出现阻塞");
                     Thread.Sleep(10);
                     mTargetMemory = SelectMemory();
                 }
                 mTargetMemory.MakeMemoryBusy();
                 Compress();
-                mSourceMemory.MakeMemoryNoBusy();
-                ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSave(mTargetMemory, mCurrentTime);
+
+                sm.Clear();
+                sm.MakeMemoryNoBusy();
+                LoggerService.Service.Info("Compress", ">>>>>>>>>压缩完成>>>>>>>>>" + mTargetMemory.UsedSize);
+
+                //System.Threading.Tasks.Task.Run(new Action(() => {
+                //    ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSave(mTargetMemory, mCurrentTime);
+                //}));
+
+                //new System.Threading.Tasks.TaskFactory().StartNew(new Action(() => {
+                    ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSave(mTargetMemory, mCurrentTime);
+                //}));
             }
             closedEvent.Set();
         }

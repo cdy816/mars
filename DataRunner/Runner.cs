@@ -57,6 +57,15 @@ namespace Cdy.Tag
 
         #region ... Constructor...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        static Runner()
+        {
+            //注册日志
+            ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
+        }
+
         #endregion ...Constructor...
 
         #region ... Properties ...
@@ -133,12 +142,12 @@ namespace Cdy.Tag
             InitPath();
 
             mHisFileManager = new DataFileManager(mDatabaseName);
+            LoadHisDatabase();
             mHisFileManager.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
 
             var task = mHisFileManager.Int();
 
             LoadRealDatabase();
-            LoadHisDatabase();
 
             realEnginer = new RealEnginer(mDatabase);
             realEnginer.Init();
@@ -169,8 +178,7 @@ namespace Cdy.Tag
         /// </summary>
         private void RegistorInterface()
         {
-            //注册日志
-            ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
+           
 
             ServiceLocator.Locator.Registor<IRealData>(realEnginer);
             ServiceLocator.Locator.Registor<IRealDataNotify>(realEnginer);
@@ -207,11 +215,13 @@ namespace Cdy.Tag
         /// <param name="database"></param>
         public async void StartAsync(string database)
         {
+            LoggerService.Service.Info("Runner",  database+"开始启动");
             await InitAsync(database);
             seriseEnginer.Start();
             compressEnginer.Start();
             hisEnginer.Start();
             mIsStarted = true;
+            LoggerService.Service.Info("Runner", database + "启动完成");
         }
 
 

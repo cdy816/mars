@@ -334,28 +334,48 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="source"></param>
         /// <param name="start"></param>
-        public override void Write(List<byte[]> source, long start)
+        public override void Write(List<byte[]> source, long start, int offset, int len)
         {
-            bool isNeedAllCopy = false;
+            List<Tuple<int, int, int>> copyIndex = new List<Tuple<int, int, int>>();
+
+            int sstart = offset;
             int count = 0;
             int precount = 0;
+            int copyed = 0;
             for (int i = 0; i < source.Count; i++)
             {
-                if (isNeedAllCopy)
+                precount = count;
+                count = source[i].Length + count;
+                if (count > sstart)
                 {
-                    mStream.Write(source[i], 0, source[i].Length);
-                }
-                else
-                {
-                    precount = count;
-                    count = source[i].Length + count;
-                    if (count > start)
+                    var ltmp = count - sstart;
+                    if (ltmp > (len - copyed))
                     {
-                        mStream.Write(source[i], (int)(start - precount), (int)(count - start));
-                        isNeedAllCopy = true;
+                        copyIndex.Add(new Tuple<int, int, int>(i, sstart - precount, len - copyed));
+                        break;
+                    }
+                    else
+                    {
+                        copyIndex.Add(new Tuple<int, int, int>(i, sstart - precount, ltmp));
+                        sstart += ltmp;
+                        copyed += ltmp;
                     }
                 }
-                
+            }
+            mStream.Position = start;
+            foreach (var vv in copyIndex)
+            {
+                mStream.Write(source[vv.Item1], vv.Item2, vv.Item3);
+            }
+        }
+
+
+        public override void Write(List<byte[]> source, long start)
+        {
+            mStream.Position = start;
+            for (int i = 0; i < source.Count; i++)
+            {
+                mStream.Write(source[i], 0, source[i].Length);
             }
         }
 

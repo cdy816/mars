@@ -212,9 +212,16 @@ namespace Cdy.Tag
             int offset = 12;
             for (int i = 0; i < count; i++)
             {
-                var id = mProcessMemory.ReadInt(offset);
-                var addr = mProcessMemory.ReadLong(offset + 4);
-                memoryAddrs.Add(id, addr);
+                try
+                {
+                    var id = mProcessMemory.ReadInt(offset);
+                    var addr = mProcessMemory.ReadLong(offset + 4);
+                    memoryAddrs.Add(id, addr);
+                }
+                catch
+                {
+
+                }
                 offset += 12;
             }
 

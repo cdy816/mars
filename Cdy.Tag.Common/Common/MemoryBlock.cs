@@ -537,6 +537,27 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
+        public void WriteLongDirect(long offset, long value)
+        {
+            IntPtr hd;
+            long ost;
+            if (IsCrossDataBuffer(offset, 8))
+            {
+                WriteBytesDirect(offset, BitConverter.GetBytes(value));
+            }
+            else
+            {
+                hd = RelocationAddress(offset, out ost);
+                MemoryHelper.WriteInt64((void*)hd, ost, value);
+            }
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="value"></param>
         public void WriteULong(long offset, ulong value)
         {
             IntPtr hd;
@@ -617,6 +638,62 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="values"></param>
+        public void WriteBytesDirect(long offset, byte[] values)
+        {
+            WriteBytesDirect(offset, values, 0, values.Length);
+        }
+
+        /// <summary>
+        /// 清空值
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="len"></param>
+        public void Clear(long offset,long len)
+        {
+            int id = (int)(offset / BufferItemSize);
+
+            long ost = offset % BufferItemSize;
+
+            if (len + ost < BufferItemSize)
+            {
+                System.Array.Clear(mBuffers[id], (int)ost, (int)len);
+            }
+            else
+            {
+                int ll = BufferItemSize - (int)ost;
+
+                System.Array.Clear(mBuffers[id], (int)ost, (int)ll);
+
+                if (len - ll < BufferItemSize)
+                {
+                    id++;
+                    System.Array.Clear(mBuffers[id], 0, (int)(len - ll));
+                }
+                else
+                {
+                    long ltmp = len - ll;
+                    int bcount = ll / BufferItemSize;
+                    int i = 0;
+                    for (i = 0; i < bcount; i++)
+                    {
+                        id++;
+                        System.Array.Clear(mBuffers[id], 0, BufferItemSize);
+                    }
+                    int otmp = ll % BufferItemSize;
+                    if (otmp > 0)
+                    {
+                        id++;
+                        System.Array.Clear(mBuffers[id], 0, otmp);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="values"></param>
         /// <param name="valueoffset"></param>
         /// <param name="len"></param>
         public void WriteBytes(long offset, byte[] values, int valueoffset, int len)
@@ -641,7 +718,7 @@ namespace Cdy.Tag
                 if (len - ll < BufferItemSize)
                 {
                     id++;
-                    Buffer.BlockCopy(values, ll+ valueoffset, mBuffers[id], 0, len - ll);
+                    Buffer.BlockCopy(values, ll + valueoffset, mBuffers[id], 0, len - ll);
                 }
                 else
                 {
@@ -651,18 +728,67 @@ namespace Cdy.Tag
                     for (i = 0; i < bcount; i++)
                     {
                         id++;
-                        Buffer.BlockCopy(values, valueoffset+ll + i * BufferItemSize, mBuffers[id], 0, BufferItemSize);
+                        Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, BufferItemSize);
                     }
                     int otmp = ll % BufferItemSize;
                     if (otmp > 0)
                     {
                         id++;
-                        Buffer.BlockCopy(values, valueoffset+ll + i * BufferItemSize, mBuffers[id], 0, otmp);
+                        Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, otmp);
                     }
                 }
             }
 
-           Position = offset + len;
+            Position = offset + len;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="values"></param>
+        /// <param name="valueoffset"></param>
+        /// <param name="len"></param>
+        public void WriteBytesDirect(long offset, byte[] values, int valueoffset, int len)
+        {
+            int id = (int)(offset / BufferItemSize);
+
+            long ost = offset % BufferItemSize;
+
+            if (len + ost < BufferItemSize)
+            {
+                Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, len);
+            }
+            else
+            {
+                int ll = BufferItemSize - (int)ost;
+
+                Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, ll);
+
+                if (len - ll < BufferItemSize)
+                {
+                    id++;
+                    Buffer.BlockCopy(values, ll + valueoffset, mBuffers[id], 0, len - ll);
+                }
+                else
+                {
+                    long ltmp = len - ll;
+                    int bcount = ll / BufferItemSize;
+                    int i = 0;
+                    for (i = 0; i < bcount; i++)
+                    {
+                        id++;
+                        Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, BufferItemSize);
+                    }
+                    int otmp = ll % BufferItemSize;
+                    if (otmp > 0)
+                    {
+                        id++;
+                        Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, otmp);
+                    }
+                }
+            }
+
         }
 
         /// <summary>
@@ -678,6 +804,19 @@ namespace Cdy.Tag
             hd = RelocationAddress(offset, out ost);
             MemoryHelper.WriteByte((void*)hd, ost, value);
             Position = offset + 1;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="value"></param>
+        public void WriteByteDirect(long offset, byte value)
+        {
+            IntPtr hd;
+            long ost;
+            hd = RelocationAddress(offset, out ost);
+            MemoryHelper.WriteByte((void*)hd, ost, value);
         }
 
         /// <summary>
@@ -733,6 +872,22 @@ namespace Cdy.Tag
             }
         }
 
+
+        public void WriteIntDirect(long offset, int value)
+        {
+            IntPtr hd;
+            long ost;
+            if (IsCrossDataBuffer(offset, 4))
+            {
+                WriteBytesDirect(offset, BitConverter.GetBytes(value));
+            }
+            else
+            {
+                hd = RelocationAddress(offset, out ost);
+                MemoryHelper.WriteInt32((void*)hd, ost, value);
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -753,6 +908,26 @@ namespace Cdy.Tag
                 MemoryHelper.WriteUInt32((void*)hd, ost, value);
                 Position = offset + 4;
             }            
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="value"></param>
+        public void WriteUIntDirect(long offset, uint value)
+        {
+            IntPtr hd;
+            long ost;
+            if (IsCrossDataBuffer(offset, 4))
+            {
+                WriteBytesDirect(offset, BitConverter.GetBytes(value));
+            }
+            else
+            {
+                hd = RelocationAddress(offset, out ost);
+                MemoryHelper.WriteUInt32((void*)hd, ost, value);
+            }
         }
 
         /// <summary>
@@ -782,6 +957,26 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
+        public void WriteShortDirect(long offset, short value)
+        {
+            IntPtr hd;
+            long ost;
+            if (IsCrossDataBuffer(offset, 2))
+            {
+                WriteBytesDirect(offset, BitConverter.GetBytes(value));
+            }
+            else
+            {
+                hd = RelocationAddress(offset, out ost);
+                MemoryHelper.WriteShort((void*)hd, ost, value);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="value"></param>
         public void WriteUShort(long offset, ushort value)
         {
             IntPtr hd;
@@ -804,6 +999,26 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
+        public void WriteUShortDirect(long offset, ushort value)
+        {
+            IntPtr hd;
+            long ost;
+            if (IsCrossDataBuffer(offset, 2))
+            {
+                WriteBytesDirect(offset, BitConverter.GetBytes(value));
+            }
+            else
+            {
+                hd = RelocationAddress(offset, out ost);
+                MemoryHelper.WriteUShort((void*)hd, ost, value);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="value"></param>
         /// <param name="encode"></param>
         public void WriteString(long offset, string value, Encoding encode)
         {
@@ -812,6 +1027,19 @@ namespace Cdy.Tag
             WriteByte(offset, (byte)sdata.Length);
             WriteBytes(offset+1, sdata);
             Position = offset + sdata.Length + 1;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="value"></param>
+        /// <param name="encode"></param>
+        public void WriteStringDirect(long offset, string value, Encoding encode)
+        {
+            var sdata = encode.GetBytes(value);
+            WriteByte(offset, (byte)sdata.Length);
+            WriteBytes(offset + 1, sdata);
         }
 
         /// <summary>

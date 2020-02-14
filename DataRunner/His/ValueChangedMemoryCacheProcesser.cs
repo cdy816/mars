@@ -159,16 +159,16 @@ namespace Cdy.Tag
             mCurrentCount = 0;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public void WriteHeader()
-        {
-            foreach (var vv in mTags.Values)
-            {
-                vv.UpdateHeader();
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public void WriteHeader()
+        //{
+        //    foreach (var vv in mTags.Values)
+        //    {
+        //        vv.UpdateHeader();
+        //    }
+        //}
 
         /// <summary>
         /// 记录所有值
@@ -178,15 +178,17 @@ namespace Cdy.Tag
             try
             {
                 mLastUpdateTime = time;
+                int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
+
                 foreach (var vv in mTags)
                 {
                     if (mChangedTags.ContainsKey(vv.Key) && mChangedTags[vv.Key])
                     {
-                        mTags[vv.Key].UpdateValue(mLastUpdateTime);
+                        mTags[vv.Key].UpdateValue(tim);
                     }
                     else
                     {
-                        vv.Value.AppendValue(mLastUpdateTime);
+                        vv.Value.AppendValue(tim);
                     }
                 }
             }
@@ -209,11 +211,12 @@ namespace Cdy.Tag
                 if (mIsClosed) break;
                 try
                 {
+                    int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
                     foreach (var vv in mChangedTags)
                     {
                         if (vv.Value)
                         {
-                            mTags[vv.Key].UpdateValue(mLastUpdateTime);
+                            mTags[vv.Key].UpdateValue(tim);
                         }
                         else
                         {

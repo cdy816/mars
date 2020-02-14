@@ -183,6 +183,8 @@ namespace Cdy.Tag
             ServiceLocator.Locator.Registor<IRealData>(realEnginer);
             ServiceLocator.Locator.Registor<IRealDataNotify>(realEnginer);
 
+            ServiceLocator.Locator.Registor<IHisEngine>(hisEnginer);
+
             ServiceLocator.Locator.Registor<IDataCompress>(compressEnginer);
             ServiceLocator.Locator.Registor<IDataSerialize>(seriseEnginer);
 

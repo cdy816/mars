@@ -17,7 +17,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 历史数据引擎
     /// </summary>
-    public class HisEnginer
+    public class HisEnginer: IHisEngine
     {
 
         #region ... Variables  ...
@@ -82,7 +82,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        private ValueChangedMemoryCacheProcesser mLastValueChangedProcesser = new ValueChangedMemoryCacheProcesser();
+        private ValueChangedMemoryCacheProcesser mLastValueChangedProcesser = new ValueChangedMemoryCacheProcesser() { Name = "ValueChanged0" };
 
         private System.Timers.Timer mRecordTimer;
 
@@ -216,7 +216,7 @@ namespace Cdy.Tag
                     {
                         if(!mLastValueChangedProcesser.AddTag(mHisTag))
                         {
-                            mLastValueChangedProcesser = new ValueChangedMemoryCacheProcesser();
+                            mLastValueChangedProcesser = new ValueChangedMemoryCacheProcesser() { Name = "ValueChanged"+mTagCount };
                             mValueChangedProcesser.Add(mLastValueChangedProcesser);
                         }
                     }
@@ -339,31 +339,46 @@ namespace Cdy.Tag
         }
 
         /// <summary>
-        /// 清空内存
+        /// 
         /// </summary>
-        private void InitMemory()
+        private void PrepareForReadyMemory()
         {
-            LoggerService.Service.Info("Record", "内存初始化开始 ");
-            //mCurrentMemory.Clear();
-            //LoggerService.Service.Info("Record", "内存初始化开始 清空完成");
             //写入时间
             mCurrentMemory.WriteDatetime(1, mLastProcessTime);
+            HisRunTag.StartTime = mLastProcessTime;
+        }
+
+        /// <summary>
+        /// 清空内存
+        /// </summary>
+        private void InitMemory(MemoryBlock memory)
+        {
+            //LoggerService.Service.Info("Record", "内存初始化开始 ");
+            //Stopwatch sw2 = new Stopwatch();
+            //sw2.Start();
+            //mCurrentMemory.Clear();
+            //LoggerService.Service.Info("Record", "内存初始化开始 清空完成");
+            ////写入时间
+            //memory.WriteDatetime(1, mLastProcessTime);
             //写入变量个数
-            mCurrentMemory.WriteInt(9, mTagCount);
+            memory.WriteInt(9, mTagCount);
             //写入时间内存保存数据的时间
-            mCurrentMemory.WriteInt(13, MemoryCachTime);
+            memory.WriteInt(13, MemoryCachTime);
             //写入最小时间间隔
-            mCurrentMemory.WriteInt(17, MemoryTimeTick);
+            memory.WriteInt(17, MemoryTimeTick);
             int offset = 21;
             //LoggerService.Service.Info("Record", "内存初始化开始 头数据写入完成");
             foreach (var vv in mHisTags)
             {
-                mCurrentMemory.WriteInt(offset, vv.Value.Id); //Tag id int(4)
-                mCurrentMemory.WriteInt(offset + 4, vv.Value.BlockHeadStartAddr); //历史数据偏移地址 int(4)
-                mCurrentMemory.WriteInt(offset + 8, vv.Value.DataSize); //历史数据大小 int(4)
+                memory.WriteInt(offset, vv.Value.Id); //Tag id int(4)
+                memory.WriteInt(offset + 4, vv.Value.BlockHeadStartAddr); //历史数据偏移地址 int(4)
+                memory.WriteInt(offset + 8, vv.Value.DataSize); //历史数据大小 int(4)
                 offset += 12;
+                vv.Value.UpdateHeader(memory);
             }
-            HisRunTag.StartTime = mLastProcessTime;
+            //sw2.Stop();
+            //LoggerService.Service.Info("Record", "内存初始化完成"+sw2.ElapsedMilliseconds);
+            //HisRunTag.StartTime = mLastProcessTime;
         }
 
         /// <summary>
@@ -375,6 +390,12 @@ namespace Cdy.Tag
             {
                 vv.Start();
             }
+
+            foreach(var vv in mValueChangedProcesser)
+            {
+                vv.Start();
+            }
+
             mRecordTimer = new System.Timers.Timer(MemoryTimeTick);
             mRecordTimer.Elapsed += MRecordTimer_Elapsed;
             mRecordTimer.Start();
@@ -382,8 +403,10 @@ namespace Cdy.Tag
 
             LoggerService.Service.Info("Record", "历史变量个数: "+this.mHisTags.Count);
 
-            InitMemory();
+            InitMemory(mMemory1);
+            InitMemory(mMemory2);
 
+            PrepareForReadyMemory();
             mMemory1.MakeMemoryNoBusy();
             mMemory2.MakeMemoryNoBusy();
         }
@@ -407,19 +430,19 @@ namespace Cdy.Tag
         private void SwitchMemory()
         {
             var mcc = mCurrentMemory;
-            LoggerService.Service.Info("Record", @"");
-            LoggerService.Service.Info("Record", ".....开始Memory选择.....");
+            //LoggerService.Service.Info("Record", @"");
+            //LoggerService.Service.Info("Record", ".....开始Memory选择.....");
             if (mCurrentMemory == mMemory1)
             {
                 CheckMemoryIsReady(mMemory2);
                 CurrentMemory = mMemory2;
-                LoggerService.Service.Info("Record", "选择 Memory2 ");
+                //LoggerService.Service.Info("Record", "选择 Memory2 ");
             }
             else
             {
                 CheckMemoryIsReady(mMemory1);
                 CurrentMemory = mMemory1;
-                LoggerService.Service.Info("Record", "选择 Memory1 ");
+                //LoggerService.Service.Info("Record", "选择 Memory1 ");
             }
 
             if (mcc != null)
@@ -429,26 +452,19 @@ namespace Cdy.Tag
 
                 ServiceLocator.Locator.Resolve<IDataCompress>().RequestToCompress(mcc);
 
-                //new System.Threading.Tasks.TaskFactory().StartNew(new Action(() => {
-
-                //}));
-                //System.Threading.Tasks.Task.Run(new Action(() => {
-                //    ServiceLocator.Locator.Resolve<IDataCompress>().RequestToCompress(mcc);
-                //}));
-
-                LoggerService.Service.Info("Record", "提交内存 "+mcc.Name+" 进行压缩");
+               
+                //LoggerService.Service.Info("Record", "提交内存 "+mcc.Name+" 进行压缩");
             }
-
-            InitMemory();
-            LoggerService.Service.Info("Record", "内存初始化完成");
+            PrepareForReadyMemory();
+            //LoggerService.Service.Info("Record", "内存初始化完成");
             foreach (var vv in mHisTags.Values)
             {
                 vv.Reset();
             }
 
-            LoggerService.Service.Info("Record", ".....结束Memory选择.....");
+            //LoggerService.Service.Info("Record", ".....结束Memory选择.....");
 
-            LoggerService.Service.Info("Record", "");
+            //LoggerService.Service.Info("Record", "");
         }
 
         /// <summary>
@@ -474,12 +490,20 @@ namespace Cdy.Tag
             var mm = (dt.Hour * 24 + dt.Minute * 60 + dt.Second) / MemoryCachTime;
             if (mm!=mLastProcessTick )
             {
-                LoggerService.Service.Info("Record", "------------------------------------------------------------");
+                LoggerService.Service.Info("Record", "<<<------------------------------------------------------>>>");
+                string timestring = "";
+                Stopwatch sw = new Stopwatch();
+                long ltmp;
+                sw.Start();
+                ltmp = sw.ElapsedMilliseconds;
+                timestring = "开始:"+ ltmp + ",";
+
                 //LoggerService.Service.Info("Record", "开始新的DataRegion");
                 if (mLastProcessTick != -1)
                 {
-                    LoggerService.Service.Info("Record", "开始记录尾部数据");
+                    //LoggerService.Service.Info("Record", "开始记录尾部数据");
                     //在内存尾部一次填充所有值
+                    
                     if (mCurrentMemory != null)
                     {
                         //foreach (var vv in mRecordTimerProcesser)
@@ -487,11 +511,13 @@ namespace Cdy.Tag
                         //    vv.RecordAllValue(dt);
                         //}
 
-                        System.Threading.Tasks.Parallel.ForEach(mRecordTimerProcesser, (vv) => {
+                        System.Threading.Tasks.Parallel.ForEach(mRecordTimerProcesser, (vv) =>
+                        {
                             vv.RecordAllValue(dt);
                         });
 
-                        System.Threading.Tasks.Parallel.ForEach(mValueChangedProcesser, (vv) => {
+                        System.Threading.Tasks.Parallel.ForEach(mValueChangedProcesser, (vv) =>
+                        {
                             vv.RecordAllValue(dt);
                         });
 
@@ -500,41 +526,52 @@ namespace Cdy.Tag
                         //    vv.RecordAllValue(dt);
                         //}
                     }
-                    LoggerService.Service.Info("Record", "结束记录尾部数据");
+                    timestring += "写入尾部数据:" + (sw.ElapsedMilliseconds - ltmp) + ",";
+                    ltmp = sw.ElapsedMilliseconds;
+                    //LoggerService.Service.Info("Record", "结束记录尾部数据");
                     mLastProcessTime = dt;
                     //将之前的Memory提交到历史存储流程中
                     SwitchMemory();
                 }
+                timestring += "内存初始化:" + (sw.ElapsedMilliseconds - ltmp) + ",";
+                ltmp = sw.ElapsedMilliseconds;
                 mLastProcessTick = mm;
 
-                LoggerService.Service.Info("Record",mCurrentMemory.Name + " 开始工作 ");
+                //LoggerService.Service.Info("Record",mCurrentMemory.Name + " 开始工作 ");
 
                 //在内存头部一次填充所有值
 
-                System.Threading.Tasks.Parallel.ForEach(mRecordTimerProcesser, (vv) => {
-                    vv.WriteHeader();
-                    vv.RecordAllValue(dt);
-                });
-
                 //foreach (var vv in mRecordTimerProcesser)
                 //{
-                //    vv.WriteHeader();
                 //    vv.RecordAllValue(dt);
                 //}
+
 
                 //foreach (var vv in mValueChangedProcesser)
                 //{
-                //    vv.WriteHeader();
                 //    vv.RecordAllValue(dt);
                 //}
 
-                System.Threading.Tasks.Parallel.ForEach(mValueChangedProcesser, (vv) => {
-                    vv.WriteHeader();
+
+                System.Threading.Tasks.Parallel.ForEach(mRecordTimerProcesser, (vv) =>
+                {
+                    //vv.WriteHeader();
                     vv.RecordAllValue(dt);
                 });
 
+
+                System.Threading.Tasks.Parallel.ForEach(mValueChangedProcesser, (vv) =>
+                {
+                    //vv.WriteHeader();
+                    vv.RecordAllValue(dt);
+                });
+
+                timestring += "写入头部值:" + (sw.ElapsedMilliseconds - ltmp) + ",";
+                ltmp = sw.ElapsedMilliseconds;
+                sw.Stop();
+                LoggerService.Service.Info("Record","内存初始化:"+ sw.ElapsedMilliseconds+"  timespan:"+ timestring);
                 //LoggerService.Service.Info("Record", " 完成DataRegion切换 ");
-                LoggerService.Service.Info("Record", "------------------------------------------------------------");
+               LoggerService.Service.Info("Record", ">>>------------------------------------------------------<<<");
             }
             else
             {
@@ -584,6 +621,22 @@ namespace Cdy.Tag
 
             mHisTags.Clear();
 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        public void ClearMemoryHisData(MemoryBlock memory)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            foreach(var vv in mHisTags)
+            {
+                vv.Value.ClearDataValue(memory);
+            }
+            sw.Stop();
+            LoggerService.Service.Info("Record", "清空数据区耗时:" + sw.ElapsedMilliseconds);
         }
 
 

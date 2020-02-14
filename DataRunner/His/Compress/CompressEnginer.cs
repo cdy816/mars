@@ -175,7 +175,8 @@ namespace Cdy.Tag
                 mTargetMemory.MakeMemoryBusy();
                 Compress();
 
-                sm.Clear();
+                //sm.Clear();
+                ServiceLocator.Locator.Resolve<IHisEngine>().ClearMemoryHisData(sm);
                 sm.MakeMemoryNoBusy();
                 LoggerService.Service.Info("Compress", ">>>>>>>>>压缩完成>>>>>>>>>" + mTargetMemory.UsedSize);
 

@@ -148,19 +148,19 @@ namespace Cdy.Tag
             mCurrentCount = 0;
         }
         
-        /// <summary>
-        /// 
-        /// </summary>
-        public void WriteHeader()
-        {
-            foreach(var vv in mTimerTags.Values)
-            {
-                foreach(var vvv in vv)
-                {
-                    vvv.UpdateHeader();
-                }
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public void WriteHeader()
+        //{
+        //    foreach(var vv in mTimerTags.Values)
+        //    {
+        //        foreach(var vvv in vv)
+        //        {
+        //            vvv.UpdateHeader();
+        //        }
+        //    }
+        //}
 
         /// <summary>
         /// 记录所有值
@@ -232,9 +232,11 @@ namespace Cdy.Tag
         /// <param name="tags"></param>
         private void ProcessAppendValue(List<HisRunTag> tags)
         {
+            int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
+
             foreach (var vv in tags)
             {
-                vv.AppendValue(mLastUpdateTime);
+                vv.AppendValue(tim);
             }
         }
 
@@ -244,9 +246,10 @@ namespace Cdy.Tag
         /// <param name="tags"></param>
         private void ProcessTags(List<HisRunTag> tags)
         {
-            foreach(var vv in tags)
+            int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
+            foreach (var vv in tags)
             {
-                vv.UpdateValue(mLastUpdateTime);
+                vv.UpdateValue(tim);
             }
         }
 

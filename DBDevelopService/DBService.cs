@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using Cdy.Tag;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,16 @@ namespace DBDevelopService
 
         #region ... Constructor...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public DBService()
+        {
+            DBDevelopService.SecurityManager.Manager.Init();
+            //注册日志
+            ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
+        }
+
         #endregion ...Constructor...
 
         #region ... Properties ...
@@ -40,6 +51,8 @@ namespace DBDevelopService
             StartAsync("0.0.0.0", port);
         }
 
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -48,12 +61,15 @@ namespace DBDevelopService
         public async void StartAsync(string ip, int port)
         {
             string sip = ip;
-            if (!sip.StartsWith("http://"))
+            if (!sip.StartsWith("https://"))
             {
-                sip = "http://" + ip;
+                sip = "https://" + ip;
             }
             sip += ":" + port;
             mhost = CreateHostBuilder(sip).Build();
+
+            DbManager.Instance.Load();
+            LoggerService.Service.Info("DBService", "启动服务:"+ sip);
             await mhost.StartAsync();
         }
 
@@ -62,10 +78,16 @@ namespace DBDevelopService
         /// </summary>
         public async void StopAsync()
         {
-           await mhost.StopAsync();
+            LoggerService.Service.Info("DBService", "关闭服务:");
+            await mhost.StopAsync();
+            mhost.Dispose();
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="serverUrl"></param>
+        /// <returns></returns>
         public static IHostBuilder CreateHostBuilder(string serverUrl) =>
            Host.CreateDefaultBuilder()
                .ConfigureWebHostDefaults(webBuilder =>

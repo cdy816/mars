@@ -29,9 +29,11 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        private string mDatabaseName="local";
+        private string mDatabaseName = "local";
 
         private Database mDatabase;
+
+        private RealDatabase mRealDatabase;
 
         private HisDatabase mHisDatabase;
 
@@ -78,6 +80,11 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        public Database Database { get { return mDatabase; } }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsStarted
         {
             get
@@ -95,33 +102,17 @@ namespace Cdy.Tag
         /// </summary>
         private void InitPath()
         {
-            if (!string.IsNullOrEmpty(DatabasePath))
-            {
-                PathHelper.helper.SetDataBasePath(DatabasePath);
-            }
-            else
-            {
-                PathHelper.helper.SetDataBasePath(this.mDatabaseName);
-            }
             PathHelper.helper.CheckDataPathExist();
         }
         
         /// <summary>
         /// 
         /// </summary>
-        private void LoadRealDatabase()
+        private void LoadDatabase()
         {
-            DatabaseManager.Manager.LoadByName(mDatabaseName);
-            this.mDatabase = DatabaseManager.Manager.Database;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private void LoadHisDatabase()
-        {
-            HisDatabaseManager.Manager.LoadByName(mDatabaseName);
-            mHisDatabase = HisDatabaseManager.Manager.Database;
+            this.mDatabase = new DatabaseSerise().Load(mDatabaseName);
+            this.mRealDatabase = this.mDatabase.RealDatabase;
+            this.mHisDatabase = this.mDatabase.HisDatabase;
         }
 
         /// <summary>
@@ -141,15 +132,13 @@ namespace Cdy.Tag
             }
             InitPath();
 
+            LoadDatabase();
+
             mHisFileManager = new DataFileManager(mDatabaseName);
-            LoadHisDatabase();
             mHisFileManager.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
 
             var task = mHisFileManager.Int();
-
-            LoadRealDatabase();
-
-            realEnginer = new RealEnginer(mDatabase);
+            realEnginer = new RealEnginer(mRealDatabase);
             realEnginer.Init();
 
             hisEnginer = new HisEnginer(mHisDatabase, realEnginer);
@@ -178,8 +167,6 @@ namespace Cdy.Tag
         /// </summary>
         private void RegistorInterface()
         {
-           
-
             ServiceLocator.Locator.Registor<IRealData>(realEnginer);
             ServiceLocator.Locator.Registor<IRealDataNotify>(realEnginer);
 
@@ -190,7 +177,7 @@ namespace Cdy.Tag
 
             ServiceLocator.Locator.Registor<IHisQuery>(querySerivce);
 
-            ServiceLocator.Locator.Registor<ITagQuery>(mDatabase);
+            ServiceLocator.Locator.Registor<ITagManager>(mRealDatabase);
         }
 
         /// <summary>

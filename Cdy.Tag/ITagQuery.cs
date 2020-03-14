@@ -15,7 +15,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public interface ITagQuery
+    public interface ITagManager
     {
         /// <summary>
         /// 

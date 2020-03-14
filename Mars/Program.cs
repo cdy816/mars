@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cdy.Tag;
+using System;
 using System.Text;
 
 namespace Mars
@@ -7,7 +8,8 @@ namespace Mars
     {
         static void Main(string[] args)
         {
-            if(args.Length>0 && args[0]== "start")
+            Console.WriteLine("欢迎来到Mars实时数据库");
+            if (args.Length>0 && args[0]== "start")
             {
                 if (args.Length > 1)
                 {
@@ -18,6 +20,7 @@ namespace Mars
                     Cdy.Tag.Runner.RunInstance.Start();
                 }
             }
+
             Console.WriteLine("输入h获取命令帮助信息");
             while (true)
             {
@@ -106,10 +109,14 @@ namespace Mars
         /// <param name="bcount"></param>
         static void GeneratorTestDatabase(string databaseName,int dcount=0, int fcount = 0, int lcount = 0, int icount=0,int bcount=0)
         {
-            Cdy.Tag.PathHelper.helper.SetDataBasePath(databaseName);
-            Cdy.Tag.Database test = new Cdy.Tag.Database() { Name = databaseName };
+            //Cdy.Tag.PathHelper.helper.SetDataBasePath(databaseName);
 
-            for(int i=0;i<dcount;i++)
+            Database db = new Database() { Name = databaseName }; 
+
+            Cdy.Tag.RealDatabase test = new Cdy.Tag.RealDatabase() { Name = databaseName };
+            db.RealDatabase = test;
+
+            for (int i=0;i<dcount;i++)
             {
                 test.Append(new Cdy.Tag.DoubleTag() { Name = "Double" + i ,Group="Double"});
             }
@@ -134,7 +141,7 @@ namespace Mars
                 test.Append(new Cdy.Tag.BoolTag() { Name = "Bool" + i, Group = "Bool" });
             }
 
-            new Cdy.Tag.DatabaseManager() { Database = test }.Save();
+           // new Cdy.Tag.RealDatabaseManager() { Database = test }.Save();
 
             Cdy.Tag.HisDatabase htest = new Cdy.Tag.HisDatabase() { Name = databaseName,Setting = new Cdy.Tag.HisSettingDoc() };
             int id = 0;
@@ -167,8 +174,11 @@ namespace Mars
                 htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Bool, Circle = 1000, Type = Cdy.Tag.RecordType.Timer });
                 id++;
             }
+            db.HisDatabase = htest;
 
-            new Cdy.Tag.HisDatabaseManager() { Database = htest }.Save();
+            new DatabaseSerise() { Dbase = db }.Save();
+
+            //new Cdy.Tag.HisDatabaseManager() { Database = htest }.Save();
 
         }
 

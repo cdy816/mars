@@ -5,20 +5,10 @@ using System.Threading.Tasks;
 
 namespace DBDevelopService
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public class LoginManager
+    public class Permission
     {
 
         #region ... Variables  ...
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        public static LoginManager Manager = new LoginManager();
-
-
 
         #endregion ...Variables...
 
@@ -31,24 +21,17 @@ namespace DBDevelopService
         #endregion ...Constructor...
 
         #region ... Properties ...
-
-        #endregion ...Properties...
-
-        #region ... Methods    ...
-
-
+        
+        public string Name { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="userName"></param>
-        /// <param name="password"></param>
-        /// <returns></returns>
-        public string GetLoginId(string userName,string password,string database="local")
-        {
-            return string.Empty;
-        }
+        public bool IsAdmin { get; set; }
 
+        #endregion ...Properties...
+
+        #region ... Methods    ...
 
         #endregion ...Methods...
 

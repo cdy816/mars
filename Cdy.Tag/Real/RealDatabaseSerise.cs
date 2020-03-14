@@ -16,7 +16,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class DatabaseManager
+    public class RealDatabaseSerise
     {
 
         #region ... Variables  ...
@@ -24,7 +24,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public static DatabaseManager Manager = new DatabaseManager();
+        public static RealDatabaseSerise Manager = new RealDatabaseSerise();
 
         #endregion ...Variables...
 
@@ -40,7 +40,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public Database Database { get; set; }
+        public RealDatabase Database { get; set; }
 
         #endregion ...Properties...
 
@@ -49,27 +49,27 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public Database Load()
+        public RealDatabase Load()
         {
-            return Load(PathHelper.helper.GetDataPath("local.xdb"));
+            return Load(PathHelper.helper.GetDataPath("local", "local.xdb"));
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="name"></param>
-        public void LoadByName(string name)
+        public RealDatabase LoadByName(string name)
         {
-            Load(PathHelper.helper.GetDataPath(name+".xdb"));
+           return  Load(PathHelper.helper.GetDataPath(name, name+".xdb"));
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="path"></param>
-        public Database Load(string path)
+        public RealDatabase Load(string path)
         {
-            Database db = new Database();
+            RealDatabase db = new RealDatabase();
             if (System.IO.File.Exists(path))
             {
                 XElement xe = XElement.Load(path);
@@ -85,23 +85,34 @@ namespace Cdy.Tag
                         db.Tags.Add(tag.Id, tag);
                     }
                 }
+
+                Dictionary<string, TagGroup> groups = new Dictionary<string, TagGroup>();
+                Dictionary<TagGroup, string> parents = new Dictionary<TagGroup, string>(); 
                 if(xe.Element("Groups")!=null)
                 {
                     foreach (var vv in xe.Element("Groups").Elements())
                     {
-                        var grp = vv.LoadTagGroupFromXML();
-                        if(!db.Groups.ContainsKey(grp.FullNameString))
+                        TagGroup group = new TagGroup();
+                        group.Name = xe.Attribute("Name").Value;
+                        string parent = xe.Attribute("Parent") != null ? xe.Attribute("Parent").Value : "";
+
+                        string fullName = xe.Attribute("FullName").Value;
+
+                        if(!groups.ContainsKey(fullName))
                         {
-                            db.Groups.Add(grp.FullNameString, grp);
+                            groups.Add(fullName, group);
                         }
+
+                        parents.Add(group, parent);
                     }
                 }
+                db.Groups = groups;
 
-                foreach(var vv in db.Groups.Values)
+                foreach(var vv in parents)
                 {
-                    if(!string.IsNullOrEmpty(vv.ParentName) && db.Groups.ContainsKey(vv.ParentName))
+                    if(!string.IsNullOrEmpty(vv.Value) && db.Groups.ContainsKey(vv.Value))
                     {
-                        vv.Parent = db.Groups[vv.ParentName];
+                        vv.Key.Parent = db.Groups[vv.Value];
                     }
                 }
 
@@ -116,7 +127,7 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         public void SaveAs(string name)
         {
-            Save(PathHelper.helper.GetDataPath(name + "/" + name + ".xdb"));
+            Save(PathHelper.helper.GetDataPath(name , name + ".xdb"));
         }
 
         /// <summary>
@@ -124,7 +135,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Save()
         {
-            Save(PathHelper.helper.GetDataPath(this.Database.Name + ".xdb"));
+            Save(PathHelper.helper.GetDataPath(this.Database.Name,this.Database.Name + ".xdb"));
         }
 
         /// <summary>

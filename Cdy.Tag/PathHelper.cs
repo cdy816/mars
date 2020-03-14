@@ -53,25 +53,25 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="path"></param>
-        public void SetDataBasePath(string path)
-        {
-            if (System.IO.Path.IsPathRooted(path))
-            {
-                this.mDataPath = path;
-            }
-            else
-            {
-                if (mDatabaseName != path)
-                {
-                    mDatabaseName = path;
-                    this.mDataPath = System.IO.Path.Combine(mDataPath, path);
-                }
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="path"></param>
+        //public void SetDataBasePath(string path)
+        //{
+        //    if (System.IO.Path.IsPathRooted(path))
+        //    {
+        //        this.mDataPath = path;
+        //    }
+        //    else
+        //    {
+        //        if (mDatabaseName != path)
+        //        {
+        //            mDatabaseName = path;
+        //            this.mDataPath = System.IO.Path.Combine(mDataPath, path);
+        //        }
+        //    }
+        //}
 
         /// <summary>
         /// 
@@ -88,10 +88,12 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="path"></param>
-        public string GetDataPath(string path)
+        public string GetDataPath(string databaseName,string path)
         {
-            return System.IO.Path.Combine(mDataPath, path);
+            return System.IO.Path.Combine(mDataPath,databaseName, path);
         }
+
+
 
         #endregion ...Methods...
 

@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29424.173
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mars", "Mars.csproj", "{D5E34665-4B1E-4037-99B4-18D637435341}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBInRun", "DBInRun.csproj", "{D5E34665-4B1E-4037-99B4-18D637435341}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cdy.Tag", "..\Cdy.Tag\Cdy.Tag.csproj", "{B4DB2B2D-6754-4B71-BC37-C8F1816646C1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DbManager.Desktop", "..\DbManager.Desktop\DbManager.Desktop.csproj", "{013BD1E6-D607-4994-9EBE-2E9ED116AAC6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBInStudio.Desktop", "..\DbManager.Desktop\DBInStudio.Desktop.csproj", "{013BD1E6-D607-4994-9EBE-2E9ED116AAC6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataRunner", "..\DataRunner\DataRunner.csproj", "{B6CE638E-0175-4CEE-ABE7-D8E4A25B2328}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBRuntime", "..\DataRunner\DBRuntime.csproj", "{B6CE638E-0175-4CEE-ABE7-D8E4A25B2328}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cdy.Tag.Common", "..\Cdy.Tag.Common\Cdy.Tag.Common.csproj", "{34F10592-77BF-47D5-B282-3E5856338F97}"
 EndProject
@@ -20,6 +20,12 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataRunnerTests", "..\DataRunnerTests\DataRunnerTests.csproj", "{DF77A949-1A7A-4526-825D-5BF5CC5162E9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBDevelopService", "..\DBDevelopService\DBDevelopService.csproj", "{2925BF23-5C16-42C3-97A0-9E0427F41D8F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBInStudioServer", "..\DBStudio\DBInStudioServer.csproj", "{14B62AEE-0651-4CE3-B330-AB0E711719CE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "InStudio", "InStudio", "{A9815173-54F6-4F9B-A01A-C388672C8C81}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "InRun", "InRun", "{D2FFF62D-75F6-4578-B721-D72CF9A665C7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,13 +65,22 @@ Global
 		{2925BF23-5C16-42C3-97A0-9E0427F41D8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2925BF23-5C16-42C3-97A0-9E0427F41D8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2925BF23-5C16-42C3-97A0-9E0427F41D8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14B62AEE-0651-4CE3-B330-AB0E711719CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14B62AEE-0651-4CE3-B330-AB0E711719CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14B62AEE-0651-4CE3-B330-AB0E711719CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14B62AEE-0651-4CE3-B330-AB0E711719CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{D5E34665-4B1E-4037-99B4-18D637435341} = {D2FFF62D-75F6-4578-B721-D72CF9A665C7}
+		{013BD1E6-D607-4994-9EBE-2E9ED116AAC6} = {A9815173-54F6-4F9B-A01A-C388672C8C81}
+		{B6CE638E-0175-4CEE-ABE7-D8E4A25B2328} = {D2FFF62D-75F6-4578-B721-D72CF9A665C7}
 		{15DC4D19-A2D0-4624-B83E-12E6466F148C} = {1A69E6A7-33B3-4DAF-9D9D-FD7CD474FFD3}
 		{DF77A949-1A7A-4526-825D-5BF5CC5162E9} = {1A69E6A7-33B3-4DAF-9D9D-FD7CD474FFD3}
+		{2925BF23-5C16-42C3-97A0-9E0427F41D8F} = {A9815173-54F6-4F9B-A01A-C388672C8C81}
+		{14B62AEE-0651-4CE3-B330-AB0E711719CE} = {A9815173-54F6-4F9B-A01A-C388672C8C81}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {577CCEC3-4CDB-458A-B93D-F8579C2C3D8F}

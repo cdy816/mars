@@ -48,9 +48,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Project\\Galaxy\\DataRunner\\DataRunner.csproj",
-      "projectName": "DataRunner",
-      "projectPath": "D:\\Project\\Galaxy\\DataRunner\\DataRunner.csproj",
+      "projectUniqueName": "D:\\Project\\Galaxy\\DataRunner\\DBRuntime.csproj",
+      "projectName": "DBRuntime",
+      "projectPath": "D:\\Project\\Galaxy\\DataRunner\\DBRuntime.csproj",
       "packagesPath": "C:\\Users\\chongdaoyang\\.nuget\\packages\\",
       "outputPath": "D:\\Project\\Galaxy\\DataRunner\\obj\\",
       "projectStyle": "PackageReference",

@@ -33,15 +33,15 @@ namespace Cdy.Tag
         /// </summary>
         public string FullName { get { return Parent == null ? Name : Parent.FullName + "." + Name; } }
 
-        /// <summary>
-        /// 用作加载时，建立父子关系
-        /// </summary>
-        internal string ParentName { get; set; }
+        ///// <summary>
+        ///// 用作加载时，建立父子关系
+        ///// </summary>
+        //internal string ParentName { get; set; }
 
-        /// <summary>
-        /// 用作加载时，表示一个全名称
-        /// </summary>
-        internal string FullNameString { get; set; }
+        ///// <summary>
+        ///// 用作加载时，表示一个全名称
+        ///// </summary>
+        //internal string FullNameString { get; set; }
 
         /// <summary>
         /// 
@@ -89,20 +89,20 @@ namespace Cdy.Tag
             return xe;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="xe"></param>
-        /// <returns></returns>
-        public static TagGroup LoadTagGroupFromXML(this XElement xe)
-        {
-            TagGroup group = new TagGroup();
-            group.Name = xe.Attribute("Name").Value;
-            if(xe.Attribute("Parent") !=null)
-            group.ParentName = xe.Attribute("Parent").Value;
-            group.FullNameString = xe.Attribute("FullName").Value;
-            return group;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="xe"></param>
+        ///// <returns></returns>
+        //public static TagGroup LoadTagGroupFromXML(this XElement xe)
+        //{
+        //    TagGroup group = new TagGroup();
+        //    group.Name = xe.Attribute("Name").Value;
+        //    if(xe.Attribute("Parent") !=null)
+        //    group.ParentName = xe.Attribute("Parent").Value;
+        //    group.FullNameString = xe.Attribute("FullName").Value;
+        //    return group;
+        //}
     }
 
 }

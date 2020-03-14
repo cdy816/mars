@@ -546,9 +546,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Project\\Galaxy\\DbManager.Desktop\\DbManager.Desktop.csproj",
-      "projectName": "DbManager.Desktop",
-      "projectPath": "D:\\Project\\Galaxy\\DbManager.Desktop\\DbManager.Desktop.csproj",
+      "projectUniqueName": "D:\\Project\\Galaxy\\DbManager.Desktop\\DBInStudio.Desktop.csproj",
+      "projectName": "DBInStudio",
+      "projectPath": "D:\\Project\\Galaxy\\DbManager.Desktop\\DBInStudio.Desktop.csproj",
       "packagesPath": "C:\\Users\\chongdaoyang\\.nuget\\packages\\",
       "outputPath": "D:\\Project\\Galaxy\\DbManager.Desktop\\obj\\",
       "projectStyle": "PackageReference",

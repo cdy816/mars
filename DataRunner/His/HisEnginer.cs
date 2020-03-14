@@ -153,7 +153,7 @@ namespace Cdy.Tag
             if (mRealEnginer != null)
             {
                 if (mManager == null)
-                    mManager = new Cdy.Tag.HisDatabaseManager().Load();
+                    mManager = new Cdy.Tag.HisDatabaseSerise().Load();
 
                 mLastProcesser = new TimerMemoryCacheProcesser();
                 mRecordTimerProcesser.Clear();

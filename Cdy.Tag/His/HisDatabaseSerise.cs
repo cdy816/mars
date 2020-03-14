@@ -16,14 +16,14 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class HisDatabaseManager
+    public class HisDatabaseSerise
     {
 
         #region ... Variables  ...
         /// <summary>
         /// 
         /// </summary>
-        public static HisDatabaseManager Manager = new HisDatabaseManager();
+        public static HisDatabaseSerise Manager = new HisDatabaseSerise();
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -49,7 +49,7 @@ namespace Cdy.Tag
         /// </summary>
         public HisDatabase Load()
         {
-            return Load(PathHelper.helper.GetDataPath("local.hdb"));
+            return Load(PathHelper.helper.GetDataPath("local","local.hdb"));
         }
 
 
@@ -57,9 +57,9 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="name"></param>
-        public void LoadByName(string name)
+        public HisDatabase LoadByName(string name)
         {
-            Load(PathHelper.helper.GetDataPath(name + ".hdb"));
+            return Load(PathHelper.helper.GetDataPath(name,name + ".hdb"));
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Save()
         {
-            Save(PathHelper.helper.GetDataPath(this.Database.Name + ".hdb"));
+            Save(PathHelper.helper.GetDataPath(this.Database.Name, this.Database.Name + ".hdb"));
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         public void SaveAs(string name)
         {
-            Save(PathHelper.helper.GetDataPath(name+"/"+ name + ".hdb"));
+            Save(PathHelper.helper.GetDataPath(name, name + ".hdb"));
         }
 
         /// <summary>

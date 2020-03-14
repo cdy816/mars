@@ -30,7 +30,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        private Database mConfigDatabase=null;
+        private RealDatabase mConfigDatabase=null;
 
 
 
@@ -70,7 +70,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="database"></param>
-        public RealEnginer(Database database)
+        public RealEnginer(RealDatabase database)
         {
             this.mConfigDatabase = database;
         }
@@ -98,7 +98,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="database"></param>
-        public void UpdateDatabase(Database database)
+        public void UpdateDatabase(RealDatabase database)
         {
             this.mConfigDatabase = database;
             Init();

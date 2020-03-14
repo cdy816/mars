@@ -56,6 +56,16 @@ namespace Cdy.Tag
         /// </summary>
         public string DataSeriser { get; set; } = "LocalFile";
 
+        /// <summary>
+        /// 主历史记录路径
+        /// </summary>
+        public string HisDataPathPrimary { get; set; }
+
+        /// <summary>
+        /// 备份历史记录路径
+        /// </summary>
+        public string HisDataPathBack { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...

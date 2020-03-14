@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DataRunner\DataRunner.csproj" />
+    <ProjectReference Include="..\DataRunner\DBRuntime.csproj" />
   </ItemGroup>
 
 </Project>

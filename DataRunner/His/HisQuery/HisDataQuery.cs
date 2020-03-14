@@ -44,7 +44,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public List<HisQueryResult<T>> Query<T>(List<string> tag, DateTime startTime, DateTime endTime)
         {
-            var lid = ServiceLocator.Locator.Resolve<ITagQuery>().GetTagIdByName(tag);
+            var lid = ServiceLocator.Locator.Resolve<ITagManager>().GetTagIdByName(tag);
             if (lid != null)
             {
                 return Query<T>(lid, startTime, endTime);
@@ -61,7 +61,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public HisQueryResult<T> Query<T>(string tag,DateTime startTime, DateTime endTime)
         {
-            int? lid = ServiceLocator.Locator.Resolve<ITagQuery>().GetTagIdByName(tag);
+            int? lid = ServiceLocator.Locator.Resolve<ITagManager>().GetTagIdByName(tag);
             if(lid!=null)
             {
                 return Query<T>(lid.Value, startTime, endTime);

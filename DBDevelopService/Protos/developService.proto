@@ -10,21 +10,37 @@ service DevelopServer {
   //Login
   rpc Login(LoginRequest) returns (LoginReply);
 
+  //新建用户
+  rpc NewUser(NewUserRequest) returns (BoolResultReplay);
+
+  //更新用户密码
+  rpc ModifyPassword(ModifyPasswordRequest) returns (BoolResultReplay);
+
+  //修改用户信息
+  rpc UpdateUser(UpdateUserRequest) returns (BoolResultReplay);
+
+  //枚举检索数据库
+  rpc QueryDatabase(QueryDatabaseRequst) returns (QueryDatabaseReplay);
+
+  //新建数据库
+  rpc NewDatabase(NewDatabaseRequest) returns (BoolResultReplay);
+
   //添加
   rpc AddTag(AddTagRequestMessage) returns (AddTagReplyMessage);
 
   //删除
   rpc RemoveTag(RemoveTagMessage) returns (BoolResultReplay);
 
-  //查询
+  //获取所有实时变量
   rpc GetRealAllTag(GetRequest) returns (GetRealTagMessageReply);
 
-  //
+  //获取所有历史变量
   rpc GetHisAllTag(GetRequest) returns (GetHistTagMessageReply);
 
   //查询指定条件的变量
   rpc QueryRealTag(QueryMessage) returns (GetRealTagMessageReply);
 
+  //查询历史变量
   rpc QueryHisTag(QueryMessage) returns (GetHistTagMessageReply);
 
   //修改实时变量
@@ -39,6 +55,58 @@ service DevelopServer {
   //撤销
   rpc Cancel(GetRequest) returns (BoolResultReplay);
 
+  //Logout
+   rpc Logout(LogoutRequest) returns (BoolResultReplay);
+
+   //启动数据库
+   rpc Start(GetRequest) returns (BoolResultReplay);
+
+   //停止数据库
+   rpc Stop(GetRequest) returns (BoolResultReplay);
+
+}
+
+//新建用户
+message NewUserRequest
+{
+   string loginId =1;
+   string userName=2;
+   string password=3;
+   repeated string permission=4;
+}
+
+//更新用户密码
+message ModifyPasswordRequest
+{
+    string loginId=1;
+    string userName=2;
+    string password=3;
+}
+
+//修改用户信息
+message UpdateUserRequest
+{
+    string loginId=1;
+    string userName=2;
+    repeated string permission=4;
+}
+
+message NewDatabaseRequest
+{
+    string loginId =1;
+    string Database=2;
+}
+
+message QueryDatabaseRequst
+{
+   string loginId =1;
+}
+
+message QueryDatabaseReplay
+{
+    bool Result =1;
+    string ErroMessage=2;
+   repeated string Database=3;
 }
 
 message LoginRequest
@@ -53,43 +121,55 @@ message LoginReply
     string loginId=1;
 }
 
+message LogoutRequest
+{
+    string LoginId=1;
+}
+
 //
 message AddTagRequestMessage
 {
     string loginId =1;
-    RealTagMessage realTag = 2;
-    HisTagMessage hisTag = 3;
+     string Database=2;
+    RealTagMessage realTag = 3;
+    HisTagMessage hisTag = 4;
 }
 
 message UpdateRealTagRequestMessage
 {
     string loginId=1;
-    RealTagMessage tag = 2;
+    string Database=2;
+    RealTagMessage tag = 3;
 }
 
 message UpdateHisTagRequestMessage
 {
     string loginId=1;
-    HisTagMessage tag = 2;
+    string Database=2;
+    HisTagMessage tag = 3;
 }
 
 //
 message AddTagReplyMessage
 {
     int32 TagId = 1;
+    bool Result =2;
+    string ErroMessage=3;
 }
 
 message RemoveTagMessage
 {
     string LoginId=1;
-    repeated int32 TagId=2;
+     string Database=2;
+    repeated int32 TagId=3;
 }
 
 //
 message QueryMessage
 {
     string LoginId=1;
-    repeated KeyValueMessage conditions=2;
+    string Database=2;
+    repeated KeyValueMessage conditions=3;
 }
 
 //
@@ -103,22 +183,28 @@ message KeyValueMessage
 message GetRequest
 {
     string LoginId=1;
+    string Database=2;
 }
 
 //
 message BoolResultReplay
 {
     bool Result =1;
+    string ErroMessage=2;
 }
 
 message GetRealTagMessageReply
 {
-    repeated RealTagMessage messages=1;
+    bool Result =1;
+    string ErroMessage=2;
+    repeated RealTagMessage messages=3;
 }
 
 message GetHistTagMessageReply
 {
-    repeated HisTagMessage messages=1;
+    bool Result =1;
+    string ErroMessage=2;
+    repeated HisTagMessage messages=3;
 }
 
 

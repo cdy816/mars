@@ -50,6 +50,16 @@ namespace Cdy.Tag
         /// </summary>
         public int TagCountOneFile { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public string PrimaryHisDataPath { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string BackHisDataPath { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -57,9 +67,29 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        private string GetPrimaryHisDataPath()
+        {
+            return string.IsNullOrEmpty(PrimaryHisDataPath) ? PathHelper.helper.GetDataPath(this.mDatabaseName,"HisData") : System.IO.Path.IsPathRooted(PrimaryHisDataPath) ? PrimaryHisDataPath : PathHelper.helper.GetDataPath(this.mDatabaseName,PrimaryHisDataPath);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private string GetBackHisDataPath()
+        {
+            return string.IsNullOrEmpty(BackHisDataPath) ? PathHelper.helper.GetDataPath(this.mDatabaseName, "HisData") : System.IO.Path.IsPathRooted(BackHisDataPath) ? BackHisDataPath : PathHelper.helper.GetDataPath(this.mDatabaseName, BackHisDataPath);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         public async Task Int()
         {
-           await Scan(PathHelper.helper.GetDataPath("HisData"));
+           await Scan(GetPrimaryHisDataPath());
+           await Scan(GetBackHisDataPath());
         }
 
         /// <summary>

@@ -16,12 +16,12 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class Database: ITagQuery
+    public class RealDatabase: ITagManager
     {
         /// <summary>
         /// 
         /// </summary>
-        public Database()
+        public RealDatabase()
         {
             Tags = new Dictionary<int, Tagbase>();
             NamedTags = new Dictionary<string, Tagbase>();

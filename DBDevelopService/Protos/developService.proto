@@ -25,6 +25,24 @@ service DevelopServer {
   //新建数据库
   rpc NewDatabase(NewDatabaseRequest) returns (BoolResultReplay);
 
+  //新建数据库用户
+  rpc NewDatabaseUser(NewDatabaseUserRequest) returns (BoolResultReplay);
+
+  //修改数据库用户密码
+  rpc ModifyDatabaseUserPassword(ModifyDatabaseUserPasswordRequest) returns (BoolResultReplay);
+
+  //更新数据库用户信息
+  rpc UpdateDatabaseUser(UpdateDatabaseUserRequest) returns (BoolResultReplay);
+
+  //添加数据库权限
+  rpc NewDatabasePermission(DatabasePermissionRequest) returns (BoolResultReplay);
+
+  //更新数据库权限
+  rpc UpdateDatabasePermission(DatabasePermissionRequest) returns (BoolResultReplay);
+
+  //获取数据权限列表
+  rpc GetAllDatabasePermission(GetAllDatabasePermissionRequest) returns (GetAllDatabasePermissionReplay);
+
   //添加
   rpc AddTag(AddTagRequestMessage) returns (AddTagReplyMessage);
 
@@ -66,12 +84,76 @@ service DevelopServer {
 
 }
 
+//获取数据权限列表
+message GetAllDatabasePermissionRequest
+{
+    string LoginId=1;
+    string Database=2;
+}
+
+//
+message GetAllDatabasePermissionReplay
+{
+    bool Result =1;
+    string ErroMessage=2;
+    repeated DatabasePermission Permission=3;
+}
+
+//
+message DatabasePermissionRequest
+{
+    string LoginId=1;
+    string Database=2;
+    DatabasePermission Permission=3;
+}
+
+//
+message DatabasePermission
+{
+    string Name=1;
+    string Desc=2;
+    bool EnableWrite=3;
+    repeated string Group=4;
+}
+
+//新建数据库用户
+message NewDatabaseUserRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string userName=3;
+    string password=4;
+       string Group=5;
+    repeated string permission=6;
+}
+
+//更新数据库用户密码
+message ModifyDatabaseUserPasswordRequest
+{
+    string loginId=1;
+    string Database=2;
+    string userName=3;
+    string password=4;
+}
+
+//修改数据库用户信息
+message UpdateDatabaseUserRequest
+{
+    string loginId=1;
+     string Database=2;
+    string userName=3;
+    string Group=4;
+    repeated string permission=5;
+
+}
+
 //新建用户
 message NewUserRequest
 {
    string loginId =1;
    string userName=2;
    string password=3;
+
    repeated string permission=4;
 }
 
@@ -88,7 +170,7 @@ message UpdateUserRequest
 {
     string loginId=1;
     string userName=2;
-    repeated string permission=4;
+    repeated string permission=3;
 }
 
 message NewDatabaseRequest
@@ -226,7 +308,11 @@ message HisTagMessage
  uint32 Type=2;
  uint32 TagType=3;
  uint32 CompressType=4;
- float CompressParameter1=5;
- float CompressParameter2=6;
- float CompressParameter3=7;
+repeated hisTagParameterItem Parameter=5;
+}
+
+message hisTagParameterItem
+{
+    string Name=1;
+    double value=2;
 }

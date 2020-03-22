@@ -93,10 +93,10 @@ namespace Cdy.Tag
                     foreach (var vv in xe.Element("Groups").Elements())
                     {
                         TagGroup group = new TagGroup();
-                        group.Name = xe.Attribute("Name").Value;
-                        string parent = xe.Attribute("Parent") != null ? xe.Attribute("Parent").Value : "";
+                        group.Name = vv.Attribute("Name").Value;
+                        string parent = vv.Attribute("Parent") != null ? xe.Attribute("Parent").Value : "";
 
-                        string fullName = xe.Attribute("FullName").Value;
+                        string fullName = vv.Attribute("FullName").Value;
 
                         if(!groups.ContainsKey(fullName))
                         {

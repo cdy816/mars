@@ -37,7 +37,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public Dictionary<string,PermissionItem> Permisstion { get; set; }
+        public Dictionary<string, PermissionItem> Permissions { get; set; } = new Dictionary<string, PermissionItem>();
 
 
 
@@ -45,7 +45,29 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
-        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="permission"></param>
+        public void Add(PermissionItem permission)
+        {
+            if(!Permissions.ContainsKey(permission.Name))
+            {
+                Permissions.Add(permission.Name, permission);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        public void Remove(string name)
+        {
+            if(!Permissions.ContainsKey(name))
+            {
+                Permissions.Remove(name);
+            }
+        }
 
         #endregion ...Methods...
 

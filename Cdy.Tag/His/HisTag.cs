@@ -41,18 +41,23 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public float CompressParameter1 { get; set; }
+        public Dictionary<string, double> Parameters { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public float CompressParameter2 { get; set; }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public float CompressParameter1 { get; set; }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public float CompressParameter2 { get; set; }
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public float CompressParameter3 { get; set; }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public float CompressParameter3 { get; set; }
 
         /// <summary>
         /// 定时记录周期,ms
@@ -79,9 +84,21 @@ namespace Cdy.Tag
             xe.SetAttributeValue("Circle", tag.Circle);
             xe.SetAttributeValue("CompressType", tag.CompressType);
 
-            xe.SetAttributeValue("CompressParameter1", tag.CompressParameter1);
-            xe.SetAttributeValue("CompressParameter2", tag.CompressParameter2);
-            xe.SetAttributeValue("CompressParameter3", tag.CompressParameter3);
+            if (tag.Parameters != null && tag.Parameters.Count > 0)
+            {
+                XElement para = new XElement("Parameters");
+                foreach(var vv in tag.Parameters)
+                {
+                    var vpp = new XElement("ParameterItem");
+                    vpp.SetAttributeValue("Name", vv.Key.ToString());
+                    vpp.SetAttributeValue("Value", vv.Value.ToString());
+                    para.Add(vpp);
+                }
+                xe.Add(para);
+            }
+            //xe.SetAttributeValue("CompressParameter1", tag.CompressParameter1);
+            //xe.SetAttributeValue("CompressParameter2", tag.CompressParameter2);
+            //xe.SetAttributeValue("CompressParameter3", tag.CompressParameter3);
             return xe;
         }
 
@@ -99,9 +116,24 @@ namespace Cdy.Tag
             hisTag.TagType = (TagType)(int.Parse(xe.Attribute("TagType").Value));
             hisTag.CompressType = int.Parse(xe.Attribute("CompressType").Value);
 
-            hisTag.CompressParameter1 = float.Parse(xe.Attribute("CompressParameter1").Value);
-            hisTag.CompressParameter2 = float.Parse(xe.Attribute("CompressParameter2").Value);
-            hisTag.CompressParameter3 = float.Parse(xe.Attribute("CompressParameter3").Value);
+            if(xe.Element("Parameters") !=null)
+            {
+                Dictionary<string, double> dvals = new Dictionary<string, double>();
+                foreach(var vv in xe.Element("Parameters").Elements())
+                {
+                    string skey = vv.Attribute("Name").Value;
+                    double dval = Convert.ToDouble(vv.Attribute("Value").Value);
+                    if(!dvals.ContainsKey(skey))
+                    {
+                        dvals.Add(skey, dval);
+                    }
+                }
+                hisTag.Parameters = dvals;
+            }
+
+            //hisTag.CompressParameter1 = float.Parse(xe.Attribute("CompressParameter1").Value);
+            //hisTag.CompressParameter2 = float.Parse(xe.Attribute("CompressParameter2").Value);
+            //hisTag.CompressParameter3 = float.Parse(xe.Attribute("CompressParameter3").Value);
             return hisTag;
         }
     }

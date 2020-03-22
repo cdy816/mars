@@ -70,17 +70,22 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public float CompressParameter1 { get; set; }
+        public Dictionary<string,double> Parameters { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public float CompressParameter2 { get; set; }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public float CompressParameter1 { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public float CompressParameter3 { get; set; }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public float CompressParameter2 { get; set; }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public float CompressParameter3 { get; set; }
 
         #endregion ...Properties...
 

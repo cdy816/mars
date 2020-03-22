@@ -36,6 +36,6 @@ namespace Cdy.Tag
         /// <summary>
         /// 允许访问的变量组
         /// </summary>
-        public List<string> Group { get; set; }
+        public List<string> Group { get; set; } = new List<string>();
     }
 }

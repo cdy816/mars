@@ -8,7 +8,7 @@ namespace Mars
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("欢迎来到Mars实时数据库");
+            Console.WriteLine("***************欢迎来到Mars实时数据库****************");
             if (args.Length>0 && args[0]== "start")
             {
                 if (args.Length > 1)
@@ -111,9 +111,9 @@ namespace Mars
         {
             //Cdy.Tag.PathHelper.helper.SetDataBasePath(databaseName);
 
-            Database db = new Database() { Name = databaseName }; 
+            Database db =  Database.New(databaseName); 
 
-            Cdy.Tag.RealDatabase test = new Cdy.Tag.RealDatabase() { Name = databaseName };
+            Cdy.Tag.RealDatabase test = db.RealDatabase;
             db.RealDatabase = test;
 
             for (int i=0;i<dcount;i++)
@@ -143,7 +143,7 @@ namespace Mars
 
            // new Cdy.Tag.RealDatabaseManager() { Database = test }.Save();
 
-            Cdy.Tag.HisDatabase htest = new Cdy.Tag.HisDatabase() { Name = databaseName,Setting = new Cdy.Tag.HisSettingDoc() };
+            Cdy.Tag.HisDatabase htest =db.HisDatabase;
             int id = 0;
             for (int i = 0; i < dcount; i++)
             {

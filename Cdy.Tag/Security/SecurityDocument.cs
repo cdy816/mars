@@ -33,22 +33,22 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = "local";
 
         /// <summary>
         /// 
         /// </summary>
-        public string Version { get; set; }
+        public string Version { get; set; } = "0.0.1";
 
         /// <summary>
         /// 
         /// </summary>
-        public UserDocument User { get; set; }
+        public UserDocument User { get; set; } = new UserDocument();
 
         /// <summary>
         /// 
         /// </summary>
-        public PermissionDocument Permission { get; set; }
+        public PermissionDocument Permission { get; set; } = new PermissionDocument();
 
         #endregion ...Properties...
 

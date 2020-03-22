@@ -95,20 +95,35 @@ namespace Cdy.Tag
         public virtual byte SizeOfValue { get; }
 
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static int HeadSize
+        {
+            get
+            {
+                return 4 + 4;
+            }
+        }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
 
         public void Init()
         {
-            var hbyts = new List<byte>(19);
+            var hbyts = new List<byte>(8);
             hbyts.AddRange(BitConverter.GetBytes(this.HisQulityStartAddr - this.TimerValueStartAddr));
-            hbyts.Add((byte)this.Type);
-            hbyts.Add((byte)this.TagType);
-            hbyts.Add((byte)this.CompressType);
-            hbyts.AddRange(BitConverter.GetBytes(CompressParameter1));
-            hbyts.AddRange(BitConverter.GetBytes(CompressParameter2));
-            hbyts.AddRange(BitConverter.GetBytes(CompressParameter3));
+            //修改成参数从历史变量配置中获取
+            hbyts.AddRange(BitConverter.GetBytes(this.Id));
+
+            //hbyts.Add((byte)this.Type);
+            //hbyts.Add((byte)this.TagType);
+            //hbyts.Add((byte)this.CompressType);
+            //hbyts.AddRange(BitConverter.GetBytes(CompressParameter1));
+            //hbyts.AddRange(BitConverter.GetBytes(CompressParameter2));
+            //hbyts.AddRange(BitConverter.GetBytes(CompressParameter3));
             headBytes = hbyts.ToArray();
         }
 

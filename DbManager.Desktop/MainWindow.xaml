@@ -7,7 +7,18 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <Button Content="Button" HorizontalAlignment="Left" Height="45" Margin="156,77,0,0" VerticalAlignment="Top" Width="109" Click="Button_Click"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Border BorderThickness="0,0,0,1" BorderBrush="LightGray" Background="AliceBlue">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Button" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" Click="Button_Click" Grid.Row="1"/>
+
+            </StackPanel>
+        </Border>
+        
+        <DataGrid Margin="0,61,0,0" Grid.Row="1"/>
 
     </Grid>
 </Window>

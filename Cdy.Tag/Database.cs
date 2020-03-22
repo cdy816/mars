@@ -8,24 +8,53 @@ namespace Cdy.Tag
     public class Database
     {
 
+        private string mName = string.Empty;
+
+        private string mVersion= "0.0.1";
+
         /// <summary>
         /// 
         /// </summary>
         public Database()
         {
             Setting = new SettingDoc();
-            Security = new SecurityDocument();
+            Security = new SecurityDocument() { Name = this.Name };
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public string Name { get; set; }
+        public string Name 
+        {
+            get { return mName; } 
+            set
+            {
+                mName = value; 
+                if(Security!=null)
+                Security.Name = value;
+                if (RealDatabase != null)
+                    RealDatabase.Name = value;
+                if (HisDatabase != null)
+                    HisDatabase.Name = value;
+            }
+        }
 
         /// <summary>
         /// 
         /// </summary>
-        public string Version { get; set; }
+        public string Version 
+        { 
+            get { return mVersion; } 
+            set {
+                    mVersion = value;
+                if (Security != null)
+                    Security.Version = value;
+                if (RealDatabase != null)
+                    RealDatabase.Version = value;
+                if (HisDatabase != null)
+                    HisDatabase.Version = value;
+            }
+        }
 
         /// <summary>
         /// 
@@ -47,6 +76,23 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public SecurityDocument Security { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        public static Database New(string name,string version="0.0.1")
+        {
+            Database db = new Database();
+            
+            db.RealDatabase = new RealDatabase();
+            db.HisDatabase = new HisDatabase() { Setting = new HisSettingDoc() };
+            db.Name = name;
+            db.Version = version;
+            return db;
+        }
 
     }
 }

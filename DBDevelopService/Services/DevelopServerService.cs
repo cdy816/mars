@@ -50,6 +50,156 @@ namespace DBDevelopService
             return SecurityManager.Manager.CheckKeyAvaiable(id) && SecurityManager.Manager.CheckPermission(id,permission);
         }
 
+        #region Database User
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<GetAllDatabasePermissionReplay> GetAllDatabasePermission(GetAllDatabasePermissionRequest request, ServerCallContext context)
+        {
+            if (CheckLoginId(request.LoginId))
+            {
+                return Task.FromResult(new GetAllDatabasePermissionReplay() { Result = false });
+            }
+
+            GetAllDatabasePermissionReplay re = new GetAllDatabasePermissionReplay() { Result = true };
+            List<DatabasePermission> pers = new List<DatabasePermission>();
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if(db!=null)
+            {
+                if (db.Security != null && db.Security.Permission != null)
+                {
+                    foreach (var vv in db.Security.Permission.Permissions)
+                    {
+                        var dd = new DatabasePermission() { Name = vv.Value.Name, Desc = vv.Value.Desc, EnableWrite = vv.Value.EnableWrite };
+                        dd.Group.AddRange(vv.Value.Group);
+                        pers.Add(dd);
+                    }
+                }
+            }
+            re.Permission.AddRange(pers);
+            return Task.FromResult(re);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> ModifyDatabaseUserPassword(ModifyDatabaseUserPasswordRequest request, ServerCallContext context)
+        {
+            if (CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                 var uss = db.Security.User.Users;
+                if(uss.ContainsKey(request.UserName))
+                {
+                    uss[request.UserName].Password = request.Password;
+                }
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> NewDatabasePermission(DatabasePermissionRequest request, ServerCallContext context)
+        {
+            if (CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var pers = new Cdy.Tag.PermissionItem() { Name = request.Permission.Name, Desc = request.Permission.Desc, EnableWrite = request.Permission.EnableWrite};
+                pers.Group.AddRange(request.Permission.Group);
+                db.Security.Permission.Add(pers);
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> NewDatabaseUser(NewDatabaseUserRequest request, ServerCallContext context)
+        {
+            if (CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var user = new Cdy.Tag.UserItem() { Name = request.UserName, Password = request.Password,Group = request.Group, Permissions = request.Permission.ToList() };
+                db.Security.User.AddUser(user);
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> UpdateDatabasePermission(DatabasePermissionRequest request, ServerCallContext context)
+        {
+            if (CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+
+            }
+            return base.UpdateDatabasePermission(request, context);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> UpdateDatabaseUser(UpdateDatabaseUserRequest request, ServerCallContext context)
+        {
+            if (CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var uss = db.Security.User.Users;
+                if (uss.ContainsKey(request.UserName))
+                {
+                    var user = uss[request.UserName];
+                    user.Permissions = request.Permission.ToList();
+                    user.Group = request.Group;
+                }
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+
+        #endregion
+
         #region System user
 
         /// <summary>
@@ -198,7 +348,16 @@ namespace DBDevelopService
             {
                 foreach (var vv in db.HisDatabase.HisTags.Values)
                 {
-                    re.Add(new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType, CompressParameter1 = vv.CompressParameter1, CompressParameter2 = vv.CompressParameter2, CompressParameter3 = vv.CompressParameter3 });
+                    var vitem = new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType };
+                    if (vv.Parameters != null && vv.Parameters.Count > 0)
+                    {
+                        foreach (var vvv in vv.Parameters)
+                        {
+                            vitem.Parameter.Add(new hisTagParameterItem() { Name = vvv.Key, Value = vvv.Value });
+                        }
+                    }
+                    re.Add(vitem);
+                    // re.Add(new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType});
                 }
             }
             var msg = new GetHistTagMessageReply() { Result = true };
@@ -276,7 +435,15 @@ namespace DBDevelopService
                 List<HisTagMessage> re = new List<HisTagMessage>();
                 foreach (var vv in htags)
                 {
-                    re.Add(new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType, CompressParameter1 = vv.CompressParameter1, CompressParameter2 = vv.CompressParameter2, CompressParameter3 = vv.CompressParameter3 });
+                    var vitem = new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType };
+                    if(vv.Parameters!=null&&vv.Parameters.Count>0)
+                    {
+                        foreach(var vvv in vv.Parameters)
+                        {
+                            vitem.Parameter.Add(new hisTagParameterItem() { Name = vvv.Key, Value = vvv.Value });
+                        }
+                    }
+                    re.Add(vitem);
                 }
                 var msg = new GetHistTagMessageReply() { Result = true };
                 msg.Messages.AddRange(re);
@@ -384,9 +551,18 @@ namespace DBDevelopService
                     hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
                     hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
                     hisTag.CompressType = (int)(vtag.CompressType);
-                    hisTag.CompressParameter1 = vtag.CompressParameter1;
-                    hisTag.CompressParameter2 = vtag.CompressParameter2;
-                    hisTag.CompressParameter3 = vtag.CompressParameter3;
+                    hisTag.Parameters = new Dictionary<string, double>();
+                    if (vtag.Parameter != null)
+                    {
+                        foreach (var vv in vtag.Parameter)
+                        {
+                            hisTag.Parameters.Add(vv.Name, vv.Value);
+                        }
+                    }
+
+                    //hisTag.CompressParameter1 = vtag.CompressParameter1;
+                    //hisTag.CompressParameter2 = vtag.CompressParameter2;
+                    //hisTag.CompressParameter3 = vtag.CompressParameter3;
                     db.HisDatabase.AddOrUpdate(hisTag);
                 }
                 return Task.FromResult(new BoolResultReplay() { Result = true });
@@ -504,9 +680,19 @@ namespace DBDevelopService
                     hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
                     hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
                     hisTag.CompressType = (int)(vtag.CompressType);
-                    hisTag.CompressParameter1 = vtag.CompressParameter1;
-                    hisTag.CompressParameter2 = vtag.CompressParameter2;
-                    hisTag.CompressParameter3 = vtag.CompressParameter3;
+
+                    hisTag.Parameters = new Dictionary<string, double>();
+                    if(vtag.Parameter!=null)
+                    {
+                        foreach(var vv in vtag.Parameter)
+                        {
+                            hisTag.Parameters.Add(vv.Name, vv.Value);
+                        }
+                    }
+
+                    //hisTag.CompressParameter1 = vtag.CompressParameter1;
+                    //hisTag.CompressParameter2 = vtag.CompressParameter2;
+                    //hisTag.CompressParameter3 = vtag.CompressParameter3;
                     db.HisDatabase.AddOrUpdate(hisTag);
                 }
                 return Task.FromResult(new AddTagReplyMessage() { Result = true, TagId = tag.Id });

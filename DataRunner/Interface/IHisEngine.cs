@@ -21,5 +21,12 @@ namespace Cdy.Tag
         /// 清空内存数据区域
         /// </summary>
         public void ClearMemoryHisData(MemoryBlock memory);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public HisRunTag GetHisTag(int id);
     }
 }

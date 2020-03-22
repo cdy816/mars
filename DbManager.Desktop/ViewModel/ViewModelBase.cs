@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 
-namespace DbManager.Desktop
+namespace DBInStudio.Desktop
 {
     public class ViewModelBase : INotifyPropertyChanged
     {

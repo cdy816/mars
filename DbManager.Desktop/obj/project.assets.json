@@ -209,6 +209,16 @@
         "runtime": {
           "lib/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.dll": {}
         }
+      },
+      "Cdy.Tag/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.0",
+        "compile": {
+          "bin/placeholder/Cdy.Tag.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Cdy.Tag.dll": {}
+        }
       }
     }
   },
@@ -531,10 +541,16 @@
         "useSharedDesignerContext.txt",
         "version.txt"
       ]
+    },
+    "Cdy.Tag/1.0.0": {
+      "type": "project",
+      "path": "../Cdy.Tag/Cdy.Tag.csproj",
+      "msbuildProject": "../Cdy.Tag/Cdy.Tag.csproj"
     }
   },
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v3.1": [
+      "Cdy.Tag >= 1.0.0",
       "Google.Protobuf >= 3.11.2",
       "Grpc.Net.ClientFactory >= 2.26.0",
       "Grpc.Tools >= 2.26.0"
@@ -567,7 +583,11 @@
       },
       "frameworks": {
         "netcoreapp3.1": {
-          "projectReferences": {}
+          "projectReferences": {
+            "D:\\Project\\Galaxy\\Cdy.Tag\\Cdy.Tag.csproj": {
+              "projectPath": "D:\\Project\\Galaxy\\Cdy.Tag\\Cdy.Tag.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

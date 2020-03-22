@@ -147,13 +147,13 @@ namespace Cdy.Tag
         public PermissionDocument LoadPermission(XElement element)
         {
             PermissionDocument re = new PermissionDocument();
-            re.Permisstion = new Dictionary<string, PermissionItem>();
+            re.Permissions = new Dictionary<string, PermissionItem>();
             foreach(var vv in element.Elements())
             {
                 var pp = LoadPermissionItem(vv);
-                if(!re.Permisstion.ContainsKey(pp.Name))
+                if(!re.Permissions.ContainsKey(pp.Name))
                 {
-                    re.Permisstion.Add(pp.Name, pp);
+                    re.Permissions.Add(pp.Name, pp);
                 }
             }
             return re;
@@ -205,6 +205,17 @@ namespace Cdy.Tag
         private UserItem LoadUserItem(XElement xe)
         {
             UserItem re = new UserItem();
+            if (xe.Attribute("Name") != null)
+                re.Name = xe.Attribute("Name").Value;
+            if (xe.Attribute("Password") != null)
+                re.Password = xe.Attribute("Password").Value;
+            if (xe.Attribute("Group") != null)
+                re.Group = xe.Attribute("Group").Value;
+            if (xe.Attribute("Permissions") != null)
+            {
+                var pp = xe.Attribute("Permissions").Value;
+                re.Permissions = pp.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+            }
             return re;
         }
 
@@ -241,7 +252,7 @@ namespace Cdy.Tag
         private XElement Save(PermissionDocument permission)
         {
             XElement xe = new XElement("Permission");
-            foreach( var vv in permission.Permisstion)
+            foreach( var vv in permission.Permissions)
             {
                 xe.Add(Save(vv.Value));
             }
@@ -317,8 +328,10 @@ namespace Cdy.Tag
             doc.SetAttributeValue("Version", this.Document.Version);
             doc.SetAttributeValue("Auther", "cdy");
 
-            doc.Add(Save(this.Document.User));
-            doc.Add(Save(this.Document.Permission));
+            if (this.Document.User != null)
+                doc.Add(Save(this.Document.User));
+            if (this.Document.Permission != null)
+                doc.Add(Save(this.Document.Permission));
 
            
             doc.Save(sfile);

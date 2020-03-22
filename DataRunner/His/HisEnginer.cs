@@ -237,15 +237,15 @@ namespace Cdy.Tag
             return 1 + 8 + 4 + 4 + 4 + mTagCount * 12;
         }
 
-        /// <summary>
-        /// 内存块的头部大小
-        /// </summary>
-        /// <returns></returns>
-        private int CalBlockHeadSize()
-        {
-            //qulity address offset + Type + TagType + CompressType + compressParamter1+ compressParamter2+ compressParamter3
-            return 4 + 1 + 1 + 1 + 4 + 4 + 4;
-        }
+        ///// <summary>
+        ///// 内存块的头部大小
+        ///// </summary>
+        ///// <returns></returns>
+        //private int CalBlockHeadSize()
+        //{
+        //    //qulity address offset + Type + TagType + CompressType + compressParamter1+ compressParamter2+ compressParamter3
+        //    return 4 + 1 + 1 + 1 + 4 + 4 + 4;
+        //}
 
         /// <summary>
         /// 计算每个变量数据块的大小
@@ -312,7 +312,8 @@ namespace Cdy.Tag
                数据:[时间戳]+[值]+[质量戳]
              */
             long headSize = CalHeadSize();
-            int blockheadsize = CalBlockHeadSize();
+            //int blockheadsize = CalBlockHeadSize();
+            int blockheadsize = HisRunTag.HeadSize;
             int qulityOffset = 0;
             int valueOffset = 0;
             foreach(var vv in mHisTags)
@@ -637,6 +638,20 @@ namespace Cdy.Tag
             }
             sw.Stop();
             LoggerService.Service.Info("Record", "清空数据区耗时:" + sw.ElapsedMilliseconds);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public HisRunTag GetHisTag(int id)
+        {
+            if(mHisTags.ContainsKey(id))
+            {
+                return mHisTags[id];
+            }
+            return null;
         }
 
 

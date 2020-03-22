@@ -45,6 +45,8 @@ namespace Cdy.Tag
 
         private int mMemoryTimeTick = 0;
 
+        private IHisEngine mHisTagService;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -101,6 +103,9 @@ namespace Cdy.Tag
             mCompressThread = new Thread(ThreadPro);
             mCompressThread.IsBackground = true;
             mCompressThread.Start();
+
+            mHisTagService = ServiceLocator.Locator.Resolve<IHisEngine>();
+
         }
 
         /// <summary>
@@ -117,6 +122,9 @@ namespace Cdy.Tag
 
             this.mMemory1 = null;
             this.mMemory2 = null;
+
+            mHisTagService = null;
+
             resetEvent.Dispose();
             closedEvent.Dispose();
         }
@@ -175,14 +183,10 @@ namespace Cdy.Tag
                 mTargetMemory.MakeMemoryBusy();
                 Compress();
 
-                //sm.Clear();
+                
                 ServiceLocator.Locator.Resolve<IHisEngine>().ClearMemoryHisData(sm);
                 sm.MakeMemoryNoBusy();
                 LoggerService.Service.Info("Compress", ">>>>>>>>>压缩完成>>>>>>>>>" + mTargetMemory.UsedSize);
-
-                //System.Threading.Tasks.Task.Run(new Action(() => {
-                //    ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSave(mTargetMemory, mCurrentTime);
-                //}));
 
                 //new System.Threading.Tasks.TaskFactory().StartNew(new Action(() => {
                     ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSave(mTargetMemory, mCurrentTime);
@@ -318,27 +322,26 @@ namespace Cdy.Tag
         private int CompressBlockMemory(int addr,int targetPosition,int len)
         {
             var qulityoffset = mSourceMemory.ReadInt(addr);
-            byte rtype = mSourceMemory[addr + 4];//记录类型
-            byte tagtype = mSourceMemory[addr + 5];//变量类型
-            byte comtype = mSourceMemory[addr + 6];//压缩类型
-            float cp1 = mSourceMemory.ReadFloat(addr + 7);//压缩附属参数
-            float cp2 = mSourceMemory.ReadFloat(addr + 11);//压缩附属参数
-            float cp3 = mSourceMemory.ReadFloat(addr + 15);//压缩附属参数
+            var id = mSourceMemory.ReadInt(addr + 4);
+
+            var histag = mHisTagService.GetHisTag(id);
+
+            if (histag == null) return 0;
+
+            var comtype = histag.CompressType;//压缩类型
 
 
             //写入压缩类型
-            mTargetMemory.WriteByte(targetPosition + 4, comtype);
+            mTargetMemory.WriteByte(targetPosition + 4, (byte)comtype);
 
             var tp = CompressUnitManager.Manager.GetCompress(comtype);
             if (tp != null)
             {
                 tp.QulityOffset = qulityoffset;
-                tp.TagType = tagtype;
-                tp.RecordType = (RecordType)rtype;
+                tp.TagType = (byte)histag.TagType;
+                tp.RecordType = histag.Type;
                 tp.StartTime = mCurrentTime;
-                tp.CompressParameter1 = cp1;
-                tp.CompressParameter2 = cp2;
-                tp.CompressParameter3 = cp3;
+                tp.Parameters = histag.Parameters;
                 var size = tp.Compress(mSourceMemory, addr + 19, mTargetMemory, targetPosition + 5, len - 19) + 1;
                 mTargetMemory.WriteInt(targetPosition,size);
                 return size + 4;

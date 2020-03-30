@@ -21,7 +21,7 @@ namespace DBDevelopService {
     static readonly grpc::Marshaller<global::DBDevelopService.BoolResultReplay> __Marshaller_dbDevelopService_BoolResultReplay = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DBDevelopService.BoolResultReplay.Parser.ParseFrom);
     static readonly grpc::Marshaller<global::DBDevelopService.ModifyPasswordRequest> __Marshaller_dbDevelopService_ModifyPasswordRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DBDevelopService.ModifyPasswordRequest.Parser.ParseFrom);
     static readonly grpc::Marshaller<global::DBDevelopService.UpdateUserRequest> __Marshaller_dbDevelopService_UpdateUserRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DBDevelopService.UpdateUserRequest.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::DBDevelopService.QueryDatabaseRequst> __Marshaller_dbDevelopService_QueryDatabaseRequst = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DBDevelopService.QueryDatabaseRequst.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::DBDevelopService.QueryDatabaseRequest> __Marshaller_dbDevelopService_QueryDatabaseRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DBDevelopService.QueryDatabaseRequest.Parser.ParseFrom);
     static readonly grpc::Marshaller<global::DBDevelopService.QueryDatabaseReplay> __Marshaller_dbDevelopService_QueryDatabaseReplay = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DBDevelopService.QueryDatabaseReplay.Parser.ParseFrom);
     static readonly grpc::Marshaller<global::DBDevelopService.NewDatabaseRequest> __Marshaller_dbDevelopService_NewDatabaseRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DBDevelopService.NewDatabaseRequest.Parser.ParseFrom);
     static readonly grpc::Marshaller<global::DBDevelopService.NewDatabaseUserRequest> __Marshaller_dbDevelopService_NewDatabaseUserRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DBDevelopService.NewDatabaseUserRequest.Parser.ParseFrom);
@@ -69,11 +69,11 @@ namespace DBDevelopService {
         __Marshaller_dbDevelopService_UpdateUserRequest,
         __Marshaller_dbDevelopService_BoolResultReplay);
 
-    static readonly grpc::Method<global::DBDevelopService.QueryDatabaseRequst, global::DBDevelopService.QueryDatabaseReplay> __Method_QueryDatabase = new grpc::Method<global::DBDevelopService.QueryDatabaseRequst, global::DBDevelopService.QueryDatabaseReplay>(
+    static readonly grpc::Method<global::DBDevelopService.QueryDatabaseRequest, global::DBDevelopService.QueryDatabaseReplay> __Method_QueryDatabase = new grpc::Method<global::DBDevelopService.QueryDatabaseRequest, global::DBDevelopService.QueryDatabaseReplay>(
         grpc::MethodType.Unary,
         __ServiceName,
         "QueryDatabase",
-        __Marshaller_dbDevelopService_QueryDatabaseRequst,
+        __Marshaller_dbDevelopService_QueryDatabaseRequest,
         __Marshaller_dbDevelopService_QueryDatabaseReplay);
 
     static readonly grpc::Method<global::DBDevelopService.NewDatabaseRequest, global::DBDevelopService.BoolResultReplay> __Method_NewDatabase = new grpc::Method<global::DBDevelopService.NewDatabaseRequest, global::DBDevelopService.BoolResultReplay>(
@@ -429,7 +429,7 @@ namespace DBDevelopService {
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::DBDevelopService.QueryDatabaseReplay QueryDatabase(global::DBDevelopService.QueryDatabaseRequst request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual global::DBDevelopService.QueryDatabaseReplay QueryDatabase(global::DBDevelopService.QueryDatabaseRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return QueryDatabase(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -439,7 +439,7 @@ namespace DBDevelopService {
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::DBDevelopService.QueryDatabaseReplay QueryDatabase(global::DBDevelopService.QueryDatabaseRequst request, grpc::CallOptions options)
+      public virtual global::DBDevelopService.QueryDatabaseReplay QueryDatabase(global::DBDevelopService.QueryDatabaseRequest request, grpc::CallOptions options)
       {
         return CallInvoker.BlockingUnaryCall(__Method_QueryDatabase, null, options, request);
       }
@@ -451,7 +451,7 @@ namespace DBDevelopService {
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::DBDevelopService.QueryDatabaseReplay> QueryDatabaseAsync(global::DBDevelopService.QueryDatabaseRequst request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual grpc::AsyncUnaryCall<global::DBDevelopService.QueryDatabaseReplay> QueryDatabaseAsync(global::DBDevelopService.QueryDatabaseRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return QueryDatabaseAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -461,7 +461,7 @@ namespace DBDevelopService {
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::DBDevelopService.QueryDatabaseReplay> QueryDatabaseAsync(global::DBDevelopService.QueryDatabaseRequst request, grpc::CallOptions options)
+      public virtual grpc::AsyncUnaryCall<global::DBDevelopService.QueryDatabaseReplay> QueryDatabaseAsync(global::DBDevelopService.QueryDatabaseRequest request, grpc::CallOptions options)
       {
         return CallInvoker.AsyncUnaryCall(__Method_QueryDatabase, null, options, request);
       }

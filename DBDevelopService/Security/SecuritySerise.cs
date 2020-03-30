@@ -54,7 +54,8 @@ namespace DBDevelopService.Security
         /// </summary>
         public void Load()
         {
-
+            string sfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "User.dat");
+            Load(sfile);
         }
 
         /// <summary>
@@ -79,6 +80,12 @@ namespace DBDevelopService.Security
                 {
                     db.Permission = LoadPermission(xe.Element("Permissions"));
                 }
+            }
+            else
+            {
+                db.Permission = new PermissionDocument();
+                db.User = new UserDocument();
+                db.User.AddDefaultUser();
             }
             this.Document = db;
         }

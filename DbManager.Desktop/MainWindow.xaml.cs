@@ -15,7 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace DbManager.Desktop
+namespace DBInStudio.Desktop
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -25,20 +25,7 @@ namespace DbManager.Desktop
         public MainWindow()
         {
             InitializeComponent();
-        }
-
-        private async void Button_Click(object sender, RoutedEventArgs e)
-        {
-            var httpClientHandler = new HttpClientHandler();
-            // Return `true` to allow certificates that are untrusted/invalid
-            httpClientHandler.ServerCertificateCustomValidationCallback =
-                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
-            var httpClient = new HttpClient(httpClientHandler);
-
-            Grpc.Net.Client.GrpcChannel grpcChannel = Grpc.Net.Client.GrpcChannel.ForAddress(@"https://localhost:5001", new GrpcChannelOptions { HttpClient = httpClient });
-            DBDevelopService.DevelopServer.DevelopServerClient client = new DBDevelopService.DevelopServer.DevelopServerClient(grpcChannel);
-            var sid = await client.LoginAsync(new DBDevelopService.LoginRequest() { UserName = "admin", Password = "12345", Database = "local" });
-            System.Windows.MessageBox.Show(sid.LoginId);
+            this.DataContext = new MainViewModel();
         }
     }
 }

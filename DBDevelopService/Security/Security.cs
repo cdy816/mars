@@ -28,7 +28,7 @@ namespace DBDevelopService.Security
         /// <summary>
         /// 
         /// </summary>
-        public string Version { get; set; }
+        public string Version { get; set; } = "0.1";
 
         /// <summary>
         /// 

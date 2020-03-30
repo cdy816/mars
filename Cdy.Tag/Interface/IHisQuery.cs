@@ -25,7 +25,7 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<bool> result);
+        void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<bool> result);
 
         /// <summary>
         /// 
@@ -34,62 +34,7 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<byte> result);
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<short> result);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<ushort> result);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<int> result);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<uint> result);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<ulong> result);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<long> result);
+        void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<byte> result);
 
 
         /// <summary>
@@ -99,7 +44,7 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<float> result);
+        void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<short> result);
 
         /// <summary>
         /// 
@@ -108,7 +53,7 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<double> result);
+        void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<ushort> result);
 
         /// <summary>
         /// 
@@ -117,7 +62,7 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<DateTime> result);
+        void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<int> result);
 
         /// <summary>
         /// 
@@ -126,7 +71,62 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        public void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<string> result);
+        void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<uint> result);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<ulong> result);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<long> result);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<float> result);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<double> result);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<DateTime> result);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        void ReadValue(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<string> result);
 
         /// <summary>
         /// 
@@ -135,7 +135,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<bool> result);
+        void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<bool> result);
 
         /// <summary>
         /// 
@@ -144,7 +144,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<byte> result);
+        void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<byte> result);
 
         /// <summary>
         /// 
@@ -153,7 +153,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<short> result);
+        void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<short> result);
 
         /// <summary>
         /// 
@@ -162,7 +162,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<ushort> result);
+        void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<ushort> result);
 
         /// <summary>
         /// 
@@ -171,7 +171,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<int> result);
+        void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<int> result);
 
         /// <summary>
         /// 
@@ -180,7 +180,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<uint> result);
+        void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<uint> result);
 
         /// <summary>
         /// 
@@ -189,7 +189,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<long> result);
+        void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<long> result);
 
         /// <summary>
         /// 
@@ -198,7 +198,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<ulong> result);
+        void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<ulong> result);
 
         /// <summary>
         /// 
@@ -207,7 +207,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<float> result);
+        void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<float> result);
 
         /// <summary>
         /// 
@@ -216,7 +216,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<double> result);
+        void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<double> result);
 
         /// <summary>
         /// 
@@ -225,7 +225,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<DateTime> result);
+        void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<DateTime> result);
 
         /// <summary>
         /// 
@@ -234,6 +234,6 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<string> result);
+        void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<string> result);
     }
 }

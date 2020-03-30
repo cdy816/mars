@@ -213,11 +213,24 @@
       "Cdy.Tag/1.0.0": {
         "type": "project",
         "framework": ".NETStandard,Version=v2.0",
+        "dependencies": {
+          "Cdy.Tag.Common": "1.0.0"
+        },
         "compile": {
           "bin/placeholder/Cdy.Tag.dll": {}
         },
         "runtime": {
           "bin/placeholder/Cdy.Tag.dll": {}
+        }
+      },
+      "Cdy.Tag.Common/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.0",
+        "compile": {
+          "bin/placeholder/Cdy.Tag.Common.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Cdy.Tag.Common.dll": {}
         }
       }
     }
@@ -546,6 +559,11 @@
       "type": "project",
       "path": "../Cdy.Tag/Cdy.Tag.csproj",
       "msbuildProject": "../Cdy.Tag/Cdy.Tag.csproj"
+    },
+    "Cdy.Tag.Common/1.0.0": {
+      "type": "project",
+      "path": "../Cdy.Tag.Common/Cdy.Tag.Common.csproj",
+      "msbuildProject": "../Cdy.Tag.Common/Cdy.Tag.Common.csproj"
     }
   },
   "projectFileDependencyGroups": {

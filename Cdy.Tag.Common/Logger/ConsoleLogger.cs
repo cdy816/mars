@@ -24,6 +24,8 @@ namespace Cdy.Tag
 
         string erroFormate = "Erro {0} {1} {2}";
 
+        string warnFormate = "Warn {0} {1} {2}";
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -57,7 +59,9 @@ namespace Cdy.Tag
         /// <param name="msg"></param>
         public void Erro(string name, string msg)
         {
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(string.Format(erroFormate, DateTime.Now.ToString(), name, msg));
+            Console.ResetColor();
         }
 
         /// <summary>
@@ -68,6 +72,18 @@ namespace Cdy.Tag
         public void Info(string name, string msg)
         {
             Console.WriteLine(string.Format(infoFormate, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), name, msg));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="msg"></param>
+        public void Warn(string name, string msg)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(string.Format(warnFormate, DateTime.Now.ToString(), name, msg));
+            Console.ResetColor();
         }
 
         #endregion ...Methods...

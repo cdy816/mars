@@ -1,0 +1,32 @@
+﻿<UserControl x:Class="DBInStudio.Desktop.View.ListDatabaseView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:DBInStudio.Desktop.View"
+              xmlns:res="clr-namespace:DBInStudio.Desktop"
+             mc:Ignorable="d" 
+             d:DesignHeight="200" d:DesignWidth="500">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock Margin="10,0" Text="{res:ResMarker SelectDatabase}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+        <ListBox Margin="-1" Grid.Row="1" ItemsSource="{Binding DatabaseItems}" SelectedItem="{Binding SelectDatabase,Mode=TwoWay}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="gg" />
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding Name}"  />
+                        <TextBlock Text="{Binding Desc}" Grid.Column="1" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <Button Command="{Binding NewCommand}" Content="{res:ResMarker New}" Width="80" HorizontalAlignment="Right" Margin="5,0" Height="26" VerticalAlignment="Center" />
+    </Grid>
+</UserControl>

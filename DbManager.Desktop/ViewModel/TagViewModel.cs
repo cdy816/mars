@@ -26,6 +26,9 @@ namespace DBInStudio.Desktop
 
         private static string[] mTagTypeList;
         private static string[] mRecordTypeList;
+        private static string[] mCompressTypeList;
+
+        private bool mHasHisTag;
 
         #endregion ...Variables...
 
@@ -40,6 +43,7 @@ namespace DBInStudio.Desktop
         static TagViewModel()
         {
             InitEnumType();
+            mCompressTypeList = new string[] { "无", "无损压缩", "死区压缩", "斜率死区" };
         }
 
         public TagViewModel()
@@ -50,7 +54,7 @@ namespace DBInStudio.Desktop
         public TagViewModel(Cdy.Tag.Tagbase realTag, Cdy.Tag.HisTag histag)
         {
             this.mRealTagMode = realTag;
-            this.mHisTagMode = histag;
+            this.HisTagMode = histag;
         }
 
         #endregion ...Constructor...
@@ -88,7 +92,9 @@ namespace DBInStudio.Desktop
                 if (mHisTagMode != value)
                 {
                     mHisTagMode = value;
+                   
                 }
+                mHasHisTag = mHisTagMode != null;
             }
         }
 
@@ -152,6 +158,17 @@ namespace DBInStudio.Desktop
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public string[] CompressTypeList
+        {
+            get
+            {
+                return mCompressTypeList;
+            }
+        }
+
 
         /// <summary>
         /// 类型
@@ -209,6 +226,35 @@ namespace DBInStudio.Desktop
                 }
             }
         }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool HasHisTag
+        {
+            get
+            {
+                return mHasHisTag;
+            }
+            set
+            {
+                if (mHasHisTag != value)
+                {
+                    mHasHisTag = value;
+                    if(!value)
+                    {
+                        mHisTagMode = null;
+                    }
+                    else
+                    {
+                        mHisTagMode = new Cdy.Tag.HisTag() { Id = this.mRealTagMode.Id };
+                        ChangeTagType(this.mRealTagMode.Type);
+                    }
+                }
+                OnPropertChanged("HasHisTag");
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -279,10 +325,14 @@ namespace DBInStudio.Desktop
             mRecordTypeList = Enum.GetNames(typeof(Cdy.Tag.RecordType));
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagType"></param>
         private void ChangeTagType(Cdy.Tag.TagType tagType)
         {
             Cdy.Tag.Tagbase ntag = null;
-
+            if (mHisTagMode == null) return;
             switch (tagType)
             {
                 case Cdy.Tag.TagType.Bool:
@@ -377,6 +427,108 @@ namespace DBInStudio.Desktop
                 RealTagMode = ntag;
             }
         }
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class TagGroupViewModel : ViewModelBase
+    {
+
+        #region ... Variables  ...
+        private string mName;
+        private System.Collections.ObjectModel.ObservableCollection<TagGroupViewModel> mChildren = new System.Collections.ObjectModel.ObservableCollection<TagGroupViewModel>();
+        private bool mIsSelected = false;
+        private bool mIsExpand = false;
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Name
+        {
+            get
+            {
+                return mName;
+            }
+            set
+            {
+                if (mName != value)
+                {
+                    mName = value;
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public System.Collections.ObjectModel.ObservableCollection<TagGroupViewModel> Children
+        {
+            get
+            {
+                return mChildren;
+            }
+        }
+
+        /// <summary>
+            /// 被选中
+            /// </summary>
+        public bool IsSelected
+        {
+            get
+            {
+                return mIsSelected;
+            }
+            set
+            {
+                if (mIsSelected != value)
+                {
+                    mIsSelected = value;
+                }
+            }
+        }
+
+        /// <summary>
+            /// 展开
+            /// </summary>
+        public bool IsExpand
+        {
+            get
+            {
+                return mIsExpand;
+            }
+            set
+            {
+                if (mIsExpand != value)
+                {
+                    mIsExpand = value;
+                }
+            }
+        }
+
+
+
+        #endregion ...Properties...
+
+        #region ... Methods    ...
 
         #endregion ...Methods...
 

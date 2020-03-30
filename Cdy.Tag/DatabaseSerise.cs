@@ -73,6 +73,7 @@ namespace Cdy.Tag
                 XElement xe = XElement.Load(path);
 
                 doc.Name = xe.Attribute("Name").Value;
+                doc.Desc = xe.Attribute("Desc") != null ? xe.Attribute("Desc").Value : string.Empty;
                 doc.Version = xe.Attribute("Version").Value;
 
                 if (xe.Element("Setting") != null)
@@ -94,6 +95,7 @@ namespace Cdy.Tag
 
             XElement doc = new XElement("RealDatabase");
             doc.SetAttributeValue("Name", Dbase.Name);
+            doc.SetAttributeValue("Desc", Dbase.Desc);
             doc.SetAttributeValue("Version", Dbase.Version);
             doc.SetAttributeValue("Auther", "cdy");
 

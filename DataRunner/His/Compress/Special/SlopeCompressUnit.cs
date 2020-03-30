@@ -35,7 +35,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public override string Desc => "斜率压缩";
+        public override string Desc => "斜率死区";
 
         /// <summary>
         /// 

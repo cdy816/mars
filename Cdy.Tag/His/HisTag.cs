@@ -43,22 +43,6 @@ namespace Cdy.Tag
         /// </summary>
         public Dictionary<string, double> Parameters { get; set; }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public float CompressParameter1 { get; set; }
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public float CompressParameter2 { get; set; }
-
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public float CompressParameter3 { get; set; }
-
         /// <summary>
         /// 定时记录周期,ms
         /// </summary>

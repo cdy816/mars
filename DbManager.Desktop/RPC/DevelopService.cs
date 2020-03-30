@@ -47,94 +47,96 @@ namespace DBDevelopService {
             "TW9kaWZ5UGFzc3dvcmRSZXF1ZXN0Eg8KB2xvZ2luSWQYASABKAkSEAoIdXNl",
             "ck5hbWUYAiABKAkSEAoIcGFzc3dvcmQYAyABKAkiSgoRVXBkYXRlVXNlclJl",
             "cXVlc3QSDwoHbG9naW5JZBgBIAEoCRIQCgh1c2VyTmFtZRgCIAEoCRISCgpw",
-            "ZXJtaXNzaW9uGAMgAygJIjcKEk5ld0RhdGFiYXNlUmVxdWVzdBIPCgdsb2dp",
-            "bklkGAEgASgJEhAKCERhdGFiYXNlGAIgASgJIiYKE1F1ZXJ5RGF0YWJhc2VS",
-            "ZXF1c3QSDwoHbG9naW5JZBgBIAEoCSJMChNRdWVyeURhdGFiYXNlUmVwbGF5",
-            "Eg4KBlJlc3VsdBgBIAEoCBITCgtFcnJvTWVzc2FnZRgCIAEoCRIQCghEYXRh",
-            "YmFzZRgDIAMoCSJECgxMb2dpblJlcXVlc3QSEAoIdXNlck5hbWUYASABKAkS",
-            "EAoIcGFzc3dvcmQYAiABKAkSEAoIZGF0YWJhc2UYAyABKAkiHQoKTG9naW5S",
-            "ZXBseRIPCgdsb2dpbklkGAEgASgJIiAKDUxvZ291dFJlcXVlc3QSDwoHTG9n",
-            "aW5JZBgBIAEoCSKdAQoUQWRkVGFnUmVxdWVzdE1lc3NhZ2USDwoHbG9naW5J",
-            "ZBgBIAEoCRIQCghEYXRhYmFzZRgCIAEoCRIxCgdyZWFsVGFnGAMgASgLMiAu",
-            "ZGJEZXZlbG9wU2VydmljZS5SZWFsVGFnTWVzc2FnZRIvCgZoaXNUYWcYBCAB",
-            "KAsyHy5kYkRldmVsb3BTZXJ2aWNlLkhpc1RhZ01lc3NhZ2UibwobVXBkYXRl",
-            "UmVhbFRhZ1JlcXVlc3RNZXNzYWdlEg8KB2xvZ2luSWQYASABKAkSEAoIRGF0",
-            "YWJhc2UYAiABKAkSLQoDdGFnGAMgASgLMiAuZGJEZXZlbG9wU2VydmljZS5S",
-            "ZWFsVGFnTWVzc2FnZSJtChpVcGRhdGVIaXNUYWdSZXF1ZXN0TWVzc2FnZRIP",
-            "Cgdsb2dpbklkGAEgASgJEhAKCERhdGFiYXNlGAIgASgJEiwKA3RhZxgDIAEo",
-            "CzIfLmRiRGV2ZWxvcFNlcnZpY2UuSGlzVGFnTWVzc2FnZSJIChJBZGRUYWdS",
-            "ZXBseU1lc3NhZ2USDQoFVGFnSWQYASABKAUSDgoGUmVzdWx0GAIgASgIEhMK",
-            "C0Vycm9NZXNzYWdlGAMgASgJIkQKEFJlbW92ZVRhZ01lc3NhZ2USDwoHTG9n",
-            "aW5JZBgBIAEoCRIQCghEYXRhYmFzZRgCIAEoCRINCgVUYWdJZBgDIAMoBSJo",
-            "CgxRdWVyeU1lc3NhZ2USDwoHTG9naW5JZBgBIAEoCRIQCghEYXRhYmFzZRgC",
-            "IAEoCRI1Cgpjb25kaXRpb25zGAMgAygLMiEuZGJEZXZlbG9wU2VydmljZS5L",
-            "ZXlWYWx1ZU1lc3NhZ2UiLQoPS2V5VmFsdWVNZXNzYWdlEgsKA2tleRgBIAEo",
-            "CRINCgV2YWx1ZRgCIAEoCSIvCgpHZXRSZXF1ZXN0Eg8KB0xvZ2luSWQYASAB",
-            "KAkSEAoIRGF0YWJhc2UYAiABKAkiNwoQQm9vbFJlc3VsdFJlcGxheRIOCgZS",
-            "ZXN1bHQYASABKAgSEwoLRXJyb01lc3NhZ2UYAiABKAkicQoWR2V0UmVhbFRh",
-            "Z01lc3NhZ2VSZXBseRIOCgZSZXN1bHQYASABKAgSEwoLRXJyb01lc3NhZ2UY",
-            "AiABKAkSMgoIbWVzc2FnZXMYAyADKAsyIC5kYkRldmVsb3BTZXJ2aWNlLlJl",
-            "YWxUYWdNZXNzYWdlInAKFkdldEhpc3RUYWdNZXNzYWdlUmVwbHkSDgoGUmVz",
-            "dWx0GAEgASgIEhMKC0Vycm9NZXNzYWdlGAIgASgJEjEKCG1lc3NhZ2VzGAMg",
-            "AygLMh8uZGJEZXZlbG9wU2VydmljZS5IaXNUYWdNZXNzYWdlIm0KDlJlYWxU",
-            "YWdNZXNzYWdlEgoKAklkGAEgASgNEg8KB1RhZ1R5cGUYAiABKA0SDAoETmFt",
-            "ZRgDIAEoCRINCgVHcm91cBgEIAEoCRIMCgREZXNjGAUgASgJEhMKC0xpbmtB",
-            "ZGRyZXNzGAYgASgJIqQBCg1IaXNUYWdNZXNzYWdlEgoKAklkGAEgASgNEgwK",
-            "BFR5cGUYAiABKA0SDwoHVGFnVHlwZRgDIAEoDRIUCgxDb21wcmVzc1R5cGUY",
-            "BCABKA0SGgoSQ29tcHJlc3NQYXJhbWV0ZXIxGAUgASgCEhoKEkNvbXByZXNz",
-            "UGFyYW1ldGVyMhgGIAEoAhIaChJDb21wcmVzc1BhcmFtZXRlcjMYByABKAIy",
-            "/REKDURldmVsb3BTZXJ2ZXISRQoFTG9naW4SHi5kYkRldmVsb3BTZXJ2aWNl",
-            "LkxvZ2luUmVxdWVzdBocLmRiRGV2ZWxvcFNlcnZpY2UuTG9naW5SZXBseRJP",
-            "CgdOZXdVc2VyEiAuZGJEZXZlbG9wU2VydmljZS5OZXdVc2VyUmVxdWVzdBoi",
-            "LmRiRGV2ZWxvcFNlcnZpY2UuQm9vbFJlc3VsdFJlcGxheRJdCg5Nb2RpZnlQ",
-            "YXNzd29yZBInLmRiRGV2ZWxvcFNlcnZpY2UuTW9kaWZ5UGFzc3dvcmRSZXF1",
-            "ZXN0GiIuZGJEZXZlbG9wU2VydmljZS5Cb29sUmVzdWx0UmVwbGF5ElUKClVw",
-            "ZGF0ZVVzZXISIy5kYkRldmVsb3BTZXJ2aWNlLlVwZGF0ZVVzZXJSZXF1ZXN0",
-            "GiIuZGJEZXZlbG9wU2VydmljZS5Cb29sUmVzdWx0UmVwbGF5El0KDVF1ZXJ5",
-            "RGF0YWJhc2USJS5kYkRldmVsb3BTZXJ2aWNlLlF1ZXJ5RGF0YWJhc2VSZXF1",
-            "c3QaJS5kYkRldmVsb3BTZXJ2aWNlLlF1ZXJ5RGF0YWJhc2VSZXBsYXkSVwoL",
-            "TmV3RGF0YWJhc2USJC5kYkRldmVsb3BTZXJ2aWNlLk5ld0RhdGFiYXNlUmVx",
-            "dWVzdBoiLmRiRGV2ZWxvcFNlcnZpY2UuQm9vbFJlc3VsdFJlcGxheRJfCg9O",
-            "ZXdEYXRhYmFzZVVzZXISKC5kYkRldmVsb3BTZXJ2aWNlLk5ld0RhdGFiYXNl",
+            "ZXJtaXNzaW9uGAMgAygJIkUKEk5ld0RhdGFiYXNlUmVxdWVzdBIPCgdsb2dp",
+            "bklkGAEgASgJEhAKCERhdGFiYXNlGAIgASgJEgwKBERlc2MYAyABKAkiJwoU",
+            "UXVlcnlEYXRhYmFzZVJlcXVlc3QSDwoHbG9naW5JZBgBIAEoCSJvChNRdWVy",
+            "eURhdGFiYXNlUmVwbGF5Eg4KBlJlc3VsdBgBIAEoCBITCgtFcnJvTWVzc2Fn",
+            "ZRgCIAEoCRIzCghEYXRhYmFzZRgDIAMoCzIhLmRiRGV2ZWxvcFNlcnZpY2Uu",
+            "S2V5VmFsdWVNZXNzYWdlIjIKDExvZ2luUmVxdWVzdBIQCgh1c2VyTmFtZRgB",
+            "IAEoCRIQCghwYXNzd29yZBgCIAEoCSIdCgpMb2dpblJlcGx5Eg8KB2xvZ2lu",
+            "SWQYASABKAkiIAoNTG9nb3V0UmVxdWVzdBIPCgdMb2dpbklkGAEgASgJIp0B",
+            "ChRBZGRUYWdSZXF1ZXN0TWVzc2FnZRIPCgdsb2dpbklkGAEgASgJEhAKCERh",
+            "dGFiYXNlGAIgASgJEjEKB3JlYWxUYWcYAyABKAsyIC5kYkRldmVsb3BTZXJ2",
+            "aWNlLlJlYWxUYWdNZXNzYWdlEi8KBmhpc1RhZxgEIAEoCzIfLmRiRGV2ZWxv",
+            "cFNlcnZpY2UuSGlzVGFnTWVzc2FnZSJvChtVcGRhdGVSZWFsVGFnUmVxdWVz",
+            "dE1lc3NhZ2USDwoHbG9naW5JZBgBIAEoCRIQCghEYXRhYmFzZRgCIAEoCRIt",
+            "CgN0YWcYAyABKAsyIC5kYkRldmVsb3BTZXJ2aWNlLlJlYWxUYWdNZXNzYWdl",
+            "Im0KGlVwZGF0ZUhpc1RhZ1JlcXVlc3RNZXNzYWdlEg8KB2xvZ2luSWQYASAB",
+            "KAkSEAoIRGF0YWJhc2UYAiABKAkSLAoDdGFnGAMgASgLMh8uZGJEZXZlbG9w",
+            "U2VydmljZS5IaXNUYWdNZXNzYWdlIkgKEkFkZFRhZ1JlcGx5TWVzc2FnZRIN",
+            "CgVUYWdJZBgBIAEoBRIOCgZSZXN1bHQYAiABKAgSEwoLRXJyb01lc3NhZ2UY",
+            "AyABKAkiRAoQUmVtb3ZlVGFnTWVzc2FnZRIPCgdMb2dpbklkGAEgASgJEhAK",
+            "CERhdGFiYXNlGAIgASgJEg0KBVRhZ0lkGAMgAygFImgKDFF1ZXJ5TWVzc2Fn",
+            "ZRIPCgdMb2dpbklkGAEgASgJEhAKCERhdGFiYXNlGAIgASgJEjUKCmNvbmRp",
+            "dGlvbnMYAyADKAsyIS5kYkRldmVsb3BTZXJ2aWNlLktleVZhbHVlTWVzc2Fn",
+            "ZSItCg9LZXlWYWx1ZU1lc3NhZ2USCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIg",
+            "ASgJIi8KCkdldFJlcXVlc3QSDwoHTG9naW5JZBgBIAEoCRIQCghEYXRhYmFz",
+            "ZRgCIAEoCSI3ChBCb29sUmVzdWx0UmVwbGF5Eg4KBlJlc3VsdBgBIAEoCBIT",
+            "CgtFcnJvTWVzc2FnZRgCIAEoCSJxChZHZXRSZWFsVGFnTWVzc2FnZVJlcGx5",
+            "Eg4KBlJlc3VsdBgBIAEoCBITCgtFcnJvTWVzc2FnZRgCIAEoCRIyCghtZXNz",
+            "YWdlcxgDIAMoCzIgLmRiRGV2ZWxvcFNlcnZpY2UuUmVhbFRhZ01lc3NhZ2Ui",
+            "cAoWR2V0SGlzdFRhZ01lc3NhZ2VSZXBseRIOCgZSZXN1bHQYASABKAgSEwoL",
+            "RXJyb01lc3NhZ2UYAiABKAkSMQoIbWVzc2FnZXMYAyADKAsyHy5kYkRldmVs",
+            "b3BTZXJ2aWNlLkhpc1RhZ01lc3NhZ2UibQoOUmVhbFRhZ01lc3NhZ2USCgoC",
+            "SWQYASABKA0SDwoHVGFnVHlwZRgCIAEoDRIMCgROYW1lGAMgASgJEg0KBUdy",
+            "b3VwGAQgASgJEgwKBERlc2MYBSABKAkSEwoLTGlua0FkZHJlc3MYBiABKAki",
+            "igEKDUhpc1RhZ01lc3NhZ2USCgoCSWQYASABKA0SDAoEVHlwZRgCIAEoDRIP",
+            "CgdUYWdUeXBlGAMgASgNEhQKDENvbXByZXNzVHlwZRgEIAEoDRI4CglQYXJh",
+            "bWV0ZXIYBSADKAsyJS5kYkRldmVsb3BTZXJ2aWNlLmhpc1RhZ1BhcmFtZXRl",
+            "ckl0ZW0iMgoTaGlzVGFnUGFyYW1ldGVySXRlbRIMCgROYW1lGAEgASgJEg0K",
+            "BXZhbHVlGAIgASgBMv4RCg1EZXZlbG9wU2VydmVyEkUKBUxvZ2luEh4uZGJE",
+            "ZXZlbG9wU2VydmljZS5Mb2dpblJlcXVlc3QaHC5kYkRldmVsb3BTZXJ2aWNl",
+            "LkxvZ2luUmVwbHkSTwoHTmV3VXNlchIgLmRiRGV2ZWxvcFNlcnZpY2UuTmV3",
             "VXNlclJlcXVlc3QaIi5kYkRldmVsb3BTZXJ2aWNlLkJvb2xSZXN1bHRSZXBs",
-            "YXkSdQoaTW9kaWZ5RGF0YWJhc2VVc2VyUGFzc3dvcmQSMy5kYkRldmVsb3BT",
-            "ZXJ2aWNlLk1vZGlmeURhdGFiYXNlVXNlclBhc3N3b3JkUmVxdWVzdBoiLmRi",
-            "RGV2ZWxvcFNlcnZpY2UuQm9vbFJlc3VsdFJlcGxheRJlChJVcGRhdGVEYXRh",
-            "YmFzZVVzZXISKy5kYkRldmVsb3BTZXJ2aWNlLlVwZGF0ZURhdGFiYXNlVXNl",
-            "clJlcXVlc3QaIi5kYkRldmVsb3BTZXJ2aWNlLkJvb2xSZXN1bHRSZXBsYXkS",
-            "aAoVTmV3RGF0YWJhc2VQZXJtaXNzaW9uEisuZGJEZXZlbG9wU2VydmljZS5E",
-            "YXRhYmFzZVBlcm1pc3Npb25SZXF1ZXN0GiIuZGJEZXZlbG9wU2VydmljZS5C",
-            "b29sUmVzdWx0UmVwbGF5EmsKGFVwZGF0ZURhdGFiYXNlUGVybWlzc2lvbhIr",
-            "LmRiRGV2ZWxvcFNlcnZpY2UuRGF0YWJhc2VQZXJtaXNzaW9uUmVxdWVzdBoi",
-            "LmRiRGV2ZWxvcFNlcnZpY2UuQm9vbFJlc3VsdFJlcGxheRJ/ChhHZXRBbGxE",
-            "YXRhYmFzZVBlcm1pc3Npb24SMS5kYkRldmVsb3BTZXJ2aWNlLkdldEFsbERh",
-            "dGFiYXNlUGVybWlzc2lvblJlcXVlc3QaMC5kYkRldmVsb3BTZXJ2aWNlLkdl",
-            "dEFsbERhdGFiYXNlUGVybWlzc2lvblJlcGxheRJWCgZBZGRUYWcSJi5kYkRl",
-            "dmVsb3BTZXJ2aWNlLkFkZFRhZ1JlcXVlc3RNZXNzYWdlGiQuZGJEZXZlbG9w",
-            "U2VydmljZS5BZGRUYWdSZXBseU1lc3NhZ2USUwoJUmVtb3ZlVGFnEiIuZGJE",
-            "ZXZlbG9wU2VydmljZS5SZW1vdmVUYWdNZXNzYWdlGiIuZGJEZXZlbG9wU2Vy",
-            "dmljZS5Cb29sUmVzdWx0UmVwbGF5ElcKDUdldFJlYWxBbGxUYWcSHC5kYkRl",
-            "dmVsb3BTZXJ2aWNlLkdldFJlcXVlc3QaKC5kYkRldmVsb3BTZXJ2aWNlLkdl",
-            "dFJlYWxUYWdNZXNzYWdlUmVwbHkSVgoMR2V0SGlzQWxsVGFnEhwuZGJEZXZl",
-            "bG9wU2VydmljZS5HZXRSZXF1ZXN0GiguZGJEZXZlbG9wU2VydmljZS5HZXRI",
-            "aXN0VGFnTWVzc2FnZVJlcGx5ElgKDFF1ZXJ5UmVhbFRhZxIeLmRiRGV2ZWxv",
-            "cFNlcnZpY2UuUXVlcnlNZXNzYWdlGiguZGJEZXZlbG9wU2VydmljZS5HZXRS",
-            "ZWFsVGFnTWVzc2FnZVJlcGx5ElcKC1F1ZXJ5SGlzVGFnEh4uZGJEZXZlbG9w",
-            "U2VydmljZS5RdWVyeU1lc3NhZ2UaKC5kYkRldmVsb3BTZXJ2aWNlLkdldEhp",
-            "c3RUYWdNZXNzYWdlUmVwbHkSYgoNVXBkYXRlUmVhbFRhZxItLmRiRGV2ZWxv",
-            "cFNlcnZpY2UuVXBkYXRlUmVhbFRhZ1JlcXVlc3RNZXNzYWdlGiIuZGJEZXZl",
-            "bG9wU2VydmljZS5Cb29sUmVzdWx0UmVwbGF5EmAKDFVwZGF0ZUhpc1RhZxIs",
-            "LmRiRGV2ZWxvcFNlcnZpY2UuVXBkYXRlSGlzVGFnUmVxdWVzdE1lc3NhZ2Ua",
-            "Ii5kYkRldmVsb3BTZXJ2aWNlLkJvb2xSZXN1bHRSZXBsYXkSSAoEU2F2ZRIc",
+            "YXkSXQoOTW9kaWZ5UGFzc3dvcmQSJy5kYkRldmVsb3BTZXJ2aWNlLk1vZGlm",
+            "eVBhc3N3b3JkUmVxdWVzdBoiLmRiRGV2ZWxvcFNlcnZpY2UuQm9vbFJlc3Vs",
+            "dFJlcGxheRJVCgpVcGRhdGVVc2VyEiMuZGJEZXZlbG9wU2VydmljZS5VcGRh",
+            "dGVVc2VyUmVxdWVzdBoiLmRiRGV2ZWxvcFNlcnZpY2UuQm9vbFJlc3VsdFJl",
+            "cGxheRJeCg1RdWVyeURhdGFiYXNlEiYuZGJEZXZlbG9wU2VydmljZS5RdWVy",
+            "eURhdGFiYXNlUmVxdWVzdBolLmRiRGV2ZWxvcFNlcnZpY2UuUXVlcnlEYXRh",
+            "YmFzZVJlcGxheRJXCgtOZXdEYXRhYmFzZRIkLmRiRGV2ZWxvcFNlcnZpY2Uu",
+            "TmV3RGF0YWJhc2VSZXF1ZXN0GiIuZGJEZXZlbG9wU2VydmljZS5Cb29sUmVz",
+            "dWx0UmVwbGF5El8KD05ld0RhdGFiYXNlVXNlchIoLmRiRGV2ZWxvcFNlcnZp",
+            "Y2UuTmV3RGF0YWJhc2VVc2VyUmVxdWVzdBoiLmRiRGV2ZWxvcFNlcnZpY2Uu",
+            "Qm9vbFJlc3VsdFJlcGxheRJ1ChpNb2RpZnlEYXRhYmFzZVVzZXJQYXNzd29y",
+            "ZBIzLmRiRGV2ZWxvcFNlcnZpY2UuTW9kaWZ5RGF0YWJhc2VVc2VyUGFzc3dv",
+            "cmRSZXF1ZXN0GiIuZGJEZXZlbG9wU2VydmljZS5Cb29sUmVzdWx0UmVwbGF5",
+            "EmUKElVwZGF0ZURhdGFiYXNlVXNlchIrLmRiRGV2ZWxvcFNlcnZpY2UuVXBk",
+            "YXRlRGF0YWJhc2VVc2VyUmVxdWVzdBoiLmRiRGV2ZWxvcFNlcnZpY2UuQm9v",
+            "bFJlc3VsdFJlcGxheRJoChVOZXdEYXRhYmFzZVBlcm1pc3Npb24SKy5kYkRl",
+            "dmVsb3BTZXJ2aWNlLkRhdGFiYXNlUGVybWlzc2lvblJlcXVlc3QaIi5kYkRl",
+            "dmVsb3BTZXJ2aWNlLkJvb2xSZXN1bHRSZXBsYXkSawoYVXBkYXRlRGF0YWJh",
+            "c2VQZXJtaXNzaW9uEisuZGJEZXZlbG9wU2VydmljZS5EYXRhYmFzZVBlcm1p",
+            "c3Npb25SZXF1ZXN0GiIuZGJEZXZlbG9wU2VydmljZS5Cb29sUmVzdWx0UmVw",
+            "bGF5En8KGEdldEFsbERhdGFiYXNlUGVybWlzc2lvbhIxLmRiRGV2ZWxvcFNl",
+            "cnZpY2UuR2V0QWxsRGF0YWJhc2VQZXJtaXNzaW9uUmVxdWVzdBowLmRiRGV2",
+            "ZWxvcFNlcnZpY2UuR2V0QWxsRGF0YWJhc2VQZXJtaXNzaW9uUmVwbGF5ElYK",
+            "BkFkZFRhZxImLmRiRGV2ZWxvcFNlcnZpY2UuQWRkVGFnUmVxdWVzdE1lc3Nh",
+            "Z2UaJC5kYkRldmVsb3BTZXJ2aWNlLkFkZFRhZ1JlcGx5TWVzc2FnZRJTCglS",
+            "ZW1vdmVUYWcSIi5kYkRldmVsb3BTZXJ2aWNlLlJlbW92ZVRhZ01lc3NhZ2Ua",
+            "Ii5kYkRldmVsb3BTZXJ2aWNlLkJvb2xSZXN1bHRSZXBsYXkSVwoNR2V0UmVh",
+            "bEFsbFRhZxIcLmRiRGV2ZWxvcFNlcnZpY2UuR2V0UmVxdWVzdBooLmRiRGV2",
+            "ZWxvcFNlcnZpY2UuR2V0UmVhbFRhZ01lc3NhZ2VSZXBseRJWCgxHZXRIaXNB",
+            "bGxUYWcSHC5kYkRldmVsb3BTZXJ2aWNlLkdldFJlcXVlc3QaKC5kYkRldmVs",
+            "b3BTZXJ2aWNlLkdldEhpc3RUYWdNZXNzYWdlUmVwbHkSWAoMUXVlcnlSZWFs",
+            "VGFnEh4uZGJEZXZlbG9wU2VydmljZS5RdWVyeU1lc3NhZ2UaKC5kYkRldmVs",
+            "b3BTZXJ2aWNlLkdldFJlYWxUYWdNZXNzYWdlUmVwbHkSVwoLUXVlcnlIaXNU",
+            "YWcSHi5kYkRldmVsb3BTZXJ2aWNlLlF1ZXJ5TWVzc2FnZRooLmRiRGV2ZWxv",
+            "cFNlcnZpY2UuR2V0SGlzdFRhZ01lc3NhZ2VSZXBseRJiCg1VcGRhdGVSZWFs",
+            "VGFnEi0uZGJEZXZlbG9wU2VydmljZS5VcGRhdGVSZWFsVGFnUmVxdWVzdE1l",
+            "c3NhZ2UaIi5kYkRldmVsb3BTZXJ2aWNlLkJvb2xSZXN1bHRSZXBsYXkSYAoM",
+            "VXBkYXRlSGlzVGFnEiwuZGJEZXZlbG9wU2VydmljZS5VcGRhdGVIaXNUYWdS",
+            "ZXF1ZXN0TWVzc2FnZRoiLmRiRGV2ZWxvcFNlcnZpY2UuQm9vbFJlc3VsdFJl",
+            "cGxheRJICgRTYXZlEhwuZGJEZXZlbG9wU2VydmljZS5HZXRSZXF1ZXN0GiIu",
+            "ZGJEZXZlbG9wU2VydmljZS5Cb29sUmVzdWx0UmVwbGF5EkoKBkNhbmNlbBIc",
             "LmRiRGV2ZWxvcFNlcnZpY2UuR2V0UmVxdWVzdBoiLmRiRGV2ZWxvcFNlcnZp",
-            "Y2UuQm9vbFJlc3VsdFJlcGxheRJKCgZDYW5jZWwSHC5kYkRldmVsb3BTZXJ2",
-            "aWNlLkdldFJlcXVlc3QaIi5kYkRldmVsb3BTZXJ2aWNlLkJvb2xSZXN1bHRS",
-            "ZXBsYXkSTQoGTG9nb3V0Eh8uZGJEZXZlbG9wU2VydmljZS5Mb2dvdXRSZXF1",
-            "ZXN0GiIuZGJEZXZlbG9wU2VydmljZS5Cb29sUmVzdWx0UmVwbGF5EkkKBVN0",
-            "YXJ0EhwuZGJEZXZlbG9wU2VydmljZS5HZXRSZXF1ZXN0GiIuZGJEZXZlbG9w",
-            "U2VydmljZS5Cb29sUmVzdWx0UmVwbGF5EkgKBFN0b3ASHC5kYkRldmVsb3BT",
-            "ZXJ2aWNlLkdldFJlcXVlc3QaIi5kYkRldmVsb3BTZXJ2aWNlLkJvb2xSZXN1",
-            "bHRSZXBsYXlCE6oCEERCRGV2ZWxvcFNlcnZpY2ViBnByb3RvMw=="));
+            "Y2UuQm9vbFJlc3VsdFJlcGxheRJNCgZMb2dvdXQSHy5kYkRldmVsb3BTZXJ2",
+            "aWNlLkxvZ291dFJlcXVlc3QaIi5kYkRldmVsb3BTZXJ2aWNlLkJvb2xSZXN1",
+            "bHRSZXBsYXkSSQoFU3RhcnQSHC5kYkRldmVsb3BTZXJ2aWNlLkdldFJlcXVl",
+            "c3QaIi5kYkRldmVsb3BTZXJ2aWNlLkJvb2xSZXN1bHRSZXBsYXkSSAoEU3Rv",
+            "cBIcLmRiRGV2ZWxvcFNlcnZpY2UuR2V0UmVxdWVzdBoiLmRiRGV2ZWxvcFNl",
+            "cnZpY2UuQm9vbFJlc3VsdFJlcGxheUITqgIQREJEZXZlbG9wU2VydmljZWIG",
+            "cHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
@@ -148,10 +150,10 @@ namespace DBDevelopService {
             new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.NewUserRequest), global::DBDevelopService.NewUserRequest.Parser, new[]{ "LoginId", "UserName", "Password", "Permission" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.ModifyPasswordRequest), global::DBDevelopService.ModifyPasswordRequest.Parser, new[]{ "LoginId", "UserName", "Password" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.UpdateUserRequest), global::DBDevelopService.UpdateUserRequest.Parser, new[]{ "LoginId", "UserName", "Permission" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.NewDatabaseRequest), global::DBDevelopService.NewDatabaseRequest.Parser, new[]{ "LoginId", "Database" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.QueryDatabaseRequst), global::DBDevelopService.QueryDatabaseRequst.Parser, new[]{ "LoginId" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.NewDatabaseRequest), global::DBDevelopService.NewDatabaseRequest.Parser, new[]{ "LoginId", "Database", "Desc" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.QueryDatabaseRequest), global::DBDevelopService.QueryDatabaseRequest.Parser, new[]{ "LoginId" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.QueryDatabaseReplay), global::DBDevelopService.QueryDatabaseReplay.Parser, new[]{ "Result", "ErroMessage", "Database" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.LoginRequest), global::DBDevelopService.LoginRequest.Parser, new[]{ "UserName", "Password", "Database" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.LoginRequest), global::DBDevelopService.LoginRequest.Parser, new[]{ "UserName", "Password" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.LoginReply), global::DBDevelopService.LoginReply.Parser, new[]{ "LoginId" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.LogoutRequest), global::DBDevelopService.LogoutRequest.Parser, new[]{ "LoginId" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.AddTagRequestMessage), global::DBDevelopService.AddTagRequestMessage.Parser, new[]{ "LoginId", "Database", "RealTag", "HisTag" }, null, null, null),
@@ -166,7 +168,8 @@ namespace DBDevelopService {
             new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.GetRealTagMessageReply), global::DBDevelopService.GetRealTagMessageReply.Parser, new[]{ "Result", "ErroMessage", "Messages" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.GetHistTagMessageReply), global::DBDevelopService.GetHistTagMessageReply.Parser, new[]{ "Result", "ErroMessage", "Messages" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.RealTagMessage), global::DBDevelopService.RealTagMessage.Parser, new[]{ "Id", "TagType", "Name", "Group", "Desc", "LinkAddress" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.HisTagMessage), global::DBDevelopService.HisTagMessage.Parser, new[]{ "Id", "Type", "TagType", "CompressType", "CompressParameter1", "CompressParameter2", "CompressParameter3" }, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.HisTagMessage), global::DBDevelopService.HisTagMessage.Parser, new[]{ "Id", "Type", "TagType", "CompressType", "Parameter" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DBDevelopService.hisTagParameterItem), global::DBDevelopService.hisTagParameterItem.Parser, new[]{ "Name", "Value" }, null, null, null)
           }));
     }
     #endregion
@@ -2231,6 +2234,7 @@ namespace DBDevelopService {
     public NewDatabaseRequest(NewDatabaseRequest other) : this() {
       loginId_ = other.loginId_;
       database_ = other.database_;
+      desc_ = other.desc_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -2261,6 +2265,17 @@ namespace DBDevelopService {
       }
     }
 
+    /// <summary>Field number for the "Desc" field.</summary>
+    public const int DescFieldNumber = 3;
+    private string desc_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public string Desc {
+      get { return desc_; }
+      set {
+        desc_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as NewDatabaseRequest);
@@ -2276,6 +2291,7 @@ namespace DBDevelopService {
       }
       if (LoginId != other.LoginId) return false;
       if (Database != other.Database) return false;
+      if (Desc != other.Desc) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -2284,6 +2300,7 @@ namespace DBDevelopService {
       int hash = 1;
       if (LoginId.Length != 0) hash ^= LoginId.GetHashCode();
       if (Database.Length != 0) hash ^= Database.GetHashCode();
+      if (Desc.Length != 0) hash ^= Desc.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -2305,6 +2322,10 @@ namespace DBDevelopService {
         output.WriteRawTag(18);
         output.WriteString(Database);
       }
+      if (Desc.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(Desc);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -2318,6 +2339,9 @@ namespace DBDevelopService {
       }
       if (Database.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(Database);
+      }
+      if (Desc.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Desc);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -2335,6 +2359,9 @@ namespace DBDevelopService {
       }
       if (other.Database.Length != 0) {
         Database = other.Database;
+      }
+      if (other.Desc.Length != 0) {
+        Desc = other.Desc;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -2355,17 +2382,21 @@ namespace DBDevelopService {
             Database = input.ReadString();
             break;
           }
+          case 26: {
+            Desc = input.ReadString();
+            break;
+          }
         }
       }
     }
 
   }
 
-  public sealed partial class QueryDatabaseRequst : pb::IMessage<QueryDatabaseRequst> {
-    private static readonly pb::MessageParser<QueryDatabaseRequst> _parser = new pb::MessageParser<QueryDatabaseRequst>(() => new QueryDatabaseRequst());
+  public sealed partial class QueryDatabaseRequest : pb::IMessage<QueryDatabaseRequest> {
+    private static readonly pb::MessageParser<QueryDatabaseRequest> _parser = new pb::MessageParser<QueryDatabaseRequest>(() => new QueryDatabaseRequest());
     private pb::UnknownFieldSet _unknownFields;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public static pb::MessageParser<QueryDatabaseRequst> Parser { get { return _parser; } }
+    public static pb::MessageParser<QueryDatabaseRequest> Parser { get { return _parser; } }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
@@ -2378,21 +2409,21 @@ namespace DBDevelopService {
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public QueryDatabaseRequst() {
+    public QueryDatabaseRequest() {
       OnConstruction();
     }
 
     partial void OnConstruction();
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public QueryDatabaseRequst(QueryDatabaseRequst other) : this() {
+    public QueryDatabaseRequest(QueryDatabaseRequest other) : this() {
       loginId_ = other.loginId_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public QueryDatabaseRequst Clone() {
-      return new QueryDatabaseRequst(this);
+    public QueryDatabaseRequest Clone() {
+      return new QueryDatabaseRequest(this);
     }
 
     /// <summary>Field number for the "loginId" field.</summary>
@@ -2408,11 +2439,11 @@ namespace DBDevelopService {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
-      return Equals(other as QueryDatabaseRequst);
+      return Equals(other as QueryDatabaseRequest);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public bool Equals(QueryDatabaseRequst other) {
+    public bool Equals(QueryDatabaseRequest other) {
       if (ReferenceEquals(other, null)) {
         return false;
       }
@@ -2462,7 +2493,7 @@ namespace DBDevelopService {
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public void MergeFrom(QueryDatabaseRequst other) {
+    public void MergeFrom(QueryDatabaseRequest other) {
       if (other == null) {
         return;
       }
@@ -2550,11 +2581,11 @@ namespace DBDevelopService {
 
     /// <summary>Field number for the "Database" field.</summary>
     public const int DatabaseFieldNumber = 3;
-    private static readonly pb::FieldCodec<string> _repeated_database_codec
-        = pb::FieldCodec.ForString(26);
-    private readonly pbc::RepeatedField<string> database_ = new pbc::RepeatedField<string>();
+    private static readonly pb::FieldCodec<global::DBDevelopService.KeyValueMessage> _repeated_database_codec
+        = pb::FieldCodec.ForMessage(26, global::DBDevelopService.KeyValueMessage.Parser);
+    private readonly pbc::RepeatedField<global::DBDevelopService.KeyValueMessage> database_ = new pbc::RepeatedField<global::DBDevelopService.KeyValueMessage>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<string> Database {
+    public pbc::RepeatedField<global::DBDevelopService.KeyValueMessage> Database {
       get { return database_; }
     }
 
@@ -2694,7 +2725,6 @@ namespace DBDevelopService {
     public LoginRequest(LoginRequest other) : this() {
       userName_ = other.userName_;
       password_ = other.password_;
-      database_ = other.database_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -2725,17 +2755,6 @@ namespace DBDevelopService {
       }
     }
 
-    /// <summary>Field number for the "database" field.</summary>
-    public const int DatabaseFieldNumber = 3;
-    private string database_ = "";
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public string Database {
-      get { return database_; }
-      set {
-        database_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
-      }
-    }
-
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as LoginRequest);
@@ -2751,7 +2770,6 @@ namespace DBDevelopService {
       }
       if (UserName != other.UserName) return false;
       if (Password != other.Password) return false;
-      if (Database != other.Database) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -2760,7 +2778,6 @@ namespace DBDevelopService {
       int hash = 1;
       if (UserName.Length != 0) hash ^= UserName.GetHashCode();
       if (Password.Length != 0) hash ^= Password.GetHashCode();
-      if (Database.Length != 0) hash ^= Database.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -2782,10 +2799,6 @@ namespace DBDevelopService {
         output.WriteRawTag(18);
         output.WriteString(Password);
       }
-      if (Database.Length != 0) {
-        output.WriteRawTag(26);
-        output.WriteString(Database);
-      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -2799,9 +2812,6 @@ namespace DBDevelopService {
       }
       if (Password.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(Password);
-      }
-      if (Database.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(Database);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -2820,9 +2830,6 @@ namespace DBDevelopService {
       if (other.Password.Length != 0) {
         Password = other.Password;
       }
-      if (other.Database.Length != 0) {
-        Database = other.Database;
-      }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -2840,10 +2847,6 @@ namespace DBDevelopService {
           }
           case 18: {
             Password = input.ReadString();
-            break;
-          }
-          case 26: {
-            Database = input.ReadString();
             break;
           }
         }
@@ -5398,9 +5401,7 @@ namespace DBDevelopService {
       type_ = other.type_;
       tagType_ = other.tagType_;
       compressType_ = other.compressType_;
-      compressParameter1_ = other.compressParameter1_;
-      compressParameter2_ = other.compressParameter2_;
-      compressParameter3_ = other.compressParameter3_;
+      parameter_ = other.parameter_.Clone();
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -5453,37 +5454,14 @@ namespace DBDevelopService {
       }
     }
 
-    /// <summary>Field number for the "CompressParameter1" field.</summary>
-    public const int CompressParameter1FieldNumber = 5;
-    private float compressParameter1_;
+    /// <summary>Field number for the "Parameter" field.</summary>
+    public const int ParameterFieldNumber = 5;
+    private static readonly pb::FieldCodec<global::DBDevelopService.hisTagParameterItem> _repeated_parameter_codec
+        = pb::FieldCodec.ForMessage(42, global::DBDevelopService.hisTagParameterItem.Parser);
+    private readonly pbc::RepeatedField<global::DBDevelopService.hisTagParameterItem> parameter_ = new pbc::RepeatedField<global::DBDevelopService.hisTagParameterItem>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public float CompressParameter1 {
-      get { return compressParameter1_; }
-      set {
-        compressParameter1_ = value;
-      }
-    }
-
-    /// <summary>Field number for the "CompressParameter2" field.</summary>
-    public const int CompressParameter2FieldNumber = 6;
-    private float compressParameter2_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public float CompressParameter2 {
-      get { return compressParameter2_; }
-      set {
-        compressParameter2_ = value;
-      }
-    }
-
-    /// <summary>Field number for the "CompressParameter3" field.</summary>
-    public const int CompressParameter3FieldNumber = 7;
-    private float compressParameter3_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public float CompressParameter3 {
-      get { return compressParameter3_; }
-      set {
-        compressParameter3_ = value;
-      }
+    public pbc::RepeatedField<global::DBDevelopService.hisTagParameterItem> Parameter {
+      get { return parameter_; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5503,9 +5481,7 @@ namespace DBDevelopService {
       if (Type != other.Type) return false;
       if (TagType != other.TagType) return false;
       if (CompressType != other.CompressType) return false;
-      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(CompressParameter1, other.CompressParameter1)) return false;
-      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(CompressParameter2, other.CompressParameter2)) return false;
-      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(CompressParameter3, other.CompressParameter3)) return false;
+      if(!parameter_.Equals(other.parameter_)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -5516,9 +5492,7 @@ namespace DBDevelopService {
       if (Type != 0) hash ^= Type.GetHashCode();
       if (TagType != 0) hash ^= TagType.GetHashCode();
       if (CompressType != 0) hash ^= CompressType.GetHashCode();
-      if (CompressParameter1 != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(CompressParameter1);
-      if (CompressParameter2 != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(CompressParameter2);
-      if (CompressParameter3 != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(CompressParameter3);
+      hash ^= parameter_.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -5548,18 +5522,7 @@ namespace DBDevelopService {
         output.WriteRawTag(32);
         output.WriteUInt32(CompressType);
       }
-      if (CompressParameter1 != 0F) {
-        output.WriteRawTag(45);
-        output.WriteFloat(CompressParameter1);
-      }
-      if (CompressParameter2 != 0F) {
-        output.WriteRawTag(53);
-        output.WriteFloat(CompressParameter2);
-      }
-      if (CompressParameter3 != 0F) {
-        output.WriteRawTag(61);
-        output.WriteFloat(CompressParameter3);
-      }
+      parameter_.WriteTo(output, _repeated_parameter_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -5580,15 +5543,7 @@ namespace DBDevelopService {
       if (CompressType != 0) {
         size += 1 + pb::CodedOutputStream.ComputeUInt32Size(CompressType);
       }
-      if (CompressParameter1 != 0F) {
-        size += 1 + 4;
-      }
-      if (CompressParameter2 != 0F) {
-        size += 1 + 4;
-      }
-      if (CompressParameter3 != 0F) {
-        size += 1 + 4;
-      }
+      size += parameter_.CalculateSize(_repeated_parameter_codec);
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -5612,15 +5567,7 @@ namespace DBDevelopService {
       if (other.CompressType != 0) {
         CompressType = other.CompressType;
       }
-      if (other.CompressParameter1 != 0F) {
-        CompressParameter1 = other.CompressParameter1;
-      }
-      if (other.CompressParameter2 != 0F) {
-        CompressParameter2 = other.CompressParameter2;
-      }
-      if (other.CompressParameter3 != 0F) {
-        CompressParameter3 = other.CompressParameter3;
-      }
+      parameter_.Add(other.parameter_);
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -5648,16 +5595,165 @@ namespace DBDevelopService {
             CompressType = input.ReadUInt32();
             break;
           }
-          case 45: {
-            CompressParameter1 = input.ReadFloat();
+          case 42: {
+            parameter_.AddEntriesFrom(input, _repeated_parameter_codec);
             break;
           }
-          case 53: {
-            CompressParameter2 = input.ReadFloat();
+        }
+      }
+    }
+
+  }
+
+  public sealed partial class hisTagParameterItem : pb::IMessage<hisTagParameterItem> {
+    private static readonly pb::MessageParser<hisTagParameterItem> _parser = new pb::MessageParser<hisTagParameterItem>(() => new hisTagParameterItem());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pb::MessageParser<hisTagParameterItem> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::DBDevelopService.DevelopServiceReflection.Descriptor.MessageTypes[29]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public hisTagParameterItem() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public hisTagParameterItem(hisTagParameterItem other) : this() {
+      name_ = other.name_;
+      value_ = other.value_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public hisTagParameterItem Clone() {
+      return new hisTagParameterItem(this);
+    }
+
+    /// <summary>Field number for the "Name" field.</summary>
+    public const int NameFieldNumber = 1;
+    private string name_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public string Name {
+      get { return name_; }
+      set {
+        name_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "value" field.</summary>
+    public const int ValueFieldNumber = 2;
+    private double value_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public double Value {
+      get { return value_; }
+      set {
+        value_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override bool Equals(object other) {
+      return Equals(other as hisTagParameterItem);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool Equals(hisTagParameterItem other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Name != other.Name) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Value, other.Value)) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Name.Length != 0) hash ^= Name.GetHashCode();
+      if (Value != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Value);
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void WriteTo(pb::CodedOutputStream output) {
+      if (Name.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(Name);
+      }
+      if (Value != 0D) {
+        output.WriteRawTag(17);
+        output.WriteDouble(Value);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int CalculateSize() {
+      int size = 0;
+      if (Name.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Name);
+      }
+      if (Value != 0D) {
+        size += 1 + 8;
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(hisTagParameterItem other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Name.Length != 0) {
+        Name = other.Name;
+      }
+      if (other.Value != 0D) {
+        Value = other.Value;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(pb::CodedInputStream input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            Name = input.ReadString();
             break;
           }
-          case 61: {
-            CompressParameter3 = input.ReadFloat();
+          case 17: {
+            Value = input.ReadDouble();
             break;
           }
         }

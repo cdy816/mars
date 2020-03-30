@@ -17,7 +17,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public unsafe class RealEnginer: IRealDataNotify, IRealData
+    public unsafe class RealEnginer: IRealDataNotify, IRealData, Driver.IRealTagDriver
     {
 
         #region ... Variables  ...
@@ -30,7 +30,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        private RealDatabase mConfigDatabase=null;
+        private RealDatabase mConfigDatabase =null;
 
 
 
@@ -89,6 +89,8 @@ namespace Cdy.Tag
                 return mMemory;
             }
         }
+
+    
 
         #endregion ...Properties...
 
@@ -401,6 +403,18 @@ namespace Cdy.Tag
             System.Buffer.BlockCopy(value.ToCharArray(), 0, mMemory, (int)addr, value.Length);
             MemoryHelper.WriteDateTime(mMHandle, Const.StringSize, time);
             MemoryHelper.WriteByte(mMHandle, Const.StringSize + 8, qulity); ;
+        }
+
+        public void SetValue(int id, bool value)
+        {
+            if (value)
+            {
+                SetValue(id, (byte)1);
+            }
+            else
+            {
+                SetValue(id, (byte)0);
+            }
         }
 
         /// <summary>
@@ -2038,12 +2052,101 @@ namespace Cdy.Tag
             return -1;
         }
 
+
+
         #endregion
 
         #endregion ...Methods...
 
         #region ... Interfaces ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public List<int> GetTagByLinkAddress(string address)
+        {
+            return mConfigDatabase.GetTagIdByLinkAddress(address);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public Dictionary<string, List<int>> GetTagsByLinkAddress(List<string> address)
+        {
+            return mConfigDatabase.GetTagsIdByLinkAddress(address);
+        }
+
+        public bool SetTagValue(int id, object value)
+        {
+            try
+            {
+                switch (mConfigDatabase.Tags[id].Type)
+                {
+                    case TagType.Bool:
+                        SetValue(id, Convert.ToBoolean(value));
+                        break;
+                    case TagType.Byte:
+                        SetValue(id, Convert.ToByte(value));
+                        break;
+                    case TagType.DateTime:
+                        SetValue(id, (DateTime)(value));
+                        break;
+                    case TagType.Double:
+                        SetValue(id, Convert.ToDouble(value));
+                        break;
+                    case TagType.Float:
+                        SetValue(id, Convert.ToSingle(value));
+                        break;
+                    case TagType.Int:
+                        SetValue(id, Convert.ToInt32(value));
+                        break;
+                    case TagType.Long:
+                        SetValue(id, Convert.ToInt64(value));
+                        break;
+                    case TagType.Short:
+                        SetValue(id, Convert.ToInt16(value));
+                        break;
+                    case TagType.String:
+                        SetValue(id, Convert.ToString(value));
+                        break;
+                    case TagType.UInt:
+                        SetValue(id, Convert.ToUInt32(value));
+                        break;
+                    case TagType.ULong:
+                        SetValue(id, Convert.ToUInt64(value));
+                        break;
+                    case TagType.UShort:
+                        SetValue(id, Convert.ToUInt16(value));
+                        break;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<int> ids, object value)
+        {
+            bool re = true;
+            Parallel.ForEach(ids, (vv) =>
+            {
+                re &= SetTagValue(vv, value);
+            });
+            return re;
+        }
         #endregion ...Interfaces...
     }
 }

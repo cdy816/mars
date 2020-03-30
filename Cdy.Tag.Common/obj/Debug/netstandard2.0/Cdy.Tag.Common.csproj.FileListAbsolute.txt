@@ -5,3 +5,4 @@ D:\Project\Galaxy\Cdy.Tag.Common\obj\Debug\netstandard2.0\Cdy.Tag.Common.Assembl
 D:\Project\Galaxy\Cdy.Tag.Common\obj\Debug\netstandard2.0\Cdy.Tag.Common.AssemblyInfo.cs
 D:\Project\Galaxy\Cdy.Tag.Common\obj\Debug\netstandard2.0\Cdy.Tag.Common.dll
 D:\Project\Galaxy\Cdy.Tag.Common\obj\Debug\netstandard2.0\Cdy.Tag.Common.pdb
+D:\Project\Galaxy\Cdy.Tag.Common\obj\Debug\netstandard2.0\Cdy.Tag.Common.csprojAssemblyReference.cache

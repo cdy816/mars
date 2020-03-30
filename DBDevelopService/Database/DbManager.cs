@@ -62,15 +62,15 @@ namespace DBDevelopService
         /// 
         /// </summary>
         /// <param name="name"></param>
-        public void NewDB(string name)
+        public void NewDB(string name,string desc)
         {
             if (mDatabase.ContainsKey(name))
             {
-                mDatabase[name] = new Cdy.Tag.Database() { Name = name };
+                mDatabase[name] = new Cdy.Tag.Database() { Name = name,Desc=desc };
             }
             else
             {
-                mDatabase.Add(name, new Cdy.Tag.Database() { Name = name });
+                mDatabase.Add(name, new Cdy.Tag.Database() { Name = name,Desc=desc });
             }
         }
 

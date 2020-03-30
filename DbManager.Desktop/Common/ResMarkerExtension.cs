@@ -26,6 +26,8 @@ namespace DBInStudio.Desktop
 
         private FrameworkElement mTarget;
 
+        private string mAppendChar = "";
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -53,6 +55,11 @@ namespace DBInStudio.Desktop
             {
                 mCachItems.Add(this);
             }
+        }
+
+        public ResMarkerExtension(string key,string appendChar) : this(key)
+        {
+            mAppendChar = appendChar;
         }
 
         #endregion ...Constructor...
@@ -123,12 +130,12 @@ namespace DBInStudio.Desktop
         {
             if (string.IsNullOrEmpty(Key))
             {
-                return " ";
+                return " "+ mAppendChar;
             }
             else
             {
                 System.Globalization.CultureInfo cinfo = Thread.CurrentThread.CurrentUICulture;
-                return Properties.Resources.ResourceManager.GetString(Key, cinfo);
+                return Properties.Resources.ResourceManager.GetString(Key, cinfo)+ mAppendChar;
             }
         }
 

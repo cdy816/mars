@@ -84,6 +84,20 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="name"></param>
         /// <param name="msg"></param>
+        public void Warn(string name, string msg)
+        {
+            lock (mLockObj)
+            {
+                if (EnableLogger)
+                    mLogger?.Warn(name, msg);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="msg"></param>
         public void Erro(string name, string msg)
         {
             lock (mLockObj)

@@ -78,6 +78,31 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public List<int> GetTagIdByLinkAddress(string address)
+        {
+            return Tags.Values.Where(e => e.LinkAddress == address).Select(e => e.Id).ToList();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public Dictionary<string,List<int>> GetTagsIdByLinkAddress(List<string> address)
+        {
+            Dictionary<string, List<int>> re = new Dictionary<string, List<int>>();
+            foreach(var vv in address)
+            {
+                re.Add(vv, GetTagIdByLinkAddress(vv));
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
         public Tagbase GetTagByName(string name)

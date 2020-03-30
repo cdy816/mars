@@ -482,7 +482,7 @@ namespace Cdy.Tag
 
             if (mIsBusy)
             {
-                LoggerService.Service.Info("RecordTimer", "出现阻塞");
+                LoggerService.Service.Warn("RecordTimer", "出现阻塞");
                 return;
             }
             mIsBusy = true;

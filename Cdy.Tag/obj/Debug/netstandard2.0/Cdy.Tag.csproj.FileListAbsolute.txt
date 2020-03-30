@@ -5,3 +5,7 @@ D:\Project\Galaxy\Cdy.Tag\obj\Debug\netstandard2.0\Cdy.Tag.AssemblyInfoInputs.ca
 D:\Project\Galaxy\Cdy.Tag\obj\Debug\netstandard2.0\Cdy.Tag.AssemblyInfo.cs
 D:\Project\Galaxy\Cdy.Tag\obj\Debug\netstandard2.0\Cdy.Tag.dll
 D:\Project\Galaxy\Cdy.Tag\obj\Debug\netstandard2.0\Cdy.Tag.pdb
+D:\Project\Galaxy\Cdy.Tag\obj\Debug\netstandard2.0\Cdy.Tag.csprojAssemblyReference.cache
+D:\Project\Galaxy\Cdy.Tag\bin\Debug\netstandard2.0\Cdy.Tag.Common.dll
+D:\Project\Galaxy\Cdy.Tag\bin\Debug\netstandard2.0\Cdy.Tag.Common.pdb
+D:\Project\Galaxy\Cdy.Tag\obj\Debug\netstandard2.0\Cdy.Tag.csproj.CopyComplete

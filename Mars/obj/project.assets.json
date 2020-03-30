@@ -5,6 +5,9 @@
       "Cdy.Tag/1.0.0": {
         "type": "project",
         "framework": ".NETStandard,Version=v2.0",
+        "dependencies": {
+          "Cdy.Tag.Common": "1.0.0"
+        },
         "compile": {
           "bin/placeholder/Cdy.Tag.dll": {}
         },
@@ -22,12 +25,26 @@
           "bin/placeholder/Cdy.Tag.Common.dll": {}
         }
       },
+      "Cdy.Tag.Driver/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.0",
+        "dependencies": {
+          "Cdy.Tag": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/Cdy.Tag.Driver.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Cdy.Tag.Driver.dll": {}
+        }
+      },
       "DBRuntime/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v3.1",
         "dependencies": {
           "Cdy.Tag": "1.0.0",
-          "Cdy.Tag.Common": "1.0.0"
+          "Cdy.Tag.Common": "1.0.0",
+          "Cdy.Tag.Driver": "1.0.0"
         },
         "compile": {
           "bin/placeholder/DBRuntime.dll": {}
@@ -48,6 +65,11 @@
       "type": "project",
       "path": "../Cdy.Tag.Common/Cdy.Tag.Common.csproj",
       "msbuildProject": "../Cdy.Tag.Common/Cdy.Tag.Common.csproj"
+    },
+    "Cdy.Tag.Driver/1.0.0": {
+      "type": "project",
+      "path": "../Cdy.Tag.Driver/Cdy.Tag.Driver.csproj",
+      "msbuildProject": "../Cdy.Tag.Driver/Cdy.Tag.Driver.csproj"
     },
     "DBRuntime/1.0.0": {
       "type": "project",

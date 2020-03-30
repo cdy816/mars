@@ -176,7 +176,7 @@ namespace Cdy.Tag
                 mTargetMemory = SelectMemory();
                 while (mTargetMemory == null)
                 {
-                    LoggerService.Service.Info("Compress", "压缩出现阻塞");
+                    LoggerService.Service.Warn("Compress", "压缩出现阻塞");
                     Thread.Sleep(10);
                     mTargetMemory = SelectMemory();
                 }

@@ -1,11 +1,23 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:DBInStudio.Desktop">
-    
-    <DataTemplate DataType="{x:Type local:TagViewModel}">
-        
+                    xmlns:local="clr-namespace:DBInStudio.Desktop"
+                    xmlns:viewmodel="clr-namespace:DBInStudio.Desktop.ViewModel"
+                    xmlns:view="clr-namespace:DBInStudio.Desktop.View"
+                    >
+
+    <DataTemplate DataType="{x:Type viewmodel:LoginViewModel}">
+        <view:LoginView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type viewmodel:ListDatabaseViewModel}">
+        <view:ListDatabaseView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type viewmodel:NewDatabaseViewModel}">
+        <view:NewDatabaseView />
+    </DataTemplate>
+
+    <BooleanToVisibilityConverter x:Key="bvc" />
     <Style TargetType="{x:Type local:CustomWindowBase}">
         <Setter Property="IsOK" Value="{Binding IsOK}" />
         <Setter Property="IsCancel" Value="{Binding IsCancel}" />

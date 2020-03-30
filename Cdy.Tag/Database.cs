@@ -42,6 +42,11 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        public string Desc { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public string Version 
         { 
             get { return mVersion; } 

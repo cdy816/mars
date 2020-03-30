@@ -45,6 +45,14 @@ namespace DBDevelopService
         /// <summary>
         /// 
         /// </summary>
+        public void AddDefaultUser()
+        {
+            this.AddUser(new User() { Name = "Admin", Password = "Admin", Permissions = new List<string>() { "admin" } });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
         public User GetUser(string name)

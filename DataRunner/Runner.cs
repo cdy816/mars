@@ -158,6 +158,8 @@ namespace Cdy.Tag
 
             RegistorInterface();
 
+            DriverManager.Manager.Init(realEnginer);
+
             await task;
 
         }
@@ -209,6 +211,7 @@ namespace Cdy.Tag
             seriseEnginer.Start();
             compressEnginer.Start();
             hisEnginer.Start();
+            DriverManager.Manager.Start();
             mIsStarted = true;
             LoggerService.Service.Info("Runner", database + "启动完成");
         }

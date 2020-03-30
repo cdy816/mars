@@ -36,6 +36,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="name"></param>
         /// <param name="msg"></param>
+        void Warn(string name, string msg);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="msg"></param>
         void Erro(string name, string msg);
     }
 }

@@ -25,6 +25,16 @@
         "build": {
           "build/netstandard2.0/NETStandard.Library.targets": {}
         }
+      },
+      "Cdy.Tag.Common/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.0",
+        "compile": {
+          "bin/placeholder/Cdy.Tag.Common.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Cdy.Tag.Common.dll": {}
+        }
       }
     }
   },
@@ -172,10 +182,16 @@
         "netstandard.library.2.0.3.nupkg.sha512",
         "netstandard.library.nuspec"
       ]
+    },
+    "Cdy.Tag.Common/1.0.0": {
+      "type": "project",
+      "path": "../Cdy.Tag.Common/Cdy.Tag.Common.csproj",
+      "msbuildProject": "../Cdy.Tag.Common/Cdy.Tag.Common.csproj"
     }
   },
   "projectFileDependencyGroups": {
     ".NETStandard,Version=v2.0": [
+      "Cdy.Tag.Common >= 1.0.0",
       "NETStandard.Library >= 2.0.3"
     ]
   },
@@ -206,7 +222,11 @@
       },
       "frameworks": {
         "netstandard2.0": {
-          "projectReferences": {}
+          "projectReferences": {
+            "D:\\Project\\Galaxy\\Cdy.Tag.Common\\Cdy.Tag.Common.csproj": {
+              "projectPath": "D:\\Project\\Galaxy\\Cdy.Tag.Common\\Cdy.Tag.Common.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

@@ -27,6 +27,11 @@ namespace Cdy.Tag.Driver
         /// </summary>
         string Name { get; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        string[] Registors { get; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...

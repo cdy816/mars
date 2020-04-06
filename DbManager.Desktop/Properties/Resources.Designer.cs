@@ -79,6 +79,24 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Circle 的本地化字符串。
+        /// </summary>
+        internal static string Circle {
+            get {
+                return ResourceManager.GetString("Circle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 CompressType 的本地化字符串。
+        /// </summary>
+        internal static string CompressType {
+            get {
+                return ResourceManager.GetString("CompressType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Database select 的本地化字符串。
         /// </summary>
         internal static string databaseSelect {
@@ -88,11 +106,38 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Dead zone 的本地化字符串。
+        /// </summary>
+        internal static string DeadAreaCompress {
+            get {
+                return ResourceManager.GetString("DeadAreaCompress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Dead zone 的本地化字符串。
+        /// </summary>
+        internal static string DeadAreaValue {
+            get {
+                return ResourceManager.GetString("DeadAreaValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Description 的本地化字符串。
         /// </summary>
         internal static string Desc {
             get {
                 return ResourceManager.GetString("Desc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Driver 的本地化字符串。
+        /// </summary>
+        internal static string Driver {
+            get {
+                return ResourceManager.GetString("Driver", resourceCulture);
             }
         }
         
@@ -151,6 +196,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Lossless 的本地化字符串。
+        /// </summary>
+        internal static string LosslessCompress {
+            get {
+                return ResourceManager.GetString("LosslessCompress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Mars database developer 的本地化字符串。
         /// </summary>
         internal static string MainwindowTitle {
@@ -196,6 +250,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Nome 的本地化字符串。
+        /// </summary>
+        internal static string NomeCompress {
+            get {
+                return ResourceManager.GetString("NomeCompress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 OK 的本地化字符串。
         /// </summary>
         internal static string OK {
@@ -232,11 +295,65 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Registor 的本地化字符串。
+        /// </summary>
+        internal static string Registor {
+            get {
+                return ResourceManager.GetString("Registor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Remove 的本地化字符串。
         /// </summary>
         internal static string Remove {
             get {
                 return ResourceManager.GetString("Remove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 ReName 的本地化字符串。
+        /// </summary>
+        internal static string ReName {
+            get {
+                return ResourceManager.GetString("ReName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Save 的本地化字符串。
+        /// </summary>
+        internal static string Save {
+            get {
+                return ResourceManager.GetString("Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 save failed! 的本地化字符串。
+        /// </summary>
+        internal static string Savefailed {
+            get {
+                return ResourceManager.GetString("Savefailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 save sucessfull! 的本地化字符串。
+        /// </summary>
+        internal static string SaveSucessful {
+            get {
+                return ResourceManager.GetString("SaveSucessful", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Security 的本地化字符串。
+        /// </summary>
+        internal static string Security {
+            get {
+                return ResourceManager.GetString("Security", resourceCulture);
             }
         }
         
@@ -255,6 +372,33 @@ namespace DBInStudio.Desktop.Properties {
         internal static string ServerIp {
             get {
                 return ResourceManager.GetString("ServerIp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Slope zone 的本地化字符串。
+        /// </summary>
+        internal static string SlopeAreaValue {
+            get {
+                return ResourceManager.GetString("SlopeAreaValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Slope 的本地化字符串。
+        /// </summary>
+        internal static string SlopeCompress {
+            get {
+                return ResourceManager.GetString("SlopeCompress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 TagGroup 的本地化字符串。
+        /// </summary>
+        internal static string TagGroup {
+            get {
+                return ResourceManager.GetString("TagGroup", resourceCulture);
             }
         }
         

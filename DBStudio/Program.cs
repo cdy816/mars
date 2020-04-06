@@ -7,11 +7,18 @@ namespace DBStudio
         static void Main(string[] args)
         {
             int port = 5001;
+            int webPort = 9000;
             if(args.Length>0)
             {
                 port = int.Parse(args[0]);
             }
-            DBDevelopService.DBService.Service.Start(port);
+
+            if(args.Length>1)
+            {
+                webPort = int.Parse(args[1]);
+            }
+
+            DBDevelopService.Service.Instanse.Start(port, webPort);
             Console.WriteLine("输入exit退出服务");
             while (true)
             {
@@ -26,7 +33,7 @@ namespace DBStudio
                         break;
                 }
             }
-            DBDevelopService.DBService.Service.StopAsync();
+            DBDevelopService.Service.Instanse.Stop();
 
         }
     }

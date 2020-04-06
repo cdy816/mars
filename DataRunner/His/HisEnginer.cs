@@ -308,7 +308,7 @@ namespace Cdy.Tag
                内存头:标记 + 记录时间 + 数据个数+MemoryCachTime+MemoryTimeTick
                数据块指针:变量ID,数据偏移地址,数据大小
                数据块:数据块头+数据
-               数据块头:数据区大小+记录类型(byte)+变量类型(byte)+压缩类型(byte)+压缩参数1(float)+压缩参数2(float)+压缩参数3(float)
+               数据块头:质量戳偏移+id
                数据:[时间戳]+[值]+[质量戳]
              */
             long headSize = CalHeadSize();
@@ -355,12 +355,6 @@ namespace Cdy.Tag
         private void InitMemory(MemoryBlock memory)
         {
             //LoggerService.Service.Info("Record", "内存初始化开始 ");
-            //Stopwatch sw2 = new Stopwatch();
-            //sw2.Start();
-            //mCurrentMemory.Clear();
-            //LoggerService.Service.Info("Record", "内存初始化开始 清空完成");
-            ////写入时间
-            //memory.WriteDatetime(1, mLastProcessTime);
             //写入变量个数
             memory.WriteInt(9, mTagCount);
             //写入时间内存保存数据的时间
@@ -377,9 +371,6 @@ namespace Cdy.Tag
                 offset += 12;
                 vv.Value.UpdateHeader(memory);
             }
-            //sw2.Stop();
-            //LoggerService.Service.Info("Record", "内存初始化完成"+sw2.ElapsedMilliseconds);
-            //HisRunTag.StartTime = mLastProcessTime;
         }
 
         /// <summary>
@@ -507,11 +498,6 @@ namespace Cdy.Tag
                     
                     if (mCurrentMemory != null)
                     {
-                        //foreach (var vv in mRecordTimerProcesser)
-                        //{
-                        //    vv.RecordAllValue(dt);
-                        //}
-
                         System.Threading.Tasks.Parallel.ForEach(mRecordTimerProcesser, (vv) =>
                         {
                             vv.RecordAllValue(dt);
@@ -521,11 +507,6 @@ namespace Cdy.Tag
                         {
                             vv.RecordAllValue(dt);
                         });
-
-                        //foreach (var vv in mValueChangedProcesser)
-                        //{
-                        //    vv.RecordAllValue(dt);
-                        //}
                     }
                     timestring += "写入尾部数据:" + (sw.ElapsedMilliseconds - ltmp) + ",";
                     ltmp = sw.ElapsedMilliseconds;
@@ -542,28 +523,14 @@ namespace Cdy.Tag
 
                 //在内存头部一次填充所有值
 
-                //foreach (var vv in mRecordTimerProcesser)
-                //{
-                //    vv.RecordAllValue(dt);
-                //}
-
-
-                //foreach (var vv in mValueChangedProcesser)
-                //{
-                //    vv.RecordAllValue(dt);
-                //}
-
-
                 System.Threading.Tasks.Parallel.ForEach(mRecordTimerProcesser, (vv) =>
                 {
-                    //vv.WriteHeader();
                     vv.RecordAllValue(dt);
                 });
 
 
                 System.Threading.Tasks.Parallel.ForEach(mValueChangedProcesser, (vv) =>
                 {
-                    //vv.WriteHeader();
                     vv.RecordAllValue(dt);
                 });
 

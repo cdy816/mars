@@ -101,6 +101,12 @@ namespace Cdy.Tag
 
             doc.Add(Save(Dbase.Setting));
 
+            var spath = System.IO.Path.GetDirectoryName(path);
+            if(!System.IO.Directory.Exists(spath))
+            {
+                System.IO.Directory.CreateDirectory(spath);
+            }
+
             doc.Save(path);
 
         }

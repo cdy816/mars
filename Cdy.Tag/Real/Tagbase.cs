@@ -29,27 +29,30 @@ namespace Cdy.Tag
         /// <summary>
         /// 名称
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = "";
 
         /// <summary>
         /// 组
         /// </summary>
-        public string Group { get; set; }
+        public string Group { get; set; } = "";
 
         /// <summary>
         /// 描述
         /// </summary>
-        public string Desc { get; set; }
+        public string Desc { get; set; } = "";
 
         /// <summary>
         /// 外部管理IO的地址
         /// </summary>
-        public string LinkAddress { get; set; }
+        public string LinkAddress { get; set; } = "";
 
         /// <summary>
         /// 
         /// </summary>
         public long ValueAddress { get; set; }
+
+
+        
 
     }
 

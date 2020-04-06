@@ -7,7 +7,7 @@
 //  种道洋
 //==============================================================
 
-using DBInStudio.Desktop.RPC;
+using DBDevelopClientApi;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -98,6 +98,8 @@ namespace DBInStudio.Desktop.ViewModel
                 re.Add(new DatabaseItem() { Name = vv.Key, Desc = vv.Value });
             }
             this.DatabaseItems = re;
+            if (re.Count > 0)
+                SelectDatabase = re[0];
         }
 
         /// <summary>

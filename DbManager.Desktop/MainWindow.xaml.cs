@@ -27,5 +27,10 @@ namespace DBInStudio.Desktop
             InitializeComponent();
             this.DataContext = new MainViewModel();
         }
+
+        private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            (this.DataContext as MainViewModel).CurrentSelectGroup = tv.SelectedItem as TreeItemViewModel;
+        }
     }
 }

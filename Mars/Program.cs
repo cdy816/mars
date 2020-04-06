@@ -118,17 +118,17 @@ namespace Mars
 
             for (int i=0;i<dcount;i++)
             {
-                test.Append(new Cdy.Tag.DoubleTag() { Name = "Double" + i ,Group="Double"});
+                test.Append(new Cdy.Tag.DoubleTag() { Name = "Double" + i ,Group="Double",LinkAddress= "Sim:sin" });
             }
 
             for (int i = 0; i < fcount; i++)
             {
-                test.Append(new Cdy.Tag.FloatTag() { Name = "Float" + i, Group = "Float" });
+                test.Append(new Cdy.Tag.FloatTag() { Name = "Float" + i, Group = "Float", LinkAddress = "Sim:cos" });
             }
 
             for (int i = 0; i < lcount; i++)
             {
-                test.Append(new Cdy.Tag.LongTag() { Name = "Long" + i, Group = "Long" });
+                test.Append(new Cdy.Tag.LongTag() { Name = "Long" + i, Group = "Long",LinkAddress= "Sim:step" });
             }
 
             for (int i = 0; i < icount; i++)
@@ -141,7 +141,6 @@ namespace Mars
                 test.Append(new Cdy.Tag.BoolTag() { Name = "Bool" + i, Group = "Bool" });
             }
 
-           // new Cdy.Tag.RealDatabaseManager() { Database = test }.Save();
 
             Cdy.Tag.HisDatabase htest =db.HisDatabase;
             int id = 0;
@@ -178,7 +177,6 @@ namespace Mars
 
             new DatabaseSerise() { Dbase = db }.Save();
 
-            //new Cdy.Tag.HisDatabaseManager() { Database = htest }.Save();
 
         }
 

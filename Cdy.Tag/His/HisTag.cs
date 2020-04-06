@@ -26,7 +26,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 记录类型
         /// </summary>
-        public RecordType Type { get; set; }
+        public RecordType Type { get; set; } = RecordType.Timer;
 
         /// <summary>
         /// 变量类型
@@ -36,17 +36,17 @@ namespace Cdy.Tag
         /// <summary>
         /// 压缩算法
         /// </summary>
-        public int CompressType { get; set; }
+        public int CompressType { get; set; } = 0;
 
         /// <summary>
         /// 
         /// </summary>
-        public Dictionary<string, double> Parameters { get; set; }
+        public Dictionary<string, double> Parameters { get; set; } = new Dictionary<string, double>();
 
         /// <summary>
         /// 定时记录周期,ms
         /// </summary>
-        public long Circle { get; set; }
+        public long Circle { get; set; } = 1000;
     }
 
     /// <summary>

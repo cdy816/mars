@@ -17,6 +17,18 @@
         <view:NewDatabaseView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type viewmodel:TagGroupDetailViewModel}">
+        <view:TagGroupDetailView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type viewmodel:DeadAreaCompressParameterViewModel}">
+        <view:DeadAreaCompressParameter/>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type viewmodel:SlopeCompressParameterViewModel}">
+        <view:SlopeCompressParameterView />
+    </DataTemplate>
+
     <BooleanToVisibilityConverter x:Key="bvc" />
     <Style TargetType="{x:Type local:CustomWindowBase}">
         <Setter Property="IsOK" Value="{Binding IsOK}" />

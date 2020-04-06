@@ -123,12 +123,27 @@
   <data name="Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
+  <data name="Circle" xml:space="preserve">
+    <value>Circle</value>
+  </data>
+  <data name="CompressType" xml:space="preserve">
+    <value>CompressType</value>
+  </data>
   <data name="databaseSelect" xml:space="preserve">
     <value>Database select</value>
     <comment>List database View Title</comment>
   </data>
+  <data name="DeadAreaCompress" xml:space="preserve">
+    <value>Dead zone</value>
+  </data>
+  <data name="DeadAreaValue" xml:space="preserve">
+    <value>Dead zone</value>
+  </data>
   <data name="Desc" xml:space="preserve">
     <value>Description</value>
+  </data>
+  <data name="Driver" xml:space="preserve">
+    <value>Driver</value>
   </data>
   <data name="Export" xml:space="preserve">
     <value>Export</value>
@@ -149,6 +164,9 @@
   <data name="LoginFailed" xml:space="preserve">
     <value>Login Failed!</value>
   </data>
+  <data name="LosslessCompress" xml:space="preserve">
+    <value>Lossless</value>
+  </data>
   <data name="MainwindowTitle" xml:space="preserve">
     <value>Mars database developer</value>
   </data>
@@ -164,6 +182,9 @@
   <data name="NewDatabaseFailed" xml:space="preserve">
     <value>New database failed!</value>
   </data>
+  <data name="NomeCompress" xml:space="preserve">
+    <value>Nome</value>
+  </data>
   <data name="OK" xml:space="preserve">
     <value>OK</value>
   </data>
@@ -176,8 +197,26 @@
   <data name="RecordType" xml:space="preserve">
     <value>RecordType</value>
   </data>
+  <data name="Registor" xml:space="preserve">
+    <value>Registor</value>
+  </data>
   <data name="Remove" xml:space="preserve">
     <value>Remove</value>
+  </data>
+  <data name="ReName" xml:space="preserve">
+    <value>ReName</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Savefailed" xml:space="preserve">
+    <value>save failed!</value>
+  </data>
+  <data name="SaveSucessful" xml:space="preserve">
+    <value>save sucessfull!</value>
+  </data>
+  <data name="Security" xml:space="preserve">
+    <value>Security</value>
   </data>
   <data name="SelectDatabase" xml:space="preserve">
     <value>Select a database</value>
@@ -185,6 +224,15 @@
   </data>
   <data name="ServerIp" xml:space="preserve">
     <value>Server Ip</value>
+  </data>
+  <data name="SlopeAreaValue" xml:space="preserve">
+    <value>Slope zone</value>
+  </data>
+  <data name="SlopeCompress" xml:space="preserve">
+    <value>Slope</value>
+  </data>
+  <data name="TagGroup" xml:space="preserve">
+    <value>TagGroup</value>
   </data>
   <data name="Type" xml:space="preserve">
     <value>Type</value>

@@ -1,7 +1,9 @@
-﻿using Cdy.Tag.Driver;
+﻿using Cdy.Tag;
+using Cdy.Tag.Driver;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace SimDriver
 {
@@ -18,6 +20,7 @@ namespace SimDriver
 
         private IRealTagDriver mTagService;
 
+        private bool mIsBusy = false;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -35,11 +38,19 @@ namespace SimDriver
         /// </summary>
         public string Name => "Sim";
 
+        public string[] Registors
+        {
+            get
+            {
+                return new string[] { "cos", "sin", "step" };
+            }
+        }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
 
-        
+
 
         /// <summary>
         /// 
@@ -47,7 +58,7 @@ namespace SimDriver
         /// <param name="tagQuery"></param>
         private void InitTagCach(IRealTagDriver tagQuery)
         {
-            mTagIdCach = tagQuery.GetTagsByLinkAddress(new List<string>() { "cos", "sin","step" });
+            mTagIdCach = tagQuery.GetTagsByLinkAddress(new List<string>() { "Sim:cos", "Sim:sin", "Sim:step" });
         }
 
         /// <summary>
@@ -72,25 +83,42 @@ namespace SimDriver
         /// <param name="e"></param>
         private void MScanTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            if (mIsBusy)
+            {
+                LoggerService.Service.Warn("Sim Driver", "出现阻塞");
+                return;
+            }
+            mIsBusy = true;
+
             mNumber++;
             mNumber = mNumber > (short)360 ? (short)0 : mNumber;
+//#if DEBUG
+//            Stopwatch sw = new Stopwatch();
+//            sw.Start();
+//#endif
             foreach(var vv in mTagIdCach)
             {
-                if(vv.Key=="cos")
+                if (vv.Key == "Sim:cos")
                 {
-                    double fval = Math.Cos(mNumber / 180 * Math.PI);
+                    double fval = Math.Cos(mNumber / 180.0 * Math.PI);
                     mTagService.SetTagValue(vv.Value, fval);
                 }
-                else if(vv.Key=="sim")
+                else if (vv.Key == "Sim:sin")
                 {
-                    double fval = Math.Sin(mNumber / 180 * Math.PI);
+                    double fval = Math.Sin(mNumber / 180.0 * Math.PI);
                     mTagService.SetTagValue(vv.Value, fval);
                 }
-                else if(vv.Key=="step")
+                else if (vv.Key == "Sim:step")
                 {
                     mTagService.SetTagValue(vv.Value, mNumber);
                 }
             }
+//#if DEBUG
+//            sw.Stop();
+
+//            LoggerService.Service.Info("Sim Driver","set value elapsed:"+ sw.ElapsedMilliseconds +" total count:"+mNumber+" cos:"+ Math.Cos(mNumber / 180.0 * Math.PI)+" sin:"+ Math.Sin(mNumber / 180.0 * Math.PI));
+//#endif
+            mIsBusy = false;
         }
 
         /// <summary>

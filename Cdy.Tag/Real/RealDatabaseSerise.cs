@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace Cdy.Tag
 {
@@ -115,7 +116,14 @@ namespace Cdy.Tag
                         vv.Key.Parent = db.Groups[vv.Value];
                     }
                 }
-
+                if (xe.Attribute("MaxId") != null)
+                {
+                    db.MaxId = int.Parse(xe.Attribute("MaxId").Value);
+                }
+                else
+                {
+                    db.MaxId = db.Tags.Keys.Max();
+                }
             }
             this.Database = db;
             return db;
@@ -148,12 +156,15 @@ namespace Cdy.Tag
             doc.SetAttributeValue("Name", Database.Name);
             doc.SetAttributeValue("Version", Database.Version);
             doc.SetAttributeValue("Auther", "cdy");
+            doc.SetAttributeValue("MaxId", Database.MaxId);
             XElement xe = new XElement("Tags");
             foreach(var vv in Database.Tags.Values)
             {
                 xe.Add(vv.SaveToXML());
             }
             doc.Add(xe);
+
+            
 
             xe = new XElement("Groups");
             foreach(var vv in Database.Groups.Values)

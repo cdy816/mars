@@ -7,10 +7,11 @@
 //  种道洋
 //==============================================================
 
-using DBInStudio.Desktop.RPC;
+using DBDevelopClientApi;
 using Grpc.Net.Client;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Text;
 using System.Windows.Input;
@@ -130,6 +131,7 @@ namespace DBInStudio.Desktop.ViewModel
         {
             try
             {
+                CheckLocalServerRun();
                 LoginUserId = DevelopServiceHelper.Helper.Login(Server, UserName, Password);
             }
             catch
@@ -138,6 +140,19 @@ namespace DBInStudio.Desktop.ViewModel
             }
             return !string.IsNullOrEmpty(LoginUserId);
         }
+
+        private void CheckLocalServerRun()
+        {
+            if(mServer=="127.0.0.1"&&mServer=="localhost")
+            {
+               var pps = Process.GetProcessesByName("DBInStudioServer");
+                if(pps==null||pps.Length==0)
+                {
+                    Process.Start("DBInStudioServer.exe").WaitForExit(2000);
+                }
+            }
+        }
+
 
         #endregion ...Methods...
 

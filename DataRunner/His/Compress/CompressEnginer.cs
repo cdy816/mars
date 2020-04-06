@@ -8,6 +8,7 @@
 //==============================================================
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 
@@ -90,7 +91,7 @@ namespace Cdy.Tag
                data block:size+compressType+data
              */
             mMemory1 = new MemoryBlock(size) { Name = "CompressMemory1" };
-            mMemory2 = new MemoryBlock(size) { Name = "CompressMemory2" };
+            //mMemory2 = new MemoryBlock(size) { Name = "CompressMemory2" };
         }
 
         /// <summary>
@@ -150,10 +151,10 @@ namespace Cdy.Tag
             {
                 return mMemory1;
             }
-            else if(!mMemory2.IsBusy)
-            {
-                return mMemory2;
-            }
+            //else if(!mMemory2.IsBusy)
+            //{
+            //    return mMemory2;
+            //}
             return null;
         }
 
@@ -169,8 +170,12 @@ namespace Cdy.Tag
                 resetEvent.Reset();
                 if (mIsClosed)
                     break;
+#if DEBUG 
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
                 LoggerService.Service.Info("Compress", "********开始执行压缩********");
 
+#endif
                 var sm = mSourceMemory;
 
                 mTargetMemory = SelectMemory();
@@ -186,10 +191,14 @@ namespace Cdy.Tag
                 
                 ServiceLocator.Locator.Resolve<IHisEngine>().ClearMemoryHisData(sm);
                 sm.MakeMemoryNoBusy();
-                LoggerService.Service.Info("Compress", ">>>>>>>>>压缩完成>>>>>>>>>" + mTargetMemory.UsedSize);
-
+#if DEBUG
+                sw.Stop();
+                Console.ForegroundColor = ConsoleColor.Green;
+                LoggerService.Service.Info("Compress", ">>>>>>>>>压缩完成>>>>>>>>>" +  " ElapsedMilliseconds:" + sw.ElapsedMilliseconds);
+                Console.ResetColor();
+#endif
                 //new System.Threading.Tasks.TaskFactory().StartNew(new Action(() => {
-                    ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSave(mTargetMemory, mCurrentTime);
+                ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSave(mTargetMemory, mCurrentTime);
                 //}));
             }
             closedEvent.Set();
@@ -342,7 +351,7 @@ namespace Cdy.Tag
                 tp.RecordType = histag.Type;
                 tp.StartTime = mCurrentTime;
                 tp.Parameters = histag.Parameters;
-                var size = tp.Compress(mSourceMemory, addr + 19, mTargetMemory, targetPosition + 5, len - 19) + 1;
+                var size = tp.Compress(mSourceMemory, addr + 8, mTargetMemory, targetPosition + 5, len - 8) + 1;
                 mTargetMemory.WriteInt(targetPosition,size);
                 return size + 4;
             }

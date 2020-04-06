@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 /*
  * ****文件结构****
@@ -243,9 +244,11 @@ namespace Cdy.Tag
              2. 拷贝数据块
              3. 更新数据块指针
              */
-
+#if DEBUG 
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             LoggerService.Service.Info("SeriseEnginer", "********开始执行存储********");
-
+#endif
             HisDataPath = SelectHisDataPath();
 
             Dictionary<int, long> memoryAddrs = new Dictionary<int, long>();
@@ -272,15 +275,19 @@ namespace Cdy.Tag
                 mSeriseFile[keyval.Key].SaveToFile(mProcessMemory, keyval.Value,mCurrentTime);
             });
 
-
-            LoggerService.Service.Info("SeriseEnginer", ">>>>>>>>>完成执行存储>>>>>>>");
+#if DEBUG
+            sw.Stop();
+            Console.ForegroundColor = ConsoleColor.Green;
+            LoggerService.Service.Info("SeriseEnginer", ">>>>>>>>>完成执行存储>>>>>>>" + " ElapsedMilliseconds:" + sw.ElapsedMilliseconds);
+            Console.ResetColor();
+#endif
         }
 
-        #endregion ...Methods...
+#endregion ...Methods...
 
-        #region ... Interfaces ...
+#region ... Interfaces ...
 
-        #endregion ...Interfaces...
+#endregion ...Interfaces...
 
     }
 
@@ -289,7 +296,7 @@ namespace Cdy.Tag
     /// </summary>
     public class SeriseFileItem:IDisposable
     {
-        #region ... Variables  ...
+#region ... Variables  ...
 
         /// <summary>
         /// 变量的数据指针的相对起始地址
@@ -340,18 +347,18 @@ namespace Cdy.Tag
         /// </summary>
         private long mPreDataRegion = 0;
 
-        #endregion ...Variables...
+#endregion ...Variables...
 
-        #region ... Events     ...
+#region ... Events     ...
 
-        #endregion ...Events...
+#endregion ...Events...
 
-        #region ... Constructor...
+#region ... Constructor...
 
 
-        #endregion ...Constructor...
+#endregion ...Constructor...
 
-        #region ... Properties ...
+#region ... Properties ...
         /// <summary>
         /// 
         /// </summary>
@@ -394,9 +401,9 @@ namespace Cdy.Tag
         public string DatabaseName { get; set; }
 
 
-        #endregion ...Properties...
+#endregion ...Properties...
 
-        #region ... Methods    ...
+#region ... Methods    ...
 
         /// <summary>
         /// 
@@ -499,11 +506,11 @@ namespace Cdy.Tag
 
         }
 
-        #endregion ...Methods...
+#endregion ...Methods...
 
-        #region ... Interfaces ...
+#region ... Interfaces ...
 
-        #endregion ...Interfaces...
+#endregion ...Interfaces...
 
         
 

@@ -5,17 +5,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
+using System.Net.WebSockets;
+using Microsoft.AspNetCore.Http;
+using System.Threading;
+using Microsoft.AspNetCore.Routing;
 
 namespace DBDevelopService
 {
-    public class DBService
+    public class GrpcDBService
     {
 
         #region ... Variables  ...
         /// <summary>
         /// 
         /// </summary>
-        public static DBService Service = new DBService();
+        public static GrpcDBService Service = new GrpcDBService();
         private IHost mhost;
         #endregion ...Variables...
 
@@ -25,15 +30,15 @@ namespace DBDevelopService
 
         #region ... Constructor...
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public DBService()
-        {
-            DBDevelopService.SecurityManager.Manager.Init();
-            //注册日志
-            ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public GrpcDBService()
+        //{
+        //    DBDevelopService.SecurityManager.Manager.Init();
+        //    //注册日志
+        //    ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
+        //}
 
         #endregion ...Constructor...
 
@@ -51,8 +56,6 @@ namespace DBDevelopService
             StartAsync("0.0.0.0", port);
         }
 
-
-
         /// <summary>
         /// 
         /// </summary>
@@ -67,8 +70,6 @@ namespace DBDevelopService
             }
             sip += ":" + port;
             mhost = CreateHostBuilder(sip).Build();
-
-            DbManager.Instance.Load();
             LoggerService.Service.Info("DBService", "启动服务:"+ sip);
             await mhost.StartAsync();
         }

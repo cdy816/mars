@@ -13,16 +13,16 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <TextBlock Margin="10,0" Text="{res:ResMarker SelectDatabase}" HorizontalAlignment="Left" VerticalAlignment="Center" />
-        <ListBox Margin="-1" Grid.Row="1" ItemsSource="{Binding DatabaseItems}" SelectedItem="{Binding SelectDatabase,Mode=TwoWay}">
+        <ListBox Margin="-1" Grid.Row="1"  ItemsSource="{Binding DatabaseItems}" SelectedItem="{Binding SelectDatabase,Mode=TwoWay}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Grid>
+                    <Grid MinHeight="28">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="gg" />
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="{Binding Name}"  />
-                        <TextBlock Text="{Binding Desc}" Grid.Column="1" />
+                        <TextBlock Text="{Binding Name}" MinWidth="50" VerticalAlignment="Center"  />
+                        <TextBlock Margin="10,0" Text="{Binding Desc}" Grid.Column="1" VerticalAlignment="Center" />
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>

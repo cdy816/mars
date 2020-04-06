@@ -7,7 +7,7 @@
 //  种道洋
 //==============================================================
 
-using DBInStudio.Desktop.RPC;
+using DBDevelopClientApi;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -32,6 +32,7 @@ namespace DBInStudio.Desktop.ViewModel
             DefaultWidth = 400;
             DefaultHeight = 120;
             Title = Res.Get("NewDatabase");
+            IsEnableMax = false;
         }
         #endregion ...Constructor...
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cdy.Tag;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -37,14 +38,21 @@ namespace DBDevelopService
         /// </summary>
         public void Load()
         {
-            string databasePath = System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location) + "/Data";
-
+            string databasePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location) , "Data");
+            
             if (System.IO.Directory.Exists(databasePath))
             {
                 foreach (var vv in System.IO.Directory.EnumerateDirectories(databasePath))
                 {
-                    Cdy.Tag.Database db = new Cdy.Tag.DatabaseSerise().Load(System.IO.Path.GetDirectoryName(vv));
+                    string sname = new System.IO.DirectoryInfo(vv).Name;
+
+                    Cdy.Tag.Database db = new Cdy.Tag.DatabaseSerise().Load(sname);
+                    if(!mDatabase.ContainsKey(db.Name))
                     mDatabase.Add(db.Name, db);
+                    else
+                    {
+                        mDatabase[db.Name] = db;
+                    }
                 }
             }
         }

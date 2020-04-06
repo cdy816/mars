@@ -41,7 +41,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 当前最大ID
         /// </summary>
-        public int MaxId { get; set; }
+        public int MaxId { get; set; } = -1;
 
         /// <summary>
         /// 
@@ -137,12 +137,25 @@ namespace Cdy.Tag
                 {
                     NamedTags.Add(tag.Name, tag);
                 }
-                else 
+                else
                 {
-                    NamedTags[tag.Name] =tag;
+                    NamedTags[tag.Name] = tag;
                 }
 
                 return true;
+            }
+            else
+            {
+                Tags[tag.Id] = tag;
+
+                if (!NamedTags.ContainsKey(tag.Name))
+                {
+                    NamedTags.Add(tag.Name, tag);
+                }
+                else
+                {
+                    NamedTags[tag.Name] = tag;
+                }
             }
             return false;
         }
@@ -215,7 +228,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool Append(Tagbase tag)
         {
-            tag.Id = MaxId++;
+            tag.Id = ++MaxId;
             return Add(tag);
         }
 
@@ -269,7 +282,41 @@ namespace Cdy.Tag
                 foreach (var vvv in vv)
                 {
                     Tags.Remove(vvv.Id);
+                }                
+                vv.Clear();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="group"></param>
+        public void RemoveGroup(string group)
+        {
+            if (this.Groups.ContainsKey(group))
+            {
+                var vv = this.Groups[group].Tags;
+                foreach (var vvv in vv)
+                {
+                    Tags.Remove(vvv.Id);
                 }
+
+                //获取改组的所有子组
+                var gg = GetAllChildGroups(this.Groups[group]);
+                var ggnames = gg.Select(e => e.FullName);
+                foreach (var vvg in gg)
+                {
+                    foreach (var vvv in vvg.Tags)
+                    {
+                        Tags.Remove(vvv.Id);
+                    }
+                    vvg.Tags.Clear();
+                }
+
+                this.Groups.Remove(group);
+                foreach (var vvn in ggnames)
+                    this.Groups.Remove(vvn);
+
                 vv.Clear();
             }
         }
@@ -299,6 +346,66 @@ namespace Cdy.Tag
                 re.AddRange(GetAllChildGroups(vv));
             }
             return re;
+        }
+
+        /// <summary>
+        /// 改变变量组的父类
+        /// </summary>
+        /// <param name="group"></param>
+        /// <param name="oldParentName"></param>
+        /// <param name="newParentName"></param>
+        public void ChangeGroupParent(string group,string oldParentName,string newParentName)
+        {
+            string oldgroupFullName = oldParentName + "." + group;
+            if (Groups.ContainsKey(oldgroupFullName))
+            {
+                var grp = Groups[oldgroupFullName];
+                //获取改组的所有子组
+                var gg = GetAllChildGroups(grp);
+
+                //从Groups删除目标组以及所有子组
+                Groups.Remove(oldgroupFullName);
+
+                foreach (var vv in gg.Select(e => e.FullName))
+                {
+                    if (Groups.ContainsKey(vv))
+                    {
+                        Groups.Remove(vv);
+                    }
+                }
+
+                if(Groups.ContainsKey(newParentName))
+                {
+                    grp.Parent = Groups[newParentName];
+                }
+
+                //修改子组变量对变量组的引用
+                string fullname = string.Empty;
+                foreach (var vv in gg)
+                {
+                    fullname = vv.FullName;
+                    foreach (var vvt in vv.Tags)
+                    {
+                        vvt.Group = fullname;
+                    }
+                }
+
+                //修改本组变量对变量组的引用
+                fullname = grp.FullName;
+                if (grp.Tags != null)
+                {
+                    foreach (var vv in grp.Tags)
+                    {
+                        vv.Group = fullname;
+                    }
+                }
+                //将目标组以及所有子组添加至Groups中
+                Groups.Add(fullname, grp);
+                foreach (var vv in gg)
+                {
+                    Groups.Add(vv.FullName, vv);
+                }
+            }
         }
 
         /// <summary>
@@ -361,7 +468,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="groupFullName"></param>
         /// <param name="newParentFullName"></param>
-        public void ChangeGroupParent(string groupFullName, string newParentFullName)
+        public void ChangeTagGroupParent(string groupFullName, string newParentFullName)
         {
             if (Groups.ContainsKey(groupFullName))
             {

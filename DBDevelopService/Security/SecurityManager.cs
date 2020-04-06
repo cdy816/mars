@@ -103,6 +103,8 @@ namespace DBDevelopService
         /// <returns></returns>
         public bool CheckPermission(string key,string permission)
         {
+            if (string.IsNullOrEmpty(permission)) return true;
+
             var users = mLogins.Where(e => e.Value == key).FirstOrDefault().Key;
             if(Securitys.User.Users.ContainsKey(users))
             {

@@ -11,6 +11,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System.Windows.Input;
+using DBDevelopClientApi;
+using DBInStudio.Desktop.ViewModel;
 
 namespace DBInStudio.Desktop
 {
@@ -28,7 +31,19 @@ namespace DBInStudio.Desktop
         private static string[] mRecordTypeList;
         private static string[] mCompressTypeList;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public static Dictionary<string, string[]> Drivers;
+
+        private string mDriverName;
+        private string mRegistorName;
+
         private bool mHasHisTag;
+
+        private CompressParameterModelBase mCompressParameterModel;
+
+        private string[] mRegistorList;
 
         #endregion ...Variables...
 
@@ -43,7 +58,13 @@ namespace DBInStudio.Desktop
         static TagViewModel()
         {
             InitEnumType();
-            mCompressTypeList = new string[] { "无", "无损压缩", "死区压缩", "斜率死区" };
+            mCompressTypeList = new string[] 
+            {
+                Res.Get("NomeCompress"),
+                Res.Get("LosslessCompress"),
+                Res.Get("DeadAreaCompress"),
+                Res.Get("SlopeCompress")
+            };
         }
 
         public TagViewModel()
@@ -55,11 +76,43 @@ namespace DBInStudio.Desktop
         {
             this.mRealTagMode = realTag;
             this.HisTagMode = histag;
+            CheckLinkAddress();
         }
 
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsChanged { get; set; }
+
+        /// <summary>
+        /// 是否新建
+        /// </summary>
+        public bool IsNew { get; set; }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public CompressParameterModelBase CompressParameterModel
+        {
+            get
+            {
+                return mCompressParameterModel;
+            }
+            set
+            {
+                if (mCompressParameterModel != value)
+                {
+                    mCompressParameterModel = value;
+                    OnPropertyChanged("CompressParameterModel");
+                }
+            }
+        }
+
+
         /// <summary>
         /// 实时变量配置
         /// </summary>
@@ -92,7 +145,7 @@ namespace DBInStudio.Desktop
                 if (mHisTagMode != value)
                 {
                     mHisTagMode = value;
-                   
+                    CheckRecordTypeParameterModel();
                 }
                 mHasHisTag = mHisTagMode != null;
             }
@@ -112,7 +165,8 @@ namespace DBInStudio.Desktop
                 if (mRealTagMode != null && mRealTagMode.Name != value)
                 {
                     mRealTagMode.Name = value;
-                    OnPropertChanged("Name");
+                    IsChanged = true;
+                    OnPropertyChanged("Name");
                 }
             }
         }
@@ -131,7 +185,8 @@ namespace DBInStudio.Desktop
                 if (mRealTagMode != null && mRealTagMode.Desc != value)
                 {
                     mRealTagMode.Desc = value;
-                    OnPropertChanged("Desc");
+                    IsChanged = true;
+                    OnPropertyChanged("Desc");
                 }
             }
         }
@@ -169,6 +224,45 @@ namespace DBInStudio.Desktop
             }
         }
 
+        /// <summary>
+            /// 
+            /// </summary>
+        public string[] RegistorList
+        {
+            get
+            {
+                return mRegistorList;
+            }
+            set
+            {
+                if (mRegistorList != value)
+                {
+                    mRegistorList = value;
+                }
+                OnPropertyChanged("RegistorList");
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string[] DriverList
+        {
+            get
+            {
+                if (Drivers != null)
+                {
+                    return Drivers.Keys.ToArray();
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+
 
         /// <summary>
         /// 类型
@@ -184,8 +278,21 @@ namespace DBInStudio.Desktop
                 if (mRealTagMode != null && (int)mRealTagMode.Type != value)
                 {
                     ChangeTagType((Cdy.Tag.TagType)value);
-                    OnPropertChanged("Type");
+                    IsChanged = true;
+                    OnPropertyChanged("Type");
+                    OnPropertyChanged("TypeString");
                 }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string TypeString
+        {
+            get
+            {
+                return mRealTagMode.Type.ToString();
             }
         }
 
@@ -203,7 +310,8 @@ namespace DBInStudio.Desktop
                 if (mRealTagMode != null && mRealTagMode.Group != value)
                 {
                     mRealTagMode.Group = value;
-                    OnPropertChanged("Group");
+                    IsChanged = true;
+                    OnPropertyChanged("Group");
                 }
             }
         }
@@ -222,7 +330,8 @@ namespace DBInStudio.Desktop
                 if (mRealTagMode != null && mRealTagMode.LinkAddress != value)
                 {
                     mRealTagMode.LinkAddress = value;
-                    OnPropertChanged("LinkAddress");
+                    IsChanged = true;
+                    OnPropertyChanged("LinkAddress");
                 }
             }
         }
@@ -230,6 +339,55 @@ namespace DBInStudio.Desktop
         /// <summary>
             /// 
             /// </summary>
+        public string DriverName
+        {
+            get
+            {
+                return mDriverName;
+            }
+            set
+            {
+                if (mDriverName != value)
+                {
+                    mDriverName = value;
+                    LinkAddress = DriverName + ":" + RegistorName;
+                    if(Drivers!=null&&Drivers.ContainsKey(mDriverName))
+                    {
+                        RegistorList = Drivers[mDriverName];
+                    }
+                    else
+                    {
+                        RegistorList = null;
+                    }
+                    OnPropertyChanged("DriverName");
+                }
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public string RegistorName
+        {
+            get
+            {
+                return mRegistorName;
+            }
+            set
+            {
+                if (mRegistorName != value)
+                {
+                    mRegistorName = value;
+                    LinkAddress = DriverName + ":" + RegistorName;
+                    OnPropertyChanged("RegistorName");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         public bool HasHisTag
         {
             get
@@ -247,11 +405,16 @@ namespace DBInStudio.Desktop
                     }
                     else
                     {
-                        mHisTagMode = new Cdy.Tag.HisTag() { Id = this.mRealTagMode.Id };
-                        ChangeTagType(this.mRealTagMode.Type);
+                        mHisTagMode = new Cdy.Tag.HisTag() { Id = this.mRealTagMode.Id,TagType=mRealTagMode.Type };
                     }
+                    CheckRecordTypeParameterModel();
+                    IsChanged = true;
                 }
-                OnPropertChanged("HasHisTag");
+                OnPropertyChanged("RecordType");
+                OnPropertyChanged("CompressCircle");
+                OnPropertyChanged("CompressType");
+                OnPropertyChanged("HasHisTag");
+                OnPropertyChanged("IsTimerRecord");
             }
         }
 
@@ -270,10 +433,38 @@ namespace DBInStudio.Desktop
                 if (mHisTagMode != null && (int)mHisTagMode.Type != value)
                 {
                     mHisTagMode.Type = (Cdy.Tag.RecordType)value;
-                    OnPropertChanged("RecordType");
+                    IsChanged = true;
+                    OnPropertyChanged("RecordType");
+                    OnPropertyChanged("RecordTypeString");
+                    OnPropertyChanged("IsTimerRecord");
+                    
                 }
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsTimerRecord
+        {
+            get
+            {
+                return RecordType == (int)(Cdy.Tag.RecordType.Timer);
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string RecordTypeString
+        {
+            get
+            {
+                return mHisTagMode!=null?mHisTagMode.Type.ToString():string.Empty;
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -289,6 +480,10 @@ namespace DBInStudio.Desktop
                 if (mHisTagMode != null && mHisTagMode.CompressType != value)
                 {
                     mHisTagMode.CompressType = value;
+                    IsChanged = true;
+                    CheckRecordTypeParameterModel();
+
+                    OnPropertyChanged("CompressType");
                 }
             }
         }
@@ -307,6 +502,8 @@ namespace DBInStudio.Desktop
                 if (mHisTagMode != null && mHisTagMode.Circle != value)
                 {
                     mHisTagMode.Circle = value;
+                    IsChanged = true;
+                    OnPropertyChanged("CompressCircle");
                 }
             }
         }
@@ -315,6 +512,26 @@ namespace DBInStudio.Desktop
         #endregion ...Properties....
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void CheckLinkAddress()
+        {
+            if (string.IsNullOrEmpty(LinkAddress))
+            {
+                return;
+            }
+            else
+            {
+                string[] str = LinkAddress.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+                mDriverName = str[0];
+                if(str.Length>1)
+                {
+                    mRegistorName = LinkAddress.Substring(mDriverName.Length+1);
+                }
+            }
+        }
 
         /// <summary>
         /// 
@@ -426,7 +643,109 @@ namespace DBInStudio.Desktop
             {
                 RealTagMode = ntag;
             }
+            IsChanged = true;
         }
+
+        private void CheckRecordTypeParameterModel()
+        {
+            if(mHisTagMode==null)
+            {
+                CompressParameterModel = null;
+                return;
+            }
+            switch (CompressType)
+            {
+                case 0:
+                case 1:
+                    CompressParameterModel = null;
+                    break;
+                case 2:
+                    CompressParameterModel = new DeadAreaCompressParameterViewModel() { Parameters = HisTagMode.Parameters };
+                    break;
+                case 3:
+                    CompressParameterModel = new SlopeCompressParameterViewModel() { Parameters = HisTagMode.Parameters };
+                    break;
+            }
+            
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public TagViewModel Clone()
+        {
+            Cdy.Tag.Tagbase ntag = null;
+            Cdy.Tag.HisTag htag = null;
+            if(mHisTagMode != null)
+            {
+                htag = new Cdy.Tag.HisTag() { Id = mHisTagMode.Id, Circle = mHisTagMode.Circle, CompressType = mHisTagMode.CompressType, TagType = mHisTagMode.TagType, Type = mHisTagMode.Type };
+
+                if (this.mHisTagMode.Parameters != null)
+                {
+                    htag.Parameters = new Dictionary<string, double>();
+                    foreach(var vv in mHisTagMode.Parameters)
+                    {
+                        htag.Parameters.Add(vv.Key, vv.Value);
+                    }
+                }
+            }
+
+            switch (this.mRealTagMode.Type)
+            {
+                case Cdy.Tag.TagType.Bool:
+                    ntag = new Cdy.Tag.BoolTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    break;
+                case Cdy.Tag.TagType.Byte:
+                    ntag = new Cdy.Tag.ByteTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+
+                    break;
+                case Cdy.Tag.TagType.DateTime:
+                    ntag = new Cdy.Tag.DateTimeTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+
+                    break;
+                case Cdy.Tag.TagType.Double:
+                    ntag = new Cdy.Tag.DoubleTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+
+                    break;
+                case Cdy.Tag.TagType.Float:
+                    ntag = new Cdy.Tag.FloatTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+
+                    break;
+                case Cdy.Tag.TagType.Int:
+                    ntag = new Cdy.Tag.IntTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+
+                    break;
+                case Cdy.Tag.TagType.Long:
+                    ntag = new Cdy.Tag.LongTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+
+                    break;
+                case Cdy.Tag.TagType.Short:
+                    ntag = new Cdy.Tag.ShortTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+
+                    break;
+                case Cdy.Tag.TagType.String:
+                    ntag = new Cdy.Tag.StringTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+
+                    break;
+                case Cdy.Tag.TagType.UInt:
+                    ntag = new Cdy.Tag.UIntTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+
+                    break;
+                case Cdy.Tag.TagType.ULong:
+                    ntag = new Cdy.Tag.ULongTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+
+                    break;
+                case Cdy.Tag.TagType.UShort:
+                    ntag = new Cdy.Tag.UShortTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+
+                    break;
+                default:
+                    break;
+            }
+            return new TagViewModel(ntag,htag);
+        }
+
 
         #endregion ...Methods...
 
@@ -438,14 +757,11 @@ namespace DBInStudio.Desktop
     /// <summary>
     /// 
     /// </summary>
-    public class TagGroupViewModel : ViewModelBase
+    public class TagGroupViewModel : HasChildrenTreeItemViewModel
     {
 
         #region ... Variables  ...
-        private string mName;
-        private System.Collections.ObjectModel.ObservableCollection<TagGroupViewModel> mChildren = new System.Collections.ObjectModel.ObservableCollection<TagGroupViewModel>();
-        private bool mIsSelected = false;
-        private bool mIsExpand = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -458,77 +774,58 @@ namespace DBInStudio.Desktop
 
         #region ... Properties ...
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public string Name
-        {
-            get
-            {
-                return mName;
-            }
-            set
-            {
-                if (mName != value)
-                {
-                    mName = value;
-                }
-            }
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public System.Collections.ObjectModel.ObservableCollection<TagGroupViewModel> Children
-        {
-            get
-            {
-                return mChildren;
-            }
-        }
-
-        /// <summary>
-            /// 被选中
-            /// </summary>
-        public bool IsSelected
-        {
-            get
-            {
-                return mIsSelected;
-            }
-            set
-            {
-                if (mIsSelected != value)
-                {
-                    mIsSelected = value;
-                }
-            }
-        }
-
-        /// <summary>
-            /// 展开
-            /// </summary>
-        public bool IsExpand
-        {
-            get
-            {
-                return mIsExpand;
-            }
-            set
-            {
-                if (mIsExpand != value)
-                {
-                    mIsExpand = value;
-                }
-            }
-        }
-
+        public override string FullName => (Parent is TagGroupViewModel)?(Parent as TagGroupViewModel).FullName+"."+Name:Name;
 
 
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        public override bool CanRemove()
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override void Remove()
+        {
+            string sname = this.FullName;
+            if (DevelopServiceHelper.Helper.RemoveGroup(Database, sname))
+            {
+                if (Parent != null &&  Parent is HasChildrenTreeItemViewModel)
+                {
+                    (Parent as HasChildrenTreeItemViewModel).Children.Remove(this);
+                    Parent = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
+        /// <returns></returns>
+        public override bool OnRename(string oldName, string newName)
+        {
+            return DevelopServiceHelper.Helper.ReNameGroup(Database,this.FullName, newName);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="groups"></param>
+        public void InitData(Dictionary<string,string> groups)
+        {
+            foreach(var vv in groups.Where(e=>e.Value==this.FullName))
+            {
+                TagGroupViewModel groupViewModel = new TagGroupViewModel() { Name = vv.Key,Database=Database };
+                groupViewModel.Parent = this;
+                this.Children.Add(groupViewModel);
+            }
+        }
 
         #endregion ...Methods...
 
@@ -536,4 +833,97 @@ namespace DBInStudio.Desktop
 
         #endregion ...Interfaces...
     }
+
+    public class RootTagGroupViewModel: TagGroupViewModel
+    {
+
+        #region ... Variables  ...
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+        /// <summary>
+        /// 
+        /// </summary>
+        public RootTagGroupViewModel()
+        {
+            Name = Res.Get("TagGroup");
+        }
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+        /// <summary>
+        /// 
+        /// </summary>
+        public override string FullName => string.Empty;
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
+        /// <returns></returns>
+        public override bool OnRename(string oldName, string newName)
+        {
+            return true;
+        }
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+    public class DatabaseViewModel : HasChildrenTreeItemViewModel
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+        
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
+        /// <returns></returns>
+        public override bool OnRename(string oldName, string newName)
+        {
+            return base.OnRename(oldName, newName);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override bool CanAddChild()
+        {
+            return false;
+        }
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+
 }

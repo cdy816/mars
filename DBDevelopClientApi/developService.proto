@@ -49,8 +49,32 @@ service DevelopServer {
   //删除
   rpc RemoveTag(RemoveTagMessage) returns (BoolResultReplay);
 
+  //
+  rpc RemoveHisTag(RemoveTagMessage) returns (BoolResultReplay);
+
   //获取所有实时变量
   rpc GetRealAllTag(GetRequest) returns (GetRealTagMessageReply);
+
+  //获取变量组
+  rpc GetTagGroup(GetRequest) returns (GetTagGroupMessageReply);
+
+  //
+  rpc AddTagGroup(AddTagGroupRequest) returns (BoolResultReplay);
+
+  //
+  rpc RemoveTagGroup(RemoveTagGroupRequest) returns (BoolResultReplay);
+
+  //
+  rpc RenameTagGroup(RenameTagGroupRequest) returns (BoolResultReplay);
+
+  //
+  rpc MoveTagGroup(MoveTagGroupRequest) returns (BoolResultReplay);
+
+  //根据组获取变量
+  rpc GetTagByGroup(GetTagByGroupRequest) returns (GetTagMessageReply);
+
+  //获取所有变量
+  rpc GetAllTag(GetTagByGroupRequest) returns (GetTagMessageReply);
 
   //获取所有历史变量
   rpc GetHisAllTag(GetRequest) returns (GetHistTagMessageReply);
@@ -73,6 +97,9 @@ service DevelopServer {
   //撤销
   rpc Cancel(GetRequest) returns (BoolResultReplay);
 
+  //获取驱动列表
+  rpc GetRegisteDrivers(GetRequest) returns (GetRegisteDriversReplay);
+
   //Logout
    rpc Logout(LogoutRequest) returns (BoolResultReplay);
 
@@ -82,6 +109,20 @@ service DevelopServer {
    //停止数据库
    rpc Stop(GetRequest) returns (BoolResultReplay);
 
+}
+
+//获取驱动列表返回消息
+message GetRegisteDriversReplay
+{
+    bool Result =1;
+    string ErroMessage=2;
+    repeated Driver Drivers=3;
+}
+
+message Driver
+{
+    string Name=1;
+    repeated string Registors=2;
 }
 
 //获取数据权限列表
@@ -231,6 +272,43 @@ message UpdateHisTagRequestMessage
     HisTagMessage tag = 3;
 }
 
+//添加组
+message AddTagGroupRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string Name=3;
+    string ParentName=4;
+}
+
+//删除组
+message RemoveTagGroupRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string Name=3;
+}
+
+//
+message RenameTagGroupRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string OldFullName=3;
+    string NewName=4;
+}
+
+//
+message MoveTagGroupRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string Name=3;
+    string OldParentName=4;
+    string NewParentName=5;
+}
+
+
 //
 message AddTagReplyMessage
 {
@@ -268,6 +346,13 @@ message GetRequest
     string Database=2;
 }
 
+message GetTagByGroupRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string Group=3;
+}
+
 //
 message BoolResultReplay
 {
@@ -275,11 +360,28 @@ message BoolResultReplay
     string ErroMessage=2;
 }
 
+//获取变量配置
+message GetTagMessageReply
+{
+    bool Result =1;
+    string ErroMessage=2;
+    repeated RealTagMessage realTag=3;
+    repeated HisTagMessage hisTag=4;
+}
+
 message GetRealTagMessageReply
 {
     bool Result =1;
     string ErroMessage=2;
     repeated RealTagMessage messages=3;
+}
+
+
+message GetTagGroupMessageReply
+{
+    bool Result =1;
+    string ErroMessage=2;
+    repeated TagGroup Group=3;
 }
 
 message GetHistTagMessageReply
@@ -308,11 +410,19 @@ message HisTagMessage
  uint32 Type=2;
  uint32 TagType=3;
  uint32 CompressType=4;
-repeated hisTagParameterItem Parameter=5;
+ uint64 Circle=5;
+ repeated hisTagParameterItem Parameter=6;
 }
 
 message hisTagParameterItem
 {
     string Name=1;
     double value=2;
+}
+
+//变量组
+message TagGroup
+{
+    string Name=1;
+    string Parent=2;
 }

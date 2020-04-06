@@ -39,7 +39,7 @@ namespace DBInStudio.Desktop
         /// 
         /// </summary>
         /// <param name="name"></param>
-        protected void OnPropertChanged(string name)
+        protected void OnPropertyChanged(string name)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }

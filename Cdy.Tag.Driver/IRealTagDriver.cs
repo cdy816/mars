@@ -62,6 +62,11 @@ namespace Cdy.Tag.Driver
         /// <returns></returns>
         List<int> GetTagByLinkAddress(string address);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
         Dictionary<string, List<int>> GetTagsByLinkAddress(List<string> address);
 
         #endregion ...Methods...

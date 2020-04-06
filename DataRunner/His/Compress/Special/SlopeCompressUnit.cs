@@ -52,7 +52,7 @@ namespace Cdy.Tag
 
         public override CompressUnitbase Clone()
         {
-            throw new NotImplementedException();
+            return new SlopeCompressUnit();
         }
 
         public override int Compress(MemoryBlock source, int sourceAddr, MemoryBlock target, int targetAddr, int size)

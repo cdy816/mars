@@ -64,23 +64,23 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public RealDatabase RealDatabase { get; set; }
+        public RealDatabase RealDatabase { get; set; } = new RealDatabase();
 
         /// <summary>
         /// 
         /// </summary>
-        public HisDatabase HisDatabase { get; set; }
+        public HisDatabase HisDatabase { get; set; } = new HisDatabase();
 
         /// <summary>
         /// 
         /// </summary>
-        public SettingDoc Setting { get; set; }
+        public SettingDoc Setting { get; set; } = new SettingDoc();
 
 
         /// <summary>
         /// 
         /// </summary>
-        public SecurityDocument Security { get; set; }
+        public SecurityDocument Security { get; set; } = new SecurityDocument();
 
         /// <summary>
         /// 

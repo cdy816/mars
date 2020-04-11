@@ -8,7 +8,9 @@
 //==============================================================
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Cdy.Tag
@@ -90,21 +92,23 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public override void Flush()
+        public override DataFileSeriserbase Flush()
         {
             if (mStream != null)
                 mStream.Flush();
+            return this;
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public override void Close()
+        public override DataFileSeriserbase Close()
         {
             if (mStream != null)
             {
                 mStream.Close();
             }
+            return this;
         }
 
 
@@ -124,11 +128,16 @@ namespace Cdy.Tag
         /// <param name="start"></param>
         /// <param name="len"></param>
         /// <returns></returns>
-        public override MemoryBlock Read(long start, int len)
+        public override MarshalMemoryBlock Read(long start, int len)
         {
-            MemoryBlock re = new MemoryBlock(len);
+            MarshalMemoryBlock re = new MarshalMemoryBlock(len);
             mStream.Position = start;
-            mStream.Write(re.StartMemory, 0, len);
+
+            byte[] bval = new byte[len];
+            mStream.Read(bval, 0, len);
+            re.WriteBytesDirect(0, bval);
+
+            //mStream.Write(re.StartMemory, 0, len);
             return re;
         }
 
@@ -138,10 +147,11 @@ namespace Cdy.Tag
         /// <param name="source"></param>
         /// <param name="start"></param>
         /// <param name="len"></param>
-        public override void Write(byte[] source, long start)
+        public override DataFileSeriserbase Write(byte[] source, long start)
         {
             mStream.Position = start;
             mStream.Write(source, 0, source.Length);
+            return this;
         }
 
         /// <summary>
@@ -151,10 +161,11 @@ namespace Cdy.Tag
         /// <param name="start"></param>
         /// <param name="offset"></param>
         /// <param name="len"></param>
-        public override void Write(byte[] source, long start, int offset, int len)
+        public override DataFileSeriserbase Write(byte[] source, long start, int offset, int len)
         {
             mStream.Position = start;
             mStream.Write(source, offset, len);
+            return this;
         }
 
         /// <summary>
@@ -163,10 +174,24 @@ namespace Cdy.Tag
         /// <param name="source"></param>
         /// <param name="offset"></param>
         /// <param name="len"></param>
-        public override void Append(byte[] source, int offset, int len)
+        public override DataFileSeriserbase Append(byte[] source, int offset, int len)
         {
+            //Stopwatch sw = new Stopwatch();
+            //sw.Start();
             mStream.Position = mStream.Length;
             mStream.Write(source, offset, len);
+            //LoggerService.Service.Info("LocalFileSeriser", "写入文件耗时:" + sw.ElapsedMilliseconds + " 文件大小:" + len / 1024.0 / 1024.0);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="len"></param>
+        public override DataFileSeriserbase AppendZore(int len)
+        {
+            mStream.Position = mStream.Length + len;;
+            return this;
         }
 
         /// <summary>
@@ -232,10 +257,11 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="value"></param>
         /// <param name="start"></param>
-        public override void Write(DateTime value, long start)
+        public override DataFileSeriserbase Write(DateTime value, long start)
         {
             mStream.Position = start;
             mStream.Write(MemoryHelper.GetBytes(value), 0, 8);
+            return this;
         }
 
         /// <summary>
@@ -243,11 +269,12 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="value"></param>
         /// <param name="start"></param>
-        public override void Write(long value, long start)
+        public override DataFileSeriserbase Write(long value, long start)
         {
             mStream.Position = start;
             var re = BitConverter.GetBytes(value);
             mStream.Write(re, 0, re.Length);
+            return this;
         }
 
         /// <summary>
@@ -255,11 +282,12 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="value"></param>
         /// <param name="start"></param>
-        public override void Write(int value, long start)
+        public override DataFileSeriserbase Write(int value, long start)
         {
             mStream.Position = start;
             var re = BitConverter.GetBytes(value);
             mStream.Write(re, 0, re.Length);
+            return this;
         }
 
         /// <summary>
@@ -267,11 +295,12 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="value"></param>
         /// <param name="start"></param>
-        public override void Write(short value, long start)
+        public override DataFileSeriserbase Write(short value, long start)
         {
             mStream.Position = start;
             var re = BitConverter.GetBytes(value);
             mStream.Write(re, 0, re.Length);
+            return this;
         }
 
         /// <summary>
@@ -279,10 +308,11 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="value"></param>
         /// <param name="start"></param>
-        public override void Write(byte value, long start)
+        public override DataFileSeriserbase Write(byte value, long start)
         {
             mStream.Position = start;
-            mStream.Write(new byte[] { value }, 0, 1);
+            mStream.WriteByte(value);
+            return this;
         }
 
         /// <summary>
@@ -292,6 +322,15 @@ namespace Cdy.Tag
         public override DataFileSeriserbase New()
         {
             return new LocalFileSeriser();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override Stream GetStream()
+        {
+            return mStream;
         }
 
         /// <summary>
@@ -324,9 +363,10 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public override void GoToEnd()
+        public override DataFileSeriserbase GoToEnd()
         {
             mStream.Position = mStream.Length;
+            return this;
         }
 
         /// <summary>
@@ -334,7 +374,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="source"></param>
         /// <param name="start"></param>
-        public override void Write(List<byte[]> source, long start, int offset, int len)
+        public override DataFileSeriserbase Write(List<byte[]> source, long start, int offset, int len)
         {
             List<Tuple<int, int, int>> copyIndex = new List<Tuple<int, int, int>>();
 
@@ -367,16 +407,18 @@ namespace Cdy.Tag
             {
                 mStream.Write(source[vv.Item1], vv.Item2, vv.Item3);
             }
+            return this;
         }
 
 
-        public override void Write(List<byte[]> source, long start)
+        public override DataFileSeriserbase Write(List<byte[]> source, long start)
         {
             mStream.Position = start;
             for (int i = 0; i < source.Count; i++)
             {
                 mStream.Write(source[i], 0, source[i].Length);
             }
+            return this;
         }
 
         /// <summary>
@@ -385,9 +427,13 @@ namespace Cdy.Tag
         /// <param name="source"></param>
         /// <param name="offset"></param>
         /// <param name="len"></param>
-        public override void Append(List<byte[]> source, int offset, int len)
+        public override DataFileSeriserbase Append(List<byte[]> source, int offset, int len)
         {
+            //Stopwatch sw = new Stopwatch();
+            //sw.Start();
             List<Tuple<int, int, int>> copyIndex = new List<Tuple<int, int, int>>();
+
+            mStream.Position = mStream.Length;
 
             int start = offset;
             int count = 0;
@@ -418,6 +464,9 @@ namespace Cdy.Tag
             {
                 mStream.Write(source[vv.Item1], vv.Item2, vv.Item3);
             }
+            //sw.Stop();
+            //LoggerService.Service.Info("LocalFileSeriser", "写入文件耗时:" + sw.ElapsedMilliseconds + " 文件大小:" + len / 1024.0 / 1024.0);
+            return this;
         }
     }
 }

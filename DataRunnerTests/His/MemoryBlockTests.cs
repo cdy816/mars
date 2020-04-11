@@ -151,7 +151,7 @@ namespace Cdy.Tag.Tests
 
             MemoryBlock memory2 = new MemoryBlock(100);
 
-            memory.CopyTo(memory2,0,0,memory.Length);
+            memory.CopyTo(memory2,0,0,(int)memory.Length);
 
             Assert.IsTrue(memory2.ReadByte() == byte.MaxValue);
             Assert.IsTrue(memory2.ReadShort() == short.MaxValue);

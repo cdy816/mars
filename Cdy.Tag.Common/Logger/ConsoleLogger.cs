@@ -79,12 +79,27 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="name"></param>
         /// <param name="msg"></param>
+        /// <param name="parameter"></param>
+        public void Info(string name, string msg, object parameter)
+        {
+            Console.ForegroundColor = (ConsoleColor)(parameter);
+            Console.WriteLine(string.Format(infoFormate, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), name, msg));
+            Console.ResetColor();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="msg"></param>
         public void Warn(string name, string msg)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine(string.Format(warnFormate, DateTime.Now.ToString(), name, msg));
             Console.ResetColor();
         }
+
+        
 
         #endregion ...Methods...
 

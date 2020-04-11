@@ -121,6 +121,21 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="msg"></param>
+        /// <param name="parameter"></param>
+        public void Info(string name,string msg,object parameter)
+        {
+            lock (mLockObj)
+            {
+                if (EnableLogger)
+                    mLogger?.Info(name, msg,parameter);
+            }
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

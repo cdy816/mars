@@ -90,6 +90,13 @@ namespace Cdy.Tag
             }
         }
 
+        public IntPtr MemoryHandle
+        {
+            get
+            {
+                return (IntPtr)mMHandle;
+            }
+        }
     
 
         #endregion ...Properties...

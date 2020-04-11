@@ -20,7 +20,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 清空内存数据区域
         /// </summary>
-        public void ClearMemoryHisData(MemoryBlock memory);
+        public void ClearMemoryHisData(MarshalMemoryBlock memory);
 
         /// <summary>
         /// 
@@ -28,5 +28,11 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         /// <returns></returns>
         public HisRunTag GetHisTag(int id);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public List<HisRunTag> ListAllTags();
     }
 }

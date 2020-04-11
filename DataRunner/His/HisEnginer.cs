@@ -7,17 +7,20 @@
 //  种道洋
 //==============================================================
 using Cdy.Tag;
+using DBRuntime.His;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
+using System.Linq;
 
 namespace Cdy.Tag
 {
     /// <summary>
     /// 历史数据引擎
     /// </summary>
-    public class HisEnginer: IHisEngine
+    public class HisEnginer : IHisEngine
     {
 
         #region ... Variables  ...
@@ -32,10 +35,14 @@ namespace Cdy.Tag
         private Cdy.Tag.RealEnginer mRealEnginer;
 
         /// <summary>
-        /// 每个变量在内存中保留的历史记录历史的长度
-        /// 单位s
+        /// 缓存内存缓存时间,单位:s
         /// </summary>
-        public int MemoryCachTime = 10*60;
+        public int CachMemoryTime = 60;
+
+        /// <summary>
+        /// 合并内存存储时间,单位:s
+        /// </summary>
+        public int MergeMemoryTime = 5 * 60;
 
         /// <summary>
         /// 历史记录时间最短间隔
@@ -51,18 +58,25 @@ namespace Cdy.Tag
         /// <summary>
         /// 历史记录内存1
         /// </summary>
-        private MemoryBlock mMemory1;
+        private CachMemoryBlock mCachMemory1;
 
         /// <summary>
         /// 历史记录内存2
         /// </summary>
-        private MemoryBlock mMemory2;
+        private CachMemoryBlock mCachMemory2;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private MergeMemoryBlock mMergeMemory;
 
         /// <summary>
         /// 当前正在使用的内存
         /// </summary>
-        private MemoryBlock mCurrentMemory;
-        
+        private CachMemoryBlock mCurrentMemory;
+
+
+        private CachMemoryBlock mWaitForMergeMemory;
 
         /// <summary>
         /// 值改变的变量列表
@@ -93,6 +107,16 @@ namespace Cdy.Tag
         private int mLastProcessTick = -1;
 
         private bool mIsBusy = false;
+
+        private ManualResetEvent resetEvent = new ManualResetEvent(false);
+
+        private Thread mMergeThread;
+
+        private bool mIsClosed = false;
+
+        private int mBlockCount = 0;
+
+        private int mMergeCount = 0;
 
         #endregion ...Variables...
 
@@ -125,9 +149,21 @@ namespace Cdy.Tag
         #region ... Properties ...
 
         /// <summary>
+        /// 
+        /// </summary>
+        public long MegerMemorySize
+        {
+            get
+            {
+                return mMergeMemory != null ? mMergeMemory.Length : 0;
+            }
+        }
+    
+
+        /// <summary>
         /// 当前工作的内存区域
         /// </summary>
-        public MemoryBlock CurrentMemory
+        public CachMemoryBlock CurrentMemory
         {
             get
             {
@@ -155,7 +191,7 @@ namespace Cdy.Tag
                 if (mManager == null)
                     mManager = new Cdy.Tag.HisDatabaseSerise().Load();
 
-                mLastProcesser = new TimerMemoryCacheProcesser();
+                mLastProcesser = new TimerMemoryCacheProcesser() { Id = 0 };
                 mRecordTimerProcesser.Clear();
                 mRecordTimerProcesser.Add(mLastProcesser);
 
@@ -163,8 +199,9 @@ namespace Cdy.Tag
                 mValueChangedProcesser.Add(mLastValueChangedProcesser);
 
                 // var count = MemoryCachTime * 1000 / MemoryTimeTick;
-                var count = MemoryCachTime;
+                var count = CachMemoryTime;
                 var realbaseaddr = mRealEnginer.Memory;
+                IntPtr realHandle = mRealEnginer.MemoryHandle;
                 HisRunTag mHisTag = null;
                 foreach (var vv in mManager.HisTags)
                 {
@@ -173,31 +210,31 @@ namespace Cdy.Tag
                     {
                         case Cdy.Tag.TagType.Bool:
                         case Cdy.Tag.TagType.Byte:
-                            mHisTag = new ByteHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealValueAddr = realaddr };
+                            mHisTag = new ByteHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr };
                             break;
                         case Cdy.Tag.TagType.Short:
                         case Cdy.Tag.TagType.UShort:
-                            mHisTag = new ShortHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealValueAddr = realaddr };
+                            mHisTag = new ShortHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr };
                             break;
                         case Cdy.Tag.TagType.Int:
                         case Cdy.Tag.TagType.UInt:
-                            mHisTag = new IntHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealValueAddr = realaddr };
+                            mHisTag = new IntHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr };
                             break;
                         case Cdy.Tag.TagType.Long:
                         case Cdy.Tag.TagType.ULong:
-                            mHisTag = new LongHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealValueAddr = realaddr };
+                            mHisTag = new LongHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr,RealMemoryPtr=realHandle, RealValueAddr = realaddr };
                             break;
                         case Cdy.Tag.TagType.Float:
-                            mHisTag = new FloatHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealValueAddr = realaddr };
+                            mHisTag = new FloatHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr };
                             break;
                         case Cdy.Tag.TagType.Double:
-                            mHisTag = new DoubleHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealValueAddr = realaddr };
+                            mHisTag = new DoubleHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr };
                             break;
                         case Cdy.Tag.TagType.DateTime:
-                            mHisTag = new DateTimeHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealValueAddr = realaddr };
+                            mHisTag = new DateTimeHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr };
                             break;
                         case Cdy.Tag.TagType.String:
-                            mHisTag = new StirngHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealValueAddr = realaddr };
+                            mHisTag = new StirngHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr };
                             break;
                     }
                     mHisTag.MaxCount = count;
@@ -207,7 +244,7 @@ namespace Cdy.Tag
                     {
                         if(!mLastProcesser.AddTag(mHisTag))
                         {
-                            mLastProcesser = new TimerMemoryCacheProcesser();
+                            mLastProcesser = new TimerMemoryCacheProcesser() { Id = mLastProcesser.Id + 1 };
                             mLastProcesser.AddTag(mHisTag);
                             mRecordTimerProcesser.Add(mLastProcesser);
                         }
@@ -227,48 +264,73 @@ namespace Cdy.Tag
         }
 
         /// <summary>
-        /// 块标题大小
-        /// </summary>
-        /// <returns></returns>
-        private long CalHeadSize()
-        {
-            //Flag + DateTime + Data Count+MemoryCachTime+MemoryTimeTick + 变量ID,数据偏移地址,数据大小
-            //Flag 表示 0：空闲，1：忙
-            return 1 + 8 + 4 + 4 + 4 + mTagCount * 12;
-        }
-
-        ///// <summary>
-        ///// 内存块的头部大小
-        ///// </summary>
-        ///// <returns></returns>
-        //private int CalBlockHeadSize()
-        //{
-        //    //qulity address offset + Type + TagType + CompressType + compressParamter1+ compressParamter2+ compressParamter3
-        //    return 4 + 1 + 1 + 1 + 4 + 4 + 4;
-        //}
-
-        /// <summary>
         /// 计算每个变量数据块的大小
         /// </summary>
         /// <param name="tagType"></param>
         /// <returns></returns>
-        private int CalBlockSize(Cdy.Tag.TagType tagType,Cdy.Tag.RecordType recordType,int blockSize,out int dataOffset,out int qulityOffset)
+        private int CalMergeBlockSize(Cdy.Tag.TagType tagType,Cdy.Tag.RecordType recordType,int blockHeadSize,out int dataOffset,out int qulityOffset)
         {
 
             //单个数据块内容包括：时间戳(2)+数值+质量戳(1)
 
             qulityOffset = 0;
-            int regionHeadSize = blockSize;
+            int regionHeadSize = blockHeadSize;
             // int count = MemoryCachTime * 1000 / MemoryTimeTick;
-            int count = MemoryCachTime;
+            int count = MergeMemoryTime;
 
             //对于值改变的记录方式,提高内存分配量,以提高值改变记录的数据个数
             if(recordType == RecordType.ValueChanged)
             {
-                count = MemoryCachTime * 1000 / MemoryTimeTick;
+                count = MergeMemoryTime * 1000 / MemoryTimeTick;
             }
 
+            //用于解码时在头尾分别记录前一个区域的值和后一个区域的值
+            count += 2;
+
             dataOffset = regionHeadSize + count * 2;
+            switch (tagType)
+            {
+                case Cdy.Tag.TagType.Byte:
+                case Cdy.Tag.TagType.Bool:
+                    qulityOffset = dataOffset + count;
+                    return qulityOffset + count;
+                case Cdy.Tag.TagType.Short:
+                case Cdy.Tag.TagType.UShort:
+                    qulityOffset = dataOffset + count * 2;
+                    return qulityOffset + count;
+                case Cdy.Tag.TagType.Int:
+                case Cdy.Tag.TagType.UInt:
+                case Cdy.Tag.TagType.Float:
+                    qulityOffset = dataOffset + count * 4;
+                    return qulityOffset + count;
+                case Cdy.Tag.TagType.Long:
+                case Cdy.Tag.TagType.ULong:
+                case Cdy.Tag.TagType.Double:
+                case Cdy.Tag.TagType.DateTime:
+                    qulityOffset = dataOffset + count * 8;
+                    return qulityOffset + count;
+                case Cdy.Tag.TagType.String:
+                    qulityOffset = dataOffset + count * Const.StringSize;
+                    return qulityOffset + count;
+                default:
+                    return 0;
+            }
+        }
+
+        private int CalCachDatablockSize(Cdy.Tag.TagType tagType, Cdy.Tag.RecordType recordType, int headSize, out int dataOffset, out int qulityOffset)
+        {
+            //单个数据块内容包括：时间戳(2)+数值+质量戳(1)
+
+            qulityOffset = headSize;
+            int count = CachMemoryTime;
+
+            //对于值改变的记录方式,提高内存分配量,以提高值改变记录的数据个数
+            if (recordType == RecordType.ValueChanged)
+            {
+                count = CachMemoryTime * 1000 / MemoryTimeTick;
+            }
+
+            dataOffset = headSize + count * 2;
             switch (tagType)
             {
                 case Cdy.Tag.TagType.Byte:
@@ -304,38 +366,48 @@ namespace Cdy.Tag
         private void AllocMemory()
         {
             /*
-               内存结构:内存头+[数据块指针]+[数据块(一个变量一个数据块)]
-               内存头:标记 + 记录时间 + 数据个数+MemoryCachTime+MemoryTimeTick
-               数据块指针:变量ID,数据偏移地址,数据大小
                数据块:数据块头+数据
                数据块头:质量戳偏移+id
                数据:[时间戳]+[值]+[质量戳]
              */
-            long headSize = CalHeadSize();
-            //int blockheadsize = CalBlockHeadSize();
-            int blockheadsize = HisRunTag.HeadSize;
+            long storeHeadSize = 0;
+
+            long cachHeadSize = 0;
+            int blockheadsize = 0;
             int qulityOffset = 0;
             int valueOffset = 0;
+
+            Dictionary<int, Tuple<long,int, int,int>> addressoffset = new Dictionary<int, Tuple<long, int, int, int>>();
+
             foreach(var vv in mHisTags)
             {
-                var ss = CalBlockSize(vv.Value.TagType,vv.Value.Type,blockheadsize,out valueOffset, out qulityOffset);
 
-                vv.Value.BlockHeadStartAddr = (int)headSize;
+                var ss = CalMergeBlockSize(vv.Value.TagType,vv.Value.Type,blockheadsize,out valueOffset, out qulityOffset);
 
-                vv.Value.TimerValueStartAddr = vv.Value.BlockHeadStartAddr + blockheadsize;
+                addressoffset.Add(vv.Value.Id, new Tuple<long, int, int,int>(storeHeadSize,valueOffset, qulityOffset,ss));
+                storeHeadSize += ss;
+
+                var css = CalCachDatablockSize(vv.Value.TagType, vv.Value.Type, blockheadsize, out valueOffset,out qulityOffset);
+
+                vv.Value.BlockHeadStartAddr = cachHeadSize;
+
+                vv.Value.TimerValueStartAddr = vv.Value.BlockHeadStartAddr;
 
                 vv.Value.HisValueStartAddr = vv.Value.BlockHeadStartAddr + valueOffset;
                
                 vv.Value.HisQulityStartAddr = vv.Value.BlockHeadStartAddr + qulityOffset;
 
-                vv.Value.DataSize = ss;
-                headSize += ss;
-                vv.Value.Init();
+                vv.Value.DataSize = css;
+                cachHeadSize += css;
+                //vv.Value.Init();
             }
-            mMemory1 = new MemoryBlock(headSize) { Name = "RecordMemory1" };
-            mMemory2 = new MemoryBlock(headSize) { Name = "RecordMemory2" };
 
-            CurrentMemory = mMemory1;
+            mMergeMemory = new MergeMemoryBlock(storeHeadSize) { Name = "StoreMemory",TagAddress = addressoffset };
+
+            mCachMemory1 = new CachMemoryBlock(cachHeadSize) { Name = "CachMemory1" };
+            mCachMemory2 = new CachMemoryBlock(cachHeadSize) { Name = "CachMemory2" };
+
+            CurrentMemory = mCachMemory1;
             
         }
 
@@ -345,32 +417,7 @@ namespace Cdy.Tag
         private void PrepareForReadyMemory()
         {
             //写入时间
-            mCurrentMemory.WriteDatetime(1, mLastProcessTime);
             HisRunTag.StartTime = mLastProcessTime;
-        }
-
-        /// <summary>
-        /// 清空内存
-        /// </summary>
-        private void InitMemory(MemoryBlock memory)
-        {
-            //LoggerService.Service.Info("Record", "内存初始化开始 ");
-            //写入变量个数
-            memory.WriteInt(9, mTagCount);
-            //写入时间内存保存数据的时间
-            memory.WriteInt(13, MemoryCachTime);
-            //写入最小时间间隔
-            memory.WriteInt(17, MemoryTimeTick);
-            int offset = 21;
-            //LoggerService.Service.Info("Record", "内存初始化开始 头数据写入完成");
-            foreach (var vv in mHisTags)
-            {
-                memory.WriteInt(offset, vv.Value.Id); //Tag id int(4)
-                memory.WriteInt(offset + 4, vv.Value.BlockHeadStartAddr); //历史数据偏移地址 int(4)
-                memory.WriteInt(offset + 8, vv.Value.DataSize); //历史数据大小 int(4)
-                offset += 12;
-                vv.Value.UpdateHeader(memory);
-            }
         }
 
         /// <summary>
@@ -378,7 +425,8 @@ namespace Cdy.Tag
         /// </summary>
         public void Start()
         {
-            foreach(var vv in mRecordTimerProcesser)
+            mIsClosed = false;
+            foreach (var vv in mRecordTimerProcesser)
             {
                 vv.Start();
             }
@@ -388,26 +436,34 @@ namespace Cdy.Tag
                 vv.Start();
             }
 
+            LoggerService.Service.Info("Record", "历史变量个数: " + this.mHisTags.Count);
+
+            mCachMemory1.MakeMemoryNoBusy();
+            mCachMemory2.MakeMemoryNoBusy();
+            mMergeMemory.MakeMemoryNoBusy();
+
+            RecordAllFirstValue();
+
+            mLastProcessTime = DateTime.Now;
+            PrepareForReadyMemory();
+            CurrentMemory = mCachMemory1;
+
             mRecordTimer = new System.Timers.Timer(MemoryTimeTick);
             mRecordTimer.Elapsed += MRecordTimer_Elapsed;
             mRecordTimer.Start();
-            mLastProcessTime = DateTime.Now;
 
-            LoggerService.Service.Info("Record", "历史变量个数: "+this.mHisTags.Count);
+            mMergeThread = new Thread(MergerMemoryProcess);
+            mMergeThread.IsBackground=true;
+            mMergeThread.Start();
 
-            InitMemory(mMemory1);
-            InitMemory(mMemory2);
 
-            PrepareForReadyMemory();
-            mMemory1.MakeMemoryNoBusy();
-            mMemory2.MakeMemoryNoBusy();
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="memory"></param>
-        private void CheckMemoryIsReady(MemoryBlock memory)
+        private void CheckMemoryIsReady(MarshalMemoryBlock memory)
         {
             while (memory.IsBusy)
             {
@@ -417,46 +473,175 @@ namespace Cdy.Tag
         }
 
         /// <summary>
-        /// 切换内存
+        /// 
         /// </summary>
-        private void SwitchMemory()
+        private void MergerMemoryProcess()
         {
-            var mcc = mCurrentMemory;
-            //LoggerService.Service.Info("Record", @"");
-            //LoggerService.Service.Info("Record", ".....开始Memory选择.....");
-            if (mCurrentMemory == mMemory1)
+            int number = MergeMemoryTime / CachMemoryTime;
+            int count = 0;
+
+            while (!mIsClosed)
             {
-                CheckMemoryIsReady(mMemory2);
-                CurrentMemory = mMemory2;
-                //LoggerService.Service.Info("Record", "选择 Memory2 ");
+                resetEvent.WaitOne();
+                resetEvent.Reset();
+                if (mIsClosed) return;
+                
+                MemoryMerge(count);
+
+                //如果合并满了，则提交给压缩流程进行压缩
+                count++;
+                if(count>=number)
+                {
+                    if (mMergeMemory != null)
+                    {
+                        RecordAllLastValue();
+
+                        mMergeMemory.MakeMemoryBusy();
+                        //提交到数据压缩流程
+                        ServiceLocator.Locator.Resolve<IDataCompress>().RequestToCompress(mMergeMemory);
+                        LoggerService.Service.Info("Record", "提交内存 " + mMergeMemory.Name + " 进行压缩",ConsoleColor.Green);
+
+                        //等待压缩完成
+                        while(mMergeMemory.IsBusy) Thread.Sleep(1);
+                        RecordAllFirstValue();
+                    }
+                    count = 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 进行内存合并
+        /// </summary>
+        private void MemoryMerge(int count)
+        {
+            if (count == 0) mMergeMemory.CurrentDatetime = mWaitForMergeMemory.CurrentDatetime;
+
+            var mcc = mWaitForMergeMemory;
+            LoggerService.Service.Info("Record", "开始内存合并" + mcc.Name);
+            
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            //System.Threading.Tasks.Parallel.ForEach(mHisTags, (tag) => {
+            foreach (var tag in mHisTags)
+            {
+                var vaddrs = mMergeMemory.TagAddress[tag.Value.Id];
+                var addrbase = vaddrs.Item1;
+
+                //拷贝时间
+                var tcount = (tag.Value.HisValueStartAddr - tag.Value.TimerValueStartAddr);
+                var vtimeaddr = addrbase + tcount * count;
+                mcc.CopyTo(mMergeMemory, tag.Value.TimerValueStartAddr, vtimeaddr, tcount);
+
+                //拷贝数值
+                tcount = tag.Value.HisQulityStartAddr - tag.Value.HisValueStartAddr;
+                vtimeaddr = addrbase + vaddrs.Item2 + tcount * count;
+                mcc.CopyTo(mMergeMemory, tag.Value.HisValueStartAddr, vtimeaddr, tcount);
+
+                //拷贝质量戳
+                tcount = tag.Value.DataSize - tag.Value.HisQulityStartAddr + tag.Value.BlockHeadStartAddr;
+                vtimeaddr = addrbase + vaddrs.Item3 + tcount * count;
+                mcc.CopyTo(mMergeMemory, tag.Value.HisQulityStartAddr, vtimeaddr, tcount);
+            }
+            //});
+            ClearMemoryHisData(mcc);
+            mcc.MakeMemoryNoBusy();
+            sw.Stop();
+            LoggerService.Service.Info("Record", "合并完成 " + mcc.Name+" 次数:"+(count+1)+" 耗时:"+sw.ElapsedMilliseconds);
+        }
+
+
+        /// <summary>
+        /// 提交内存数据到压缩
+        /// </summary>
+        private void SubmiteMemory()
+        {
+            int number = MergeMemoryTime / CachMemoryTime;
+
+            var mcc = mCurrentMemory;
+
+            mMergeCount++;
+            mMergeCount = mMergeCount >= number ? 0 : mMergeCount;
+            HisRunTag.TimerOffset = mMergeCount * 10 * CachMemoryTime;
+
+            if (mCurrentMemory == mCachMemory1)
+            {
+                CheckMemoryIsReady(mCachMemory2);
+                CurrentMemory = mCachMemory2;
             }
             else
             {
-                CheckMemoryIsReady(mMemory1);
-                CurrentMemory = mMemory1;
-                //LoggerService.Service.Info("Record", "选择 Memory1 ");
+                CheckMemoryIsReady(mCachMemory1);
+                CurrentMemory = mCachMemory1;
             }
 
-            if (mcc != null)
-            {
-                mcc.MakeMemoryBusy();
-                //提交到数据压缩流程
-
-                ServiceLocator.Locator.Resolve<IDataCompress>().RequestToCompress(mcc);
-
-               
-                //LoggerService.Service.Info("Record", "提交内存 "+mcc.Name+" 进行压缩");
-            }
             PrepareForReadyMemory();
-            //LoggerService.Service.Info("Record", "内存初始化完成");
             foreach (var vv in mHisTags.Values)
             {
                 vv.Reset();
             }
 
-            //LoggerService.Service.Info("Record", ".....结束Memory选择.....");
+            if (mcc != null)
+            {
+                mcc.MakeMemoryBusy();
+                mWaitForMergeMemory = mcc;
+                //通知进行内存合并
+                resetEvent.Set();
+            }
+        }
 
-            //LoggerService.Service.Info("Record", "");
+        /// <summary>
+        /// 在数据区域头部添加数值
+        /// </summary>
+        /// <param name="dt"></param>
+        private void RecordAllFirstValue()
+        {
+            foreach(var vv in mMergeMemory.TagAddress)
+            {
+                //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
+                //实时数据内存结构为:实时值+时间戳+质量戳
+
+                long timeraddr = vv.Value.Item1;
+                long valueaddr = vv.Value.Item1 + vv.Value.Item2;
+                long qaddr = vv.Value.Item1 + vv.Value.Item3;
+
+                var tag = mHisTags[vv.Key];
+
+                mMergeMemory.WriteIntDirect(timeraddr, -1);
+
+                //写入数值
+                mMergeMemory.WriteBytesDirect(valueaddr, mRealEnginer.Memory, tag.RealValueAddr, tag.SizeOfValue);
+
+                //更新质量戳,在现有质量戳的基础添加100，用于表示这是一个强制更新的值
+                mMergeMemory.WriteByteDirect(qaddr, (byte)(mRealEnginer.Memory[tag.RealValueAddr + tag.SizeOfValue + 8]+100));
+            }
+        }
+
+        /// <summary>
+        /// 在数据区域尾部添加数值
+        /// </summary>
+        /// <param name="dt"></param>
+        private void RecordAllLastValue()
+        {
+            foreach (var vv in mMergeMemory.TagAddress)
+            {
+                //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
+                //实时数据内存结构为:实时值+时间戳+质量戳
+
+                var tag = mHisTags[vv.Key];
+
+                long timeraddr = vv.Value.Item1 + vv.Value.Item2-4;
+                long valueaddr = vv.Value.Item1 + vv.Value.Item3-tag.SizeOfValue;
+                long qaddr = vv.Value.Item1 + vv.Value.Item4-1;
+
+                mMergeMemory.WriteIntDirect(timeraddr, int.MaxValue);
+
+                //写入数值
+                mMergeMemory.WriteBytesDirect(valueaddr, mRealEnginer.Memory, tag.RealValueAddr, tag.SizeOfValue);
+
+                //更新质量戳
+                mMergeMemory.WriteByteDirect(qaddr, (byte)(mRealEnginer.Memory[tag.RealValueAddr + tag.SizeOfValue + 8]+100));
+            }
         }
 
         /// <summary>
@@ -473,73 +658,31 @@ namespace Cdy.Tag
 
             if (mIsBusy)
             {
-                LoggerService.Service.Warn("RecordTimer", "出现阻塞");
+                mBlockCount++;
+                LoggerService.Service.Warn("RecordTimer", "出现阻塞"+ mBlockCount);
                 return;
             }
             mIsBusy = true;
-
+            mBlockCount = 0;
             DateTime dt = DateTime.Now;
-            var mm = (dt.Hour * 24 + dt.Minute * 60 + dt.Second) / MemoryCachTime;
+            var mm = (dt.Hour * 24 + dt.Minute * 60 + dt.Second) / CachMemoryTime;
             if (mm!=mLastProcessTick )
             {
-                LoggerService.Service.Info("Record", "<<<------------------------------------------------------>>>");
-                string timestring = "";
+                LoggerService.Service.Info("Record", "-------------------------------------------------------------------------", ConsoleColor.Green);
+                LoggerService.Service.Info("Record", "准备新的内存，提交内存 "+ CurrentMemory.Name+ " 到压缩");
                 Stopwatch sw = new Stopwatch();
-                long ltmp;
                 sw.Start();
-                ltmp = sw.ElapsedMilliseconds;
-                timestring = "开始:"+ ltmp + ",";
-
-                //LoggerService.Service.Info("Record", "开始新的DataRegion");
                 if (mLastProcessTick != -1)
                 {
-                    //LoggerService.Service.Info("Record", "开始记录尾部数据");
-                    //在内存尾部一次填充所有值
-                    
-                    if (mCurrentMemory != null)
-                    {
-                        System.Threading.Tasks.Parallel.ForEach(mRecordTimerProcesser, (vv) =>
-                        {
-                            vv.RecordAllValue(dt);
-                        });
-
-                        System.Threading.Tasks.Parallel.ForEach(mValueChangedProcesser, (vv) =>
-                        {
-                            vv.RecordAllValue(dt);
-                        });
-                    }
-                    timestring += "写入尾部数据:" + (sw.ElapsedMilliseconds - ltmp) + ",";
-                    ltmp = sw.ElapsedMilliseconds;
-                    //LoggerService.Service.Info("Record", "结束记录尾部数据");
                     mLastProcessTime = dt;
-                    //将之前的Memory提交到历史存储流程中
-                    SwitchMemory();
+                    //将之前的Memory提交到合并流程中
+                    SubmiteMemory();
                 }
-                timestring += "内存初始化:" + (sw.ElapsedMilliseconds - ltmp) + ",";
-                ltmp = sw.ElapsedMilliseconds;
                 mLastProcessTick = mm;
-
-                //LoggerService.Service.Info("Record",mCurrentMemory.Name + " 开始工作 ");
-
-                //在内存头部一次填充所有值
-
-                System.Threading.Tasks.Parallel.ForEach(mRecordTimerProcesser, (vv) =>
-                {
-                    vv.RecordAllValue(dt);
-                });
-
-
-                System.Threading.Tasks.Parallel.ForEach(mValueChangedProcesser, (vv) =>
-                {
-                    vv.RecordAllValue(dt);
-                });
-
-                timestring += "写入头部值:" + (sw.ElapsedMilliseconds - ltmp) + ",";
-                ltmp = sw.ElapsedMilliseconds;
+                CurrentMemory.CurrentDatetime = dt;
                 sw.Stop();
-                LoggerService.Service.Info("Record","内存初始化:"+ sw.ElapsedMilliseconds+"  timespan:"+ timestring);
-                //LoggerService.Service.Info("Record", " 完成DataRegion切换 ");
-               LoggerService.Service.Info("Record", ">>>------------------------------------------------------<<<");
+                LoggerService.Service.Info("Record", (CurrentMemory!=null? CurrentMemory.Name:"")+" 内存初始化:" + sw.ElapsedMilliseconds);
+                LoggerService.Service.Info("Record", "*************************************************************************", ConsoleColor.Green);
             }
             else
             {
@@ -563,6 +706,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Stop()
         {
+            mIsClosed = true;
             mRecordTimer.Stop();
             if(mRecordTimer!=null)
             {
@@ -595,14 +739,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="memory"></param>
-        public void ClearMemoryHisData(MemoryBlock memory)
+        public void ClearMemoryHisData(MarshalMemoryBlock memory)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            foreach(var vv in mHisTags)
-            {
-                vv.Value.ClearDataValue(memory);
-            }
+            memory.Clear();
+            memory.WriteByteDirect(0,0);
+            //foreach(var vv in mHisTags)
+            //{
+            //    vv.Value.ClearDataValue(memory);
+            //}
             sw.Stop();
             LoggerService.Service.Info("Record", "清空数据区耗时:" + sw.ElapsedMilliseconds);
         }
@@ -621,6 +767,16 @@ namespace Cdy.Tag
             return null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public List<HisRunTag> ListAllTags()
+        {
+            return mHisTags.Values.ToList();
+        }
+
+        
 
         #endregion ...Methods...
 

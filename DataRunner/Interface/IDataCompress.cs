@@ -6,6 +6,7 @@
 //  Version 1.0
 //  种道洋
 //==============================================================
+using DBRuntime.His;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -40,7 +41,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="dataMemory"></param>
-        void RequestToCompress(MemoryBlock dataMemory);
+        void RequestToCompress(MergeMemoryBlock dataMemory);
 
 
         #endregion ...Methods...

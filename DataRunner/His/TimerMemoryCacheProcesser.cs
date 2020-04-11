@@ -47,6 +47,10 @@ namespace Cdy.Tag
 
         private DateTime mLastUpdateTime;
 
+        private bool mIsBusy = false;
+
+        private int mBusyCount = 0;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -77,6 +81,11 @@ namespace Cdy.Tag
         /// </summary>
         public Action AfterProcess { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Id { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -87,6 +96,16 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public void Notify(DateTime time)
         {
+            if (mIsBusy)
+            {
+                mBusyCount++;
+                if(Id==0)
+                LoggerService.Service.Warn("Record", "TimerMemoryCacheProcesser 出现阻塞:"+mBusyCount);
+            }
+            else
+            {
+                mBusyCount = 0;
+            }
             mLastUpdateTime = time;
             resetEvent.Set();
         }
@@ -148,47 +167,6 @@ namespace Cdy.Tag
             mCurrentCount = 0;
         }
         
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public void WriteHeader()
-        //{
-        //    foreach(var vv in mTimerTags.Values)
-        //    {
-        //        foreach(var vvv in vv)
-        //        {
-        //            vvv.UpdateHeader();
-        //        }
-        //    }
-        //}
-
-        /// <summary>
-        /// 记录所有值
-        /// </summary>
-        public void RecordAllValue(DateTime time)
-        {
-            try
-            {
-                mLastUpdateTime = time;
-                foreach (var vv in mCount.Keys.ToArray())
-                {
-                    mCount[vv] += HisEnginer.MemoryTimeTick;
-                    if (mCount[vv] >= vv)
-                    {
-                        mCount[vv] = 0;
-                        ProcessTags(mTimerTags[vv]);
-                    }
-                    else
-                    {
-                        ProcessAppendValue(mTimerTags[vv]);
-                    }
-                }
-            }
-            catch
-            {
-
-            }
-        }
 
         /// <summary>
         /// 
@@ -196,6 +174,7 @@ namespace Cdy.Tag
         private void ThreadProcess()
         {
             closedEvent.Reset();
+            var vkeys = mCount.Keys.ToArray();
             while (!mIsClosed)
             {
                 resetEvent.WaitOne();
@@ -203,7 +182,8 @@ namespace Cdy.Tag
                 if (mIsClosed) break;
                 try
                 {
-                    foreach (var vv in mCount.Keys.ToArray())
+                    mIsBusy = true;
+                    foreach (var vv in vkeys)
                     {
                         mCount[vv] += HisEnginer.MemoryTimeTick;
                         if (mCount[vv] >= vv)
@@ -211,11 +191,8 @@ namespace Cdy.Tag
                             mCount[vv] = 0;
                             ProcessTags(mTimerTags[vv]);
                         }
-                        //else
-                        //{
-                        //    ProcessTagsNone(mTimerTags[vv]);
-                        //}
                     }
+                    mIsBusy = false;
                 }
                 catch
                 {
@@ -226,19 +203,6 @@ namespace Cdy.Tag
             closedEvent.Set();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="tags"></param>
-        private void ProcessAppendValue(List<HisRunTag> tags)
-        {
-            int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
-
-            foreach (var vv in tags)
-            {
-                vv.AppendValue(tim);
-            }
-        }
 
         /// <summary>
         /// 记录一组
@@ -252,18 +216,6 @@ namespace Cdy.Tag
                 vv.UpdateValue(tim);
             }
         }
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="tags"></param>
-        //private void ProcessTagsNone(List<HisRunTag> tags)
-        //{
-        //    foreach (var vv in tags)
-        //    {
-        //        vv.UpdateNone();
-        //    }
-        //}
 
         /// <summary>
         /// 

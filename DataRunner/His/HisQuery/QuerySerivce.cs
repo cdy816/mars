@@ -2415,9 +2415,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <returns></returns>
-        private static bool? DeCompressDataBlockToBoolValue(MemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        private static bool? DeCompressDataBlockToBoolValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2435,9 +2435,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockToBoolValue(MemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result)
+        private static void DeCompressDataBlockToBoolValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2454,9 +2454,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <returns></returns>
-        private static byte? DeCompressDataBlockToByteValue(MemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        private static byte? DeCompressDataBlockToByteValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2474,9 +2474,9 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockToByteValue(MemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result)
+        private static void DeCompressDataBlockToByteValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2494,9 +2494,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <returns></returns>
-        private static short? DeCompressDataBlockToShortValue(MemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        private static short? DeCompressDataBlockToShortValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2515,9 +2515,9 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockToShortValue(MemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<short> result)
+        private static void DeCompressDataBlockToShortValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<short> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2534,9 +2534,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <returns></returns>
-        private static ushort? DeCompressDataBlockToUShortValue(MemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        private static ushort? DeCompressDataBlockToUShortValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2554,9 +2554,9 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockToUShortValue(MemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result)
+        private static void DeCompressDataBlockToUShortValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2575,9 +2575,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <returns></returns>
-        private static int? DeCompressDataBlockToIntValue(MemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        private static int? DeCompressDataBlockToIntValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2596,9 +2596,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockToIntValue(MemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<int> result)
+        private static void DeCompressDataBlockToIntValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<int> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2615,9 +2615,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <returns></returns>
-        private static uint? DeCompressDataBlockToUIntValue(MemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        private static uint? DeCompressDataBlockToUIntValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2635,9 +2635,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockToUIntValue(MemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result)
+        private static void DeCompressDataBlockToUIntValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2654,9 +2654,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <returns></returns>
-        private static long? DeCompressDataBlockToLongValue(MemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        private static long? DeCompressDataBlockToLongValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2667,9 +2667,9 @@ namespace Cdy.Tag
             return null;
         }
 
-        private static void DeCompressDataBlockToLongValue(MemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<long> result)
+        private static void DeCompressDataBlockToLongValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<long> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2686,9 +2686,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <returns></returns>
-        private static ulong? DeCompressDataBlockToULongValue(MemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        private static ulong? DeCompressDataBlockToULongValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2699,9 +2699,9 @@ namespace Cdy.Tag
             return null;
         }
 
-        private static void DeCompressDataBlockToULongValue(MemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result)
+        private static void DeCompressDataBlockToULongValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2718,9 +2718,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <returns></returns>
-        private static float? DeCompressDataBlockToFloatValue(MemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        private static float? DeCompressDataBlockToFloatValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2738,9 +2738,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockToFloatValue(MemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<float> result)
+        private static void DeCompressDataBlockToFloatValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<float> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2756,9 +2756,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <returns></returns>
-        private static Double? DeCompressDataBlockToDoubleValue(MemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        private static Double? DeCompressDataBlockToDoubleValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2776,9 +2776,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockToDoubleValue(MemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<double> result)
+        private static void DeCompressDataBlockToDoubleValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<double> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2795,9 +2795,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <returns></returns>
-        private static string DeCompressDataBlockToStringValue(MemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        private static string DeCompressDataBlockToStringValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2815,9 +2815,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockToStringValue(MemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<string> result)
+        private static void DeCompressDataBlockToStringValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<string> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2834,9 +2834,9 @@ namespace Cdy.Tag
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <returns></returns>
-        private static DateTime? DeCompressDataBlockToDateTimeValue(MemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        private static DateTime? DeCompressDataBlockToDateTimeValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2855,9 +2855,9 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockToDateTimeValue(MemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result)
+        private static void DeCompressDataBlockToDateTimeValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2874,9 +2874,9 @@ namespace Cdy.Tag
         /// <param name="endTime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MemoryBlock memory,DateTime startTime,DateTime endTime, int timeTick,HisQueryResult<bool> result)
+        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory,DateTime startTime,DateTime endTime, int timeTick,HisQueryResult<bool> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2893,29 +2893,9 @@ namespace Cdy.Tag
         /// <param name="endTime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<byte> result)
+        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<byte> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<short> result)
-        {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2933,9 +2913,9 @@ namespace Cdy.Tag
         /// <param name="endTime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ushort> result)
+        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<short> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2953,47 +2933,9 @@ namespace Cdy.Tag
         /// <param name="endTime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<int> result)
+        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ushort> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
-            }
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<uint> result)
-        {
-            MemoryBlock target = new MemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
-            }
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<long> result)
-        {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -3011,9 +2953,47 @@ namespace Cdy.Tag
         /// <param name="endTime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ulong> result)
+        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<int> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+            //读取压缩类型
+            var ctype = memory.ReadByte();
+            var tp = CompressUnitManager.Manager.GetCompress(ctype);
+            if (tp != null)
+            {
+                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="result"></param>
+        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<uint> result)
+        {
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+            //读取压缩类型
+            var ctype = memory.ReadByte();
+            var tp = CompressUnitManager.Manager.GetCompress(ctype);
+            if (tp != null)
+            {
+                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="result"></param>
+        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<long> result)
+        {
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -3031,9 +3011,9 @@ namespace Cdy.Tag
         /// <param name="endTime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<float> result)
+        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ulong> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -3051,9 +3031,9 @@ namespace Cdy.Tag
         /// <param name="endTime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result)
+        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<float> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -3071,9 +3051,9 @@ namespace Cdy.Tag
         /// <param name="endTime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<DateTime> result)
+        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -3091,9 +3071,29 @@ namespace Cdy.Tag
         /// <param name="endTime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<string> result)
+        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<DateTime> result)
         {
-            MemoryBlock target = new MemoryBlock(memory.Length);
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+            //读取压缩类型
+            var ctype = memory.ReadByte();
+            var tp = CompressUnitManager.Manager.GetCompress(ctype);
+            if (tp != null)
+            {
+                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="result"></param>
+        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<string> result)
+        {
+            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -3147,7 +3147,7 @@ namespace Cdy.Tag
                     dataoffset += 4;
                     using (var dd = datafile.Read(dataoffset, dsize))
                     {
-                        VarintCodeMemory vcm = new VarintCodeMemory(dd.StartMemory);
+                        MarshalVarintCodeMemory vcm = new MarshalVarintCodeMemory(dd.StartMemory);
                         var ltmp = vcm.ToIntList();
 
                         var dtmp = new Dictionary<int, int>();
@@ -3234,7 +3234,7 @@ namespace Cdy.Tag
         /// <param name="dataTime"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static MemoryBlock ReadTagDataBlock(this DataFileSeriserbase datafile, int tid, long offset, DateTime dataTime, out int timetick)
+        public static MarshalMemoryBlock ReadTagDataBlock(this DataFileSeriserbase datafile, int tid, long offset, DateTime dataTime, out int timetick)
         {
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
@@ -3270,7 +3270,7 @@ namespace Cdy.Tag
         /// <param name="dataTimes"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static Dictionary<DateTime, MemoryBlock> ReadTagDataBlock(this DataFileSeriserbase datafile, int tid, long offset, List<DateTime> dataTimes, out int timetick)
+        public static Dictionary<DateTime, MarshalMemoryBlock> ReadTagDataBlock(this DataFileSeriserbase datafile, int tid, long offset, List<DateTime> dataTimes, out int timetick)
         {
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
@@ -3279,9 +3279,9 @@ namespace Cdy.Tag
 
             var startTime = datafile.ReadDateTime(16);
 
-            Dictionary<long, MemoryBlock> rtmp = new Dictionary<long, MemoryBlock>();
+            Dictionary<long, MarshalMemoryBlock> rtmp = new Dictionary<long, MarshalMemoryBlock>();
 
-            Dictionary<DateTime, MemoryBlock> re = new Dictionary<DateTime, MemoryBlock>();
+            Dictionary<DateTime, MarshalMemoryBlock> re = new Dictionary<DateTime, MarshalMemoryBlock>();
 
             foreach (var vdd in dataTimes)
             {
@@ -3324,7 +3324,7 @@ namespace Cdy.Tag
         /// <param name="dataTimes"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static Dictionary<MemoryBlock, List<DateTime>> ReadTagDataBlock2(this DataFileSeriserbase datafile, int tid, long offset, List<DateTime> dataTimes, out int timetick)
+        public static Dictionary<MarshalMemoryBlock, List<DateTime>> ReadTagDataBlock2(this DataFileSeriserbase datafile, int tid, long offset, List<DateTime> dataTimes, out int timetick)
         {
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
@@ -3333,9 +3333,9 @@ namespace Cdy.Tag
 
             var startTime = datafile.ReadDateTime(16);
 
-            Dictionary<long, MemoryBlock> rtmp = new Dictionary<long, MemoryBlock>();
+            Dictionary<long, MarshalMemoryBlock> rtmp = new Dictionary<long, MarshalMemoryBlock>();
 
-            Dictionary<MemoryBlock, List<DateTime>> re = new Dictionary<MemoryBlock, List<DateTime>>();
+            Dictionary<MarshalMemoryBlock, List<DateTime>> re = new Dictionary<MarshalMemoryBlock, List<DateTime>>();
 
             foreach (var vdd in dataTimes)
             {
@@ -3394,7 +3394,7 @@ namespace Cdy.Tag
         /// <param name="end"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static Dictionary<MemoryBlock, Tuple<DateTime, DateTime>> ReadTagDataBlock2(this DataFileSeriserbase datafile, int tid, long offset, DateTime start,DateTime end, out int timetick)
+        public static Dictionary<MarshalMemoryBlock, Tuple<DateTime, DateTime>> ReadTagDataBlock2(this DataFileSeriserbase datafile, int tid, long offset, DateTime start,DateTime end, out int timetick)
         {
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
@@ -3403,7 +3403,7 @@ namespace Cdy.Tag
 
             var startTime = datafile.ReadDateTime(16);
 
-            Dictionary<MemoryBlock, Tuple<DateTime,DateTime>> re = new Dictionary<MemoryBlock, Tuple<DateTime, DateTime>>();
+            Dictionary<MarshalMemoryBlock, Tuple<DateTime,DateTime>> re = new Dictionary<MarshalMemoryBlock, Tuple<DateTime, DateTime>>();
 
             DateTime sstart = start;
             DateTime send = end;

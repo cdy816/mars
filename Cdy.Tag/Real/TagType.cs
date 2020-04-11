@@ -66,4 +66,45 @@ namespace Cdy.Tag
         /// </summary>
         String
     }
+
+    public static class TagTypeExtends
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagType"></param>
+        /// <returns></returns>
+        public static Cdy.Tag.Tagbase GetTag(this Cdy.Tag.TagType tagType)
+        {
+            switch (tagType)
+            {
+                case Cdy.Tag.TagType.Bool:
+                    return new Cdy.Tag.BoolTag();
+                case Cdy.Tag.TagType.Byte:
+                    return new Cdy.Tag.ByteTag();
+                case Cdy.Tag.TagType.DateTime:
+                    return new Cdy.Tag.DateTimeTag();
+                case Cdy.Tag.TagType.Double:
+                    return new Cdy.Tag.DoubleTag();
+                case Cdy.Tag.TagType.Float:
+                    return new Cdy.Tag.FloatTag();
+                case Cdy.Tag.TagType.Int:
+                    return new Cdy.Tag.IntTag();
+                case Cdy.Tag.TagType.Long:
+                    return new Cdy.Tag.LongTag();
+                case Cdy.Tag.TagType.Short:
+                    return new Cdy.Tag.ShortTag();
+                case Cdy.Tag.TagType.String:
+                    return new Cdy.Tag.StringTag();
+                case Cdy.Tag.TagType.UInt:
+                    return new Cdy.Tag.UIntTag();
+                case Cdy.Tag.TagType.ULong:
+                    return new Cdy.Tag.ULongTag();
+                case Cdy.Tag.TagType.UShort:
+                    return new Cdy.Tag.UShortTag();
+            }
+            return null;
+        }
+    }
+
 }

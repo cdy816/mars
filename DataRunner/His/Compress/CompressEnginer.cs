@@ -6,6 +6,7 @@
 //  Version 1.0
 //  种道洋
 //==============================================================
+using DBRuntime.His;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -32,21 +33,19 @@ namespace Cdy.Tag
 
         private bool mIsClosed = false;
 
-        private MemoryBlock mSourceMemory;
+        private MergeMemoryBlock mSourceMemory;
 
-        private MemoryBlock mTargetMemory;
 
-        private MemoryBlock mMemory1;
-
-        private MemoryBlock mMemory2;
+        /// <summary>
+        /// 
+        /// </summary>
+        private Dictionary<int, CompressMemory> mTargetMemorys = new Dictionary<int, CompressMemory>();
 
         private DateTime mCurrentTime;
 
-        private int mMemoryCachTime = 0;
-
-        private int mMemoryTimeTick = 0;
-
         private IHisEngine mHisTagService;
+
+        private long mTotalSize = 0;
 
         #endregion ...Variables...
 
@@ -61,7 +60,7 @@ namespace Cdy.Tag
         /// </summary>
         public CompressEnginer(long size)
         {
-            CalMemory(size);
+            mTotalSize = size;
         }
 
         #endregion ...Constructor...
@@ -80,18 +79,34 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public void CalMemory(long size)
+        public void Init()
         {
-            /* 内存结构:Head+[DataRegion]
-             * Head:数据区域个数(4)+时间(8)+[区域ID(4)+区域地址(8)]
-             * DataRegion:region head+数据区指针+数据区
-               region head:数据大小(4)+变量数量(4)
-               数据区指针:[ID(4) + address(4)]
-               数据区:[data block]
-               data block:size+compressType+data
-             */
-            mMemory1 = new MemoryBlock(size) { Name = "CompressMemory1" };
-            //mMemory2 = new MemoryBlock(size) { Name = "CompressMemory2" };
+            CompressMemory.TagCountPerMemory = TagCountOneFile;
+            foreach (var vm in mTargetMemorys)
+            {
+                vm.Value.Dispose();
+            }
+            mTargetMemorys.Clear();
+
+            var histag = mHisTagService.ListAllTags();
+            //计算数据区域个数
+            var mLastDataRegionId = -1;
+            foreach (var vv in histag)
+            {
+                var id = vv.Id;
+                var did = id / TagCountOneFile;
+                if (mLastDataRegionId != did)
+                {
+                    mTargetMemorys.Add(did, new CompressMemory() { Id = did,Name="CompressTarget"+did });
+                    mLastDataRegionId = did;
+                }
+            }
+
+            long psize = mTotalSize/mTargetMemorys.Count;
+            foreach(var vv in mTargetMemorys)
+            {
+                vv.Value.ReAlloc(vv.Value.HeadSize + psize);
+            }
         }
 
         /// <summary>
@@ -99,14 +114,15 @@ namespace Cdy.Tag
         /// </summary>
         public void Start()
         {
+            mHisTagService = ServiceLocator.Locator.Resolve<IHisEngine>();
+
+            Init();
             resetEvent = new ManualResetEvent(false);
             closedEvent = new ManualResetEvent(false);
             mCompressThread = new Thread(ThreadPro);
             mCompressThread.IsBackground = true;
             mCompressThread.Start();
-
-            mHisTagService = ServiceLocator.Locator.Resolve<IHisEngine>();
-
+           
         }
 
         /// <summary>
@@ -119,25 +135,30 @@ namespace Cdy.Tag
             closedEvent.WaitOne();
 
             mSourceMemory = null;
-            mTargetMemory = null;
-
-            this.mMemory1 = null;
-            this.mMemory2 = null;
-
             mHisTagService = null;
 
             resetEvent.Dispose();
             closedEvent.Dispose();
+
+            foreach(var vv in mTargetMemorys)
+            {
+                vv.Value.Dispose();
+            }
+            mTargetMemorys.Clear();
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="dataMemory"></param>
-        public void RequestToCompress(MemoryBlock dataMemory)
+        public void RequestToCompress(MergeMemoryBlock dataMemory)
         {
             mSourceMemory = dataMemory;
-            mCurrentTime = dataMemory.ReadDateTime(1);
+            mCurrentTime = mSourceMemory.CurrentDatetime;
+            foreach(var vv in mTargetMemorys)
+            {
+                vv.Value.CurrentTime = mCurrentTime;
+            }
             resetEvent.Set();
         }
 
@@ -145,17 +166,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <returns></returns>
-        private MemoryBlock SelectMemory()
+        private bool CheckIsBusy()
         {
-            if(!mMemory1.IsBusy)
+            foreach(var vv in mTargetMemorys)
             {
-                return mMemory1;
+                if(vv.Value.IsBusy)
+                {
+                    return true;
+                }
             }
-            //else if(!mMemory2.IsBusy)
-            //{
-            //    return mMemory2;
-            //}
-            return null;
+            return false;
         }
 
         /// <summary>
@@ -170,192 +190,41 @@ namespace Cdy.Tag
                 resetEvent.Reset();
                 if (mIsClosed)
                     break;
-#if DEBUG 
+//#if DEBUG 
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
-                LoggerService.Service.Info("Compress", "********开始执行压缩********");
-
-#endif
+                LoggerService.Service.Info("Compress", "********开始执行压缩********", ConsoleColor.Blue);
+//#endif
                 var sm = mSourceMemory;
 
-                mTargetMemory = SelectMemory();
-                while (mTargetMemory == null)
+                while (CheckIsBusy())
                 {
                     LoggerService.Service.Warn("Compress", "压缩出现阻塞");
-                    Thread.Sleep(10);
-                    mTargetMemory = SelectMemory();
+                    Thread.Sleep(500);
                 }
-                mTargetMemory.MakeMemoryBusy();
-                Compress();
 
-                
+                foreach (var mm in mTargetMemorys)
+                {
+                    mm.Value.Compress(sm);
+                }
+
+                //System.Threading.Tasks.Parallel.ForEach(mTargetMemorys, (mm) =>
+                //{
+                //    mm.Value.Compress(sm);
+                //});
+
                 ServiceLocator.Locator.Resolve<IHisEngine>().ClearMemoryHisData(sm);
                 sm.MakeMemoryNoBusy();
-#if DEBUG
+
+                ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSave();
+
+//#if DEBUG
                 sw.Stop();
-                Console.ForegroundColor = ConsoleColor.Green;
-                LoggerService.Service.Info("Compress", ">>>>>>>>>压缩完成>>>>>>>>>" +  " ElapsedMilliseconds:" + sw.ElapsedMilliseconds);
-                Console.ResetColor();
-#endif
-                //new System.Threading.Tasks.TaskFactory().StartNew(new Action(() => {
-                ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSave(mTargetMemory, mCurrentTime);
-                //}));
+                LoggerService.Service.Info("Compress", ">>>>>>>>>压缩完成>>>>>>>>>" +  " ElapsedMilliseconds:" + sw.ElapsedMilliseconds, ConsoleColor.Blue);
+//#endif
+
             }
             closedEvent.Set();
-        }
-
-        
-
-        /// <summary>
-        /// 执行压缩
-        /// </summary>
-        private void Compress()
-        {
-
-            /* 内存结构:Head+[DataRegion]
-             * Head:数据区域个数(4)+时间(8)+[区域ID(4)+区域地址(8)]
-             * DataRegion:region head+数据区指针+数据区
-               region head:数据大小(4)+变量数量(4)
-               数据区指针:[ID(4) + address(4)]
-               数据区:[data block]
-               data block:size+compressType+data
-             */
-
-            //读取变量个数
-            int count = mSourceMemory.ReadInt(9);
-
-            //读取内存保存时间
-            mMemoryCachTime = mSourceMemory.ReadInt(13);
-            //读取时间最小间隔
-            mMemoryTimeTick = mSourceMemory.ReadInt(17);
-
-            //源内存数据块头部信息偏移地址
-            int offset = 21;
-
-            int mLastDataRegionId = -1;
-            Dictionary<int,long> Drids = new Dictionary<int, long>();
-            //记录每个数据区域内ID的个数
-            Dictionary<int, int> mDRcount = new Dictionary<int, int>();
-            //计算数据区域个数
-            for(int i=0;i<count;i++)
-            {
-                var id = mSourceMemory.ReadInt(offset);
-                var did = id / TagCountOneFile;
-                if (mLastDataRegionId != did)
-                {
-                    Drids.Add(did, 0);
-                    mDRcount.Add(did, 1);
-                    mLastDataRegionId = did;
-                }
-                else
-                {
-                    mDRcount[did]++;
-                }
-                offset += 12;
-            }
-
-            offset = 21;
-
-            //数据区头部指针偏移
-            int headoffset = 0;
-            //数据区起始地址
-            int mHeadAddress = -1;
-
-            //数据区地址
-            int mDataPosition = 12 + Drids.Count * 12;
-
-            mLastDataRegionId = -1;
-
-            for (int i=0;i<count;i++)
-            {
-                var id = mSourceMemory.ReadInt(offset);
-                var qaddr = mSourceMemory.ReadInt(offset + 4);
-                var len = mSourceMemory.ReadInt(offset + 8);
-
-                int rid = id / TagCountOneFile;
-                int size = 0;
-                if (rid != mLastDataRegionId)
-                {
-                    //开启一个新的数据区域
-
-                    if (mHeadAddress >= 0)
-                    {
-                        mTargetMemory.WriteInt(mHeadAddress, mDataPosition);//写入上一个区域数据块的大小
-                        mTargetMemory.WriteInt(mHeadAddress + 4, mDRcount[mLastDataRegionId]);//写入变量个数
-                    }
-
-                    Drids[rid] = mHeadAddress  = mDataPosition;
-                    headoffset = mHeadAddress + 8;
-                    mDataPosition = headoffset + mDRcount[rid] * 8 + 8;
-                    mLastDataRegionId = rid;
-                }
-
-                //压缩数据
-                size = CompressBlockMemory(qaddr, mDataPosition, len);
-
-                //更新头部指针区域数据
-                //写入变量ID
-                mTargetMemory.WriteInt(headoffset, id);
-                //写入数据区地址
-                mTargetMemory.WriteInt(headoffset + 4, mDataPosition);
-
-                headoffset += 8;
-                offset += 12;
-                mDataPosition += size;
-            }
-            if (count > 0)
-            {
-                mTargetMemory.WriteInt(mHeadAddress, mDataPosition);//写入上一个区域数据块的大小
-                mTargetMemory.WriteInt(mHeadAddress + 4, mDRcount[mLastDataRegionId]);//写入变量个数
-            }
-
-            mTargetMemory.WriteInt(0, Drids.Count);
-            mTargetMemory.WriteDatetime(4, mCurrentTime);
-            //更新数据区域地址
-            offset = 12;
-            foreach (var vid in Drids)
-            {
-                mTargetMemory.WriteInt(offset, vid.Key);
-                mTargetMemory.WriteLong(offset+4, vid.Value);
-                offset += 12;
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="addr"></param>
-        /// <param name="targetPosition"></param>
-        /// <param name="len"></param>
-        /// <returns></returns>
-        private int CompressBlockMemory(int addr,int targetPosition,int len)
-        {
-            var qulityoffset = mSourceMemory.ReadInt(addr);
-            var id = mSourceMemory.ReadInt(addr + 4);
-
-            var histag = mHisTagService.GetHisTag(id);
-
-            if (histag == null) return 0;
-
-            var comtype = histag.CompressType;//压缩类型
-
-
-            //写入压缩类型
-            mTargetMemory.WriteByte(targetPosition + 4, (byte)comtype);
-
-            var tp = CompressUnitManager.Manager.GetCompress(comtype);
-            if (tp != null)
-            {
-                tp.QulityOffset = qulityoffset;
-                tp.TagType = (byte)histag.TagType;
-                tp.RecordType = histag.Type;
-                tp.StartTime = mCurrentTime;
-                tp.Parameters = histag.Parameters;
-                var size = tp.Compress(mSourceMemory, addr + 8, mTargetMemory, targetPosition + 5, len - 8) + 1;
-                mTargetMemory.WriteInt(targetPosition,size);
-                return size + 4;
-            }
-            return 0;
         }
 
         #endregion ...Methods...

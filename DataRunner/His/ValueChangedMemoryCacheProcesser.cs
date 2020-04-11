@@ -170,33 +170,61 @@ namespace Cdy.Tag
         //    }
         //}
 
-        /// <summary>
-        /// 记录所有值
-        /// </summary>
-        public void RecordAllValue(DateTime time)
-        {
-            try
-            {
-                mLastUpdateTime = time;
-                int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="time"></param>
+        //public void RecordFirstValue(DateTime time)
+        //{
+        //    mLastUpdateTime = time;
+        //    int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
+        //    foreach (var vv in mTags)
+        //    {
+        //        vv.Value.UpdateFirstValue(tim);
+        //    }
+        //}
 
-                foreach (var vv in mTags)
-                {
-                    if (mChangedTags.ContainsKey(vv.Key) && mChangedTags[vv.Key])
-                    {
-                        mTags[vv.Key].UpdateValue(tim);
-                    }
-                    else
-                    {
-                        vv.Value.AppendValue(tim);
-                    }
-                }
-            }
-            catch
-            {
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="time"></param>
+        //public void RecordLastValue(DateTime time)
+        //{
+        //    mLastUpdateTime = time;
+        //    int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
+        //    foreach (var vv in mTags)
+        //    {
+        //        vv.Value.UpdateLastValue(tim);
+        //    }
+        //}
 
-            }
-        }
+        ///// <summary>
+        ///// 记录所有值
+        ///// </summary>
+        //public void RecordAllValue(DateTime time)
+        //{
+        //    try
+        //    {
+        //        mLastUpdateTime = time;
+        //        int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
+
+        //        foreach (var vv in mTags)
+        //        {
+        //            if (mChangedTags.ContainsKey(vv.Key) && mChangedTags[vv.Key])
+        //            {
+        //                mTags[vv.Key].UpdateValue(tim);
+        //            }
+        //            else
+        //            {
+        //                vv.Value.AppendValue(tim);
+        //            }
+        //        }
+        //    }
+        //    catch
+        //    {
+
+        //    }
+        //}
 
         /// <summary>
         /// 
@@ -216,7 +244,7 @@ namespace Cdy.Tag
                     {
                         if (vv.Value)
                         {
-                            mTags[vv.Key].UpdateValue(tim);
+                            mTags[vv.Key].UpdateValue(tim/10,tim);
                         }
                         else
                         {

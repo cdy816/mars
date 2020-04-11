@@ -142,10 +142,10 @@ namespace Cdy.Tag
             realEnginer.Init();
 
             hisEnginer = new HisEnginer(mHisDatabase, realEnginer);
-            hisEnginer.MemoryCachTime = mHisDatabase.Setting.DataBlockDuration * 60;
+            hisEnginer.MergeMemoryTime = mHisDatabase.Setting.DataBlockDuration * 60;
             hisEnginer.Init();
 
-            compressEnginer = new CompressEnginer(hisEnginer.CurrentMemory.Length);
+            compressEnginer = new CompressEnginer(hisEnginer.MegerMemorySize);
             compressEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
 
             seriseEnginer = new SeriseEnginer() { DatabaseName = database };

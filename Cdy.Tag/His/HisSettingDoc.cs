@@ -44,7 +44,7 @@ namespace Cdy.Tag
         /// 单个数据块保存数据的时长
         /// 单位分钟
         /// </summary>
-        public int DataBlockDuration { get; set; } = 1;
+        public int DataBlockDuration { get; set; } = 5;
 
         /// <summary>
         /// 一个文件中变量的个数

@@ -36,11 +36,16 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
         /// <summary>
-        /// 
+        /// 请求序列化文件
         /// </summary>
         /// <param name="dataMemory"></param>
         /// <param name="date"></param>
-        void RequestToSave(MemoryBlock dataMemory,DateTime date);
+        void RequestToSeriseFile(CompressMemory dataMemory,DateTime date);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        void RequestToSave();
 
         #endregion ...Methods...
 

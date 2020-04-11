@@ -31,6 +31,10 @@ namespace Cdy.Tag
         /// <param name="msg"></param>
         void Info(string name, string msg);
 
+
+        void Info(string name, string msg, object parameter);
+        
+
         /// <summary>
         /// 
         /// </summary>

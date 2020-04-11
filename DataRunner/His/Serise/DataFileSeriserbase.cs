@@ -45,7 +45,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public abstract void Close();
+        public abstract DataFileSeriserbase Close();
 
 
 
@@ -73,35 +73,35 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="value"></param>
         /// <param name="start"></param>
-        public abstract void Write(DateTime value, long start);
+        public abstract DataFileSeriserbase Write(DateTime value, long start);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="value"></param>
         /// <param name="start"></param>
-        public abstract void Write(long value, long start);
+        public abstract DataFileSeriserbase Write(long value, long start);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="value"></param>
         /// <param name="start"></param>
-        public abstract void Write(int value, long start);
+        public abstract DataFileSeriserbase Write(int value, long start);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="value"></param>
         /// <param name="start"></param>
-        public abstract void Write(short value, long start);
+        public abstract DataFileSeriserbase Write(short value, long start);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="value"></param>
         /// <param name="start"></param>
-        public abstract void Write(byte value, long start);
+        public abstract DataFileSeriserbase Write(byte value, long start);
 
 
         /// <summary>
@@ -110,14 +110,14 @@ namespace Cdy.Tag
         /// <param name="source"></param>
         /// <param name="start"></param>
         /// <param name="len"></param>
-        public abstract void Write(byte[] source, long start);
+        public abstract DataFileSeriserbase Write(byte[] source, long start);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="source"></param>
         /// <param name="start"></param>
-        public abstract void Write(List<byte[]> source, long start);
+        public abstract DataFileSeriserbase Write(List<byte[]> source, long start);
 
         /// <summary>
         /// 
@@ -126,7 +126,7 @@ namespace Cdy.Tag
         /// <param name="start"></param>
         /// <param name="offset"></param>
         /// <param name="len"></param>
-        public abstract void Write(List<byte[]> source, long start,int offset,int len);
+        public abstract DataFileSeriserbase Write(List<byte[]> source, long start,int offset,int len);
 
         /// <summary>
         /// 
@@ -134,7 +134,13 @@ namespace Cdy.Tag
         /// <param name="source"></param>
         /// <param name="offset"></param>
         /// <param name="len"></param>
-        public abstract void Append(byte[] source, int offset, int len);
+        public abstract DataFileSeriserbase Append(byte[] source, int offset, int len);
+
+        /// <summary>
+        /// 附加空值
+        /// </summary>
+        /// <param name="len"></param>
+        public abstract DataFileSeriserbase AppendZore(int len);
 
 
         /// <summary>
@@ -143,7 +149,7 @@ namespace Cdy.Tag
         /// <param name="source"></param>
         /// <param name="offset"></param>
         /// <param name="len"></param>
-        public abstract void Append(List<byte[]> source, int offset, int len);
+        public abstract DataFileSeriserbase Append(List<byte[]> source, int offset, int len);
 
         /// <summary>
         /// 
@@ -152,14 +158,14 @@ namespace Cdy.Tag
         /// <param name="start"></param>
         /// <param name="offset"></param>
         /// <param name="len"></param>
-        public abstract void Write(byte[] source, long start,int offset, int len);
+        public abstract DataFileSeriserbase Write(byte[] source, long start,int offset, int len);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="start"></param>
         /// <param name="len"></param>
-        public abstract MemoryBlock Read(long start, int len);
+        public abstract MarshalMemoryBlock Read(long start, int len);
 
 
         /// <summary>
@@ -211,18 +217,24 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public abstract void GoToEnd();
+        public abstract DataFileSeriserbase GoToEnd();
 
         /// <summary>
         /// 刷新数据
         /// </summary>
-        public abstract void Flush();
+        public abstract DataFileSeriserbase Flush();
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public abstract DataFileSeriserbase New();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public abstract Stream GetStream();
 
         /// <summary>
         /// 

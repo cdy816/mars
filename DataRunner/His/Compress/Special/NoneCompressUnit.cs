@@ -51,7 +51,7 @@ namespace Cdy.Tag
             target.Write(this.StartTime);
             target.Write((ushort)(size - this.QulityOffset));//写入值的个数
             if (size > 0)
-                source.CopyTo(target, sourceAddr, targetAddr + 12, size);
+                source.CopyTo(target, sourceAddr, targetAddr + 10, size);
             return size + 10;
         }
 
@@ -148,7 +148,14 @@ namespace Cdy.Tag
         //    return (int)count;
         //}
 
-        
+        /// <summary>
+        /// 读取时间戳
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="startTime"></param>
+        /// <returns></returns>
         private Dictionary<DateTime, int> ReadTimeQulity(MarshalMemoryBlock source, int sourceAddr, int timeTick, out DateTime startTime)
         {
             source.Position = sourceAddr;
@@ -163,11 +170,6 @@ namespace Cdy.Tag
             for(int i=0;i<qoffset;i++)
             {
                 timeQulities.Add(startTime.AddMilliseconds(source.ReadUShort() * timeTick), i);
-            }
-
-            while (source.Position < source.Length)
-            {
-                timeQulities.Add(startTime.AddTicks(source.ReadUShort() * timeTick), source.ReadByte());
             }
             return timeQulities;
         }
@@ -189,14 +191,17 @@ namespace Cdy.Tag
             DateTime time;
             var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
 
+            //读取质量戳,时间戳2个字节，值1个字节，质量戳1个字节
             var qq = source.ReadBytes(qs.Count * 3, qs.Count);
 
+            //值地址
             var valaddr = qs.Count * 2;
 
             int i = 0;
             int rcount = 0;
             foreach(var vv in qs)
             {
+                //如果时间戳大于100说明，是其他类型的值，故排除掉
                 if(qq[vv.Value] <100)
                 {
                     if (vv.Key < startTime || vv.Key > endTime)
@@ -227,6 +232,7 @@ namespace Cdy.Tag
             DateTime time;
             var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
 
+            //读取质量戳,时间戳2个字节，值1个字节，质量戳1个字节
             var qq = source.ReadBytes(qs.Count * 3, qs.Count);
 
             var valaddr = qs.Count * 2;
@@ -266,6 +272,7 @@ namespace Cdy.Tag
             DateTime time;
             var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
 
+            //读取质量戳,时间戳2个字节，值2个字节，质量戳1个字节
             var qq = source.ReadBytes(qs.Count * 4, qs.Count);
 
             var valaddr = qs.Count * 2;
@@ -304,6 +311,7 @@ namespace Cdy.Tag
             DateTime time;
             var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
 
+            //读取质量戳,时间戳2个字节，值2个字节，质量戳1个字节
             var qq = source.ReadBytes(qs.Count * 4, qs.Count);
 
             var valaddr = qs.Count * 2;
@@ -342,6 +350,7 @@ namespace Cdy.Tag
             DateTime time;
             var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
 
+            //读取质量戳,时间戳2个字节，值4个字节，质量戳1个字节
             var qq = source.ReadBytes(qs.Count * 6, qs.Count);
 
             var valaddr = qs.Count * 2;
@@ -356,7 +365,7 @@ namespace Cdy.Tag
                     {
                         continue;
                     }
-                    var bval = source.ReadUShort(valaddr + i * 4);
+                    var bval = source.ReadInt(valaddr + i * 4);
                     result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
@@ -380,6 +389,7 @@ namespace Cdy.Tag
             DateTime time;
             var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
 
+            //读取质量戳,时间戳2个字节，值4个字节，质量戳1个字节
             var qq = source.ReadBytes(qs.Count * 6, qs.Count);
 
             var valaddr = qs.Count * 2;
@@ -394,7 +404,7 @@ namespace Cdy.Tag
                     {
                         continue;
                     }
-                    var bval = source.ReadUShort(valaddr + i * 4);
+                    var bval = source.ReadUInt(valaddr + i * 4);
                     result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
@@ -419,6 +429,7 @@ namespace Cdy.Tag
             DateTime time;
             var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
 
+            //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
             var qq = source.ReadBytes(qs.Count * 10, qs.Count);
 
             var valaddr = qs.Count * 2;
@@ -433,7 +444,7 @@ namespace Cdy.Tag
                     {
                         continue;
                     }
-                    var bval = source.ReadUShort(valaddr + i * 8);
+                    var bval = source.ReadLong(valaddr + i * 8);
                     result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
@@ -457,6 +468,7 @@ namespace Cdy.Tag
             DateTime time;
             var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
 
+            //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
             var qq = source.ReadBytes(qs.Count * 10, qs.Count);
 
             var valaddr = qs.Count * 2;
@@ -471,7 +483,7 @@ namespace Cdy.Tag
                     {
                         continue;
                     }
-                    var bval = source.ReadUShort(valaddr + i * 8);
+                    var bval = source.ReadULong(valaddr + i * 8);
                     result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
@@ -495,6 +507,7 @@ namespace Cdy.Tag
             DateTime time;
             var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
 
+            //读取质量戳,时间戳2个字节，值4个字节，质量戳1个字节
             var qq = source.ReadBytes(qs.Count * 6, qs.Count);
 
             var valaddr = qs.Count * 2;
@@ -509,7 +522,7 @@ namespace Cdy.Tag
                     {
                         continue;
                     }
-                    var bval = source.ReadUShort(valaddr + i * 4);
+                    var bval = source.ReadFloat(valaddr + i * 4);
                     result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
@@ -533,6 +546,7 @@ namespace Cdy.Tag
             DateTime time;
             var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
 
+            //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
             var qq = source.ReadBytes(qs.Count * 10, qs.Count);
 
             var valaddr = qs.Count * 2;
@@ -547,7 +561,7 @@ namespace Cdy.Tag
                     {
                         continue;
                     }
-                    var bval = source.ReadUShort(valaddr + i * 8);
+                    var bval = source.ReadDouble(valaddr + i * 8);
                     result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }
@@ -571,6 +585,7 @@ namespace Cdy.Tag
             DateTime time;
             var qs = ReadTimeQulity(source, sourceAddr, timeTick, out time);
 
+            //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
             var qq = source.ReadBytes(qs.Count * 10, qs.Count);
 
             var valaddr = qs.Count * 2;
@@ -585,7 +600,7 @@ namespace Cdy.Tag
                     {
                         continue;
                     }
-                    var bval = source.ReadUShort(valaddr + i * 8);
+                    var bval = source.ReadDateTime(valaddr + i * 8);
                     result.Add(bval, vv.Key, qq[vv.Value]);
                     rcount++;
                 }

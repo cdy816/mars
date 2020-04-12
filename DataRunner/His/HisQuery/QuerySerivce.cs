@@ -3155,7 +3155,7 @@ namespace Cdy.Tag
                         {
                             int preid = ltmp[0];
                             dtmp.Add(preid,0);
-                            for (int i = 0; i < ltmp.Count; i++)
+                            for (int i = 1; i < ltmp.Count; i++)
                             {
                                 var id = ltmp[i] + preid;
                                 dtmp.Add(id, i);

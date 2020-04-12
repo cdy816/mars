@@ -104,39 +104,10 @@ namespace Cdy.Tag
         /// </summary>
         public virtual byte SizeOfValue { get; }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public static int HeadSize
-        //{
-        //    get
-        //    {
-        //        return 4;
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public byte[] HeadDatas
-        //{
-        //    get
-        //    {
-        //        return headBytes;
-        //    }
-        //}
-
-
         #endregion ...Properties...
 
         #region ... Methods    ...
 
-        //public void Init()
-        //{
-        //    var hbyts = new List<byte>(4);
-        //    hbyts.AddRange(BitConverter.GetBytes(this.HisQulityStartAddr - this.TimerValueStartAddr));
-        //    headBytes = hbyts.ToArray();
-        //}
 
         /// <summary>
         /// 
@@ -177,8 +148,8 @@ namespace Cdy.Tag
                 Count = vcount;
 
                 //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
-                //实时数据内存结构为:实时值+时间戳+质量戳
-                HisAddr.WriteIntDirect(TimerValueStartAddr + vcount * 2, tim + TimerOffset);
+                //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
+                HisAddr.WriteUShort(TimerValueStartAddr + vcount * 2, (ushort)(tim + TimerOffset));
 
                 //写入数值
                 //HisAddr.WriteBytesDirect(HisValueStartAddr + vcount * SizeOfValue, RealMemoryAddr, RealValueAddr, SizeOfValue);

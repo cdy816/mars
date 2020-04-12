@@ -287,6 +287,7 @@ namespace Cdy.Tag
             //用于解码时在头尾分别记录前一个区域的值和后一个区域的值
             count += 2;
 
+            //数据区偏移，时间戳占2个字节
             dataOffset = regionHeadSize + count * 2;
             switch (tagType)
             {
@@ -330,6 +331,7 @@ namespace Cdy.Tag
                 count = CachMemoryTime * 1000 / MemoryTimeTick;
             }
 
+            //数据区偏移,时间戳占2个字节,质量戳占1个字节
             dataOffset = headSize + count * 2;
             switch (tagType)
             {

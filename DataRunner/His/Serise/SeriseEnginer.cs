@@ -133,6 +133,7 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
+
         /// <summary>
         /// 选择历史记录路径
         /// </summary>
@@ -161,6 +162,9 @@ namespace Cdy.Tag
         /// </summary>
         private void Init()
         {
+            DataFileSeriserManager.manager.Init();
+            CompressUnitManager.Manager.Init();
+
             var his = ServiceLocator.Locator.Resolve<IHisEngine>();
             var histag = his.ListAllTags().OrderBy(e => e.Id);
 

@@ -6,6 +6,8 @@
     <UseWPF>true</UseWPF>
     <AssemblyName>DBInStudio</AssemblyName>
     <SignAssembly>false</SignAssembly>
+    <Authors>Chongdaoyang</Authors>
+    <Description>数据库管理工具</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

@@ -20,6 +20,8 @@ namespace Cdy.Tag
 
         #region ... Variables  ...
 
+        private SortedDictionary<DateTime, Tuple<TimeSpan, DataFileInfo>> mFileMaps = new SortedDictionary<DateTime, Tuple<TimeSpan, DataFileInfo>>();
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -44,23 +46,15 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="month"></param>
+        /// <param name="startTime"></param>
+        /// <param name="duration"></param>
         /// <param name="file"></param>
-        public DayTimeFile AddDay(int month, DayTimeFile file)
+        public void AddFile(DateTime startTime,TimeSpan duration, DataFileInfo file)
         {
-            file.Parent = this;
-            return this.AddTimefile(month, file) as DayTimeFile;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="month"></param>
-        /// <returns></returns>
-        public DayTimeFile AddDay(int month)
-        {
-            DayTimeFile mfile = new DayTimeFile() { TimeKey = month };
-            return AddDay(month, mfile);
+            if(!mFileMaps.ContainsKey(startTime))
+            {
+                mFileMaps.Add(startTime, new Tuple<TimeSpan, DataFileInfo>(duration, file));
+            }
         }
 
         /// <summary>
@@ -68,17 +62,71 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="dateTime"></param>
         /// <returns></returns>
-        public override MinuteTimeFile GetFile(DateTime dateTime)
+        public DataFileInfo GetDataFile(DateTime dateTime)
         {
-            if (this.ContainsKey(dateTime.Day))
+            foreach (var vv in mFileMaps)
             {
-                return this[dateTime.Day].GetFile(dateTime);
+                if (vv.Key <= dateTime && dateTime < (vv.Key + vv.Value.Item1))
+                {
+                    return vv.Value.Item2;
+                }
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <returns></returns>
+        public List<DataFileInfo> GetDataFiles(DateTime startTime,DateTime endTime)
+        {
+            List<DataFileInfo> infos = new List<DataFileInfo>();
+
+            DateTime stime = startTime;
+            foreach (var vv in mFileMaps)
+            {
+                if (vv.Key >= startTime && vv.Key < endTime)
+                {
+                    infos.Add(vv.Value.Item2);
+                }
+            }
+            return infos;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="startTime"></param>
+        /// <param name="span"></param>
+        /// <returns></returns>
+        public List<DataFileInfo> GetDataFiles(DateTime startTime,TimeSpan span)
+        {
+            return GetDataFiles(startTime, startTime + span);
+        }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="month"></param>
+        ///// <param name="file"></param>
+        //public DayTimeFile AddDay(int month, DayTimeFile file)
+        //{
+        //    file.Parent = this;
+        //    return this.AddTimefile(month, file) as DayTimeFile;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="month"></param>
+        ///// <returns></returns>
+        //public DayTimeFile AddDay(int month)
+        //{
+        //    DayTimeFile mfile = new DayTimeFile() { TimeKey = month };
+        //    return AddDay(month, mfile);
+        //}
 
         #endregion ...Methods...
 

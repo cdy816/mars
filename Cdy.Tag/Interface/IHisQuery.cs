@@ -235,5 +235,24 @@ namespace Cdy.Tag
         /// <param name="endTime"></param>
         /// <param name="result"></param>
         void ReadAllValue(int id, DateTime startTime, DateTime endTime, HisQueryResult<string> result);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <returns></returns>
+        HisQueryResult<T>  ReadAllValue<T>(int id, DateTime startTime, DateTime endTime);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        HisQueryResult<T> ReadValue<T>(int id, List<DateTime> times, QueryValueMatchType type);
     }
 }

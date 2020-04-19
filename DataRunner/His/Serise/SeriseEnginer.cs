@@ -468,15 +468,16 @@ namespace Cdy.Tag
         {
             byte[] bval;
             int totalLen;
-            bval = GeneratorDataRegionHeader(out totalLen);
-            mFileWriter.Append(bval, 0, bval.Length);
-            mFileWriter.AppendZore(totalLen - bval.Length);
 
             //更新上个DataRegion 的Next DataRegion Pointer 指针
             if (mPreDataRegion >= 0)
             {
                 mFileWriter.Write(mCurrentDataRegion, mPreDataRegion + 8);
             }
+            
+            bval = GeneratorDataRegionHeader(out totalLen);
+            mFileWriter.Append(bval, 0, bval.Length);
+            mFileWriter.AppendZore(totalLen - bval.Length);
 
             mPreDataRegion = mCurrentDataRegion;
 
@@ -497,7 +498,6 @@ namespace Cdy.Tag
             int len = GetDataRegionHeaderLength() + 4+ mTagIdMemoryCach.Position + mTagCount * (blockcount * 8);
             
             totallenght = len;
-            
 
             using (System.IO.MemoryStream mHeadMemory = new System.IO.MemoryStream())
             {              
@@ -578,7 +578,7 @@ namespace Cdy.Tag
             mPreDataRegion = offset;
 
             mFileWriter.GoToEnd();
-            mCurrentDataRegion = mFileWriter.Length;
+            mCurrentDataRegion = mFileWriter.CurrentPostion;
 
             return 0;
         }
@@ -739,7 +739,6 @@ namespace Cdy.Tag
                 var count = mProcessMemory.ReadInt(dataOffset + 4);
                 mTagCount = count;
                 mCurrentTime = time;
-                long offset = 8 + dataOffset;
 
                 //to do 计算变量信息是否改变
 
@@ -762,12 +761,12 @@ namespace Cdy.Tag
 
                 var ltmp2 = sw.ElapsedMilliseconds;
 
-                offset = 8 + dataOffset;
+                long offset = 8 + dataOffset;
                 long start = count * 8 + offset;//计算出数据起始地址
 
                 //LoggerService.Service.Info("SeriseFileItem" + Id, "开始更新指针区域");
 
-                var dataAddr = this.mFileWriter.GoToEnd().Length;
+                var dataAddr = this.mFileWriter.GoToEnd().CurrentPostion;
 
                 mBlockPointMemory.CheckAndResize(mTagCount * 8);
                 mBlockPointMemory.Clear();
@@ -775,12 +774,18 @@ namespace Cdy.Tag
                 for (int i = 0; i < count; i++)
                 {
                     var id = mProcessMemory.ReadInt(offset);
-                    var addr = mProcessMemory.ReadInt(offset + 4) + dataAddr;
+                    var addr = mProcessMemory.ReadInt(offset + 4) - start + dataAddr;
                     offset += 8;
                     if (id > -1)
                     {
                         mBlockPointMemory.WriteLong(i * 8, addr);
                     }
+                }
+
+                StringBuilder sb = new StringBuilder();
+                foreach (var vv in mBlockPointMemory.ToLongList())
+                {
+                    sb.Append(vv + ",");
                 }
 
                 //计算本次更新对应的指针区域的起始地址
@@ -790,10 +795,16 @@ namespace Cdy.Tag
 
                 var ltmp3 = sw.ElapsedMilliseconds;
 
+
                 //lock (mFileLocker)
                 {
                     mFileWriter.GoToEnd();
+                    long lpp = mFileWriter.CurrentPostion;
                     mProcessMemory.WriteToStream(mFileWriter.GetStream(), start, totalsize - start);//直接拷贝数据块
+                    LoggerService.Service.Info("SeriseFileItem", "数据写入地址:" + lpp + ",更新指针地址：" + pointAddr+" block index:"+bid+" tagcount:"+count+" block point Start Addr:"+ mBlockPointOffset+" point values:"+sb.ToString());
+
+                    
+
                     //this.mFileWriter.Append(mProcessMemory.Buffers, (int)start, (int)(totalsize - start)); 
                     mFileWriter.Write(mBlockPointMemory.Buffers, pointAddr, 0, (int)mBlockPointMemory.AllocSize);
                     Flush();

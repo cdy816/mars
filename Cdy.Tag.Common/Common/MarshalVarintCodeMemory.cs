@@ -44,11 +44,11 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public MarshalVarintCodeMemory(IntPtr buffer)
+        public MarshalVarintCodeMemory(IntPtr buffer,int size)
         {
             mDataBuffer = buffer;
             position = 0;
-            limit = 1024 * 1024 * 256;
+            limit = size;
         }
 
         #endregion ...Constructor...

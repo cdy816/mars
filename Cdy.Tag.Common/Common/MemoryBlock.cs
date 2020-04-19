@@ -1351,7 +1351,7 @@ namespace Cdy.Tag
 
             long ost = offset % BufferItemSize;
 
-            if (len + ost < BufferItemSize)
+            if (len + ost <= BufferItemSize)
             {
                 Buffer.BlockCopy(mBuffers[id], (int)ost,re, 0, len);
             }
@@ -1361,7 +1361,7 @@ namespace Cdy.Tag
 
                 Buffer.BlockCopy(mBuffers[id], (int)ost,re,0, ll);
 
-                if (len - ll < BufferItemSize)
+                if (len - ll <= BufferItemSize)
                 {
                     id++;
                     Buffer.BlockCopy(mBuffers[id], 0, re, ll, len - ll);
@@ -1665,9 +1665,9 @@ namespace Cdy.Tag
         /// <returns></returns>
         public static List<long> ToLongList(this MemoryBlock memory)
         {
-            List<long> re = new List<long>((int)(memory.Length / 8));
+            List<long> re = new List<long>((int)(memory.AllocSize / 8));
             memory.Position = 0;
-            while (memory.Position < memory.Length)
+            while (memory.Position < memory.AllocSize)
             {
                 re.Add(memory.ReadLong());
             }

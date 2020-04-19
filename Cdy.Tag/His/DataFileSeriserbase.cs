@@ -38,6 +38,11 @@ namespace Cdy.Tag
         /// </summary>
         public abstract string Name { get; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public string FileName { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -187,7 +192,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="start"></param>
         /// <returns></returns>
-        public abstract int ReadInit(long start);
+        public abstract int ReadInt(long start);
 
         /// <summary>
         /// 

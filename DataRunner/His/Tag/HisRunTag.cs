@@ -29,7 +29,13 @@ namespace Cdy.Tag
         #endregion ...Events...
 
         #region ... Constructor...
-
+            /// <summary>
+            /// 
+            /// </summary>
+        public HisRunTag()
+        {
+            ValueSnape = new byte[SizeOfValue];
+        }
         #endregion ...Constructor...
 
         #region ... Properties ...
@@ -59,10 +65,10 @@ namespace Cdy.Tag
         /// </summary>
         public static DateTime StartTime { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static int TimerOffset { get; set; } = 0;
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public static int TimerOffset { get; set; } = 0;
 
         /// <summary>
         /// 头部信息起始地址
@@ -104,6 +110,16 @@ namespace Cdy.Tag
         /// </summary>
         public virtual byte SizeOfValue { get; }
 
+        /// <summary>
+        /// 值快照
+        /// </summary>
+        public byte[] ValueSnape { get; set; }
+
+        /// <summary>
+        /// 质量戳快照
+        /// </summary>
+        public byte QulitySnape { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -137,6 +153,15 @@ namespace Cdy.Tag
         }
 
         /// <summary>
+        /// 执行快照
+        /// </summary>
+        public void Snape()
+        {
+            System.Runtime.InteropServices.Marshal.Copy(RealMemoryPtr + RealValueAddr, ValueSnape, 0, SizeOfValue);
+            QulitySnape = RealMemoryAddr[RealValueAddr + SizeOfValue + 8];
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="tim"></param>
@@ -149,7 +174,7 @@ namespace Cdy.Tag
 
                 //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
                 //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
-                HisAddr.WriteUShort(TimerValueStartAddr + vcount * 2, (ushort)(tim + TimerOffset));
+                HisAddr.WriteUShort(TimerValueStartAddr + vcount * 2, (ushort)(tim));
 
                 //写入数值
                 //HisAddr.WriteBytesDirect(HisValueStartAddr + vcount * SizeOfValue, RealMemoryAddr, RealValueAddr, SizeOfValue);

@@ -1,25 +1,27 @@
 ﻿//==============================================================
-//  Copyright (C) 2019  Inc. All rights reserved.
+//  Copyright (C) 2020  Inc. All rights reserved.
 //
 //==============================================================
-//  Create by 种道洋 at 2019/12/27 18:45:02.
+//  Create by 种道洋 at 2020/4/13 11:46:47.
 //  Version 1.0
 //  种道洋
 //==============================================================
+
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Cdy.Tag
+namespace HisDataTools.ViewModel
 {
     /// <summary>
     /// 
     /// </summary>
-    public class TimeFileBase:Dictionary<int,TimeFileBase>
+    public class FunctionItemViewModel:ViewModelBase
     {
+
         #region ... Variables  ...
 
-        private int mTimeKey = 0;
+        private bool mIsSelected = false;
 
         #endregion ...Variables...
 
@@ -34,50 +36,50 @@ namespace Cdy.Tag
         #region ... Properties ...
 
         /// <summary>
-            /// 
-            /// </summary>
-        public int TimeKey
+        /// 
+        /// </summary>
+        public virtual string Name
         {
             get
             {
-                return mTimeKey;
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public virtual string DisplayName
+        {
+            get
+            {
+                return Res.Get(this.Name);
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool IsSelected
+        {
+            get
+            {
+                return mIsSelected;
             }
             set
             {
-                if (mTimeKey != value)
+                if (mIsSelected != value)
                 {
-                    mTimeKey = value;
+                    mIsSelected = value;
+                    OnPropertyChanged("IsSelected");
                 }
             }
         }
 
 
-
         #endregion ...Properties...
 
-
-
-
-
         #region ... Methods    ...
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        public TimeFileBase AddTimefile(int key, TimeFileBase value)
-        {
-            if (this.ContainsKey(key))
-            {
-                return this[key];
-            }
-            else
-            {
-                base.Add(key, value);
-                return value;
-            }
-        }
 
         #endregion ...Methods...
 

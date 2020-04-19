@@ -55,7 +55,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 单个文件内变量的个数
         /// </summary>
-        public int TagCountOneFile { get; set; }
+        public int TagCountOneFile { get; set; } = 100000;
 
         /// <summary>
         /// 
@@ -156,9 +156,13 @@ namespace Cdy.Tag
             
             int hhind = int.Parse(stime.Substring(10, 2));
 
-            int hh = 24 / hhspan * hhind;
+            int hh = hhspan * hhind;
+
+
+            DateTime startTime = new DateTime(yy, mm, dd, hh, 0, 0);
 
             YearTimeFile yt = new YearTimeFile() { TimeKey = yy };
+            yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new DataFileInfo() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName } );
 
             if(mTimeFileMaps.ContainsKey(id))
             {
@@ -176,41 +180,69 @@ namespace Cdy.Tag
                 mTimeFileMaps.Add(id, new Dictionary<int, YearTimeFile>());
                 mTimeFileMaps[id].Add(yy, yt);
             }
-            
-            yt.AddMonth(mm).AddDay(dd).AddHour(hh).AddMinutes().ForEach(e=> { e.AddFile(file.FullName); });
-
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="time"></param>
+        /// <param name="Id"></param>
         /// <returns></returns>
-        public MinuteTimeFile GetFile(DateTime time,int Id)
+        public DataFileInfo GetDataFile(DateTime time,int Id)
         {
             int id = Id / TagCountOneFile;
 
             if (mTimeFileMaps.ContainsKey(id) && mTimeFileMaps[id].ContainsKey(time.Year))
             {
-                return mTimeFileMaps[id][time.Year].GetFile(time);
+                return mTimeFileMaps[id][time.Year].GetDataFile(time);
             }
             return null;
         }
+
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="starttime"></param>
         /// <param name="endtime"></param>
+        /// <param name="Id"></param>
         /// <returns></returns>
-        public List<MinuteTimeFile> GetFiles(DateTime starttime,DateTime endtime,int Id)
+        public List<DataFileInfo> GetDataFiles(DateTime starttime, DateTime endtime, int Id)
         {
-            List<MinuteTimeFile> re = new List<MinuteTimeFile>();
-            DateTime sstart = starttime;
-            while (sstart <= endtime)
+            return GetDataFiles(starttime,endtime-starttime,Id);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="startTime"></param>
+        /// <param name="span"></param>
+        /// <param name="Id"></param>
+        /// <returns></returns>
+        public List<DataFileInfo> GetDataFiles(DateTime startTime, TimeSpan span, int Id)
+        {
+            List<DataFileInfo> re = new List<DataFileInfo>();
+            int id = Id / TagCountOneFile;
+            if (mTimeFileMaps.ContainsKey(Id))
             {
-                re.Add(GetFile(sstart,Id));
-                sstart = sstart.AddMinutes(1);
+                var nxtYear = new DateTime(startTime.Year+1, 1, 1);
+                if (nxtYear > startTime + span)
+                {
+                    int mon = startTime.Year;
+                    if (mTimeFileMaps[id].ContainsKey(mon))
+                    {
+                        re.AddRange((mTimeFileMaps[id][mon]).GetDataFiles(startTime, span));
+                    }
+                }
+                else
+                {
+                    int mon = startTime.Year;
+                    if (mTimeFileMaps[id].ContainsKey(mon))
+                    {
+                        re.AddRange((mTimeFileMaps[id][mon]).GetDataFiles(startTime, span));
+                    }
+                    re.AddRange(GetDataFiles(nxtYear, startTime + span - nxtYear,Id));
+                }
             }
             return re;
         }
@@ -219,26 +251,78 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="times"></param>
+        /// <param name="Id"></param>
         /// <returns></returns>
-        public Dictionary<DateTime, MinuteTimeFile> GetFiles(List<DateTime> times,int Id)
+        public SortedDictionary<DateTime, DataFileInfo> GetDataFiles(List<DateTime> times, int Id)
         {
-            Dictionary<DateTime,MinuteTimeFile> re = new Dictionary<DateTime, MinuteTimeFile>();
+            SortedDictionary<DateTime, DataFileInfo> re = new SortedDictionary<DateTime, DataFileInfo>();
             foreach(var vv in times)
             {
-                re.Add(vv,GetFile(vv,Id));
+                re.Add(vv, GetDataFile(vv, Id));
             }
             return re;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <returns></returns>
-        private DataFileSeriserbase GetFileSerise(string datafile)
-        {
-            return null;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public MinuteTimeFile GetFile(DateTime time,int Id)
+        //{
+        //    int id = Id / TagCountOneFile;
+
+        //    if (mTimeFileMaps.ContainsKey(id) && mTimeFileMaps[id].ContainsKey(time.Year))
+        //    {
+        //        return mTimeFileMaps[id][time.Year].GetFile(time);
+        //    }
+        //    return null;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="starttime"></param>
+        ///// <param name="endtime"></param>
+        ///// <returns></returns>
+        //public List<MinuteTimeFile> GetFiles(DateTime starttime,DateTime endtime,int Id)
+        //{
+        //    List<MinuteTimeFile> re = new List<MinuteTimeFile>();
+        //    DateTime sstart = starttime;
+        //    while (sstart <= endtime)
+        //    {
+        //        var sfile = GetFile(sstart, Id);
+        //        if (sfile != null)
+        //            re.Add(sfile);
+        //        sstart = sstart.AddMinutes(1);
+        //    }
+        //    return re;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="times"></param>
+        ///// <returns></returns>
+        //public Dictionary<DateTime, MinuteTimeFile> GetFiles(List<DateTime> times,int Id)
+        //{
+        //    Dictionary<DateTime,MinuteTimeFile> re = new Dictionary<DateTime, MinuteTimeFile>();
+        //    foreach(var vv in times)
+        //    {
+        //        re.Add(vv,GetFile(vv,Id));
+        //    }
+        //    return re;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <returns></returns>
+        //private DataFileSeriserbase GetFileSerise(string datafile)
+        //{
+        //    return null;
+        //}
 
         #endregion ...Methods...
 

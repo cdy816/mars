@@ -118,51 +118,21 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Cancel" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
-  <data name="Chart" xml:space="preserve">
-    <value>Chart</value>
-  </data>
-  <data name="DataTable" xml:space="preserve">
-    <value>DataTable</value>
-  </data>
-  <data name="DateTime" xml:space="preserve">
-    <value>DateTime</value>
-  </data>
-  <data name="EndTime" xml:space="preserve">
-    <value>EndTime</value>
+    <value>取消</value>
   </data>
   <data name="HisDataQuery" xml:space="preserve">
-    <value>HisDataQuery</value>
+    <value>历史数据查询</value>
   </data>
   <data name="HisDataTools" xml:space="preserve">
-    <value>History data tools</value>
-  </data>
-  <data name="Id" xml:space="preserve">
-    <value>Id</value>
+    <value>历史数据工具</value>
   </data>
   <data name="OK" xml:space="preserve">
-    <value>OK</value>
+    <value>确定</value>
   </data>
   <data name="Open" xml:space="preserve">
-    <value>Open</value>
-  </data>
-  <data name="Quality" xml:space="preserve">
-    <value>Quality</value>
-  </data>
-  <data name="Query" xml:space="preserve">
-    <value>Query</value>
+    <value>打开</value>
   </data>
   <data name="SelectDatabase" xml:space="preserve">
-    <value>Select a database</value>
-  </data>
-  <data name="StartTime" xml:space="preserve">
-    <value>StartTime</value>
-  </data>
-  <data name="Tag" xml:space="preserve">
-    <value>Tag</value>
-  </data>
-  <data name="Value" xml:space="preserve">
-    <value>Value</value>
+    <value>选择一个数据库</value>
   </data>
 </root>

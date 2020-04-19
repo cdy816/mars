@@ -61,11 +61,146 @@ namespace HisDataTools.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Cancel 的本地化字符串。
+        /// </summary>
+        internal static string Cancel {
+            get {
+                return ResourceManager.GetString("Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Chart 的本地化字符串。
+        /// </summary>
+        internal static string Chart {
+            get {
+                return ResourceManager.GetString("Chart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 DataTable 的本地化字符串。
+        /// </summary>
+        internal static string DataTable {
+            get {
+                return ResourceManager.GetString("DataTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 DateTime 的本地化字符串。
+        /// </summary>
+        internal static string DateTime {
+            get {
+                return ResourceManager.GetString("DateTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 EndTime 的本地化字符串。
+        /// </summary>
+        internal static string EndTime {
+            get {
+                return ResourceManager.GetString("EndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 HisDataQuery 的本地化字符串。
+        /// </summary>
+        internal static string HisDataQuery {
+            get {
+                return ResourceManager.GetString("HisDataQuery", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 History data tools 的本地化字符串。
+        /// </summary>
+        internal static string HisDataTools {
+            get {
+                return ResourceManager.GetString("HisDataTools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Id 的本地化字符串。
+        /// </summary>
+        internal static string Id {
+            get {
+                return ResourceManager.GetString("Id", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 OK 的本地化字符串。
+        /// </summary>
+        internal static string OK {
+            get {
+                return ResourceManager.GetString("OK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Open 的本地化字符串。
         /// </summary>
         internal static string Open {
             get {
                 return ResourceManager.GetString("Open", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Quality 的本地化字符串。
+        /// </summary>
+        internal static string Quality {
+            get {
+                return ResourceManager.GetString("Quality", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Query 的本地化字符串。
+        /// </summary>
+        internal static string Query {
+            get {
+                return ResourceManager.GetString("Query", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Select a database 的本地化字符串。
+        /// </summary>
+        internal static string SelectDatabase {
+            get {
+                return ResourceManager.GetString("SelectDatabase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 StartTime 的本地化字符串。
+        /// </summary>
+        internal static string StartTime {
+            get {
+                return ResourceManager.GetString("StartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Tag 的本地化字符串。
+        /// </summary>
+        internal static string Tag {
+            get {
+                return ResourceManager.GetString("Tag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Value 的本地化字符串。
+        /// </summary>
+        internal static string Value {
+            get {
+                return ResourceManager.GetString("Value", resourceCulture);
             }
         }
     }

@@ -130,7 +130,10 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override MarshalMemoryBlock Read(long start, int len)
         {
-            MarshalMemoryBlock re = new MarshalMemoryBlock(len);
+            var vtmp = len / 1024 * 100;
+            vtmp = len % (1024 * 100) > 0 ? vtmp + 1 : vtmp;
+
+            MarshalMemoryBlock re = new MarshalMemoryBlock(len, 1024 * 100);
             mStream.Position = start;
 
             byte[] bval = new byte[len];
@@ -190,7 +193,18 @@ namespace Cdy.Tag
         /// <param name="len"></param>
         public override DataFileSeriserbase AppendZore(int len)
         {
-            mStream.Position = mStream.Length + len;;
+            mStream.Position = mStream.Length;
+            int size = 1024 * 128;
+            byte[] bvals = new byte[size];
+            for(int i=0;i<(len/size);i++)
+            {
+                mStream.Write(bvals, 0, bvals.Length);
+            }
+            int csize = len % size;
+            if (csize > 0)
+            {
+                mStream.Write(bvals, 0, csize);
+            }
             return this;
         }
 
@@ -212,7 +226,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="start"></param>
         /// <returns></returns>
-        public override int ReadInit(long start)
+        public override int ReadInt(long start)
         {
             mStream.Position = start;
             byte[] re = new byte[4];
@@ -225,7 +239,10 @@ namespace Cdy.Tag
             mStream.Position = start;
             byte[] re = new byte[8];
             mStream.Read(re, 0, re.Length);
-            return DateTime.FromBinary(BitConverter.ToInt64(re, 0));
+
+            return MemoryHelper.ReadDateTime(re);
+
+           // return DateTime.FromBinary(BitConverter.ToInt64(re, 0));
         }
 
         /// <summary>

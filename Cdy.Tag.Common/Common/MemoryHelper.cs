@@ -319,7 +319,7 @@ namespace Cdy.Tag
         {
             byte[] bval = new byte[8];
             var ptr = (IntPtr)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(bval, 0);
-            WriteDateTime((void*)ptr, 0, date);
+            WriteDateTime(bval.AsMemory(0, 8).Pin().Pointer, 0, date);
             return bval;
         }
 
@@ -331,8 +331,9 @@ namespace Cdy.Tag
         /// <returns></returns>
         public static unsafe DateTime ReadDateTime(byte[] value, int offset = 0)
         {
-            var ptr = (IntPtr)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(value, offset);
-            return ReadDateTime((void*)ptr, 0);
+            
+           // var ptr = (IntPtr)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(value, offset);
+            return ReadDateTime(value.AsMemory(offset,8).Pin().Pointer, 0);
         }
 
         /// <summary>

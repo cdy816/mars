@@ -1,0 +1,63 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:HisDataTools"
+                    xmlns:viewmodel="clr-namespace:HisDataTools.ViewModel"
+                    xmlns:view="clr-namespace:HisDataTools.View"
+                    >
+
+    <DataTemplate DataType="{x:Type viewmodel:ListDatabaseViewModel}">
+        <view:ListDatabaseView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type viewmodel:HisDataQueryModel}">
+        <view:HisDataQueryView />
+    </DataTemplate>
+
+    <BooleanToVisibilityConverter x:Key="bvc" />
+    <Style TargetType="{x:Type local:CustomWindowBase}">
+        <Setter Property="IsOK" Value="{Binding IsOK}" />
+        <Setter Property="IsCancel" Value="{Binding IsCancel}" />
+        <Setter Property="Title" Value="{Binding Title}" />
+        <Setter Property="IconString" Value="{Binding Icon}" />
+        <Setter Property="IsClosed" Value="{Binding IsClosed}" />
+        <Setter Property="SizeToContent" Value="WidthAndHeight" />
+        <Setter Property="IsEnableMax" Value="{Binding IsEnableMax}" />
+        <Setter Property="ShowInTaskbar" Value="False" />
+        <Setter Property="IsHidden" Value="{Binding IsHidden}" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="ResizeMode" Value="CanResizeWithGrip" />
+        <Setter Property="Background" Value="White" />
+        <!--<Setter Property="ResizeMode" Value="{Binding IsEnableMax,Converter={StaticResource BoolToResize}}" />-->
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:CustomWindowBase}">
+                    <Grid Background="{TemplateBinding Background}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <ContentControl x:Name="content_host" Content="{Binding}" Margin="0" />
+                        <Border Height="30"  Grid.Row="1" BorderBrush="DarkGray" BorderThickness="0,1,0,0" Visibility="{Binding IsOkCancel,Converter={StaticResource bvc}}">
+                            <Grid Background="#FFF0F0F0"   Margin="0" >
+                                <Label Content="{Binding Message}" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,0,200,0" />
+                                <Button Name="btn_Cancel" Background="#FFF0F0F0" IsCancel="{Binding IsEnableDefault}" Content="{local:ResMarker Cancel}" Height="22" Width="75" Margin="0,0,10,0" Command="{Binding CancelCommand}" HorizontalAlignment="Right" VerticalAlignment="Center"   />
+                                <Button Name="btn_OK" Background="#FFF0F0F0" IsDefault="{Binding IsEnableDefault}" Content="{local:ResMarker OK}" Height="22" Width="75"  Margin="0,0,100,0" Command="{Binding OKCommand}" HorizontalAlignment="Right" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsOkCancel}" Value="False" >
+                            <Setter TargetName="btn_OK" Property="IsDefault" Value="False" />
+                            <Setter TargetName="btn_Cancel" Property="IsCancel" Value="False" />
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+
+            </Setter.Value>
+
+        </Setter>
+
+    </Style>
+
+</ResourceDictionary>

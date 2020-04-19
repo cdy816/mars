@@ -8,6 +8,7 @@
 //==============================================================
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Cdy.Tag
@@ -15,12 +16,12 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public unsafe class HisQueryResult<T>
+    public unsafe class HisQueryResult<T>:IDisposable
     {
 
         #region ... Variables  ...
 
-        private byte[] mDataBuffer;
+        //private byte[] mDataBuffer;
 
         private int mTimeAddr = 0;
 
@@ -36,9 +37,11 @@ namespace Cdy.Tag
 
         private int mCount = 0;
 
-        private void* handle;
+        private IntPtr handle;
 
         private int mLimite = 0;
+
+        public static byte[] zoreData = new byte[1024 * 10];
 
         #endregion ...Variables...
 
@@ -94,12 +97,24 @@ namespace Cdy.Tag
         /// <param name="count"></param>
         private void Init(int count)
         {
-            mDataBuffer = new byte[count * (9 + mDataSize)];
+            //mDataBuffer = new byte[count * (9 + mDataSize)];
+
+            int csize = count * (9 + mDataSize);
+
+            int cc = csize / 1024;
+            if(csize % 1024!=0)
+            {
+                cc++;
+            }
+
+            csize = cc * 1024;
+
             mTimeAddr = count * mDataSize;
             mQulityAddr = count * (mDataSize + 8);
-            mLenght = mDataBuffer.Length;
+            mLenght = count;
             //handle = mDataBuffer.AsMemory().Pin().Pointer;
-            handle = (void*)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mDataBuffer, 0);
+            handle = Marshal.AllocHGlobal(csize);
+           // handle = (void*)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mDataBuffer, 0);
             mLimite = count;
         }
 
@@ -123,55 +138,58 @@ namespace Cdy.Tag
             {
                 case 0:
                 case 1:
-                    mDataBuffer[mPosition] = (byte)value;
+                    Marshal.WriteByte(handle+mPosition, (byte)value);
+                    //mDataBuffer[mPosition] = (byte)value;
                     mPosition++;
                     break;
                 case 2:
-                    MemoryHelper.WriteShort(handle, mPosition, (short)value);
+                    MemoryHelper.WriteShort((void*)handle, mPosition, (short)value);
                     mPosition+=2;
                     break;
                 case 3:
-                    MemoryHelper.WriteUShort(handle, mPosition, (ushort)value);
+                    MemoryHelper.WriteUShort((void*)handle, mPosition, (ushort)value);
                     mPosition += 2;
                     break;
                 case 4:
-                    MemoryHelper.WriteInt32(handle, mPosition, (int)value);
+                    MemoryHelper.WriteInt32((void*)handle, mPosition, (int)value);
                     mPosition += 4;
                     break;
                 case 5:
-                    MemoryHelper.WriteUInt32(handle, mPosition, (uint)value);
+                    MemoryHelper.WriteUInt32((void*)handle, mPosition, (uint)value);
                     mPosition += 4;
                     break;
                 case 6:
-                    MemoryHelper.WriteInt64(handle, mPosition, (long)value);
+                    MemoryHelper.WriteInt64((void*)handle, mPosition, (long)value);
                     mPosition += 8;
                     break;
                 case 7:
-                    MemoryHelper.WriteUInt64(handle, mPosition, (ulong)value);
+                    MemoryHelper.WriteUInt64((void*)handle, mPosition, (ulong)value);
                     mPosition += 8;
                     break;
                 case 8:
-                    MemoryHelper.WriteFloat(handle, mPosition, (float)value);
+                    MemoryHelper.WriteFloat((void*)handle, mPosition, (float)value);
                     mPosition += 4;
                     break;
                 case 9:
-                    MemoryHelper.WriteDouble(handle, mPosition, (double)value);
+                    MemoryHelper.WriteDouble((void*)handle, mPosition, (double)value);
                     mPosition += 8;
                     break;
                 case 10:
-                    MemoryHelper.WriteDateTime(handle, mPosition, (DateTime)value);
+                    MemoryHelper.WriteDateTime((void*)handle, mPosition, (DateTime)value);
                     mPosition += 8;
                     break;
                 case 11:
                     var sdata = Encoding.Unicode.GetBytes((string)value);
-                    MemoryHelper.WriteByte(handle, mPosition, (byte)sdata.Length);
+                    MemoryHelper.WriteByte((void*)handle, mPosition, (byte)sdata.Length);
                     mPosition++;
-                    System.Buffer.BlockCopy(sdata, 0, mDataBuffer, mPosition, sdata.Length);
+
+                    Marshal.Copy(sdata, 0, handle+ mPosition, sdata.Length);
                     mPosition += sdata.Length;
                     break;
             }
-            MemoryHelper.WriteDateTime(handle, mCount * 8 + mTimeAddr, time);
-            mDataBuffer[mCount + mQulityAddr] = qulity;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            Marshal.WriteByte(handle + mCount + mQulityAddr, (byte)value);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
             mCount++;
         }
 
@@ -189,10 +207,14 @@ namespace Cdy.Tag
                 Resize(newCount);
                 mLimite = newCount;
             }
-            mDataBuffer[mPosition] = (byte)(value ? 1 : 0);
+
+            Marshal.WriteByte(handle + mPosition, (byte)(value ? 1 : 0));
+
+          //  mDataBuffer[mPosition] = (byte)(value ? 1 : 0);
             mPosition++;
-            MemoryHelper.WriteDateTime(handle, mCount * 8 + mTimeAddr, time);
-            mDataBuffer[mCount + mQulityAddr] = qulity;
+            MemoryHelper.WriteDateTime((void*)(handle),mCount * 8 + mTimeAddr, time);
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+          //  mDataBuffer[mCount + mQulityAddr] = qulity;
             mCount++;
         }
 
@@ -210,10 +232,12 @@ namespace Cdy.Tag
                 Resize(newCount);
                 mLimite = newCount;
             }
-            mDataBuffer[mPosition] = value;
+            Marshal.WriteByte(handle + mPosition, value);
+            // mDataBuffer[mPosition] = value;
             mPosition++;
-            MemoryHelper.WriteDateTime(handle, mCount * 8 + mTimeAddr, time);
-            mDataBuffer[mCount + mQulityAddr] = qulity;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
             mCount++;
         }
 
@@ -226,10 +250,11 @@ namespace Cdy.Tag
                 Resize(newCount);
                 mLimite = newCount;
             }
-            MemoryHelper.WriteShort(handle, mPosition, value);
+            MemoryHelper.WriteShort((void*)handle, mPosition, value);
             mPosition += 2;
-            MemoryHelper.WriteDateTime(handle, mCount * 8 + mTimeAddr, time);
-            mDataBuffer[mCount + mQulityAddr] = qulity;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
             mCount++;
         }
 
@@ -241,10 +266,11 @@ namespace Cdy.Tag
                 Resize(newCount);
                 mLimite = newCount;
             }
-            MemoryHelper.WriteUShort(handle, mPosition, value);
+            MemoryHelper.WriteUShort((void*)handle, mPosition, value);
             mPosition += 2;
-            MemoryHelper.WriteDateTime(handle, mCount * 8 + mTimeAddr, time);
-            mDataBuffer[mCount + mQulityAddr] = qulity;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            //   mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
             mCount++;
         }
 
@@ -256,10 +282,11 @@ namespace Cdy.Tag
                 Resize(newCount);
                 mLimite = newCount;
             }
-            MemoryHelper.WriteInt32(handle, mPosition, value);
+            MemoryHelper.WriteInt32((void*)handle, mPosition, value);
             mPosition += 4;
-            MemoryHelper.WriteDateTime(handle, mCount * 8 + mTimeAddr, time);
-            mDataBuffer[mCount + mQulityAddr] = qulity;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
             mCount++;
         }
 
@@ -272,10 +299,11 @@ namespace Cdy.Tag
                 Resize(newCount);
                 mLimite = newCount;
             }
-            MemoryHelper.WriteUInt32(handle, mPosition, value);
+            MemoryHelper.WriteUInt32((void*)handle, mPosition, value);
             mPosition += 4;
-            MemoryHelper.WriteDateTime(handle, mCount * 8 + mTimeAddr, time);
-            mDataBuffer[mCount + mQulityAddr] = qulity;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
             mCount++;
         }
 
@@ -288,10 +316,11 @@ namespace Cdy.Tag
                 Resize(newCount);
                 mLimite = newCount;
             }
-            MemoryHelper.WriteInt64(handle, mPosition, value);
+            MemoryHelper.WriteInt64((void*)handle, mPosition, value);
             mPosition += 8;
-            MemoryHelper.WriteDateTime(handle, mCount * 8 + mTimeAddr, time);
-            mDataBuffer[mCount + mQulityAddr] = qulity;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            //mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
             mCount++;
         }
 
@@ -304,10 +333,11 @@ namespace Cdy.Tag
                 Resize(newCount);
                 mLimite = newCount;
             }
-            MemoryHelper.WriteUInt64(handle, mPosition, value);
+            MemoryHelper.WriteUInt64((void*)handle, mPosition, value);
             mPosition += 8;
-            MemoryHelper.WriteDateTime(handle, mCount * 8 + mTimeAddr, time);
-            mDataBuffer[mCount + mQulityAddr] = qulity;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
             mCount++;
         }
 
@@ -325,10 +355,11 @@ namespace Cdy.Tag
                 Resize(newCount);
                 mLimite = newCount;
             }
-            MemoryHelper.WriteFloat(handle, mPosition, value);
+            MemoryHelper.WriteFloat((void*)handle, mPosition, value);
             mPosition += 4;
-            MemoryHelper.WriteDateTime(handle, mCount * 8 + mTimeAddr, time);
-            mDataBuffer[mCount + mQulityAddr] = qulity;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            //mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
             mCount++;
         }
 
@@ -346,10 +377,11 @@ namespace Cdy.Tag
                 Resize(newCount);
                 mLimite = newCount;
             }
-            MemoryHelper.WriteDouble(handle, mPosition, value);
+            MemoryHelper.WriteDouble((void*)handle, mPosition, value);
             mPosition += 8;
-            MemoryHelper.WriteDateTime(handle, mCount * 8 + mTimeAddr, time);
-            mDataBuffer[mCount + mQulityAddr] = qulity;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
             mCount++;
         }
 
@@ -367,10 +399,11 @@ namespace Cdy.Tag
                 Resize(newCount);
                 mLimite = newCount;
             }
-            MemoryHelper.WriteDateTime(handle, mPosition, value);
+            MemoryHelper.WriteDateTime((void*)handle, mPosition, value);
             mPosition += 8;
-            MemoryHelper.WriteDateTime(handle, mCount * 8 + mTimeAddr, time);
-            mDataBuffer[mCount + mQulityAddr] = qulity;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
             mCount++;
         }
 
@@ -389,13 +422,15 @@ namespace Cdy.Tag
                 mLimite = newCount;
             }
             var sdata = Encoding.Unicode.GetBytes((string)value);
-            MemoryHelper.WriteByte(handle, mPosition, (byte)sdata.Length);
+            MemoryHelper.WriteByte((void*)handle, mPosition, (byte)sdata.Length);
             mPosition++;
-            System.Buffer.BlockCopy(sdata, 0, mDataBuffer, mPosition, sdata.Length);
-            mPosition+=sdata.Length;
+            Marshal.Copy(sdata, 0, handle + mPosition, sdata.Length);
+            //System.Buffer.BlockCopy(sdata, 0, mDataBuffer, mPosition, sdata.Length);
+            mPosition +=sdata.Length;
 
-            MemoryHelper.WriteDateTime(handle, mCount * 8 + mTimeAddr, time);
-            mDataBuffer[mCount + mQulityAddr] = qulity;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            //mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
             mCount++;
         }
 
@@ -410,37 +445,37 @@ namespace Cdy.Tag
             switch (mDataType)
             {
                 case 0:
-                    re = Convert.ToBoolean(mDataBuffer[index]);
+                    re = Convert.ToBoolean(MemoryHelper.ReadByte((void*)handle, index));
                     break;
                 case 1:
-                    re = mDataBuffer[index];
+                    re = MemoryHelper.ReadByte((void*)handle, index);
                     break;
                 case 2:
-                    re = MemoryHelper.ReadShort(handle, index*2);
+                    re = MemoryHelper.ReadShort((void*)handle, index*2);
                     break;
                 case 3:
-                    re = MemoryHelper.ReadShort(handle, index * 2);
+                    re = MemoryHelper.ReadShort((void*)handle, index * 2);
                     break;
                 case 4:
-                    re = MemoryHelper.ReadInt32(handle, index * 4);
+                    re = MemoryHelper.ReadInt32((void*)handle, index * 4);
                     break;
                 case 5:
-                    re = MemoryHelper.ReadInt32(handle, index * 4);
+                    re = MemoryHelper.ReadInt32((void*)handle, index * 4);
                     break;
                 case 6:
-                    re = MemoryHelper.ReadInt32(handle, index * 8);
+                    re = MemoryHelper.ReadInt32((void*)handle, index * 8);
                     break;
                 case 7:
-                    re = MemoryHelper.ReadInt32(handle, index * 8);
+                    re = MemoryHelper.ReadInt32((void*)handle, index * 8);
                     break;
                 case 8:
-                    re = MemoryHelper.ReadFloat(handle, index * 4);
+                    re = MemoryHelper.ReadFloat((void*)handle, index * 4);
                     break;
                 case 9:
-                    re = MemoryHelper.ReadDouble(handle, index * 8);
+                    re = MemoryHelper.ReadDouble((void*)handle, index * 8);
                     break;
                 case 10:
-                    re = MemoryHelper.ReadDateTime(handle, index * 8);
+                    re = MemoryHelper.ReadDateTime((void*)handle, index * 8);
                     break;
                 case 11:
 
@@ -452,15 +487,16 @@ namespace Cdy.Tag
                         {
                             break;
                         }
-                        pos += (mDataBuffer[pos]+1);
+                        //pos += (mDataBuffer[pos]+1);
+                        pos += MemoryHelper.ReadByte((void*)handle, pos) + 1;
                         cc++;
                     }
-                    re = new string((char*)handle, pos+1, mDataBuffer[pos]);
+                    re = new string((char*)handle, pos+1, MemoryHelper.ReadByte((void*)handle, pos));
                     break;
             }
 
-            time = MemoryHelper.ReadDateTime(handle, index * 8 + mTimeAddr);
-            qulity = mDataBuffer[mQulityAddr + index];
+            time = MemoryHelper.ReadDateTime((void*)handle, index * 8 + mTimeAddr);
+            qulity = MemoryHelper.ReadByte((void*)handle, mQulityAddr + index);
 
            
 
@@ -477,22 +513,18 @@ namespace Cdy.Tag
 
             if (newsize == mLenght) return;
 
-            var mDataBuffern = new byte[newsize];
+            IntPtr nhd = Marshal.AllocHGlobal(newsize);
+
             var mTimeAddrn = count * mDataSize;
             var mQulityAddrn = count * (mDataSize + 8);
 
-            Buffer.BlockCopy(mDataBuffer, 0, mDataBuffern, 0, this.mTimeAddr);
+            Buffer.MemoryCopy((void*)handle, (void*)nhd, newsize, mLenght);
 
-            Buffer.BlockCopy(mDataBuffer, mTimeAddr, mDataBuffern, mTimeAddrn, mCount*8);
-
-            Buffer.BlockCopy(mDataBuffer, mQulityAddr, mDataBuffern, mQulityAddrn, mCount);
-
-            mDataBuffer = mDataBuffern;
             mTimeAddr = mTimeAddrn;
             mQulityAddr = mQulityAddrn;
 
-            handle = (void*)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mDataBuffer, 0);
-            // handle = mDataBuffer.AsMemory().Pin().Pointer;
+            Marshal.FreeHGlobal(handle);
+            handle = nhd;
             mLimite = count;
 
         }
@@ -554,7 +586,11 @@ namespace Cdy.Tag
         {
             mPosition = 0;
             mCount = 0;
-            Array.Clear(mDataBuffer,0,mDataBuffer.Length);
+
+            for (int i = 0; i < mLenght / zoreData.Length; i++)
+            {
+                Marshal.Copy(zoreData, 0, (IntPtr)(handle+ i * zoreData.Length), zoreData.Length);
+            }
         }
 
         /// <summary>
@@ -565,9 +601,17 @@ namespace Cdy.Tag
         {
             if (target.mLimite < this.mLimite) target.Resize(this.mLimite);
 
-            Array.Copy(mDataBuffer, 0, target.mDataBuffer, 0, mDataBuffer.Length);
+            Buffer.MemoryCopy((void*)handle, (void*)target.handle, mLimite, this.mLenght);
             target.mCount = this.mCount;
             target.mPosition = this.mPosition;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Dispose()
+        {
+            Marshal.FreeHGlobal(handle);
         }
 
         #endregion ...Methods...

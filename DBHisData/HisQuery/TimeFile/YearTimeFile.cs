@@ -39,6 +39,39 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="startTime"></param>
+        /// <param name="duration"></param>
+        /// <param name="file"></param>
+        public void AddFile(DateTime startTime,TimeSpan duration,DataFileInfo file)
+        {
+            int mon1 = startTime.Month;
+            var endTime = startTime.Add(duration);
+            if (mon1 == endTime.Month)
+            {
+                var mm = AddMonth(mon1);
+                mm.AddFile(startTime, duration, file);
+            }
+            else
+            {
+                var startTime2 = new DateTime(endTime.Year, endTime.Month, endTime.Day);
+
+                var mm = AddMonth(mon1);
+                mm.AddFile(startTime, startTime2-startTime, file);
+                if ((endTime - startTime).Seconds <= 1)
+                {
+                    return;
+                }
+                else
+                {
+                    mm = AddMonth(endTime.Month);
+                    mm.AddFile(startTime2, endTime - startTime2, file);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="month"></param>
         /// <param name="file"></param>
         public MonthTimeFile AddMonth(int month, MonthTimeFile file)
@@ -63,16 +96,44 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="dateTime"></param>
         /// <returns></returns>
-        public override MinuteTimeFile GetFile(DateTime dateTime)
+        public DataFileInfo GetDataFile(DateTime dateTime)
         {
-            if (this.ContainsKey(dateTime.Month))
+            if(this.ContainsKey(dateTime.Month))
             {
-                return this[dateTime.Month].GetFile(dateTime);
+                return (this[dateTime.Month] as MonthTimeFile).GetDataFile(dateTime);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="startTime"></param>
+        /// <param name="span"></param>
+        /// <returns></returns>
+        public List<DataFileInfo> GetDataFiles(DateTime startTime,TimeSpan span)
+        {
+            List<DataFileInfo> re = new List<DataFileInfo>();
+            var nxtMonth = startTime.AddMonths(1);
+            nxtMonth = new DateTime(nxtMonth.Year, nxtMonth.Month,1);
+            if(nxtMonth>startTime+span)
+            {
+                int mon = startTime.Month;
+                if(this.ContainsKey(mon))
+                {
+                    re.AddRange((this[mon] as MonthTimeFile).GetDataFiles(startTime, span));
+                }
             }
             else
             {
-                return null;
+                int mon = startTime.Month;
+                if (this.ContainsKey(mon))
+                {
+                    re.AddRange((this[mon] as MonthTimeFile).GetDataFiles(startTime, nxtMonth - startTime));
+                }
+                re.AddRange(GetDataFiles(nxtMonth, startTime+span - nxtMonth));
             }
+            return re;
         }
 
 

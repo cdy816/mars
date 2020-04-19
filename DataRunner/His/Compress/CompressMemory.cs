@@ -231,8 +231,8 @@ namespace Cdy.Tag
                 tp.StartTime = mCurrentTime;
                 tp.Parameters = histag.Parameters;
                 var size = tp.Compress(mSourceMemory, addr, this, targetPosition + 5, len) + 1;
-                this.WriteLong(targetPosition, size);
-                return size + 8;
+                this.WriteInt(targetPosition, (int)size);
+                return size + 5;
             }
             return 0;
         }

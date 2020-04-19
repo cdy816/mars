@@ -2,13 +2,13 @@
 using System;
 using System.Text;
 
-namespace Mars
+namespace DBInRun
 {
     class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("***************欢迎来到Mars实时数据库****************");
+            Console.WriteLine(Res.Get("WelcomeMsg"));
             if (args.Length>0 && args[0]== "start")
             {
                 if (args.Length > 1)
@@ -21,7 +21,7 @@ namespace Mars
                 }
             }
 
-            Console.WriteLine("输入h获取命令帮助信息");
+            Console.WriteLine(Res.Get("HelpMsg"));
             while (true)
             {
                 Console.Write(">");
@@ -91,10 +91,10 @@ namespace Mars
         private static string GetHelpString()
         {
             StringBuilder re = new StringBuilder();
-            re.AppendLine("start [database] // start to run a databse,ignor database name to run default 'local' database ");
-            re.AppendLine("stop             // stop  a databse");
-            re.AppendLine("gd    [databasename] [double tag count] [float tag count] [long tag count] [int tag count] [bool tag count] // generate a sample databse with special number tags");
-            re.AppendLine("h                //display command list");
+            re.AppendLine("start [database] // "+Res.Get("StartMsg"));
+            re.AppendLine("stop             // " + Res.Get("StopMsg"));
+            re.AppendLine("gd    [databasename] [double tag count] [float tag count] [long tag count] [int tag count] [bool tag count] // "+Res.Get("GDMsg"));
+            re.AppendLine("h                // " + Res.Get("HMsg"));
             return re.ToString();
         }
 
@@ -118,7 +118,7 @@ namespace Mars
 
             for (int i=0;i<dcount;i++)
             {
-                test.Append(new Cdy.Tag.DoubleTag() { Name = "Double" + i ,Group="Double",LinkAddress= "Sim:sin" });
+                test.Append(new Cdy.Tag.DoubleTag() { Name = "Double" + i ,Group="Double",LinkAddress= "Sim:step" });
             }
 
             for (int i = 0; i < fcount; i++)

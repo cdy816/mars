@@ -4,8 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HisDataTools"
+        xmlns:model="clr-namespace:HisDataTools.ViewModel"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="{local:ResMarker HisDataTools}" Height="1080" Width="1920" WindowStartupLocation="CenterScreen" WindowState="Maximized">
     <Window.Resources>
         <Style x:Key="FocusVisual">
             <Setter Property="Control.Template">
@@ -63,14 +64,14 @@
             </Setter>
         </Style>
     </Window.Resources>
-    <Grid>
+    <Grid >
         <Grid.RowDefinitions>
             <RowDefinition Height="48"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Border BorderThickness="0,0,0,1" BorderBrush="LightGray" Background="AliceBlue">
             <StackPanel Orientation="Horizontal">
-                <Button Style="{DynamicResource MenuButton}"  Command="{Binding LoginCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80"  >
+                <Button Style="{DynamicResource MenuButton}"  Command="{Binding OpenCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80"  >
                     <Button.ContentTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
@@ -83,5 +84,36 @@
                
             </StackPanel>
         </Border>
+        <Grid Grid.Row="1" IsEnabled="{Binding IsEnable}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="180" MinWidth="30" MaxWidth="1000"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TreeView x:Name="tv" ItemsSource="{Binding TreeItems}"   BorderThickness="0,0,1,0" >
+                <TreeView.Resources>
+
+                    <Style TargetType="{x:Type TreeViewItem}" >
+                        <Setter Property="TreeViewItem.IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                        <Setter Property="TreeViewItem.IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                        <Setter Property="Control.FontWeight" Value="Normal" />
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+                        <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+                        <Setter Property="Padding" Value="1,0,0,0"/>
+                    </Style>
+
+                    <DataTemplate  DataType="{x:Type model:HisDataQueryItem}" >
+                        <StackPanel Cursor="Hand"  Orientation="Horizontal" Height="24">
+                            <Image Focusable="False" Source="/Image/el-hg-icon-query.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+
+                   
+                </TreeView.Resources>
+            </TreeView>
+            <GridSplitter VerticalAlignment="Stretch" Width="5" HorizontalAlignment="Right" Background="Transparent" />
+            <ContentControl Grid.Column="1" Content="{Binding CurrentEditModel}"/>
+        </Grid>
     </Grid>
 </Window>

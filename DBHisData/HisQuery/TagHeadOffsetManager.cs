@@ -27,7 +27,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        Dictionary<HeadOffsetKey, Dictionary<int, int>> mHeadOffsets = new Dictionary<HeadOffsetKey, Dictionary<int, int>>();
+        Dictionary<HeadOffsetKey,Tuple<Dictionary<int, int>,long>> mHeadOffsets = new Dictionary<HeadOffsetKey, Tuple<Dictionary<int, int>, long>>();
 
         #endregion ...Variables...
 
@@ -63,10 +63,10 @@ namespace Cdy.Tag
         /// <param name="sum"></param>
         /// <param name="count"></param>
         /// <param name="offset"></param>
-        public void Add(long sum,int count,Dictionary<int, int> offset)
+        public void Add(long sum,int count,Dictionary<int, int> offset,long blockPointer)
         {
             HeadOffsetKey key = new HeadOffsetKey(count, sum);
-            mHeadOffsets.Add(key, offset);
+            mHeadOffsets.Add(key,new Tuple<Dictionary<int, int>, long>(offset, blockPointer));
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace Cdy.Tag
         /// <param name="sum"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        public Dictionary<int,int> Get(long sum,int count)
+        public Tuple<Dictionary<int,int>,long> Get(long sum,int count)
         {
             HeadOffsetKey key = new HeadOffsetKey(count, sum);
             return mHeadOffsets[key];

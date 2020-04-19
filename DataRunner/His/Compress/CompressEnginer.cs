@@ -213,6 +213,8 @@ namespace Cdy.Tag
                 //    mm.Value.Compress(sm);
                 //});
 
+                //sm.Dump();
+
                 ServiceLocator.Locator.Resolve<IHisEngine>().ClearMemoryHisData(sm);
                 sm.MakeMemoryNoBusy();
 

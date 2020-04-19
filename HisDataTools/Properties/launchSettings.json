@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "HisDataTools": {
+      "commandName": "Executable",
+      "executablePath": "D:\\Project\\Galaxy\\Output\\HisDataTools.exe"
+    }
+  }
+}

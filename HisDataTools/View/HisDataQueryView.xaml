@@ -1,0 +1,91 @@
+﻿<UserControl x:Class="HisDataTools.View.HisDataQueryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:HisDataTools.View"
+             xmlns:res="clr-namespace:HisDataTools"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="926">
+    <UserControl.Resources>
+        <res:IndexConverter x:Key="ic" />
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <ComboBox  IsEditable="True" Text="{Binding SelectTag,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding TagList}"  HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Width="154" Grid.Column="1"/>
+            <Label Content="{res:ResMarker StartTime, :}" HorizontalAlignment="Left" Margin="170,0,0,0" VerticalAlignment="Center" Grid.Column="1"/>
+            <DatePicker SelectedDate="{Binding StartTime,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Center" Width="150" Grid.Column="2"/>
+            <ComboBox ItemsSource="{Binding HourItems}" SelectedIndex="{Binding StartTimeHour,UpdateSourceTrigger=PropertyChanged}" IsEditable="True"  HorizontalAlignment="Left" Margin="170,0,0,0" VerticalAlignment="Center" Width="60" Grid.Column="2"/>
+
+            <Label Content="{res:ResMarker EndTime, :}" HorizontalAlignment="Left" Margin="240,0,0,0" VerticalAlignment="Center" Grid.Column="2"/>
+
+            <Button Content="{res:ResMarker Query}" Command="{Binding QueryCommand}"  HorizontalAlignment="Right" Padding="2" Margin="0,0,10,0" VerticalAlignment="Center"  Width="79" Grid.Column="3"/>
+
+            <Label Content="{res:ResMarker Tag,:}" HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Center"/>
+            <DatePicker SelectedDate="{Binding EndTime,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" VerticalAlignment="Center" Width="150" Margin="5,0,0,0" Grid.Column="3"/>
+            <ComboBox ItemsSource="{Binding HourItems}" SelectedIndex="{Binding EndTimeHour,UpdateSourceTrigger=PropertyChanged}" IsEditable="True"  HorizontalAlignment="Left" Margin="170,0,0,0" VerticalAlignment="Center" Width="60" Grid.Column="3"/>
+
+
+        </Grid>
+
+        <TabControl Grid.Row="1" TabStripPlacement="Bottom">
+            <TabItem Header="{res:ResMarker DataTable}">
+                <Grid Background="#FFE5E5E5">
+                    <DataGrid IsReadOnly="True" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"  ItemsSource="{Binding Datas}"  >
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn   IsReadOnly="True" Width="Auto" MinWidth="30" Header="{res:ResMarker Id}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" >
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource ic}">
+                                                    <Binding />
+                                                    <Binding Path="ItemsSource" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type DataGrid}}" />
+                                                    <Binding Path="ItemsSource.Count" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type DataGrid}}" />
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn  IsReadOnly="True" Width="200" MinWidth="60" Header="{res:ResMarker DateTime}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock HorizontalAlignment="Center" Text="{Binding DateTime}" VerticalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn  IsReadOnly="True" Width="120" MinWidth="60" Header="{res:ResMarker Value}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock HorizontalAlignment="Center" Text="{Binding Value}" VerticalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="30" Header="{res:ResMarker Quality}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock HorizontalAlignment="Center" Text="{Binding Quality}" VerticalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+            <TabItem Header="{res:ResMarker Chart}">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

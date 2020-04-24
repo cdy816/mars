@@ -468,6 +468,17 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        public static byte[] GetAvailableDatas(this VarintCodeMemory memory)
+        {
+            byte[] bvals = new byte[memory.Length];
+            Buffer.BlockCopy(memory.Buffer, 0, bvals, 0,bvals.Length);
+            return bvals;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
         public static List<int> ToIntList(this VarintCodeMemory memory)

@@ -124,6 +124,9 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public byte[] EndMemory
         {
             get

@@ -15,7 +15,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class DeadAreaCompressUnit : CompressUnitbase
+    public class DeadAreaCompressUnit : LosslessCompressUnit
     {
         /// <summary>
         /// 
@@ -39,194 +39,325 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="target"></param>
-        /// <param name="targetAddr"></param>
+        /// <param name="preVal"></param>
+        /// <param name="newVal"></param>
+        /// <param name="deadArea"></param>
+        /// <param name="Deadtype"></param>
         /// <returns></returns>
-        public override long Compress(MarshalMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size)
+        private bool CheckIsNeedRecord(double preVal,double newVal,double deadArea,int Deadtype)
         {
-            return 0;
+            if(Deadtype==0)
+            {
+                return Math.Abs(newVal - preVal) > deadArea;
+            }
+            else
+            {
+                return Math.Abs((newVal - preVal) / preVal) > deadArea;
+            }
         }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<bool> result)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <param name="emptyIds"></param>
+        /// <returns></returns>
+        protected override Memory<byte> CompressValues<T>(MarshalMemoryBlock source, long offset, int count, Queue<int> emptyIds)
         {
-            throw new NotImplementedException();
-        }
+            var deadArea = this.Parameters.ContainsKey("DeadValue") ? this.Parameters["DeadValue"] : 0;
+            var deadType = (int)(this.Parameters.ContainsKey("DeadType") ? this.Parameters["DeadType"] : 0);
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<byte> result)
-        {
-            throw new NotImplementedException();
-        }
+            mMarshalMemory.Position = 0;
+            mVarintMemory.Position = 0;
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<short> result)
-        {
-            throw new NotImplementedException();
-        }
+            bool isFirst = true;
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ushort> result)
-        {
-            throw new NotImplementedException();
-        }
+            int ig = -1;
+            emptyIds.TryDequeue(out ig);
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<int> result)
-        {
-            throw new NotImplementedException();
-        }
+            if (typeof(T) == typeof(byte))
+            {
+                byte sval = 0;
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadByte(offset + i);
+                        if (isFirst)
+                        {
+                            sval = id;
+                            mMarshalMemory.Write(id);
+                            isFirst = false;
+                        }
+                        else
+                        {
+                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
+                            {
+                                mMarshalMemory.Write(id);
+                                sval = id;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
+                return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
+            }
+            else if (typeof(T) == typeof(short))
+            {
+                short sval = 0;
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadShort(offset + i * 2);
+                        if (isFirst)
+                        {
+                            mVarintMemory.WriteSInt32(id);
+                            isFirst = false;
+                            sval = id;
+                        }
+                        else
+                        {
+                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
+                            {
+                                mVarintMemory.WriteSInt32(id - sval);
+                                sval = id;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<uint> result)
-        {
-            throw new NotImplementedException();
-        }
+            }
+            else if (typeof(T) == typeof(ushort))
+            {
+                ushort sval = 0;
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadUShort(offset + i * 2);
+                        if (isFirst)
+                        {
+                            mVarintMemory.WriteSInt32(id);
+                            isFirst = false;
+                            sval = id;
+                        }
+                        else
+                        {
+                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
+                            {
+                                mVarintMemory.WriteSInt32(id - sval);
+                                sval = id;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<long> result)
-        {
-            throw new NotImplementedException();
-        }
+            }
+            else if (typeof(T) == typeof(int))
+            {
+                int sval = 0;
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadInt(offset + i * 4);
+                        if (isFirst)
+                        {
+                            mVarintMemory.WriteInt32(id);
+                            isFirst = false;
+                            sval = id;
+                        }
+                        else
+                        {
+                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
+                            {
+                                mVarintMemory.WriteSInt32(id - sval);
+                                sval = id;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ulong> result)
-        {
-            throw new NotImplementedException();
-        }
+            }
+            else if (typeof(T) == typeof(uint))
+            {
+                uint sval = 0;
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadUInt(offset + i * 4);
+                        if (isFirst)
+                        {
+                            mVarintMemory.WriteInt32(id);
+                            isFirst = false;
+                            sval = id;
+                        }
+                        else
+                        {
+                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
+                            {
+                                mVarintMemory.WriteSInt32((int)(id - sval));
+                                sval = id;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(long))
+            {
+                long sval = 0;
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadLong(offset + i * 8);
+                        if (isFirst)
+                        {
+                            mVarintMemory.WriteInt64(id);
+                            isFirst = false;
+                            sval = id;
+                        }
+                        else
+                        {
+                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
+                            {
+                                mVarintMemory.WriteSInt64((id - sval));
+                                sval = id;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<float> result)
-        {
-            throw new NotImplementedException();
-        }
+            }
+            else if (typeof(T) == typeof(ulong))
+            {
+                ulong sval = 0;
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadULong(offset + i * 8);
+                        if (isFirst)
+                        {
+                            mVarintMemory.WriteInt64(id);
+                            isFirst = false;
+                            sval = id;
+                        }
+                        else
+                        {
+                            if (CheckIsNeedRecord(sval, id, deadArea, deadType))
+                            {
+                                mVarintMemory.WriteSInt64((long)(id - sval));
+                                sval = id;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result)
-        {
-            throw new NotImplementedException();
-        }
+            }
+            else if (typeof(T) == typeof(double))
+            {
+                double sval = 0;
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadDouble(offset + i * 8);
+                        if (isFirst)
+                        {
+                            mMarshalMemory.Write(id);
+                            isFirst = false;
+                            sval = id;
+                        }
+                        else
+                        {
+                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
+                            {
+                                mMarshalMemory.Write(id);
+                                sval = id;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
+                return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                float sval = 0;
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadFloat(offset + i * 4);
+                        if (isFirst)
+                        {
+                            mMarshalMemory.Write(id);
+                            isFirst = false;
+                            sval = id;
+                        }
+                        else
+                        {
+                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
+                            {
+                                mMarshalMemory.Write(id);
+                                sval = id;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
+                return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
+            }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<DateTime> result)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<string> result)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool? DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override byte? DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override DateTime? DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override double? DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<double> result)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override float? DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<float> result)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int? DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<int> result)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override long? DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<long> result)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override short? DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<short> result)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<string> result)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override uint? DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override ulong? DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override ushort? DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result)
-        {
-            throw new NotImplementedException();
+            return mVarintMemory.Buffer.AsMemory<byte>(0, (int)mVarintMemory.Position);
         }
     }
 }

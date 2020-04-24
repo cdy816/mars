@@ -60,7 +60,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 变量类型
         /// </summary>
-        public byte TagType { get; set; }
+        public TagType TagType { get; set; }
 
         /// <summary>
         /// 压缩类型

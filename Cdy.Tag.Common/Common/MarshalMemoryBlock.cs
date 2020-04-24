@@ -537,6 +537,15 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="values"></param>
+        public void Write(Memory<byte> values)
+        {
+            WriteMemory(mPosition, values);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
         public void WriteLong(long offset, long value)
@@ -653,6 +662,16 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="values"></param>
+        public void WriteMemory(long offset,Memory<byte> values)
+        {
+            WriteMemory(offset, values, 0, values.Length);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="values"></param>
         public void WriteBytes(long offset,byte[] values)
         {
             WriteBytes(offset, values, 0, values.Length);
@@ -717,6 +736,65 @@ namespace Cdy.Tag
                     }
                 }
             }
+        }
+
+        public void WriteMemory(long offset, Memory<byte> values, int valueoffset, int len)
+        {
+
+            CheckAndResize(offset + len);
+
+            int id = (int)(offset / BufferItemSize);
+
+            long ost = offset % BufferItemSize;
+
+            if (len + ost < BufferItemSize)
+            {
+
+                //Marshal.Copy(values, valueoffset, mHandles[id] + (int)ost, len);
+                Buffer.MemoryCopy((void*)((IntPtr)values.Pin().Pointer+valueoffset),(void*)(mHandles[id] + (int)ost), BufferItemSize, len);
+            }
+            else
+            {
+                int ll = BufferItemSize - (int)ost;
+
+                 //Marshal.Copy(values, valueoffset, mHandles[id] + (int)ost, ll);
+
+                 Buffer.MemoryCopy((void*)((IntPtr)values.Pin().Pointer + valueoffset), (void*)(mHandles[id] + (int)ost), BufferItemSize, ll);
+
+                if (len - ll < BufferItemSize)
+                {
+                    id++;
+                   // Marshal.Copy(values, valueoffset + ll, mHandles[id], len - ll);
+                    Buffer.MemoryCopy((void*)((IntPtr)values.Pin().Pointer + valueoffset+ll), (void*)(mHandles[id]), BufferItemSize,len- ll);
+
+                    // Buffer.BlockCopy(values, ll + valueoffset, mBuffers[id], 0, len - ll);
+                }
+                else
+                {
+                    long ltmp = len - ll;
+                    int bcount = ll / BufferItemSize;
+                    int i = 0;
+                    for (i = 0; i < bcount; i++)
+                    {
+                        id++;
+                       // Marshal.Copy(values, valueoffset + ll + i * BufferItemSize, mHandles[id], BufferItemSize);
+                        Buffer.MemoryCopy((void*)((IntPtr)values.Pin().Pointer + valueoffset + ll + i * BufferItemSize), (void*)(mHandles[id]), BufferItemSize, BufferItemSize);
+
+                        // Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, BufferItemSize);
+                    }
+                    int otmp = ll % BufferItemSize;
+                    if (otmp > 0)
+                    {
+                        id++;
+                       // Marshal.Copy(values, valueoffset + ll + i * BufferItemSize, mHandles[id], otmp);
+                        Buffer.MemoryCopy((void*)((IntPtr)values.Pin().Pointer + valueoffset + ll + i * BufferItemSize), (void*)(mHandles[id]), BufferItemSize, otmp);
+
+                        //Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, otmp);
+                    }
+                }
+            }
+
+            Position = offset + len;
         }
 
         /// <summary>
@@ -1318,6 +1396,16 @@ namespace Cdy.Tag
             return re;
         }
 
+        //public T Read<T>(long offset)
+        //{
+        //    if (typeof(T) == typeof(double))
+        //    {
+                
+        //        return ReadDouble(offset);
+        //    }
+
+        //    return  default(T);
+        //}
 
         /// <summary>
         /// 
@@ -1689,6 +1777,23 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public List<string> ReadStrings(long offset, int count)
+        {
+            mPosition = offset;
+            List<string> re = new List<string>(count);
+            for(int i=0;i<count;i++)
+            {
+                re.Add(ReadString());
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="len"></param>
         /// <returns></returns>
         public byte[] ReadBytes(int len)
@@ -1883,6 +1988,13 @@ namespace Cdy.Tag
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="source"></param>
+        /// <param name="start"></param>
+        /// <param name="len"></param>
         private void WriteToStream(Stream stream,IntPtr source,int start,int len)
         {
             byte[] bvals = new byte[1024*1024*4];
@@ -1897,6 +2009,21 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="len"></param>
+        /// <returns></returns>
+        public byte[] ToBytes(int start,int len)
+        {
+            using(var mm = new System.IO.MemoryStream(len))
+            {
+                WriteToStream(mm, 0, len);
+                return mm.ToArray();
+            }
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...
@@ -1906,6 +2033,7 @@ namespace Cdy.Tag
 
     public static class MarshalMemoryBlockExtends
     {
+
         /// <summary>
         /// 
         /// </summary>

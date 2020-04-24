@@ -8,6 +8,7 @@
 //==============================================================
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Cdy.Tag
@@ -15,7 +16,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class SlopeCompressUnit : CompressUnitbase
+    public class SlopeCompressUnit : LosslessCompressUnit
     {
 
         #region ... Variables  ...
@@ -43,203 +44,1044 @@ namespace Cdy.Tag
         public override int TypeCode => 3;
 
 
-
-
         #endregion ...Properties...
 
         #region ... Methods    ...
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public override CompressUnitbase Clone()
         {
             return new SlopeCompressUnit();
         }
+               
 
-        public override long Compress(MarshalMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="timerVals"></param>
+        /// <param name="usedIndex"></param>
+        /// <returns></returns>
+        protected new byte[] CompressTimers(List<ushort> timerVals, Queue<int> usedIndex)
         {
-            throw new NotImplementedException();
+            int preids = timerVals[0];
+            int ig = -1;
+            usedIndex.TryDequeue(out ig);
+            bool isFirst = true;
+
+            mVarintMemory.Position = 0;
+            mVarintMemory.WriteInt32(preids);
+            for (int i = 1; i < timerVals.Count; i++)
+            {
+                if (i == ig)
+                {
+                    var id = timerVals[i];
+                    if (isFirst)
+                    {
+                        mVarintMemory.WriteInt32(id);
+                        preids = id;
+                    }
+                    else
+                    {
+                        mVarintMemory.WriteInt32(id - preids);
+                        preids = id;
+                    }
+                    if (usedIndex.Count > 0)
+                        usedIndex.TryDequeue(out ig);
+                }
+            }
+            return mVarintMemory.Buffer.AsSpan(0, mVarintMemory.Position).ToArray();
         }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<bool> result)
+
+        private Queue<int> GetEmpityTimers(List<ushort> timerVals)
         {
-            throw new NotImplementedException();
+            Queue<int> emptyIds = new Queue<int>();
+            int preids = timerVals[0];
+            mVarintMemory.Position = 0;
+            {
+                for (int i = 1; i < timerVals.Count; i++)
+                {
+                    if (timerVals[i] <= 0)
+                    {
+                        emptyIds.Enqueue(i);
+                    }
+                }
+                return emptyIds;
+            }
         }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<byte> result)
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="offset"></param>
+        /// <param name="totalcount"></param>
+        /// <param name="usedIndex"></param>
+        /// <returns></returns>
+        protected new Memory<byte> CompressQulitys(MarshalMemoryBlock source, long offset, int totalcount, Queue<int> usedIndex)
         {
-            throw new NotImplementedException();
+            int count = 1;
+            byte qus = source.ReadByte(offset);
+            //using (VarintCodeMemory memory = new VarintCodeMemory(qulitys.Length * 2))
+            mVarintMemory.Position = 0;
+            int ig = -1;
+            usedIndex.TryDequeue(out ig);
+            mVarintMemory.WriteInt32(qus);
+            for (int i = 1; i < totalcount; i++)
+            {
+                if (i == ig)
+                {
+                    byte bval = source.ReadByte(offset + i);
+                    if (bval == qus)
+                    {
+                        count++;
+                    }
+                    else
+                    {
+                        mVarintMemory.WriteInt32(count);
+                        qus = bval;
+                        mVarintMemory.WriteInt32(qus);
+                        count = 1;
+                    }
+                    if (usedIndex.Count > 0)
+                        usedIndex.TryDequeue(out ig);
+                }
+            }
+            mVarintMemory.WriteInt32(count);
+            return mVarintMemory.Buffer.AsMemory(0, mVarintMemory.Position);
         }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<short> result)
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="fval"></param>
+        /// <param name="lastVal"></param>
+        /// <param name="timSpan"></param>
+        /// <returns></returns>
+        private double CalSlope(object fval, object lastVal,int timSpan)
         {
-            throw new NotImplementedException();
+            return (Convert.ToDouble(lastVal) - Convert.ToDouble(fval)) / timSpan;
         }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ushort> result)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="preVal"></param>
+        /// <param name="newVal"></param>
+        /// <param name="area"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        private bool CheckIsNeedRecord(double preVal, double newVal, double area, int type)
         {
-            throw new NotImplementedException();
+            if (type == 0)
+            {
+                return Math.Abs(newVal - preVal) > area;
+            }
+            else
+            {
+                return Math.Abs((newVal - preVal) / preVal) > area;
+            }
         }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<int> result)
+        #region SlopeCompress
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="mUsedTimerIndex"></param>
+        /// <returns></returns>
+        private Memory<byte> SlopeCompress(Dictionary<ushort,byte> values,out Queue<int> mUsedTimerIndex)
         {
-            throw new NotImplementedException();
+            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
+            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
+            double slope = 0;
+
+            mMarshalMemory.Position = 0;
+            Queue<int> mTimerIndex = new Queue<int>();
+
+            if(values.Count>0)
+            {
+                var vals = values.ToArray();
+                var pval = vals[0].Value;
+                ushort ptim = vals[0].Key;
+
+                mTimerIndex.Enqueue(0);
+
+                mMarshalMemory.Write(pval);
+
+                for (int i = 1; i < vals.Length; i++)
+                {
+                    if (i == 1)
+                    {
+                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                    }
+                    else
+                    {
+                        if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
+                        {
+                            mTimerIndex.Enqueue(i - 1);
+                            mMarshalMemory.Write((vals[i - 1].Value));
+                            slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
+                        }
+                    }
+                }
+
+                if (!mTimerIndex.Contains(vals.Length - 1))
+                {
+                    int i = vals.Length - 1;
+                    mTimerIndex.Enqueue(i);
+                    mMarshalMemory.Write((vals[i].Value));
+                }
+            }
+            mUsedTimerIndex = mTimerIndex;
+            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
         }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<uint> result)
+
+        private Memory<byte> SlopeCompress(Dictionary<ushort, short> values, out Queue<int> mUsedTimerIndex)
         {
-            throw new NotImplementedException();
+            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
+            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
+            double slope = 0;
+
+            mMarshalMemory.Position = 0;
+            Queue<int> mTimerIndex = new Queue<int>();
+
+            if (values.Count > 0)
+            {
+                var vals = values.ToArray();
+                var pval = vals[0].Value;
+                ushort ptim = vals[0].Key;
+
+                mTimerIndex.Enqueue(0);
+
+                mMarshalMemory.Write(pval);
+
+                for (int i = 1; i < vals.Length; i++)
+                {
+                    if (i == 1)
+                    {
+                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                    }
+                    else
+                    {
+                        if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
+                        {
+                            mTimerIndex.Enqueue(i - 1);
+                            mMarshalMemory.Write((vals[i - 1].Value));
+                            slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
+                        }
+                    }
+                }
+
+                if (!mTimerIndex.Contains(vals.Length - 1))
+                {
+                    int i = vals.Length - 1;
+                    mTimerIndex.Enqueue(i);
+                    mMarshalMemory.Write((vals[i].Value));
+                }
+            }
+            mUsedTimerIndex = mTimerIndex;
+            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
         }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<long> result)
+
+        private Memory<byte> SlopeCompress(Dictionary<ushort, ushort> values, out Queue<int> mUsedTimerIndex)
         {
-            throw new NotImplementedException();
+            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
+            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
+            double slope = 0;
+
+            mMarshalMemory.Position = 0;
+            Queue<int> mTimerIndex = new Queue<int>();
+
+            if (values.Count > 0)
+            {
+                var vals = values.ToArray();
+                var pval = vals[0].Value;
+                ushort ptim = vals[0].Key;
+
+                mTimerIndex.Enqueue(0);
+
+                mMarshalMemory.Write(pval);
+
+                for (int i = 1; i < vals.Length; i++)
+                {
+                    if (i == 1)
+                    {
+                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                    }
+                    else
+                    {
+                        if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
+                        {
+                            mTimerIndex.Enqueue(i - 1);
+                            mMarshalMemory.Write((vals[i - 1].Value));
+                            slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
+                        }
+                    }
+                }
+
+                if (!mTimerIndex.Contains(vals.Length - 1))
+                {
+                    int i = vals.Length - 1;
+                    mTimerIndex.Enqueue(i);
+                    mMarshalMemory.Write((vals[i].Value));
+                }
+            }
+            mUsedTimerIndex = mTimerIndex;
+            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
         }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ulong> result)
+        private Memory<byte> SlopeCompress(Dictionary<ushort, int> values, out Queue<int> mUsedTimerIndex)
         {
-            throw new NotImplementedException();
+            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
+            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
+            double slope = 0;
+
+            mMarshalMemory.Position = 0;
+            Queue<int> mTimerIndex = new Queue<int>();
+
+            if (values.Count > 0)
+            {
+                var vals = values.ToArray();
+                var pval = vals[0].Value;
+                ushort ptim = vals[0].Key;
+
+                mTimerIndex.Enqueue(0);
+
+                mMarshalMemory.Write(pval);
+
+                for (int i = 1; i < vals.Length; i++)
+                {
+                    if (i == 1)
+                    {
+                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                    }
+                    else
+                    {
+                        if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
+                        {
+                            mTimerIndex.Enqueue(i - 1);
+                            mMarshalMemory.Write((vals[i - 1].Value));
+                            slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
+                        }
+                    }
+                }
+
+                if (!mTimerIndex.Contains(vals.Length - 1))
+                {
+                    int i = vals.Length - 1;
+                    mTimerIndex.Enqueue(i);
+                    mMarshalMemory.Write((vals[i].Value));
+                }
+            }
+            mUsedTimerIndex = mTimerIndex;
+            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
         }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<float> result)
+        private Memory<byte> SlopeCompress(Dictionary<ushort, uint> values, out Queue<int> mUsedTimerIndex)
         {
-            throw new NotImplementedException();
+            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
+            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
+            double slope = 0;
+
+            mMarshalMemory.Position = 0;
+            Queue<int> mTimerIndex = new Queue<int>();
+
+            if (values.Count > 0)
+            {
+                var vals = values.ToArray();
+                var pval = vals[0].Value;
+                ushort ptim = vals[0].Key;
+
+                mTimerIndex.Enqueue(0);
+
+                mMarshalMemory.Write(pval);
+
+                for (int i = 1; i < vals.Length; i++)
+                {
+                    if (i == 1)
+                    {
+                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                    }
+                    else
+                    {
+                        if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
+                        {
+                            mTimerIndex.Enqueue(i - 1);
+                            mMarshalMemory.Write((vals[i - 1].Value));
+                            slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
+                        }
+                    }
+                }
+
+                if (!mTimerIndex.Contains(vals.Length - 1))
+                {
+                    int i = vals.Length - 1;
+                    mTimerIndex.Enqueue(i);
+                    mMarshalMemory.Write((vals[i].Value));
+                }
+            }
+            mUsedTimerIndex = mTimerIndex;
+            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
         }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result)
+        private Memory<byte> SlopeCompress(Dictionary<ushort, long> values, out Queue<int> mUsedTimerIndex)
         {
-            throw new NotImplementedException();
+            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
+            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
+            double slope = 0;
+
+            mMarshalMemory.Position = 0;
+            Queue<int> mTimerIndex = new Queue<int>();
+
+            if (values.Count > 0)
+            {
+                var vals = values.ToArray();
+                var pval = vals[0].Value;
+                ushort ptim = vals[0].Key;
+
+                mTimerIndex.Enqueue(0);
+
+                mMarshalMemory.Write(pval);
+
+                for (int i = 1; i < vals.Length; i++)
+                {
+                    if (i == 1)
+                    {
+                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                    }
+                    else
+                    {
+                        if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
+                        {
+                            mTimerIndex.Enqueue(i - 1);
+                            mMarshalMemory.Write((vals[i - 1].Value));
+                            slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
+                        }
+                    }
+                }
+
+                if (!mTimerIndex.Contains(vals.Length - 1))
+                {
+                    int i = vals.Length - 1;
+                    mTimerIndex.Enqueue(i);
+                    mMarshalMemory.Write((vals[i].Value));
+                }
+            }
+            mUsedTimerIndex = mTimerIndex;
+            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
         }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<DateTime> result)
+        private Memory<byte> SlopeCompress(Dictionary<ushort, ulong> values, out Queue<int> mUsedTimerIndex)
         {
-            throw new NotImplementedException();
+            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
+            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
+            double slope = 0;
+
+            mMarshalMemory.Position = 0;
+            Queue<int> mTimerIndex = new Queue<int>();
+
+            if (values.Count > 0)
+            {
+                var vals = values.ToArray();
+                var pval = vals[0].Value;
+                ushort ptim = vals[0].Key;
+
+                mTimerIndex.Enqueue(0);
+
+                mMarshalMemory.Write(pval);
+
+                for (int i = 1; i < vals.Length; i++)
+                {
+                    if (i == 1)
+                    {
+                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                    }
+                    else
+                    {
+                        if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
+                        {
+                            mTimerIndex.Enqueue(i - 1);
+                            mMarshalMemory.Write((vals[i - 1].Value));
+                            slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
+                        }
+                    }
+                }
+
+                if (!mTimerIndex.Contains(vals.Length - 1))
+                {
+                    int i = vals.Length - 1;
+                    mTimerIndex.Enqueue(i);
+                    mMarshalMemory.Write((vals[i].Value));
+                }
+            }
+            mUsedTimerIndex = mTimerIndex;
+            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
         }
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<string> result)
+        private Memory<byte> SlopeCompress(Dictionary<ushort, double> values, out Queue<int> mUsedTimerIndex)
         {
-            throw new NotImplementedException();
+            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
+            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
+            double slope = 0;
+
+            mMarshalMemory.Position = 0;
+            Queue<int> mTimerIndex = new Queue<int>();
+
+            if (values.Count > 0)
+            {
+                var vals = values.ToArray();
+                var pval = vals[0].Value;
+                ushort ptim = vals[0].Key;
+
+                mTimerIndex.Enqueue(0);
+
+                mMarshalMemory.Write(pval);
+
+                for (int i = 1; i < vals.Length; i++)
+                {
+                    if (i == 1)
+                    {
+                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                    }
+                    else
+                    {
+                        if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
+                        {
+                            mTimerIndex.Enqueue(i - 1);
+                            mMarshalMemory.Write((vals[i - 1].Value));
+                            slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
+                        }
+                    }
+                }
+
+                if (!mTimerIndex.Contains(vals.Length - 1))
+                {
+                    int i = vals.Length - 1;
+                    mTimerIndex.Enqueue(i);
+                    mMarshalMemory.Write((vals[i].Value));
+                }
+            }
+            mUsedTimerIndex = mTimerIndex;
+            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
         }
 
-        public override bool? DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="mUsedTimerIndex"></param>
+        /// <returns></returns>
+        private Memory<byte> SlopeCompress(Dictionary<ushort, float> values, out Queue<int> mUsedTimerIndex)
         {
-            throw new NotImplementedException();
+            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
+            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
+            double slope = 0;
+
+            mMarshalMemory.Position = 0;
+            Queue<int> mTimerIndex = new Queue<int>();
+
+            if (values.Count > 0)
+            {
+                var vals = values.ToArray();
+                var pval = vals[0].Value;
+                ushort ptim = vals[0].Key;
+
+                mTimerIndex.Enqueue(0);
+
+                mMarshalMemory.Write(pval);
+
+                for (int i = 1; i < vals.Length; i++)
+                {
+                    if (i == 1)
+                    {
+                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                    }
+                    else
+                    {
+                        if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
+                        {
+                            mTimerIndex.Enqueue(i - 1);
+                            mMarshalMemory.Write((vals[i - 1].Value));
+                            slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
+                        }
+                    }
+                }
+
+                if (!mTimerIndex.Contains(vals.Length - 1))
+                {
+                    int i = vals.Length - 1;
+                    mTimerIndex.Enqueue(i);
+                    mMarshalMemory.Write((vals[i].Value));
+                }
+            }
+            mUsedTimerIndex = mTimerIndex;
+            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
+        }
+        #endregion
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <param name="emptyIds"></param>
+        /// <param name="mTimers"></param>
+        /// <param name="usedTimerIndex"></param>
+        /// <returns></returns>
+        protected  Memory<byte> CompressValues<T>(MarshalMemoryBlock source, long offset, int count, Queue<int> emptyIds,List<ushort> mTimers,out Queue<int> usedTimerIndex)
+        {
+            int ig = -1;
+            emptyIds.TryDequeue(out ig);
+
+            if (typeof(T) == typeof(byte))
+            {
+                Dictionary<ushort, byte> mavaibleValues = new Dictionary<ushort, byte>();
+
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadByte(offset + i);
+                        mavaibleValues.Add(mTimers[i], id);
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
+                return SlopeCompress(mavaibleValues,out usedTimerIndex);
+            }
+            else if (typeof(T) == typeof(short))
+            {
+                Dictionary<ushort, short> mavaibleValues = new Dictionary<ushort, short>();
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadShort(offset + i);
+                        mavaibleValues.Add(mTimers[i], id);
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
+                return SlopeCompress(mavaibleValues, out usedTimerIndex);
+            }
+            else if (typeof(T) == typeof(ushort))
+            {
+                Dictionary<ushort, ushort> mavaibleValues = new Dictionary<ushort, ushort>();
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadUShort(offset + i);
+                        mavaibleValues.Add(mTimers[i], id);
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
+                return SlopeCompress(mavaibleValues, out usedTimerIndex);
+            }
+            else if (typeof(T) == typeof(int))
+            {
+                Dictionary<ushort, int> mavaibleValues = new Dictionary<ushort, int>();
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadInt(offset + i);
+                        mavaibleValues.Add(mTimers[i], id);
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
+                return SlopeCompress(mavaibleValues, out usedTimerIndex);
+            }
+            else if (typeof(T) == typeof(uint))
+            {
+                Dictionary<ushort, uint> mavaibleValues = new Dictionary<ushort, uint>();
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadUInt(offset + i);
+                        mavaibleValues.Add(mTimers[i], id);
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
+                return SlopeCompress(mavaibleValues, out usedTimerIndex);
+            }
+            else if (typeof(T) == typeof(long))
+            {
+                Dictionary<ushort, long> mavaibleValues = new Dictionary<ushort, long>();
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadLong(offset + i * 8);
+                        mavaibleValues.Add(mTimers[i], id);
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
+                return SlopeCompress(mavaibleValues, out usedTimerIndex);
+            }
+            else if (typeof(T) == typeof(ulong))
+            {
+                Dictionary<ushort, ulong> mavaibleValues = new Dictionary<ushort, ulong>();
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadULong(offset + i * 8);
+                        mavaibleValues.Add(mTimers[i], id);
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
+                return SlopeCompress(mavaibleValues, out usedTimerIndex);
+            }
+            else if (typeof(T) == typeof(double))
+            {
+                Dictionary<ushort, double> mavaibleValues = new Dictionary<ushort, double>();
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadDouble(offset + i * 8);
+                        mavaibleValues.Add(mTimers[i], id);
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
+                return SlopeCompress(mavaibleValues, out usedTimerIndex);
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                Dictionary<ushort, float> mavaibleValues = new Dictionary<ushort, float>();
+                for (int i = 0; i < count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = source.ReadFloat(offset + i * 4);
+                        mavaibleValues.Add(mTimers[i], id);
+                    }
+                    else
+                    {
+                        if (emptyIds.Count > 0)
+                            emptyIds.TryDequeue(out ig);
+                    }
+                }
+                return SlopeCompress(mavaibleValues, out usedTimerIndex);
+            }
+            usedTimerIndex = null;
+            return null;
+
         }
 
-        public override int DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="target"></param>
+        /// <param name="targetAddr"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        protected override long Compress<T>(MarshalMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size)
         {
-            throw new NotImplementedException();
-        }
+            var count = (int)(size - this.QulityOffset);
+            var tims = source.ReadUShorts(sourceAddr, (int)count);
 
-        public override byte? DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
+            if (mMarshalMemory == null)
+            {
+                mMarshalMemory = new MemoryBlock(count * 10);
+            }
 
-        public override int DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result)
-        {
-            throw new NotImplementedException();
-        }
+            if (mVarintMemory == null)
+            {
+                mVarintMemory = new VarintCodeMemory(count * 10);
+            }
 
-        public override DateTime? DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
+            Queue<int> emptys = GetEmpityTimers(tims);
+            Queue<int> usedIndex;
 
-        public override int DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result)
-        {
-            throw new NotImplementedException();
-        }
+            long rsize = 0;
 
-        public override double? DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
 
-        public override int DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<double> result)
-        {
-            throw new NotImplementedException();
-        }
+            if (typeof(T) == typeof(byte))
+            {
+                var cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, emptys, tims,out usedIndex);
 
-        public override float? DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
+                target.Write((ushort)usedIndex.Count);
+                rsize += 2;
 
-        public override int DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<float> result)
-        {
-            throw new NotImplementedException();
-        }
+                var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, new Queue<int>(usedIndex));
+                var timeData = CompressTimers(tims, usedIndex);
 
-        public override int? DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
+                target.Write((int)timeData.Length);
+                target.Write(timeData);
+                rsize += 4;
+                rsize += timeData.Length;
 
-        public override int DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<int> result)
-        {
-            throw new NotImplementedException();
-        }
+                target.Write(cval.Length);
+                target.Write(cval);
+                rsize += 4;
+                rsize += cval.Length;
 
-        public override long? DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
+               
+                target.Write(cqus.Length);
+                target.Write(cqus);
+                rsize += 4;
+                rsize += cqus.Length;
+            }
+            else if (typeof(T) == typeof(short))
+            {
+                var res = CompressValues<short>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
 
-        public override int DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<long> result)
-        {
-            throw new NotImplementedException();
-        }
+                target.Write((ushort)usedIndex.Count);
+                rsize += 2;
 
-        public override short? DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
+                var cqus = CompressQulitys(source, count * 4 + sourceAddr, count,new Queue<int>(usedIndex));
+                var timeData = CompressTimers(tims, usedIndex);
 
-        public override int DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<short> result)
-        {
-            throw new NotImplementedException();
-        }
+                target.Write((int)timeData.Length);
+                target.Write(timeData);
+                rsize += 4;
+                rsize += timeData.Length;
+              
+                target.Write(res.Length);
+                target.Write(res);
+                rsize += 4;
+                rsize += res.Length;
 
-        public override string DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
+                
+                target.Write(cqus.Length);
+                target.Write(cqus);
+                rsize += 4;
+                rsize += cqus.Length;
+            }
+            else if (typeof(T) == typeof(ushort))
+            {
+                var res = CompressValues<ushort>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
 
-        public override int DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<string> result)
-        {
-            throw new NotImplementedException();
-        }
+                target.Write((ushort)usedIndex.Count);
+                rsize += 2;
 
-        public override uint? DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
+                var cqus = CompressQulitys(source, count * 4 + sourceAddr, count, new Queue<int>(usedIndex));
+                var timeData = CompressTimers(tims, usedIndex);
 
-        public override int DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result)
-        {
-            throw new NotImplementedException();
-        }
+                target.Write((int)timeData.Length);
+                target.Write(timeData);
+                rsize += 4;
+                rsize += timeData.Length;
 
-        public override ulong? DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
+                target.Write(res.Length);
+                target.Write(res);
+                rsize += 4;
+                rsize += res.Length;
 
-        public override int DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result)
-        {
-            throw new NotImplementedException();
-        }
+              
+                target.Write(cqus.Length);
+                target.Write(cqus);
+                rsize += 4;
+                rsize += cqus.Length;
+            }
+            else if (typeof(T) == typeof(int))
+            {
+                var res = CompressValues<int>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
 
-        public override ushort? DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            throw new NotImplementedException();
-        }
+                target.Write((ushort)usedIndex.Count);
+                rsize += 2;
 
-        public override int DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result)
-        {
-            throw new NotImplementedException();
-        }
+                var cqus = CompressQulitys(source, count * 6 + sourceAddr, count, new Queue<int>(usedIndex));
+                var timeData = CompressTimers(tims, usedIndex);
 
+                target.Write((int)timeData.Length);
+                target.Write(timeData);
+                rsize += 4;
+                rsize += timeData.Length;
+
+                target.Write(res.Length);
+                target.Write(res);
+                rsize += 4;
+                rsize += res.Length;
+
+               
+                target.Write(cqus.Length);
+                target.Write(cqus);
+                rsize += 4;
+                rsize += cqus.Length;
+            }
+            else if (typeof(T) == typeof(uint))
+            {
+                var res = CompressValues<uint>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
+                target.Write((ushort)usedIndex.Count);
+                rsize += 2;
+
+                var cqus = CompressQulitys(source, count * 6 + sourceAddr, count, new Queue<int>(usedIndex));
+                var timeData = CompressTimers(tims, usedIndex);
+
+                target.Write((int)timeData.Length);
+                target.Write(timeData);
+                rsize += 4;
+                rsize += timeData.Length;
+
+
+                target.Write(res.Length);
+                target.Write(res);
+                rsize += 4;
+                rsize += res.Length;
+
+                
+                target.Write(cqus.Length);
+                target.Write(cqus);
+                rsize += 4;
+                rsize += cqus.Length;
+            }
+            else if (typeof(T) == typeof(long))
+            {
+                var res = CompressValues<long>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
+
+                target.Write((ushort)usedIndex.Count);
+                rsize += 2;
+                var cqus = CompressQulitys(source, count * 10 + sourceAddr, count, new Queue<int>(usedIndex));
+
+                var timeData = CompressTimers(tims, usedIndex);
+
+                target.Write((int)timeData.Length);
+                target.Write(timeData);
+                rsize += 4;
+                rsize += timeData.Length;
+
+                target.Write(res.Length);
+                target.Write(res);
+                rsize += 4;
+                rsize += res.Length;
+
+                target.Write(cqus.Length);
+                target.Write(cqus);
+                rsize += 4;
+                rsize += cqus.Length;
+            }
+            else if (typeof(T) == typeof(ulong))
+            {
+                var res = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
+                target.Write((ushort)usedIndex.Count);
+                rsize += 2;
+
+                var cqus = CompressQulitys(source, count * 10 + sourceAddr, count, new Queue<int>(usedIndex));
+
+                var timeData = CompressTimers(tims, usedIndex);
+                target.Write((int)timeData.Length);
+                target.Write(timeData);
+                rsize += 4;
+                rsize += timeData.Length;
+
+                target.Write(res.Length);
+                target.Write(res);
+                rsize += 4;
+                rsize += res.Length;
+
+                
+                target.Write(cqus.Length);
+                target.Write(cqus);
+                rsize += 4;
+                rsize += cqus.Length;
+            }
+            
+            else if (typeof(T) == typeof(double))
+            {
+                var res = CompressValues<double>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
+
+                target.Write((ushort)usedIndex.Count);
+                rsize += 2;
+
+                var cqus = CompressQulitys(source, count * 10 + sourceAddr, count, new Queue<int>(usedIndex));
+
+                var timeData = CompressTimers(tims, usedIndex);
+                target.Write((int)timeData.Length);
+                target.Write(timeData);
+                rsize += 4;
+                rsize += timeData.Length;
+
+
+                target.Write(res.Length);
+                target.Write(res);
+                rsize += 4;
+                rsize += res.Length;
+
+              
+                target.Write(cqus.Length);
+                target.Write(cqus);
+                rsize += 4;
+                rsize += cqus.Length;
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                var res = CompressValues<float>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
+
+                target.Write((ushort)usedIndex.Count);
+                rsize += 2;
+
+                var cqus = CompressQulitys(source, count * 6 + sourceAddr, count, new Queue<int>(usedIndex));
+
+                var timeData = CompressTimers(tims, usedIndex);
+                target.Write((int)timeData.Length);
+                target.Write(timeData);
+                rsize += 4;
+                rsize += timeData.Length;
+
+
+                target.Write(res.Length);
+                target.Write(res);
+                rsize += 4;
+                rsize += res.Length;
+
+               
+                target.Write(cqus.Length);
+                target.Write(cqus);
+                rsize += 4;
+                rsize += cqus.Length;
+            }
+            
+            return rsize;
+        }
+                
         #endregion ...Methods...
 
         #region ... Interfaces ...

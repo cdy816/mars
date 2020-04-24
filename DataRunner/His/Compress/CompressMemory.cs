@@ -226,7 +226,7 @@ namespace Cdy.Tag
             if (tp != null)
             {
                 tp.QulityOffset = (int)qulityoffset;
-                tp.TagType = (byte)histag.TagType;
+                tp.TagType = histag.TagType;
                 tp.RecordType = histag.Type;
                 tp.StartTime = mCurrentTime;
                 tp.Parameters = histag.Parameters;

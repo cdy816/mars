@@ -847,7 +847,7 @@ namespace Cdy.Tag
             {
                 var cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, emptys, tims,out usedIndex);
 
-                target.Write((ushort)usedIndex.Count);
+                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
                 rsize += 2;
 
                 var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, new Queue<int>(usedIndex));
@@ -873,7 +873,7 @@ namespace Cdy.Tag
             {
                 var res = CompressValues<short>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
 
-                target.Write((ushort)usedIndex.Count);
+                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
                 rsize += 2;
 
                 var cqus = CompressQulitys(source, count * 4 + sourceAddr, count,new Queue<int>(usedIndex));
@@ -899,7 +899,7 @@ namespace Cdy.Tag
             {
                 var res = CompressValues<ushort>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
 
-                target.Write((ushort)usedIndex.Count);
+                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
                 rsize += 2;
 
                 var cqus = CompressQulitys(source, count * 4 + sourceAddr, count, new Queue<int>(usedIndex));
@@ -925,7 +925,7 @@ namespace Cdy.Tag
             {
                 var res = CompressValues<int>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
 
-                target.Write((ushort)usedIndex.Count);
+                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
                 rsize += 2;
 
                 var cqus = CompressQulitys(source, count * 6 + sourceAddr, count, new Queue<int>(usedIndex));
@@ -950,7 +950,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(uint))
             {
                 var res = CompressValues<uint>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
-                target.Write((ushort)usedIndex.Count);
+                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
                 rsize += 2;
 
                 var cqus = CompressQulitys(source, count * 6 + sourceAddr, count, new Queue<int>(usedIndex));
@@ -977,7 +977,7 @@ namespace Cdy.Tag
             {
                 var res = CompressValues<long>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
 
-                target.Write((ushort)usedIndex.Count);
+                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
                 rsize += 2;
                 var cqus = CompressQulitys(source, count * 10 + sourceAddr, count, new Queue<int>(usedIndex));
 
@@ -1001,7 +1001,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(ulong))
             {
                 var res = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
-                target.Write((ushort)usedIndex.Count);
+                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
                 rsize += 2;
 
                 var cqus = CompressQulitys(source, count * 10 + sourceAddr, count, new Queue<int>(usedIndex));
@@ -1028,7 +1028,7 @@ namespace Cdy.Tag
             {
                 var res = CompressValues<double>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
 
-                target.Write((ushort)usedIndex.Count);
+                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
                 rsize += 2;
 
                 var cqus = CompressQulitys(source, count * 10 + sourceAddr, count, new Queue<int>(usedIndex));
@@ -1055,7 +1055,7 @@ namespace Cdy.Tag
             {
                 var res = CompressValues<float>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
 
-                target.Write((ushort)usedIndex.Count);
+                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
                 rsize += 2;
 
                 var cqus = CompressQulitys(source, count * 6 + sourceAddr, count, new Queue<int>(usedIndex));

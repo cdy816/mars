@@ -55,33 +55,33 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override long Compress(MarshalMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size)
         {
-            target.Write(this.StartTime);
+            target.WriteDatetime(targetAddr, this.StartTime);
             switch (TagType)
             {
                 case TagType.Bool:
-                    return Compress<bool>(source, sourceAddr, target, targetAddr, size) + 8;
+                    return Compress<bool>(source, sourceAddr, target, targetAddr+8, size) + 8;
                 case TagType.Byte:
-                    return Compress<byte>(source, sourceAddr, target, targetAddr, size) + 8;
+                    return Compress<byte>(source, sourceAddr, target, targetAddr+8, size) + 8;
                 case TagType.UShort:
-                    return Compress<ushort>(source, sourceAddr, target, targetAddr, size) + 8;
+                    return Compress<ushort>(source, sourceAddr, target, targetAddr + 8, size) + 8;
                 case TagType.Short:
-                    return Compress<short>(source, sourceAddr, target, targetAddr, size) + 8;
+                    return Compress<short>(source, sourceAddr, target, targetAddr + 8, size) + 8;
                 case TagType.UInt:
-                    return Compress<uint>(source, sourceAddr, target, targetAddr, size) + 8;
+                    return Compress<uint>(source, sourceAddr, target, targetAddr + 8, size) + 8;
                 case TagType.Int:
-                    return Compress<int>(source, sourceAddr, target, targetAddr, size) + 8;
+                    return Compress<int>(source, sourceAddr, target, targetAddr + 8, size) + 8;
                 case TagType.ULong:
-                    return Compress<ulong>(source, sourceAddr, target, targetAddr, size) + 8;
+                    return Compress<ulong>(source, sourceAddr, target, targetAddr + 8, size) + 8;
                 case TagType.Long:
-                    return Compress<long>(source, sourceAddr, target, targetAddr, size) + 8;
+                    return Compress<long>(source, sourceAddr, target, targetAddr + 8, size) + 8;
                 case TagType.Double:
-                    return Compress<double>(source, sourceAddr, target, targetAddr, size) + 8;
+                    return Compress<double>(source, sourceAddr, target, targetAddr + 8, size) + 8;
                 case TagType.Float:
-                    return Compress<float>(source, sourceAddr, target, targetAddr, size) + 8;
+                    return Compress<float>(source, sourceAddr, target, targetAddr + 8, size) + 8;
                 case TagType.String:
-                    return Compress<string>(source, sourceAddr, target, targetAddr, size) + 8;
+                    return Compress<string>(source, sourceAddr, target, targetAddr + 8, size) + 8;
                 case TagType.DateTime:
-                    return Compress<DateTime>(source, sourceAddr, target, targetAddr, size) + 8;
+                    return Compress<DateTime>(source, sourceAddr, target, targetAddr + 8, size) + 8;
             }
             return 8;
         }
@@ -97,9 +97,9 @@ namespace Cdy.Tag
             int preids = 0;
             mVarintMemory.Position = 0;
             bool isFirst = true;
-            for (int i = 1; i < timerVals.Count; i++)
+            for (int i = 0; i < timerVals.Count; i++)
             {
-                if (timerVals[i] > 0)
+                if (timerVals[i] > 0||i==0)
                 {
                     var id = timerVals[i];
                     if (isFirst)
@@ -556,7 +556,7 @@ namespace Cdy.Tag
             //byte[] qus = null;
             int rcount = count - emptys.Count;
 
-            target.Write((ushort)rcount);
+            target.WriteUShort(targetAddr,(ushort)rcount);
             rsize += 2;
             target.Write((int)datas.Length);
             target.Write(datas);
@@ -788,8 +788,9 @@ namespace Cdy.Tag
                 for (int i = 1; i < count; i++)
                 {
                     var ss = (ushort)memory.ReadInt32();
-                    re.Add((ushort)(preval + ss));
-                    preval = ss;
+                    var val = (ushort)(preval + ss);
+                    re.Add(val);
+                    preval = val;
                 }
                 return re;
             }
@@ -1049,7 +1050,7 @@ namespace Cdy.Tag
         public virtual int DeCompressALlValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result)
         {
             int count = 0;
-            var timers = GetTimers(source, sourceAddr + 8, startTime, endTime, timeTick,out count);
+            var timers = GetTimers(source, sourceAddr, startTime, endTime, timeTick,out count);
 
             var valuesize = source.ReadInt();
             var value = DeCompressValue<T>(source.ReadBytes(valuesize),count);

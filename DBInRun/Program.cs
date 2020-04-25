@@ -8,6 +8,7 @@ namespace DBInRun
     {
         static void Main(string[] args)
         {
+            bool mIsClosed = false;
             Console.WriteLine(Res.Get("WelcomeMsg"));
             if (args.Length>0 && args[0]== "start")
             {
@@ -22,7 +23,7 @@ namespace DBInRun
             }
 
             Console.WriteLine(Res.Get("HelpMsg"));
-            while (true)
+            while (!mIsClosed)
             {
                 Console.Write(">");
                 string[] cmd = Console.ReadLine().Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
@@ -37,6 +38,7 @@ namespace DBInRun
                         {
                             Cdy.Tag.Runner.RunInstance.Stop();
                         }
+                        mIsClosed = true;
                         break;
                     case "start":
                         if (cmd.Length > 1)
@@ -91,6 +93,7 @@ namespace DBInRun
         private static string GetHelpString()
         {
             StringBuilder re = new StringBuilder();
+            re.AppendLine();
             re.AppendLine("start [database] // "+Res.Get("StartMsg"));
             re.AppendLine("stop             // " + Res.Get("StopMsg"));
             re.AppendLine("gd    [databasename] [double tag count] [float tag count] [long tag count] [int tag count] [bool tag count] // "+Res.Get("GDMsg"));
@@ -141,36 +144,37 @@ namespace DBInRun
                 test.Append(new Cdy.Tag.BoolTag() { Name = "Bool" + i, Group = "Bool" });
             }
 
+            
 
             Cdy.Tag.HisDatabase htest =db.HisDatabase;
             int id = 0;
             for (int i = 0; i < dcount; i++)
             {
-                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Double, Circle = 1000,Type = Cdy.Tag.RecordType.Timer });
+                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Double, Circle = 1000,Type = Cdy.Tag.RecordType.Timer,CompressType=0 });
                 id++;
             }
 
             for (int i = 0; i < fcount; i++)
             {
-                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Float, Circle = 1000, Type = Cdy.Tag.RecordType.Timer });
+                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Float, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
                 id++;
             }
 
             for (int i = 0; i < lcount; i++)
             {
-                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Long, Circle = 1000, Type = Cdy.Tag.RecordType.Timer });
+                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Long, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
                 id++;
             }
 
             for (int i = 0; i < icount; i++)
             {
-                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Int, Circle = 1000, Type = Cdy.Tag.RecordType.Timer });
+                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Int, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
                 id++;
             }
 
             for (int i = 0; i < bcount; i++)
             {
-                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Bool, Circle = 1000, Type = Cdy.Tag.RecordType.Timer });
+                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Bool, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
                 id++;
             }
             db.HisDatabase = htest;

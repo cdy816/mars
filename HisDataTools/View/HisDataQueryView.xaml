@@ -9,6 +9,7 @@
              d:DesignHeight="450" d:DesignWidth="926">
     <UserControl.Resources>
         <res:IndexConverter x:Key="ic" />
+       
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -61,7 +62,7 @@
                             <DataGridTemplateColumn  IsReadOnly="True" Width="200" MinWidth="60" Header="{res:ResMarker DateTime}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock HorizontalAlignment="Center" Text="{Binding DateTime}" VerticalAlignment="Center" />
+                                        <TextBlock HorizontalAlignment="Center" Text="{Binding DateTimeString}" VerticalAlignment="Center" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

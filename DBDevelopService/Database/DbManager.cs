@@ -29,6 +29,11 @@ namespace DBDevelopService
 
         #region ... Properties ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsLoaded { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -55,6 +60,7 @@ namespace DBDevelopService
                     }
                 }
             }
+            IsLoaded = true;
         }
 
         /// <summary>

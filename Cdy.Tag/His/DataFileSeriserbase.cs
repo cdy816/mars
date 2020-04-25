@@ -67,6 +67,13 @@ namespace Cdy.Tag
         public abstract bool OpenFile(string filename);
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public abstract bool OpenForReadOnly(string filename);
+
+        /// <summary>
         /// 检查是否存在
         /// </summary>
         /// <param name="filename"></param>

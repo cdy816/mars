@@ -126,7 +126,7 @@ namespace Cdy.Tag
         public void Stop()
         {
             mIsClosed = true;
-            closedEvent.WaitOne();
+            closedEvent.WaitOne(1000);
         }
 
         /// <summary>

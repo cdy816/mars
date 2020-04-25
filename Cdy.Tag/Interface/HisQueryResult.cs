@@ -127,7 +127,7 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void Add<T>(T value,DateTime time,byte qulity)
         {
-            Add((bool)((object)value), time, qulity);
+            Add((object)value, time, qulity);
         }
 
         /// <summary>
@@ -200,7 +200,7 @@ namespace Cdy.Tag
                     break;
             }
             MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            Marshal.WriteByte(handle + mCount + mQulityAddr, (byte)value);
+            Marshal.WriteByte(handle + mCount + mQulityAddr, (byte)qulity);
             // mDataBuffer[mCount + mQulityAddr] = qulity;
             mCount++;
         }

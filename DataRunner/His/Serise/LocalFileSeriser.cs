@@ -380,6 +380,21 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public override bool OpenForReadOnly(string filename)
+        {
+            if (System.IO.File.Exists(filename))
+            {
+                mStream = System.IO.File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public override DataFileSeriserbase GoToEnd()
         {
             mStream.Position = mStream.Length;
@@ -485,5 +500,7 @@ namespace Cdy.Tag
             //LoggerService.Service.Info("LocalFileSeriser", "写入文件耗时:" + sw.ElapsedMilliseconds + " 文件大小:" + len / 1024.0 / 1024.0);
             return this;
         }
+
+        
     }
 }

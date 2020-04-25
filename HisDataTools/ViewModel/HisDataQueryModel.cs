@@ -337,6 +337,15 @@ namespace HisDataTools.ViewModel
         /// </summary>
         public DateTime DateTime { get; set; }
 
+        public string DateTimeString
+        {
+            get
+            {
+                return DateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            }
+        }
+
+
         /// <summary>
         /// 
         /// </summary>

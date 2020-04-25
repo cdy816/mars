@@ -223,7 +223,7 @@ namespace Cdy.Tag
         {
             List<DataFileInfo> re = new List<DataFileInfo>();
             int id = Id / TagCountOneFile;
-            if (mTimeFileMaps.ContainsKey(Id))
+            if (mTimeFileMaps.ContainsKey(id))
             {
                 var nxtYear = new DateTime(startTime.Year+1, 1, 1);
                 if (nxtYear > startTime + span)

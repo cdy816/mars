@@ -48,7 +48,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override long Compress(MarshalMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size)
         {
-            target.Write(this.StartTime);
+            target.WriteDatetime(targetAddr,this.StartTime);
             target.Write((ushort)(size - this.QulityOffset));//写入值的个数
             if (size > 0)
                 source.CopyTo(target, sourceAddr, targetAddr + 10, size);

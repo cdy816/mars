@@ -96,7 +96,7 @@ namespace Cdy.Tag
         public async Task Int()
         {
            await Scan(GetPrimaryHisDataPath());
-           await Scan(GetBackHisDataPath());
+           //await Scan(GetBackHisDataPath());
         }
 
         /// <summary>
@@ -162,8 +162,7 @@ namespace Cdy.Tag
             DateTime startTime = new DateTime(yy, mm, dd, hh, 0, 0);
 
             YearTimeFile yt = new YearTimeFile() { TimeKey = yy };
-            yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new DataFileInfo() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName } );
-
+           
             if(mTimeFileMaps.ContainsKey(id))
             {
                 if (mTimeFileMaps[id].ContainsKey(yy))
@@ -180,6 +179,7 @@ namespace Cdy.Tag
                 mTimeFileMaps.Add(id, new Dictionary<int, YearTimeFile>());
                 mTimeFileMaps[id].Add(yy, yt);
             }
+            yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new DataFileInfo() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName });
         }
 
         /// <summary>

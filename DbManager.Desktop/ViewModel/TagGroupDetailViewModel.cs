@@ -8,8 +8,10 @@
 //==============================================================
 
 using DBDevelopClientApi;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -90,7 +92,7 @@ namespace DBInStudio.Desktop.ViewModel
                 if (mExportCommand == null)
                 {
                     mExportCommand = new RelayCommand(() => {
-
+                        ExportToFile();
                     });
                 }
                 return mExportCommand;
@@ -107,7 +109,7 @@ namespace DBInStudio.Desktop.ViewModel
                 if (mImportCommand == null)
                 {
                     mImportCommand = new RelayCommand(() => {
-
+                        ImportFromFile();
                     });
                 }
                 return mImportCommand;
@@ -167,18 +169,99 @@ namespace DBInStudio.Desktop.ViewModel
             {
                 return mSelectGroupTags;
             }
+            set
+            {
+                mSelectGroupTags = value;
+                OnPropertyChanged("SelectGroupTags");
+            }
         }
 
         #endregion ...Properties...
 
         #region ... Methods    ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private void ExportToFile()
+        {
+            SaveFileDialog ofd = new SaveFileDialog();
+            ofd.Filter = "csv|*.csv";
+            if(ofd.ShowDialog().Value)
+            {
+                var stream = new StreamWriter(File.Open(ofd.FileName, FileMode.OpenOrCreate, FileAccess.ReadWrite));
+                foreach(var vv in mSelectGroupTags)
+                {
+                    stream.WriteLine(vv.SaveToCSVString());
+                }
+                stream.Close();
+            }
+        }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private void ImportFromFile()
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "csv|*.csv";
+            List<TagViewModel> ltmp = new List<TagViewModel>();
+
+            if (ofd.ShowDialog().Value)
+            {
+                var stream = new StreamReader(File.Open(ofd.FileName, FileMode.OpenOrCreate, FileAccess.ReadWrite));
+                while(!stream.EndOfStream)
+                {
+                    string sval = stream.ReadLine();
+                    if (!string.IsNullOrEmpty(sval))
+                    {
+                        TagViewModel tm = TagViewModel.LoadFromCSVString(sval);
+                        ltmp.Add(tm);
+                    }
+                }
+                stream.Close();
+            }
+
+            var tags = mSelectGroupTags.ToDictionary(e => e.RealTagMode.Id);
+            foreach(var vv in ltmp)
+            {
+                if(tags.ContainsKey(vv.RealTagMode.Id))
+                {
+                    if(!DevelopServiceHelper.Helper.UpdateTag(GroupModel.Database, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(vv.RealTagMode, vv.HisTagMode)))
+                    {
+                        MessageBox.Show(string.Format(Res.Get("UpdateTagFail"), vv.RealTagMode.Name),Res.Get("erro"),MessageBoxButton.OK,MessageBoxImage.Error);
+                        break;
+                    }
+                }
+                else
+                {
+                    int id;
+                    if (!DevelopServiceHelper.Helper.AddTag(GroupModel.Database, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(vv.RealTagMode, vv.HisTagMode), out id))
+                    {
+                        MessageBox.Show(string.Format(Res.Get("AddTagFail"), vv.RealTagMode.Name), Res.Get("erro"), MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    }
+                    else
+                    {
+                        vv.RealTagMode.Id = id;
+                        if (vv.HisTagMode != null) vv.HisTagMode.Id = id;
+                        vv.IsChanged = false;
+                        vv.IsNew = false;
+                    }
+                }
+            }
+
+            System.Threading.Tasks.Task.Run(() => { QueryTags();});
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private void QueryTags()
         {
-            Application.Current.Dispatcher.Invoke(() => {
-                mSelectGroupTags.Clear();
-            });
+            var vtags = new System.Collections.ObjectModel.ObservableCollection<TagViewModel>();
+            
             
             var vv = DevelopServiceHelper.Helper.QueryTagByGroup(this.GroupModel.Database, this.GroupModel.FullName);
             if (vv != null)
@@ -187,11 +270,13 @@ namespace DBInStudio.Desktop.ViewModel
                 {
                     Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                         TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2);
-                        mSelectGroupTags.Add(model);
+                        vtags.Add(model);
                     }));
-
                 }
             }
+
+            SelectGroupTags = vtags;
+
         }
 
 

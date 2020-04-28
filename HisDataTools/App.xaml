@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:HisDataTools"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary Source="/HisDataTools;component/Chart/ChartGeneric.xaml" />
     </Application.Resources>
 </Application>

@@ -76,8 +76,15 @@ namespace Cdy.Tag
         /// <param name="file"></param>
         public MonthTimeFile AddMonth(int month, MonthTimeFile file)
         {
-            file.Parent = this;
-            return this.AddTimefile(month, file) as MonthTimeFile;
+            if (this.ContainsKey(month))
+            {
+                return this[month] as MonthTimeFile;
+            }
+            else
+            {
+                file.Parent = this;
+                return this.AddTimefile(month, file) as MonthTimeFile;
+            }
         }
 
         /// <summary>

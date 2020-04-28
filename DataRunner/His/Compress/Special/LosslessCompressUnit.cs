@@ -1284,7 +1284,7 @@ namespace Cdy.Tag
                                     }
                                     else
                                     {
-                                        result.Add(0, time1, (byte)QulityConst.Null);
+                                        result.Add(0, time1, (byte)QualityConst.Null);
                                     }
                                     resultCount++;
                                 }

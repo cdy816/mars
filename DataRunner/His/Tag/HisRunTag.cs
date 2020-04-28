@@ -140,7 +140,7 @@ namespace Cdy.Tag
         public void UpdateNone()
         {
             Count = ++Count > MaxCount ? MaxCount : Count;
-            HisAddr[HisQulityStartAddr + Count] = (byte)QulityConst.Tick;
+            HisAddr[HisQulityStartAddr + Count] = (byte)QualityConst.Tick;
         }
 
         /// <summary>

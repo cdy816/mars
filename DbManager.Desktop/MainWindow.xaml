@@ -93,6 +93,26 @@
                         </DataTemplate>
                     </Button.ContentTemplate>
                 </Button>
+                <Button Style="{DynamicResource MenuButton}"  Command="{Binding ExportCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                    <Button.ContentTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="/Image/export.png" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                                <TextBlock Text="{local:ResMarker Export}" VerticalAlignment="Center" Margin="5,0"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </Button.ContentTemplate>
+                </Button>
+                <Button Style="{DynamicResource MenuButton}"  Command="{Binding ImportCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                    <Button.ContentTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="/Image/import.png" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                                <TextBlock Text="{local:ResMarker Import}" VerticalAlignment="Center" Margin="5,0"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </Button.ContentTemplate>
+                </Button>
             </StackPanel>
         </Border>
         <Grid Grid.Row="1">

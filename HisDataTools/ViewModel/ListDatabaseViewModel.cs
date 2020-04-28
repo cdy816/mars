@@ -38,7 +38,7 @@ namespace HisDataTools.ViewModel
             Init();
             DefaultHeight = 300;
             DefaultWidth = 500;
-            Title = Res.Get("databaseSelect");
+            Title = Res.Get("DatabaseSelectTitle");
         }
         #endregion ...Constructor...
 

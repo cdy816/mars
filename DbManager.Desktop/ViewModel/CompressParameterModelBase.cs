@@ -82,6 +82,7 @@ namespace DBInStudio.Desktop.ViewModel
 
         #region ... Variables  ...
         private double mDeadValue;
+        private int mDeadType;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -94,8 +95,8 @@ namespace DBInStudio.Desktop.ViewModel
 
         #region ... Properties ...
         /// <summary>
-            /// 死区值
-            /// </summary>
+        /// 死区值
+        /// </summary>
         public double DeadValue
         {
             get
@@ -111,6 +112,23 @@ namespace DBInStudio.Desktop.ViewModel
                 }
             }
         }
+
+
+        public int Type
+        {
+            get
+            {
+                return mDeadType;
+            }
+            set
+            {
+                mDeadType = value;
+                FillParameters();
+                OnPropertyChanged("Type");
+            }
+        }
+
+
 
         #endregion ...Properties...
 
@@ -129,6 +147,15 @@ namespace DBInStudio.Desktop.ViewModel
             {
                 this.mDeadValue = 0;
             }
+
+            if (Parameters.ContainsKey("DeadType"))
+            {
+                this.mDeadType = (int)(Parameters["DeadType"]);
+            }
+            else
+            {
+                this.mDeadType = 0;
+            }
         }
 
         /// <summary>
@@ -144,6 +171,15 @@ namespace DBInStudio.Desktop.ViewModel
             {
                 Parameters.Add("DeadValue", DeadValue);
             }
+
+            if (Parameters.ContainsKey("DeadType"))
+            {
+                Parameters["DeadType"] = Type;
+            }
+            else
+            {
+                Parameters.Add("DeadType", Type);
+            }
         }
 
         #endregion ...Methods...
@@ -158,6 +194,7 @@ namespace DBInStudio.Desktop.ViewModel
 
         #region ... Variables  ...
         private double mSlopeValue;
+        private int mSlopeType;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -170,8 +207,8 @@ namespace DBInStudio.Desktop.ViewModel
 
         #region ... Properties ...
         /// <summary>
-            /// 斜率值
-            /// </summary>
+        /// 斜率值
+        /// </summary>
         public double SlopeValue
         {
             get
@@ -189,6 +226,21 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
+        public int Type
+        {
+            get
+            {
+                return mSlopeType;
+            }
+            set
+            {
+                mSlopeType = value;
+                FillParameters();
+                OnPropertyChanged("SlopeType");
+            }
+        }
+        
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -198,13 +250,22 @@ namespace DBInStudio.Desktop.ViewModel
         /// </summary>
         public override void Init()
         {
-            if (Parameters.ContainsKey("SlopeValue"))
+            if (Parameters.ContainsKey("SlopeArea"))
             {
-                this.mSlopeValue = Parameters["SlopeValue"];
+                this.mSlopeValue = Parameters["SlopeArea"];
             }
             else
             {
                 this.mSlopeValue = 0;
+            }
+
+            if (Parameters.ContainsKey("SlopeType"))
+            {
+                this.mSlopeType = (int)Parameters["SlopeType"];
+            }
+            else
+            {
+                this.mSlopeType = 0;
             }
         }
 
@@ -213,13 +274,22 @@ namespace DBInStudio.Desktop.ViewModel
         /// </summary>
         public override void FillParameters()
         {
-            if (Parameters.ContainsKey("SlopeValue"))
+            if (Parameters.ContainsKey("SlopeArea"))
             {
-                Parameters["SlopeValue"] = SlopeValue;
+                Parameters["SlopeArea"] = SlopeValue;
             }
             else
             {
-                Parameters.Add("SlopeValue", SlopeValue);
+                Parameters.Add("SlopeArea", SlopeValue);
+            }
+
+            if (Parameters.ContainsKey("SlopeType"))
+            {
+                Parameters["SlopeType"] = Type;
+            }
+            else
+            {
+                Parameters.Add("SlopeType", Type);
             }
         }
 

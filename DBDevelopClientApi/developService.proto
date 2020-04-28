@@ -76,6 +76,7 @@ service DevelopServer {
   //获取所有变量
   rpc GetAllTag(GetTagByGroupRequest) returns (GetTagMessageReply);
 
+
   //获取所有历史变量
   rpc GetHisAllTag(GetRequest) returns (GetHistTagMessageReply);
 
@@ -351,6 +352,7 @@ message GetTagByGroupRequest
     string LoginId=1;
     string Database=2;
     string Group=3;
+    int32 Index=4;
 }
 
 //
@@ -360,13 +362,17 @@ message BoolResultReplay
     string ErroMessage=2;
 }
 
+
+
 //获取变量配置
 message GetTagMessageReply
 {
     bool Result =1;
     string ErroMessage=2;
-    repeated RealTagMessage realTag=3;
-    repeated HisTagMessage hisTag=4;
+    int32 Count=3;
+    int32 Index=4;
+    repeated RealTagMessage realTag=5;
+    repeated HisTagMessage hisTag=6;
 }
 
 message GetRealTagMessageReply

@@ -90,6 +90,9 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public IntPtr MemoryHandle
         {
             get
@@ -119,6 +122,7 @@ namespace Cdy.Tag
         public void Init()
         {
             long msize = 0;
+            byte unknowQuality = (byte)QualityConst.Init;
             mIdAndAddr.Clear();
             foreach (var vv in mConfigDatabase.Tags)
             {
@@ -128,7 +132,7 @@ namespace Cdy.Tag
                 {
                     case TagType.Bool:
                     case TagType.Byte:
-                        msize+=10;
+                        msize +=10;
                         break;
                     case TagType.Short:
                     case TagType.UShort:
@@ -153,6 +157,35 @@ namespace Cdy.Tag
             mUsedSize = (long)(msize * 1.2);
             mMemory = new byte[mUsedSize];
             mMHandle = mMemory.AsMemory().Pin().Pointer;
+
+            foreach (var vv in mConfigDatabase.Tags)
+            {
+                switch (vv.Value.Type)
+                {
+                    case TagType.Bool:
+                    case TagType.Byte:
+                        MemoryHelper.WriteByte(mMHandle, vv.Value.ValueAddress + 9, unknowQuality);
+                        break;
+                    case TagType.Short:
+                    case TagType.UShort:
+                        MemoryHelper.WriteByte(mMHandle, vv.Value.ValueAddress + 10, unknowQuality);
+                        break;
+                    case TagType.Int:
+                    case TagType.UInt:
+                    case TagType.Float:
+                        MemoryHelper.WriteByte(mMHandle, vv.Value.ValueAddress + 12, unknowQuality);
+                        break;
+                    case TagType.Long:
+                    case TagType.ULong:
+                    case TagType.Double:
+                        MemoryHelper.WriteByte(mMHandle, vv.Value.ValueAddress + 16, unknowQuality);
+                        break;
+                    case TagType.String:
+                        MemoryHelper.WriteByte(mMHandle, vv.Value.ValueAddress + Const.StringSize + 8, unknowQuality);
+                        break;
+                }
+            }
+
         }
 
         /// <summary>
@@ -223,6 +256,7 @@ namespace Cdy.Tag
         public void SetValueByAddr(long addr, byte value)
         {
             mMemory[addr] = value;
+            MemoryHelper.WriteByte(mMHandle, addr + 9, 0);
         }
 
         /// <summary>
@@ -247,6 +281,7 @@ namespace Cdy.Tag
         public void SetValueByAddr(long addr, short value)
         {
             MemoryHelper.WriteShort(mMHandle, addr, value);
+            MemoryHelper.WriteByte(mMHandle, addr + 10, 0);
         }
 
         /// <summary>
@@ -271,6 +306,7 @@ namespace Cdy.Tag
         public void SetValueByAddr(long addr, int value)
         {
             MemoryHelper.WriteInt32(mMHandle, addr, value);
+            MemoryHelper.WriteByte(mMHandle, addr + 12, 0);
         }
 
         /// <summary>
@@ -295,6 +331,7 @@ namespace Cdy.Tag
         public void SetValueByAddr(long addr, long value)
         {
             MemoryHelper.WriteInt64(mMHandle, addr, value);
+            MemoryHelper.WriteByte(mMHandle, addr + 16, 0);
         }
 
         /// <summary>
@@ -308,7 +345,7 @@ namespace Cdy.Tag
         {
             MemoryHelper.WriteInt64(mMHandle, addr, value);
             MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
-            MemoryHelper.WriteByte(mMHandle, addr + 16, qulity); ;
+            MemoryHelper.WriteByte(mMHandle, addr + 16, qulity);
         }
 
  
@@ -321,6 +358,7 @@ namespace Cdy.Tag
         public void SetValueByAddr(long addr, float value)
         {
             MemoryHelper.WriteFloat(mMHandle, addr, value);
+            MemoryHelper.WriteByte(mMHandle, addr + 12, 0);
         }
 
         /// <summary>
@@ -345,6 +383,7 @@ namespace Cdy.Tag
         public void SetValueByAddr(long addr, double value)
         {
             MemoryHelper.WriteDouble(mMHandle, addr, value);
+            MemoryHelper.WriteByte(mMHandle, addr + 16, 0);
         }
 
         /// <summary>
@@ -369,6 +408,7 @@ namespace Cdy.Tag
         public void SetValueByAddr(long addr, DateTime value)
         {
             MemoryHelper.WriteDateTime(mMHandle, addr, value);
+            MemoryHelper.WriteByte(mMHandle, addr + 16, 0);
         }
 
         /// <summary>
@@ -396,6 +436,7 @@ namespace Cdy.Tag
             MemoryHelper.WriteByte(mMHandle, addr, (byte)value.Length);
             
             System.Buffer.BlockCopy(value.ToCharArray(), 0, mMemory, (int)addr+1, value.Length);
+            MemoryHelper.WriteByte(mMHandle, Const.StringSize + 8, 0);
         }
 
         /// <summary>
@@ -409,9 +450,14 @@ namespace Cdy.Tag
         {
             System.Buffer.BlockCopy(value.ToCharArray(), 0, mMemory, (int)addr, value.Length);
             MemoryHelper.WriteDateTime(mMHandle, Const.StringSize, time);
-            MemoryHelper.WriteByte(mMHandle, Const.StringSize + 8, qulity); ;
+            MemoryHelper.WriteByte(mMHandle, Const.StringSize + 8, qulity); 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
         public void SetValue(int id, bool value)
         {
             if (value)

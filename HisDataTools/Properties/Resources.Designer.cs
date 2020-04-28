@@ -61,6 +61,33 @@ namespace HisDataTools.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Null 的本地化字符串。
+        /// </summary>
+        internal static string _null {
+            get {
+                return ResourceManager.GetString("null", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 All value 的本地化字符串。
+        /// </summary>
+        internal static string AllValue {
+            get {
+                return ResourceManager.GetString("AllValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Bad 的本地化字符串。
+        /// </summary>
+        internal static string bad {
+            get {
+                return ResourceManager.GetString("bad", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Cancel 的本地化字符串。
         /// </summary>
         internal static string Cancel {
@@ -75,6 +102,15 @@ namespace HisDataTools.Properties {
         internal static string Chart {
             get {
                 return ResourceManager.GetString("Chart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Database select 的本地化字符串。
+        /// </summary>
+        internal static string DatabaseSelectTitle {
+            get {
+                return ResourceManager.GetString("DatabaseSelectTitle", resourceCulture);
             }
         }
         
@@ -106,6 +142,15 @@ namespace HisDataTools.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Good 的本地化字符串。
+        /// </summary>
+        internal static string good {
+            get {
+                return ResourceManager.GetString("good", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 HisDataQuery 的本地化字符串。
         /// </summary>
         internal static string HisDataQuery {
@@ -133,6 +178,15 @@ namespace HisDataTools.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Init 的本地化字符串。
+        /// </summary>
+        internal static string Init {
+            get {
+                return ResourceManager.GetString("Init", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 OK 的本地化字符串。
         /// </summary>
         internal static string OK {
@@ -147,6 +201,15 @@ namespace HisDataTools.Properties {
         internal static string Open {
             get {
                 return ResourceManager.GetString("Open", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Value count {0}/{1} ms 的本地化字符串。
+        /// </summary>
+        internal static string OpMsgFormate {
+            get {
+                return ResourceManager.GetString("OpMsgFormate", resourceCulture);
             }
         }
         
@@ -187,11 +250,29 @@ namespace HisDataTools.Properties {
         }
         
         /// <summary>
+        ///   查找类似 StartValue 的本地化字符串。
+        /// </summary>
+        internal static string startvalue {
+            get {
+                return ResourceManager.GetString("startvalue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Tag 的本地化字符串。
         /// </summary>
         internal static string Tag {
             get {
                 return ResourceManager.GetString("Tag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 TimeSpan 的本地化字符串。
+        /// </summary>
+        internal static string TimeSpan {
+            get {
+                return ResourceManager.GetString("TimeSpan", resourceCulture);
             }
         }
         

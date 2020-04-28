@@ -15,7 +15,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 质量戳常量
     /// </summary>
-    public enum QulityConst
+    public enum QualityConst
     {
         /// <summary>
         /// 好
@@ -26,9 +26,13 @@ namespace Cdy.Tag
         /// </summary>
         Bad= 20,
         /// <summary>
+        ///  初始状态
+        /// </summary>
+        Init = 63,
+        /// <summary>
         /// 无数据
         /// </summary>
-        Tick=253,
+        Tick =253,
         /// <summary>
         /// 保持和前置一样
         /// </summary>

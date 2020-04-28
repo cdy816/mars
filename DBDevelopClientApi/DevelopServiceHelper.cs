@@ -185,6 +185,74 @@ namespace DBDevelopClientApi
         /// 
         /// </summary>
         /// <param name="database"></param>
+        /// <returns></returns>
+        public Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> QueryAllTag(string database)
+        {
+            Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> re = new Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>>();
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                int idx = 0;
+                int count = 0;
+                do
+                {
+                    var result = mCurrentClient.GetAllTag(new DBDevelopService.GetTagByGroupRequest() { Database = database, LoginId = mLoginId });
+
+                    idx = result.Index;
+                    count = result.Count;
+
+                    if (!result.Result) break;
+
+                    Dictionary<int, Cdy.Tag.Tagbase> mRealTag = new Dictionary<int, Cdy.Tag.Tagbase>();
+                    foreach (var vv in result.RealTag)
+                    {
+                        var tag = GetTag((int)vv.TagType);
+                        tag.Id = (int)vv.Id;
+                        tag.LinkAddress = vv.LinkAddress;
+                        tag.Name = vv.Name;
+                        tag.Desc = vv.Desc;
+                        tag.Group = vv.Group;
+                        mRealTag.Add(tag.Id, tag);
+                    }
+
+                    Dictionary<int, Cdy.Tag.HisTag> mHisTag = new Dictionary<int, Cdy.Tag.HisTag>();
+                    foreach (var vv in result.HisTag)
+                    {
+                        var tag = new Cdy.Tag.HisTag { Id = (int)vv.Id, TagType = (Cdy.Tag.TagType)vv.TagType, Type = (Cdy.Tag.RecordType)vv.Type, CompressType = (int)vv.CompressType };
+                        if (vv.Parameter.Count > 0)
+                        {
+                            tag.Parameters = new Dictionary<string, double>();
+                            foreach (var vvv in vv.Parameter)
+                            {
+                                tag.Parameters.Add(vvv.Name, vvv.Value);
+                            }
+
+                        }
+                        mHisTag.Add(tag.Id, tag);
+                    }
+
+                    foreach (var vv in mRealTag)
+                    {
+                        if (mHisTag.ContainsKey(vv.Key))
+                        {
+                            re.Add(vv.Key, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(mRealTag[vv.Key], mHisTag[vv.Key]));
+                        }
+                        else
+                        {
+                            re.Add(vv.Key, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(mRealTag[vv.Key], null));
+                        }
+                    }
+
+                    idx++;
+                }
+                while (idx < count);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
         /// <param name="group"></param>
         /// <returns></returns>
         public Dictionary<int,Tuple<Cdy.Tag.Tagbase,Cdy.Tag.HisTag>> QueryTagByGroup(string database,string group)
@@ -192,45 +260,60 @@ namespace DBDevelopClientApi
             Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> re = new Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>>();
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
-                var result = mCurrentClient.GetTagByGroup(new DBDevelopService.GetTagByGroupRequest() { Database = database, LoginId = mLoginId,Group=group });
-                Dictionary<int, Cdy.Tag.Tagbase> mRealTag = new Dictionary<int, Cdy.Tag.Tagbase>();
-                foreach(var vv in result.RealTag)
+                int idx = 0;
+                int count = 0;
+                do
                 {
-                    var tag = GetTag((int)vv.TagType);
-                    tag.Id = (int)vv.Id;
-                    tag.LinkAddress = vv.LinkAddress;
-                    tag.Name = vv.Name;
-                    tag.Desc = vv.Desc;
-                    mRealTag.Add(tag.Id, tag);
-                }
+                    var result = mCurrentClient.GetTagByGroup(new DBDevelopService.GetTagByGroupRequest() { Database = database, LoginId = mLoginId, Group = group,Index=idx });
 
-                Dictionary<int, Cdy.Tag.HisTag> mHisTag = new Dictionary<int, Cdy.Tag.HisTag>();
-                foreach (var vv in result.HisTag)
-                {
-                    var tag = new Cdy.Tag.HisTag { Id = (int)vv.Id, TagType = (Cdy.Tag.TagType)vv.TagType, Type = (Cdy.Tag.RecordType)vv.Type, CompressType = (int)vv.CompressType };
-                    if(vv.Parameter.Count>0)
+                    idx = result.Index;
+                    count = result.Count;
+
+                    if (!result.Result) break;
+
+                    Dictionary<int, Cdy.Tag.Tagbase> mRealTag = new Dictionary<int, Cdy.Tag.Tagbase>();
+                    foreach (var vv in result.RealTag)
                     {
-                        tag.Parameters = new Dictionary<string, double>();
-                        foreach(var vvv in vv.Parameter)
+                        var tag = GetTag((int)vv.TagType);
+                        tag.Id = (int)vv.Id;
+                        tag.LinkAddress = vv.LinkAddress;
+                        tag.Name = vv.Name;
+                        tag.Desc = vv.Desc;
+                        tag.Group = vv.Group;
+                        mRealTag.Add(tag.Id, tag);
+                    }
+
+                    Dictionary<int, Cdy.Tag.HisTag> mHisTag = new Dictionary<int, Cdy.Tag.HisTag>();
+                    foreach (var vv in result.HisTag)
+                    {
+                        var tag = new Cdy.Tag.HisTag { Id = (int)vv.Id, TagType = (Cdy.Tag.TagType)vv.TagType, Type = (Cdy.Tag.RecordType)vv.Type, CompressType = (int)vv.CompressType };
+                        if (vv.Parameter.Count > 0)
                         {
-                            tag.Parameters.Add(vvv.Name, vvv.Value);
-                        }
-                        
-                    }
-                    mHisTag.Add(tag.Id, tag);
-                }
+                            tag.Parameters = new Dictionary<string, double>();
+                            foreach (var vvv in vv.Parameter)
+                            {
+                                tag.Parameters.Add(vvv.Name, vvv.Value);
+                            }
 
-                foreach(var vv in mRealTag)
-                {
-                    if (mHisTag.ContainsKey(vv.Key))
-                    {
-                        re.Add(vv.Key, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(mRealTag[vv.Key], mHisTag[vv.Key]));
+                        }
+                        mHisTag.Add(tag.Id, tag);
                     }
-                    else
+
+                    foreach (var vv in mRealTag)
                     {
-                        re.Add(vv.Key, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(mRealTag[vv.Key], null));
+                        if (mHisTag.ContainsKey(vv.Key))
+                        {
+                            re.Add(vv.Key, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(mRealTag[vv.Key], mHisTag[vv.Key]));
+                        }
+                        else
+                        {
+                            re.Add(vv.Key, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(mRealTag[vv.Key], null));
+                        }
                     }
+
+                    idx++;
                 }
+                while (idx < count);
             }
             return re;
         }

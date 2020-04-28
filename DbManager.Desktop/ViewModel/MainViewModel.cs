@@ -17,6 +17,8 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Windows;
 using DBDevelopClientApi;
+using Microsoft.Win32;
+using System.IO;
 
 namespace DBInStudio.Desktop
 {
@@ -36,6 +38,10 @@ namespace DBInStudio.Desktop
         private ICommand mAddGroupCommand;
         private ICommand mRemoveGroupCommand;
 
+        private ICommand mExportCommand;
+
+        private ICommand mImportCommand;
+
         private TreeItemViewModel mCurrentSelectTreeItem;
 
    
@@ -49,6 +55,8 @@ namespace DBInStudio.Desktop
 
         private ViewModelBase mContentViewModel;
 
+        private bool mIsCanOperate = true;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -61,6 +69,63 @@ namespace DBInStudio.Desktop
 
         #region ... Properties ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsCanOperate
+        {
+            get
+            {
+                return mIsCanOperate;
+            }
+            set
+            {
+                if (mIsCanOperate != value)
+                {
+                    mIsCanOperate = value;
+                    OnPropertyChanged("IsCanOperate");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand ImportCommand
+        {
+            get
+            {
+                if(mImportCommand==null)
+                {
+                    mImportCommand = new RelayCommand(() => {
+                        ImportFromFile();
+                    });
+                }
+                return mImportCommand;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand ExportCommand
+        {
+            get
+            {
+                if (mExportCommand == null)
+                {
+                    mExportCommand = new RelayCommand(() => {
+                        ExportToFile();
+                    });
+                }
+                return mExportCommand;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         public ViewModelBase ContentViewModel
         {
             get
@@ -204,6 +269,78 @@ namespace DBInStudio.Desktop
 
         #region ... Methods    ...
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void ImportFromFile()
+        {
+            IsCanOperate = false;
+
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "csv|*.csv";
+            List<TagViewModel> ltmp = new List<TagViewModel>();
+
+            if (ofd.ShowDialog().Value)
+            {
+                var stream = new StreamReader(File.Open(ofd.FileName, FileMode.OpenOrCreate, FileAccess.ReadWrite));
+                while (!stream.EndOfStream)
+                {
+                    string sval = stream.ReadLine();
+                    if (!string.IsNullOrEmpty(sval))
+                    {
+                        TagViewModel tm = TagViewModel.LoadFromCSVString(sval);
+                        ltmp.Add(tm);
+                    }
+                }
+                stream.Close();
+            }
+
+            Task.Run(() => {
+
+                int id;
+                foreach (var vv in ltmp)
+                {
+                    if (!DevelopServiceHelper.Helper.AddTag(this.mDatabase, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(vv.RealTagMode, vv.HisTagMode), out id))
+                    {
+                        MessageBox.Show(string.Format(Res.Get("UpdateTagFail"), vv.RealTagMode.Name), Res.Get("erro"), MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    }
+                }
+                Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                    IsCanOperate = true;
+                    SelectContentModel();
+                }));
+            });
+
+            
+
+           
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void ExportToFile()
+        {
+            IsCanOperate = false;
+            SaveFileDialog ofd = new SaveFileDialog();
+            ofd.Filter = "csv|*.csv";
+            if (ofd.ShowDialog().Value)
+            {
+
+                var stream = new StreamWriter(File.Open(ofd.FileName, FileMode.OpenOrCreate, FileAccess.ReadWrite));
+                var res = DevelopServiceHelper.Helper.QueryAllTag(mDatabase);
+                foreach (var vv in res.Select(e=>new TagViewModel(e.Value.Item1,e.Value.Item2)))
+                {
+                    stream.WriteLine(vv.SaveToCSVString());
+                }
+                stream.Close();
+            }
+
+            IsCanOperate = true;
+        }
+
         
 
         /// <summary>
@@ -305,7 +442,7 @@ namespace DBInStudio.Desktop
                 foreach(var vvv in vv.Where(e=>string.IsNullOrEmpty(e.Value)))
                 {
                     Application.Current.Dispatcher.Invoke(() => {
-                        TagGroupViewModel groupViewModel = new TagGroupViewModel() { Name = vvv.Key,Database=mDatabase };
+                        TagGroupViewModel groupViewModel = new TagGroupViewModel() { mName = vvv.Key,Database=mDatabase };
                         mRootTagGroupModel.Children.Add(groupViewModel);
                         groupViewModel.InitData(vv);
                     });

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DBInStudio.Desktop": {
+      "commandName": "Executable",
+      "executablePath": "D:\\Project\\Galaxy\\Output\\DBInStudio.exe"
+    }
+  }
+}

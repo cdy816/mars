@@ -143,7 +143,7 @@ namespace DBInStudio.Desktop.ViewModel
 
         private void CheckLocalServerRun()
         {
-            if(mServer=="127.0.0.1"&&mServer=="localhost")
+            if(mServer=="127.0.0.1"||mServer=="localhost")
             {
                var pps = Process.GetProcessesByName("DBInStudioServer");
                 if(pps==null||pps.Length==0)

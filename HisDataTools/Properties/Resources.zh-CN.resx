@@ -117,8 +117,32 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AllValue" xml:space="preserve">
+    <value>所有值</value>
+  </data>
+  <data name="bad" xml:space="preserve">
+    <value>坏</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>取消</value>
+  </data>
+  <data name="Chart" xml:space="preserve">
+    <value>图表显示</value>
+  </data>
+  <data name="DatabaseSelectTitle" xml:space="preserve">
+    <value>数据库选择</value>
+  </data>
+  <data name="DataTable" xml:space="preserve">
+    <value>表格显示</value>
+  </data>
+  <data name="DateTime" xml:space="preserve">
+    <value>时间</value>
+  </data>
+  <data name="EndTime" xml:space="preserve">
+    <value>结束时间</value>
+  </data>
+  <data name="good" xml:space="preserve">
+    <value>好</value>
   </data>
   <data name="HisDataQuery" xml:space="preserve">
     <value>历史数据查询</value>
@@ -126,13 +150,46 @@
   <data name="HisDataTools" xml:space="preserve">
     <value>历史数据工具</value>
   </data>
+  <data name="Id" xml:space="preserve">
+    <value>编号</value>
+  </data>
+  <data name="Init" xml:space="preserve">
+    <value>初始态</value>
+  </data>
+  <data name="null" xml:space="preserve">
+    <value>空</value>
+  </data>
   <data name="OK" xml:space="preserve">
     <value>确定</value>
   </data>
   <data name="Open" xml:space="preserve">
     <value>打开</value>
   </data>
+  <data name="OpMsgFormate" xml:space="preserve">
+    <value>{1} ms 查询到{0} 个值</value>
+  </data>
+  <data name="Quality" xml:space="preserve">
+    <value>质量</value>
+  </data>
+  <data name="Query" xml:space="preserve">
+    <value>查询</value>
+  </data>
   <data name="SelectDatabase" xml:space="preserve">
     <value>选择一个数据库</value>
+  </data>
+  <data name="StartTime" xml:space="preserve">
+    <value>开始时间</value>
+  </data>
+  <data name="startvalue" xml:space="preserve">
+    <value>起停值</value>
+  </data>
+  <data name="Tag" xml:space="preserve">
+    <value>变量</value>
+  </data>
+  <data name="TimeSpan" xml:space="preserve">
+    <value>时间间隔</value>
+  </data>
+  <data name="Value" xml:space="preserve">
+    <value>值</value>
   </data>
 </root>

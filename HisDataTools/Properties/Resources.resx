@@ -117,11 +117,20 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AllValue" xml:space="preserve">
+    <value>All value</value>
+  </data>
+  <data name="bad" xml:space="preserve">
+    <value>Bad</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
   <data name="Chart" xml:space="preserve">
     <value>Chart</value>
+  </data>
+  <data name="DatabaseSelectTitle" xml:space="preserve">
+    <value>Database select</value>
   </data>
   <data name="DataTable" xml:space="preserve">
     <value>DataTable</value>
@@ -132,6 +141,9 @@
   <data name="EndTime" xml:space="preserve">
     <value>EndTime</value>
   </data>
+  <data name="good" xml:space="preserve">
+    <value>Good</value>
+  </data>
   <data name="HisDataQuery" xml:space="preserve">
     <value>HisDataQuery</value>
   </data>
@@ -141,11 +153,20 @@
   <data name="Id" xml:space="preserve">
     <value>Id</value>
   </data>
+  <data name="Init" xml:space="preserve">
+    <value>Init</value>
+  </data>
+  <data name="null" xml:space="preserve">
+    <value>Null</value>
+  </data>
   <data name="OK" xml:space="preserve">
     <value>OK</value>
   </data>
   <data name="Open" xml:space="preserve">
     <value>Open</value>
+  </data>
+  <data name="OpMsgFormate" xml:space="preserve">
+    <value>Value count {0}/{1} ms</value>
   </data>
   <data name="Quality" xml:space="preserve">
     <value>Quality</value>
@@ -159,8 +180,14 @@
   <data name="StartTime" xml:space="preserve">
     <value>StartTime</value>
   </data>
+  <data name="startvalue" xml:space="preserve">
+    <value>StartValue</value>
+  </data>
   <data name="Tag" xml:space="preserve">
     <value>Tag</value>
+  </data>
+  <data name="TimeSpan" xml:space="preserve">
+    <value>TimeSpan</value>
   </data>
   <data name="Value" xml:space="preserve">
     <value>Value</value>

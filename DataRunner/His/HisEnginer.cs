@@ -521,7 +521,11 @@ namespace Cdy.Tag
         /// </summary>
         private void MemoryMerge(int count)
         {
-            if (count == 0) mMergeMemory.CurrentDatetime = mWaitForMergeMemory.CurrentDatetime;
+            if (count == 0)
+            {
+                mMergeMemory.CurrentDatetime = mWaitForMergeMemory.CurrentDatetime;
+                LoggerService.Service.Info("HisEnginer", "MergeMemory 使用新的时间起点:" + mWaitForMergeMemory.Name + mMergeMemory.CurrentDatetime.ToString());
+            }
 
             var mcc = mWaitForMergeMemory;
             LoggerService.Service.Info("Record", "开始内存合并" + mcc.Name);
@@ -591,9 +595,11 @@ namespace Cdy.Tag
                 CurrentMemory = mCachMemory1;
             }
 
-            if(mMergeCount==0)
+            CurrentMemory.CurrentDatetime = dateTime;
+
+            if (mMergeCount==0)
             {
-                CurrentMemory.CurrentDatetime = dateTime;
+                LoggerService.Service.Info("HisEnginer", "使用新的时间起点:" + CurrentMemory.Name + "  " + CurrentMemory.CurrentDatetime.ToString());
                 HisRunTag.StartTime = dateTime;
             }
             //PrepareForReadyMemory();
@@ -665,7 +671,7 @@ namespace Cdy.Tag
 
                 var tag = mHisTags[vv.Key];
 
-                long timeraddr = vv.Value.Item1 + vv.Value.Item2-4;
+                long timeraddr = vv.Value.Item1 + vv.Value.Item2-2;
                 long valueaddr = vv.Value.Item1 + vv.Value.Item3-tag.SizeOfValue;
                 long qaddr = vv.Value.Item1 + vv.Value.Item4-1;
 

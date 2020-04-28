@@ -1,0 +1,15 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:HeBianGu.WPF.EChart">
+    <ResourceDictionary.MergedDictionaries>
+
+        <ResourceDictionary Source="/HisDataTools;component/Chart/Plotter/PlotterBaseStyle.xaml" />
+        <ResourceDictionary Source="/HisDataTools;component/Chart/Legend/LineLegendItem.xaml" />
+        <ResourceDictionary Source="/HisDataTools;component/Chart/Plotter/Common/LineLegendDetail.xaml" />
+       
+    </ResourceDictionary.MergedDictionaries>
+
+
+    <SolidColorBrush Color="#FF7A7A7A" x:Key="split_backcolor"/>
+    
+</ResourceDictionary> 

@@ -117,8 +117,14 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AbsoluteValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
   <data name="Add" xml:space="preserve">
     <value>Add</value>
+  </data>
+  <data name="AddTagFail" xml:space="preserve">
+    <value>Add tag {0} failed!</value>
   </data>
   <data name="Cancel" xml:space="preserve">
     <value>Cancel</value>
@@ -136,6 +142,9 @@
   <data name="DeadAreaCompress" xml:space="preserve">
     <value>Dead zone</value>
   </data>
+  <data name="DeadAreaType" xml:space="preserve">
+    <value>Type</value>
+  </data>
   <data name="DeadAreaValue" xml:space="preserve">
     <value>Dead zone</value>
   </data>
@@ -144,6 +153,9 @@
   </data>
   <data name="Driver" xml:space="preserve">
     <value>Driver</value>
+  </data>
+  <data name="erro" xml:space="preserve">
+    <value>erro</value>
   </data>
   <data name="Export" xml:space="preserve">
     <value>Export</value>
@@ -182,14 +194,17 @@
   <data name="NewDatabaseFailed" xml:space="preserve">
     <value>New database failed!</value>
   </data>
-  <data name="NomeCompress" xml:space="preserve">
-    <value>Nome</value>
+  <data name="NoneCompress" xml:space="preserve">
+    <value>None</value>
   </data>
   <data name="OK" xml:space="preserve">
     <value>OK</value>
   </data>
   <data name="Password" xml:space="preserve">
     <value>Password</value>
+  </data>
+  <data name="PercentValue" xml:space="preserve">
+    <value>Percent</value>
   </data>
   <data name="Record" xml:space="preserve">
     <value>Record</value>
@@ -236,6 +251,9 @@
   </data>
   <data name="Type" xml:space="preserve">
     <value>Type</value>
+  </data>
+  <data name="UpdateTagFail" xml:space="preserve">
+    <value>Update tag {0} failed!</value>
   </data>
   <data name="UserName" xml:space="preserve">
     <value>UserName</value>

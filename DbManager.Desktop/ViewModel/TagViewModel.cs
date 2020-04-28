@@ -14,6 +14,7 @@ using System.Linq;
 using System.Windows.Input;
 using DBDevelopClientApi;
 using DBInStudio.Desktop.ViewModel;
+using Cdy.Tag;
 
 namespace DBInStudio.Desktop
 {
@@ -60,7 +61,7 @@ namespace DBInStudio.Desktop
             InitEnumType();
             mCompressTypeList = new string[] 
             {
-                Res.Get("NomeCompress"),
+                Res.Get("NoneCompress"),
                 Res.Get("LosslessCompress"),
                 Res.Get("DeadAreaCompress"),
                 Res.Get("SlopeCompress")
@@ -646,6 +647,9 @@ namespace DBInStudio.Desktop
             IsChanged = true;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void CheckRecordTypeParameterModel()
         {
             if(mHisTagMode==null)
@@ -746,6 +750,87 @@ namespace DBInStudio.Desktop
             return new TagViewModel(ntag,htag);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public string SaveToCSVString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(mRealTagMode.Id+",");
+            sb.Append(mRealTagMode.Name + ",");
+            sb.Append(mRealTagMode.Desc + ",");
+            sb.Append(mRealTagMode.Group + ",");
+            sb.Append(mRealTagMode.Type + ",");
+            sb.Append(mRealTagMode.LinkAddress + ",");
+            if(this.mHisTagMode!=null)
+            {
+                sb.Append(mHisTagMode.Type + ",");
+                sb.Append(mHisTagMode.Circle + ",");
+                sb.Append(mHisTagMode.CompressType + ",");
+                if(mHisTagMode.Parameters!=null)
+                {
+                    foreach(var vv in mHisTagMode.Parameters)
+                    {
+                        sb.Append(vv.Key + ",");
+                        sb.Append(vv.Value + ",");
+                    }
+                }
+            }
+            sb.Length = sb.Length > 0 ? sb.Length - 1 : sb.Length;
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="val"></param>
+        public static TagViewModel LoadFromCSVString(string val)
+        {
+            string[] stmp = val.Split(new char[] { ',' });
+            Cdy.Tag.TagType tp = (Cdy.Tag.TagType)Enum.Parse(typeof(Cdy.Tag.TagType),stmp[4]);
+            var realtag = TagTypeExtends.GetTag(tp);
+
+            realtag.Id = int.Parse(stmp[0]);
+            realtag.Name = stmp[1];
+            realtag.Desc = stmp[2];
+            realtag.Group = stmp[3];
+            realtag.LinkAddress = stmp[5];
+
+            if (stmp.Length > 6)
+            {
+                Cdy.Tag.HisTag histag = new HisTag();
+                histag.Type = (Cdy.Tag.RecordType)Enum.Parse(typeof(Cdy.Tag.RecordType), stmp[6]);
+
+                histag.Circle = long.Parse(stmp[7]);
+                histag.CompressType = int.Parse(stmp[8]);
+                histag.Parameters = new Dictionary<string, double>();
+                histag.TagType = realtag.Type;
+                histag.Id = realtag.Id;
+
+                for (int i=9;i<stmp.Length;i++)
+                {
+                    string skey = stmp[i];
+                    if(string.IsNullOrEmpty(skey))
+                    {
+                        break;
+                    }
+                    double dval = double.Parse(stmp[i + 1]);
+
+                    if(!histag.Parameters.ContainsKey(skey))
+                    {
+                        histag.Parameters.Add(skey, dval);
+                    }
+
+                    i++;
+                }
+                return new TagViewModel(realtag, histag);
+            }
+
+            return new TagViewModel(realtag, null);
+
+
+        }
 
         #endregion ...Methods...
 

@@ -7,10 +7,13 @@
 //  种道洋
 //==============================================================
 
+using HeBianGu.WPF.EChart;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
@@ -28,17 +31,34 @@ namespace HisDataTools.ViewModel
         private DateTime mStartTime =DateTime.Now.Date;
         private int mStartTimeHour;
         private DateTime mEndTime = DateTime.Now.Date;
-        private int mEndTimeHour;
+        private int mEndTimeHour=24;
 
         private Dictionary<string, Tuple<int,byte>> mTags;
 
         private ICommand mQueryCommand;
 
-        private System.Collections.ObjectModel.ObservableCollection<HisDataPoint> mDatas = new System.Collections.ObjectModel.ObservableCollection<HisDataPoint>();
+        private List<HisDataPoint> mDatas = new List<HisDataPoint>();
+
+        private List<ICurveEntitySource> mChartSource = new List<ICurveEntitySource>();
 
         private bool mIsBusy = false;
 
         private string mDatabase = "";
+
+        private double mMaxXValue = 0;
+        private double mMaxYValue = 0;
+
+
+        private double mMinXValue = 0;
+        private double mMinYValue = 0;
+
+        private List<SplitItem> mYLineItems;
+
+        private bool mAllValue=true;
+
+        private int mTimeSpan=10;
+
+        private string mOpMessage;
 
         #endregion ...Variables...
 
@@ -58,6 +78,43 @@ namespace HisDataTools.ViewModel
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public string OpMessage
+        {
+            get
+            {
+                return mOpMessage;
+            }
+            set
+            {
+                if (mOpMessage != value)
+                {
+                    mOpMessage = value;
+                    OnPropertyChanged("OpMessage");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<ICurveEntitySource> ChartSource
+        {
+            get
+            {
+                return mChartSource;
+            }
+            set
+            {
+                mChartSource = value;
+                OnPropertyChanged("ChartSource");
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -184,7 +241,24 @@ namespace HisDataTools.ViewModel
                     {
                         DateTime stime = StartTime.AddHours(StartTimeHour);
                         DateTime etime = EndTime.AddHours(EndTimeHour);
-                        QueryHisData(SelectTag, stime, etime);
+
+                        if (!AllValue)
+                        {
+                            List<DateTime> dt = new List<DateTime>();
+                            DateTime dtt = stime;
+                            do
+                            {
+                                dtt = dtt.AddSeconds(TimeSpan);
+                                dt.Add(dtt);
+                            }
+                            while (dtt <= etime);
+                            QueryHisData(SelectTag, dt);
+                        }
+                        else
+                        {
+                            QueryHisData(SelectTag, stime, etime);
+                        }
+
 
                     },()=> { return !string.IsNullOrEmpty(mSelectTag) && !mIsBusy && EndTime.AddHours(EndTimeHour)> StartTime.AddHours(StartTimeHour); });
                 }
@@ -195,13 +269,155 @@ namespace HisDataTools.ViewModel
         /// <summary>
         /// 
         /// </summary>
-        public ObservableCollection<HisDataPoint> Datas
+        public List<HisDataPoint> Datas
         {
             get
             {
                 return mDatas;
             }
+            set
+            {
+                mDatas = value;
+                OnPropertyChanged("Datas");
+            }
         }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<SplitItem> YLineItems
+        {
+            get
+            {
+                return mYLineItems;
+            }
+            set
+            {
+                if (mYLineItems != value)
+                {
+                    mYLineItems = value;
+                    OnPropertyChanged("YLineItems");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public double MaxYValue
+        {
+            get
+            {
+                return mMaxYValue;
+            }
+            set
+            {
+                if (mMaxYValue != value)
+                {
+                    mMaxYValue = value;
+                    OnPropertyChanged("MaxYValue");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public double MaxXValue
+        {
+            get
+            {
+                return mMaxXValue;
+            }
+            set
+            {
+                if (mMaxXValue != value)
+                {
+                    mMaxXValue = value;
+                    OnPropertyChanged("MaxXValue");
+                }
+            }
+        }
+
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public double MinXValue
+        {
+            get
+            {
+                return mMinXValue;
+            }
+            set
+            {
+                if (mMinXValue != value)
+                {
+                    mMinXValue = value;
+                    OnPropertyChanged("MinXValue");
+                }
+            }
+        }
+
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public double MinYValue
+        {
+            get
+            {
+                return mMinYValue;
+            }
+            set
+            {
+                if (mMinYValue != value)
+                {
+                    mMinYValue = value;
+                    OnPropertyChanged("MinYValue");
+                }
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool AllValue
+        {
+            get
+            {
+                return mAllValue;
+            }
+            set
+            {
+                if (mAllValue != value)
+                {
+                    mAllValue = value;
+                    OnPropertyChanged("AllValue");
+                }
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public int TimeSpan
+        {
+            get
+            {
+                return mTimeSpan;
+            }
+            set
+            {
+                if (mTimeSpan != value)
+                {
+                    mTimeSpan = value;
+                    OnPropertyChanged("TimeSpan");
+                }
+            }
+        }
+
 
 
         #endregion ...Properties...
@@ -222,15 +438,68 @@ namespace HisDataTools.ViewModel
         /// 
         /// </summary>
         /// <param name="tag"></param>
+        /// <param name="times"></param>
+        private void QueryHisData(string tag,List<DateTime> times)
+        {
+            mIsBusy = true;
+
+            mDatas.Clear();
+
+            int id = mTags[mSelectTag].Item1;
+          
+
+            switch (mTags[mSelectTag].Item2)
+            {
+                case (byte)Cdy.Tag.TagType.Bool:
+                    ProcessDataQuery<bool>(id, times);
+                    break;
+                case (byte)Cdy.Tag.TagType.Byte:
+                    ProcessDataQuery<byte>(id, times);
+                    break;
+                case (byte)Cdy.Tag.TagType.DateTime:
+                    ProcessDataQuery<DateTime>(id, times);
+                    break;
+                case (byte)Cdy.Tag.TagType.Double:
+                    ProcessDataQuery<double>(id, times);
+                    break;
+                case (byte)Cdy.Tag.TagType.Float:
+                    ProcessDataQuery<float>(id, times);
+                    break;
+                case (byte)Cdy.Tag.TagType.Int:
+                    ProcessDataQuery<int>(id, times);
+                    break;
+                case (byte)Cdy.Tag.TagType.Long:
+                    ProcessDataQuery<long>(id, times);
+                    break;
+                case (byte)Cdy.Tag.TagType.Short:
+                    ProcessDataQuery<short>(id, times);
+                    break;
+                case (byte)Cdy.Tag.TagType.String:
+                    ProcessDataQuery<string>(id, times);
+                    break;
+                case (byte)Cdy.Tag.TagType.UInt:
+                    ProcessDataQuery<uint>(id, times);
+                    break;
+                case (byte)Cdy.Tag.TagType.ULong:
+                    ProcessDataQuery<ulong>(id, times);
+                    break;
+                case (byte)Cdy.Tag.TagType.UShort:
+                    ProcessDataQuery<ushort>(id, times);
+                    break;
+            }
+            mIsBusy = false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         private void QueryHisData(string tag,DateTime startTime,DateTime endTime)
         {
             mIsBusy = true;
 
-            Application.Current.Dispatcher.Invoke(new Action(() => {
-                mDatas.Clear();
-            }));
 
             int id = mTags[mSelectTag].Item1;
             DateTime sTime = StartTime.AddHours(StartTimeHour);
@@ -280,6 +549,94 @@ namespace HisDataTools.ViewModel
             mIsBusy = false;
         }
 
+        private void ProcessDataQuery<T>(int id, List<DateTime> times)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            var result = HisDataManager.Manager.GetQueryService(mDatabase).ReadValue<T>(id,times,Cdy.Tag.QueryValueMatchType.Linear);
+
+            sw.Stop();
+
+           
+
+            OpMessage = string.Format(Res.Get("OpMsgFormate"), result.Count, sw.ElapsedMilliseconds);
+
+            CurveEntitySource entity = new CurveEntitySource();
+            entity.Text = this.SelectTag;
+            entity.Color = System.Windows.Media.Brushes.Red;
+            entity.Marker = new CirclePointMarker();
+            entity.Marker.Fill = System.Windows.Media.Brushes.Red;
+            entity.Marker.Visibility = Visibility.Hidden;
+
+
+            double maxx = double.MinValue, maxy = double.MinValue, minx = double.MaxValue, miny = double.MaxValue;
+
+            Dictionary<DateTime,Tuple<object, int>> vtmps = new Dictionary<DateTime, Tuple<object, int>>();
+
+            List<HisDataPoint> ltmp = new List<HisDataPoint>();
+
+            int i = 0;
+            for (i=0;i<result.Count;i++)
+            {
+                object value;
+                DateTime time;
+                byte qu = 0;
+                value = result.GetValue(i, out time, out qu);
+                vtmps.Add(time, new Tuple<object, int>(value, qu));
+            }
+            i = 0;
+            foreach (var vv in times)
+            {
+                object value=0;
+                DateTime time=vv;
+                byte qu = 255;
+                if(vtmps.ContainsKey(vv))
+                {
+                    value = vtmps[vv].Item1;
+                    qu = (byte)vtmps[vv].Item2;
+                }
+
+                minx = minx > i ? i : minx;
+                maxx = maxx < i ? i : maxx;
+
+                miny = miny > Convert.ToDouble(value) ? Convert.ToDouble(value) : miny;
+                maxy = maxy < Convert.ToDouble(value) ? Convert.ToDouble(value) : maxy;
+
+                PointC point = new PointC();
+                point.X = i;
+                point.Y = Convert.ToDouble(value);
+                point.Text = time.ToString("dd HH:mm:ss");
+                entity.Source.Add(point);
+
+                ltmp.Add(new HisDataPoint() { DateTime = time, Quality = qu, Value = value });
+                i++;
+            }
+
+            Datas = ltmp;
+
+            List<SplitItem> yitems = new List<SplitItem>(5);
+
+            maxy = maxy * 1.2;
+            miny = miny - Math.Abs(miny) * 0.2;
+
+            MaxXValue = maxx;
+            MaxYValue = maxy;
+            MinXValue = minx;
+            MinYValue = miny;
+            ChartSource = new List<ICurveEntitySource>() { entity };
+
+            var dval = (maxy - miny) / 5;
+            for (i = 1; i <= 5; i++)
+            {
+                yitems.Add(new SplitItem() { SpliteType = SplitItemType.Normal, Text = (miny + i * dval).ToString("f2"), IsShowText = true, Value = miny + i * dval, Color = System.Windows.Media.Brushes.SkyBlue });
+            }
+            yitems.Add(new SplitItem() { SpliteType = SplitItemType.HeighLight, Text = (miny + (maxy - miny) / 2).ToString("f2"), IsShowText = true, Value = miny + (maxy - miny) / 2, Color = System.Windows.Media.Brushes.DeepSkyBlue, IsShowTrangle = true });
+
+
+
+            YLineItems = yitems;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -289,7 +646,26 @@ namespace HisDataTools.ViewModel
         /// <param name="eTime"></param>
         private void ProcessDataQuery<T>(int id,DateTime sTime,DateTime eTime)
         {
-            var result = HisDataManager.Manager.GetQueryService(mDatabase).ReadAllValue<double>(id, sTime, eTime);
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            var result = HisDataManager.Manager.GetQueryService(mDatabase).ReadAllValue<T>(id, sTime, eTime);
+            sw.Stop();
+
+            OpMessage = string.Format(Res.Get("OpMsgFormate"), result.Count, sw.ElapsedMilliseconds);
+
+            //Debug.Print("查询耗时:" + sw.ElapsedMilliseconds);
+
+            CurveEntitySource entity = new CurveEntitySource();
+            entity.Text = this.SelectTag;
+            entity.Color = System.Windows.Media.Brushes.Red;
+            entity.Marker = new CirclePointMarker();
+            entity.Marker.Fill = System.Windows.Media.Brushes.Red;
+            entity.Marker.Visibility = Visibility.Hidden;
+
+
+            double maxx=double.MinValue, maxy = double.MinValue, minx=double.MaxValue, miny = double.MaxValue;
+
+            List<HisDataPoint> ltmp = new List<HisDataPoint>();
 
             for (int i = 0; i < result.Count; i++)
             {
@@ -297,12 +673,43 @@ namespace HisDataTools.ViewModel
                 DateTime time;
                 byte qu = 0;
                 value = result.GetValue(i, out time, out qu);
-                Application.Current.Dispatcher.BeginInvoke(new Action(() => {
-                    
-                   
-                    mDatas.Add(new HisDataPoint() { DateTime = time, Quality = qu, Value = value });
-                }), null);
+
+                minx = minx > i ? i : minx;
+                maxx = maxx < i ? i : maxx;
+
+                miny = miny > Convert.ToDouble(value) ? Convert.ToDouble(value) : miny;
+                maxy =maxy < Convert.ToDouble(value) ? Convert.ToDouble(value) : maxy;
+
+                PointC point = new PointC();
+                point.X = i;
+                point.Y = Convert.ToDouble(value);
+                point.Text = time.ToString("dd HH:mm:ss");
+                entity.Source.Add(point);
+
+                ltmp.Add(new HisDataPoint() { DateTime = time, Quality = qu, Value = value });
+               /// mDatas.Add(new HisDataPoint() { DateTime = time, Quality = qu, Value = value });
             }
+            Datas = ltmp;
+
+            List<SplitItem> yitems = new List<SplitItem>(5);
+
+            maxy = maxy * 1.2;
+            miny = miny - Math.Abs(miny) * 0.2;
+
+            MaxXValue = maxx;
+            MaxYValue = maxy;
+            MinXValue = minx;
+            MinYValue = miny;
+            ChartSource = new List<ICurveEntitySource>() { entity };
+
+            var dval = (maxy - miny) / 5;
+            for (int i = 1; i <= 5; i++)
+            {
+                yitems.Add(new SplitItem() { SpliteType = SplitItemType.Normal, Text = (miny + i * dval).ToString("f2"), IsShowText = true, Value = miny + i * dval, Color = System.Windows.Media.Brushes.SkyBlue });
+            }
+            yitems.Add(new SplitItem() { SpliteType = SplitItemType.HeighLight, Text = (miny + (maxy - miny) / 2).ToString("f2"), IsShowText = true, Value = miny + (maxy - miny) / 2, Color = System.Windows.Media.Brushes.DeepSkyBlue, IsShowTrangle = true });
+
+            YLineItems = yitems;
         }
 
         /// <summary>

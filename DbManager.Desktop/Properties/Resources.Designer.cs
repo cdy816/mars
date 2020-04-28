@@ -61,11 +61,29 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Value 的本地化字符串。
+        /// </summary>
+        internal static string AbsoluteValue {
+            get {
+                return ResourceManager.GetString("AbsoluteValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Add 的本地化字符串。
         /// </summary>
         internal static string Add {
             get {
                 return ResourceManager.GetString("Add", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Add tag {0} failed! 的本地化字符串。
+        /// </summary>
+        internal static string AddTagFail {
+            get {
+                return ResourceManager.GetString("AddTagFail", resourceCulture);
             }
         }
         
@@ -115,6 +133,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Type 的本地化字符串。
+        /// </summary>
+        internal static string DeadAreaType {
+            get {
+                return ResourceManager.GetString("DeadAreaType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Dead zone 的本地化字符串。
         /// </summary>
         internal static string DeadAreaValue {
@@ -138,6 +165,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Driver {
             get {
                 return ResourceManager.GetString("Driver", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 erro 的本地化字符串。
+        /// </summary>
+        internal static string erro {
+            get {
+                return ResourceManager.GetString("erro", resourceCulture);
             }
         }
         
@@ -250,11 +286,11 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Nome 的本地化字符串。
+        ///   查找类似 None 的本地化字符串。
         /// </summary>
-        internal static string NomeCompress {
+        internal static string NoneCompress {
             get {
-                return ResourceManager.GetString("NomeCompress", resourceCulture);
+                return ResourceManager.GetString("NoneCompress", resourceCulture);
             }
         }
         
@@ -273,6 +309,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Password {
             get {
                 return ResourceManager.GetString("Password", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Percent 的本地化字符串。
+        /// </summary>
+        internal static string PercentValue {
+            get {
+                return ResourceManager.GetString("PercentValue", resourceCulture);
             }
         }
         
@@ -408,6 +453,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Type {
             get {
                 return ResourceManager.GetString("Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Update tag {0} failed! 的本地化字符串。
+        /// </summary>
+        internal static string UpdateTagFail {
+            get {
+                return ResourceManager.GetString("UpdateTagFail", resourceCulture);
             }
         }
         

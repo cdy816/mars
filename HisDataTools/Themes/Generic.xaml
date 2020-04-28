@@ -4,6 +4,9 @@
                     xmlns:viewmodel="clr-namespace:HisDataTools.ViewModel"
                     xmlns:view="clr-namespace:HisDataTools.View"
                     >
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/HisDataTools;component/Chart/ChartGeneric.xaml" />
+    </ResourceDictionary.MergedDictionaries>
 
     <DataTemplate DataType="{x:Type viewmodel:ListDatabaseViewModel}">
         <view:ListDatabaseView />

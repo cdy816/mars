@@ -72,7 +72,7 @@ namespace Cdy.Tag
                         mPreFile = null;
                         mtime.Clear();
                     }
-                    result.Add(false, vv.Key, (byte)QulityConst.Null);
+                    result.Add(false, vv.Key, (byte)QualityConst.Null);
                 }
                 else if (vv.Value != mPreFile)
                 {
@@ -117,7 +117,7 @@ namespace Cdy.Tag
                         mPreFile = null;
                         mtime.Clear();
                     }
-                    result.Add((byte)0, vv.Key, (byte)QulityConst.Null);
+                    result.Add((byte)0, vv.Key, (byte)QualityConst.Null);
                 }
                 else if (vv.Value != mPreFile)
                 {
@@ -163,7 +163,7 @@ namespace Cdy.Tag
                         mPreFile = null;
                         mtime.Clear();
                     }
-                    result.Add((short)0, vv.Key, (byte)QulityConst.Null);
+                    result.Add((short)0, vv.Key, (byte)QualityConst.Null);
                 }
                 else if (vv.Value != mPreFile)
                 {
@@ -208,7 +208,7 @@ namespace Cdy.Tag
                         mPreFile = null;
                         mtime.Clear();
                     }
-                    result.Add((ushort)0, vv.Key, (byte)QulityConst.Null);
+                    result.Add((ushort)0, vv.Key, (byte)QualityConst.Null);
                 }
                 else if (vv.Value != mPreFile)
                 {
@@ -253,7 +253,7 @@ namespace Cdy.Tag
                         mPreFile = null;
                         mtime.Clear();
                     }
-                    result.Add((int)0, vv.Key, (byte)QulityConst.Null);
+                    result.Add((int)0, vv.Key, (byte)QualityConst.Null);
                 }
                 else if (vv.Value != mPreFile)
                 {
@@ -298,7 +298,7 @@ namespace Cdy.Tag
                         mPreFile = null;
                         mtime.Clear();
                     }
-                    result.Add((uint)0, vv.Key, (byte)QulityConst.Null);
+                    result.Add((uint)0, vv.Key, (byte)QualityConst.Null);
                 }
                 else if (vv.Value != mPreFile)
                 {
@@ -343,7 +343,7 @@ namespace Cdy.Tag
                         mPreFile = null;
                         mtime.Clear();
                     }
-                    result.Add((ulong)0, vv.Key, (byte)QulityConst.Null);
+                    result.Add((ulong)0, vv.Key, (byte)QualityConst.Null);
                 }
                 else if (vv.Value != mPreFile)
                 {
@@ -389,7 +389,7 @@ namespace Cdy.Tag
                         mtime.Clear();
                     }
 
-                    result.Add((long)0, vv.Key, (byte)QulityConst.Null);
+                    result.Add((long)0, vv.Key, (byte)QualityConst.Null);
                 }
                 else if (vv.Value != mPreFile)
                 {
@@ -436,7 +436,7 @@ namespace Cdy.Tag
                         mtime.Clear();
                     }
 
-                    result.Add((float)0, vv.Key, (byte)QulityConst.Null);
+                    result.Add((float)0, vv.Key, (byte)QualityConst.Null);
                 }
                 else if (vv.Value != mPreFile)
                 {
@@ -482,7 +482,7 @@ namespace Cdy.Tag
                         mtime.Clear();
                     }
 
-                    result.Add((double)0, vv.Key, (byte)QulityConst.Null);
+                    result.Add((double)0, vv.Key, (byte)QualityConst.Null);
                 }
                 else if (vv.Value != mPreFile)
                 {
@@ -527,7 +527,7 @@ namespace Cdy.Tag
                         mPreFile = null;
                         mtime.Clear();
                     }
-                    result.Add(DateTime.Now, vv.Key, (byte)QulityConst.Null);
+                    result.Add(DateTime.Now, vv.Key, (byte)QualityConst.Null);
                 }
                 else if (vv.Value != mPreFile)
                 {
@@ -572,7 +572,7 @@ namespace Cdy.Tag
                         mPreFile = null;
                         mtime.Clear();
                     }
-                    result.Add("", vv.Key, (byte)QulityConst.Null);
+                    result.Add("", vv.Key, (byte)QualityConst.Null);
                 }
                 else if (vv.Value != mPreFile)
                 {

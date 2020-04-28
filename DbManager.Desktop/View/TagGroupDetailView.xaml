@@ -107,29 +107,28 @@
             </DataGrid.Columns>
             <DataGrid.RowDetailsTemplate>
                 <DataTemplate>
-                    <Grid  Margin="4" Visibility="{Binding HasHisTag,Converter={StaticResource btv}}">
+                    <Grid  Margin="10,4" Visibility="{Binding HasHisTag,Converter={StaticResource btv}}" Height="36">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="30" />
-                            <RowDefinition Height="30" />
-                        </Grid.RowDefinitions>
                         <TextBlock Text="{local:ResMarker RecordType,:}" VerticalAlignment="Center" />
                         <ComboBox Margin="4,0" Grid.Column="1" Width="100" VerticalAlignment="Center" Text="{Binding RecordTypeString,Mode=OneWay}" SelectedIndex="{Binding RecordType,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding RecordTypeList}"/>
-                        <Grid Margin="4,0" Grid.Column="2" Visibility="{Binding IsTimerRecord,Converter={StaticResource btv}}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{local:ResMarker Circle,:}" VerticalAlignment="Center" />
-                            <TextBox Margin="8,0" Grid.Column="1" Width="60" Text="{Binding CompressCircle,Mode=TwoWay}" VerticalAlignment="Center" />
-                        </Grid>
-                        <TextBlock Text="{local:ResMarker CompressType,:}" Grid.Row="1" VerticalAlignment="Center"/>
-                        <ComboBox Margin="8,0" Width="100" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" ItemsSource="{Binding CompressTypeList}" SelectedIndex="{Binding CompressType,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
-                        <ContentControl Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Content="{Binding CompressParameterModel}" HorizontalAlignment="Stretch" />
+                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                            <Grid Margin="4,0"  Visibility="{Binding IsTimerRecord,Converter={StaticResource btv}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{local:ResMarker Circle,:}" VerticalAlignment="Center" />
+                                <TextBox Margin="8,0" Grid.Column="1" Width="60" Text="{Binding CompressCircle,Mode=TwoWay}" VerticalAlignment="Center" />
+                            </Grid>
+                            <TextBlock Text="{local:ResMarker CompressType,:}"  VerticalAlignment="Center"/>
+                            <ComboBox Margin="8,0" Width="100" VerticalAlignment="Center" ItemsSource="{Binding CompressTypeList}" SelectedIndex="{Binding CompressType,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                            <ContentControl  VerticalAlignment="Center" Content="{Binding CompressParameterModel}" HorizontalAlignment="Stretch" />
+                        </StackPanel>
+                        
                     </Grid>
                 </DataTemplate>
             </DataGrid.RowDetailsTemplate>

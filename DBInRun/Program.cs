@@ -119,14 +119,40 @@ namespace DBInRun
             Cdy.Tag.RealDatabase test = db.RealDatabase;
             db.RealDatabase = test;
 
+            string address = "";
+
             for (int i=0;i<dcount;i++)
             {
-                test.Append(new Cdy.Tag.DoubleTag() { Name = "Double" + i ,Group="Double",LinkAddress= "Sim:step" });
+                if(i%3==0)
+                {
+                    address = "Sim:sin";
+                }
+                else if(i%3==1)
+                {
+                    address = "Sim:cos";
+                }
+                else
+                {
+                    address = "Sim:step";
+                }
+                test.Append(new Cdy.Tag.DoubleTag() { Name = "Double" + i ,Group="Double",LinkAddress= address });
             }
 
             for (int i = 0; i < fcount; i++)
             {
-                test.Append(new Cdy.Tag.FloatTag() { Name = "Float" + i, Group = "Float", LinkAddress = "Sim:cos" });
+                if (i % 3 == 0)
+                {
+                    address = "Sim:sin";
+                }
+                else if (i % 3 == 1)
+                {
+                    address = "Sim:cos";
+                }
+                else
+                {
+                    address = "Sim:step";
+                }
+                test.Append(new Cdy.Tag.FloatTag() { Name = "Float" + i, Group = "Float", LinkAddress = address });
             }
 
             for (int i = 0; i < lcount; i++)

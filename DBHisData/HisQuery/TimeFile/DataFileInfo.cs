@@ -1048,6 +1048,7 @@ namespace Cdy.Tag
             foreach (var vv in times)
             {
                 var ff = file.GetFileOffsets(vv);
+                if (ff <= 0) continue;
                 if (moffs.ContainsKey(ff))
                 {
                     moffs[ff].Add(vv);
@@ -2554,6 +2555,17 @@ namespace Cdy.Tag
                 {
                     //Tag id 列表经过压缩，内容格式为:DataSize + Data
                     var dsize = datafile.ReadInt(dataoffset);
+
+                    if (dsize <= 0)
+                    {
+                        tagCount = 0;
+                        fileDuration = 0;
+                        blockDuration = 0;
+                        timetick = 0;
+                        blockPointer = 0;
+                        return new Dictionary<int, int>();
+                    }
+
                     dataoffset += 4;
 
                     blockPointer = dataoffset + dsize - offset;
@@ -2748,10 +2760,12 @@ namespace Cdy.Tag
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
             long blockpointer = 0;
-            var blockIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick,out blockpointer);
+
+            var tagIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick,out blockpointer);
+            
             int blockcount = fileDuration * 60 / blockDuration;
 
-            var startTime = datafile.ReadDateTime(16);
+            var startTime = datafile.ReadDateTime(0);
 
             Dictionary<long, MarshalMemoryBlock> rtmp = new Dictionary<long, MarshalMemoryBlock>();
 
@@ -2760,46 +2774,60 @@ namespace Cdy.Tag
             foreach (var vdd in dataTimes)
             {
                 var ttmp = (vdd - startTime).TotalMinutes;
-                int dindex = (int)(ttmp / blockDuration);
-                if (ttmp % blockDuration > 0)
-                {
-                    dindex++;
-                }
+                int blockindex = (int)(ttmp / blockDuration);
+                //if (ttmp % blockDuration > 0)
+                //{
+                //    blockindex++;
+                //}
 
-                if (dindex > blockcount)
+                if (blockindex > blockcount)
                 {
                     throw new Exception("DataPointer index is out of total block number");
                 }
 
-                var dataPointer = datafile.ReadLong(blockIndex * 8 + dindex * tagCount * 8); //读取DataBlock的地址
 
-                var datasize = datafile.ReadInt(dataPointer); //读取DataBlock 的大小
+                var dataPointer = datafile.ReadLong(offset + blockpointer + tagIndex * 8 + blockindex * tagCount * 8); //读取DataBlock的地址
 
-                if (!rtmp.ContainsKey(dataPointer))
+                if (dataPointer > 0)
                 {
-                    var rmm = datafile.Read(dataPointer, datasize);
-                    if (!re.ContainsKey(rmm))
+                    var datasize = datafile.ReadInt(dataPointer); //读取DataBlock 的大小
+                    if (datasize > 0)
                     {
-                        re.Add(rmm, new List<DateTime>() { vdd });
+                        //var rmm = datafile.Read(dataPointer + 4, (int)datasize);
+                        //if (!re.ContainsKey(rmm))
+                        //{
+                        //    re.Add(rmm, new Tuple<DateTime, DateTime>(sstart, end));
+                        //}
+
+                        if (!rtmp.ContainsKey(dataPointer))
+                        {
+                            var rmm = datafile.Read(dataPointer + 4, datasize);
+                            if (!re.ContainsKey(rmm))
+                            {
+                                re.Add(rmm, new List<DateTime>() { vdd });
+                            }
+                            else
+                            {
+                                re[rmm].Add(vdd);
+                            }
+                            rtmp.Add(dataPointer, rmm);
+                        }
+                        else
+                        {
+                            var rmm = rtmp[dataPointer];
+                            if (!re.ContainsKey(rmm))
+                            {
+                                re.Add(rmm, new List<DateTime>() { vdd });
+                            }
+                            else
+                            {
+                                re[rmm].Add(vdd);
+                            }
+                        }
                     }
-                    else
-                    {
-                        re[rmm].Add(vdd);
-                    }
-                    rtmp.Add(dataPointer, rmm);
+                    
                 }
-                else
-                {
-                    var rmm = rtmp[dataPointer];
-                    if (!re.ContainsKey(rmm))
-                    {
-                        re.Add(rmm, new List<DateTime>() { vdd });
-                    }
-                    else
-                    {
-                        re[rmm].Add(vdd);
-                    }
-                }
+                
             }
             return re;
         }
@@ -2834,7 +2862,7 @@ namespace Cdy.Tag
             while (sstart < end)
             {
                 var ttmp = (sstart - startTime).TotalMinutes;
-                send = sstart.AddMinutes(blockDuration);
+                send = (sstart  - new TimeSpan(0, 0, 0, sstart.Second, sstart.Millisecond)).AddMinutes(blockDuration);
                 if (send > end)
                 {
                     send = end;

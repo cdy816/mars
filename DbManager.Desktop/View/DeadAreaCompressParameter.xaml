@@ -10,9 +10,16 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="637*"/>
+            <ColumnDefinition Width="120"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <TextBlock Text="{res:ResMarker DeadAreaValue,:}" Margin="5,0" VerticalAlignment="Center" />
-        <TextBox Width="100" HorizontalAlignment="Left" Margin="5,0" Text="{Binding DeadValue,Mode=TwoWay}" Grid.Column="1" VerticalAlignment="Center" />
+        <TextBlock Text="{res:ResMarker DeadAreaValue,:}" Margin="5,0,5,0" VerticalAlignment="Center" />
+        <TextBox Width="100" HorizontalAlignment="Left" Margin="5,0,0,0" Text="{Binding DeadValue,Mode=TwoWay}" Grid.Column="1" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="2" Text="{res:ResMarker DeadAreaType,:}" Margin="5,0,5,0" VerticalAlignment="Center" />
+        <ComboBox SelectedIndex="{Binding Type,UpdateSourceTrigger=PropertyChanged}" Grid.Column="3" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0" Width="80" >
+            <ComboBoxItem Content="{res:ResMarker AbsoluteValue}" />
+            <ComboBoxItem Content="{res:ResMarker PercentValue}" />
+        </ComboBox>
     </Grid>
 </UserControl>

@@ -16,6 +16,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Linq;
 
 namespace HisDataTools.ViewModel
 {
@@ -27,6 +28,8 @@ namespace HisDataTools.ViewModel
 
         #region ... Variables  ...
         private string mSelectTag = string.Empty;
+
+        private IEnumerable<string> mTagFilters;
 
         private DateTime mStartTime =DateTime.Now.Date;
         private int mStartTimeHour;
@@ -128,7 +131,12 @@ namespace HisDataTools.ViewModel
         {
             get
             {
-                return mTags.Keys;
+                return mTagFilters;
+            }
+            set
+            {
+                mTagFilters = value;
+                OnPropertyChanged("TagList");
             }
         }
 
@@ -431,7 +439,16 @@ namespace HisDataTools.ViewModel
         public void LoadData(string database)
         {
             mTags = HisDataManager.Manager.GetHisTagIds(database);
+
+            FilterData();
             mDatabase = database;
+        }
+
+        private void FilterData()
+        {
+            var query = mTags.Keys.AsQueryable();
+
+            TagList = query.Where(e => e.StartsWith(mSelectTag)).Take(10);
         }
 
         /// <summary>

@@ -25,7 +25,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <ComboBox  IsEditable="True" Text="{Binding SelectTag,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding TagList}"  HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="154" Grid.Column="1"/>
+            <ComboBox VirtualizingPanel.IsVirtualizing="True" IsEditable="True" Text="{Binding SelectTag,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding TagList}"  HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="154" Grid.Column="1"/>
             <Label Content="{res:ResMarker StartTime, :}" HorizontalAlignment="Left" Margin="170,10,0,0" VerticalAlignment="Top" Grid.Column="1"/>
             <DatePicker SelectedDate="{Binding StartTime,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="5,10,0,0" VerticalAlignment="Top" Width="150" Grid.Column="2"/>
             <ComboBox ItemsSource="{Binding HourItems}" SelectedIndex="{Binding StartTimeHour,UpdateSourceTrigger=PropertyChanged}" IsEditable="True"  HorizontalAlignment="Left" Margin="170,10,0,0" VerticalAlignment="Top" Width="60" Grid.Column="2"/>

@@ -206,14 +206,14 @@ namespace Cdy.Tag
         /// <param name="database"></param>
         public async void StartAsync(string database)
         {
-            LoggerService.Service.Info("Runner",  database+"开始启动");
+            LoggerService.Service.Info("Runner", " 数据库 " + database+" 开始启动");
             await InitAsync(database);
             seriseEnginer.Start();
             compressEnginer.Start();
             hisEnginer.Start();
             DriverManager.Manager.Start();
             mIsStarted = true;
-            LoggerService.Service.Info("Runner", database + "启动完成");
+            LoggerService.Service.Info("Runner", " 数据库 " + database + " 启动完成");
         }
 
 

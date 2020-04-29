@@ -118,6 +118,9 @@ namespace Cdy.Tag
 
         private int mMergeCount = 0;
 
+        private bool mNeedSnapAllTag=false;
+        private DateTime mSnapAllTagTime = DateTime.Now;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -422,6 +425,11 @@ namespace Cdy.Tag
         //    HisRunTag.StartTime = mLastProcessTime;
         //}
 
+        private string formateDatetime(DateTime datetime)
+        {
+            return datetime.ToString("yyyy-MM-dd HH:mm:ss.fff");
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -444,14 +452,12 @@ namespace Cdy.Tag
             mCachMemory2.MakeMemoryNoBusy();
             mMergeMemory.MakeMemoryNoBusy();
 
-            SnapeAllTag();
-            RecordAllFirstValue();
-
             mLastProcessTime = DateTime.Now;
-            //PrepareForReadyMemory();
             HisRunTag.StartTime = mLastProcessTime;
             CurrentMemory = mCachMemory1;
             CurrentMemory.CurrentDatetime = mLastProcessTime;
+            SnapeAllTag();
+            RecordAllFirstValue();
 
             mRecordTimer = new System.Timers.Timer(MemoryTimeTick);
             mRecordTimer.Elapsed += MRecordTimer_Elapsed;
@@ -491,13 +497,19 @@ namespace Cdy.Tag
                 resetEvent.Reset();
                 if (mIsClosed) return;
 
+                if(mNeedSnapAllTag)
+                {
+                    SnapeAllTag();
+                    mNeedSnapAllTag = false;
+                }
+
                 MemoryMerge(count);
 
                 //如果合并满了，则提交给压缩流程进行压缩
                 count++;
                 if(count>=number)
                 {
-                    SnapeAllTag();
+                    
                     if (mMergeMemory != null)
                     {
                         RecordAllLastValue();
@@ -524,7 +536,7 @@ namespace Cdy.Tag
             if (count == 0)
             {
                 mMergeMemory.CurrentDatetime = mWaitForMergeMemory.CurrentDatetime;
-                LoggerService.Service.Info("HisEnginer", "MergeMemory 使用新的时间起点:" + mWaitForMergeMemory.Name + mMergeMemory.CurrentDatetime.ToString());
+                LoggerService.Service.Info("HisEnginer", "MergeMemory 使用新的时间起点:" + mWaitForMergeMemory.Name+" " + formateDatetime(mMergeMemory.CurrentDatetime), ConsoleColor.Cyan);
             }
 
             var mcc = mWaitForMergeMemory;
@@ -599,7 +611,8 @@ namespace Cdy.Tag
 
             if (mMergeCount==0)
             {
-                LoggerService.Service.Info("HisEnginer", "使用新的时间起点:" + CurrentMemory.Name + "  " + CurrentMemory.CurrentDatetime.ToString());
+                mNeedSnapAllTag = true;
+                LoggerService.Service.Info("HisEnginer", "使用新的时间起点:" + CurrentMemory.Name + "  " + formateDatetime(CurrentMemory.CurrentDatetime), ConsoleColor.Cyan);
                 HisRunTag.StartTime = dateTime;
             }
             //PrepareForReadyMemory();
@@ -622,10 +635,15 @@ namespace Cdy.Tag
         /// </summary>
         private void SnapeAllTag()
         {
+            mSnapAllTagTime = DateTime.Now;
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             foreach(var vv in mHisTags)
             {
                 vv.Value.Snape();
             }
+            sw.Stop();
+            LoggerService.Service.Info("HisEnginer", "快照记录数值:" + formateDatetime(mSnapAllTagTime) + " 耗时:" + sw.ElapsedMilliseconds, ConsoleColor.Cyan);
         }
 
         /// <summary>
@@ -662,7 +680,8 @@ namespace Cdy.Tag
         /// <param name="dt"></param>
         private void RecordAllLastValue()
         {
-            DateTime time = DateTime.Now;
+            DateTime time = mSnapAllTagTime;
+            LoggerService.Service.Info("HisEnginer", "RecordAllLastValue:" + formateDatetime(time), ConsoleColor.Cyan);
             ushort timespan = (ushort)((time - mMergeMemory.CurrentDatetime).TotalMilliseconds / 100);
             foreach (var vv in mMergeMemory.TagAddress)
             {
@@ -706,10 +725,11 @@ namespace Cdy.Tag
             mIsBusy = true;
             mBlockCount = 0;
             DateTime dt = DateTime.Now;
-            var mm = (dt.Hour * 24 + dt.Minute * 60 + dt.Second) / CachMemoryTime;
+            //var mm = (dt.Hour * 24 + dt.Minute * 60 + dt.Second) / CachMemoryTime;
+            var mm = dt.Minute;
             if (mm!=mLastProcessTick )
             {
-                LoggerService.Service.Info("Record", "-------------------------------------------------------------------------", ConsoleColor.Green);
+                LoggerService.Service.Info("Record", mm+"!="+mLastProcessTick+ "-------------------------------------------------------------------------", ConsoleColor.Green);
                 LoggerService.Service.Info("Record", "准备新的内存，提交内存 "+ CurrentMemory.Name+ " 到压缩");
                 Stopwatch sw = new Stopwatch();
                 sw.Start();

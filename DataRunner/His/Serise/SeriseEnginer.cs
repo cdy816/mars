@@ -782,11 +782,11 @@ namespace Cdy.Tag
                     }
                 }
 
-                StringBuilder sb = new StringBuilder();
-                foreach (var vv in mBlockPointMemory.ToLongList())
-                {
-                    sb.Append(vv + ",");
-                }
+                //StringBuilder sb = new StringBuilder();
+                //foreach (var vv in mBlockPointMemory.ToLongList())
+                //{
+                //    sb.Append(vv + ",");
+                //}
 
                 //计算本次更新对应的指针区域的起始地址
                 FileStartHour = (time.Hour / FileDuration) * FileDuration;
@@ -801,7 +801,7 @@ namespace Cdy.Tag
                     mFileWriter.GoToEnd();
                     long lpp = mFileWriter.CurrentPostion;
                     mProcessMemory.WriteToStream(mFileWriter.GetStream(), start, totalsize - start);//直接拷贝数据块
-                    LoggerService.Service.Info("SeriseFileItem", "数据写入地址:" + lpp + ",更新指针地址：" + pointAddr+" block index:"+bid+" tagcount:"+count+" block point Start Addr:"+ mBlockPointOffset+" point values:"+sb.ToString());
+                  //  LoggerService.Service.Info("SeriseFileItem", "数据写入地址:" + lpp + ",更新指针地址：" + pointAddr+" block index:"+bid+" tagcount:"+count+" block point Start Addr:"+ mBlockPointOffset+" point values:"+sb.ToString());
 
                     
 

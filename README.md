@@ -5,9 +5,9 @@ High performance real-time database.Our goal is to store the second level data o
 
 目前测试的结果是，在如下配置的商务台式电脑上可以达到**100**万个传感器数据按照秒级变化的历史存储。
 
-* CPU：I7 4700,主频：3.6
+* CPU： I7 4790,主频：3.6
 * 内存：8G
-* 磁盘:机械磁盘512G,7200
+* 磁盘: 机械磁盘 512G,7200转
 
 ## 功能
 1. 实时数据服务。提供数据的实时值的查询、修改服务。

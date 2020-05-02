@@ -1,5 +1,5 @@
-# mars/火星传感数据库
-High performance real-time database.Our goal is to store the second level data of 3-10 million sensors on a single server.
+# mars/火星实时物联数据库
+High performance realtime database.Our goal is to store the second level data of 3-10 million sensors on a single server.
 
 以记录物联网时代各种传感器数据为目的的，高性能实时传感器数据库。相较于传统工业系统中的实时库，该库提供了基于互联网的各种特性，相较于时序库该库提供了以单个传感器数据（变量）为记录单位的记录和管理数据的方式较时序库仍然以表为记录单位方式的不同。该项目的目标：在单台服务器上达到**300~1000万**个传感器数据按照秒级变化的数据的历史存储，分布式版本可以达到**上亿以及十亿级别**。
 

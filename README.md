@@ -22,6 +22,12 @@ High performance real-time database.Our goal is to store the second level data o
 4. DbProxy: 提供数据库的实时数据的访问代理服务。（尚未开发）。
 5. OPCProxy:居于OPC-UA协议的数据访问带来服务。（尚未开发)。
 
+##运行环境
+系统采用.net core 3.1 平台开发。依赖于.net core 的跨平台性，可部署在window、Linux等操作系统中,也可以部署在Docker中。 
+
+##沟通交流
+QQ 群:950906131
+
 ## 帮助文档、接口开发文档
 暂无。
 

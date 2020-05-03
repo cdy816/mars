@@ -877,7 +877,7 @@ namespace DBInStudio.Desktop
         public override void Remove()
         {
             string sname = this.FullName;
-            if (DevelopServiceHelper.Helper.RemoveGroup(Database, sname))
+            if (DevelopServiceHelper.Helper.RemoveTagGroup(Database, sname))
             {
                 if (Parent != null &&  Parent is HasChildrenTreeItemViewModel)
                 {
@@ -895,7 +895,7 @@ namespace DBInStudio.Desktop
         /// <returns></returns>
         public override bool OnRename(string oldName, string newName)
         {
-            return DevelopServiceHelper.Helper.ReNameGroup(Database,this.FullName, newName);
+            return DevelopServiceHelper.Helper.ReNameTagGroup(Database,this.FullName, newName);
         }
 
         /// <summary>
@@ -935,7 +935,7 @@ namespace DBInStudio.Desktop
         /// </summary>
         public RootTagGroupViewModel()
         {
-            Name = Res.Get("TagGroup");
+            Name = Res.Get("Tag");
         }
         #endregion ...Constructor...
 

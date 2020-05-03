@@ -354,6 +354,8 @@ namespace DBInStudio.Desktop
                 ListDatabaseViewModel ldm = new ListDatabaseViewModel();
                 if (ldm.ShowDialog().Value)
                 {
+                    this.TagGroup.Clear();
+
                     mDatabase = ldm.SelectDatabase.Name;
                     var dbitem = new DatabaseViewModel() { Name = mDatabase,IsSelected=true,IsExpanded=true };
                     this.TagGroup.Add(dbitem);
@@ -361,7 +363,7 @@ namespace DBInStudio.Desktop
                     mRootTagGroupModel.Database = mDatabase;
                     dbitem.Children.Add(securityModel);
                     securityModel.Database = mDatabase;
-
+                    securityModel.Init();
                     Task.Run(() => {
                         TagViewModel.Drivers = DevelopServiceHelper.Helper.GetRegistorDrivers(mDatabase);
                         QueryGroups();
@@ -379,7 +381,7 @@ namespace DBInStudio.Desktop
         {
             string sparent = mCurrentSelectTreeItem!=null && mCurrentSelectTreeItem is TagGroupViewModel? (mCurrentSelectTreeItem as TagGroupViewModel).FullName:string.Empty;
             string name = GetNewGroupName();
-            if(DevelopServiceHelper.Helper.AddGroup(mDatabase,name,sparent))
+            if(DevelopServiceHelper.Helper.AddTagGroup(mDatabase,name,sparent))
             {
                 if (mCurrentSelectTreeItem != null && mCurrentSelectTreeItem is TagGroupViewModel)
                 {
@@ -459,6 +461,10 @@ namespace DBInStudio.Desktop
             {
                 (ContentViewModel as TagGroupDetailViewModel).UpdateAll();
             }
+            else if(ContentViewModel is PermissionTreeItemViewModel)
+            {
+                (ContentViewModel as PermissionDetailViewModel).Update();
+            }
 
             if((mCurrentSelectTreeItem is TagGroupViewModel)||(mCurrentSelectTreeItem is RootTagGroupViewModel))
             {
@@ -467,6 +473,22 @@ namespace DBInStudio.Desktop
                     ContentViewModel = new TagGroupDetailViewModel();
                 }
                 (ContentViewModel as TagGroupDetailViewModel).GroupModel = mCurrentSelectTreeItem as TagGroupViewModel;
+            }
+            else if(mCurrentSelectTreeItem is UserTreeItemViewModel)
+            {
+                if(ContentViewModel == null || !(ContentViewModel is UserGroupDetailViewModel))
+                {
+                    ContentViewModel = new UserGroupDetailViewModel();
+                }
+                (ContentViewModel as UserGroupDetailViewModel).Model = mCurrentSelectTreeItem as UserTreeItemViewModel;
+            }
+            else if(mCurrentSelectTreeItem is PermissionTreeItemViewModel)
+            {
+                if (ContentViewModel == null || !(ContentViewModel is PermissionTreeItemViewModel))
+                {
+                    ContentViewModel = new PermissionDetailViewModel() { Database = this.mDatabase };
+                }
+                 (ContentViewModel as PermissionDetailViewModel).Query();
             }
             else
             {

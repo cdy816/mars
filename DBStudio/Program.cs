@@ -1,6 +1,9 @@
 ﻿using Cdy.Tag;
 using System;
 using System.Text;
+using System.Linq;
+using System.Collections.Generic;
+using System.IO;
 
 namespace DBStudio
 {
@@ -21,11 +24,11 @@ namespace DBStudio
             }
 
             DBDevelopService.Service.Instanse.Start(port, webPort);
-            Console.WriteLine("输入exit退出服务");
-            Console.WriteLine(Res.Get("HelpMsg"));
+            OutByLine("", "输入exit退出服务");
+            OutByLine("", Res.Get("HelpMsg"));
             while (true)
             {
-                Console.Write(">");
+                OutInLine("", "");
                 string[] cmd = Console.ReadLine().Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
                 if (cmd.Length == 0) continue;
 
@@ -33,7 +36,7 @@ namespace DBStudio
 
                 if (cmsg == "exit")
                 {
-                    Console.WriteLine("确定要退出?输入y确定,输入其他任意字符取消");
+                    OutByLine("","确定要退出?输入y确定,输入其他任意字符取消");
                     cmd = Console.ReadLine().Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
                     if (cmd.Length == 0) continue;
                     if (cmd[0].ToLower() == "y")
@@ -44,13 +47,54 @@ namespace DBStudio
                     if (cmd.Length > 1)
                         ProcessDatabaseCreat(cmd[1]);
                 }
+                else if (cmsg == "list")
+                {
+                    ListDatabase();
+                }
                 else if (cmsg == "h")
                 {
-                    Console.WriteLine(GetHelpString());
+                    OutByLine("",GetHelpString());
                 }
             }
             DBDevelopService.Service.Instanse.Stop();
 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="prechar"></param>
+        /// <param name="msg"></param>
+        private static void OutByLine(string prechar,string msg)
+        {
+            Console.WriteLine(prechar+">" + msg);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="prechar"></param>
+        /// <param name="msg"></param>
+        private static void OutInLine(string prechar, string msg)
+        {
+            Console.Write(prechar + ">" + msg);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private static void ListDatabase()
+        {
+            if (!DBDevelopService.DbManager.Instance.IsLoaded)
+                DBDevelopService.DbManager.Instance.Load();
+
+            StringBuilder sb = new StringBuilder();
+            foreach(var vdd in DBDevelopService.DbManager.Instance.ListDatabase())
+            {
+                sb.Append(vdd+",");
+            }
+            sb.Length = sb.Length > 1 ? sb.Length - 1 : sb.Length;
+            OutByLine("", sb.ToString());
         }
 
         /// <summary>
@@ -111,10 +155,10 @@ namespace DBStudio
                 db = Database.New(name);
             }
 
-            Console.WriteLine(Res.Get("HelpMsg"));
+            OutByLine(name,Res.Get("HelpMsg"));
             while (true)
             {
-                Console.Write(name+">"); 
+                OutInLine(name, "");
                 string[] cmd = Console.ReadLine().Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
                 if (cmd.Length == 0) continue;
                 string cmsg = cmd[0].ToLower();
@@ -132,6 +176,10 @@ namespace DBStudio
                     {
                         RemoveTag(db, cmd[1].ToLower());
                     }
+                    else if (cmsg == "clear")
+                    {
+                        ClearTag(db);
+                    }
                     else if (cmsg == "update")
                     {
                         UpdateTag(db, cmd[1].ToLower(), cmd[2], cmd[3]);
@@ -142,15 +190,33 @@ namespace DBStudio
                     }
                     else if (cmsg == "import")
                     {
-                        Import(db, cmd[1].ToLower());
+                        if (cmd.Length > 1)
+                            Import(db, cmd[1].ToLower());
+                        else
+                        {
+                            Import(db, name + ".csv");
+                        }
+                    }
+                    else if (cmsg == "export")
+                    {
+                        if(cmd.Length>1)
+                        ExportToCSV(db, cmd[1].ToLower());
+                        else
+                        {
+                            ExportToCSV(db, name+".csv");
+                        }
                     }
                     else if (cmsg == "list")
                     {
-                        ListDatabase(db, cmd[1].ToLower());
+                        string ctype = cmd.Length > 1 ? cmd[1] : "";
+                        ListDatabase(db, ctype);
                     }
                     else if (cmsg == "h")
                     {
-
+                        if(cmd.Length==1)
+                        {
+                            Console.WriteLine(GetDbManagerHelpString());
+                        }
                     }
                     else if (cmsg == "exit")
                     {
@@ -159,9 +225,26 @@ namespace DBStudio
                 }
                 catch
                 {
-                    Console.Write(name + ">" + Res.Get("ErroParameter"));
+                    OutByLine(name ,Res.Get("ErroParameter"));
                 }
             }
+        }
+
+        private static string GetDbManagerHelpString()
+        {
+            StringBuilder re = new StringBuilder();
+            re.AppendLine();
+            re.AppendLine("add       [tagtype] [tagname] [linkaddress] [repeat] // add numbers tag to database ");
+            re.AppendLine("remove    [tagname]                                  // remove a tag");
+            re.AppendLine("clear                                                // clear all tags in database");
+            re.AppendLine("update    [tagname] [propertyname] [propertyvalue]   // update value of a poperty in a tag");
+            re.AppendLine("updatehis [tagname] [propertyname] [propertyvalue]   // update value of a poperty in a tag's his config");
+            re.AppendLine("import    [filename]                                 //import tags from a csvfile");
+            re.AppendLine("export    [filename]                                 //export tags to a csvfile");
+            re.AppendLine("list      [tagtype]                                  //the sumery info of specical type tags or all tags");
+            re.AppendLine("exit                                                 //exit and back to parent");
+
+            return re.ToString();
         }
 
         /// <summary>
@@ -169,16 +252,134 @@ namespace DBStudio
         /// </summary>
         /// <param name="database"></param>
         /// <param name="type"></param>
-        private static void ListDatabase(Database database, string type)
+        private static void ListDatabase(Database database, string type="")
         {
-            if(string.IsNullOrEmpty(type))
+            if(!string.IsNullOrEmpty(type))
             {
-                
+                int count = database.RealDatabase.Tags.Values.Where(e => e.Type == (TagType)Enum.Parse(typeof(TagType),type)).Count();
+                OutByLine(database.Name,string.Format(Res.Get("TagMsg"), count, type));
             }
             else
             {
-
+                foreach (TagType vv in Enum.GetValues(typeof(TagType)))
+                {
+                    int count = database.RealDatabase.Tags.Values.Where(e => e.Type == vv).Count();
+                    OutByLine(database.Name, string.Format(Res.Get("TagMsg"), count, vv.ToString()));
+                }
             }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="file"></param>
+        private static void ExportToCSV(Database database, string file)
+        {
+            string sfile = file;
+
+            if (!System.IO.Path.IsPathRooted(sfile))
+            {
+                sfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location), sfile);
+            }
+
+            var stream = new StreamWriter(File.Open(sfile, FileMode.OpenOrCreate, FileAccess.ReadWrite));
+            foreach(var vv in database.RealDatabase.Tags)
+            {
+                if(database.HisDatabase.HisTags.ContainsKey(vv.Key))
+                {
+                    stream.WriteLine(SaveToCSVString(vv.Value, database.HisDatabase.HisTags[vv.Key]));
+                }
+                else
+                {
+                    stream.WriteLine(SaveToCSVString(vv.Value, null));
+
+                }
+            }
+            stream.Close();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mRealTagMode"></param>
+        /// <param name="mHisTagMode"></param>
+        /// <returns></returns>
+        public static string SaveToCSVString(Tagbase mRealTagMode,HisTag mHisTagMode)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(mRealTagMode.Id + ",");
+            sb.Append(mRealTagMode.Name + ",");
+            sb.Append(mRealTagMode.Desc + ",");
+            sb.Append(mRealTagMode.Group + ",");
+            sb.Append(mRealTagMode.Type + ",");
+            sb.Append(mRealTagMode.LinkAddress + ",");
+            if (mHisTagMode != null)
+            {
+                sb.Append(mHisTagMode.Type + ",");
+                sb.Append(mHisTagMode.Circle + ",");
+                sb.Append(mHisTagMode.CompressType + ",");
+                if (mHisTagMode.Parameters != null)
+                {
+                    foreach (var vv in mHisTagMode.Parameters)
+                    {
+                        sb.Append(vv.Key + ",");
+                        sb.Append(vv.Value + ",");
+                    }
+                }
+            }
+            sb.Length = sb.Length > 0 ? sb.Length - 1 : sb.Length;
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="val"></param>
+        public static Tuple<Tagbase,HisTag> LoadFromCSVString(string val)
+        {
+            string[] stmp = val.Split(new char[] { ',' });
+            Cdy.Tag.TagType tp = (Cdy.Tag.TagType)Enum.Parse(typeof(Cdy.Tag.TagType), stmp[4]);
+            var realtag = TagTypeExtends.GetTag(tp);
+
+            realtag.Id = int.Parse(stmp[0]);
+            realtag.Name = stmp[1];
+            realtag.Desc = stmp[2];
+            realtag.Group = stmp[3];
+            realtag.LinkAddress = stmp[5];
+
+            if (stmp.Length > 6)
+            {
+                Cdy.Tag.HisTag histag = new HisTag();
+                histag.Type = (Cdy.Tag.RecordType)Enum.Parse(typeof(Cdy.Tag.RecordType), stmp[6]);
+
+                histag.Circle = long.Parse(stmp[7]);
+                histag.CompressType = int.Parse(stmp[8]);
+                histag.Parameters = new Dictionary<string, double>();
+                histag.TagType = realtag.Type;
+                histag.Id = realtag.Id;
+
+                for (int i = 9; i < stmp.Length; i++)
+                {
+                    string skey = stmp[i];
+                    if (string.IsNullOrEmpty(skey))
+                    {
+                        break;
+                    }
+                    double dval = double.Parse(stmp[i + 1]);
+
+                    if (!histag.Parameters.ContainsKey(skey))
+                    {
+                        histag.Parameters.Add(skey, dval);
+                    }
+
+                    i++;
+                }
+                return new Tuple<Tagbase, HisTag>(realtag, histag);
+            }
+
+            return new Tuple<Tagbase, HisTag>(realtag, null);
         }
 
         /// <summary>
@@ -186,22 +387,38 @@ namespace DBStudio
         /// </summary>
         /// <param name="database"></param>
         /// <param name="file"></param>
-        private static void Import(Database database,string file)
+        private static void Import(Database database, string file)
         {
             string sfile = file;
-            if(!System.IO.Path.IsPathRooted(sfile))
+
+            if (!System.IO.Path.IsPathRooted(sfile))
             {
                 sfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location), sfile);
             }
-            if(System.IO.File.Exists(sfile))
+            if (System.IO.File.Exists(sfile))
             {
                 var reader = new System.IO.StreamReader(System.IO.File.Open(sfile, System.IO.FileMode.Open));
-                while(reader.Peek()>0)
+                while (reader.Peek() > 0)
                 {
                     var cmd = reader.ReadLine();
-                    ProcessDatabaseCommand(database, cmd);
+                    if (sfile.EndsWith(".cmd"))
+                    {
+                        ProcessDatabaseCommand(database, cmd);
+                    }
+                    else if (sfile.EndsWith(".csv"))
+                    {
+                        var vres = LoadFromCSVString(cmd);
+                        database.RealDatabase.AddOrUpdate(vres.Item1);
+                        if(vres.Item2!=null)
+                        {
+                            database.HisDatabase.AddOrUpdate(vres.Item2);
+                        }
+                    }
+                   
                 }
             }
+
+            
         }
 
         /// <summary>
@@ -292,6 +509,16 @@ namespace DBStudio
                     }
                     break;
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        private static void ClearTag(Database database)
+        {
+            database.RealDatabase.Tags.Clear();
+            database.HisDatabase.HisTags.Clear();
         }
 
         /// <summary>
@@ -522,11 +749,15 @@ namespace DBStudio
         {
             StringBuilder re = new StringBuilder();
             re.AppendLine();
-            re.AppendLine("db    [databasename] // " + Res.Get("GDMsg"));
-            re.AppendLine("exit             // " + Res.Get("Exit"));
-            re.AppendLine("h                // " + Res.Get("HMsg"));
+            re.AppendLine("db    [databasename]  // " + Res.Get("GDMsg"));
+            re.AppendLine("list                  // List all exist database");
+            re.AppendLine("exit                  // " + Res.Get("Exit"));
+            re.AppendLine("h                     // " + Res.Get("HMsg"));
             return re.ToString();
         }
+
+
+       
     }
 }
 

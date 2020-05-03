@@ -70,7 +70,7 @@ namespace DBDevelopService
                 {
                     foreach (var vv in db.Security.Permission.Permissions)
                     {
-                        var dd = new DatabasePermission() { Name = vv.Value.Name, Desc = vv.Value.Desc, EnableWrite = vv.Value.EnableWrite };
+                        var dd = new DatabasePermission() { Name = vv.Value.Name, Desc = vv.Value.Desc, EnableWrite = vv.Value.EnableWrite,SuperPermission=vv.Value.SuperPermission };
                         dd.Group.AddRange(vv.Value.Group);
                         pers.Add(dd);
                     }
@@ -162,9 +162,44 @@ namespace DBDevelopService
             var db = DbManager.Instance.GetDatabase(request.Database);
             if (db != null)
             {
-
+                if(db.Security.Permission.Permissions.ContainsKey(request.Permission.Name))
+                {
+                    var pp = db.Security.Permission.Permissions[request.Permission.Name];
+                    pp.Group = request.Permission.Group.ToList();
+                    pp.EnableWrite = request.Permission.EnableWrite;
+                    pp.Desc = request.Permission.Desc;
+                }
+                else
+                {
+                    var pp = new Cdy.Tag.PermissionItem() { Name = request.Permission.Name, Desc = request.Permission.Desc, EnableWrite = request.Permission.EnableWrite };
+                    pp.Group.AddRange(request.Permission.Group);
+                    db.Security.Permission.Add(pp);
+                }
             }
-            return base.UpdateDatabasePermission(request, context);
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> RemoveDatabasePermission(RemoveDatabasePermissionRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                if (db.Security.Permission.Permissions.ContainsKey(request.Permission))
+                {
+                    db.Security.Permission.Permissions.Remove(request.Permission);
+                }
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = true });
         }
 
         /// <summary>
@@ -189,10 +224,196 @@ namespace DBDevelopService
                     user.Permissions = request.Permission.ToList();
                     user.Group = request.Group;
                 }
+                else
+                {
+                    var user = new Cdy.Tag.UserItem() { Name = request.UserName,Group=request.Group };
+                    user.Permissions = request.Permission.ToList();
+                    db.Security.User.AddUser(user);
+                }
             }
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> RemoveDatabaseUser(RemoveByNameRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, PermissionDocument.DeletePermission))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var uss = db.Security.User.Users;
+                if (uss.ContainsKey(request.Name))
+                {
+                    db.Security.User.RemoveUser(request.Name);
+                }
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> AddDatabaseUserGroup(AddGroupRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var user = new Cdy.Tag.UserGroup() { Name = request.Name };
+                var usergroup = db.Security.User.GetUserGroup(request.ParentName);
+                user.Parent = usergroup;
+                db.Security.User.AddUserGroup(user);
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<GetGroupMessageReply> GetDatabaseUserGroup(GetRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId))
+            {
+                return Task.FromResult(new GetGroupMessageReply() { Result = false });
+            }
+            GetGroupMessageReply re = new GetGroupMessageReply();
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                foreach(var vgg in  db.Security.User.Groups)
+                {
+                    re.Group.Add(new Group() { Name = vgg.Value.Name, Parent = vgg.Value.Parent != null ? vgg.Value.Parent.FullName : "" });
+                }
+            }
+            return Task.FromResult(re);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<GetDatabaseUsersReplay> GetDatabaseUserByGroup(GetDatabaseUserByGroupRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId))
+            {
+                return Task.FromResult(new GetDatabaseUsersReplay() { Result = false });
+            }
+
+            GetDatabaseUsersReplay re = new GetDatabaseUsersReplay();
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                foreach (var vgg in db.Security.User.Users.Where(e=>e.Value.Group == request.Group))
+                {
+                    var user = new DatabaseUserMessage() { UserName = vgg.Value.Name, Group = vgg.Value.Group };
+                    user.Permission.AddRange(vgg.Value.Permissions);
+                    re.Users.Add(user);
+                }
+            }
+            return Task.FromResult(re);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> MoveDatabaseUserGroup(MoveGroupRequest request, ServerCallContext context)
+        {
+
+            if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                string ofname = request.OldParentName + "." + request.Name;
+                var pgroup = db.Security.User.GetUserGroup(request.NewParentName);
+
+                var usergroup = db.Security.User.GetUserGroup(ofname);
+                if (usergroup != null)
+                {
+                    db.Security.User.RemoveUserGroup(ofname);
+                    usergroup.Parent = pgroup;
+                    db.Security.User.AddUserGroup(usergroup);
+                }
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> RemoveDatabaseUserGroup(RemoveGroupRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var usergroup = db.Security.User.GetUserGroup(request.Name);
+                if(usergroup!=null)
+                {
+                    db.Security.User.RemoveUserGroup(usergroup.Name);
+                }
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> RenameDatabaseUserGroup(RenameGroupRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var usergroup = db.Security.User.GetUserGroup(request.OldFullName);
+                if (usergroup != null)
+                {
+                    usergroup.Name = request.NewName;
+                    string sname = usergroup.FullName;
+                    db.Security.User.RemoveUserGroup(request.OldFullName);
+                    db.Security.User.AddUserGroup(usergroup);
+                }
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        
 
         #endregion
 
@@ -252,6 +473,49 @@ namespace DBDevelopService
             if(user!=null)
             {
                 user.Permissions = request.Permission.ToList();
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<GetUsersReplay> GetUsers(GetRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, PermissionDocument.AdminPermission))
+            {
+                return Task.FromResult(new GetUsersReplay() { Result = false });
+            }
+
+            GetUsersReplay re = new GetUsersReplay() { Result = true };
+            foreach (var vv in SecurityManager.Manager.Securitys.User.Users)
+            {
+                var user = new UserMessage() { UserName = vv.Value.Name };
+                user.Permission.AddRange(vv.Value.Permissions);
+                re.Users.Add(user);
+            }
+            return Task.FromResult(re);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> RemoveUser(RemoveUserRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, PermissionDocument.AdminPermission))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var user = SecurityManager.Manager.Securitys.User.GetUser(request.UserName);
+            if (user != null)
+            {
+                SecurityManager.Manager.Securitys.User.RemoveUser(request.UserName);
             }
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
@@ -335,7 +599,7 @@ namespace DBDevelopService
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public override Task<BoolResultReplay> AddTagGroup(AddTagGroupRequest request, ServerCallContext context)
+        public override Task<BoolResultReplay> AddTagGroup(AddGroupRequest request, ServerCallContext context)
         {
             if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
             {
@@ -358,7 +622,7 @@ namespace DBDevelopService
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public override Task<BoolResultReplay> RenameTagGroup(RenameTagGroupRequest request, ServerCallContext context)
+        public override Task<BoolResultReplay> RenameTagGroup(RenameGroupRequest request, ServerCallContext context)
         {
             if (!CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
             {
@@ -380,7 +644,7 @@ namespace DBDevelopService
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public override Task<BoolResultReplay> RemoveTagGroup(RemoveTagGroupRequest request, ServerCallContext context)
+        public override Task<BoolResultReplay> RemoveTagGroup(RemoveGroupRequest request, ServerCallContext context)
         {
             if (!CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
             {
@@ -401,7 +665,7 @@ namespace DBDevelopService
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public override Task<BoolResultReplay> MoveTagGroup(MoveTagGroupRequest request, ServerCallContext context)
+        public override Task<BoolResultReplay> MoveTagGroup(MoveGroupRequest request, ServerCallContext context)
         {
             if (!CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
             {

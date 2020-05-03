@@ -117,9 +117,9 @@ namespace Cdy.Tag
         /// <param name="user"></param>
         public void AddUserGroup(UserGroup user)
         {
-            if (!Groups.ContainsKey(user.Name))
+            if (!Groups.ContainsKey(user.FullName))
             {
-                Groups.Add(user.Name, user);
+                Groups.Add(user.FullName, user);
             }
 
         }
@@ -142,9 +142,9 @@ namespace Cdy.Tag
         /// <param name="user"></param>
         public void ModifyUserGroup(UserGroup user)
         {
-            if (Groups.ContainsKey(user.Name))
+            if (Groups.ContainsKey(user.FullName))
             {
-                Groups[user.Name] = user;
+                Groups[user.FullName] = user;
             }
         }
 

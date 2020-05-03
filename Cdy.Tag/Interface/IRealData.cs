@@ -96,8 +96,6 @@ namespace Cdy.Tag
         void SetValue(Dictionary<int, Tuple<short, byte, DateTime>> values);
 
 
-
-
         /// <summary>
         /// 
         /// </summary>
@@ -363,10 +361,37 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         void SetValue(Dictionary<int, Tuple<string, byte, DateTime>> values);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        bool SetPointValue(int id, byte quality, DateTime time, params object[] values);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        bool SetPointValue(int id, byte quality, params object[] values);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        bool SetPointValue(int id, params object[] values);
+
         #endregion
 
         #region 数据读取接口
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -496,6 +521,173 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         /// <returns></returns>
         string ReadStringValue(int id, Encoding encoding, out byte qulity, out DateTime time);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        IntPointData ReadIntPointValue(int id, out byte quality, out DateTime time);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        UIntPointData ReadUIntPointValue(int id, out byte quality, out DateTime time);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        IntPoint3Data ReadIntPoint3Value(int id, out byte quality, out DateTime time);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        UIntPoint3Data ReadUIntPoint3Value(int id, out byte quality, out DateTime time);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+
+        LongPointData ReadLongPointValue(int id, out byte quality, out DateTime time);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        ULongPointData ReadULongPointValue(int id, out byte quality, out DateTime time);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        LongPoint3Data ReadLongPoint3Value(int id, out byte quality, out DateTime time);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        ULongPoint3Data ReadULongPoint3Value(int id, out byte quality, out DateTime time);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        bool ReadULongPoint3Value(int id, out ulong x, out ulong y, out ulong z, out byte quality, out DateTime time);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        bool ReadLongPoint3Value(int id, out long x, out long y, out long z, out byte quality, out DateTime time);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        bool ReadULongPointValue(int id, out ulong x, out ulong y, out byte quality, out DateTime time);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        bool ReadLongPointValue(int id, out long x, out long y, out byte quality, out DateTime time);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        bool ReadUIntPoint3Value(int id, out uint x, out uint y, out uint z, out byte quality, out DateTime time);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+
+        bool ReadIntPoint3Value(int id, out int x, out int y, out int z, out byte quality, out DateTime time);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+
+        bool ReadUIntPointValue(int id, out uint x, out uint y, out byte quality, out DateTime time);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+
+        bool ReadIntPointValue(int id, out int x, out int y, out byte quality, out DateTime time);
 
         #endregion
 

@@ -181,6 +181,286 @@ namespace DBDevelopClientApi
             return re;
         }
 
+
+        #region Develop User
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public bool AddUser(string name, string password)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.NewUser(new DBDevelopService.NewUserRequest() {  LoginId = mLoginId, UserName = name, Password = password }).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool RemoveUser(string name)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.RemoveUser(new DBDevelopService.RemoveUserRequest() { LoginId = mLoginId, UserName = name }).Result;
+            }
+            return false;
+        }
+
+        public bool UpdateUser(string name,List<string> permissions)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                var req = new DBDevelopService.UpdateUserRequest() { LoginId = mLoginId, UserName = name };
+                req.Permission.AddRange(permissions);
+                return mCurrentClient.UpdateUser(req).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public bool SetUserPassword(string name,string password)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.ModifyPassword(new DBDevelopService.ModifyPasswordRequest() { LoginId = mLoginId, UserName = name,Password=password }).Result;
+            }
+            return false;
+        }
+
+        
+        #endregion
+
+        #region DatabaseUser
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public Dictionary<string, string> QueryDatabaseUserGroups(string database)
+        {
+            Dictionary<string, string> re = new Dictionary<string, string>();
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                foreach (var vv in mCurrentClient.GetDatabaseUserGroup(new DBDevelopService.GetRequest() { Database = database, LoginId = mLoginId }).Group)
+                {
+                    re.Add(vv.Name, vv.Parent);
+                }
+            }
+            return re;
+        }
+
+        public List<string> GetAllUserNames(string database)
+        {
+            List<string> re = new List<string>();
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                var groups = QueryDatabaseUserGroups(database).Keys.ToList();
+                groups.Add("");
+                foreach (var vvg in groups)
+                {
+                    foreach (var vv in mCurrentClient.GetDatabaseUserByGroup(new DBDevelopService.GetDatabaseUserByGroupRequest() { Database = database, LoginId = mLoginId, Group = vvg }).Users)
+                    {
+                        //Cdy.Tag.UserItem user = new Cdy.Tag.UserItem() { Name = vv.UserName, Group = vv.Group };
+                        //user.Permissions.AddRange(vv.Permission.ToArray());
+                        re.Add(vv.UserName);
+                    }
+                }
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public List<Cdy.Tag.UserItem> GetUsersByGroup(string database,string group)
+        {
+            List<Cdy.Tag.UserItem> re = new List<Cdy.Tag.UserItem>();
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                foreach (var vv in mCurrentClient.GetDatabaseUserByGroup(new DBDevelopService.GetDatabaseUserByGroupRequest() { Database = database, LoginId = mLoginId,Group=group }).Users)
+                {
+                    Cdy.Tag.UserItem user = new Cdy.Tag.UserItem() { Name = vv.UserName, Group = vv.Group };
+                    user.Permissions.AddRange(vv.Permission.ToArray());
+                    re.Add(user);
+                }
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public List<Cdy.Tag.PermissionItem> GetAllDatabasePermission(string database)
+        {
+            List<Cdy.Tag.PermissionItem> re = new List<Cdy.Tag.PermissionItem>();
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                foreach (var vv in mCurrentClient.GetAllDatabasePermission(new DBDevelopService.GetAllDatabasePermissionRequest() { Database = database, LoginId = mLoginId }).Permission)
+                {
+                    Cdy.Tag.PermissionItem user = new Cdy.Tag.PermissionItem() { Name = vv.Name, Group = vv.Group.ToList(),Desc=vv.Desc,EnableWrite=vv.EnableWrite,SuperPermission=vv.SuperPermission };
+                    re.Add(user);
+                }
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool RemoveDatabasePermission(string database,string name)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.RemoveDatabasePermission(new DBDevelopService.RemoveDatabasePermissionRequest() { Database = database, LoginId = mLoginId, Permission = name }).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="permission"></param>
+        /// <returns></returns>
+        public bool UpdateDatabasePermission(string database,Cdy.Tag.PermissionItem permission)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                var req = new DBDevelopService.DatabasePermissionRequest();
+                req.Database = database;
+                req.LoginId = mLoginId;
+                req.Permission = new DBDevelopService.DatabasePermission() { Name = permission.Name, Desc = permission.Desc, EnableWrite = permission.EnableWrite };
+                if(permission.Group!=null)
+                req.Permission.Group.Add(permission.Group);
+                return mCurrentClient.UpdateDatabasePermission(req).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="name"></param>
+        /// <param name="parentName"></param>
+        public bool AddDatabaseUserGroup(string database, string name, string parentName)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.AddDatabaseUserGroup(new DBDevelopService.AddGroupRequest() { Database = database, LoginId = mLoginId, Name = name, ParentName = parentName }).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
+        /// <returns></returns>
+        public bool ReNameDatabaseUserGroup(string database, string oldName, string newName)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.RenameDatabaseUserGroup(new DBDevelopService.RenameGroupRequest() { Database = database, LoginId = mLoginId, OldFullName = oldName, NewName = newName }).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool RemoveDatabaseUserGroup(string database, string name)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.RemoveDatabaseUserGroup(new DBDevelopService.RemoveGroupRequest() { Database = database, LoginId = mLoginId, Name = name }).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public bool UpdateDatabaseUser(string database,Cdy.Tag.UserItem user)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                var req = new DBDevelopService.UpdateDatabaseUserRequest() { Database = database, LoginId = mLoginId, UserName = user.Name, Group = user.Group };
+                if(user.Permissions!=null)
+                req.Permission.AddRange(user.Permissions);
+                return mCurrentClient.UpdateDatabaseUser(req).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="user"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public bool UpdateDatabaseUserPassword(String database ,string user,string password)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                var req = new DBDevelopService.ModifyDatabaseUserPasswordRequest() { Database = database, LoginId = mLoginId, UserName = user, Password=password };
+                return mCurrentClient.ModifyDatabaseUserPassword(req).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool RemoveDatabaseUser(string database, string name)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.RemoveDatabaseUser(new DBDevelopService.RemoveByNameRequest() { Database = database, LoginId = mLoginId, Name = name }).Result;
+            }
+            return false;
+        }
+
+        #endregion
+
+
+        #region database permission
+
+        #endregion
+
         /// <summary>
         /// 
         /// </summary>
@@ -249,6 +529,74 @@ namespace DBDevelopClientApi
             return re;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="group"></param>
+        /// <param name="totalCount"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> QueryTagByGroup(string database, string group, int index, out int totalCount)
+        {
+            Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> re = new Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>>();
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                int idx = index;
+                var result = mCurrentClient.GetTagByGroup(new DBDevelopService.GetTagByGroupRequest() { Database = database, LoginId = mLoginId, Group = group, Index = idx });
+
+                totalCount = result.Count;
+
+                if (result.Result)
+                {
+                    Dictionary<int, Cdy.Tag.Tagbase> mRealTag = new Dictionary<int, Cdy.Tag.Tagbase>();
+                    foreach (var vv in result.RealTag)
+                    {
+                        var tag = GetTag((int)vv.TagType);
+                        tag.Id = (int)vv.Id;
+                        tag.LinkAddress = vv.LinkAddress;
+                        tag.Name = vv.Name;
+                        tag.Desc = vv.Desc;
+                        tag.Group = vv.Group;
+                        mRealTag.Add(tag.Id, tag);
+                    }
+
+                    Dictionary<int, Cdy.Tag.HisTag> mHisTag = new Dictionary<int, Cdy.Tag.HisTag>();
+                    foreach (var vv in result.HisTag)
+                    {
+                        var tag = new Cdy.Tag.HisTag { Id = (int)vv.Id, TagType = (Cdy.Tag.TagType)vv.TagType, Type = (Cdy.Tag.RecordType)vv.Type, CompressType = (int)vv.CompressType };
+                        if (vv.Parameter.Count > 0)
+                        {
+                            tag.Parameters = new Dictionary<string, double>();
+                            foreach (var vvv in vv.Parameter)
+                            {
+                                tag.Parameters.Add(vvv.Name, vvv.Value);
+                            }
+
+                        }
+                        mHisTag.Add(tag.Id, tag);
+                    }
+
+                    foreach (var vv in mRealTag)
+                    {
+                        if (mHisTag.ContainsKey(vv.Key))
+                        {
+                            re.Add(vv.Key, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(mRealTag[vv.Key], mHisTag[vv.Key]));
+                        }
+                        else
+                        {
+                            re.Add(vv.Key, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(mRealTag[vv.Key], null));
+                        }
+                    }
+                }
+            }
+            else
+            {
+                totalCount = -1;
+            }
+            
+            return re;
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -373,11 +721,11 @@ namespace DBDevelopClientApi
         /// <param name="database"></param>
         /// <param name="name"></param>
         /// <param name="parentName"></param>
-        public bool AddGroup(string database,string name,string parentName)
+        public bool AddTagGroup(string database,string name,string parentName)
         {
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
-                return mCurrentClient.AddTagGroup(new DBDevelopService.AddTagGroupRequest() { Database = database, LoginId = mLoginId, Name = name, ParentName = parentName }).Result;
+                return mCurrentClient.AddTagGroup(new DBDevelopService.AddGroupRequest() { Database = database, LoginId = mLoginId, Name = name, ParentName = parentName }).Result;
             }
             return false;
         }
@@ -389,11 +737,11 @@ namespace DBDevelopClientApi
         /// <param name="oldName"></param>
         /// <param name="newName"></param>
         /// <returns></returns>
-        public bool ReNameGroup(string database,string oldName,string newName)
+        public bool ReNameTagGroup(string database,string oldName,string newName)
         {
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
-                return mCurrentClient.RenameTagGroup(new DBDevelopService.RenameTagGroupRequest() { Database = database, LoginId = mLoginId,OldFullName=oldName,NewName=newName }).Result;
+                return mCurrentClient.RenameTagGroup(new DBDevelopService.RenameGroupRequest() { Database = database, LoginId = mLoginId,OldFullName=oldName,NewName=newName }).Result;
             }
             return false;
         }
@@ -404,11 +752,11 @@ namespace DBDevelopClientApi
         /// <param name="database"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public bool RemoveGroup(string database,string name)
+        public bool RemoveTagGroup(string database,string name)
         {
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
-                return mCurrentClient.RemoveTagGroup(new DBDevelopService.RemoveTagGroupRequest() { Database = database, LoginId = mLoginId, Name = name }).Result;
+                return mCurrentClient.RemoveTagGroup(new DBDevelopService.RemoveGroupRequest() { Database = database, LoginId = mLoginId, Name = name }).Result;
             }
             return false;
         }

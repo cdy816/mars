@@ -239,6 +239,22 @@ namespace Cdy.Tag
                         case Cdy.Tag.TagType.String:
                             mHisTag = new StirngHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.Value.CompressType, Parameters = vv.Value.Parameters };
                             break;
+                        case Cdy.Tag.TagType.UIntPoint:
+                        case Cdy.Tag.TagType.IntPoint:
+                            mHisTag = new IntPointHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.Value.CompressType, Parameters = vv.Value.Parameters };
+                            break;
+                        case Cdy.Tag.TagType.UIntPoint3:
+                        case Cdy.Tag.TagType.IntPoint3:
+                            mHisTag = new IntPoint3HisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.Value.CompressType, Parameters = vv.Value.Parameters };
+                            break;
+                        case Cdy.Tag.TagType.ULongPoint:
+                        case Cdy.Tag.TagType.LongPoint:
+                            mHisTag = new LongPointHisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.Value.CompressType, Parameters = vv.Value.Parameters };
+                            break;
+                        case Cdy.Tag.TagType.ULongPoint3:
+                        case Cdy.Tag.TagType.LongPoint3:
+                            mHisTag = new LongPoint3HisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.Value.CompressType, Parameters = vv.Value.Parameters };
+                            break;
                     }
                     mHisTag.MaxCount = count;
                     mHisTags.Add(vv.Key, mHisTag);
@@ -311,8 +327,25 @@ namespace Cdy.Tag
                 case Cdy.Tag.TagType.ULong:
                 case Cdy.Tag.TagType.Double:
                 case Cdy.Tag.TagType.DateTime:
+                case Cdy.Tag.TagType.IntPoint:
+                case Cdy.Tag.TagType.UIntPoint:
                     qulityOffset = dataOffset + count * 8;
                     return qulityOffset + count;
+                case Cdy.Tag.TagType.IntPoint3:
+                case Cdy.Tag.TagType.UIntPoint3:
+                    qulityOffset = dataOffset + count * 12;
+                    return qulityOffset + count;
+
+                case Cdy.Tag.TagType.LongPoint:
+                case Cdy.Tag.TagType.ULongPoint:
+                    qulityOffset = dataOffset + count * 16;
+                    return qulityOffset + count;
+
+                case Cdy.Tag.TagType.LongPoint3:
+                case Cdy.Tag.TagType.ULongPoint3:
+                    qulityOffset = dataOffset + count * 24;
+                    return qulityOffset + count;
+
                 case Cdy.Tag.TagType.String:
                     qulityOffset = dataOffset + count * Const.StringSize;
                     return qulityOffset + count;

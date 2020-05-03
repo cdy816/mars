@@ -169,6 +169,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 EnableWrite 的本地化字符串。
+        /// </summary>
+        internal static string EnableWrite {
+            get {
+                return ResourceManager.GetString("EnableWrite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 erro 的本地化字符串。
         /// </summary>
         internal static string erro {
@@ -183,6 +192,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Export {
             get {
                 return ResourceManager.GetString("Export", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Group 的本地化字符串。
+        /// </summary>
+        internal static string Group {
+            get {
+                return ResourceManager.GetString("Group", resourceCulture);
             }
         }
         
@@ -322,6 +340,24 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Permission 的本地化字符串。
+        /// </summary>
+        internal static string Permission {
+            get {
+                return ResourceManager.GetString("Permission", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Permission list 的本地化字符串。
+        /// </summary>
+        internal static string PermissionList {
+            get {
+                return ResourceManager.GetString("PermissionList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Record 的本地化字符串。
         /// </summary>
         internal static string Record {
@@ -439,6 +475,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Tag 的本地化字符串。
+        /// </summary>
+        internal static string Tag {
+            get {
+                return ResourceManager.GetString("Tag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 TagGroup 的本地化字符串。
         /// </summary>
         internal static string TagGroup {
@@ -462,6 +507,24 @@ namespace DBInStudio.Desktop.Properties {
         internal static string UpdateTagFail {
             get {
                 return ResourceManager.GetString("UpdateTagFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 User 的本地化字符串。
+        /// </summary>
+        internal static string User {
+            get {
+                return ResourceManager.GetString("User", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 User list 的本地化字符串。
+        /// </summary>
+        internal static string UserList {
+            get {
+                return ResourceManager.GetString("UserList", resourceCulture);
             }
         }
         

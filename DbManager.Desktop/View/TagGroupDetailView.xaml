@@ -11,7 +11,7 @@
         <BooleanToVisibilityConverter x:Key="btv" />
     </UserControl.Resources>
     <Grid>
-        <DataGrid ScrollViewer.CanContentScroll="True"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,32" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"  BorderThickness="0,0,0,1" Background="{x:Null}" >
+        <DataGrid ScrollViewer.CanContentScroll="True" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,32" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"  BorderThickness="0,0,0,1" Background="{x:Null}" >
             <DataGrid.Columns>
                 <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="30" Header="{local:ResMarker Id}">
                     <DataGridTemplateColumn.CellTemplate>

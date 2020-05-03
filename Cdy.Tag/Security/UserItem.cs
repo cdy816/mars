@@ -30,9 +30,14 @@ namespace Cdy.Tag
         /// </summary>
         public string Group { get; set; }
 
+        ///// <summary>
+        ///// 超级用户
+        ///// </summary>
+        //public bool SuperUser { get; set; }
+
         /// <summary>
         /// 
         /// </summary>
-        public List<string> Permissions { get; set; }
+        public List<string> Permissions { get; set; } = new List<string>();
     }
 }

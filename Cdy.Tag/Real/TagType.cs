@@ -64,7 +64,39 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        String
+        String,
+        /// <summary>
+        /// 
+        /// </summary>
+        IntPoint,
+        /// <summary>
+        /// 
+        /// </summary>
+        UIntPoint,
+        /// <summary>
+        /// 
+        /// </summary>
+        LongPoint,
+        /// <summary>
+        /// 
+        /// </summary>
+        ULongPoint,
+        /// <summary>
+        /// 
+        /// </summary>
+        IntPoint3,
+        /// <summary>
+        /// 
+        /// </summary>
+        UIntPoint3,
+        /// <summary>
+        /// 
+        /// </summary>
+        LongPoint3,
+        /// <summary>
+        /// 
+        /// </summary>
+        ULongPoint3
     }
 
     public static class TagTypeExtends

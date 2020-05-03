@@ -198,6 +198,30 @@ namespace Cdy.Tag
                     Marshal.Copy(sdata, 0, handle+ mPosition, sdata.Length);
                     mPosition += sdata.Length;
                     break;
+                case 12:
+                    Add((IntPointData)value, time, qulity);
+                    return;
+                case 13:
+                    Add((UIntPointData)value, time, qulity);
+                    return;
+                case 14:
+                    Add((IntPoint3Data)value, time, qulity);
+                    return;
+                case 15:
+                    Add((UIntPoint3Data)value, time, qulity);
+                    return;
+                case 16:
+                    Add((LongPointData)value, time, qulity);
+                    return;
+                case 17:
+                    Add((ULongPointData)value, time, qulity);
+                    return;
+                case 18:
+                    Add((LongPoint3Data)value, time, qulity);
+                    return;
+                case 19:
+                    Add((ULongPoint3Data)value, time, qulity);
+                    return;
             }
             MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
             Marshal.WriteByte(handle + mCount + mQulityAddr, (byte)qulity);
@@ -449,6 +473,300 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void AddPoint(int x,int y,DateTime time,byte qulity)
+        {
+            if (mCount >= mLimite)
+            {
+                int newCount = (int)(mCount * 1.2);
+                Resize(newCount);
+                mLimite = newCount;
+            }
+            MemoryHelper.WriteInt32((void*)handle, mPosition, x);
+            mPosition += 4;
+            MemoryHelper.WriteInt32((void*)handle, mPosition, y);
+            mPosition += 4;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+            mCount++;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void Add(IntPointData value, DateTime time, byte qulity)
+        {
+            AddPoint(value.X, value.Y, time, qulity);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void AddPoint(int x, int y,int z, DateTime time, byte qulity)
+        {
+            if (mCount >= mLimite)
+            {
+                int newCount = (int)(mCount * 1.2);
+                Resize(newCount);
+                mLimite = newCount;
+            }
+            MemoryHelper.WriteInt32((void*)handle, mPosition, x);
+            mPosition += 4;
+            MemoryHelper.WriteInt32((void*)handle, mPosition, y);
+            mPosition += 4;
+            MemoryHelper.WriteInt32((void*)handle, mPosition, z);
+            mPosition += 4;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+            mCount++;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void Add(IntPoint3Data value, DateTime time, byte qulity)
+        {
+            AddPoint(value.X, value.Y, value.Z, time, qulity);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void AddPoint(uint x, uint y, DateTime time, byte qulity)
+        {
+            if (mCount >= mLimite)
+            {
+                int newCount = (int)(mCount * 1.2);
+                Resize(newCount);
+                mLimite = newCount;
+            }
+            MemoryHelper.WriteUInt32((void*)handle, mPosition, x);
+            mPosition += 4;
+            MemoryHelper.WriteUInt32((void*)handle, mPosition, y);
+            mPosition += 4;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+            mCount++;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void Add(UIntPointData value, DateTime time, byte qulity)
+        {
+            AddPoint(value.X, value.Y, time, qulity);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void AddPoint(uint x, uint y, uint z, DateTime time, byte qulity)
+        {
+            if (mCount >= mLimite)
+            {
+                int newCount = (int)(mCount * 1.2);
+                Resize(newCount);
+                mLimite = newCount;
+            }
+            MemoryHelper.WriteUInt32((void*)handle, mPosition, x);
+            mPosition += 4;
+            MemoryHelper.WriteUInt32((void*)handle, mPosition, y);
+            mPosition += 4;
+            MemoryHelper.WriteUInt32((void*)handle, mPosition, z);
+            mPosition += 4;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+            mCount++;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void Add(UIntPoint3Data value, DateTime time, byte qulity)
+        {
+            AddPoint(value.X, value.Y, value.Z, time, qulity);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void AddPoint(long x, long y, DateTime time, byte qulity)
+        {
+            if (mCount >= mLimite)
+            {
+                int newCount = (int)(mCount * 1.2);
+                Resize(newCount);
+                mLimite = newCount;
+            }
+            MemoryHelper.WriteInt64((void*)handle, mPosition, x);
+            mPosition += 8;
+            MemoryHelper.WriteInt64((void*)handle, mPosition, y);
+            mPosition += 8;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+            mCount++;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void Add(LongPointData value, DateTime time, byte qulity)
+        {
+            AddPoint(value.X, value.Y,  time, qulity);
+        }
+
+        public void AddPoint(long x, long y, long z, DateTime time, byte qulity)
+        {
+            if (mCount >= mLimite)
+            {
+                int newCount = (int)(mCount * 1.2);
+                Resize(newCount);
+                mLimite = newCount;
+            }
+            MemoryHelper.WriteInt64((void*)handle, mPosition, x);
+            mPosition += 8;
+            MemoryHelper.WriteInt64((void*)handle, mPosition, y);
+            mPosition += 8;
+            MemoryHelper.WriteInt64((void*)handle, mPosition, z);
+            mPosition += 8;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+            mCount++;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void Add(LongPoint3Data value, DateTime time, byte qulity)
+        {
+            AddPoint(value.X, value.Y, value.Z, time, qulity);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void AddPoint(ulong x, ulong y, DateTime time, byte qulity)
+        {
+            if (mCount >= mLimite)
+            {
+                int newCount = (int)(mCount * 1.2);
+                Resize(newCount);
+                mLimite = newCount;
+            }
+            MemoryHelper.WriteUInt64((void*)handle, mPosition, x);
+            mPosition += 8;
+            MemoryHelper.WriteUInt64((void*)handle, mPosition, y);
+            mPosition += 8;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+            mCount++;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void Add(ULongPointData value, DateTime time, byte qulity)
+        {
+            AddPoint(value.X, value.Y, time, qulity);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void AddPoint(ulong x, ulong y, ulong z, DateTime time, byte qulity)
+        {
+            if (mCount >= mLimite)
+            {
+                int newCount = (int)(mCount * 1.2);
+                Resize(newCount);
+                mLimite = newCount;
+            }
+            MemoryHelper.WriteUInt64((void*)handle, mPosition, x);
+            mPosition += 8;
+            MemoryHelper.WriteUInt64((void*)handle, mPosition, y);
+            mPosition += 8;
+            MemoryHelper.WriteUInt64((void*)handle, mPosition, z);
+            mPosition += 8;
+            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+            // mDataBuffer[mCount + mQulityAddr] = qulity;
+            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+            mCount++;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void Add(ULongPoint3Data value, DateTime time, byte qulity)
+        {
+            AddPoint(value.X, value.Y, value.Z, time, qulity);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
         public T GetValue(int index,out DateTime time,out byte qulity)
@@ -587,7 +905,32 @@ namespace Cdy.Tag
                 case "string":
                     mDataType = 11;
                     return Const.StringSize;
+                case "IntPointdata":
+                    mDataType = 12;
+                    return 8;
+                case "UIntPointdata":
+                    mDataType = 13;
+                    return 8;
+                case "IntPoint3data":
+                    mDataType = 14;
+                    return 12;
+                case "UIntPoint3data":
+                    mDataType = 15;
+                    return 12;
+                case "LongPointdata":
+                    mDataType = 16;
+                    return 16;
+                case "ULongPointdata":
+                    mDataType = 17;
+                    return 16;
+                case "LongPoint3data":
+                    mDataType = 18;
+                    return 24;
+                case "ULongPoint3data":
+                    mDataType = 19;
+                    return 24;
             }
+          
             return 0;
         }
 

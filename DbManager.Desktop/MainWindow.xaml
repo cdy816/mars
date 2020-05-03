@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DBInStudio.Desktop"
     
         mc:Ignorable="d"
-        Title="{local:ResMarker MainwindowTitle}" Height="450" Width="800" WindowState="Maximized" WindowStartupLocation="CenterScreen" Icon="mars_2.png">
+        Title="{local:ResMarker MainwindowTitle}" Height="450" Width="800" WindowState="Maximized" WindowStartupLocation="CenterScreen" Icon="/Image/Database2.png">
     <Window.Resources>
         <local:IndexConverter x:Key="ic" />
         <BooleanToVisibilityConverter x:Key="btv" />
@@ -173,12 +173,29 @@
                             <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
+
+                    <HierarchicalDataTemplate  DataType="{x:Type local:UserGroupRootViewModel}"  ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal" Height="24">
+                            <Image Focusable="False" Source="/Image/user.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="18" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                            <TextBlock Text="{local:ResMarker User}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+
+                    <HierarchicalDataTemplate  DataType="{x:Type local:PermissionTreeItemViewModel}"  ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal" Height="24">
+                            <Image Focusable="False" Source="/Image/permissions.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="18" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                            <TextBlock Text="{local:ResMarker Permission}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
                 </TreeView.Resources>
             </TreeView>
-            <StackPanel Orientation="Horizontal"  Height="32" VerticalAlignment="Bottom" Background="#FFE7E8EC">
-                <Button Content="{local:ResMarker Add}" Command="{Binding AddGroupCommand}" Width="60" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" />
-                <Button Content="{local:ResMarker Remove}" Command="{Binding RemoveGroupCommand}" Width="60" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" />
-            </StackPanel>
+            <Border VerticalAlignment="Bottom" Background="#FFE7E8EC" Height="32" BorderBrush="Gray" BorderThickness="0,0,1,0">
+                <StackPanel Orientation="Horizontal"   >
+                    <Button Content="{local:ResMarker Add}" Command="{Binding AddGroupCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" />
+                    <Button Content="{local:ResMarker Remove}" Command="{Binding RemoveGroupCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" />
+                </StackPanel>
+            </Border>
+            
             <GridSplitter VerticalAlignment="Stretch" Width="5" HorizontalAlignment="Right" Background="Transparent" />
             <ContentControl Grid.Column="1" Content="{Binding ContentViewModel}"/>
         </Grid>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DBInStudio.Desktop.ViewModel;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
@@ -21,6 +22,14 @@ namespace DBInStudio.Desktop.View
         public TagGroupDetailView()
         {
             InitializeComponent();
+        }
+
+        private void DataGrid_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if((e.ExtentHeight - e.VerticalOffset)<50)
+            {
+                (this.DataContext as TagGroupDetailViewModel).ContinueLoadData();
+            }
         }
     }
 }

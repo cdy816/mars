@@ -18,7 +18,7 @@ namespace DBInStudio.Desktop
     {
 
         #region ... Variables  ...
-        internal string mName;
+        internal string mName="";
         private bool mIsSelected = false;
         private bool mIsExpanded = false;
         private bool mIsEdit;

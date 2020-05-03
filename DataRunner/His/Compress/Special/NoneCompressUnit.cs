@@ -2866,6 +2866,16 @@ namespace Cdy.Tag
             
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
         public override int DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result)
         {
             DateTime stime;
@@ -2962,6 +2972,1672 @@ namespace Cdy.Tag
                         break;
                     }
 
+                }
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public override int DeCompressAllPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result)
+        {
+            DateTime time;
+
+            int valuecount = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
+                      
+
+            int i = 0;
+            int rcount = 0;
+
+            if (typeof(T) == typeof(IntPointData))
+            {
+                //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * 10 + 10 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * 2 + 10 + sourceAddr;
+
+                var vals = source.ReadInts(valaddr, valuecount * 2);
+
+                for (i = 0; i < valuecount; i=i+2)
+                {
+                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    {
+                        result.AddPoint(vals[i],  vals[i + 1] , qs[i].Item1, qq[i]);
+                        rcount++;
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(UIntPointData))
+            {
+                //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * 10 + 10 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * 2 + 10 + sourceAddr;
+
+                var vals = source.ReadUInts(valaddr, valuecount * 2);
+
+                for (i = 0; i < valuecount; i = i + 2)
+                {
+                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    {
+                        result.AddPoint(vals[i], vals[i + 1], qs[i].Item1, qq[i]);
+                        rcount++;
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(IntPoint3Data))
+            {
+                //读取质量戳,时间戳2个字节，值12个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * 14 + 10 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * 2 + 10 + sourceAddr;
+
+                var vals = source.ReadInts(valaddr, valuecount * 3);
+
+                for (i = 0; i < valuecount; i = i + 3)
+                {
+                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    {
+                        result.AddPoint(vals[i], vals[i + 1],vals[i + 2], qs[i].Item1, qq[i]);
+                        rcount++;
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(UIntPoint3Data))
+            {
+                //读取质量戳,时间戳2个字节，值12个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * 14 + 10 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * 2 + 10 + sourceAddr;
+
+                var vals = source.ReadUInts(valaddr, valuecount * 3);
+
+                for (i = 0; i < valuecount; i = i + 3)
+                {
+                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    {
+                        result.AddPoint(vals[i], vals[i + 1], vals[i + 2], qs[i].Item1, qq[i]);
+                        rcount++;
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(LongPointData))
+            {
+                //读取质量戳,时间戳2个字节，值16个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * 18 + 10 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * 2 + 10 + sourceAddr;
+
+                var vals = source.ReadLongs(valaddr, valuecount * 2);
+
+                for (i = 0; i < valuecount; i = i + 2)
+                {
+                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    {
+                        result.AddPoint(vals[i], vals[i + 1], qs[i].Item1, qq[i]);
+                        rcount++;
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(ULongPointData))
+            {
+                //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * 18 + 10 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * 2 + 10 + sourceAddr;
+
+                var vals = source.ReadULongs(valaddr, valuecount * 2);
+
+                for (i = 0; i < valuecount; i = i + 2)
+                {
+                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    {
+                        result.AddPoint(vals[i], vals[i + 1], qs[i].Item1, qq[i]);
+                        rcount++;
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(LongPoint3Data))
+            {
+                //读取质量戳,时间戳2个字节，值24个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * 26 + 10 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * 2 + 10 + sourceAddr;
+
+                var vals = source.ReadLongs(valaddr, valuecount * 3);
+
+                for (i = 0; i < valuecount; i = i + 3)
+                {
+                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    {
+                        result.AddPoint(vals[i], vals[i + 1], vals[i + 2], qs[i].Item1, qq[i]);
+                        rcount++;
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(ULongPoint3Data))
+            {
+                //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * 26 + 10 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * 2 + 10 + sourceAddr;
+
+                var vals = source.ReadULongs(valaddr, valuecount * 3);
+
+                for (i = 0; i < valuecount; i = i + 3)
+                {
+                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    {
+                        result.AddPoint(vals[i], vals[i + 1], vals[i + 2], qs[i].Item1, qq[i]);
+                        rcount++;
+                    }
+                }
+            }
+            return rcount;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public override T DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        {
+            DateTime time1;
+            int valuecount = 0;
+            object reval = null;
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time1);
+            var vv = qs.ToArray();
+
+            if (typeof(T) == typeof(IntPointData))
+            {
+
+                var qq = source.ReadBytes(qs.Count * 10 + 10 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+
+                for (int i = 0; i < vv.Length - 1; i = i + 2)
+                {
+                    var skey = vv[i];
+
+                    var snext = vv[i + 1];
+
+                    if (time == skey.Value.Item1)
+                    {
+                        reval = new IntPointData(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4));
+                        break;
+                    }
+                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                reval = new IntPointData(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4));
+                                break;
+                            case QueryValueMatchType.After:
+                                reval = new IntPointData(source.ReadInt(valaddr + (i + 2) * 4), source.ReadInt(valaddr + (i + 3) * 4));
+                                break;
+                            case QueryValueMatchType.Linear:
+
+                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                {
+                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                    var sval1 = source.ReadInt(valaddr + i * 4);
+                                    var sval12 = source.ReadInt(valaddr + (i + 1) * 4);
+                                    var sval2 = source.ReadInt(valaddr + (i + 2) * 4);
+                                    var sval22 = source.ReadInt(valaddr + (i + 3) * 4);
+                                    var x1 = (int)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                    var x2 = (int)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                    reval = new IntPointData(x1, x2);
+                                }
+                                else if (qq[skey.Key] < 20)
+                                {
+                                    reval = new IntPointData(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4));
+                                }
+                                else if (qq[snext.Key] < 20)
+                                {
+                                    reval = new IntPointData(source.ReadInt(valaddr + (i + 2) * 4), source.ReadInt(valaddr + (i + 3) * 4));
+                                }
+                                break;
+
+                            case QueryValueMatchType.Closed:
+                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
+                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
+                                if (pval < fval)
+                                {
+                                    reval = new IntPointData(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4));
+                                }
+                                else
+                                {
+                                    reval = new IntPointData(source.ReadInt(valaddr + (i + 2) * 4), source.ReadInt(valaddr + (i + 3) * 4));
+                                }
+                                break;
+                        }
+                    }
+                    else if (time == snext.Value.Item1)
+                    {
+                        reval = new IntPointData(source.ReadInt(valaddr + (i + 2) * 4), source.ReadInt(valaddr + (i + 3) * 4));
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(UIntPointData))
+            {
+
+                var qq = source.ReadBytes(qs.Count * 10 + 10 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+
+                for (int i = 0; i < vv.Length - 1; i = i + 2)
+                {
+                    var skey = vv[i];
+
+                    var snext = vv[i + 1];
+
+                    if (time == skey.Value.Item1)
+                    {
+                        reval = new UIntPointData(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4));
+                        break;
+                    }
+                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                reval = new UIntPointData(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4));
+                                break;
+                            case QueryValueMatchType.After:
+                                reval = new UIntPointData(source.ReadUInt(valaddr + (i + 2) * 4), source.ReadUInt(valaddr + (i + 3) * 4));
+                                break;
+                            case QueryValueMatchType.Linear:
+
+                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                {
+                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                    var sval1 = source.ReadUInt(valaddr + i * 4);
+                                    var sval12 = source.ReadUInt(valaddr + (i + 1) * 4);
+                                    var sval2 = source.ReadUInt(valaddr + (i + 2) * 4);
+                                    var sval22 = source.ReadUInt(valaddr + (i + 3) * 4);
+                                    var x1 = (uint)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                    var x2 = (uint)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                    reval = new UIntPointData(x1, x2);
+                                }
+                                else if (qq[skey.Key] < 20)
+                                {
+                                    reval = new UIntPointData(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4));
+                                }
+                                else if (qq[snext.Key] < 20)
+                                {
+                                    reval = new UIntPointData(source.ReadUInt(valaddr + (i + 2) * 4), source.ReadUInt(valaddr + (i + 3) * 4));
+                                }
+                                break;
+
+                            case QueryValueMatchType.Closed:
+                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
+                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
+                                if (pval < fval)
+                                {
+                                    reval = new UIntPointData(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4));
+                                }
+                                else
+                                {
+                                    reval = new UIntPointData(source.ReadUInt(valaddr + (i + 2) * 4), source.ReadUInt(valaddr + (i + 3) * 4));
+                                }
+                                break;
+                        }
+                    }
+                    else if (time == snext.Value.Item1)
+                    {
+                        reval = new UIntPointData(source.ReadUInt(valaddr + (i + 2) * 4), source.ReadUInt(valaddr + (i + 3) * 4));
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(LongPointData))
+            {
+
+                var qq = source.ReadBytes(qs.Count * 18 + 10 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+
+                for (int i = 0; i < vv.Length - 1; i = i + 2)
+                {
+                    var skey = vv[i];
+
+                    var snext = vv[i + 1];
+
+                    if (time == skey.Value.Item1)
+                    {
+                        reval = new LongPointData(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8));
+                        break;
+                    }
+                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                reval = new LongPointData(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8));
+                                break;
+                            case QueryValueMatchType.After:
+                                reval = new LongPointData(source.ReadLong(valaddr + (i + 2) * 8), source.ReadLong(valaddr + (i + 3) * 8));
+                                break;
+                            case QueryValueMatchType.Linear:
+
+                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                {
+                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                    var sval1 = source.ReadLong(valaddr + i * 8);
+                                    var sval12 = source.ReadLong(valaddr + (i + 1) * 8);
+                                    var sval2 = source.ReadLong(valaddr + (i + 2) * 8);
+                                    var sval22 = source.ReadLong(valaddr + (i + 3) * 8);
+                                    var x1 = (long)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                    var x2 = (long)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                    reval = new LongPointData(x1, x2);
+                                }
+                                else if (qq[skey.Key] < 20)
+                                {
+                                    reval = new LongPointData(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8));
+                                }
+                                else if (qq[snext.Key] < 20)
+                                {
+                                    reval = new LongPointData(source.ReadLong(valaddr + (i + 2) * 8), source.ReadLong(valaddr + (i + 3) * 8));
+                                }
+                                break;
+
+                            case QueryValueMatchType.Closed:
+                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
+                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
+                                if (pval < fval)
+                                {
+                                    reval = new LongPointData(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8));
+                                }
+                                else
+                                {
+                                    reval = new LongPointData(source.ReadLong(valaddr + (i + 2) * 8), source.ReadLong(valaddr + (i + 3) * 8));
+                                }
+                                break;
+                        }
+                    }
+                    else if (time == snext.Value.Item1)
+                    {
+                        reval = new LongPointData(source.ReadLong(valaddr + (i + 2) * 8), source.ReadLong(valaddr + (i + 3) * 8));
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(ULongPointData))
+            {
+
+                var qq = source.ReadBytes(qs.Count * 18 + 10 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+
+                for (int i = 0; i < vv.Length - 1; i = i + 2)
+                {
+                    var skey = vv[i];
+
+                    var snext = vv[i + 1];
+
+                    if (time == skey.Value.Item1)
+                    {
+                        reval = new ULongPointData(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8));
+                        break;
+                    }
+                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                reval = new ULongPointData(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8));
+                                break;
+                            case QueryValueMatchType.After:
+                                reval = new ULongPointData(source.ReadULong(valaddr + (i + 2) * 8), source.ReadULong(valaddr + (i + 3) * 8));
+                                break;
+                            case QueryValueMatchType.Linear:
+
+                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                {
+                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                    var sval1 = source.ReadLong(valaddr + i * 8);
+                                    var sval12 = source.ReadLong(valaddr + (i + 1) * 8);
+                                    var sval2 = source.ReadLong(valaddr + (i + 2) * 8);
+                                    var sval22 = source.ReadLong(valaddr + (i + 3) * 8);
+                                    var x1 = (ulong)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                    var x2 = (ulong)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                    reval = new ULongPointData(x1, x2);
+                                }
+                                else if (qq[skey.Key] < 20)
+                                {
+                                    reval = new ULongPointData(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8));
+                                }
+                                else if (qq[snext.Key] < 20)
+                                {
+                                    reval = new ULongPointData(source.ReadULong(valaddr + (i + 2) * 8), source.ReadULong(valaddr + (i + 3) * 8));
+                                }
+                                break;
+
+                            case QueryValueMatchType.Closed:
+                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
+                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
+                                if (pval < fval)
+                                {
+                                    reval = new ULongPointData(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8));
+                                }
+                                else
+                                {
+                                    reval = new ULongPointData(source.ReadULong(valaddr + (i + 2) * 8), source.ReadULong(valaddr + (i + 3) * 8));
+                                }
+                                break;
+                        }
+                    }
+                    else if (time == snext.Value.Item1)
+                    {
+                        reval = new ULongPointData(source.ReadULong(valaddr + (i + 2) * 8), source.ReadULong(valaddr + (i + 3) * 8));
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(IntPoint3Data))
+            {
+
+                var qq = source.ReadBytes(qs.Count * 14 + 10 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+
+                for (int i = 0; i < vv.Length - 1; i = i + 3)
+                {
+                    var skey = vv[i];
+
+                    var snext = vv[i + 1];
+
+                    if (time == skey.Value.Item1)
+                    {
+                        reval = new IntPoint3Data(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4), source.ReadInt(valaddr + (i + 2) * 4));
+                        break;
+                    }
+                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                reval = new IntPoint3Data(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4), source.ReadInt(valaddr + (i + 2) * 4));
+                                break;
+                            case QueryValueMatchType.After:
+                                reval = new IntPoint3Data(source.ReadInt(valaddr + (i + 3) * 4), source.ReadInt(valaddr + (i + 4) * 4), source.ReadInt(valaddr + (i + 5) * 4));
+                                break;
+                            case QueryValueMatchType.Linear:
+
+                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                {
+                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                    var sval1 = source.ReadInt(valaddr + i * 4);
+                                    var sval12 = source.ReadInt(valaddr + (i + 1) * 4);
+                                    var sval13 = source.ReadInt(valaddr + (i + 2) * 4);
+
+                                    var sval2 = source.ReadInt(valaddr + (i + 3) * 4);
+                                    var sval22 = source.ReadInt(valaddr + (i + 4) * 4);
+                                    var sval23 = source.ReadInt(valaddr + (i + 5) * 4);
+                                    var x1 = (int)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                    var x2 = (int)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                    var x3 = (int)(pval1 / tval1 * (sval23 - sval13) + sval13);
+                                    reval = new IntPoint3Data(x1, x2, x3);
+                                }
+                                else if (qq[skey.Key] < 20)
+                                {
+                                    reval = new IntPoint3Data(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4), source.ReadInt(valaddr + (i + 2) * 4));
+                                }
+                                else if (qq[snext.Key] < 20)
+                                {
+                                    reval = new IntPoint3Data(source.ReadInt(valaddr + (i + 3) * 4), source.ReadInt(valaddr + (i + 4) * 4), source.ReadInt(valaddr + (i + 5) * 4));
+                                }
+                                break;
+
+                            case QueryValueMatchType.Closed:
+                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
+                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
+                                if (pval < fval)
+                                {
+                                    reval = new IntPoint3Data(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4), source.ReadInt(valaddr + (i + 2) * 4));
+                                }
+                                else
+                                {
+                                    reval = new IntPoint3Data(source.ReadInt(valaddr + (i + 3) * 4), source.ReadInt(valaddr + (i + 4) * 4), source.ReadInt(valaddr + (i + 5) * 4));
+                                }
+                                break;
+                        }
+                    }
+                    else if (time == snext.Value.Item1)
+                    {
+                        reval = new IntPoint3Data(source.ReadInt(valaddr + (i + 3) * 4), source.ReadInt(valaddr + (i + 4) * 4), source.ReadInt(valaddr + (i + 5) * 4));
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(LongPoint3Data))
+            {
+
+                var qq = source.ReadBytes(qs.Count * 26 + 10 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+
+                for (int i = 0; i < vv.Length - 1; i = i + 3)
+                {
+                    var skey = vv[i];
+
+                    var snext = vv[i + 1];
+
+                    if (time == skey.Value.Item1)
+                    {
+                        reval = new LongPoint3Data(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8), source.ReadLong(valaddr + (i + 2) * 8));
+                        break;
+                    }
+                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                reval = new LongPoint3Data(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8), source.ReadLong(valaddr + (i + 2) * 8));
+                                break;
+                            case QueryValueMatchType.After:
+                                reval = new LongPoint3Data(source.ReadLong(valaddr + (i + 3) * 8), source.ReadLong(valaddr + (i + 4) * 8), source.ReadLong(valaddr + (i + 5) * 8));
+                                break;
+                            case QueryValueMatchType.Linear:
+
+                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                {
+                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                    var sval1 = source.ReadLong(valaddr + i * 8);
+                                    var sval12 = source.ReadLong(valaddr + (i + 1) * 8);
+                                    var sval13 = source.ReadLong(valaddr + (i + 2) * 8);
+
+                                    var sval2 = source.ReadLong(valaddr + (i + 3) * 8);
+                                    var sval22 = source.ReadLong(valaddr + (i + 4) * 8);
+                                    var sval23 = source.ReadLong(valaddr + (i + 5) * 8);
+                                    var x1 = (long)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                    var x2 = (long)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                    var x3 = (long)(pval1 / tval1 * (sval23 - sval13) + sval13);
+                                    reval = new LongPoint3Data(x1, x2, x3);
+                                }
+                                else if (qq[skey.Key] < 20)
+                                {
+                                    reval = new LongPoint3Data(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8), source.ReadLong(valaddr + (i + 2) * 8));
+                                }
+                                else if (qq[snext.Key] < 20)
+                                {
+                                    reval = new LongPoint3Data(source.ReadLong(valaddr + (i + 3) * 8), source.ReadLong(valaddr + (i + 4) * 8), source.ReadLong(valaddr + (i + 5) * 8));
+                                }
+                                break;
+
+                            case QueryValueMatchType.Closed:
+                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
+                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
+                                if (pval < fval)
+                                {
+                                    reval = new LongPoint3Data(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8), source.ReadLong(valaddr + (i + 2) * 8));
+                                }
+                                else
+                                {
+                                    reval = new LongPoint3Data(source.ReadLong(valaddr + (i + 3) * 8), source.ReadLong(valaddr + (i + 4) * 8), source.ReadLong(valaddr + (i + 5) * 8));
+                                }
+                                break;
+                        }
+                    }
+                    else if (time == snext.Value.Item1)
+                    {
+                        reval = new LongPoint3Data(source.ReadLong(valaddr + (i + 3) * 8), source.ReadLong(valaddr + (i + 4) * 8), source.ReadLong(valaddr + (i + 5) * 8));
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(UIntPoint3Data))
+            {
+
+                var qq = source.ReadBytes(qs.Count * 14 + 10 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+
+                for (int i = 0; i < vv.Length - 1; i = i + 3)
+                {
+                    var skey = vv[i];
+
+                    var snext = vv[i + 1];
+
+                    if (time == skey.Value.Item1)
+                    {
+                        reval = new UIntPoint3Data(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4), source.ReadUInt(valaddr + (i + 2) * 4));
+                        break;
+                    }
+                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                reval = new UIntPoint3Data(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4), source.ReadUInt(valaddr + (i + 2) * 4));
+                                break;
+                            case QueryValueMatchType.After:
+                                reval = new UIntPoint3Data(source.ReadUInt(valaddr + (i + 3) * 4), source.ReadUInt(valaddr + (i + 4) * 4), source.ReadUInt(valaddr + (i + 5) * 4));
+                                break;
+                            case QueryValueMatchType.Linear:
+
+                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                {
+                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                    var sval1 = source.ReadUInt(valaddr + i * 4);
+                                    var sval12 = source.ReadUInt(valaddr + (i + 1) * 4);
+                                    var sval13 = source.ReadUInt(valaddr + (i + 2) * 4);
+
+                                    var sval2 = source.ReadUInt(valaddr + (i + 3) * 4);
+                                    var sval22 = source.ReadUInt(valaddr + (i + 4) * 4);
+                                    var sval23 = source.ReadUInt(valaddr + (i + 5) * 4);
+                                    var x1 = (uint)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                    var x2 = (uint)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                    var x3 = (uint)(pval1 / tval1 * (sval23 - sval13) + sval13);
+                                    reval = new UIntPoint3Data(x1, x2, x3);
+                                }
+                                else if (qq[skey.Key] < 20)
+                                {
+                                    reval = new UIntPoint3Data(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4), source.ReadUInt(valaddr + (i + 2) * 4));
+                                }
+                                else if (qq[snext.Key] < 20)
+                                {
+                                    reval = new UIntPoint3Data(source.ReadUInt(valaddr + (i + 3) * 4), source.ReadUInt(valaddr + (i + 4) * 4), source.ReadUInt(valaddr + (i + 5) * 4));
+                                }
+                                break;
+
+                            case QueryValueMatchType.Closed:
+                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
+                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
+                                if (pval < fval)
+                                {
+                                    reval = new UIntPoint3Data(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4), source.ReadUInt(valaddr + (i + 2) * 4));
+                                }
+                                else
+                                {
+                                    reval = new UIntPoint3Data(source.ReadUInt(valaddr + (i + 3) * 4), source.ReadUInt(valaddr + (i + 4) * 4), source.ReadUInt(valaddr + (i + 5) * 4));
+                                }
+                                break;
+                        }
+                    }
+                    else if (time == snext.Value.Item1)
+                    {
+                        reval = new UIntPoint3Data(source.ReadUInt(valaddr + (i + 3) * 4), source.ReadUInt(valaddr + (i + 4) * 4), source.ReadUInt(valaddr + (i + 5) * 4));
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(ULongPoint3Data))
+            {
+
+                var qq = source.ReadBytes(qs.Count * 26 + 10 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+
+                for (int i = 0; i < vv.Length - 1; i = i + 3)
+                {
+                    var skey = vv[i];
+
+                    var snext = vv[i + 1];
+
+                    if (time == skey.Value.Item1)
+                    {
+                        reval = new ULongPoint3Data(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8), source.ReadULong(valaddr + (i + 2) * 8));
+                        break;
+                    }
+                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                reval = new ULongPoint3Data(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8), source.ReadULong(valaddr + (i + 2) * 8));
+                                break;
+                            case QueryValueMatchType.After:
+                                reval = new ULongPoint3Data(source.ReadULong(valaddr + (i + 3) * 8), source.ReadULong(valaddr + (i + 4) * 8), source.ReadULong(valaddr + (i + 5) * 8));
+                                break;
+                            case QueryValueMatchType.Linear:
+
+                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                {
+                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                    var sval1 = source.ReadULong(valaddr + i * 8);
+                                    var sval12 = source.ReadULong(valaddr + (i + 1) * 8);
+                                    var sval13 = source.ReadULong(valaddr + (i + 2) * 8);
+
+                                    var sval2 = source.ReadULong(valaddr + (i + 3) * 8);
+                                    var sval22 = source.ReadULong(valaddr + (i + 4) * 8);
+                                    var sval23 = source.ReadULong(valaddr + (i + 5) * 8);
+                                    var x1 = (ulong)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                    var x2 = (ulong)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                    var x3 = (ulong)(pval1 / tval1 * (sval23 - sval13) + sval13);
+                                    reval = new ULongPoint3Data(x1, x2, x3);
+                                }
+                                else if (qq[skey.Key] < 20)
+                                {
+                                    reval = new ULongPoint3Data(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8), source.ReadULong(valaddr + (i + 2) * 8));
+                                }
+                                else if (qq[snext.Key] < 20)
+                                {
+                                    reval = new ULongPoint3Data(source.ReadULong(valaddr + (i + 3) * 8), source.ReadULong(valaddr + (i + 4) * 8), source.ReadULong(valaddr + (i + 5) * 8));
+                                }
+                                break;
+
+                            case QueryValueMatchType.Closed:
+                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
+                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
+                                if (pval < fval)
+                                {
+                                    reval = new ULongPoint3Data(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8), source.ReadULong(valaddr + (i + 2) * 8));
+                                }
+                                else
+                                {
+                                    reval = new ULongPoint3Data(source.ReadULong(valaddr + (i + 3) * 8), source.ReadULong(valaddr + (i + 4) * 8), source.ReadULong(valaddr + (i + 5) * 8));
+                                }
+                                break;
+                        }
+                    }
+                    else if (time == snext.Value.Item1)
+                    {
+                        reval = new ULongPoint3Data(source.ReadULong(valaddr + (i + 3) * 8), source.ReadULong(valaddr + (i + 4) * 8), source.ReadULong(valaddr + (i + 5) * 8));
+                    }
+                }
+            }
+
+            return (T)reval;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public override int DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
+        {
+            DateTime stime;
+            int valuecount = 0;
+            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out stime);
+           
+            var vv = qs.ToArray();
+
+            var valaddr = qs.Count * 2 + 10 + sourceAddr;
+
+            int count = 0;
+
+            if (typeof(T) == typeof(IntPointData))
+            {
+                var qq = source.ReadBytes(qs.Count * 10 + 10 + sourceAddr, qs.Count);
+
+                foreach (var time1 in time)
+                {
+                    for (int i = 0; i < vv.Length - 1; i++)
+                    {
+                        var skey = vv[i];
+
+                        var snext = vv[i + 1];
+
+                        if (time1 == skey.Value.Item1)
+                        {
+                            var val = source.ReadInt(valaddr + i * 4);
+                            var val2 = source.ReadInt(valaddr + (i+1) * 4);
+                            result.AddPoint(val,val2, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
+                        {
+
+                            switch (type)
+                            {
+                                case QueryValueMatchType.Previous:
+                                    var val = source.ReadInt(valaddr + i * 4);
+                                    var val2 = source.ReadInt(valaddr + (i + 1) * 4);
+                                    result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.After:
+                                    val = source.ReadInt(valaddr + (i+2) * 4);
+                                    val2 = source.ReadInt(valaddr + (i + 3) * 4);
+                                    result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Linear:
+                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    {
+                                        var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                        var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                        var sval1 = source.ReadInt(valaddr + i * 4);
+                                        var sval12 = source.ReadInt(valaddr + (i + 1) * 4);
+                                        var sval2 = source.ReadInt(valaddr + (i + 2) * 4);
+                                        var sval22 = source.ReadInt(valaddr + (i + 3) * 4);
+                                        var x1 = (int)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                        var x2 = (int)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                        result.AddPoint(x1, x2, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[skey.Key] < 20)
+                                    {
+                                        val = source.ReadInt(valaddr + i * 4);
+                                        val2 = source.ReadInt(valaddr + (i + 1) * 4);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[snext.Key] < 20)
+                                    {
+                                        val = source.ReadInt(valaddr + (i + 2) * 4);
+                                        val2 = source.ReadInt(valaddr + (i + 3) * 4);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Closed:
+                                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        val = source.ReadInt(valaddr + i * 4);
+                                        val2 = source.ReadInt(valaddr + (i + 1) * 4);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        val = source.ReadInt(valaddr + (i + 2) * 4);
+                                        val2 = source.ReadInt(valaddr + (i + 3) * 4);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    count++;
+                                    break;
+                            }
+
+                            break;
+                        }
+                        else if (time1 == snext.Value.Item1)
+                        {
+                            var val = source.ReadInt(valaddr + (i + 2) * 4);
+                            var val2 = source.ReadInt(valaddr + (i + 3) * 4);
+                            result.AddPoint(val, val2, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(IntPoint3Data))
+            {
+                var qq = source.ReadBytes(qs.Count * 14 + 10 + sourceAddr, qs.Count);
+
+                foreach (var time1 in time)
+                {
+                    for (int i = 0; i < vv.Length - 1; i++)
+                    {
+                        var skey = vv[i];
+
+                        var snext = vv[i + 1];
+
+                        if (time1 == skey.Value.Item1)
+                        {
+                            var val = source.ReadInt(valaddr + i * 4);
+                            var val2 = source.ReadInt(valaddr + (i + 1) * 4);
+                            var val3 = source.ReadInt(valaddr + (i + 2) * 4);
+                            result.AddPoint(val, val2,val3, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
+                        {
+
+                            switch (type)
+                            {
+                                case QueryValueMatchType.Previous:
+                                    var val = source.ReadInt(valaddr + i * 4);
+                                    var val2 = source.ReadInt(valaddr + (i + 1) * 4);
+                                    var val3 = source.ReadInt(valaddr + (i + 2) * 4);
+                                    result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.After:
+
+                                    val = source.ReadInt(valaddr + (i+3) * 4);
+                                    val2 = source.ReadInt(valaddr + (i +4) * 4);
+                                    val3 = source.ReadInt(valaddr + (i + 5) * 4);
+                                    result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Linear:
+                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    {
+                                        var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                        var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                        var sval1 = source.ReadInt(valaddr + i * 4);
+                                        var sval12 = source.ReadInt(valaddr + (i + 1) * 4);
+                                        var sval13 = source.ReadInt(valaddr + (i + 2) * 4);
+
+                                        var sval2 = source.ReadInt(valaddr + (i + 3) * 4);
+                                        var sval22 = source.ReadInt(valaddr + (i + 4) * 4);
+                                        var sval23 = source.ReadInt(valaddr + (i + 5) * 4);
+
+                                        var x1 = (int)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                        var x2 = (int)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                        var x3 = (int)(pval1 / tval1 * (sval23 - sval13) + sval12);
+                                        result.AddPoint(x1, x2, x3, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[skey.Key] < 20)
+                                    {
+                                        val = source.ReadInt(valaddr + i * 4);
+                                        val2 = source.ReadInt(valaddr + (i + 1) * 4);
+                                        val3 = source.ReadInt(valaddr + (i + 2) * 4);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[snext.Key] < 20)
+                                    {
+                                        val = source.ReadInt(valaddr + (i + 3) * 4);
+                                        val2 = source.ReadInt(valaddr + (i + 4) * 4);
+                                        val3 = source.ReadInt(valaddr + (i + 5) * 4);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Closed:
+                                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        val = source.ReadInt(valaddr + i * 4);
+                                        val2 = source.ReadInt(valaddr + (i + 1) * 4);
+                                        val3 = source.ReadInt(valaddr + (i + 2) * 4);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        val = source.ReadInt(valaddr + (i + 3) * 4);
+                                        val2 = source.ReadInt(valaddr + (i + 4) * 4);
+                                        val3 = source.ReadInt(valaddr + (i + 5) * 4);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    count++;
+                                    break;
+                            }
+
+                            break;
+                        }
+                        else if (time1 == snext.Value.Item1)
+                        {
+                            var val = source.ReadInt(valaddr + (i + 3) * 4);
+                            var val2 = source.ReadInt(valaddr + (i + 4) * 4);
+                            var val3 = source.ReadInt(valaddr + (i + 5) * 4);
+                            result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(UIntPoint3Data))
+            {
+                var qq = source.ReadBytes(qs.Count * 14 + 10 + sourceAddr, qs.Count);
+
+                foreach (var time1 in time)
+                {
+                    for (int i = 0; i < vv.Length - 1; i++)
+                    {
+                        var skey = vv[i];
+
+                        var snext = vv[i + 1];
+
+                        if (time1 == skey.Value.Item1)
+                        {
+                            var val = source.ReadUInt(valaddr + i * 4);
+                            var val2 = source.ReadUInt(valaddr + (i + 1) * 4);
+                            var val3 = source.ReadUInt(valaddr + (i + 2) * 4);
+                            result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
+                        {
+
+                            switch (type)
+                            {
+                                case QueryValueMatchType.Previous:
+                                    var val = source.ReadUInt(valaddr + i * 4);
+                                    var val2 = source.ReadUInt(valaddr + (i + 1) * 4);
+                                    var val3 = source.ReadUInt(valaddr + (i + 2) * 4);
+                                    result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.After:
+
+                                    val = source.ReadUInt(valaddr + (i + 3) * 4);
+                                    val2 = source.ReadUInt(valaddr + (i + 4) * 4);
+                                    val3 = source.ReadUInt(valaddr + (i + 5) * 4);
+                                    result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Linear:
+                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    {
+                                        var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                        var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                        var sval1 = source.ReadUInt(valaddr + i * 4);
+                                        var sval12 = source.ReadUInt(valaddr + (i + 1) * 4);
+                                        var sval13 = source.ReadUInt(valaddr + (i + 2) * 4);
+
+                                        var sval2 = source.ReadUInt(valaddr + (i + 3) * 4);
+                                        var sval22 = source.ReadUInt(valaddr + (i + 4) * 4);
+                                        var sval23 = source.ReadUInt(valaddr + (i + 5) * 4);
+
+                                        var x1 = (uint)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                        var x2 = (uint)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                        var x3 = (uint)(pval1 / tval1 * (sval23 - sval13) + sval12);
+                                        result.AddPoint(x1, x2, x3, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[skey.Key] < 20)
+                                    {
+                                        val = source.ReadUInt(valaddr + i * 4);
+                                        val2 = source.ReadUInt(valaddr + (i + 1) * 4);
+                                        val3 = source.ReadUInt(valaddr + (i + 2) * 4);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[snext.Key] < 20)
+                                    {
+                                        val = source.ReadUInt(valaddr + (i + 3) * 4);
+                                        val2 = source.ReadUInt(valaddr + (i + 4) * 4);
+                                        val3 = source.ReadUInt(valaddr + (i + 5) * 4);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Closed:
+                                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        val = source.ReadUInt(valaddr + i * 4);
+                                        val2 = source.ReadUInt(valaddr + (i + 1) * 4);
+                                        val3 = source.ReadUInt(valaddr + (i + 2) * 4);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        val = source.ReadUInt(valaddr + (i + 3) * 4);
+                                        val2 = source.ReadUInt(valaddr + (i + 4) * 4);
+                                        val3 = source.ReadUInt(valaddr + (i + 5) * 4);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    count++;
+                                    break;
+                            }
+
+                            break;
+                        }
+                        else if (time1 == snext.Value.Item1)
+                        {
+                            var val = source.ReadUInt(valaddr + (i + 3) * 4);
+                            var val2 = source.ReadUInt(valaddr + (i + 4) * 4);
+                            var val3 = source.ReadUInt(valaddr + (i + 5) * 4);
+                            result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(UIntPointData))
+            {
+                var qq = source.ReadBytes(qs.Count * 10 + 10 + sourceAddr, qs.Count);
+
+                foreach (var time1 in time)
+                {
+                    for (int i = 0; i < vv.Length - 1; i++)
+                    {
+                        var skey = vv[i];
+
+                        var snext = vv[i + 1];
+
+                        if (time1 == skey.Value.Item1)
+                        {
+                            var val = source.ReadUInt(valaddr + i * 4);
+                            var val2 = source.ReadUInt(valaddr + (i + 1) * 4);
+                            result.AddPoint(val, val2, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
+                        {
+
+                            switch (type)
+                            {
+                                case QueryValueMatchType.Previous:
+                                    var val = source.ReadUInt(valaddr + i * 4);
+                                    var val2 = source.ReadUInt(valaddr + (i + 1) * 4);
+                                    result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.After:
+                                    val = source.ReadUInt(valaddr + (i + 2) * 4);
+                                    val2 = source.ReadUInt(valaddr + (i + 3) * 4);
+                                    result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Linear:
+                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    {
+                                        var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                        var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                        var sval1 = source.ReadUInt(valaddr + i * 4);
+                                        var sval12 = source.ReadUInt(valaddr + (i + 1) * 4);
+                                        var sval2 = source.ReadUInt(valaddr + (i + 2) * 4);
+                                        var sval22 = source.ReadUInt(valaddr + (i + 3) * 4);
+                                        var x1 = (uint)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                        var x2 = (uint)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                        result.AddPoint(x1, x2, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[skey.Key] < 20)
+                                    {
+                                        val = source.ReadUInt(valaddr + i * 4);
+                                        val2 = source.ReadUInt(valaddr + (i + 1) * 4);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[snext.Key] < 20)
+                                    {
+                                        val = source.ReadUInt(valaddr + (i + 2) * 4);
+                                        val2 = source.ReadUInt(valaddr + (i + 3) * 4);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Closed:
+                                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        val = source.ReadUInt(valaddr + i * 4);
+                                        val2 = source.ReadUInt(valaddr + (i + 1) * 4);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        val = source.ReadUInt(valaddr + (i + 2) * 4);
+                                        val2 = source.ReadUInt(valaddr + (i + 3) * 4);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    count++;
+                                    break;
+                            }
+
+                            break;
+                        }
+                        else if (time1 == snext.Value.Item1)
+                        {
+                            var val = source.ReadUInt(valaddr + (i + 2) * 4);
+                            var val2 = source.ReadUInt(valaddr + (i + 3) * 4);
+                            result.AddPoint(val, val2, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(LongPointData))
+            {
+                var qq = source.ReadBytes(qs.Count * 18 + 10 + sourceAddr, qs.Count);
+
+                foreach (var time1 in time)
+                {
+                    for (int i = 0; i < vv.Length - 1; i++)
+                    {
+                        var skey = vv[i];
+
+                        var snext = vv[i + 1];
+
+                        if (time1 == skey.Value.Item1)
+                        {
+                            var val = source.ReadLong(valaddr + i * 8);
+                            var val2 = source.ReadLong(valaddr + (i + 1) * 8);
+                            result.AddPoint(val, val2, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
+                        {
+
+                            switch (type)
+                            {
+                                case QueryValueMatchType.Previous:
+                                    var val = source.ReadLong(valaddr + i * 8);
+                                    var val2 = source.ReadLong(valaddr + (i + 1) * 8);
+                                    result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.After:
+                                    val = source.ReadLong(valaddr + (i + 2) * 8);
+                                    val2 = source.ReadLong(valaddr + (i + 3) * 8);
+                                    result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Linear:
+                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    {
+                                        var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                        var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                        var sval1 = source.ReadLong(valaddr + i * 8);
+                                        var sval12 = source.ReadLong(valaddr + (i + 1) * 8);
+                                        var sval2 = source.ReadLong(valaddr + (i + 2) * 8);
+                                        var sval22 = source.ReadLong(valaddr + (i + 3) * 8);
+                                        var x1 = (long)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                        var x2 = (long)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                        result.AddPoint(x1, x2, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[skey.Key] < 20)
+                                    {
+                                        val = source.ReadLong(valaddr + i * 8);
+                                        val2 = source.ReadLong(valaddr + (i + 1) * 8);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[snext.Key] < 20)
+                                    {
+                                        val = source.ReadLong(valaddr + (i + 2) * 8);
+                                        val2 = source.ReadLong(valaddr + (i + 3) * 8);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Closed:
+                                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        val = source.ReadLong(valaddr + i * 8);
+                                        val2 = source.ReadLong(valaddr + (i + 1) * 8);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        val = source.ReadLong(valaddr + (i + 2) * 8);
+                                        val2 = source.ReadLong(valaddr + (i + 3) * 8);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    count++;
+                                    break;
+                            }
+
+                            break;
+                        }
+                        else if (time1 == snext.Value.Item1)
+                        {
+                            var val = source.ReadLong(valaddr + (i + 2) * 8);
+                            var val2 = source.ReadLong(valaddr + (i + 3) * 8);
+                            result.AddPoint(val, val2, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(ULongPointData))
+            {
+                var qq = source.ReadBytes(qs.Count * 18 + 10 + sourceAddr, qs.Count);
+
+                foreach (var time1 in time)
+                {
+                    for (int i = 0; i < vv.Length - 1; i++)
+                    {
+                        var skey = vv[i];
+
+                        var snext = vv[i + 1];
+
+                        if (time1 == skey.Value.Item1)
+                        {
+                            var val = source.ReadULong(valaddr + i * 8);
+                            var val2 = source.ReadULong(valaddr + (i + 1) * 8);
+                            result.AddPoint(val, val2, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
+                        {
+
+                            switch (type)
+                            {
+                                case QueryValueMatchType.Previous:
+                                    var val = source.ReadULong(valaddr + i * 8);
+                                    var val2 = source.ReadULong(valaddr + (i + 1) * 8);
+                                    result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.After:
+                                    val = source.ReadULong(valaddr + (i + 2) * 8);
+                                    val2 = source.ReadULong(valaddr + (i + 3) * 8);
+                                    result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Linear:
+                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    {
+                                        var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                        var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                        var sval1 = source.ReadULong(valaddr + i * 8);
+                                        var sval12 = source.ReadULong(valaddr + (i + 1) * 8);
+                                        var sval2 = source.ReadULong(valaddr + (i + 2) * 8);
+                                        var sval22 = source.ReadULong(valaddr + (i + 3) * 8);
+                                        var x1 = (long)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                        var x2 = (long)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                        result.AddPoint(x1, x2, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[skey.Key] < 20)
+                                    {
+                                        val = source.ReadULong(valaddr + i * 8);
+                                        val2 = source.ReadULong(valaddr + (i + 1) * 8);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[snext.Key] < 20)
+                                    {
+                                        val = source.ReadULong(valaddr + (i + 2) * 8);
+                                        val2 = source.ReadULong(valaddr + (i + 3) * 8);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Closed:
+                                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        val = source.ReadULong(valaddr + i * 8);
+                                        val2 = source.ReadULong(valaddr + (i + 1) * 8);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        val = source.ReadULong(valaddr + (i + 2) * 8);
+                                        val2 = source.ReadULong(valaddr + (i + 3) * 8);
+                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                    }
+                                    count++;
+                                    break;
+                            }
+
+                            break;
+                        }
+                        else if (time1 == snext.Value.Item1)
+                        {
+                            var val = source.ReadULong(valaddr + (i + 2) * 8);
+                            var val2 = source.ReadULong(valaddr + (i + 3) * 8);
+                            result.AddPoint(val, val2, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(LongPoint3Data))
+            {
+                var qq = source.ReadBytes(qs.Count * 26 + 10 + sourceAddr, qs.Count);
+
+                foreach (var time1 in time)
+                {
+                    for (int i = 0; i < vv.Length - 1; i++)
+                    {
+                        var skey = vv[i];
+
+                        var snext = vv[i + 1];
+
+                        if (time1 == skey.Value.Item1)
+                        {
+                            var val = source.ReadLong(valaddr + i * 8);
+                            var val2 = source.ReadLong(valaddr + (i + 1) * 8);
+                            var val3 = source.ReadLong(valaddr + (i + 2) * 8);
+                            result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
+                        {
+
+                            switch (type)
+                            {
+                                case QueryValueMatchType.Previous:
+                                    var val = source.ReadLong(valaddr + i * 8);
+                                    var val2 = source.ReadLong(valaddr + (i + 1) * 8);
+                                    var val3 = source.ReadLong(valaddr + (i + 2) * 8);
+                                    result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.After:
+
+                                    val = source.ReadLong(valaddr + (i + 3) * 8);
+                                    val2 = source.ReadLong(valaddr + (i + 4) * 8);
+                                    val3 = source.ReadLong(valaddr + (i + 5) * 8);
+                                    result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Linear:
+                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    {
+                                        var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                        var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                        var sval1 = source.ReadLong(valaddr + i * 8);
+                                        var sval12 = source.ReadLong(valaddr + (i + 1) * 8);
+                                        var sval13 = source.ReadLong(valaddr + (i + 2) * 8);
+
+                                        var sval2 = source.ReadLong(valaddr + (i + 3) * 8);
+                                        var sval22 = source.ReadLong(valaddr + (i + 4) * 8);
+                                        var sval23 = source.ReadLong(valaddr + (i + 5) * 8);
+
+                                        var x1 = (uint)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                        var x2 = (uint)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                        var x3 = (uint)(pval1 / tval1 * (sval23 - sval13) + sval12);
+                                        result.AddPoint(x1, x2, x3, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[skey.Key] < 20)
+                                    {
+                                        val = source.ReadLong(valaddr + i * 8);
+                                        val2 = source.ReadLong(valaddr + (i + 1) * 8);
+                                        val3 = source.ReadLong(valaddr + (i + 2) * 8);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[snext.Key] < 20)
+                                    {
+                                        val = source.ReadLong(valaddr + (i + 3) * 8);
+                                        val2 = source.ReadLong(valaddr + (i + 4) * 8);
+                                        val3 = source.ReadLong(valaddr + (i + 5) * 8);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Closed:
+                                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        val = source.ReadLong(valaddr + i * 8);
+                                        val2 = source.ReadLong(valaddr + (i + 1) * 8);
+                                        val3 = source.ReadLong(valaddr + (i + 2) * 8);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        val = source.ReadLong(valaddr + (i + 3) * 8);
+                                        val2 = source.ReadLong(valaddr + (i + 4) * 8);
+                                        val3 = source.ReadLong(valaddr + (i + 5) * 8);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    count++;
+                                    break;
+                            }
+
+                            break;
+                        }
+                        else if (time1 == snext.Value.Item1)
+                        {
+                            var val = source.ReadLong(valaddr + (i + 3) * 8);
+                            var val2 = source.ReadLong(valaddr + (i + 4) * 8);
+                            var val3 = source.ReadLong(valaddr + (i + 5) * 8);
+                            result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(ULongPoint3Data))
+            {
+                var qq = source.ReadBytes(qs.Count * 26 + 10 + sourceAddr, qs.Count);
+
+                foreach (var time1 in time)
+                {
+                    for (int i = 0; i < vv.Length - 1; i++)
+                    {
+                        var skey = vv[i];
+
+                        var snext = vv[i + 1];
+
+                        if (time1 == skey.Value.Item1)
+                        {
+                            var val = source.ReadULong(valaddr + i * 8);
+                            var val2 = source.ReadULong(valaddr + (i + 1) * 8);
+                            var val3 = source.ReadULong(valaddr + (i + 2) * 8);
+                            result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
+                        {
+
+                            switch (type)
+                            {
+                                case QueryValueMatchType.Previous:
+                                    var val = source.ReadULong(valaddr + i * 8);
+                                    var val2 = source.ReadULong(valaddr + (i + 1) * 8);
+                                    var val3 = source.ReadULong(valaddr + (i + 2) * 8);
+                                    result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.After:
+
+                                    val = source.ReadULong(valaddr + (i + 3) * 8);
+                                    val2 = source.ReadULong(valaddr + (i + 4) * 8);
+                                    val3 = source.ReadULong(valaddr + (i + 5) * 8);
+                                    result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Linear:
+                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    {
+                                        var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                        var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                        var sval1 = source.ReadULong(valaddr + i * 8);
+                                        var sval12 = source.ReadULong(valaddr + (i + 1) * 8);
+                                        var sval13 = source.ReadULong(valaddr + (i + 2) * 8);
+
+                                        var sval2 = source.ReadULong(valaddr + (i + 3) * 8);
+                                        var sval22 = source.ReadULong(valaddr + (i + 4) * 8);
+                                        var sval23 = source.ReadULong(valaddr + (i + 5) * 8);
+
+                                        var x1 = (uint)(pval1 / tval1 * (sval2 - sval1) + sval1);
+                                        var x2 = (uint)(pval1 / tval1 * (sval22 - sval12) + sval12);
+                                        var x3 = (uint)(pval1 / tval1 * (sval23 - sval13) + sval12);
+                                        result.AddPoint(x1, x2, x3, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[skey.Key] < 20)
+                                    {
+                                        val = source.ReadULong(valaddr + i * 8);
+                                        val2 = source.ReadULong(valaddr + (i + 1) * 8);
+                                        val3 = source.ReadULong(valaddr + (i + 2) * 8);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    else if (qq[snext.Key] < 20)
+                                    {
+                                        val = source.ReadULong(valaddr + (i + 3) * 8);
+                                        val2 = source.ReadULong(valaddr + (i + 4) * 8);
+                                        val3 = source.ReadULong(valaddr + (i + 5) * 8);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                    count++;
+                                    break;
+                                case QueryValueMatchType.Closed:
+                                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        val = source.ReadULong(valaddr + i * 8);
+                                        val2 = source.ReadULong(valaddr + (i + 1) * 8);
+                                        val3 = source.ReadULong(valaddr + (i + 2) * 8);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    else
+                                    {
+                                        val = source.ReadULong(valaddr + (i + 3) * 8);
+                                        val2 = source.ReadULong(valaddr + (i + 4) * 8);
+                                        val3 = source.ReadULong(valaddr + (i + 5) * 8);
+                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                    }
+                                    count++;
+                                    break;
+                            }
+
+                            break;
+                        }
+                        else if (time1 == snext.Value.Item1)
+                        {
+                            var val = source.ReadULong(valaddr + (i + 3) * 8);
+                            var val2 = source.ReadULong(valaddr + (i + 4) * 8);
+                            var val3 = source.ReadULong(valaddr + (i + 5) * 8);
+                            result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                            count++;
+                            break;
+                        }
+                    }
                 }
             }
             return count;

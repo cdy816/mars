@@ -148,6 +148,22 @@ namespace Cdy.Tag
                     case TagType.Double:
                         msize += 17;
                         break;
+                    case TagType.IntPoint:
+                    case TagType.UIntPoint:
+                        msize += 17;
+                        break;
+                    case TagType.IntPoint3:
+                    case TagType.UIntPoint3:
+                        msize += 21;
+                        break;
+                    case TagType.LongPoint:
+                    case TagType.ULongPoint:
+                        msize += 25;
+                        break;
+                    case TagType.LongPoint3:
+                    case TagType.ULongPoint3:
+                        msize += 33;
+                        break;
                     case TagType.String:
                         msize += (Const.StringSize + 9);
                         break;
@@ -178,7 +194,21 @@ namespace Cdy.Tag
                     case TagType.Long:
                     case TagType.ULong:
                     case TagType.Double:
+                    case TagType.IntPoint:
+                    case TagType.UIntPoint:
                         MemoryHelper.WriteByte(mMHandle, vv.Value.ValueAddress + 16, unknowQuality);
+                        break;
+                    case TagType.IntPoint3:
+                    case TagType.UIntPoint3:
+                        MemoryHelper.WriteByte(mMHandle, vv.Value.ValueAddress + 20, unknowQuality);
+                        break;
+                    case TagType.LongPoint:
+                    case TagType.ULongPoint:
+                        MemoryHelper.WriteByte(mMHandle, vv.Value.ValueAddress + 24, unknowQuality);
+                        break;
+                    case TagType.LongPoint3:
+                    case TagType.ULongPoint3:
+                        MemoryHelper.WriteByte(mMHandle, vv.Value.ValueAddress + 32, unknowQuality);
                         break;
                     case TagType.String:
                         MemoryHelper.WriteByte(mMHandle, vv.Value.ValueAddress + Const.StringSize + 8, unknowQuality);
@@ -264,13 +294,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValueByAddr(long addr, byte value,byte qulity,DateTime time)
+        public void SetValueByAddr(long addr, byte value,byte quality,DateTime time)
         {
             mMemory[addr] = value;
             MemoryHelper.WriteDateTime(mMHandle, addr + 1,time);
-            MemoryHelper.WriteByte(mMHandle, addr + 9, qulity);
+            MemoryHelper.WriteByte(mMHandle, addr + 9, quality);
         }
 
         /// <summary>
@@ -289,13 +319,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValueByAddr(long addr, short value, byte qulity, DateTime time)
+        public void SetValueByAddr(long addr, short value, byte quality, DateTime time)
         {
             MemoryHelper.WriteShort(mMHandle, addr, value);
             MemoryHelper.WriteDateTime(mMHandle, addr +2, time);
-            MemoryHelper.WriteByte(mMHandle, addr + 10, qulity);
+            MemoryHelper.WriteByte(mMHandle, addr + 10, quality);
         }
 
         /// <summary>
@@ -314,13 +344,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValueByAddr(long addr, int value, byte qulity, DateTime time)
+        public void SetValueByAddr(long addr, int value, byte quality, DateTime time)
         {
             MemoryHelper.WriteInt32(mMHandle, addr, value);
             MemoryHelper.WriteDateTime(mMHandle, addr + 4, time);
-            MemoryHelper.WriteByte(mMHandle, addr + 12, qulity); ;
+            MemoryHelper.WriteByte(mMHandle, addr + 12, quality); ;
         }
 
         /// <summary>
@@ -339,13 +369,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValueByAddr(long addr, long value, byte qulity, DateTime time)
+        public void SetValueByAddr(long addr, long value, byte quality, DateTime time)
         {
             MemoryHelper.WriteInt64(mMHandle, addr, value);
             MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
-            MemoryHelper.WriteByte(mMHandle, addr + 16, qulity);
+            MemoryHelper.WriteByte(mMHandle, addr + 16, quality);
         }
 
  
@@ -366,13 +396,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValueByAddr(long addr, float value, byte qulity, DateTime time)
+        public void SetValueByAddr(long addr, float value, byte quality, DateTime time)
         {
             MemoryHelper.WriteFloat(mMHandle, addr, value);
             MemoryHelper.WriteDateTime(mMHandle, addr + 4, time);
-            MemoryHelper.WriteByte(mMHandle, addr + 12, qulity); ;
+            MemoryHelper.WriteByte(mMHandle, addr + 12, quality); ;
         }
 
         /// <summary>
@@ -391,13 +421,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValueByAddr(long addr, double value, byte qulity, DateTime time)
+        public void SetValueByAddr(long addr, double value, byte quality, DateTime time)
         {
             MemoryHelper.WriteDouble(mMHandle, addr, value);
             MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
-            MemoryHelper.WriteByte(mMHandle, addr + 16, qulity); ;
+            MemoryHelper.WriteByte(mMHandle, addr + 16, quality); ;
         }
 
         /// <summary>
@@ -416,13 +446,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValueByAddr(long addr, DateTime value, byte qulity, DateTime time)
+        public void SetValueByAddr(long addr, DateTime value, byte quality, DateTime time)
         {
             MemoryHelper.WriteDateTime(mMHandle, addr, value);
             MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
-            MemoryHelper.WriteByte(mMHandle, addr + 16, qulity); ;
+            MemoryHelper.WriteByte(mMHandle, addr + 16, quality); ;
         }
 
         /// <summary>
@@ -444,14 +474,153 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValueByAddr(long addr, string value, byte qulity, DateTime time)
+        public void SetValueByAddr(long addr, string value, byte quality, DateTime time)
         {
             System.Buffer.BlockCopy(value.ToCharArray(), 0, mMemory, (int)addr, value.Length);
             MemoryHelper.WriteDateTime(mMHandle, Const.StringSize, time);
-            MemoryHelper.WriteByte(mMHandle, Const.StringSize + 8, qulity); 
+            MemoryHelper.WriteByte(mMHandle, Const.StringSize + 8, quality); 
         }
+
+        #region
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        public void SetPointValueByAddr(long addr, int value1,int value2, byte quality, DateTime time)
+        {
+            MemoryHelper.WriteInt32(mMHandle, addr, value1);
+            MemoryHelper.WriteInt32(mMHandle, addr+4, value2);
+            MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 16, quality); ;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="value1"></param>
+        /// <param name="value2"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        public void SetPointValueByAddr(long addr, uint value1, uint value2, byte quality, DateTime time)
+        {
+            MemoryHelper.WriteUInt32(mMHandle, addr, value1);
+            MemoryHelper.WriteUInt32(mMHandle, addr + 4, value2);
+            MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 16, quality); ;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="value1"></param>
+        /// <param name="value2"></param>
+        /// <param name="value3"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        public void SetPointValueByAddr(long addr, int value1, int value2,int value3, byte quality, DateTime time)
+        {
+            MemoryHelper.WriteInt32(mMHandle, addr, value1);
+            MemoryHelper.WriteInt32(mMHandle, addr + 4, value2);
+            MemoryHelper.WriteInt32(mMHandle, addr + 8, value3);
+            MemoryHelper.WriteDateTime(mMHandle, addr + 12, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 20, quality); 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="value1"></param>
+        /// <param name="value2"></param>
+        /// <param name="value3"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        public void SetPointValueByAddr(long addr, uint value1, uint value2, uint value3, byte quality, DateTime time)
+        {
+            MemoryHelper.WriteUInt32(mMHandle, addr, value1);
+            MemoryHelper.WriteUInt32(mMHandle, addr + 4, value2);
+            MemoryHelper.WriteUInt32(mMHandle, addr + 8, value3);
+            MemoryHelper.WriteDateTime(mMHandle, addr + 12, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 20, quality); 
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="value1"></param>
+        /// <param name="value2"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        public void SetPointValueByAddr(long addr, ulong value1, ulong value2, byte quality, DateTime time)
+        {
+            MemoryHelper.WriteUInt64(mMHandle, addr, value1);
+            MemoryHelper.WriteUInt64(mMHandle, addr + 8, value2);
+            MemoryHelper.WriteDateTime(mMHandle, addr + 16, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 24, quality); 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="value1"></param>
+        /// <param name="value2"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        public void SetPointValueByAddr(long addr, long value1, long value2,  byte quality, DateTime time)
+        {
+            MemoryHelper.WriteInt64(mMHandle, addr, value1);
+            MemoryHelper.WriteInt64(mMHandle, addr + 8, value2);
+            MemoryHelper.WriteDateTime(mMHandle, addr + 16, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 24, quality); ;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="value1"></param>
+        /// <param name="value2"></param>
+        /// <param name="value3"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        public void SetPointValueByAddr(long addr, long value1, long value2, long value3, byte quality, DateTime time)
+        {
+            MemoryHelper.WriteInt64(mMHandle, addr, value1);
+            MemoryHelper.WriteInt64(mMHandle, addr + 8, value2);
+            MemoryHelper.WriteInt64(mMHandle, addr + 16, value3);
+            MemoryHelper.WriteDateTime(mMHandle, addr + 24, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 32, quality); ;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="value1"></param>
+        /// <param name="value2"></param>
+        /// <param name="value3"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        public void SetPointValueByAddr(long addr, ulong value1, ulong value2, ulong value3, byte quality, DateTime time)
+        {
+            MemoryHelper.WriteUInt64(mMHandle, addr, value1);
+            MemoryHelper.WriteUInt64(mMHandle, addr + 8, value2);
+            MemoryHelper.WriteUInt64(mMHandle, addr + 16, value3);
+            MemoryHelper.WriteDateTime(mMHandle, addr + 24, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 32, quality); ;
+        }
+        #endregion
 
         /// <summary>
         /// 
@@ -460,13 +629,14 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void SetValue(int id, bool value)
         {
+            DateTime time = DateTime.Now;
             if (value)
             {
-                SetValue(id, (byte)1);
+                SetValue(id, (byte)1, 0, time);
             }
             else
             {
-                SetValue(id, (byte)0);
+                SetValue(id, (byte)0, 0, time);
             }
         }
 
@@ -477,9 +647,10 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void SetValue(int id, byte value)
         {
+            DateTime time = DateTime.Now;
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value);
+                SetValueByAddr(mIdAndAddr[id], value,0,time);
                 NotifyValueChanged(id);
             }
         }
@@ -490,12 +661,14 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int,byte> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            DateTime time = DateTime.Now;
+            //Parallel.ForEach(values, (vv) => {
+            foreach(var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value);
+                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -505,12 +678,13 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, Tuple<byte,byte,DateTime>> values)
         {
-            Parallel.ForEach(values,(vv) => {
-                if (mIdAndAddr.ContainsKey(vv.Key))
+            //Parallel.ForEach(values,(vv) => {
+                foreach (var vv in values)
+                    if (mIdAndAddr.ContainsKey(vv.Key))
                 {
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -519,13 +693,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValue(int id, byte value,byte qulity,DateTime time)
+        public void SetValue(int id, byte value,byte quality,DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value,qulity,time);
+                SetValueByAddr(mIdAndAddr[id], value,quality,time);
                 NotifyValueChanged(id);
             }
         }
@@ -540,7 +714,7 @@ namespace Cdy.Tag
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value);
+                SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
                 NotifyValueChanged(id);
             }
         }
@@ -551,12 +725,14 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, short> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            DateTime time = DateTime.Now;
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value);
+                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -565,13 +741,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValue(int id, short value, byte qulity, DateTime time)
+        public void SetValue(int id, short value, byte quality, DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value, qulity, time);
+                SetValueByAddr(mIdAndAddr[id], value, quality, time);
                 NotifyValueChanged(id);
             }
         }
@@ -582,12 +758,13 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, Tuple<short, byte, DateTime>> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -601,7 +778,7 @@ namespace Cdy.Tag
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value);
+                SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
                 NotifyValueChanged(id);
             }
         }
@@ -612,12 +789,14 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, ushort> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            DateTime time = DateTime.Now;
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value);
+                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -626,13 +805,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValue(int id, ushort value, byte qulity, DateTime time)
+        public void SetValue(int id, ushort value, byte quality, DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value, qulity, time);
+                SetValueByAddr(mIdAndAddr[id], value, quality, time);
                 NotifyValueChanged(id);
             }
         }
@@ -643,12 +822,13 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, Tuple<ushort, byte, DateTime>> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -661,7 +841,7 @@ namespace Cdy.Tag
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value);
+                SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
                 NotifyValueChanged(id);
             }
         }
@@ -672,12 +852,14 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, int> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            DateTime time = DateTime.Now;
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value);
+                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -686,13 +868,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValue(int id, int value, byte qulity, DateTime time)
+        public void SetValue(int id, int value, byte quality, DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value, qulity, time);
+                SetValueByAddr(mIdAndAddr[id], value, quality, time);
                 NotifyValueChanged(id);
             }
         }
@@ -703,12 +885,13 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, Tuple<int, byte, DateTime>> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -722,7 +905,7 @@ namespace Cdy.Tag
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value);
+                SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
                 NotifyValueChanged(id);
             }
         }
@@ -733,12 +916,14 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, uint> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            //Parallel.ForEach(values, (vv) => {
+            DateTime time = DateTime.Now;
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value);
+                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -747,13 +932,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValue(int id, uint value, byte qulity, DateTime time)
+        public void SetValue(int id, uint value, byte quality, DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value, qulity, time);
+                SetValueByAddr(mIdAndAddr[id], value, quality, time);
                 NotifyValueChanged(id);
             }
         }
@@ -764,12 +949,13 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, Tuple<uint, byte, DateTime>> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -782,7 +968,7 @@ namespace Cdy.Tag
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value);
+                SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
                 NotifyValueChanged(id);
             }
         }
@@ -793,12 +979,14 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, long> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            //Parallel.ForEach(values, (vv) => {
+            DateTime time = DateTime.Now;
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value);
+                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -807,13 +995,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValue(int id, long value, byte qulity, DateTime time)
+        public void SetValue(int id, long value, byte quality, DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value, qulity, time);
+                SetValueByAddr(mIdAndAddr[id], value, quality, time);
                 NotifyValueChanged(id);
             }
         }
@@ -824,12 +1012,13 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, Tuple<long, byte, DateTime>> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -843,7 +1032,7 @@ namespace Cdy.Tag
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value);
+                SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
                 NotifyValueChanged(id);
             }
         }
@@ -854,12 +1043,14 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, ulong> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            DateTime time = DateTime.Now;
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value);
+                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -868,13 +1059,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValue(int id, ulong value, byte qulity, DateTime time)
+        public void SetValue(int id, ulong value, byte quality, DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value, qulity, time);
+                SetValueByAddr(mIdAndAddr[id], value, quality, time);
                 NotifyValueChanged(id);
             }
         }
@@ -885,14 +1076,144 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, Tuple<ulong, byte, DateTime>> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void SetValue(int id, IntPointData value,DateTime time,byte quality)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                SetPointValueByAddr(mIdAndAddr[id], value.X,value.Y,quality,time);
+                NotifyValueChanged(id);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void SetValue(int id, UIntPointData value, DateTime time, byte quality)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, quality, time);
+                NotifyValueChanged(id);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void SetValue(int id, IntPoint3Data value, DateTime time, byte quality)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
+                NotifyValueChanged(id);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void SetValue(int id, UIntPoint3Data value, DateTime time, byte quality)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
+                NotifyValueChanged(id);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void SetValue(int id, ULongPoint3Data value, DateTime time, byte quality)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
+                NotifyValueChanged(id);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void SetValue(int id, LongPoint3Data value, DateTime time, byte quality)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
+                NotifyValueChanged(id);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void SetValue(int id, LongPointData value, DateTime time, byte quality)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, quality, time);
+                NotifyValueChanged(id);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void SetValue(int id, ULongPointData value, DateTime time, byte quality)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, quality, time);
+                NotifyValueChanged(id);
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -913,12 +1234,14 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, float> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            DateTime time = DateTime.Now;
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value);
+                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -927,13 +1250,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValue(int id, float value, byte qulity, DateTime time)
+        public void SetValue(int id, float value, byte quality, DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value, qulity, time);
+                SetValueByAddr(mIdAndAddr[id], value, quality, time);
                 NotifyValueChanged(id);
             }
         }
@@ -944,12 +1267,13 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, Tuple<float, byte, DateTime>> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -974,12 +1298,14 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, double> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            DateTime time = DateTime.Now;
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value);
+                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -988,13 +1314,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValue(int id, double value, byte qulity, DateTime time)
+        public void SetValue(int id, double value, byte quality, DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value, qulity, time);
+                SetValueByAddr(mIdAndAddr[id], value, quality, time);
                 NotifyValueChanged(id);
             }
         }
@@ -1005,12 +1331,13 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, Tuple<double, byte, DateTime>> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -1024,7 +1351,7 @@ namespace Cdy.Tag
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value);
+                SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
                 NotifyValueChanged(id);
             }
         }
@@ -1035,12 +1362,14 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, DateTime> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            DateTime time = DateTime.Now;
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value);
+                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -1049,13 +1378,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValue(int id, DateTime value, byte qulity, DateTime time)
+        public void SetValue(int id, DateTime value, byte quality, DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value, qulity, time);
+                SetValueByAddr(mIdAndAddr[id], value, quality, time);
                 NotifyValueChanged(id);
             }
         }
@@ -1066,12 +1395,13 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, Tuple<DateTime, byte, DateTime>> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -1092,15 +1422,146 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool SetPointValue(int id, byte quality, DateTime time, params object[] values)
+        {
+            if (mIdAndAddr.ContainsKey(id) && mConfigDatabase.Tags.ContainsKey(id))
+            {
+                switch (mConfigDatabase.Tags[id].Type)
+                {
+                    case TagType.IntPoint:
+                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], quality, time);
+                        break;
+                    case TagType.UIntPoint:
+                        SetPointValueByAddr(mIdAndAddr[id], (uint)values[0], (uint)values[1], quality, time);
+                        break;
+                    case TagType.IntPoint3:
+                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], (int)values[2], quality, time);
+                        break;
+                    case TagType.UIntPoint3:
+                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], (int)values[2], quality, time);
+                        break;
+                    case TagType.LongPoint:
+                        SetPointValueByAddr(mIdAndAddr[id], (long)values[0], (long)values[1], quality, time);
+                        break;
+                    case TagType.ULongPoint:
+                        SetPointValueByAddr(mIdAndAddr[id], (ulong)values[0], (ulong)values[1], quality, time);
+                        break;
+                    case TagType.LongPoint3:
+                        SetPointValueByAddr(mIdAndAddr[id], (long)values[0], (long)values[1], (long)values[2], quality, time);
+                        break;
+                    case TagType.ULongPoint3:
+                        SetPointValueByAddr(mIdAndAddr[id], (ulong)values[0], (ulong)values[1], (ulong)values[2], quality, time);
+                        break;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool SetPointValue(int id, byte quality,  params object[] values)
+        {
+            DateTime time = DateTime.Now;
+            if (mIdAndAddr.ContainsKey(id) && mConfigDatabase.Tags.ContainsKey(id))
+            {
+                switch (mConfigDatabase.Tags[id].Type)
+                {
+                    case TagType.IntPoint:
+                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], quality, time);
+                        break;
+                    case TagType.UIntPoint:
+                        SetPointValueByAddr(mIdAndAddr[id], (uint)values[0], (uint)values[1], quality, time);
+                        break;
+                    case TagType.IntPoint3:
+                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], (int)values[2], quality, time);
+                        break;
+                    case TagType.UIntPoint3:
+                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], (int)values[2], quality, time);
+                        break;
+                    case TagType.LongPoint:
+                        SetPointValueByAddr(mIdAndAddr[id], (long)values[0], (long)values[1], quality, time);
+                        break;
+                    case TagType.ULongPoint:
+                        SetPointValueByAddr(mIdAndAddr[id], (ulong)values[0], (ulong)values[1], quality, time);
+                        break;
+                    case TagType.LongPoint3:
+                        SetPointValueByAddr(mIdAndAddr[id], (long)values[0], (long)values[1], (long)values[2], quality, time);
+                        break;
+                    case TagType.ULongPoint3:
+                        SetPointValueByAddr(mIdAndAddr[id], (ulong)values[0], (ulong)values[1], (ulong)values[2], quality, time);
+                        break;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool SetPointValue(int id,  params object[] values)
+        {
+            DateTime time = DateTime.Now;
+            byte quality = 0;
+            if (mIdAndAddr.ContainsKey(id) && mConfigDatabase.Tags.ContainsKey(id))
+            {
+                switch (mConfigDatabase.Tags[id].Type)
+                {
+                    case TagType.IntPoint:
+                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], quality, time);
+                        break;
+                    case TagType.UIntPoint:
+                        SetPointValueByAddr(mIdAndAddr[id], (uint)values[0], (uint)values[1], quality, time);
+                        break;
+                    case TagType.IntPoint3:
+                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], (int)values[2], quality, time);
+                        break;
+                    case TagType.UIntPoint3:
+                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], (int)values[2], quality, time);
+                        break;
+                    case TagType.LongPoint:
+                        SetPointValueByAddr(mIdAndAddr[id], (long)values[0], (long)values[1], quality, time);
+                        break;
+                    case TagType.ULongPoint:
+                        SetPointValueByAddr(mIdAndAddr[id], (ulong)values[0], (ulong)values[1], quality, time);
+                        break;
+                    case TagType.LongPoint3:
+                        SetPointValueByAddr(mIdAndAddr[id], (long)values[0], (long)values[1], (long)values[2], quality, time);
+                        break;
+                    case TagType.ULongPoint3:
+                        SetPointValueByAddr(mIdAndAddr[id], (ulong)values[0], (ulong)values[1], (ulong)values[2], quality, time);
+                        break;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, string> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            DateTime time = DateTime.Now;
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value);
+                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
 
@@ -1109,13 +1570,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetValue(int id, string value, byte qulity, DateTime time)
+        public void SetValue(int id, string value, byte quality, DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                SetValueByAddr(mIdAndAddr[id], value, qulity, time);
+                SetValueByAddr(mIdAndAddr[id], value, quality, time);
                 NotifyValueChanged(id);
             }
         }
@@ -1126,12 +1587,13 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void SetValue(Dictionary<int, Tuple<string, byte, DateTime>> values)
         {
-            Parallel.ForEach(values, (vv) => {
+            //Parallel.ForEach(values, (vv) => {
+            foreach (var vv in values)
                 if (mIdAndAddr.ContainsKey(vv.Key))
                 {
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
-            });
+            //});
             NotifyValueChanged(values.Keys.ToList());
         }
         #endregion
@@ -1156,14 +1618,14 @@ namespace Cdy.Tag
         /// <param name="addr"></param>
         /// <param name="encoding"></param>
         /// <param name="time"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <returns></returns>
-        public string ReadStringValueByAddr(long addr, Encoding encoding,out DateTime time, out byte qulity)
+        public string ReadStringValueByAddr(long addr, Encoding encoding,out DateTime time, out byte quality)
         {
             int len = MemoryHelper.ReadByte((sbyte*)mMHandle, addr);
             var re = new string((sbyte*)mMHandle, (int)addr+1, len, encoding);
             time = MemoryHelper.ReadDateTime(mMHandle, addr+ Const.StringSize);
-            qulity = MemoryHelper.ReadByte(mMHandle, addr + Const.StringSize + 8);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + Const.StringSize + 8);
             return re;
         }
 
@@ -1182,12 +1644,12 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="time"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <returns></returns>
-        public byte ReadByteValueByAddr(long addr, out DateTime time, out byte qulity)
+        public byte ReadByteValueByAddr(long addr, out DateTime time, out byte quality)
         {
             time = MemoryHelper.ReadDateTime(mMHandle, addr + 1);
-            qulity = MemoryHelper.ReadByte(mMHandle, addr + 9);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 9);
             return MemoryHelper.ReadByte(mMHandle, addr);
         }
 
@@ -1206,12 +1668,12 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="time"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <returns></returns>
-        public int ReadIntValueByAddr(long addr, out DateTime time, out byte qulity)
+        public int ReadIntValueByAddr(long addr, out DateTime time, out byte quality)
         {
             time = MemoryHelper.ReadDateTime(mMHandle, addr + 4);
-            qulity = MemoryHelper.ReadByte(mMHandle, addr + 12);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 12);
             return MemoryHelper.ReadInt32(mMHandle, addr);
         }
 
@@ -1230,12 +1692,12 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="time"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <returns></returns>
-        public short ReadShortValueByAddr(long addr, out DateTime time, out byte qulity)
+        public short ReadShortValueByAddr(long addr, out DateTime time, out byte quality)
         {
             time = MemoryHelper.ReadDateTime(mMHandle, addr + 2);
-            qulity = MemoryHelper.ReadByte(mMHandle, addr + 10);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 10);
             return MemoryHelper.ReadShort(mMHandle, addr);
         }
 
@@ -1254,12 +1716,12 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="time"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <returns></returns>
-        public long ReadInt64ValueByAddr(long addr, out DateTime time, out byte qulity)
+        public long ReadInt64ValueByAddr(long addr, out DateTime time, out byte quality)
         {
             time = MemoryHelper.ReadDateTime(mMHandle, addr + 8);
-            qulity = MemoryHelper.ReadByte(mMHandle, addr + 16);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 16);
             return MemoryHelper.ReadInt64(mMHandle, addr);
         }
 
@@ -1278,12 +1740,12 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="time"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <returns></returns>
-        public double ReadDoubleValueByAddr(long addr, out DateTime time, out byte qulity)
+        public double ReadDoubleValueByAddr(long addr, out DateTime time, out byte quality)
         {
             time = MemoryHelper.ReadDateTime(mMHandle, addr + 8);
-            qulity = MemoryHelper.ReadByte(mMHandle, addr + 16);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 16);
             return MemoryHelper.ReadDouble(mMHandle, addr);
         }
 
@@ -1302,12 +1764,12 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="time"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <returns></returns>
-        public float ReadFloatValueByAddr(long addr, out DateTime time, out byte qulity)
+        public float ReadFloatValueByAddr(long addr, out DateTime time, out byte quality)
         {
             time = MemoryHelper.ReadDateTime(mMHandle, addr + 4);
-            qulity = MemoryHelper.ReadByte(mMHandle, addr + 12);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 12);
             return MemoryHelper.ReadFloat(mMHandle, addr);
         }
 
@@ -1326,13 +1788,263 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <param name="time"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <returns></returns>
-        public DateTime ReadDateTimeValueByAddr(long addr, out DateTime time, out byte qulity)
+        public DateTime ReadDateTimeValueByAddr(long addr, out DateTime time, out byte quality)
         {
             time = MemoryHelper.ReadDateTime(mMHandle, addr + 8);
-            qulity = MemoryHelper.ReadByte(mMHandle, addr + 16);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 16);
             return MemoryHelper.ReadDateTime(mMHandle, addr);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public IntPointData ReadIntPointValueByAddr(long addr, out byte quality, out DateTime time)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 8);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 16);
+            return new IntPointData(MemoryHelper.ReadInt32(mMHandle, addr), MemoryHelper.ReadInt32(mMHandle, addr + 4));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        public void ReadIntPointValueByAddr(long addr, out byte quality, out DateTime time, out int x, out int y)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 8);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 16);
+            x = MemoryHelper.ReadInt32(mMHandle, addr);
+            y = MemoryHelper.ReadInt32(mMHandle, addr + 4);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public UIntPointData ReadUIntPointValueByAddr(long addr, out byte quality, out DateTime time)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 8);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 16);
+           return  new UIntPointData(MemoryHelper.ReadUInt32(mMHandle, addr), MemoryHelper.ReadUInt32(mMHandle, addr + 4));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        public void ReadUIntPointValueByAddr(long addr, out byte quality, out DateTime time, out uint x, out uint y)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 8);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 16);
+            x = MemoryHelper.ReadUInt32(mMHandle, addr);
+            y = MemoryHelper.ReadUInt32(mMHandle, addr + 4);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public IntPoint3Data ReadIntPoint3ValueByAddr(long addr, out byte quality, out DateTime time)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 12);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 20);
+           return  new IntPoint3Data(MemoryHelper.ReadInt32(mMHandle, addr), MemoryHelper.ReadInt32(mMHandle, addr + 4), MemoryHelper.ReadInt32(mMHandle, addr + 8));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        public void ReadIntPoint3ValueByAddr(long addr, out byte quality, out DateTime time, out int x, out int y, out int z)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 12);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 20);
+            x = MemoryHelper.ReadInt32(mMHandle, addr);
+            y = MemoryHelper.ReadInt32(mMHandle, addr + 4);
+            z = MemoryHelper.ReadInt32(mMHandle, addr + 8);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public UIntPoint3Data ReadUIntPoint3ValueByAddr(long addr, out byte quality, out DateTime time)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 12);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 20);
+            return new UIntPoint3Data(MemoryHelper.ReadUInt32(mMHandle, addr), MemoryHelper.ReadUInt32(mMHandle, addr + 4), MemoryHelper.ReadUInt32(mMHandle, addr + 8));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        public void ReadUIntPoint3ValueByAddr(long addr, out byte quality, out DateTime time, out uint x, out uint y, out uint z)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 12);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 20);
+            x = MemoryHelper.ReadUInt32(mMHandle, addr);
+            y = MemoryHelper.ReadUInt32(mMHandle, addr + 4);
+            z = MemoryHelper.ReadUInt32(mMHandle, addr + 8);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public LongPointData ReadLongPointValueByAddr(long addr, out byte quality, out DateTime time)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 16);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 24);
+            return new LongPointData(MemoryHelper.ReadInt64(mMHandle, addr), MemoryHelper.ReadInt64(mMHandle, addr + 8));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        public void ReadLongPointValueByAddr(long addr, out byte quality, out DateTime time, out long x, out long y)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 16);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 24);
+            x = MemoryHelper.ReadInt64(mMHandle, addr);
+            y = MemoryHelper.ReadInt64(mMHandle, addr + 8);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public ULongPointData ReadULongPointValueByAddr(long addr, out byte quality, out DateTime time)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 16);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 24);
+            return new ULongPointData(MemoryHelper.ReadUInt64(mMHandle, addr), MemoryHelper.ReadUInt64(mMHandle, addr + 8));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        public void ReadULongPointValueByAddr(long addr, out byte quality, out DateTime time, out ulong x, out ulong y)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 16);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 24);
+            x = MemoryHelper.ReadUInt64(mMHandle, addr);
+            y = MemoryHelper.ReadUInt64(mMHandle, addr + 8);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public LongPoint3Data ReadLongPoint3ValueByAddr(long addr, out byte quality, out DateTime time)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 24);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 32);
+            return new LongPoint3Data(MemoryHelper.ReadInt64(mMHandle, addr), MemoryHelper.ReadInt64(mMHandle, addr + 8), MemoryHelper.ReadInt64(mMHandle, addr + 16));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        public void ReadLongPoint3ValueByAddr(long addr, out byte quality, out DateTime time, out long x, out long y, out long z)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 24);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 32);
+            x = MemoryHelper.ReadInt64(mMHandle, addr);
+            y = MemoryHelper.ReadInt64(mMHandle, addr + 8);
+            z = MemoryHelper.ReadInt64(mMHandle, addr + 16);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public ULongPoint3Data ReadULongPoint3ValueByAddr(long addr, out byte quality, out DateTime time)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 24);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 32);
+            return new ULongPoint3Data(MemoryHelper.ReadUInt64(mMHandle, addr), MemoryHelper.ReadUInt64(mMHandle, addr + 8), MemoryHelper.ReadUInt64(mMHandle, addr + 16));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        public void ReadULongPoint3ValueByAddr(long addr, out byte quality, out DateTime time,out ulong x,out ulong y,out ulong z)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 24);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 32);
+            x = MemoryHelper.ReadUInt64(mMHandle, addr);
+            y = MemoryHelper.ReadUInt64(mMHandle, addr + 8);
+            z= MemoryHelper.ReadUInt64(mMHandle, addr + 16);
         }
 
         /// <summary>
@@ -1353,16 +2065,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public byte? ReadByteValue(int id,out byte qulity,out DateTime time)
+        public byte? ReadByteValue(int id,out byte quality,out DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                return ReadByteValueByAddr(mIdAndAddr[id],out time,out qulity);
+                return ReadByteValueByAddr(mIdAndAddr[id],out time,out quality);
             }
-            qulity = byte.MaxValue;
+            quality = byte.MaxValue;
             time = DateTime.MinValue;
             return null;
         }
@@ -1385,16 +2097,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public short? ReadShortValue(int id, out byte qulity, out DateTime time)
+        public short? ReadShortValue(int id, out byte quality, out DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                return ReadShortValueByAddr(mIdAndAddr[id], out time, out qulity);
+                return ReadShortValueByAddr(mIdAndAddr[id], out time, out quality);
             }
-            qulity = byte.MaxValue;
+            quality = byte.MaxValue;
             time = DateTime.MinValue;
             return null;
         }
@@ -1417,16 +2129,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public int? ReadIntValue(int id, out byte qulity, out DateTime time)
+        public int? ReadIntValue(int id, out byte quality, out DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                return ReadIntValueByAddr(mIdAndAddr[id], out time, out qulity);
+                return ReadIntValueByAddr(mIdAndAddr[id], out time, out quality);
             }
-            qulity = byte.MaxValue;
+            quality = byte.MaxValue;
             time = DateTime.MinValue;
             return null;
         }
@@ -1449,16 +2161,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public long? ReadInt64Value(int id, out byte qulity, out DateTime time)
+        public long? ReadInt64Value(int id, out byte quality, out DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                return ReadInt64ValueByAddr(mIdAndAddr[id], out time, out qulity);
+                return ReadInt64ValueByAddr(mIdAndAddr[id], out time, out quality);
             }
-            qulity = byte.MaxValue;
+            quality = byte.MaxValue;
             time = DateTime.MinValue;
             return null;
         }
@@ -1481,16 +2193,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public double? ReadDoubleValue(int id, out byte qulity, out DateTime time)
+        public double? ReadDoubleValue(int id, out byte quality, out DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                return ReadDoubleValueByAddr(mIdAndAddr[id], out time, out qulity);
+                return ReadDoubleValueByAddr(mIdAndAddr[id], out time, out quality);
             }
-            qulity = byte.MaxValue;
+            quality = byte.MaxValue;
             time = DateTime.MinValue;
             return null;
         }
@@ -1513,16 +2225,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public float? ReadFloatValue(int id, out byte qulity, out DateTime time)
+        public float? ReadFloatValue(int id, out byte quality, out DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                return ReadFloatValueByAddr(mIdAndAddr[id], out time, out qulity);
+                return ReadFloatValueByAddr(mIdAndAddr[id], out time, out quality);
             }
-            qulity = byte.MaxValue;
+            quality = byte.MaxValue;
             time = DateTime.MinValue;
             return null;
         }
@@ -1545,16 +2257,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public DateTime? ReadDatetimeValue(int id, out byte qulity, out DateTime time)
+        public DateTime? ReadDatetimeValue(int id, out byte quality, out DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                return ReadDateTimeValueByAddr(mIdAndAddr[id], out time, out qulity);
+                return ReadDateTimeValueByAddr(mIdAndAddr[id], out time, out quality);
             }
-            qulity = byte.MaxValue;
+            quality = byte.MaxValue;
             time = DateTime.MinValue;
             return null;
         }
@@ -1578,499 +2290,339 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public string ReadStringValue(int id, Encoding encoding, out byte qulity, out DateTime time)
+        public string ReadStringValue(int id, Encoding encoding, out byte quality, out DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                return ReadStringValueByAddr(mIdAndAddr[id],encoding, out time, out qulity);
+                return ReadStringValueByAddr(mIdAndAddr[id],encoding, out time, out quality);
             }
-            qulity = byte.MaxValue;
+            quality = byte.MaxValue;
             time = DateTime.MinValue;
             return null;
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public IntPointData ReadIntPointValue(int id, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                return ReadIntPointValueByAddr(id, out quality, out time);
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            return new IntPointData();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public bool ReadIntPointValue(int id,out int x,out int y, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                ReadIntPointValueByAddr(id, out quality, out time, out x, out y);
+                return true;
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            x = y =0;
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public UIntPointData ReadUIntPointValue(int id, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                return ReadUIntPointValueByAddr(id, out quality, out time);
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            return new UIntPointData();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public bool ReadUIntPointValue(int id, out uint x, out uint y, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                ReadUIntPointValueByAddr(id, out quality, out time, out x, out y);
+                return true;
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            x = y = 0;
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public IntPoint3Data ReadIntPoint3Value(int id, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                return ReadIntPoint3ValueByAddr(id, out quality, out time);
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            return new IntPoint3Data();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public bool ReadIntPoint3Value(int id, out int x, out int y,out int z, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                ReadIntPoint3ValueByAddr(id, out quality, out time, out x, out y,out z);
+                return true;
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            x = y =z= 0;
+            return false;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public UIntPoint3Data ReadUIntPoint3Value(int id, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                return ReadUIntPoint3ValueByAddr(id, out quality, out time);
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            return new UIntPoint3Data();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public bool ReadUIntPoint3Value(int id, out uint x, out uint y, out uint z, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                ReadUIntPoint3ValueByAddr(id, out quality, out time, out x, out y, out z);
+                return true;
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            x = y = z = 0;
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+
+        public LongPointData ReadLongPointValue(int id, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                return ReadLongPointValueByAddr(id, out quality, out time);
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            return new LongPointData();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public bool ReadLongPointValue(int id, out long x, out long y, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                ReadLongPointValueByAddr(id, out quality, out time, out x, out y);
+                return true;
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            x = y =  0;
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public ULongPointData ReadULongPointValue(int id, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                return ReadULongPointValueByAddr(id, out quality, out time);
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            return new ULongPointData();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public bool ReadULongPointValue(int id, out ulong x, out ulong y, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                ReadULongPointValueByAddr(id, out quality, out time, out x, out y);
+                return true;
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            x = y =  0;
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public LongPoint3Data ReadLongPoint3Value(int id, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                return ReadLongPoint3ValueByAddr(id, out quality, out time);
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            return new LongPoint3Data();
+        }
+
+
+        public bool ReadLongPoint3Value(int id, out long x, out long y, out long z, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                ReadLongPoint3ValueByAddr(id, out quality, out time, out x, out y, out z);
+                return true;
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            x = y =z= 0;
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public ULongPoint3Data ReadULongPoint3Value(int id, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                return ReadULongPoint3ValueByAddr(id, out quality, out time);
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            return new ULongPoint3Data();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public bool ReadULongPoint3Value(int id, out ulong x, out ulong y, out ulong z, out byte quality, out DateTime time)
+        {
+            if (mIdAndAddr.ContainsKey(id))
+            {
+                ReadULongPoint3ValueByAddr(id, out quality, out time, out x, out y, out z);
+                return true;
+            }
+            quality = byte.MaxValue;
+            time = DateTime.MinValue;
+            x = y = z = 0;
+            return false;
+        }
+
         #endregion
-
-        //#region Helper fun
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="ptr"></param>
-        ///// <param name="ofs"></param>
-        ///// <param name="val"></param>
-        //public static unsafe void WriteByte(void* ptr, long ofs, byte val)
-        //{
-        //    try
-        //    {
-        //        byte* addr = (byte*)ptr + ofs;
-        //        *(addr) = val;
-        //    }
-        //    catch (NullReferenceException)
-        //    {
-        //        throw new AccessViolationException();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="ptr"></param>
-        ///// <param name="ofs"></param>
-        ///// <param name="val"></param>
-        //public static unsafe void WriteShort(void* ptr, long ofs, short val)
-        //{
-        //    try
-        //    {
-        //        byte* addr = (byte*)ptr + ofs;
-        //        if ((unchecked((short)addr) & 0x3) == 0)
-        //        {
-        //            // aligned write
-        //            *((short*)addr) = val;
-        //        }
-        //        else
-        //        {
-        //            // unaligned write
-        //            byte* valPtr = (byte*)&val;
-        //            addr[0] = valPtr[0];
-        //            addr[1] = valPtr[1];
-        //        }
-        //    }
-        //    catch (NullReferenceException)
-        //    {
-        //        // this method is documented to throw AccessViolationException on any AV
-        //        throw new AccessViolationException();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="ptr"></param>
-        ///// <param name="ofs"></param>
-        ///// <param name="val"></param>
-        //public static unsafe void WriteInt32(void* ptr, long ofs, int val)
-        //{
-        //    try
-        //    {
-        //        byte* addr = (byte*)ptr + ofs;
-        //        if ((unchecked((int)addr) & 0x3) == 0)
-        //        {
-        //            // aligned write
-        //            *((int*)addr) = val;
-        //        }
-        //        else
-        //        {
-        //            // unaligned write
-        //            byte* valPtr = (byte*)&val;
-        //            addr[0] = valPtr[0];
-        //            addr[1] = valPtr[1];
-        //            addr[2] = valPtr[2];
-        //            addr[3] = valPtr[3];
-        //        }
-        //    }
-        //    catch (NullReferenceException)
-        //    {
-        //        // this method is documented to throw AccessViolationException on any AV
-        //        throw new AccessViolationException();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="ptr"></param>
-        ///// <param name="ofs"></param>
-        ///// <param name="val"></param>
-        //public static unsafe void WriteFloat(void* ptr, long ofs, float val)
-        //{
-        //    try
-        //    {
-        //        byte* addr = (byte*)ptr + ofs;
-        //        if ((unchecked((int)addr) & 0x3) == 0)
-        //        {
-        //            // aligned write
-        //            *((int*)addr) = *(int*)(&val);
-        //        }
-        //        else
-        //        {
-        //            // unaligned write
-        //            byte* valPtr = (byte*)&val;
-        //            addr[0] = valPtr[0];
-        //            addr[1] = valPtr[1];
-        //            addr[2] = valPtr[2];
-        //            addr[3] = valPtr[3];
-        //        }
-        //    }
-        //    catch (NullReferenceException)
-        //    {
-        //        // this method is documented to throw AccessViolationException on any AV
-        //        throw new AccessViolationException();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="ptr"></param>
-        ///// <param name="ofs"></param>
-        ///// <param name="val"></param>
-        //public static unsafe void WriteInt64(void* ptr, long ofs, Int64 val)
-        //{
-        //    try
-        //    {
-        //        byte* addr = (byte*)ptr + ofs;
-        //        if ((unchecked((Int64)addr) & 0x3) == 0)
-        //        {
-        //            // aligned write
-        //            *((Int64*)addr) = val;
-        //        }
-        //        else
-        //        {
-        //            // unaligned write
-        //            byte* valPtr = (byte*)&val;
-        //            addr[0] = valPtr[0];
-        //            addr[1] = valPtr[1];
-        //            addr[2] = valPtr[2];
-        //            addr[3] = valPtr[3];
-        //            addr[4] = valPtr[4];
-        //            addr[5] = valPtr[5];
-        //            addr[6] = valPtr[6];
-        //            addr[7] = valPtr[7];
-        //        }
-        //    }
-        //    catch (NullReferenceException)
-        //    {
-        //        // this method is documented to throw AccessViolationException on any AV
-        //        throw new AccessViolationException();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="ptr"></param>
-        ///// <param name="ofs"></param>
-        ///// <param name="val"></param>
-        //public static unsafe void WriteDouble(void* ptr, long ofs, double val)
-        //{
-        //    try
-        //    {
-        //        byte* addr = (byte*)ptr + ofs;
-        //        if ((unchecked((Int64)addr) & 0x3) == 0)
-        //        {
-        //            // aligned write
-        //            *((Int64*)addr) = *(Int64*)(&val);
-        //        }
-        //        else
-        //        {
-        //            // unaligned write
-        //            byte* valPtr = (byte*)&val;
-        //            addr[0] = valPtr[0];
-        //            addr[1] = valPtr[1];
-        //            addr[2] = valPtr[2];
-        //            addr[3] = valPtr[3];
-        //            addr[4] = valPtr[4];
-        //            addr[5] = valPtr[5];
-        //            addr[6] = valPtr[6];
-        //            addr[7] = valPtr[7];
-        //        }
-        //    }
-        //    catch (NullReferenceException)
-        //    {
-        //        // this method is documented to throw AccessViolationException on any AV
-        //        throw new AccessViolationException();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="ptr"></param>
-        ///// <param name="ofs"></param>
-        ///// <param name="val"></param>
-        //public static unsafe void WriteDateTime(void* ptr, long ofs, DateTime val)
-        //{
-        //    try
-        //    {
-        //        byte* addr = (byte*)ptr + ofs;
-        //        if ((unchecked((Int64)addr) & 0x3) == 0)
-        //        {
-        //            // aligned write
-        //            *((Int64*)addr) = *(Int64*)(&val);
-        //        }
-        //        else
-        //        {
-        //            // unaligned write
-        //            byte* valPtr = (byte*)&val;
-        //            addr[0] = valPtr[0];
-        //            addr[1] = valPtr[1];
-        //            addr[2] = valPtr[2];
-        //            addr[3] = valPtr[3];
-        //            addr[4] = valPtr[4];
-        //            addr[5] = valPtr[5];
-        //            addr[6] = valPtr[6];
-        //            addr[7] = valPtr[7];
-        //        }
-        //    }
-        //    catch (NullReferenceException)
-        //    {
-        //        // this method is documented to throw AccessViolationException on any AV
-        //        throw new AccessViolationException();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="ptr"></param>
-        ///// <param name="ofs"></param>
-        ///// <returns></returns>
-        //public static unsafe int ReadInt32(void* ptr, long ofs)
-        //{
-        //    try
-        //    {
-        //        byte* addr = (byte*)ptr + ofs;
-        //        if ((unchecked((int)addr) & 0x3) == 0)
-        //        {
-        //            //aligned read
-        //            return *((int*)addr);
-        //        }
-        //        else
-        //        {
-        //            // unaligned read
-        //            int val;
-        //            byte* valPtr = (byte*)&val;
-        //            valPtr[0] = addr[0];
-        //            valPtr[1] = addr[1];
-        //            valPtr[2] = addr[2];
-        //            valPtr[3] = addr[3];
-        //            return val;
-        //        }
-        //    }
-        //    catch (NullReferenceException)
-        //    {
-        //        // this method is documented to throw AccessViolationException on any AV
-        //        throw new AccessViolationException();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="ptr"></param>
-        ///// <param name="ofs"></param>
-        ///// <returns></returns>
-        //public static unsafe float ReadFloat(void* ptr, long ofs)
-        //{
-        //    try
-        //    {
-        //        byte* addr = (byte*)ptr + ofs;
-        //        if ((unchecked((int)addr) & 0x3) == 0)
-        //        {
-        //            //aligned read
-        //            return *((float*)addr);
-        //        }
-        //        else
-        //        {
-        //            // unaligned read
-        //            float val;
-        //            byte* valPtr = (byte*)&val;
-        //            valPtr[0] = addr[0];
-        //            valPtr[1] = addr[1];
-        //            valPtr[2] = addr[2];
-        //            valPtr[3] = addr[3];
-        //            return val;
-        //        }
-        //    }
-        //    catch (NullReferenceException)
-        //    {
-        //        // this method is documented to throw AccessViolationException on any AV
-        //        throw new AccessViolationException();
-        //    }
-        //}
-
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="ptr"></param>
-        ///// <param name="ofs"></param>
-        ///// <returns></returns>
-        //public static unsafe short ReadShort(void* ptr, long ofs)
-        //{
-        //    try
-        //    {
-        //        byte* addr = (byte*)ptr + ofs;
-        //        if ((unchecked((short)addr) & 0x3) == 0)
-        //        {
-        //            //aligned read
-        //            return *((short*)addr);
-        //        }
-        //        else
-        //        {
-        //            // unaligned read
-        //            short val;
-        //            byte* valPtr = (byte*)&val;
-        //            valPtr[0] = addr[0];
-        //            valPtr[1] = addr[1];
-        //            return val;
-        //        }
-        //    }
-        //    catch (NullReferenceException)
-        //    {
-        //        // this method is documented to throw AccessViolationException on any AV
-        //        throw new AccessViolationException();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="ptr"></param>
-        ///// <param name="ofs"></param>
-        ///// <returns></returns>
-        //public static unsafe byte ReadByte(void* ptr, long ofs)
-        //{
-        //    try
-        //    {
-        //        byte* addr = (byte*)ptr + ofs;
-        //        return *(addr);
-        //    }
-        //    catch (NullReferenceException)
-        //    {
-        //        // this method is documented to throw AccessViolationException on any AV
-        //        throw new AccessViolationException();
-        //    }
-        //}
-
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="ptr"></param>
-        ///// <param name="ofs"></param>
-        ///// <returns></returns>
-        //public static unsafe long ReadInt64(void* ptr, long ofs)
-        //{
-        //    try
-        //    {
-        //        byte* addr = (byte*)ptr + ofs;
-        //        if ((unchecked((long)addr) & 0x3) == 0)
-        //        {
-        //            //aligned read
-        //            return *((long*)addr);
-        //        }
-        //        else
-        //        {
-        //            // unaligned read
-        //            long val;
-        //            byte* valPtr = (byte*)&val;
-        //            valPtr[0] = addr[0];
-        //            valPtr[1] = addr[1];
-        //            valPtr[2] = addr[2];
-        //            valPtr[3] = addr[3];
-
-        //            valPtr[4] = addr[4];
-        //            valPtr[5] = addr[5];
-        //            valPtr[6] = addr[6];
-        //            valPtr[7] = addr[7];
-
-        //            return val;
-        //        }
-        //    }
-        //    catch (NullReferenceException)
-        //    {
-        //        // this method is documented to throw AccessViolationException on any AV
-        //        throw new AccessViolationException();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="ptr"></param>
-        ///// <param name="ofs"></param>
-        ///// <returns></returns>
-        //public static unsafe double ReadDouble(void* ptr, long ofs)
-        //{
-        //    try
-        //    {
-        //        byte* addr = (byte*)ptr + ofs;
-        //        if ((unchecked((long)addr) & 0x3) == 0)
-        //        {
-        //            //aligned read
-        //            return *((double*)addr);
-        //        }
-        //        else
-        //        {
-        //            // unaligned read
-        //            double val;
-        //            byte* valPtr = (byte*)&val;
-        //            valPtr[0] = addr[0];
-        //            valPtr[1] = addr[1];
-        //            valPtr[2] = addr[2];
-        //            valPtr[3] = addr[3];
-
-        //            valPtr[4] = addr[4];
-        //            valPtr[5] = addr[5];
-        //            valPtr[6] = addr[6];
-        //            valPtr[7] = addr[7];
-
-        //            return val;
-        //        }
-        //    }
-        //    catch (NullReferenceException)
-        //    {
-        //        // this method is documented to throw AccessViolationException on any AV
-        //        throw new AccessViolationException();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="ptr"></param>
-        ///// <param name="ofs"></param>
-        ///// <returns></returns>
-        //public static unsafe DateTime ReadDateTime(void* ptr, long ofs)
-        //{
-        //    try
-        //    {
-        //        byte* addr = (byte*)ptr + ofs;
-        //        if ((unchecked((long)addr) & 0x3) == 0)
-        //        {
-        //            //aligned read
-        //            return *((DateTime*)addr);
-        //        }
-        //        else
-        //        {
-        //            // unaligned read
-        //            DateTime val;
-        //            byte* valPtr = (byte*)&val;
-        //            valPtr[0] = addr[0];
-        //            valPtr[1] = addr[1];
-        //            valPtr[2] = addr[2];
-        //            valPtr[3] = addr[3];
-
-        //            valPtr[4] = addr[4];
-        //            valPtr[5] = addr[5];
-        //            valPtr[6] = addr[6];
-        //            valPtr[7] = addr[7];
-
-        //            return val;
-        //        }
-        //    }
-        //    catch (NullReferenceException)
-        //    {
-        //        // this method is documented to throw AccessViolationException on any AV
-        //        throw new AccessViolationException();
-        //    }
-        //}
-        //#endregion
 
         #region Addr
 
@@ -2133,6 +2685,12 @@ namespace Cdy.Tag
             return mConfigDatabase.GetTagsIdByLinkAddress(address);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public bool SetTagValue(int id, object value)
         {
             try
@@ -2185,6 +2743,8 @@ namespace Cdy.Tag
 
         }
 
+        
+
         /// <summary>
         /// 
         /// </summary>
@@ -2194,12 +2754,34 @@ namespace Cdy.Tag
         public bool SetTagValue(List<int> ids, object value)
         {
             bool re = true;
-            Parallel.ForEach(ids, (vv) =>
+            //Parallel.ForEach(ids, (vv) =>
+            foreach (var vv in ids)
             {
                 re &= SetTagValue(vv, value);
-            });
+            }
+            //});
             return re;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool SetPointValue(List<int> ids, params object[] values)
+        {
+            bool re = true;
+            //Parallel.ForEach(ids, (vv) =>
+            foreach (var vv in ids)
+            {
+                re &= SetPointValue(vv, values);
+            }
+            //});
+            return re;
+        }
+
+
         #endregion ...Interfaces...
     }
 }

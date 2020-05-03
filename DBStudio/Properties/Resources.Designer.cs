@@ -104,5 +104,14 @@ namespace DBInStudioServer.Properties {
                 return ResourceManager.GetString("HMsg", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   查找类似 {0}  {1} Tag 的本地化字符串。
+        /// </summary>
+        internal static string TagMsg {
+            get {
+                return ResourceManager.GetString("TagMsg", resourceCulture);
+            }
+        }
     }
 }

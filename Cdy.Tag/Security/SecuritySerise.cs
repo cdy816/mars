@@ -211,6 +211,7 @@ namespace Cdy.Tag
                 re.Password = xe.Attribute("Password").Value;
             if (xe.Attribute("Group") != null)
                 re.Group = xe.Attribute("Group").Value;
+
             if (xe.Attribute("Permissions") != null)
             {
                 var pp = xe.Attribute("Permissions").Value;
@@ -265,6 +266,7 @@ namespace Cdy.Tag
             re.SetAttributeValue("Name", permission.Name);
             re.SetAttributeValue("Desc", permission.Desc);
             re.SetAttributeValue("EnableWrite", permission.EnableWrite);
+            re.SetAttributeValue("SuperPermission", permission.SuperPermission);
             if (permission.Group != null)
             {
                 StringBuilder sb = new StringBuilder();
@@ -292,6 +294,10 @@ namespace Cdy.Tag
             if (xe.Attribute("EnableWrite") != null)
             {
                 re.EnableWrite = bool.Parse(xe.Attribute("EnableWrite").Value);
+            }
+            if (xe.Attribute("SuperPermission") != null)
+            {
+                re.SuperPermission = bool.Parse(xe.Attribute("SuperPermission").Value);
             }
             if (xe.Attribute("Group") != null)
             {

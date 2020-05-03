@@ -36,6 +36,11 @@ namespace DBInStudio.Desktop.ViewModel
 
         private TagViewModel mCurrentSelectTag;
 
+        private int mTotalPageNumber = 0;
+        private int mCurrentPageIndex = 0;
+
+        private bool mIsLoading = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -47,6 +52,26 @@ namespace DBInStudio.Desktop.ViewModel
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool IsLoading
+        {
+            get
+            {
+                return mIsLoading;
+            }
+            set
+            {
+                if (mIsLoading != value)
+                {
+                    mIsLoading = value;
+                    OnPropertyChanged("IsLoading");
+                }
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -155,7 +180,8 @@ namespace DBInStudio.Desktop.ViewModel
                 {
                     UpdateAll();
                     mGroupModel = value;
-                    QueryTags();
+                    mTotalPageNumber = -1;
+                    ContinueQueryTags();
                 }
             }
         }
@@ -251,8 +277,63 @@ namespace DBInStudio.Desktop.ViewModel
                 }
             }
 
-            System.Threading.Tasks.Task.Run(() => { QueryTags();});
+            System.Threading.Tasks.Task.Run(() => { mCurrentPageIndex--; ContinueQueryTags(); });
 
+        }
+
+        public void ContinueLoadData()
+        {
+            if (!IsLoading)
+            {
+                IsLoading = true;
+                System.Threading.Tasks.Task.Run(() => { ContinueQueryTags(); IsLoading = false; });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void ContinueQueryTags()
+        {
+
+            if (mTotalPageNumber == -1)
+            {
+                var vtags = new System.Collections.ObjectModel.ObservableCollection<TagViewModel>();
+                mCurrentPageIndex = 0;
+
+                var vv = DevelopServiceHelper.Helper.QueryTagByGroup(this.GroupModel.Database, this.GroupModel.FullName,mCurrentPageIndex, out mTotalPageNumber);
+                if (vv != null)
+                {
+                    foreach (var vvv in vv)
+                    {
+                        TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2);
+                        vtags.Add(model);
+                    }
+                }
+                SelectGroupTags = vtags;
+            }
+            else
+            {
+                if (mTotalPageNumber > mCurrentPageIndex)
+                {
+                    mCurrentPageIndex++;
+                    int totalcount = 0;
+                    
+                    var vv = DevelopServiceHelper.Helper.QueryTagByGroup(this.GroupModel.Database, this.GroupModel.FullName, mCurrentPageIndex, out totalcount);
+                    if (vv != null)
+                    {
+                        foreach (var vvv in vv)
+                        {
+                            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                            {
+                                TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2);
+                                SelectGroupTags.Add(model);
+                            }));
+                        }
+                    }
+                }
+            }
+            
         }
 
         /// <summary>

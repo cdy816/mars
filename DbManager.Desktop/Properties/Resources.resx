@@ -154,11 +154,17 @@
   <data name="Driver" xml:space="preserve">
     <value>Driver</value>
   </data>
+  <data name="EnableWrite" xml:space="preserve">
+    <value>EnableWrite</value>
+  </data>
   <data name="erro" xml:space="preserve">
     <value>erro</value>
   </data>
   <data name="Export" xml:space="preserve">
     <value>Export</value>
+  </data>
+  <data name="Group" xml:space="preserve">
+    <value>Group</value>
   </data>
   <data name="Id" xml:space="preserve">
     <value>Id</value>
@@ -206,6 +212,12 @@
   <data name="PercentValue" xml:space="preserve">
     <value>Percent</value>
   </data>
+  <data name="Permission" xml:space="preserve">
+    <value>Permission</value>
+  </data>
+  <data name="PermissionList" xml:space="preserve">
+    <value>Permission list</value>
+  </data>
   <data name="Record" xml:space="preserve">
     <value>Record</value>
   </data>
@@ -246,6 +258,9 @@
   <data name="SlopeCompress" xml:space="preserve">
     <value>Slope</value>
   </data>
+  <data name="Tag" xml:space="preserve">
+    <value>Tag</value>
+  </data>
   <data name="TagGroup" xml:space="preserve">
     <value>TagGroup</value>
   </data>
@@ -254,6 +269,12 @@
   </data>
   <data name="UpdateTagFail" xml:space="preserve">
     <value>Update tag {0} failed!</value>
+  </data>
+  <data name="User" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="UserList" xml:space="preserve">
+    <value>User list</value>
   </data>
   <data name="UserName" xml:space="preserve">
     <value>UserName</value>

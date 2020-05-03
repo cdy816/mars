@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
 namespace SimDriver
 {
@@ -21,6 +22,9 @@ namespace SimDriver
         private IRealTagDriver mTagService;
 
         private bool mIsBusy = false;
+
+        private StreamWriter mWriter;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -28,7 +32,15 @@ namespace SimDriver
         #endregion ...Events...
 
         #region ... Constructor...
-
+        /// <summary>
+        /// 
+        /// </summary>
+        public Driver()
+        {
+            var vfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), DateTime.Now.ToString("yyyyMMddHHmmss") + ".log");
+            mWriter = new StreamWriter(  System.IO.File.Open(vfile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite));
+            
+        }
         #endregion ...Constructor...
 
         #region ... Properties ...
@@ -38,6 +50,9 @@ namespace SimDriver
         /// </summary>
         public string Name => "Sim";
 
+        /// <summary>
+        /// 
+        /// </summary>
         public string[] Registors
         {
             get
@@ -50,7 +65,14 @@ namespace SimDriver
 
         #region ... Methods    ...
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sval"></param>
+        private void Log(string sval)
+        {
+            mWriter.WriteLine(sval);
+        }
 
         /// <summary>
         /// 
@@ -92,32 +114,35 @@ namespace SimDriver
 
             mNumber++;
             mNumber = mNumber > (short)360 ? (short)0 : mNumber;
-//#if DEBUG
-//            Stopwatch sw = new Stopwatch();
-//            sw.Start();
-//#endif
-            foreach(var vv in mTagIdCach)
+            //#if DEBUG
+            //            Stopwatch sw = new Stopwatch();
+            //            sw.Start();
+            //#endif
+            double fval = Math.Cos(mNumber / 180.0 * Math.PI);
+            double sval = Math.Sin(mNumber / 180.0 * Math.PI);
+
+            Log("Sim:Sin " + fval + " " + "Sim:Cos " + sval + " "+ "Sim:step " + mNumber +"  "+ DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+            
+            foreach (var vv in mTagIdCach)
             {
                 if (vv.Key == "Sim:cos")
                 {
-                    double fval = Math.Cos(mNumber / 180.0 * Math.PI);
                     mTagService.SetTagValue(vv.Value, fval);
                 }
                 else if (vv.Key == "Sim:sin")
                 {
-                    double fval = Math.Sin(mNumber / 180.0 * Math.PI);
-                    mTagService.SetTagValue(vv.Value, fval);
+                    mTagService.SetTagValue(vv.Value, sval);
                 }
                 else if (vv.Key == "Sim:step")
                 {
                     mTagService.SetTagValue(vv.Value, mNumber);
                 }
             }
-//#if DEBUG
-//            sw.Stop();
+            //#if DEBUG
+            //            sw.Stop();
 
-//            LoggerService.Service.Info("Sim Driver","set value elapsed:"+ sw.ElapsedMilliseconds +" total count:"+mNumber+" cos:"+ Math.Cos(mNumber / 180.0 * Math.PI)+" sin:"+ Math.Sin(mNumber / 180.0 * Math.PI));
-//#endif
+            //            LoggerService.Service.Info("Sim Driver","set value elapsed:"+ sw.ElapsedMilliseconds +" total count:"+mNumber+" cos:"+ Math.Cos(mNumber / 180.0 * Math.PI)+" sin:"+ Math.Sin(mNumber / 180.0 * Math.PI));
+            //#endif
             mIsBusy = false;
         }
 
@@ -128,6 +153,7 @@ namespace SimDriver
         public bool Stop()
         {
             mScanTimer.Stop();
+            mWriter.Close();
             return true;
         }
 

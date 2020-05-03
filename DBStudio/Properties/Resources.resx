@@ -132,4 +132,7 @@
   <data name="HMsg" xml:space="preserve">
     <value>display command list</value>
   </data>
+  <data name="TagMsg" xml:space="preserve">
+    <value>{0}  {1} Tag</value>
+  </data>
 </root>

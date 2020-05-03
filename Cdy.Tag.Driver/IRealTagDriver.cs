@@ -58,6 +58,23 @@ namespace Cdy.Tag.Driver
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="id"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        bool SetPointValue(int id, params object[] values);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+
+        bool SetPointValue(List<int> ids, params object[] values);
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
         List<int> GetTagByLinkAddress(string address);

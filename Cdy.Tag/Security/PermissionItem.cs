@@ -34,6 +34,11 @@ namespace Cdy.Tag
         public bool EnableWrite { get; set; }
 
         /// <summary>
+        /// 超级权限
+        /// </summary>
+        public bool SuperPermission { get; set; }
+
+        /// <summary>
         /// 允许访问的变量组
         /// </summary>
         public List<string> Group { get; set; } = new List<string>();

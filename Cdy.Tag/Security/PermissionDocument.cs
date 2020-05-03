@@ -30,6 +30,13 @@ namespace Cdy.Tag
 
         #region ... Constructor...
 
+
+        public PermissionDocument()
+        {
+            var superPermission = new PermissionItem() { Name = "Super", SuperPermission = true, EnableWrite = true,Desc="Super Permission" };
+            Permissions.Add(superPermission.Name, superPermission);
+        }
+
         #endregion ...Constructor...
 
         #region ... Properties ...

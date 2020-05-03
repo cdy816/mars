@@ -19,6 +19,12 @@ service DevelopServer {
   //修改用户信息
   rpc UpdateUser(UpdateUserRequest) returns (BoolResultReplay);
 
+  //删除用户
+  rpc RemoveUser(RemoveUserRequest) returns (BoolResultReplay);
+
+  //获取开发者用户
+  rpc GetUsers(GetRequest) returns (GetUsersReplay);
+
   //枚举检索数据库
   rpc QueryDatabase(QueryDatabaseRequest) returns (QueryDatabaseReplay);
 
@@ -34,14 +40,40 @@ service DevelopServer {
   //更新数据库用户信息
   rpc UpdateDatabaseUser(UpdateDatabaseUserRequest) returns (BoolResultReplay);
 
+  //删除数据库用户
+  rpc RemoveDatabaseUser(RemoveByNameRequest) returns (BoolResultReplay);
+
+  //添加用户组
+  rpc AddDatabaseUserGroup(AddGroupRequest) returns (BoolResultReplay);
+
+  //获取用户组
+  rpc GetDatabaseUserGroup(GetRequest) returns (GetGroupMessageReply);
+
+  //删除用户组
+  rpc RemoveDatabaseUserGroup(RemoveGroupRequest) returns (BoolResultReplay);
+
+  //改名用户组
+  rpc RenameDatabaseUserGroup(RenameGroupRequest) returns (BoolResultReplay);
+
+  //移动组
+  rpc MoveDatabaseUserGroup(MoveGroupRequest) returns (BoolResultReplay);
+
+  //通过组获取用户
+  rpc GetDatabaseUserByGroup(GetDatabaseUserByGroupRequest) returns (GetDatabaseUsersReplay);
+
   //添加数据库权限
   rpc NewDatabasePermission(DatabasePermissionRequest) returns (BoolResultReplay);
+
 
   //更新数据库权限
   rpc UpdateDatabasePermission(DatabasePermissionRequest) returns (BoolResultReplay);
 
   //获取数据权限列表
   rpc GetAllDatabasePermission(GetAllDatabasePermissionRequest) returns (GetAllDatabasePermissionReplay);
+
+  //删除数据库权限
+  rpc RemoveDatabasePermission(RemoveDatabasePermissionRequest) returns (BoolResultReplay);
+  
 
   //添加
   rpc AddTag(AddTagRequestMessage) returns (AddTagReplyMessage);
@@ -59,16 +91,16 @@ service DevelopServer {
   rpc GetTagGroup(GetRequest) returns (GetTagGroupMessageReply);
 
   //
-  rpc AddTagGroup(AddTagGroupRequest) returns (BoolResultReplay);
+  rpc AddTagGroup(AddGroupRequest) returns (BoolResultReplay);
 
   //
-  rpc RemoveTagGroup(RemoveTagGroupRequest) returns (BoolResultReplay);
+  rpc RemoveTagGroup(RemoveGroupRequest) returns (BoolResultReplay);
 
   //
-  rpc RenameTagGroup(RenameTagGroupRequest) returns (BoolResultReplay);
+  rpc RenameTagGroup(RenameGroupRequest) returns (BoolResultReplay);
 
   //
-  rpc MoveTagGroup(MoveTagGroupRequest) returns (BoolResultReplay);
+  rpc MoveTagGroup(MoveGroupRequest) returns (BoolResultReplay);
 
   //根据组获取变量
   rpc GetTagByGroup(GetTagByGroupRequest) returns (GetTagMessageReply);
@@ -141,6 +173,14 @@ message GetAllDatabasePermissionReplay
     repeated DatabasePermission Permission=3;
 }
 
+
+message RemoveDatabasePermissionRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string Permission=3;
+}
+
 //
 message DatabasePermissionRequest
 {
@@ -155,7 +195,8 @@ message DatabasePermission
     string Name=1;
     string Desc=2;
     bool EnableWrite=3;
-    repeated string Group=4;
+    bool SuperPermission=4;
+    repeated string Group=5;
 }
 
 //新建数据库用户
@@ -195,7 +236,6 @@ message NewUserRequest
    string loginId =1;
    string userName=2;
    string password=3;
-
    repeated string permission=4;
 }
 
@@ -213,6 +253,49 @@ message UpdateUserRequest
     string loginId=1;
     string userName=2;
     repeated string permission=3;
+}
+
+message RemoveUserRequest
+{
+    string loginId=1;
+    string userName=2;
+}
+
+///
+message GetDatabaseUserByGroupRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string Group=3;
+}
+
+//
+message GetDatabaseUsersReplay
+{
+    bool Result =1;
+    string ErroMessage=2;
+   repeated DatabaseUserMessage Users=3;
+}
+
+//数据库用户信息
+message DatabaseUserMessage
+{
+    string userName=1;
+    string Group=2;
+    repeated string permission=3;
+}
+
+message GetUsersReplay
+{
+    bool Result =1;
+    string ErroMessage=2;
+   repeated UserMessage Users=3;
+}
+
+message UserMessage
+{
+    string userName=1;
+    repeated string permission=2;
 }
 
 message NewDatabaseRequest
@@ -274,7 +357,7 @@ message UpdateHisTagRequestMessage
 }
 
 //添加组
-message AddTagGroupRequest
+message AddGroupRequest
 {
     string LoginId=1;
     string Database=2;
@@ -282,8 +365,16 @@ message AddTagGroupRequest
     string ParentName=4;
 }
 
+//通过名称删除用户
+message RemoveByNameRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string Name=3;
+}
+
 //删除组
-message RemoveTagGroupRequest
+message RemoveGroupRequest
 {
     string LoginId=1;
     string Database=2;
@@ -291,7 +382,7 @@ message RemoveTagGroupRequest
 }
 
 //
-message RenameTagGroupRequest
+message RenameGroupRequest
 {
     string LoginId=1;
     string Database=2;
@@ -300,7 +391,7 @@ message RenameTagGroupRequest
 }
 
 //
-message MoveTagGroupRequest
+message MoveGroupRequest
 {
     string LoginId=1;
     string Database=2;
@@ -390,6 +481,13 @@ message GetTagGroupMessageReply
     repeated TagGroup Group=3;
 }
 
+message GetGroupMessageReply
+{
+    bool Result =1;
+    string ErroMessage=2;
+    repeated Group Group=3;
+}
+
 message GetHistTagMessageReply
 {
     bool Result =1;
@@ -428,6 +526,12 @@ message hisTagParameterItem
 
 //变量组
 message TagGroup
+{
+    string Name=1;
+    string Parent=2;
+}
+
+message Group
 {
     string Name=1;
     string Parent=2;

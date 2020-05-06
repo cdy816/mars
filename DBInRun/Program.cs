@@ -23,11 +23,17 @@ namespace DBInRun
                 }
             }
 
+            
+
             Console.WriteLine(Res.Get("HelpMsg"));
             while (!mIsClosed)
             {
                 Console.Write(">");
-                string[] cmd = Console.ReadLine().Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+
+                string smd = Console.ReadLine();
+                if (string.IsNullOrEmpty(smd)) continue;
+
+                string[] cmd = smd.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
                 if (cmd.Length == 0) continue;
 

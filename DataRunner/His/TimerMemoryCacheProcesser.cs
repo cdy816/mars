@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Linq;
+using System.Diagnostics;
 
 namespace Cdy.Tag
 {
@@ -33,7 +34,7 @@ namespace Cdy.Tag
         /// </summary>
         private Dictionary<long, long> mCount = new Dictionary<long, long>();
 
-        public const int MaxTagCount = 100000;
+        public const int MaxTagCount = 50000;
 
         private int mCurrentCount = 0;
 
@@ -99,7 +100,8 @@ namespace Cdy.Tag
             if (mIsBusy)
             {
                 mBusyCount++;
-                if(Id==0)
+                //if(Id==0)
+                if(mBusyCount>4)
                 LoggerService.Service.Warn("Record", "TimerMemoryCacheProcesser"+Id+" 出现阻塞:"+mBusyCount);
             }
             else
@@ -127,7 +129,7 @@ namespace Cdy.Tag
         {
             mIsClosed = true;
             resetEvent.Set();
-            closedEvent.WaitOne(1000);
+            closedEvent.WaitOne();
         }
 
         /// <summary>
@@ -167,7 +169,7 @@ namespace Cdy.Tag
             mCount.Clear();
             mCurrentCount = 0;
         }
-        
+
 
         /// <summary>
         /// 
@@ -184,6 +186,7 @@ namespace Cdy.Tag
                 try
                 {
                     mIsBusy = true;
+                    
                     foreach (var vv in vkeys)
                     {
                         mCount[vv] += HisEnginer.MemoryTimeTick;
@@ -193,6 +196,7 @@ namespace Cdy.Tag
                             ProcessTags(mTimerTags[vv]);
                         }
                     }
+                    
                     mIsBusy = false;
                 }
                 catch
@@ -202,6 +206,8 @@ namespace Cdy.Tag
                 resetEvent.Reset();
             }
             closedEvent.Set();
+            LoggerService.Service.Info("TimerMemoryCacheProcesser",  Id + " 退出");
+
         }
 
 
@@ -211,11 +217,24 @@ namespace Cdy.Tag
         /// <param name="tags"></param>
         private void ProcessTags(List<HisRunTag> tags)
         {
+            //Stopwatch sw = new Stopwatch();
+            //sw.Start();
+
             int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
+            //System.Threading.Tasks.Parallel.ForEach(tags, (vv) =>
+            //{
+            //    vv.UpdateValue(tim);
+            //});
             foreach (var vv in tags)
             {
                 vv.UpdateValue(tim);
             }
+
+
+            //{
+            //sw.Stop();
+            //    LoggerService.Service.Info("ProcessTags", "TimerMemoryCacheProcesser" + Id + " 处理变量:" +tags.Count+"  " + sw.ElapsedMilliseconds);
+            //}
         }
 
         /// <summary>

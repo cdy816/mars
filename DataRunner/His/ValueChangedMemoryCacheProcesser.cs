@@ -129,7 +129,7 @@ namespace Cdy.Tag
         {
             mIsClosed = true;
             resetEvent.Set();
-            closedEvent.WaitOne(1000);
+            closedEvent.WaitOne();
         }
 
         /// <summary>
@@ -261,6 +261,7 @@ namespace Cdy.Tag
                 resetEvent.Reset();
             }
             closedEvent.Set();
+            LoggerService.Service.Info("ValueChangedMemoryCacheProcesser", Name + " 退出");
         }
 
         /// <summary>

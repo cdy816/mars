@@ -91,7 +91,14 @@ namespace Cdy.Tag
                 Scan();
             }
 
-            DataFileManager.CurrentDateTime.Add(FId, mLastTime);
+            if (DataFileManager.CurrentDateTime.ContainsKey(FId))
+            {
+                DataFileManager.CurrentDateTime[FId] = mLastTime;
+            }
+            else
+            {
+                DataFileManager.CurrentDateTime.Add(FId, mLastTime);
+            }
 
         }
 

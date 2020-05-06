@@ -123,6 +123,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Start()
         {
+            mIsClosed = false;
             mHisTagService = ServiceLocator.Locator.Resolve<IHisEngine>();
 
             Init();
@@ -139,7 +140,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Stop()
         {
-            mIsClosed = false;
+            mIsClosed = true;
             resetEvent.Set();
             closedEvent.WaitOne();
 
@@ -151,6 +152,7 @@ namespace Cdy.Tag
 
             foreach(var vv in mTargetMemorys)
             {
+                while (vv.Value.IsBusy()) Thread.Sleep(1);
                 vv.Value.Dispose();
             }
             mTargetMemorys.Clear();
@@ -236,6 +238,9 @@ namespace Cdy.Tag
 
             }
             closedEvent.Set();
+
+            LoggerService.Service.Info("Compress", "压缩线程退出!");
+
         }
 
         #endregion ...Methods...

@@ -195,6 +195,8 @@ namespace Cdy.Tag
                 LoggerService.Service.Info("LogManager", "记录"+ mNeedSaveMemory1.Name +"到日志文件 耗时" + sw.ElapsedMilliseconds + " ");
             }
             closedEvent.Set();
+            LoggerService.Service.Info("LogManager", "退出!");
+
         }
 
         /// <summary>

@@ -56,7 +56,7 @@ namespace Cdy.Tag
 
         private DateTime mCurrentTime;
 
-        private SeriseFileItem[] mSeriseFile;
+        //private SeriseFileItem[] mSeriseFile;
 
         private Dictionary<int, CompressMemory> mWaitForProcessMemory = new Dictionary<int, CompressMemory>();
 
@@ -205,6 +205,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Start()
         {
+            mIsClosed = false;
             Init();
             resetEvent = new ManualResetEvent(false);
             closedEvent = new ManualResetEvent(false);
@@ -218,14 +219,17 @@ namespace Cdy.Tag
         /// </summary>
         public void Stop()
         {
-            mIsClosed = false;
+            mIsClosed = true;
             resetEvent.Set();
             closedEvent.WaitOne();
-            foreach (var vv in mSeriseFile)
+            if (mSeriserFiles != null)
             {
-                vv.Dispose();
+                foreach (var vv in mSeriserFiles)
+                {
+                    vv.Value.Dispose();
+                }
+                mSeriserFiles.Clear();
             }
-            mSeriseFile = null;
 
             resetEvent.Dispose();
             closedEvent.Dispose();

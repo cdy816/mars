@@ -168,6 +168,8 @@ namespace Cdy.Tag
             
             Dictionary<int, long> dtmp = new Dictionary<int, long>();
 
+            this.MakeMemoryBusy();
+
             //更新数据区域
             foreach(var vv in mTagAddress)
             {
@@ -192,7 +194,7 @@ namespace Cdy.Tag
             ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSeriseFile(this, mCurrentTime);
             sw.Stop();
 
-            LoggerService.Service.Info("SeriseEnginer", Id+ "压缩完成 耗时:"+sw.ElapsedMilliseconds);
+            LoggerService.Service.Info("CompressEnginer", Id+ "压缩完成 耗时:"+sw.ElapsedMilliseconds);
         }
 
         /// <summary>

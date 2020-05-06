@@ -120,7 +120,12 @@ namespace Cdy.Tag
         private int mMergeCount = 0;
 
         private bool mNeedSnapAllTag=false;
+
         private DateTime mSnapAllTagTime = DateTime.Now;
+
+        private bool mForceSubmiteToCompress = false;
+
+        private bool mMegerProcessIsClosed = false;
 
         #endregion ...Variables...
 
@@ -497,7 +502,7 @@ namespace Cdy.Tag
         public void Start()
         {
             mIsClosed = false;
-
+            mMegerProcessIsClosed = false;
             if (LogManager != null)
             {
                 LogManager.InitHeadData(this.mHisTags);
@@ -563,7 +568,7 @@ namespace Cdy.Tag
             {
                 resetEvent.WaitOne();
                 resetEvent.Reset();
-                if (mIsClosed) return;
+                //if (mIsClosed) return;
 
                 if(mNeedSnapAllTag)
                 {
@@ -575,7 +580,7 @@ namespace Cdy.Tag
 
                 //如果合并满了，则提交给压缩流程进行压缩
                 count++;
-                if(count>=number)
+                if(count>=number || mForceSubmiteToCompress)
                 {
                     
                     if (mMergeMemory != null)
@@ -585,7 +590,7 @@ namespace Cdy.Tag
                         mMergeMemory.MakeMemoryBusy();
                         //提交到数据压缩流程
                         ServiceLocator.Locator.Resolve<IDataCompress>().RequestToCompress(mMergeMemory);
-                        LoggerService.Service.Info("Record", "提交内存 " + mMergeMemory.Name + " 进行压缩",ConsoleColor.Green);
+                        LoggerService.Service.Info("HisEnginer", "提交内存 " + mMergeMemory.Name + " 进行压缩",ConsoleColor.Green);
 
                         //等待压缩完成
                         while(mMergeMemory.IsBusy()) Thread.Sleep(1);
@@ -594,6 +599,9 @@ namespace Cdy.Tag
                     count = 0;
                 }
             }
+            LoggerService.Service.Info("HisEnginer", "合并线程退出!" , ConsoleColor.Green);
+
+            mMegerProcessIsClosed = true;
         }
 
         /// <summary>
@@ -834,15 +842,29 @@ namespace Cdy.Tag
             mIsBusy = false;
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void SubmitLastDataToSave()
+        {
+            mNeedSnapAllTag = true;
+            mForceSubmiteToCompress = true;
+            mIsClosed = true;
+            SubmiteMemory(DateTime.Now);
+            while (!mMegerProcessIsClosed) Thread.Sleep(1);
+        }
+
+
         /// <summary>
         /// 
         /// </summary>
         public void Stop()
         {
-            mIsClosed = true;
             mRecordTimer.Stop();
             if(mRecordTimer!=null)
             {
+                mRecordTimer.Elapsed -= MRecordTimer_Elapsed;
                 mRecordTimer.Dispose();
                 mRecordTimer = null;
             }
@@ -858,16 +880,22 @@ namespace Cdy.Tag
                 vv.Stop();
                 vv.Dispose();
             }
+            mValueChangedProcesser.Clear();
 
             if (LogManager != null) LogManager.Stop();
 
-            mValueChangedProcesser.Clear();
+            SubmitLastDataToSave();
+
+            mIsClosed = true;
 
             mLastValueChangedProcesser = null;
             mLastProcesser = null;
 
             mHisTags.Clear();
 
+            mCachMemory1?.Dispose();
+            mCachMemory2?.Dispose();
+            mMergeMemory?.Dispose();
         }
 
         /// <summary>

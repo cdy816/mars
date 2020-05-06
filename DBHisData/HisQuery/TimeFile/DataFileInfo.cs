@@ -27,6 +27,8 @@ namespace Cdy.Tag
 
         private object mLockObj = new object();
 
+        private DateTime mLastTime;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -38,6 +40,11 @@ namespace Cdy.Tag
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string FId { get; set; }
 
         /// <summary>
         /// 
@@ -75,15 +82,32 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        public void UpdateLastDatetime()
+        {
+
+            lock (mLockObj)
+            {
+                mTimeOffsets.Clear();
+                Scan();
+            }
+
+            DataFileManager.CurrentDateTime.Add(FId, mLastTime);
+
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
         public void Scan()
         {
             using (var ss = DataFileSeriserManager.manager.GetDefaultFileSersie())
             {
-                ss.OpenFile(FileName);
+                ss.OpenForReadOnly(FileName);
                 long offset = DataFileManager.FileHeadSize;
                 DateTime time;
-
+                
                 do
                 {
                     time = ss.ReadDateTime(offset + 16);
@@ -94,12 +118,14 @@ namespace Cdy.Tag
                     {
                         var dt2 = ss.ReadDateTime(offset + 16);
                         mTimeOffsets.Add(time, new Tuple<TimeSpan, long>(dt2 - time, oset));
+                        mLastTime = dt2;
                     }
                     else
                     {
                         var tspan = StartTime + Duration - time;
                         if(tspan.TotalMilliseconds>0)
-                        mTimeOffsets.Add(time, new Tuple<TimeSpan, long>(StartTime + Duration - time, oset));
+                        mTimeOffsets.Add(time, new Tuple<TimeSpan, long>(tspan, oset));
+                        mLastTime = time + tspan;
                     }
                 }
                 while (offset != 0);
@@ -169,40 +195,40 @@ namespace Cdy.Tag
         {
             var re = DataFileSeriserManager.manager.GetDefaultFileSersie();
             re.FileName = file.FileName;
-            re.OpenFile(file.FileName);
+            re.OpenForReadOnly(file.FileName);
             return re;
         }
 
         #region 读取所有值
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="times"></param>
-        /// <param name="start"></param>
-        /// <param name="end"></param>
-        /// <param name="file"></param>
-        private static void GeneratorTime(Dictionary<long, Tuple<DateTime, DateTime>> times, DateTime start, DateTime end, DataFileInfo file)
-        {
-            //file.GetTimeSpan(out start, out end);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="times"></param>
+        ///// <param name="start"></param>
+        ///// <param name="end"></param>
+        ///// <param name="file"></param>
+        //private static void GeneratorTime(Dictionary<long, Tuple<DateTime, DateTime>> times, DateTime start, DateTime end, DataFileInfo file)
+        //{
+        //    //file.GetTimeSpan(out start, out end);
 
-            //int icount = 0;
-            //long laddr = 0;
-            //foreach (var vv in file.SecondOffset)
-            //{
-            //    var vend = start.AddSeconds(vv.Key);
-            //    if (icount > 0)
-            //    {
-            //        times.Add(vv.Value.Item1, new Tuple<DateTime, DateTime>(start, vend));
-            //    }
-            //    laddr = vv.Value.Item1;
-            //    start = vend;
-            //}
+        //    //int icount = 0;
+        //    //long laddr = 0;
+        //    //foreach (var vv in file.SecondOffset)
+        //    //{
+        //    //    var vend = start.AddSeconds(vv.Key);
+        //    //    if (icount > 0)
+        //    //    {
+        //    //        times.Add(vv.Value.Item1, new Tuple<DateTime, DateTime>(start, vend));
+        //    //    }
+        //    //    laddr = vv.Value.Item1;
+        //    //    start = vend;
+        //    //}
 
-            //if (start < end)
-            //{
-            //    times.Add(laddr, new Tuple<DateTime, DateTime>(start, end));
-            //}
-        }
+        //    //if (start < end)
+        //    //{
+        //    //    times.Add(laddr, new Tuple<DateTime, DateTime>(start, end));
+        //    //}
+        //}
 
         /// <summary>
         /// 读取某时间段内的所有bool值
@@ -212,201 +238,12 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<bool> result)
+        public static void ReadAllValue<T>(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<T> result)
         {
             var vff = file.GetFileSeriser();
             Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
 
-            GeneratorTime(moffs, startTime, endTime, file);
-
-            foreach (var vf in moffs)
-            {
-                vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
-            }
-        }
-
-        /// <summary>
-        /// 读取某时间段内的所有byte值
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<byte> result)
-        {
-            Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
-            using (var vff = file.GetFileSeriser())
-            {
-                GeneratorTime(moffs, startTime, endTime, file);
-
-                foreach (var vf in moffs)
-                {
-                    vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<short> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
-
-            GeneratorTime(moffs, startTime, endTime, file);
-
-            foreach (var vf in moffs)
-            {
-                vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<ushort> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
-
-            GeneratorTime(moffs, startTime, endTime, file);
-
-            foreach (var vf in moffs)
-            {
-                vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<int> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
-
-            GeneratorTime(moffs, startTime, endTime, file);
-
-            foreach (var vf in moffs)
-            {
-                vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<uint> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
-
-            GeneratorTime(moffs, startTime, endTime, file);
-
-            foreach (var vf in moffs)
-            {
-                vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
-            }
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-
-        public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<long> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
-
-            GeneratorTime(moffs, startTime, endTime, file);
-
-            foreach (var vf in moffs)
-            {
-                vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<ulong> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
-
-            GeneratorTime(moffs, startTime, endTime, file);
-
-            foreach (var vf in moffs)
-            {
-                vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<float> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
-
-            GeneratorTime(moffs, startTime, endTime, file);
-
-            foreach (var vf in moffs)
-            {
-                vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<double> result)
-        {
-            var vff = file.GetFileSeriser();
-
-            var offset = file.GetFileOffsets(startTime,endTime);
+            var offset = file.GetFileOffsets(startTime, endTime);
 
             foreach (var vv in offset)
             {
@@ -414,92 +251,1014 @@ namespace Cdy.Tag
                 DateTime etime = vv.Key + vv.Value.Item1 > endTime ? endTime : vv.Key + vv.Value.Item1;
                 vff.ReadAllValue(vv.Value.Item2, tid, stime, etime, result);
             }
+
+            //GeneratorTime(moffs, startTime, endTime, file);
+
+            //foreach (var vf in moffs)
+            //{
+            //    vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
+            //}
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<string> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
+        ///// <summary>
+        ///// 读取某时间段内的所有byte值
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<byte> result)
+        //{
+        //    Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
+        //    using (var vff = file.GetFileSeriser())
+        //    {
+        //        GeneratorTime(moffs, startTime, endTime, file);
 
-            GeneratorTime(moffs, startTime, endTime, file);
+        //        foreach (var vf in moffs)
+        //        {
+        //            vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
+        //        }
+        //    }
+        //}
 
-            foreach (var vf in moffs)
-            {
-                vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<short> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<DateTime> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
+        //    GeneratorTime(moffs, startTime, endTime, file);
 
-            GeneratorTime(moffs, startTime, endTime, file);
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
+        //    }
+        //}
 
-            foreach (var vf in moffs)
-            {
-                vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<ushort> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
+
+        //    GeneratorTime(moffs, startTime, endTime, file);
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<int> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
+
+        //    GeneratorTime(moffs, startTime, endTime, file);
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<uint> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
+
+        //    GeneratorTime(moffs, startTime, endTime, file);
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
+        //    }
+        //}
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+
+        //public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<long> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
+
+        //    GeneratorTime(moffs, startTime, endTime, file);
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<ulong> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
+
+        //    GeneratorTime(moffs, startTime, endTime, file);
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<float> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
+
+        //    GeneratorTime(moffs, startTime, endTime, file);
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<double> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+
+        //    var offset = file.GetFileOffsets(startTime,endTime);
+
+        //    foreach (var vv in offset)
+        //    {
+        //        DateTime stime = vv.Key > startTime ? vv.Key : startTime;
+        //        DateTime etime = vv.Key + vv.Value.Item1 > endTime ? endTime : vv.Key + vv.Value.Item1;
+        //        vff.ReadAllValue(vv.Value.Item2, tid, stime, etime, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<string> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
+
+        //    GeneratorTime(moffs, startTime, endTime, file);
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<DateTime> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
+
+        //    GeneratorTime(moffs, startTime, endTime, file);
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadAllValue(vf.Key, tid, vf.Value.Item1, vf.Value.Item2, result);
+        //    }
+        //}
 
         #endregion
 
         #region 读取指定时刻值
 
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="time"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public static bool? ReadBool(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    var offset = file.GetFileOffsets(time);
+        //    return vff.ReadBool(offset, tid, time, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <returns></returns>
+        //public static HisQueryResult<bool> ReadBool(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
+        //{
+        //    HisQueryResult<bool> re = new HisQueryResult<bool>(times.Count);
+        //    ReadBool(file, tid, times, type, re);
+        //    return re;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //public static void ReadBool(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<bool> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
+        //    foreach (var vv in times)
+        //    {
+        //        var ff = file.GetFileOffsets(vv);
+        //        if (moffs.ContainsKey(ff))
+        //        {
+        //            moffs[ff].Add(vv);
+        //        }
+        //        else
+        //        {
+        //            moffs.Add(ff, new List<DateTime>() { vv });
+        //        }
+        //    }
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadBool(vf.Key, tid, vf.Value, type, result);
+        //    }
+        //}
+
+
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public static byte? ReadByte(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    var offset = file.GetFileOffsets(time);
+        //    return vff.ReadByte(offset, tid, time, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public static HisQueryResult<byte> ReadByte(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
+        //{
+        //    HisQueryResult<byte> re = new HisQueryResult<byte>(times.Count);
+        //    ReadByte(file, tid, times, type, re);
+        //    return re;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //public static void ReadByte(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<byte> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
+        //    foreach (var vv in times)
+        //    {
+        //        var ff = file.GetFileOffsets(vv);
+        //        if (moffs.ContainsKey(ff))
+        //        {
+        //            moffs[ff].Add(vv);
+        //        }
+        //        else
+        //        {
+        //            moffs.Add(ff, new List<DateTime>() { vv });
+        //        }
+        //    }
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadByte(vf.Key, tid, vf.Value, type, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="time"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public static short? ReadShort(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    var offset = file.GetFileOffsets(time);
+        //    return vff.ReadShort(offset, tid, time, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public static HisQueryResult<short> ReadShort(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
+        //{
+        //    HisQueryResult<short> re = new HisQueryResult<short>(times.Count);
+        //    ReadShort(file, tid, times, type, re);
+        //    return re;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //public static void ReadShort(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<short> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
+        //    foreach (var vv in times)
+        //    {
+        //        var ff = file.GetFileOffsets(vv);
+        //        if (moffs.ContainsKey(ff))
+        //        {
+        //            moffs[ff].Add(vv);
+        //        }
+        //        else
+        //        {
+        //            moffs.Add(ff, new List<DateTime>() { vv });
+        //        }
+        //    }
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadShort(vf.Key, tid, vf.Value, type, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public static ushort? ReadUShort(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    var offset = file.GetFileOffsets(time);
+        //    return vff.ReadUShort(offset, tid, time, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <returns></returns>
+        //public static HisQueryResult<ushort> ReadUShort(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
+        //{
+        //    HisQueryResult<ushort> re = new HisQueryResult<ushort>(times.Count);
+        //    ReadUShort(file, tid, times, type, re);
+        //    return re;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //public static void ReadUShort(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<ushort> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
+        //    foreach (var vv in times)
+        //    {
+        //        var ff = file.GetFileOffsets(vv);
+        //        if (moffs.ContainsKey(ff))
+        //        {
+        //            moffs[ff].Add(vv);
+        //        }
+        //        else
+        //        {
+        //            moffs.Add(ff, new List<DateTime>() { vv });
+        //        }
+        //    }
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadUShort(vf.Key, tid, vf.Value, type, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public static int? ReadInt(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    var offset = file.GetFileOffsets(time);
+        //    return vff.ReadInt(offset, tid, time, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public static HisQueryResult<int> ReadInt(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
+        //{
+        //    HisQueryResult<int> re = new HisQueryResult<int>(times.Count);
+        //    ReadInt(file, tid, times, type, re);
+        //    return re;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //public static void ReadInt(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<int> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
+        //    foreach (var vv in times)
+        //    {
+        //        var ff = file.GetFileOffsets(vv);
+        //        if (moffs.ContainsKey(ff))
+        //        {
+        //            moffs[ff].Add(vv);
+        //        }
+        //        else
+        //        {
+        //            moffs.Add(ff, new List<DateTime>() { vv });
+        //        }
+        //    }
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadInt(vf.Key, tid, vf.Value, type, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public static uint? ReadUInt(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    var offset = file.GetFileOffsets(time);
+        //    return vff.ReadUInt(offset, tid, time, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public static HisQueryResult<uint> ReadUInt(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
+        //{
+        //    HisQueryResult<uint> re = new HisQueryResult<uint>(times.Count);
+        //    ReadUInt(file, tid, times, type, re);
+        //    return re;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //public static void ReadUInt(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<uint> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
+        //    foreach (var vv in times)
+        //    {
+        //        var ff = file.GetFileOffsets(vv);
+        //        if (moffs.ContainsKey(ff))
+        //        {
+        //            moffs[ff].Add(vv);
+        //        }
+        //        else
+        //        {
+        //            moffs.Add(ff, new List<DateTime>() { vv });
+        //        }
+        //    }
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadUInt(vf.Key, tid, vf.Value, type, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public static long? ReadLong(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    var offset = file.GetFileOffsets(time);
+        //    return vff.ReadLong(offset, tid, time, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public static HisQueryResult<long> ReadLong(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
+        //{
+
+        //    HisQueryResult<long> re = new HisQueryResult<long>(times.Count);
+        //    ReadLong(file, tid, times, type, re);
+        //    return re;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //public static void ReadLong(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<long> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
+        //    foreach (var vv in times)
+        //    {
+        //        var ff = file.GetFileOffsets(vv);
+        //        if (moffs.ContainsKey(ff))
+        //        {
+        //            moffs[ff].Add(vv);
+        //        }
+        //        else
+        //        {
+        //            moffs.Add(ff, new List<DateTime>() { vv });
+        //        }
+        //    }
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadLong(vf.Key, tid, vf.Value, type, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public static ulong? ReadULong(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    var offset = file.GetFileOffsets(time);
+        //    return vff.ReadULong(offset, tid, time, type);
+        //}
+
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public static HisQueryResult<ulong> ReadULong(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
+        //{
+        //    HisQueryResult<ulong> re = new HisQueryResult<ulong>(times.Count);
+        //    ReadULong(file, tid, times, type, re);
+        //    return re;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //public static void ReadULong(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<ulong> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
+        //    foreach (var vv in times)
+        //    {
+        //        var ff = file.GetFileOffsets(vv);
+        //        if (moffs.ContainsKey(ff))
+        //        {
+        //            moffs[ff].Add(vv);
+        //        }
+        //        else
+        //        {
+        //            moffs.Add(ff, new List<DateTime>() { vv });
+        //        }
+        //    }
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadULong(vf.Key, tid, vf.Value, type, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public static float? ReadFloat(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    var offset = file.GetFileOffsets(time);
+        //    return vff.ReadFloat(offset, tid, time, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public static HisQueryResult<float> ReadFloat(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
+        //{
+        //    HisQueryResult<float> re = new HisQueryResult<float>(times.Count);
+        //    ReadFloat(file, tid, times, type, re);
+        //    return re;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //public static void ReadFloat(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<float> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
+        //    foreach (var vv in times)
+        //    {
+        //        var ff = file.GetFileOffsets(vv);
+        //        if (moffs.ContainsKey(ff))
+        //        {
+        //            moffs[ff].Add(vv);
+        //        }
+        //        else
+        //        {
+        //            moffs.Add(ff, new List<DateTime>() { vv });
+        //        }
+        //    }
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadFloat(vf.Key, tid, vf.Value, type, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public static double? ReadDouble(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    var offset = file.GetFileOffsets(time);
+        //    return vff.ReadDouble(offset, tid, time, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public static HisQueryResult<double> ReadDouble(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
+        //{
+        //    HisQueryResult<double> re = new HisQueryResult<double>(times.Count);
+        //    ReadDouble(file, tid, times, type, re);
+        //    return re;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //public static void ReadDouble(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<double> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
+        //    foreach (var vv in times)
+        //    {
+        //        var ff = file.GetFileOffsets(vv);
+        //        if (ff <= 0) continue;
+        //        if (moffs.ContainsKey(ff))
+        //        {
+        //            moffs[ff].Add(vv);
+        //        }
+        //        else
+        //        {
+        //            moffs.Add(ff, new List<DateTime>() { vv });
+        //        }
+        //    }
+
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadDouble(vf.Key, tid, vf.Value, type, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public static DateTime? ReadDateTime(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    var offset = file.GetFileOffsets(time);
+        //    return vff.ReadDateTime(offset, tid, time, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public static HisQueryResult<DateTime> ReadDateTime(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
+        //{
+        //    HisQueryResult<DateTime> re = new HisQueryResult<DateTime>(times.Count);
+        //    ReadDateTime(file, tid, times, type, re);
+        //    return re;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //public static void ReadDateTime(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<DateTime> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
+        //    foreach (var vv in times)
+        //    {
+        //        var ff = file.GetFileOffsets(vv);
+        //        if (moffs.ContainsKey(ff))
+        //        {
+        //            moffs[ff].Add(vv);
+        //        }
+        //        else
+        //        {
+        //            moffs.Add(ff, new List<DateTime>() { vv });
+        //        }
+        //    }
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadDateTime(vf.Key, tid, vf.Value, type, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public static string ReadString(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    var offset = file.GetFileOffsets(time);
+        //    return vff.ReadString(offset, tid, time, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <returns></returns>
+        //public static HisQueryResult<string> ReadString(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
+        //{
+        //    HisQueryResult<string> re = new HisQueryResult<string>(times.Count);
+        //    ReadString(file, tid, times, type, re);
+        //    return re;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //public static void ReadString(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<string> result)
+        //{
+        //    var vff = file.GetFileSeriser();
+        //    Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
+        //    foreach (var vv in times)
+        //    {
+        //        var ff = file.GetFileOffsets(vv);
+        //        if (moffs.ContainsKey(ff))
+        //        {
+        //            moffs[ff].Add(vv);
+        //        }
+        //        else
+        //        {
+        //            moffs.Add(ff, new List<DateTime>() { vv });
+        //        }
+        //    }
+        //    foreach (var vf in moffs)
+        //    {
+        //        vff.ReadString(vf.Key, tid, vf.Value, type, result);
+        //    }
+        //}
+
         /// <summary>
         /// 
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="file"></param>
         /// <param name="tid"></param>
         /// <param name="time"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static bool? ReadBool(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
+        public static object Read<T>(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
         {
             var vff = file.GetFileSeriser();
             var offset = file.GetFileOffsets(time);
-            return vff.ReadBool(offset, tid, time, type);
+            return vff.Read<T>(offset, tid, time, type);
         }
 
         /// <summary>
         /// 
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="file"></param>
         /// <param name="tid"></param>
         /// <param name="times"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
-        public static HisQueryResult<bool> ReadBool(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
+        public static HisQueryResult<T> Read<T>(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
         {
-            HisQueryResult<bool> re = new HisQueryResult<bool>(times.Count);
-            ReadBool(file, tid, times, type, re);
+            HisQueryResult<T> re = new HisQueryResult<T>(times.Count);
+            Read<T>(file, tid, times, type, re);
             return re;
         }
 
         /// <summary>
         /// 
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="file"></param>
         /// <param name="tid"></param>
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        public static void ReadBool(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<bool> result)
+        public static void Read<T>(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
         {
             var vff = file.GetFileSeriser();
             Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
@@ -515,1076 +1274,442 @@ namespace Cdy.Tag
                     moffs.Add(ff, new List<DateTime>() { vv });
                 }
             }
-
             foreach (var vf in moffs)
             {
-                vff.ReadBool(vf.Key, tid, vf.Value, type, result);
-            }
-        }
-
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public static byte? ReadByte(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
-        {
-            var vff = file.GetFileSeriser();
-            var offset = file.GetFileOffsets(time);
-            return vff.ReadByte(offset, tid, time, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static HisQueryResult<byte> ReadByte(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
-        {
-            HisQueryResult<byte> re = new HisQueryResult<byte>(times.Count);
-            ReadByte(file, tid, times, type, re);
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public static void ReadByte(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<byte> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
-            foreach (var vv in times)
-            {
-                var ff = file.GetFileOffsets(vv);
-                if (moffs.ContainsKey(ff))
-                {
-                    moffs[ff].Add(vv);
-                }
-                else
-                {
-                    moffs.Add(ff, new List<DateTime>() { vv });
-                }
-            }
-
-            foreach (var vf in moffs)
-            {
-                vff.ReadByte(vf.Key, tid, vf.Value, type, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="time"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static short? ReadShort(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
-        {
-            var vff = file.GetFileSeriser();
-            var offset = file.GetFileOffsets(time);
-            return vff.ReadShort(offset, tid, time, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static HisQueryResult<short> ReadShort(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
-        {
-            HisQueryResult<short> re = new HisQueryResult<short>(times.Count);
-            ReadShort(file, tid, times, type, re);
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public static void ReadShort(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<short> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
-            foreach (var vv in times)
-            {
-                var ff = file.GetFileOffsets(vv);
-                if (moffs.ContainsKey(ff))
-                {
-                    moffs[ff].Add(vv);
-                }
-                else
-                {
-                    moffs.Add(ff, new List<DateTime>() { vv });
-                }
-            }
-            foreach (var vf in moffs)
-            {
-                vff.ReadShort(vf.Key, tid, vf.Value, type, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public static ushort? ReadUShort(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
-        {
-            var vff = file.GetFileSeriser();
-            var offset = file.GetFileOffsets(time);
-            return vff.ReadUShort(offset, tid, time, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <returns></returns>
-        public static HisQueryResult<ushort> ReadUShort(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
-        {
-            HisQueryResult<ushort> re = new HisQueryResult<ushort>(times.Count);
-            ReadUShort(file, tid, times, type, re);
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public static void ReadUShort(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<ushort> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
-            foreach (var vv in times)
-            {
-                var ff = file.GetFileOffsets(vv);
-                if (moffs.ContainsKey(ff))
-                {
-                    moffs[ff].Add(vv);
-                }
-                else
-                {
-                    moffs.Add(ff, new List<DateTime>() { vv });
-                }
-            }
-
-            foreach (var vf in moffs)
-            {
-                vff.ReadUShort(vf.Key, tid, vf.Value, type, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public static int? ReadInt(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
-        {
-            var vff = file.GetFileSeriser();
-            var offset = file.GetFileOffsets(time);
-            return vff.ReadInt(offset, tid, time, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static HisQueryResult<int> ReadInt(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
-        {
-            HisQueryResult<int> re = new HisQueryResult<int>(times.Count);
-            ReadInt(file, tid, times, type, re);
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public static void ReadInt(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<int> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
-            foreach (var vv in times)
-            {
-                var ff = file.GetFileOffsets(vv);
-                if (moffs.ContainsKey(ff))
-                {
-                    moffs[ff].Add(vv);
-                }
-                else
-                {
-                    moffs.Add(ff, new List<DateTime>() { vv });
-                }
-            }
-
-            foreach (var vf in moffs)
-            {
-                vff.ReadInt(vf.Key, tid, vf.Value, type, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public static uint? ReadUInt(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
-        {
-            var vff = file.GetFileSeriser();
-            var offset = file.GetFileOffsets(time);
-            return vff.ReadUInt(offset, tid, time, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static HisQueryResult<uint> ReadUInt(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
-        {
-            HisQueryResult<uint> re = new HisQueryResult<uint>(times.Count);
-            ReadUInt(file, tid, times, type, re);
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public static void ReadUInt(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<uint> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
-            foreach (var vv in times)
-            {
-                var ff = file.GetFileOffsets(vv);
-                if (moffs.ContainsKey(ff))
-                {
-                    moffs[ff].Add(vv);
-                }
-                else
-                {
-                    moffs.Add(ff, new List<DateTime>() { vv });
-                }
-            }
-            foreach (var vf in moffs)
-            {
-                vff.ReadUInt(vf.Key, tid, vf.Value, type, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public static long? ReadLong(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
-        {
-            var vff = file.GetFileSeriser();
-            var offset = file.GetFileOffsets(time);
-            return vff.ReadLong(offset, tid, time, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static HisQueryResult<long> ReadLong(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
-        {
-
-            HisQueryResult<long> re = new HisQueryResult<long>(times.Count);
-            ReadLong(file, tid, times, type, re);
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public static void ReadLong(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<long> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
-            foreach (var vv in times)
-            {
-                var ff = file.GetFileOffsets(vv);
-                if (moffs.ContainsKey(ff))
-                {
-                    moffs[ff].Add(vv);
-                }
-                else
-                {
-                    moffs.Add(ff, new List<DateTime>() { vv });
-                }
-            }
-
-            foreach (var vf in moffs)
-            {
-                vff.ReadLong(vf.Key, tid, vf.Value, type, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public static ulong? ReadULong(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
-        {
-            var vff = file.GetFileSeriser();
-            var offset = file.GetFileOffsets(time);
-            return vff.ReadULong(offset, tid, time, type);
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static HisQueryResult<ulong> ReadULong(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
-        {
-            HisQueryResult<ulong> re = new HisQueryResult<ulong>(times.Count);
-            ReadULong(file, tid, times, type, re);
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public static void ReadULong(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<ulong> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
-            foreach (var vv in times)
-            {
-                var ff = file.GetFileOffsets(vv);
-                if (moffs.ContainsKey(ff))
-                {
-                    moffs[ff].Add(vv);
-                }
-                else
-                {
-                    moffs.Add(ff, new List<DateTime>() { vv });
-                }
-            }
-
-            foreach (var vf in moffs)
-            {
-                vff.ReadULong(vf.Key, tid, vf.Value, type, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public static float? ReadFloat(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
-        {
-            var vff = file.GetFileSeriser();
-            var offset = file.GetFileOffsets(time);
-            return vff.ReadFloat(offset, tid, time, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static HisQueryResult<float> ReadFloat(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
-        {
-            HisQueryResult<float> re = new HisQueryResult<float>(times.Count);
-            ReadFloat(file, tid, times, type, re);
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public static void ReadFloat(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<float> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
-            foreach (var vv in times)
-            {
-                var ff = file.GetFileOffsets(vv);
-                if (moffs.ContainsKey(ff))
-                {
-                    moffs[ff].Add(vv);
-                }
-                else
-                {
-                    moffs.Add(ff, new List<DateTime>() { vv });
-                }
-            }
-
-            foreach (var vf in moffs)
-            {
-                vff.ReadFloat(vf.Key, tid, vf.Value, type, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public static double? ReadDouble(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
-        {
-            var vff = file.GetFileSeriser();
-            var offset = file.GetFileOffsets(time);
-            return vff.ReadDouble(offset, tid, time, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static HisQueryResult<double> ReadDouble(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
-        {
-            HisQueryResult<double> re = new HisQueryResult<double>(times.Count);
-            ReadDouble(file, tid, times, type, re);
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public static void ReadDouble(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<double> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
-            foreach (var vv in times)
-            {
-                var ff = file.GetFileOffsets(vv);
-                if (ff <= 0) continue;
-                if (moffs.ContainsKey(ff))
-                {
-                    moffs[ff].Add(vv);
-                }
-                else
-                {
-                    moffs.Add(ff, new List<DateTime>() { vv });
-                }
-            }
-
-            foreach (var vf in moffs)
-            {
-                vff.ReadDouble(vf.Key, tid, vf.Value, type, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public static DateTime? ReadDateTime(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
-        {
-            var vff = file.GetFileSeriser();
-            var offset = file.GetFileOffsets(time);
-            return vff.ReadDateTime(offset, tid, time, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static HisQueryResult<DateTime> ReadDateTime(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
-        {
-            HisQueryResult<DateTime> re = new HisQueryResult<DateTime>(times.Count);
-            ReadDateTime(file, tid, times, type, re);
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public static void ReadDateTime(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<DateTime> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
-            foreach (var vv in times)
-            {
-                var ff = file.GetFileOffsets(vv);
-                if (moffs.ContainsKey(ff))
-                {
-                    moffs[ff].Add(vv);
-                }
-                else
-                {
-                    moffs.Add(ff, new List<DateTime>() { vv });
-                }
-            }
-            foreach (var vf in moffs)
-            {
-                vff.ReadDateTime(vf.Key, tid, vf.Value, type, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public static string ReadString(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
-        {
-            var vff = file.GetFileSeriser();
-            var offset = file.GetFileOffsets(time);
-            return vff.ReadString(offset, tid, time, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <returns></returns>
-        public static HisQueryResult<string> ReadString(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
-        {
-            HisQueryResult<string> re = new HisQueryResult<string>(times.Count);
-            ReadString(file, tid, times, type, re);
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="tid"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        public static void ReadString(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<string> result)
-        {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
-            foreach (var vv in times)
-            {
-                var ff = file.GetFileOffsets(vv);
-                if (moffs.ContainsKey(ff))
-                {
-                    moffs[ff].Add(vv);
-                }
-                else
-                {
-                    moffs.Add(ff, new List<DateTime>() { vv });
-                }
-            }
-            foreach (var vf in moffs)
-            {
-                vff.ReadString(vf.Key, tid, vf.Value, type, result);
+                vff.Read<T>(vf.Key, tid, vf.Value, type, result);
             }
         }
         #endregion
 
         #region DataFileSeriser Read
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTime"></param>
-        /// <returns></returns>
-        public static bool? ReadBool(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
-            return DeCompressDataBlockToBoolValue(data, dataTime, timetick, type);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTime"></param>
+        ///// <returns></returns>
+        //public static bool? ReadBool(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
+        //    return DeCompressDataBlockToBoolValue(data, dataTime, timetick, type);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTimes"></param>
-        /// <returns></returns>
-        public static HisQueryResult<bool> ReadBool(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<bool> res)
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTimes"></param>
+        ///// <returns></returns>
+        //public static HisQueryResult<bool> ReadBool(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<bool> res)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockToBoolValue(vv.Key, vv.Value, timetick, type, res);
+        //    }
+        //    return res;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTime"></param>
+        ///// <returns></returns>
+        //public static byte? ReadByte(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
+        //    return DeCompressDataBlockToByteValue(data, dataTime, timetick, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTimes"></param>
+        ///// <returns></returns>
+        //public static void ReadByte(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<byte> res)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockToByteValue(vv.Key, vv.Value, timetick, type, res);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTime"></param>
+        ///// <returns></returns>
+        //public static short? ReadShort(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
+        //    return DeCompressDataBlockToShortValue(data, dataTime, timetick, type);
+        //}
+
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTimes"></param>
+        ///// <returns></returns>
+        //public static void ReadShort(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<short> res)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockToShortValue(vv.Key, vv.Value, timetick, type, res);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTime"></param>
+        ///// <returns></returns>
+        //public static ushort? ReadUShort(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
+        //    return DeCompressDataBlockToUShortValue(data, dataTime, timetick, type);
+        //}
+
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTimes"></param>
+        ///// <returns></returns>
+        //public static void ReadUShort(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<ushort> res)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockToUShortValue(vv.Key, vv.Value, timetick, type, res);
+        //    }
+        //}
+
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTime"></param>
+        ///// <returns></returns>
+        //public static int? ReadInt(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
+        //    return DeCompressDataBlockToIntValue(data, dataTime, timetick, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTimes"></param>
+        ///// <returns></returns>
+        //public static void ReadInt(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<int> res)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockToIntValue(vv.Key, vv.Value, timetick, type, res);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTime"></param>
+        ///// <returns></returns>
+        //public static uint? ReadUInt(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
+        //    return DeCompressDataBlockToUIntValue(data, dataTime, timetick, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTimes"></param>
+        ///// <returns></returns>
+        //public static void ReadUInt(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<uint> res)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockToUIntValue(vv.Key, vv.Value, timetick, type, res);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTime"></param>
+        ///// <returns></returns>
+        //public static long? ReadLong(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
+        //    return DeCompressDataBlockToLongValue(data, dataTime, timetick, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTimes"></param>
+        ///// <param name="type"></param>
+        ///// <param name="res"></param>
+        //public static void ReadLong(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<long> res)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockToLongValue(vv.Key, vv.Value, timetick, type, res);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTime"></param>
+        ///// <returns></returns>
+        //public static ulong? ReadULong(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
+        //    return DeCompressDataBlockToULongValue(data, dataTime, timetick, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTimes"></param>
+        ///// <returns></returns>
+        //public static void ReadULong(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<ulong> res)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockToULongValue(vv.Key, vv.Value, timetick, type, res);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTime"></param>
+        ///// <returns></returns>
+        //public static string ReadString(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
+        //    return DeCompressDataBlockToStringValue(data, dataTime, timetick, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTimes"></param>
+        ///// <returns></returns>
+        //public static void ReadString(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<string> res)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockToStringValue(vv.Key, vv.Value, timetick, type, res);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTime"></param>
+        ///// <returns></returns>
+        //public static DateTime? ReadDateTime(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
+        //    return DeCompressDataBlockToDateTimeValue(data, dataTime, timetick, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTimes"></param>
+        ///// <returns></returns>
+        //public static void ReadDateTime(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<DateTime> res)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockToDateTimeValue(vv.Key, vv.Value, timetick, type, res);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTime"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public static float? ReadFloat(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
+        //    return DeCompressDataBlockToFloatValue(data, dataTime, timetick, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTimes"></param>
+        ///// <returns></returns>
+        //public static void ReadFloat(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<float> res)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockToFloatValue(vv.Key, vv.Value, timetick, type, res);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTime"></param>
+        ///// <returns></returns>
+        //public static double? ReadDouble(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
+        //    return DeCompressDataBlockToDoubleValue(data, dataTime, timetick, type);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="dataTimes"></param>
+        ///// <returns></returns>
+        //public static void ReadDouble(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<double> res)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockToDoubleValue(vv.Key, vv.Value, timetick, type, res);
+        //    }
+        //}
+
+        public static void Read<T>(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<T> res)
         {
             int timetick = 0;
             var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
             foreach (var vv in data)
             {
-                DeCompressDataBlockToBoolValue(vv.Key, vv.Value, timetick, type, res);
-            }
-            return res;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTime"></param>
-        /// <returns></returns>
-        public static byte? ReadByte(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
-            return DeCompressDataBlockToByteValue(data, dataTime, timetick, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTimes"></param>
-        /// <returns></returns>
-        public static void ReadByte(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<byte> res)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockToByteValue(vv.Key, vv.Value, timetick, type, res);
+                DeCompressDataBlockValue<T>(vv.Key, vv.Value, timetick, type, res);
             }
         }
 
         /// <summary>
         /// 
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="datafile"></param>
         /// <param name="offset"></param>
         /// <param name="tid"></param>
         /// <param name="dataTime"></param>
-        /// <returns></returns>
-        public static short? ReadShort(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
-            return DeCompressDataBlockToShortValue(data, dataTime, timetick, type);
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTimes"></param>
-        /// <returns></returns>
-        public static void ReadShort(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<short> res)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockToShortValue(vv.Key, vv.Value, timetick, type, res);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTime"></param>
-        /// <returns></returns>
-        public static ushort? ReadUShort(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
-            return DeCompressDataBlockToUShortValue(data, dataTime, timetick, type);
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTimes"></param>
-        /// <returns></returns>
-        public static void ReadUShort(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<ushort> res)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockToUShortValue(vv.Key, vv.Value, timetick, type, res);
-            }
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTime"></param>
-        /// <returns></returns>
-        public static int? ReadInt(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
-            return DeCompressDataBlockToIntValue(data, dataTime, timetick, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTimes"></param>
-        /// <returns></returns>
-        public static void ReadInt(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<int> res)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockToIntValue(vv.Key, vv.Value, timetick, type, res);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTime"></param>
-        /// <returns></returns>
-        public static uint? ReadUInt(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
-            return DeCompressDataBlockToUIntValue(data, dataTime, timetick, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTimes"></param>
-        /// <returns></returns>
-        public static void ReadUInt(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<uint> res)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockToUIntValue(vv.Key, vv.Value, timetick, type, res);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTime"></param>
-        /// <returns></returns>
-        public static long? ReadLong(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
-            return DeCompressDataBlockToLongValue(data, dataTime, timetick, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTimes"></param>
         /// <param name="type"></param>
-        /// <param name="res"></param>
-        public static void ReadLong(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<long> res)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockToLongValue(vv.Key, vv.Value, timetick, type, res);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTime"></param>
         /// <returns></returns>
-        public static ulong? ReadULong(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
+        public static object Read<T>(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
         {
             int timetick = 0;
             var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
-            return DeCompressDataBlockToULongValue(data, dataTime, timetick, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTimes"></param>
-        /// <returns></returns>
-        public static void ReadULong(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<ulong> res)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockToULongValue(vv.Key, vv.Value, timetick, type, res);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTime"></param>
-        /// <returns></returns>
-        public static string ReadString(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
-            return DeCompressDataBlockToStringValue(data, dataTime, timetick, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTimes"></param>
-        /// <returns></returns>
-        public static void ReadString(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<string> res)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockToStringValue(vv.Key, vv.Value, timetick, type, res);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTime"></param>
-        /// <returns></returns>
-        public static DateTime? ReadDateTime(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
-            return DeCompressDataBlockToDateTimeValue(data, dataTime, timetick, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTimes"></param>
-        /// <returns></returns>
-        public static void ReadDateTime(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<DateTime> res)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockToDateTimeValue(vv.Key, vv.Value, timetick, type, res);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTime"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static float? ReadFloat(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
-            return DeCompressDataBlockToFloatValue(data, dataTime, timetick, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTimes"></param>
-        /// <returns></returns>
-        public static void ReadFloat(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<float> res)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockToFloatValue(vv.Key, vv.Value, timetick, type, res);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTime"></param>
-        /// <returns></returns>
-        public static double? ReadDouble(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
-            return DeCompressDataBlockToDoubleValue(data, dataTime, timetick, type);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="dataTimes"></param>
-        /// <returns></returns>
-        public static void ReadDouble(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<double> res)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockToDoubleValue(vv.Key, vv.Value, timetick, type, res);
-            }
+            return DeCompressDataBlockValue<T>(data, dataTime, timetick, type);
         }
 
         /// <summary>
@@ -1596,7 +1721,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<bool> result)
+        public static void ReadAllValue<T>(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<T> result)
         {
             int timetick = 0;
             var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
@@ -1606,215 +1731,215 @@ namespace Cdy.Tag
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<byte> result)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<byte> result)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<ushort> result)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<ushort> result)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<short> result)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<short> result)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<uint> result)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<uint> result)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<int> result)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<int> result)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<ulong> result)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<ulong> result)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<long> result)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<long> result)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<string> result)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<string> result)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<DateTime> result)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<DateTime> result)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<float> result)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<float> result)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
+        //    }
+        //}
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="datafile"></param>
-        /// <param name="offset"></param>
-        /// <param name="tid"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="result"></param>
-        public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<double> result)
-        {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="datafile"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="tid"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="result"></param>
+        //public static void ReadAllValue(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<double> result)
+        //{
+        //    int timetick = 0;
+        //    var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
+        //    foreach (var vv in data)
+        //    {
+        //        DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
+        //    }
+        //}
         #endregion
 
         #region DeCompressData
@@ -1822,11 +1947,13 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="memory"></param>
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
-        private static bool? DeCompressDataBlockToBoolValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        private static object DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
         {
             MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
@@ -1834,7 +1961,7 @@ namespace Cdy.Tag
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
             if (tp != null)
             {
-                return tp.DeCompressBoolValue(memory, 1, datatime, timeTick, type);
+                return tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type);
             }
             return null;
         }
@@ -1842,50 +1969,13 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockToBoolValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressBoolValue(memory, 1, datatime, timeTick, type, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        private static byte? DeCompressDataBlockToByteValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                return tp.DeCompressByteValue(memory, 1, datatime, timeTick, type);
-            }
-            return null;
-        }
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="memory"></param>
         /// <param name="datatime"></param>
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockToByteValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result)
+        private static void DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
         {
             MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
@@ -1893,507 +1983,488 @@ namespace Cdy.Tag
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
             if (tp != null)
             {
-                tp.DeCompressByteValue(memory, 1, datatime, timeTick, type, result);
+                tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type, result);
             }
         }
 
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //private static bool? DeCompressDataBlockToBoolValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        return tp.DeCompressBoolValue(memory, 1, datatime, timeTick, type);
+        //    }
+        //    return null;
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        private static short? DeCompressDataBlockToShortValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                return tp.DeCompressShortValue(memory, 1, datatime, timeTick, type);
-            }
-            return null;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockToBoolValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressBoolValue(memory, 1, datatime, timeTick, type, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockToShortValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<short> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressShortValue(memory, 1, datatime, timeTick, type, result);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        private static ushort? DeCompressDataBlockToUShortValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                return tp.DeCompressUShortValue(memory, 1, datatime, timeTick, type);
-            }
-            return null;
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockToUShortValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressUShortValue(memory, 1, datatime, timeTick, type, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //private static byte? DeCompressDataBlockToByteValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        return tp.DeCompressByteValue(memory, 1, datatime, timeTick, type);
+        //    }
+        //    return null;
+        //}
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockToByteValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressByteValue(memory, 1, datatime, timeTick, type, result);
+        //    }
+        //}
 
 
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //private static short? DeCompressDataBlockToShortValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        return tp.DeCompressShortValue(memory, 1, datatime, timeTick, type);
+        //    }
+        //    return null;
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        private static int? DeCompressDataBlockToIntValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                return tp.DeCompressIntValue(memory, 1, datatime, timeTick, type);
-            }
-            return null;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockToShortValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<short> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressShortValue(memory, 1, datatime, timeTick, type, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //private static ushort? DeCompressDataBlockToUShortValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        return tp.DeCompressUShortValue(memory, 1, datatime, timeTick, type);
+        //    }
+        //    return null;
+        //}
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockToUShortValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressUShortValue(memory, 1, datatime, timeTick, type, result);
+        //    }
+        //}
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockToIntValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<int> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressIntValue(memory, 1, datatime, timeTick, type, result);
-            }
-        }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        private static uint? DeCompressDataBlockToUIntValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                return tp.DeCompressUIntValue(memory, 1, datatime, timeTick, type);
-            }
-            return null;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //private static int? DeCompressDataBlockToIntValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        return tp.DeCompressIntValue(memory, 1, datatime, timeTick, type);
+        //    }
+        //    return null;
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockToUIntValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressUIntValue(memory, 1, datatime, timeTick, type, result);
-            }
-        }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        private static long? DeCompressDataBlockToLongValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                return tp.DeCompressLongValue(memory, 1, datatime, timeTick, type);
-            }
-            return null;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockToIntValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<int> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressIntValue(memory, 1, datatime, timeTick, type, result);
+        //    }
+        //}
 
-        private static void DeCompressDataBlockToLongValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<long> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressLongValue(memory, 1, datatime, timeTick, type, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //private static uint? DeCompressDataBlockToUIntValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        return tp.DeCompressUIntValue(memory, 1, datatime, timeTick, type);
+        //    }
+        //    return null;
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        private static ulong? DeCompressDataBlockToULongValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                return tp.DeCompressULongValue(memory, 1, datatime, timeTick, type);
-            }
-            return null;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockToUIntValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressUIntValue(memory, 1, datatime, timeTick, type, result);
+        //    }
+        //}
 
-        private static void DeCompressDataBlockToULongValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressULongValue(memory, 1, datatime, timeTick, type, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //private static long? DeCompressDataBlockToLongValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        return tp.DeCompressLongValue(memory, 1, datatime, timeTick, type);
+        //    }
+        //    return null;
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        private static float? DeCompressDataBlockToFloatValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                return tp.DeCompressFloatValue(memory, 1, datatime, timeTick, type);
-            }
-            return null;
-        }
+        //private static void DeCompressDataBlockToLongValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<long> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressLongValue(memory, 1, datatime, timeTick, type, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockToFloatValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<float> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressFloatValue(memory, 1, datatime, timeTick, type, result);
-            }
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        private static Double? DeCompressDataBlockToDoubleValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                return tp.DeCompressDoubleValue(memory, 1, datatime, timeTick, type);
-            }
-            return null;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //private static ulong? DeCompressDataBlockToULongValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        return tp.DeCompressULongValue(memory, 1, datatime, timeTick, type);
+        //    }
+        //    return null;
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockToDoubleValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<double> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressDoubleValue(memory, 1, datatime, timeTick, type, result);
-            }
-        }
+        //private static void DeCompressDataBlockToULongValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressULongValue(memory, 1, datatime, timeTick, type, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        private static string DeCompressDataBlockToStringValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                return tp.DeCompressStringValue(memory, 1, datatime, timeTick, type);
-            }
-            return null;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //private static float? DeCompressDataBlockToFloatValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        return tp.DeCompressFloatValue(memory, 1, datatime, timeTick, type);
+        //    }
+        //    return null;
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockToStringValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<string> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressStringValue(memory, 1, datatime, timeTick, type, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockToFloatValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<float> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressFloatValue(memory, 1, datatime, timeTick, type, result);
+        //    }
+        //}
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //private static Double? DeCompressDataBlockToDoubleValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        return tp.DeCompressDoubleValue(memory, 1, datatime, timeTick, type);
+        //    }
+        //    return null;
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        private static DateTime? DeCompressDataBlockToDateTimeValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                return tp.DeCompressDateTimeValue(memory, 1, datatime, timeTick, type);
-            }
-            return null;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockToDoubleValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<double> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressDoubleValue(memory, 1, datatime, timeTick, type, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="datatime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockToDateTimeValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressDateTimeValue(memory, 1, datatime, timeTick, type, result);
-            }
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<bool> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
-            }
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<byte> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //private static string DeCompressDataBlockToStringValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        return tp.DeCompressStringValue(memory, 1, datatime, timeTick, type);
+        //    }
+        //    return null;
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<short> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockToStringValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<string> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressStringValue(memory, 1, datatime, timeTick, type, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ushort> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //private static DateTime? DeCompressDataBlockToDateTimeValue(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        return tp.DeCompressDateTimeValue(memory, 1, datatime, timeTick, type);
+        //    }
+        //    return null;
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<int> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
-            }
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<uint> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="datatime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockToDateTimeValue(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressDateTimeValue(memory, 1, datatime, timeTick, type, result);
+        //    }
+        //}
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<bool> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+                
+        //    }
+        //}
         /// <summary>
         /// 
         /// </summary>
@@ -2402,7 +2473,7 @@ namespace Cdy.Tag
         /// <param name="endTime"></param>
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<long> result)
+        private static void DeCompressDataBlockAllValue<T>(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result)
         {
             MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
@@ -2414,105 +2485,203 @@ namespace Cdy.Tag
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ulong> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<short> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<float> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ushort> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<int> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+        //    }
+        //}
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<uint> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+        //    }
+        //}
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<long> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<DateTime> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ulong> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<string> result)
-        {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
-            //读取压缩类型
-            var ctype = memory.ReadByte();
-            var tp = CompressUnitManager.Manager.GetCompress(ctype);
-            if (tp != null)
-            {
-                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<float> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<DateTime> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        //private static void DeCompressDataBlockAllValue(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<string> result)
+        //{
+        //    MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+        //    //读取压缩类型
+        //    var ctype = memory.ReadByte();
+        //    var tp = CompressUnitManager.Manager.GetCompress(ctype);
+        //    if (tp != null)
+        //    {
+        //        tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+        //    }
+        //}
         #endregion
 
         #region 读取数据区域头数据

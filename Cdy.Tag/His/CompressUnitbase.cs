@@ -103,387 +103,374 @@ namespace Cdy.Tag
         public abstract long Compress(MarshalMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size);
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        public abstract bool? DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr,DateTime time,int timeTick, QueryValueMatchType type);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //public abstract bool? DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr,DateTime time,int timeTick, QueryValueMatchType type);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract int DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result);
 
-        /// <summary>
-        /// 解压缩某个事件段内所有值
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime,DateTime endTime, int timeTick, HisQueryResult<bool> result);
+        ///// <summary>
+        ///// 解压缩某个事件段内所有值
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime,DateTime endTime, int timeTick, HisQueryResult<bool> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract byte? DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract byte? DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract int DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<byte> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<byte> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract short? DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract short? DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract int DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<short> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<short> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<short> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<short> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract ushort? DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract ushort? DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract int DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ushort> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ushort> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract int? DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract int? DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract int DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<int> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<int> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<int> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<int> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract uint? DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract uint? DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract int DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<uint> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<uint> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract long? DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract long? DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract int DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<long> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<long> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<long> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<long> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract ulong? DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract ulong? DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract int DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ulong> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ulong> result);
 
 
         
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        public abstract float? DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //public abstract float? DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        public abstract int DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<float> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<float> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<float> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<float> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        public abstract double? DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //public abstract double? DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <returns></returns>
-        public abstract int DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<double> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <param name="timeTick"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<double> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract DateTime? DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract DateTime? DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract int DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<DateTime> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<DateTime> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract string DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract string DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public abstract int DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<string> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<string> result);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<string> result);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<string> result);
 
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public abstract int DeCompressAllPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result);
 
         /// <summary>
         /// 
@@ -491,11 +478,12 @@ namespace Cdy.Tag
         /// <typeparam name="T"></typeparam>
         /// <param name="source"></param>
         /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
         /// <param name="timeTick"></param>
-        /// <param name="type"></param>
+        /// <param name="result"></param>
         /// <returns></returns>
-        public abstract T DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        public abstract int DeCompressAllValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result);
 
         /// <summary>
         /// 
@@ -508,7 +496,57 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public abstract int DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result);
+        public abstract int DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public abstract object DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressAllPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result);
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public abstract T DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="time"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public abstract int DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result);
 
 
         public abstract CompressUnitbase Clone();

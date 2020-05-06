@@ -100,7 +100,7 @@ namespace Cdy.Tag
             {
                 mBusyCount++;
                 if(Id==0)
-                LoggerService.Service.Warn("Record", "TimerMemoryCacheProcesser 出现阻塞:"+mBusyCount);
+                LoggerService.Service.Warn("Record", "TimerMemoryCacheProcesser"+Id+" 出现阻塞:"+mBusyCount);
             }
             else
             {
@@ -126,6 +126,7 @@ namespace Cdy.Tag
         public void Stop()
         {
             mIsClosed = true;
+            resetEvent.Set();
             closedEvent.WaitOne(1000);
         }
 

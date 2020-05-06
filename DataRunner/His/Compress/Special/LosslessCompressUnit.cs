@@ -1144,11 +1144,11 @@ namespace Cdy.Tag
                 List<ushort> re = new List<ushort>();
                 using (VarintCodeMemory memory = new VarintCodeMemory(value))
                 {
-                    var vv = (ushort)memory.ReadInt32();
-                    re.Add(vv);
+                    var vv = (short)memory.ReadInt32();
+                    re.Add((ushort)vv);
                     for (int i = 1; i < count; i++)
                     {
-                        var vss = (ushort)memory.ReadSInt32();
+                        var vss = (short)memory.ReadSInt32();
                         re.Add((ushort)(vv + vss));
                         vv = vss;
                     }
@@ -1177,12 +1177,12 @@ namespace Cdy.Tag
                 List<uint> re = new List<uint>();
                 using (VarintCodeMemory memory = new VarintCodeMemory(value))
                 {
-                    var vv = (uint)memory.ReadInt32();
-                    re.Add(vv);
+                    var vv = memory.ReadInt32();
+                    re.Add((uint)vv);
                     for (int i = 1; i < count; i++)
                     {
-                        var vss = (uint)memory.ReadSInt32();
-                        re.Add((uint)(vv + vss));
+                        var vss = memory.ReadSInt32();
+                        re.Add((uint)((uint)vv + vss));
                         vv = vss;
                     }
                 }
@@ -1209,11 +1209,11 @@ namespace Cdy.Tag
                 List<ulong> re = new List<ulong>();
                 using (VarintCodeMemory memory = new VarintCodeMemory(value))
                 {
-                    var vv = (ulong)memory.ReadInt64();
-                    re.Add(vv);
+                    var vv = memory.ReadInt64();
+                    re.Add((ulong)vv);
                     for (int i = 1; i < count; i++)
                     {
-                        var vss = (ulong)memory.ReadSInt64();
+                        var vss = memory.ReadSInt64();
                         re.Add((ulong)(vv + vss));
                         vv = vss;
                     }
@@ -1276,6 +1276,170 @@ namespace Cdy.Tag
                     return re as List<T>;
                 }
             }
+            else if (typeof(T) == typeof(IntPointData))
+            {
+                List<IntPointData> re = new List<IntPointData>();
+                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                {
+                    var vv = (int)memory.ReadInt32();
+                    var vv2 = (int)memory.ReadInt32();
+                    re.Add(new IntPointData(vv,vv2));
+                    for (int i = 2; i < count-1; i=i+2)
+                    {
+                        var vss = (int)memory.ReadSInt32();
+                        var vss2 = (int)memory.ReadSInt32();
+                        re.Add(new IntPointData((int)(vv + vss), (int)(vv2 + vss2)));
+                        vv = vss;
+                        vv2 = vss2;
+                    }
+                }
+                return re as List<T>;
+            }
+            else if (typeof(T) == typeof(UIntPointData))
+            {
+                List<UIntPointData> re = new List<UIntPointData>();
+                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                {
+                    var vv = (int)memory.ReadInt32();
+                    var vv2 = (int)memory.ReadInt32();
+                    re.Add(new UIntPointData((uint)vv, (uint)vv2));
+                    for (int i = 2; i < count - 1; i = i + 2)
+                    {
+                        var vss = (int)memory.ReadSInt32();
+                        var vss2 = (int)memory.ReadSInt32();
+                        re.Add(new UIntPointData((uint)(vv + vss), (uint)(vv2 + vss2)));
+                        vv = vss;
+                        vv2 = vss2;
+                    }
+                }
+                return re as List<T>;
+            }
+            else if (typeof(T) == typeof(LongPointData))
+            {
+                List<LongPointData> re = new List<LongPointData>();
+                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                {
+                    var vv = (long)memory.ReadInt64();
+                    var vv2 = (long)memory.ReadInt64();
+                    re.Add(new LongPointData(vv, vv2));
+                    for (int i = 2; i < count - 1; i = i + 2)
+                    {
+                        var vss = memory.ReadSInt64();
+                        var vss2 = memory.ReadSInt64();
+                        re.Add(new LongPointData((vv + vss), (vv2 + vss2)));
+                        vv = vss;
+                        vv2 = vss2;
+                    }
+                }
+                return re as List<T>;
+            }
+            else if (typeof(T) == typeof(ULongPointData))
+            {
+                List<ULongPointData> re = new List<ULongPointData>();
+                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                {
+                    var vv = memory.ReadInt64();
+                    var vv2 = memory.ReadInt64();
+                    re.Add(new ULongPointData((ulong)vv, (ulong)vv2));
+                    for (int i = 2; i < count - 1; i = i + 2)
+                    {
+                        var vss = memory.ReadSInt64();
+                        var vss2 = memory.ReadSInt64();
+                        re.Add(new ULongPointData((ulong)(vv + vss), (ulong)(vv2 + vss2)));
+                        vv = vss;
+                        vv2 = vss2;
+                    }
+                }
+                return re as List<T>;
+            }
+            else if (typeof(T) == typeof(IntPoint3Data))
+            {
+                List<IntPoint3Data> re = new List<IntPoint3Data>();
+                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                {
+                    var vv = (int)memory.ReadInt32();
+                    var vv2 = (int)memory.ReadInt32();
+                    var vv3 = (int)memory.ReadInt32();
+                    re.Add(new IntPoint3Data(vv, vv2,vv3));
+                    for (int i = 3; i < count - 2; i = i + 3)
+                    {
+                        var vss = (int)memory.ReadSInt32();
+                        var vss2 = (int)memory.ReadSInt32();
+                        var vss3 = (int)memory.ReadSInt32();
+                        re.Add(new IntPoint3Data((int)(vv + vss), (int)(vv2 + vss2), (int)(vv3 + vss3)));
+                        vv = vss;
+                        vv2 = vss2;
+                        vv3 = vss3;
+                    }
+                }
+                return re as List<T>;
+            }
+            else if (typeof(T) == typeof(UIntPoint3Data))
+            {
+                List<UIntPoint3Data> re = new List<UIntPoint3Data>();
+                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                {
+                    var vv = (int)memory.ReadInt32();
+                    var vv2 = (int)memory.ReadInt32();
+                    var vv3 = (int)memory.ReadInt32();
+                    re.Add(new UIntPoint3Data((uint)vv, (uint)vv2, (uint)vv3));
+                    for (int i = 3; i < count - 2; i = i + 3)
+                    {
+                        var vss = (int)memory.ReadSInt32();
+                        var vss2 = (int)memory.ReadSInt32();
+                        var vss3 = (int)memory.ReadSInt32();
+                        re.Add(new UIntPoint3Data((uint)(vv + vss), (uint)(vv2 + vss2), (uint)(vv3 + vss3)));
+                        vv = vss;
+                        vv2 = vss2;
+                        vv3 = vss3;
+                    }
+                }
+                return re as List<T>;
+            }
+            else if (typeof(T) == typeof(LongPoint3Data))
+            {
+                List<LongPoint3Data> re = new List<LongPoint3Data>();
+                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                {
+                    var vv = (long)memory.ReadInt64();
+                    var vv2 = (long)memory.ReadInt64();
+                    var vv3 = (long)memory.ReadInt64();
+                    re.Add(new LongPoint3Data((long)vv, (long)vv2, (long)vv3));
+                    for (int i = 3; i < count - 2; i = i + 3)
+                    {
+                        var vss = memory.ReadInt64();
+                        var vss2 = memory.ReadInt64();
+                        var vss3 = memory.ReadInt64();
+                        re.Add(new LongPoint3Data((long)(vv + vss), (long)(vv2 + vss2), (long)(vv3 + vss3)));
+                        vv = vss;
+                        vv2 = vss2;
+                        vv3 = vss3;
+                    }
+                }
+                return re as List<T>;
+            }
+            else if (typeof(T) == typeof(ULongPoint3Data))
+            {
+                List<ULongPoint3Data> re = new List<ULongPoint3Data>();
+                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                {
+                    var vv = (long)memory.ReadInt64();
+                    var vv2 = (long)memory.ReadInt64();
+                    var vv3 = (long)memory.ReadInt64();
+                    re.Add(new ULongPoint3Data((ulong)vv, (ulong)vv2, (ulong)vv3));
+                    for (int i = 3; i < count - 2; i = i + 3)
+                    {
+                        var vss = memory.ReadInt64();
+                        var vss2 = memory.ReadInt64();
+                        var vss3 = memory.ReadInt64();
+                        re.Add(new ULongPoint3Data((ulong)(vv + vss), (ulong)(vv2 + vss2), (ulong)(vv3 + vss3)));
+                        vv = vss;
+                        vv2 = vss2;
+                        vv3 = vss3;
+                    }
+                }
+                return re as List<T>;
+            }
             return null;
         }
 
@@ -1328,6 +1492,15 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        private bool CheckTypeIsPointData(Type type)
+        {
+            return type == typeof(IntPointData) || type == typeof(UIntPointData) || type == typeof(LongPointData) || type == typeof(ULongPointData) || type == typeof(IntPoint3Data) || type == typeof(UIntPoint3Data) || type == typeof(LongPoint3Data) || type == typeof(ULongPoint3Data);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source"></param>
         /// <param name="sourceAddr"></param>
@@ -1336,108 +1509,109 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public virtual int DeCompressALlValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result)
+        public override int DeCompressAllValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result)
         {
             int count = 0;
-            var timers = GetTimers(source, sourceAddr, startTime, endTime, timeTick,out count);
+            var timers = GetTimers(source, sourceAddr, startTime, endTime, timeTick, out count);
 
             var valuesize = source.ReadInt();
-            var value = DeCompressValue<T>(source.ReadBytes(valuesize),count);
+            var value = DeCompressValue<T>(source.ReadBytes(valuesize), count);
 
             var qusize = source.ReadInt();
 
             var qulityes = DeCompressQulity(source.ReadBytes(qusize));
             int resultCount = 0;
-            for(int i=0;i<count;i++)
+            for (int i = 0; i < count; i++)
             {
-                if(qulityes[i]<100)
+                if (qulityes[i] < 100)
                 {
-                    result.Add<T>( value[i],timers[i],qulityes[i] );
+                    result.Add<T>(value[i], timers[i], qulityes[i]);
                     resultCount++;
                 }
             }
             return resultCount;
+
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<bool> result)
-        {
-           return DeCompressALlValue<bool>(source, sourceAddr, startTime, endTime, timeTick, result);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<bool> result)
+        //{
+        //   return DeCompressAllValue<bool>(source, sourceAddr, startTime, endTime, timeTick, result);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<byte> result)
-        {
-            return DeCompressALlValue<byte>(source, sourceAddr, startTime, endTime, timeTick, result);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="sourceAddr"></param>
+        ///// <param name="startTime"></param>
+        ///// <param name="endTime"></param>
+        ///// <param name="timeTick"></param>
+        ///// <param name="result"></param>
+        ///// <returns></returns>
+        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<byte> result)
+        //{
+        //    return DeCompressAllValue<byte>(source, sourceAddr, startTime, endTime, timeTick, result);
+        //}
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<short> result)
-        {
-            return DeCompressALlValue<short>(source, sourceAddr, startTime, endTime, timeTick, result);
-        }
+        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<short> result)
+        //{
+        //    return DeCompressAllValue<short>(source, sourceAddr, startTime, endTime, timeTick, result);
+        //}
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ushort> result)
-        {
-            return DeCompressALlValue<ushort>(source, sourceAddr, startTime, endTime, timeTick, result);
-        }
+        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ushort> result)
+        //{
+        //    return DeCompressAllValue<ushort>(source, sourceAddr, startTime, endTime, timeTick, result);
+        //}
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<int> result)
-        {
-            return DeCompressALlValue<int>(source, sourceAddr, startTime, endTime, timeTick, result);
-        }
+        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<int> result)
+        //{
+        //    return DeCompressAllValue<int>(source, sourceAddr, startTime, endTime, timeTick, result);
+        //}
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<uint> result)
-        {
-            return DeCompressALlValue<uint>(source, sourceAddr, startTime, endTime, timeTick, result);
-        }
+        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<uint> result)
+        //{
+        //    return DeCompressAllValue<uint>(source, sourceAddr, startTime, endTime, timeTick, result);
+        //}
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<long> result)
-        {
-            return DeCompressALlValue<long>(source, sourceAddr, startTime, endTime, timeTick, result);
-        }
+        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<long> result)
+        //{
+        //    return DeCompressAllValue<long>(source, sourceAddr, startTime, endTime, timeTick, result);
+        //}
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ulong> result)
-        {
-            return DeCompressALlValue<ulong>(source, sourceAddr, startTime, endTime, timeTick, result);
-        }
+        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ulong> result)
+        //{
+        //    return DeCompressAllValue<ulong>(source, sourceAddr, startTime, endTime, timeTick, result);
+        //}
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<float> result)
-        {
-            return DeCompressALlValue<float>(source, sourceAddr, startTime, endTime, timeTick, result);
-        }
+        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<float> result)
+        //{
+        //    return DeCompressAllValue<float>(source, sourceAddr, startTime, endTime, timeTick, result);
+        //}
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result)
-        {
-            return DeCompressALlValue<double>(source, sourceAddr, startTime, endTime, timeTick, result);
-        }
+        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result)
+        //{
+        //    return DeCompressAllValue<double>(source, sourceAddr, startTime, endTime, timeTick, result);
+        //}
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<DateTime> result)
-        {
-            return DeCompressALlValue<DateTime>(source, sourceAddr, startTime, endTime, timeTick, result);
-        }
+        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<DateTime> result)
+        //{
+        //    return DeCompressAllValue<DateTime>(source, sourceAddr, startTime, endTime, timeTick, result);
+        //}
 
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<string> result)
-        {
-            return DeCompressALlValue<string>(source, sourceAddr, startTime, endTime, timeTick, result);
-        }
+        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<string> result)
+        //{
+        //    return DeCompressAllValue<string>(source, sourceAddr, startTime, endTime, timeTick, result);
+        //}
 
         /// <summary>
         /// 
@@ -1450,8 +1624,13 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public virtual int DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
+        public override int DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
         {
+            if (CheckTypeIsPointData(typeof(T)))
+            {
+                return DeCompressPointValue<T>(source, sourceAddr, time, timeTick, type, result);
+            }
+
             int count = 0;
             var timers = GetTimers(source, sourceAddr + 8,timeTick, out count);
 
@@ -1538,7 +1717,7 @@ namespace Cdy.Tag
                                     }
                                     else
                                     {
-                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                        result.Add(default(T), time1, (byte)QualityConst.Null);
                                     }
                                     resultCount++;
                                 }
@@ -1589,8 +1768,13 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public virtual object DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override object DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
+            if (CheckTypeIsPointData(typeof(T)))
+            {
+                return DeCompressPointValue<T>(source, sourceAddr, time, timeTick, type);
+            }
+
             int count = 0;
             var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
 
@@ -1723,458 +1907,7 @@ namespace Cdy.Tag
             return null;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public override bool? DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            return DeCompressValue<bool>(source, sourceAddr, time, timeTick, type) as bool?;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public override int DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result)
-        {
-            return DeCompressValue<bool>(source, sourceAddr, time, timeTick, type, result);
-        }
-
-        public override byte? DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            return DeCompressValue<byte>(source, sourceAddr, time, timeTick, type) as byte?;
-        }
-
-        public override int DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result)
-        {
-            return DeCompressValue<byte>(source, sourceAddr, time, timeTick, type, result);
-        }
-
-        public override DateTime? DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            return DeCompressValue<DateTime>(source, sourceAddr, time, timeTick, type) as DateTime?;
-        }
-
-        public override int DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result)
-        {
-            return DeCompressValue<DateTime>(source, sourceAddr, time, timeTick, type, result);
-        }
-
-        public override double? DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            return DeCompressValue<double>(source, sourceAddr, time, timeTick, type) as double?;
-        }
-
-        public override int DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<double> result)
-        {
-            return DeCompressValue<double>(source, sourceAddr, time, timeTick, type, result);
-        }
-
-        public override float? DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            return DeCompressValue<float>(source, sourceAddr, time, timeTick, type) as float?;
-        }
-
-        public override int DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<float> result)
-        {
-            return DeCompressValue<float>(source, sourceAddr, time, timeTick, type, result);
-        }
-
-        public override int? DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            return DeCompressValue<int>(source, sourceAddr, time, timeTick, type) as int?;
-        }
-
-        public override int DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<int> result)
-        {
-            return DeCompressValue<int>(source, sourceAddr, time, timeTick, type, result);
-        }
-
-        public override long? DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            return DeCompressValue<long>(source, sourceAddr, time, timeTick, type) as long?;
-        }
-
-        public override int DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<long> result)
-        {
-            return DeCompressValue<long>(source, sourceAddr, time, timeTick, type, result);
-        }
-
-        public override short? DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            return DeCompressValue<short>(source, sourceAddr, time, timeTick, type) as short?;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public override int DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<short> result)
-        {
-            return DeCompressValue<short>(source, sourceAddr, time, timeTick, type, result);
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public override string DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            return DeCompressValue<string>(source, sourceAddr, time, timeTick, type) as string;
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public override int DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<string> result)
-        {
-            return DeCompressValue<string>(source, sourceAddr, time, timeTick, type, result);
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public override uint? DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            return DeCompressValue<uint>(source, sourceAddr, time, timeTick, type) as uint?;
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public override int DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result)
-        {
-            return DeCompressValue<uint>(source, sourceAddr, time, timeTick, type, result);
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public override ulong? DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            return DeCompressValue<ulong>(source, sourceAddr, time, timeTick, type) as ulong?;
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public override int DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result)
-        {
-            return DeCompressValue<ulong>(source, sourceAddr, time, timeTick, type, result);
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public override ushort? DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
-        {
-            return DeCompressValue<ushort>(source, sourceAddr, time, timeTick, type) as ushort?;
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public override int DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result)
-        {
-            return DeCompressValue<ushort>(source, sourceAddr, time, timeTick, type, result);
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public override int DeCompressAllPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result)
-        {
-            throw new NotImplementedException();
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        private int DeCompressIntPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
-        {
-            int count = 0;
-            var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
-
-            var valuesize = source.ReadInt();
-            var value = DeCompressValue<int>(source.ReadBytes(valuesize), count);
-
-            var qusize = source.ReadInt();
-
-            var qulityes = DeCompressQulity(source.ReadBytes(qusize));
-            int resultCount = 0;
-
-            int j = 0;
-            var time1 = time;
-
-            for (int i = j; i < timers.Count - 2; i = i + 2)
-            {
-                var skey = timers[i];
-
-                var snext = timers[i + 1];
-
-                if (time1 == skey)
-                {
-                    result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                    resultCount++;
-
-                    break;
-                }
-                else if (time1 > skey && time1 < snext)
-                {
-                    switch (type)
-                    {
-                        case QueryValueMatchType.Previous:
-                            result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                            resultCount++;
-                            break;
-                        case QueryValueMatchType.After:
-
-                            result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-
-                            resultCount++;
-                            break;
-                        case QueryValueMatchType.Linear:
-                            if (qulityes[i] < 20 && qulityes[i + 1] < 20)
-                            {
-                                var pval1 = (time1 - skey).TotalMilliseconds;
-                                var tval1 = (snext - skey).TotalMilliseconds;
-                                var sval1 = value[i];
-                                var sval2 = value[i + 2];
-
-                                var sval21 = value[i + 1];
-                                var sval22 = value[i + 3];
-
-
-                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-                                var val2 = pval1 / tval1 * (Convert.ToDouble(sval22) - Convert.ToDouble(sval21)) + Convert.ToDouble(sval21);
-
-                                result.AddPoint((int)val1, (int)val2, time1, 0);
-                            }
-                            else if (qulityes[i] < 20)
-                            {
-                                result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                            }
-                            else if (qulityes[i + 1] < 20)
-                            {
-                                result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                            }
-                            else
-                            {
-                                result.Add(0, time1, (byte)QualityConst.Null);
-                            }
-                            resultCount++;
-                            break;
-                        case QueryValueMatchType.Closed:
-                            var pval = (time1 - skey).TotalMilliseconds;
-                            var fval = (snext - time1).TotalMilliseconds;
-
-                            if (pval < fval)
-                            {
-                                result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                            }
-                            else
-                            {
-                                result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                            }
-                            resultCount++;
-                            break;
-                    }
-                    break;
-                }
-                else if (time1 == snext)
-                {
-                    result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                    resultCount++;
-                    break;
-                }
-
-            }
-
-
-            return resultCount;
-        }
-
-        private int DeCompressUIntPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
-        {
-            int count = 0;
-            var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
-
-            var valuesize = source.ReadInt();
-            var value = DeCompressValue<uint>(source.ReadBytes(valuesize), count);
-
-            var qusize = source.ReadInt();
-
-            var qulityes = DeCompressQulity(source.ReadBytes(qusize));
-            int resultCount = 0;
-
-            int j = 0;
-            var time1 = time;
-
-            for (int i = j; i < timers.Count - 2; i = i + 2)
-            {
-                var skey = timers[i];
-
-                var snext = timers[i + 1];
-
-                if (time1 == skey)
-                {
-                    result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                    resultCount++;
-
-                    break;
-                }
-                else if (time1 > skey && time1 < snext)
-                {
-                    switch (type)
-                    {
-                        case QueryValueMatchType.Previous:
-                            result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                            resultCount++;
-                            break;
-                        case QueryValueMatchType.After:
-
-                            result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-
-                            resultCount++;
-                            break;
-                        case QueryValueMatchType.Linear:
-                            if (qulityes[i] < 20 && qulityes[i + 1] < 20)
-                            {
-                                var pval1 = (time1 - skey).TotalMilliseconds;
-                                var tval1 = (snext - skey).TotalMilliseconds;
-                                var sval1 = value[i];
-                                var sval2 = value[i + 2];
-
-                                var sval21 = value[i + 1];
-                                var sval22 = value[i + 3];
-
-
-                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-                                var val2 = pval1 / tval1 * (Convert.ToDouble(sval22) - Convert.ToDouble(sval21)) + Convert.ToDouble(sval21);
-
-                                result.AddPoint((uint)val1, (uint)val2, time1, 0);
-                            }
-                            else if (qulityes[i] < 20)
-                            {
-                                result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                            }
-                            else if (qulityes[i + 1] < 20)
-                            {
-                                result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                            }
-                            else
-                            {
-                                result.Add(0, time1, (byte)QualityConst.Null);
-                            }
-                            resultCount++;
-                            break;
-                        case QueryValueMatchType.Closed:
-                            var pval = (time1 - skey).TotalMilliseconds;
-                            var fval = (snext - time1).TotalMilliseconds;
-
-                            if (pval < fval)
-                            {
-                                result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                            }
-                            else
-                            {
-                                result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                            }
-                            resultCount++;
-                            break;
-                    }
-                    break;
-                }
-                else if (time1 == snext)
-                {
-                    result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                    resultCount++;
-                    break;
-                }
-
-            }
-
-
-            return resultCount;
-        }
+        
 
         /// <summary>
         /// 
@@ -2186,933 +1919,171 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override T DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  object DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time1, int timeTick, QueryValueMatchType type)
         {
-            throw new NotImplementedException();
+            int count = 0;
+            var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
+
+            var valuesize = source.ReadInt();
+            var value = DeCompressValue<T>(source.ReadBytes(valuesize), count);
+
+            var qusize = source.ReadInt();
+
+            var qulityes = DeCompressQulity(source.ReadBytes(qusize));
+            
+            for (int i = 0; i < timers.Count - 1; i++)
+            {
+                var skey = timers[i];
+
+                var snext = timers[i + 1];
+
+                if (time1 == skey)
+                {
+                    return value[i];
+
+                }
+                else if (time1 > skey && time1 < snext)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            return value[i];
+                        case QueryValueMatchType.After:
+                            return value[i+1];
+                        case QueryValueMatchType.Linear:
+                            if (qulityes[i] < 20 && qulityes[i + 1] < 20)
+                            {
+                                return (T)LinerValue(skey, snext, time1, value[i], value[i + 1]);
+                            }
+                            else if (qulityes[i] < 20)
+                            {
+                                return value[i];
+                            }
+                            else if (qulityes[i + 1] < 20)
+                            {
+                                return value[i+1];
+                            }
+                            return null;
+                        case QueryValueMatchType.Closed:
+                            var pval = (time1 - skey).TotalMilliseconds;
+                            var fval = (snext - time1).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                return value[i];
+                            }
+                            else
+                            {
+                                return value[i + 1];
+                            }
+                            
+                    }
+                    break;
+                }
+                else if (time1 == snext)
+                {
+                    return value[i + 1];
+                }
+
+            }
+
+            return null;
+            
         }
+
 
         #region
 
+        
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
         /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
+        /// <param name="value1"></param>
+        /// <param name="value2"></param>
         /// <returns></returns>
-        private int DeCompressIntPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
+        private object LinerValue<T>(DateTime startTime,DateTime endTime,DateTime time,T value1,T value2)
         {
-            int count = 0;
-            var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
+            var pval1 = (time - startTime).TotalMilliseconds;
+            var tval1 = (endTime - startTime).TotalMilliseconds;
 
-            var valuesize = source.ReadInt();
-            var value = DeCompressValue<int>(source.ReadBytes(valuesize), count);
-
-            var qusize = source.ReadInt();
-
-            var qulityes = DeCompressQulity(source.ReadBytes(qusize));
-            int resultCount = 0;
-
-            int j = 0;
-
-            foreach (var time1 in time)
+            if (typeof(T) == typeof(IntPointData))
             {
-                for (int i = j; i < timers.Count - 2; i = i + 2)
-                {
-                    var skey = timers[i];
-
-                    var snext = timers[i + 1];
-
-                    if (time1 == skey)
-                    {
-                        result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                        resultCount++;
-
-                        break;
-                    }
-                    else if (time1 > skey && time1 < snext)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.After:
-
-                                result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qulityes[i] < 20 && qulityes[i + 1] < 20)
-                                {
-                                    var pval1 = (time1 - skey).TotalMilliseconds;
-                                    var tval1 = (snext - skey).TotalMilliseconds;
-                                    var sval1 = value[i];
-                                    var sval2 = value[i + 2];
-
-                                    var sval21 = value[i + 1];
-                                    var sval22 = value[i + 3];
-
-
-                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-                                    var val2 = pval1 / tval1 * (Convert.ToDouble(sval22) - Convert.ToDouble(sval21)) + Convert.ToDouble(sval21);
-
-                                    result.AddPoint((int)val1, (int)val2, time1, 0);
-                                }
-                                else if (qulityes[i] < 20)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                                }
-                                else if (qulityes[i + 1] < 20)
-                                {
-                                    result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
-                                }
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Closed:
-                                var pval = (time1 - skey).TotalMilliseconds;
-                                var fval = (snext - time1).TotalMilliseconds;
-
-                                if (pval < fval)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                                }
-                                resultCount++;
-                                break;
-                        }
-                        break;
-                    }
-                    else if (time1 == snext)
-                    {
-                        result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                        resultCount++;
-                        break;
-                    }
-
-                }
+                var sval1 = (IntPointData)((object)value1);
+                var sval2 = (IntPointData)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                return new IntPointData((int)val1, (int)val2);
+            }
+            else if (typeof(T) == typeof(UIntPointData))
+            {
+                var sval1 = (UIntPointData)((object)value1);
+                var sval2 = (UIntPointData)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                return new UIntPointData((uint)val1, (uint)val2);
+            }
+            else if (typeof(T) == typeof(LongPointData))
+            {
+                var sval1 = (LongPointData)((object)value1);
+                var sval2 = (LongPointData)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                return new LongPointData((long)val1, (long)val2);
+            }
+            else if (typeof(T) == typeof(ULongPointData))
+            {
+                var sval1 = (ULongPointData)((object)value1);
+                var sval2 = (ULongPointData)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                return new ULongPointData((ulong)val1, (ulong)val2);
+            }
+            else if (typeof(T) == typeof(IntPoint3Data))
+            {
+                var sval1 = (IntPoint3Data)((object)value1);
+                var sval2 = (IntPoint3Data)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
+                return new IntPoint3Data((int)val1, (int)val2, (int)val3);
+            }
+            else if (typeof(T) == typeof(UIntPoint3Data))
+            {
+                var sval1 = (UIntPoint3Data)((object)value1);
+                var sval2 = (UIntPoint3Data)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
+                return new UIntPoint3Data((uint)val1, (uint)val2, (uint)val3);
+            }
+            else if (typeof(T) == typeof(LongPoint3Data))
+            {
+                var sval1 = (LongPoint3Data)((object)value1);
+                var sval2 = (LongPoint3Data)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
+                return new LongPoint3Data((long)val1, (long)val2, (long)val3);
+            }
+            else if (typeof(T) == typeof(ULongPoint3Data))
+            {
+                var sval1 = (ULongPoint3Data)((object)value1);
+                var sval2 = (ULongPoint3Data)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
+                return new ULongPoint3Data((ulong)val1, (ulong)val2, (ulong)val3);
             }
 
-
-            return resultCount;
+            return default(T);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        private int DeCompressUIntPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
-        {
-            int count = 0;
-            var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
-
-            var valuesize = source.ReadInt();
-            var value = DeCompressValue<uint>(source.ReadBytes(valuesize), count);
-
-            var qusize = source.ReadInt();
-
-            var qulityes = DeCompressQulity(source.ReadBytes(qusize));
-            int resultCount = 0;
-
-            int j = 0;
-
-            foreach (var time1 in time)
-            {
-                for (int i = j; i < timers.Count - 2; i = i + 2)
-                {
-                    var skey = timers[i];
-
-                    var snext = timers[i + 1];
-
-                    if (time1 == skey)
-                    {
-                        result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                        resultCount++;
-
-                        break;
-                    }
-                    else if (time1 > skey && time1 < snext)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.After:
-
-                                result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qulityes[i] < 20 && qulityes[i + 1] < 20)
-                                {
-                                    var pval1 = (time1 - skey).TotalMilliseconds;
-                                    var tval1 = (snext - skey).TotalMilliseconds;
-                                    var sval1 = value[i];
-                                    var sval2 = value[i + 2];
-
-                                    var sval21 = value[i + 1];
-                                    var sval22 = value[i + 3];
-
-
-                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-                                    var val2 = pval1 / tval1 * (Convert.ToDouble(sval22) - Convert.ToDouble(sval21)) + Convert.ToDouble(sval21);
-
-                                    result.AddPoint((uint)val1, (uint)val2, time1, 0);
-                                }
-                                else if (qulityes[i] < 20)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                                }
-                                else if (qulityes[i + 1] < 20)
-                                {
-                                    result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
-                                }
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Closed:
-                                var pval = (time1 - skey).TotalMilliseconds;
-                                var fval = (snext - time1).TotalMilliseconds;
-
-                                if (pval < fval)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                                }
-                                resultCount++;
-                                break;
-                        }
-                        break;
-                    }
-                    else if (time1 == snext)
-                    {
-                        result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                        resultCount++;
-                        break;
-                    }
-
-                }
-            }
-
-
-            return resultCount;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        private int DeCompressLongPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
-        {
-            int count = 0;
-            var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
-
-            var valuesize = source.ReadInt();
-            var value = DeCompressValue<long>(source.ReadBytes(valuesize), count);
-
-            var qusize = source.ReadInt();
-
-            var qulityes = DeCompressQulity(source.ReadBytes(qusize));
-            int resultCount = 0;
-
-            int j = 0;
-
-            foreach (var time1 in time)
-            {
-                for (int i = j; i < timers.Count - 2; i = i + 2)
-                {
-                    var skey = timers[i];
-
-                    var snext = timers[i + 1];
-
-                    if (time1 == skey)
-                    {
-                        result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                        resultCount++;
-
-                        break;
-                    }
-                    else if (time1 > skey && time1 < snext)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.After:
-
-                                result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qulityes[i] < 20 && qulityes[i + 1] < 20)
-                                {
-                                    var pval1 = (time1 - skey).TotalMilliseconds;
-                                    var tval1 = (snext - skey).TotalMilliseconds;
-                                    var sval1 = value[i];
-                                    var sval2 = value[i + 2];
-
-                                    var sval21 = value[i + 1];
-                                    var sval22 = value[i + 3];
-
-
-                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-                                    var val2 = pval1 / tval1 * (Convert.ToDouble(sval22) - Convert.ToDouble(sval21)) + Convert.ToDouble(sval21);
-
-                                    result.AddPoint((long)val1, (long)val2, time1, 0);
-                                }
-                                else if (qulityes[i] < 20)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                                }
-                                else if (qulityes[i + 1] < 20)
-                                {
-                                    result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
-                                }
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Closed:
-                                var pval = (time1 - skey).TotalMilliseconds;
-                                var fval = (snext - time1).TotalMilliseconds;
-
-                                if (pval < fval)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                                }
-                                resultCount++;
-                                break;
-                        }
-                        break;
-                    }
-                    else if (time1 == snext)
-                    {
-                        result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                        resultCount++;
-                        break;
-                    }
-
-                }
-            }
-
-
-            return resultCount;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        private int DeCompressULongPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
-        {
-            int count = 0;
-            var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
-
-            var valuesize = source.ReadInt();
-            var value = DeCompressValue<ulong>(source.ReadBytes(valuesize), count);
-
-            var qusize = source.ReadInt();
-
-            var qulityes = DeCompressQulity(source.ReadBytes(qusize));
-            int resultCount = 0;
-
-            int j = 0;
-
-            foreach (var time1 in time)
-            {
-                for (int i = j; i < timers.Count - 2; i = i + 2)
-                {
-                    var skey = timers[i];
-
-                    var snext = timers[i + 1];
-
-                    if (time1 == skey)
-                    {
-                        result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                        resultCount++;
-
-                        break;
-                    }
-                    else if (time1 > skey && time1 < snext)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.After:
-
-                                result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qulityes[i] < 20 && qulityes[i + 1] < 20)
-                                {
-                                    var pval1 = (time1 - skey).TotalMilliseconds;
-                                    var tval1 = (snext - skey).TotalMilliseconds;
-                                    var sval1 = value[i];
-                                    var sval2 = value[i + 2];
-
-                                    var sval21 = value[i + 1];
-                                    var sval22 = value[i + 3];
-
-                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-                                    var val2 = pval1 / tval1 * (Convert.ToDouble(sval22) - Convert.ToDouble(sval21)) + Convert.ToDouble(sval21);
-
-                                    result.AddPoint((ulong)val1, (ulong)val2, time1, 0);
-                                }
-                                else if (qulityes[i] < 20)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                                }
-                                else if (qulityes[i + 1] < 20)
-                                {
-                                    result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
-                                }
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Closed:
-                                var pval = (time1 - skey).TotalMilliseconds;
-                                var fval = (snext - time1).TotalMilliseconds;
-
-                                if (pval < fval)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                                }
-                                resultCount++;
-                                break;
-                        }
-                        break;
-                    }
-                    else if (time1 == snext)
-                    {
-                        result.AddPoint(value[i + 2], value[i + 3], time1, qulityes[i]);
-                        resultCount++;
-                        break;
-                    }
-
-                }
-            }
-            return resultCount;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        private int DeCompressIntPoint3Value<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
-        {
-            int count = 0;
-            var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
-
-            var valuesize = source.ReadInt();
-            var value = DeCompressValue<int>(source.ReadBytes(valuesize), count);
-
-            var qusize = source.ReadInt();
-
-            var qulityes = DeCompressQulity(source.ReadBytes(qusize));
-            int resultCount = 0;
-
-            int j = 0;
-
-            foreach (var time1 in time)
-            {
-                for (int i = j; i < timers.Count - 3; i = i + 3)
-                {
-                    var skey = timers[i];
-
-                    var snext = timers[i + 1];
-
-                    if (time1 == skey)
-                    {
-                        result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                        resultCount++;
-                        break;
-                    }
-                    else if (time1 > skey && time1 < snext)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.After:
-                                result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qulityes[i] < 20 && qulityes[i + 1] < 20)
-                                {
-                                    var pval1 = (time1 - skey).TotalMilliseconds;
-                                    var tval1 = (snext - skey).TotalMilliseconds;
-                                    var sval1 = value[i];
-                                    var sval21 = value[i + 1];
-                                    var sval31 = value[i + 2];
-
-                                    var sval2 = value[i + 3];
-                                    var sval22 = value[i + 4];
-                                    var sval32 = value[i + 5];
-
-                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-                                    var val2 = pval1 / tval1 * (Convert.ToDouble(sval22) - Convert.ToDouble(sval21)) + Convert.ToDouble(sval21);
-                                    var val3 = pval1 / tval1 * (Convert.ToDouble(sval32) - Convert.ToDouble(sval31)) + Convert.ToDouble(sval31);
-
-                                    result.AddPoint((int)val1, (int)val2, (int)val3, time1, 0);
-                                }
-                                else if (qulityes[i] < 20)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                                }
-                                else if (qulityes[i + 1] < 20)
-                                {
-                                    result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
-                                }
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Closed:
-                                var pval = (time1 - skey).TotalMilliseconds;
-                                var fval = (snext - time1).TotalMilliseconds;
-
-                                if (pval < fval)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                                }
-                                resultCount++;
-                                break;
-                        }
-                        break;
-                    }
-                    else if (time1 == snext)
-                    {
-                        result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                        resultCount++;
-                        break;
-                    }
-
-                }
-            }
-
-
-            return resultCount;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        private int DeCompressUIntPoint3Value<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
-        {
-            int count = 0;
-            var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
-
-            var valuesize = source.ReadInt();
-            var value = DeCompressValue<uint>(source.ReadBytes(valuesize), count);
-
-            var qusize = source.ReadInt();
-
-            var qulityes = DeCompressQulity(source.ReadBytes(qusize));
-            int resultCount = 0;
-
-            int j = 0;
-
-            foreach (var time1 in time)
-            {
-                for (int i = j; i < timers.Count - 3; i = i + 3)
-                {
-                    var skey = timers[i];
-
-                    var snext = timers[i + 1];
-
-                    if (time1 == skey)
-                    {
-                        result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                        resultCount++;
-                        break;
-                    }
-                    else if (time1 > skey && time1 < snext)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.After:
-                                result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qulityes[i] < 20 && qulityes[i + 1] < 20)
-                                {
-                                    var pval1 = (time1 - skey).TotalMilliseconds;
-                                    var tval1 = (snext - skey).TotalMilliseconds;
-                                    var sval1 = value[i];
-                                    var sval21 = value[i + 1];
-                                    var sval31 = value[i + 2];
-
-                                    var sval2 = value[i + 3];
-                                    var sval22 = value[i + 4];
-                                    var sval32 = value[i + 5];
-
-                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-                                    var val2 = pval1 / tval1 * (Convert.ToDouble(sval22) - Convert.ToDouble(sval21)) + Convert.ToDouble(sval21);
-                                    var val3 = pval1 / tval1 * (Convert.ToDouble(sval32) - Convert.ToDouble(sval31)) + Convert.ToDouble(sval31);
-
-                                    result.AddPoint((uint)val1, (uint)val2, (uint)val3, time1, 0);
-                                }
-                                else if (qulityes[i] < 20)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                                }
-                                else if (qulityes[i + 1] < 20)
-                                {
-                                    result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
-                                }
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Closed:
-                                var pval = (time1 - skey).TotalMilliseconds;
-                                var fval = (snext - time1).TotalMilliseconds;
-
-                                if (pval < fval)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                                }
-                                resultCount++;
-                                break;
-                        }
-                        break;
-                    }
-                    else if (time1 == snext)
-                    {
-                        result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                        resultCount++;
-                        break;
-                    }
-
-                }
-            }
-
-
-            return resultCount;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        private int DeCompressLongPoint3Value<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
-        {
-            int count = 0;
-            var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
-
-            var valuesize = source.ReadInt();
-            var value = DeCompressValue<long>(source.ReadBytes(valuesize), count);
-
-            var qusize = source.ReadInt();
-
-            var qulityes = DeCompressQulity(source.ReadBytes(qusize));
-            int resultCount = 0;
-
-            int j = 0;
-
-            foreach (var time1 in time)
-            {
-                for (int i = j; i < timers.Count - 3; i = i + 3)
-                {
-                    var skey = timers[i];
-
-                    var snext = timers[i + 1];
-
-                    if (time1 == skey)
-                    {
-                        result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                        resultCount++;
-                        break;
-                    }
-                    else if (time1 > skey && time1 < snext)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.After:
-                                result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qulityes[i] < 20 && qulityes[i + 1] < 20)
-                                {
-                                    var pval1 = (time1 - skey).TotalMilliseconds;
-                                    var tval1 = (snext - skey).TotalMilliseconds;
-                                    var sval1 = value[i];
-                                    var sval21 = value[i + 1];
-                                    var sval31 = value[i + 2];
-
-                                    var sval2 = value[i + 3];
-                                    var sval22 = value[i + 4];
-                                    var sval32 = value[i + 5];
-
-                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-                                    var val2 = pval1 / tval1 * (Convert.ToDouble(sval22) - Convert.ToDouble(sval21)) + Convert.ToDouble(sval21);
-                                    var val3 = pval1 / tval1 * (Convert.ToDouble(sval32) - Convert.ToDouble(sval31)) + Convert.ToDouble(sval31);
-
-                                    result.AddPoint((long)val1, (long)val2, (long)val3, time1, 0);
-                                }
-                                else if (qulityes[i] < 20)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                                }
-                                else if (qulityes[i + 1] < 20)
-                                {
-                                    result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
-                                }
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Closed:
-                                var pval = (time1 - skey).TotalMilliseconds;
-                                var fval = (snext - time1).TotalMilliseconds;
-
-                                if (pval < fval)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                                }
-                                resultCount++;
-                                break;
-                        }
-                        break;
-                    }
-                    else if (time1 == snext)
-                    {
-                        result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                        resultCount++;
-                        break;
-                    }
-
-                }
-            }
-
-
-            return resultCount;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="sourceAddr"></param>
-        /// <param name="time"></param>
-        /// <param name="timeTick"></param>
-        /// <param name="type"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        private int DeCompressULongPoint3Value<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
-        {
-            int count = 0;
-            var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
-
-            var valuesize = source.ReadInt();
-            var value = DeCompressValue<ulong>(source.ReadBytes(valuesize), count);
-
-            var qusize = source.ReadInt();
-
-            var qulityes = DeCompressQulity(source.ReadBytes(qusize));
-            int resultCount = 0;
-
-            int j = 0;
-
-            foreach (var time1 in time)
-            {
-                for (int i = j; i < timers.Count - 3; i = i + 3)
-                {
-                    var skey = timers[i];
-
-                    var snext = timers[i + 1];
-
-                    if (time1 == skey)
-                    {
-                        result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                        resultCount++;
-                        break;
-                    }
-                    else if (time1 > skey && time1 < snext)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.After:
-                                result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qulityes[i] < 20 && qulityes[i + 1] < 20)
-                                {
-                                    var pval1 = (time1 - skey).TotalMilliseconds;
-                                    var tval1 = (snext - skey).TotalMilliseconds;
-                                    var sval1 = value[i];
-                                    var sval21 = value[i + 1];
-                                    var sval31 = value[i + 2];
-
-                                    var sval2 = value[i + 3];
-                                    var sval22 = value[i + 4];
-                                    var sval32 = value[i + 5];
-
-                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-                                    var val2 = pval1 / tval1 * (Convert.ToDouble(sval22) - Convert.ToDouble(sval21)) + Convert.ToDouble(sval21);
-                                    var val3 = pval1 / tval1 * (Convert.ToDouble(sval32) - Convert.ToDouble(sval31)) + Convert.ToDouble(sval31);
-
-                                    result.AddPoint((ulong)val1, (ulong)val2, (ulong)val3, time1, 0);
-                                }
-                                else if (qulityes[i] < 20)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                                }
-                                else if (qulityes[i + 1] < 20)
-                                {
-                                    result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
-                                }
-                                resultCount++;
-                                break;
-                            case QueryValueMatchType.Closed:
-                                var pval = (time1 - skey).TotalMilliseconds;
-                                var fval = (snext - time1).TotalMilliseconds;
-
-                                if (pval < fval)
-                                {
-                                    result.AddPoint(value[i], value[i + 1], value[i + 2], time1, qulityes[i]);
-                                }
-                                else
-                                {
-                                    result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                                }
-                                resultCount++;
-                                break;
-                        }
-                        break;
-                    }
-                    else if (time1 == snext)
-                    {
-                        result.AddPoint(value[i + 3], value[i + 4], value[i + 5], time1, qulityes[i]);
-                        resultCount++;
-                        break;
-                    }
-
-                }
-            }
-
-
-            return resultCount;
-        }
+        
+       
         /// <summary>
         /// 
         /// </summary>
@@ -3124,42 +2095,105 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
+        public  int DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
         {
-            if (typeof(T) == typeof(IntPointData))
+            int count = 0;
+            var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
+
+            var valuesize = source.ReadInt();
+            var value = DeCompressValue<T>(source.ReadBytes(valuesize), count);
+
+            var qusize = source.ReadInt();
+
+            var qulityes = DeCompressQulity(source.ReadBytes(qusize));
+            int resultCount = 0;
+
+            int j = 0;
+
+            foreach (var time1 in time)
             {
-                return DeCompressIntPointValue(source, sourceAddr, time, timeTick, type, result);
+                for (int i = j; i < timers.Count - 1; i++)
+                {
+                    var skey = timers[i];
+
+                    var snext = timers[i + 1];
+
+                    if (time1 == skey)
+                    {
+                        var val = value[i];
+                        result.Add(val, time1, qulityes[i]);
+                        resultCount++;
+
+                        break;
+                    }
+                    else if (time1 > skey && time1 < snext)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                var val = value[i];
+                                result.Add(val, time1, qulityes[i]);
+                                resultCount++;
+                                break;
+                            case QueryValueMatchType.After:
+                                val = value[i + 1];
+                                result.Add(val, time1, qulityes[i + 1]);
+                                resultCount++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qulityes[i] < 20 && qulityes[i + 1] < 20)
+                                {
+                                    result.Add(LinerValue(skey, snext, time1, value[i], value[i + 1]), time1, 0);
+                                }
+                                else if (qulityes[i] < 20)
+                                {
+                                    val = value[i];
+                                    result.Add(val, time1, qulityes[i]);
+                                }
+                                else if (qulityes[i + 1] < 20)
+                                {
+                                    val = value[i + 1];
+                                    result.Add(val, time1, qulityes[i + 1]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                resultCount++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - skey).TotalMilliseconds;
+                                var fval = (snext - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    val = value[i];
+                                    result.Add(val, time1, qulityes[i]);
+                                }
+                                else
+                                {
+                                    val = value[i + 1];
+                                    result.Add(val, time1, qulityes[i + 1]);
+                                }
+                                resultCount++;
+                                break;
+                        }
+                        break;
+                    }
+                    else if (time1 == snext)
+                    {
+                        var val = value[i + 1];
+                        result.Add(val, time1, qulityes[i + 1]);
+                        resultCount++;
+                        break;
+                    }
+
+                }
             }
-            else if (typeof(T) == typeof(UIntPointData))
-            {
-                return DeCompressUIntPointValue(source, sourceAddr, time, timeTick, type, result);
-            }
-            else if (typeof(T) == typeof(LongPointData))
-            {
-                return DeCompressLongPointValue(source, sourceAddr, time, timeTick, type, result);
-            }
-            else if (typeof(T) == typeof(ULongPointData))
-            {
-                return DeCompressULongPointValue(source, sourceAddr, time, timeTick, type, result);
-            }
-            else if (typeof(T) == typeof(IntPoint3Data))
-            {
-                return DeCompressIntPoint3Value(source, sourceAddr, time, timeTick, type, result);
-            }
-            else if (typeof(T) == typeof(UIntPoint3Data))
-            {
-                return DeCompressUIntPoint3Value(source, sourceAddr, time, timeTick, type, result);
-            }
-            else if (typeof(T) == typeof(LongPoint3Data))
-            {
-                return DeCompressLongPoint3Value(source, sourceAddr, time, timeTick, type, result);
-            }
-            else if (typeof(T) == typeof(ULongPoint3Data))
-            {
-                return DeCompressULongPoint3Value(source, sourceAddr, time, timeTick, type, result);
-            }
-            return 0;
+
+            return resultCount;
         }
+        
         #endregion
 
 

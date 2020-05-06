@@ -108,8 +108,19 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        private bool CheckDatabaseExist(string name)
+        {
+            return System.IO.File.Exists(PathHelper.helper.GetDataPath(name, name + ".db"));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private void LoadDatabase()
         {
+           
             this.mDatabase = new DatabaseSerise().Load(mDatabaseName);
             this.mRealDatabase = this.mDatabase.RealDatabase;
             this.mHisDatabase = this.mDatabase.HisDatabase;
@@ -119,8 +130,9 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="database"></param>
-        private async Task InitAsync(string database)
+        private async Task<bool> InitAsync(string database)
         {
+
             if (System.IO.Path.IsPathRooted(database))
             {
                 this.mDatabaseName = System.IO.Path.GetFileNameWithoutExtension(database);
@@ -132,35 +144,47 @@ namespace Cdy.Tag
             }
             InitPath();
 
-            LoadDatabase();
+            if (CheckDatabaseExist(mDatabaseName))
+            {
+                LoadDatabase();
 
-            mHisFileManager = new DataFileManager(mDatabaseName);
-            mHisFileManager.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
+                mHisFileManager = new DataFileManager(mDatabaseName);
+                mHisFileManager.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
 
-            var task = mHisFileManager.Int();
-            realEnginer = new RealEnginer(mRealDatabase);
-            realEnginer.Init();
+                var task = mHisFileManager.Int();
+                realEnginer = new RealEnginer(mRealDatabase);
+                realEnginer.Init();
 
-            hisEnginer = new HisEnginer(mHisDatabase, realEnginer);
-            hisEnginer.MergeMemoryTime = mHisDatabase.Setting.DataBlockDuration * 60;
-            hisEnginer.Init();
+                hisEnginer = new HisEnginer(mHisDatabase, realEnginer);
+                hisEnginer.MergeMemoryTime = mHisDatabase.Setting.DataBlockDuration * 60;
+                hisEnginer.LogManager = new LogManager() { Database = mDatabaseName };
+                hisEnginer.Init();
 
-            compressEnginer = new CompressEnginer(hisEnginer.MegerMemorySize);
-            compressEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
+                compressEnginer = new CompressEnginer(hisEnginer.MegerMemorySize);
+                compressEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
 
-            seriseEnginer = new SeriseEnginer() { DatabaseName = database };
-            seriseEnginer.FileDuration = mHisDatabase.Setting.FileDataDuration;
-            seriseEnginer.BlockDuration = mHisDatabase.Setting.DataBlockDuration;
-            seriseEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
-            seriseEnginer.DataSeriser = mHisDatabase.Setting.DataSeriser;
+                seriseEnginer = new SeriseEnginer() { DatabaseName = database };
+                seriseEnginer.FileDuration = mHisDatabase.Setting.FileDataDuration;
+                seriseEnginer.BlockDuration = mHisDatabase.Setting.DataBlockDuration;
+                seriseEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
+                seriseEnginer.DataSeriser = mHisDatabase.Setting.DataSeriser;
 
-            querySerivce = new QuerySerivce(this.mDatabaseName);
+                querySerivce = new QuerySerivce(this.mDatabaseName);
 
-            RegistorInterface();
+                RegistorInterface();
 
-            DriverManager.Manager.Init(realEnginer);
+                DriverManager.Manager.Init(realEnginer);
 
-            await task;
+                await task;
+
+                return true;
+            }
+            else
+            {
+                LoggerService.Service.Erro("Runner", string.Format(DBRuntime.Res.Get("databasenotexist"), mDatabaseName));
+                return false;
+            }
+           
 
         }
 
@@ -207,7 +231,11 @@ namespace Cdy.Tag
         public async void StartAsync(string database)
         {
             LoggerService.Service.Info("Runner", " 数据库 " + database+" 开始启动");
-            await InitAsync(database);
+            var re = await InitAsync(database);
+            if (!re)
+            {
+                return;
+            }
             seriseEnginer.Start();
             compressEnginer.Start();
             hisEnginer.Start();

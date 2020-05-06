@@ -6,6 +6,7 @@ namespace DBInRun
 {
     class Program
     {
+        //static MarshalMemoryBlock block;
         static void Main(string[] args)
         {
             bool mIsClosed = false;
@@ -82,6 +83,10 @@ namespace DBInRun
                     case "h":
                         Console.WriteLine(GetHelpString());
                         break;
+                    //case "mtest":
+                    //    block = new MarshalMemoryBlock((long)(1024 * 1024 * 1024)*2);
+                    //    //block.Clear();
+                    //    break;
                 }
             }
         }

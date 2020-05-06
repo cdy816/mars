@@ -117,22 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="GDMsg" xml:space="preserve">
-    <value>生成包括指定类型和数量的示例变量的数据库</value>
-  </data>
-  <data name="HelpMsg" xml:space="preserve">
-    <value>输入h获取命令帮助信息</value>
-  </data>
-  <data name="HMsg" xml:space="preserve">
-    <value>显示命令列表</value>
-  </data>
-  <data name="StartMsg" xml:space="preserve">
-    <value>运行指定数据库，如果忽略数据库名称则启动默认'local'数据库</value>
-  </data>
-  <data name="StopMsg" xml:space="preserve">
-    <value>停止正在运行的数据库</value>
-  </data>
-  <data name="WelcomeMsg" xml:space="preserve">
-    <value>***************欢迎来到Mars高性能实时物联数据库****************</value>
+  <data name="databasenotexist" xml:space="preserve">
+    <value>database '{0}' is not exist!</value>
   </data>
 </root>

@@ -125,7 +125,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="time"></param>
         /// <param name="qulity"></param>
-        public void Add<T>(T value,DateTime time,byte qulity)
+        public void Add<TT>(TT value,DateTime time,byte qulity)
         {
             Add((object)value, time, qulity);
         }

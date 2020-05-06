@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DBInRun.Properties {
+namespace DBRuntime.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace DBInRun.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DBInRun.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DBRuntime.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,56 +61,11 @@ namespace DBInRun.Properties {
         }
         
         /// <summary>
-        ///   查找类似 generate a sample databse with special number tags 的本地化字符串。
+        ///   查找类似 database &apos;{0}&apos; is not exist! 的本地化字符串。
         /// </summary>
-        internal static string GDMsg {
+        internal static string databasenotexist {
             get {
-                return ResourceManager.GetString("GDMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Enter h for command help information 的本地化字符串。
-        /// </summary>
-        internal static string HelpMsg {
-            get {
-                return ResourceManager.GetString("HelpMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 display command list 的本地化字符串。
-        /// </summary>
-        internal static string HMsg {
-            get {
-                return ResourceManager.GetString("HMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 start to run a databse,ignor database name to run default &apos;local&apos; database 的本地化字符串。
-        /// </summary>
-        internal static string StartMsg {
-            get {
-                return ResourceManager.GetString("StartMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 stop databse 的本地化字符串。
-        /// </summary>
-        internal static string StopMsg {
-            get {
-                return ResourceManager.GetString("StopMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 ***************Welcome to Mars high performance realtime iot database*************** 的本地化字符串。
-        /// </summary>
-        internal static string WelcomeMsg {
-            get {
-                return ResourceManager.GetString("WelcomeMsg", resourceCulture);
+                return ResourceManager.GetString("databasenotexist", resourceCulture);
             }
         }
     }

@@ -635,6 +635,10 @@ namespace Cdy.Tag
             var vv = ServiceLocator.Locator.Resolve<IHisEngine>();
             var tags = vv.ListAllTags().Where(e => e.Id >= Id * TagCountOneFile && e.Id < (Id + 1) * TagCountOneFile).OrderBy(e => e.Id);
             mBlockPointMemory = new MemoryBlock(tags.Count() * 8,1024*1024);
+            mBlockPointMemory.Clear();
+
+            LoggerService.Service.Info("SeriseEnginer", "Cal BlockPointMemory memory size:" + (mBlockPointMemory.AllocSize) / 1024.0 / 1024 + "M", ConsoleColor.Cyan);
+
             //foreach (var vtag in tags)
             //{
             //    mIdAddrs.Add(vtag.Id, offset);
@@ -808,11 +812,12 @@ namespace Cdy.Tag
                     //this.mFileWriter.Append(mProcessMemory.Buffers, (int)start, (int)(totalsize - start)); 
                     mFileWriter.Write(mBlockPointMemory.Buffers, pointAddr, 0, (int)mBlockPointMemory.AllocSize);
                     Flush();
+                    
                 }
                 sw.Stop();
-
+                
                 LoggerService.Service.Info("SeriseFileItem" + Id, "写入数据 " + mCurrentFileName + "  数据大小：" + ((totalsize - start) + mBlockPointMemory.AllocSize) / 1024.0 / 1024 + " m" +"其他脚本耗时:"+ltmp+","+(ltmp2-ltmp)+","+(ltmp3-ltmp2)+ "存储耗时:" + (sw.ElapsedMilliseconds-ltmp3));
-
+               
             }
             catch(System.IO.IOException ex)
             {
@@ -827,6 +832,7 @@ namespace Cdy.Tag
         public void Flush()
         {
             mFileWriter.Flush();
+            mFileWriter.CloseAndReOpen();
         }
 
         /// <summary>

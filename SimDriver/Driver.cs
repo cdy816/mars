@@ -25,6 +25,8 @@ namespace SimDriver
 
         private StreamWriter mWriter;
 
+        private DateTime mLastProcessTime = DateTime.Now;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -41,6 +43,9 @@ namespace SimDriver
             mWriter = new StreamWriter(  System.IO.File.Open(vfile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite));
             
         }
+
+
+
         #endregion ...Constructor...
 
         #region ... Properties ...
@@ -92,7 +97,7 @@ namespace SimDriver
         {
             mTagService = tagQuery;
             InitTagCach(tagQuery);
-            mScanTimer = new System.Timers.Timer(1000);
+            mScanTimer = new System.Timers.Timer(100);
             mScanTimer.Elapsed += MScanTimer_Elapsed;
             mScanTimer.Start();
             return true;
@@ -105,12 +110,19 @@ namespace SimDriver
         /// <param name="e"></param>
         private void MScanTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+           
             if (mIsBusy)
             {
                 LoggerService.Service.Warn("Sim Driver", "出现阻塞");
                 return;
             }
             mIsBusy = true;
+            DateTime time = DateTime.Now;
+            if ((time - mLastProcessTime).Seconds < 1)
+            {
+                return;
+            }
+            mLastProcessTime = time;
 
             mNumber++;
             mNumber = mNumber > (short)360 ? (short)0 : mNumber;
@@ -122,7 +134,7 @@ namespace SimDriver
             double sval = Math.Sin(mNumber / 180.0 * Math.PI);
 
             Log("Sim:Sin " + fval + " " + "Sim:Cos " + sval + " "+ "Sim:step " + mNumber +"  "+ DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-            
+
             foreach (var vv in mTagIdCach)
             {
                 if (vv.Key == "Sim:cos")
@@ -138,6 +150,22 @@ namespace SimDriver
                     mTagService.SetTagValue(vv.Value, mNumber);
                 }
             }
+
+            //System.Threading.Tasks.Parallel.ForEach(mTagIdCach, (vv) => {
+            //    if (vv.Key == "Sim:cos")
+            //    {
+            //        mTagService.SetTagValue(vv.Value, fval);
+            //    }
+            //    else if (vv.Key == "Sim:sin")
+            //    {
+            //        mTagService.SetTagValue(vv.Value, sval);
+            //    }
+            //    else if (vv.Key == "Sim:step")
+            //    {
+            //        mTagService.SetTagValue(vv.Value, mNumber);
+            //    }
+            //});
+
             //#if DEBUG
             //            sw.Stop();
 

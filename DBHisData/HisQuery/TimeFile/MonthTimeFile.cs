@@ -22,6 +22,8 @@ namespace Cdy.Tag
 
         private SortedDictionary<DateTime, Tuple<TimeSpan, DataFileInfo>> mFileMaps = new SortedDictionary<DateTime, Tuple<TimeSpan, DataFileInfo>>();
 
+        private DateTime mMaxTime = DateTime.MinValue;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -46,6 +48,17 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        public void UpdateLastDatetime()
+        {
+            if(mFileMaps.ContainsKey(mMaxTime))
+            {
+                mFileMaps[mMaxTime].Item2.UpdateLastDatetime();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="startTime"></param>
         /// <param name="duration"></param>
         /// <param name="file"></param>
@@ -54,6 +67,11 @@ namespace Cdy.Tag
             if(!mFileMaps.ContainsKey(startTime))
             {
                 mFileMaps.Add(startTime, new Tuple<TimeSpan, DataFileInfo>(duration, file));
+
+                if(startTime>mMaxTime)
+                {
+                    mMaxTime = startTime;
+                }
             }
         }
 
@@ -106,27 +124,6 @@ namespace Cdy.Tag
             return GetDataFiles(startTime, startTime + span);
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="month"></param>
-        ///// <param name="file"></param>
-        //public DayTimeFile AddDay(int month, DayTimeFile file)
-        //{
-        //    file.Parent = this;
-        //    return this.AddTimefile(month, file) as DayTimeFile;
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="month"></param>
-        ///// <returns></returns>
-        //public DayTimeFile AddDay(int month)
-        //{
-        //    DayTimeFile mfile = new DayTimeFile() { TimeKey = month };
-        //    return AddDay(month, mfile);
-        //}
 
         #endregion ...Methods...
 

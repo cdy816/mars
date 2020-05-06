@@ -70,7 +70,7 @@ namespace Cdy.Tag
         /// <param name="filename"></param>
         public override bool CreatOrOpenFile(string filename)
         {
-
+            this.FileName = filename;
             if(System.IO.File.Exists(filename))
             {
                 mStream = System.IO.File.Open(filename, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
@@ -234,6 +234,46 @@ namespace Cdy.Tag
             return BitConverter.ToInt32(re, 0);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <returns></returns>
+        public override float ReadFloat(long start)
+        {
+            mStream.Position = start;
+            byte[] re = new byte[4];
+            mStream.Read(re, 0, re.Length);
+            return MemoryHelper.ReadFloat(re);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <returns></returns>
+        public override double ReadDouble(long start)
+        {
+            mStream.Position = start;
+            byte[] re = new byte[8];
+            mStream.Read(re, 0, re.Length);
+            return MemoryHelper.ReadDouble(re);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="len"></param>
+        /// <returns></returns>
+        public override byte[] ReadBytes(long start, int len)
+        {
+            mStream.Position = start;
+            byte[] re = new byte[len];
+            mStream.Read(re, 0, re.Length);
+            return re;
+        }
+
         public override DateTime ReadDateTime(long start)
         {
             mStream.Position = start;
@@ -362,6 +402,15 @@ namespace Cdy.Tag
             }
         }
 
+        public override DataFileSeriserbase CloseAndReOpen()
+        {
+            long pos = mStream.Position;
+            Close();
+            OpenFile(FileName);
+            mStream.Position = pos;
+            return this;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -371,6 +420,7 @@ namespace Cdy.Tag
         {
             if (System.IO.File.Exists(filename))
             {
+                this.FileName = filename;
                 mStream = System.IO.File.Open(filename, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
                 return true;
             }
@@ -386,6 +436,7 @@ namespace Cdy.Tag
         {
             if (System.IO.File.Exists(filename))
             {
+                this.FileName = filename;
                 mStream = System.IO.File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 return true;
             }
@@ -501,6 +552,7 @@ namespace Cdy.Tag
             return this;
         }
 
-        
+       
+
     }
 }

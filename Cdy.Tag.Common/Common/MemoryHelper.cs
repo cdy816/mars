@@ -446,6 +446,18 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="value"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public static unsafe float ReadFloat(byte[] value)
+        {
+
+            return ReadFloat(value.AsMemory(0, 4).Pin().Pointer, 0);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <returns></returns>
@@ -641,6 +653,18 @@ namespace Cdy.Tag
                 // this method is documented to throw AccessViolationException on any AV
                 throw new AccessViolationException();
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public static unsafe double ReadDouble(byte[] value)
+        {
+
+            return ReadDouble(value.AsMemory(0, 8).Pin().Pointer, 0);
         }
 
         /// <summary>

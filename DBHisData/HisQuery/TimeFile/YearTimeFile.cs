@@ -20,6 +20,8 @@ namespace Cdy.Tag
 
         #region ... Variables  ...
 
+        private int mMaxMonth = 0;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -66,6 +68,18 @@ namespace Cdy.Tag
                     mm = AddMonth(endTime.Month);
                     mm.AddFile(startTime2, endTime - startTime2, file);
                 }
+            }
+            mMaxMonth = Math.Max(mon1, mMaxMonth);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void UpdateLastDatetime()
+        {
+           if(this.ContainsKey(mMaxMonth))
+            {
+                (this[mMaxMonth] as MonthTimeFile).UpdateLastDatetime();
             }
         }
 

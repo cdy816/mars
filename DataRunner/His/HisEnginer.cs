@@ -6,7 +6,6 @@
 //  Version 1.0
 //  种道洋
 //==============================================================
-using Cdy.Tag;
 using DBRuntime.His;
 using System;
 using System.Collections.Generic;
@@ -33,6 +32,8 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         private Cdy.Tag.RealEnginer mRealEnginer;
+
+        private LogManager mLogManager;
 
         /// <summary>
         /// 缓存内存缓存时间,单位:s
@@ -179,6 +180,25 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public LogManager LogManager
+        {
+            get
+            {
+                return mLogManager;
+            }
+            set
+            {
+                mLogManager = value;
+                if(mLogManager!=null)
+                {
+                    mLogManager.TimeLen = (ushort)(CachMemoryTime/60);
+                }
+            }
+        }
+
 
         #endregion ...Properties...
 
@@ -189,6 +209,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Init()
         {
+            
             if (mRealEnginer != null)
             {
                 if (mManager == null)
@@ -445,7 +466,14 @@ namespace Cdy.Tag
             mCachMemory1 = new CachMemoryBlock(cachHeadSize) { Name = "CachMemory1" };
             mCachMemory2 = new CachMemoryBlock(cachHeadSize) { Name = "CachMemory2" };
 
+            LoggerService.Service.Info("HisEnginer", "Cal MergeMemory memory size:" + (storeHeadSize/1024.0/1024)+"M", ConsoleColor.Cyan);
+            LoggerService.Service.Info("HisEnginer", "Cal CachMemoryBlock memory size:" + (cachHeadSize / 1024.0 / 1024 *2) + "M", ConsoleColor.Cyan);
+
             CurrentMemory = mCachMemory1;
+
+            mCachMemory1.Clear();
+            mCachMemory2.Clear();
+            mMergeMemory.Clear();
             
         }
 
@@ -469,6 +497,13 @@ namespace Cdy.Tag
         public void Start()
         {
             mIsClosed = false;
+
+            if (LogManager != null)
+            {
+                LogManager.InitHeadData(this.mHisTags);
+                LogManager.Start();
+            }
+
             foreach (var vv in mRecordTimerProcesser)
             {
                 vv.Start();
@@ -509,7 +544,7 @@ namespace Cdy.Tag
         /// <param name="memory"></param>
         private void CheckMemoryIsReady(MarshalMemoryBlock memory)
         {
-            while (memory.IsBusy)
+            while (memory.IsBusy())
             {
                 LoggerService.Service.Info("Record",  "记录出现阻塞 " + memory.Name);
                 System.Threading.Thread.Sleep(1);
@@ -553,7 +588,7 @@ namespace Cdy.Tag
                         LoggerService.Service.Info("Record", "提交内存 " + mMergeMemory.Name + " 进行压缩",ConsoleColor.Green);
 
                         //等待压缩完成
-                        while(mMergeMemory.IsBusy) Thread.Sleep(1);
+                        while(mMergeMemory.IsBusy()) Thread.Sleep(1);
                         RecordAllFirstValue();
                     }
                     count = 0;
@@ -660,6 +695,9 @@ namespace Cdy.Tag
                 mWaitForMergeMemory = mcc;
                 //通知进行内存合并
                 resetEvent.Set();
+
+                mLogManager?.RequestToSave(mcc.CurrentDatetime,dateTime, mcc);
+
             }
         }
 
@@ -820,6 +858,8 @@ namespace Cdy.Tag
                 vv.Stop();
                 vv.Dispose();
             }
+
+            if (LogManager != null) LogManager.Stop();
 
             mValueChangedProcesser.Clear();
 

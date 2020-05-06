@@ -128,6 +128,7 @@ namespace Cdy.Tag
         public void Stop()
         {
             mIsClosed = true;
+            resetEvent.Set();
             closedEvent.WaitOne(1000);
         }
 

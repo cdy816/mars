@@ -133,6 +133,6 @@
     <value>stop databse</value>
   </data>
   <data name="WelcomeMsg" xml:space="preserve">
-    <value>***************Welcome to Mars high performance real time sensor database***************</value>
+    <value>***************Welcome to Mars high performance realtime iot database***************</value>
   </data>
 </root>

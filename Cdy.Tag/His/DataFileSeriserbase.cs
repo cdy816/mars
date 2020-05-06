@@ -179,6 +179,27 @@ namespace Cdy.Tag
         /// <param name="len"></param>
         public abstract MarshalMemoryBlock Read(long start, int len);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <returns></returns>
+        public abstract double ReadDouble(long start);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <returns></returns>
+        public abstract float ReadFloat(long start);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="len"></param>
+        /// <returns></returns>
+        public abstract byte[] ReadBytes(long start,int len);
 
         /// <summary>
         /// 
@@ -236,6 +257,13 @@ namespace Cdy.Tag
         /// </summary>
         public abstract DataFileSeriserbase Flush();
 
+
+        /// <summary>
+        /// 关闭并重新打开
+        /// </summary>
+        /// <returns></returns>
+        public abstract DataFileSeriserbase CloseAndReOpen();
+
         /// <summary>
         /// 
         /// </summary>
@@ -247,6 +275,8 @@ namespace Cdy.Tag
         /// </summary>
         /// <returns></returns>
         public abstract Stream GetStream();
+
+
 
         /// <summary>
         /// 

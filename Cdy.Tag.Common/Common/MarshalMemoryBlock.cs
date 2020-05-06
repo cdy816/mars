@@ -44,6 +44,8 @@ namespace Cdy.Tag
 
         public static byte[] zoreData = new byte[1024 * 10];
 
+        private int mRefCount = 0;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -125,10 +127,10 @@ namespace Cdy.Tag
             }
         }
 
-        /// <summary>
-        /// 是否繁忙
-        /// </summary>
-        public bool IsBusy { get; set; }
+        ///// <summary>
+        ///// 是否繁忙
+        ///// </summary>
+        //public bool IsBusy { get; set; }
 
 
         /// <summary>
@@ -203,6 +205,34 @@ namespace Cdy.Tag
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void IncRef()
+        {
+            lock (mUserSizeLock)
+                Interlocked.Increment(ref mRefCount);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void DecRef()
+        {
+            lock (mUserSizeLock)
+                mRefCount = mRefCount > 0 ? mRefCount - 1 : mRefCount;
+        }
+
+        /// <summary>
+        /// 是否繁忙
+        /// </summary>
+        /// <returns></returns>
+        public bool IsBusy()
+        {
+            return mRefCount > 0;
+        }
+
 
         /// <summary>
         /// 
@@ -340,7 +370,7 @@ namespace Cdy.Tag
             mUsedSize = 0;
             mPosition = 0;
 
-            LoggerService.Service.Info("MemoryBlock", Name + " is clear !");
+           // LoggerService.Service.Info("MemoryBlock", Name + " is clear !");
         }
 
         /// <summary>
@@ -2164,14 +2194,17 @@ namespace Cdy.Tag
             return re;
         }
 
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="memory"></param>
         public static void MakeMemoryBusy(this MarshalMemoryBlock memory)
         {
-            LoggerService.Service.Info("MemoryBlock", memory.Name + " is busy.....");
-            memory.IsBusy = true;
+            memory.IncRef();
+            LoggerService.Service.Info("MemoryBlock","make "+ memory.Name + " is busy.....");
+            //memory.IsBusy = true;
+            
             //memory.StartMemory[0] = 1;
         }
 
@@ -2181,8 +2214,9 @@ namespace Cdy.Tag
         /// <param name="memory"></param>
         public static void MakeMemoryNoBusy(this MarshalMemoryBlock memory)
         {
-            LoggerService.Service.Info("MemoryBlock", memory.Name+ " is ready !");
-            memory.IsBusy = false;
+            memory.DecRef();
+            LoggerService.Service.Info("MemoryBlock", "make " + memory.Name+ " is ready !");
+            
             //memory.StartMemory[0] = 0;
         }
 
@@ -2206,6 +2240,40 @@ namespace Cdy.Tag
                 }
                 stream.Flush();
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <param name="stream"></param>
+        public static void RecordToLog(this MarshalMemoryBlock memory,Stream stream)
+        {
+                byte[] bvals = new byte[1024];
+                long totalsize = memory.AllocSize;
+                long csize = 0;
+                foreach (var vv in memory.Buffers)
+                {
+                    for (int i = 0; i < memory.BufferItemSize / 1024; i++)
+                    {
+                        Marshal.Copy(vv + i * 1024, bvals, 0, 1024);
+                        int isize = (int)Math.Min(totalsize - csize, 1024);
+                        csize += isize;
+                        stream.Write(bvals, 0, isize);
+                        if (csize >= totalsize)
+                            break;
+                    }
+                    if (csize >= totalsize)
+                        break;
+                }
+                stream.Flush();
+        }
+
+        public static void Dump(this MarshalMemoryBlock memory,DateTime time)
+        {
+            string fileName = memory.Name + "_" + time.ToString("yyyy_MM_dd_HH_mm_ss") + ".dmp";
+            fileName = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(MarshalMemoryBlock).Assembly.Location), fileName);
+            Dump(memory, fileName);
         }
 
         /// <summary>

@@ -27,7 +27,9 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        Dictionary<HeadOffsetKey,Tuple<Dictionary<int, int>,long>> mHeadOffsets = new Dictionary<HeadOffsetKey, Tuple<Dictionary<int, int>, long>>();
+        public Dictionary<HeadOffsetKey,Tuple<Dictionary<int, int>,long>> mHeadOffsets = new Dictionary<HeadOffsetKey, Tuple<Dictionary<int, int>, long>>();
+
+        public Dictionary<string, Dictionary<int, long>> LogHeadOffsets = new Dictionary<string, Dictionary<int, long>>();
 
         #endregion ...Variables...
 
@@ -44,6 +46,45 @@ namespace Cdy.Tag
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool Contains(string name)
+        {
+            return LogHeadOffsets.ContainsKey(name);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="addrs"></param>
+        public void AddLogHead(string name,Dictionary<int,long> addrs)
+        {
+            if (!LogHeadOffsets.ContainsKey(name))
+            {
+                LogHeadOffsets.Add(name, addrs);
+            }
+            else
+            {
+                LogHeadOffsets[name] = addrs;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        public void RemoveLogHead(string name)
+        {
+            if(LogHeadOffsets.ContainsKey(name))
+            {
+                LogHeadOffsets.Remove(name);
+            }
+        }
 
         /// <summary>
         /// 
@@ -79,6 +120,16 @@ namespace Cdy.Tag
         {
             HeadOffsetKey key = new HeadOffsetKey(count, sum);
             return mHeadOffsets[key];
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public Dictionary<int, long> Get(string key)
+        {
+            return LogHeadOffsets[key];
         }
 
         #endregion ...Methods...

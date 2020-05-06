@@ -116,7 +116,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<bool> result)
+        public  int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<bool> result)
         {
 
             DateTime time;
@@ -158,7 +158,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<byte> result)
+        public  int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<byte> result)
         {
             DateTime time;
 
@@ -224,7 +224,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<short> result)
+        public  int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<short> result)
         {
             DateTime time;
 
@@ -290,7 +290,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ushort> result)
+        public  int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ushort> result)
         {
             DateTime time;
 
@@ -356,7 +356,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<int> result)
+        public  int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<int> result)
         {
             DateTime time;
 
@@ -422,7 +422,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<uint> result)
+        public  int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<uint> result)
         {
             DateTime time;
 
@@ -487,7 +487,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<long> result)
+        public  int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<long> result)
         {
             DateTime time;
 
@@ -552,7 +552,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ulong> result)
+        public  int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ulong> result)
         {
             DateTime time;
 
@@ -618,7 +618,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<float> result)
+        public  int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<float> result)
         {
             DateTime time;
 
@@ -683,7 +683,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result)
+        public  int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result)
         {
             DateTime time;
 
@@ -722,7 +722,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<DateTime> result)
+        public  int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<DateTime> result)
         {
             DateTime time;
 
@@ -788,7 +788,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<string> result)
+        public  int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<string> result)
         {
             DateTime time;
             int valuecount = 0;
@@ -848,7 +848,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override bool? DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  bool? DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
             int valuecount = 0;
@@ -909,7 +909,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result)
+        public  int DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result)
         {
             DateTime stime;
             int valuecount = 0;
@@ -997,7 +997,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override byte? DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  byte? DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
             int valuecount = 0;
@@ -1057,7 +1057,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result)
+        public  int DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result)
         {
             DateTime stime;
             int valuecount = 0;
@@ -1144,7 +1144,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override DateTime? DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  DateTime? DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
             int valuecount = 0;
@@ -1204,7 +1204,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result)
+        public  int DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result)
         {
             DateTime stime;
             int valuecount = 0;
@@ -1292,7 +1292,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override double? DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  double? DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
             int valuecount = 0;
@@ -1375,7 +1375,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<double> result)
+        public  int DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<double> result)
         {
             DateTime stime;
             int valuecount = 0;
@@ -1477,7 +1477,7 @@ namespace Cdy.Tag
         }
 
 
-        public override float? DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  float? DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
             int valuecount = 0;
@@ -1558,7 +1558,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<float> result)
+        public  int DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<float> result)
         {
             DateTime stime;
             int valuecount = 0;
@@ -1668,7 +1668,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override int? DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  int? DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
             int valuecount = 0;
@@ -1749,7 +1749,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<int> result)
+        public  int DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<int> result)
         {
             DateTime stime;
             int valuecount = 0;
@@ -1859,7 +1859,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override long? DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  long? DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
             int valuecount = 0;
@@ -1940,7 +1940,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<long> result)
+        public  int DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<long> result)
         {
             DateTime stime;
             int valuecount = 0;
@@ -2052,7 +2052,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override short? DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  short? DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
             int valuecount = 0;
@@ -2133,7 +2133,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<short> result)
+        public  int DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<short> result)
         {
 
             DateTime stime;
@@ -2246,7 +2246,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override string DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  string DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
             int valuecount = 0;
@@ -2314,7 +2314,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<string> result)
+        public  int DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<string> result)
         {
 
             DateTime stime;
@@ -2409,7 +2409,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override uint? DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  uint? DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
             int valuecount = 0;
@@ -2491,7 +2491,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result)
+        public  int DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result)
         {
             DateTime stime;
             int valuecount = 0;
@@ -2601,7 +2601,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override ulong? DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  ulong? DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
             int valuecount = 0;
@@ -2684,7 +2684,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result)
+        public  int DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result)
         {
             DateTime stime;
             int valuecount = 0;
@@ -2793,7 +2793,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override ushort? DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  ushort? DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
             int valuecount = 0;
@@ -2876,7 +2876,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result)
+        public  int DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result)
         {
             DateTime stime;
             int valuecount = 0;
@@ -2988,7 +2988,209 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressAllPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result)
+        public override int DeCompressAllValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result)
+        {
+            if (typeof(T) == typeof(bool))
+            {
+                return DeCompressAllValue(source, sourceAddr, startTime, endTime, timeTick, result as HisQueryResult<bool>);
+            }
+            else if (typeof(T) == typeof(short))
+            {
+                return DeCompressAllValue(source, sourceAddr, startTime, endTime, timeTick, result as HisQueryResult<short>);
+            }
+            else if (typeof(T) == typeof(ushort))
+            {
+                return DeCompressAllValue(source, sourceAddr, startTime, endTime, timeTick, result as HisQueryResult<ushort>);
+            }
+            else if (typeof(T) == typeof(int))
+            {
+                return DeCompressAllValue(source, sourceAddr, startTime, endTime, timeTick, result as HisQueryResult<int>);
+            }
+            else if (typeof(T) == typeof(uint))
+            {
+                return DeCompressAllValue(source, sourceAddr, startTime, endTime, timeTick, result as HisQueryResult<uint>);
+            }
+            else if (typeof(T) == typeof(long))
+            {
+                return DeCompressAllValue(source, sourceAddr, startTime, endTime, timeTick, result as HisQueryResult<long>);
+            }
+            else if (typeof(T) == typeof(ulong))
+            {
+                return DeCompressAllValue(source, sourceAddr, startTime, endTime, timeTick, result as HisQueryResult<ulong>);
+            }
+            else if (typeof(T) == typeof(double))
+            {
+                return DeCompressAllValue(source, sourceAddr, startTime, endTime, timeTick, result as HisQueryResult<double>);
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                return DeCompressAllValue(source, sourceAddr, startTime, endTime, timeTick, result as HisQueryResult<float>);
+            }
+            else if (typeof(T) == typeof(byte))
+            {
+                return DeCompressAllValue(source, sourceAddr, startTime, endTime, timeTick, result as HisQueryResult<byte>);
+            }
+            else if (typeof(T) == typeof(string))
+            {
+                return DeCompressAllValue(source, sourceAddr, startTime, endTime, timeTick, result as HisQueryResult<string>);
+            }
+            else if (typeof(T) == typeof(DateTime))
+            {
+                return DeCompressAllValue(source, sourceAddr, startTime, endTime, timeTick, result as HisQueryResult<DateTime>);
+            }
+            else
+            {
+                return DeCompressAllPointValue(source, sourceAddr, startTime, endTime, timeTick, result);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public override object DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        {
+            if (typeof(T) == typeof(bool))
+            {
+                return ((object)DeCompressBoolValue(source, sourceAddr, time, timeTick, type));
+            }
+            else if (typeof(T) == typeof(byte))
+            {
+                return ((object)DeCompressByteValue(source, sourceAddr, time, timeTick, type));
+
+            }
+            else if (typeof(T) == typeof(short))
+            {
+                return ((object)DeCompressShortValue(source, sourceAddr, time, timeTick, type));
+
+            }
+            else if (typeof(T) == typeof(ushort))
+            {
+                return ((object)DeCompressUShortValue(source, sourceAddr, time, timeTick, type));
+
+            }
+            else if (typeof(T) == typeof(int))
+            {
+                return ((object)DeCompressIntValue(source, sourceAddr, time, timeTick, type));
+
+            }
+            else if (typeof(T) == typeof(uint))
+            {
+                return ((object)DeCompressUIntValue(source, sourceAddr, time, timeTick, type));
+
+            }
+            else if (typeof(T) == typeof(long))
+            {
+                return ((object)DeCompressLongValue(source, sourceAddr, time, timeTick, type));
+
+            }
+            else if (typeof(T) == typeof(ulong))
+            {
+                return ((object)DeCompressULongValue(source, sourceAddr, time, timeTick, type));
+
+            }
+            else if (typeof(T) == typeof(DateTime))
+            {
+                return ((object)DeCompressDateTimeValue(source, sourceAddr, time, timeTick, type));
+
+            }
+            else if (typeof(T) == typeof(string))
+            {
+                return ((object)DeCompressStringValue(source, sourceAddr, time, timeTick, type));
+            }
+            else
+            {
+                return DeCompressPointValue<T>(source, sourceAddr, time, timeTick, type);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public override int DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
+        {
+            if (typeof(T) == typeof(bool))
+            {
+                return DeCompressBoolValue(source, sourceAddr, time, timeTick,type, result as HisQueryResult<bool>);
+            }
+            else if (typeof(T) == typeof(byte))
+            {
+                return DeCompressByteValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<byte>);
+
+            }
+            else if (typeof(T) == typeof(short))
+            {
+                return DeCompressShortValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<short>);
+
+            }
+            else if (typeof(T) == typeof(ushort))
+            {
+                return DeCompressUShortValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<ushort>);
+
+            }
+            else if (typeof(T) == typeof(int))
+            {
+                return DeCompressIntValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<int>);
+
+            }
+            else if (typeof(T) == typeof(uint))
+            {
+                return DeCompressUIntValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<uint>);
+
+            }
+            else if (typeof(T) == typeof(long))
+            {
+                return DeCompressLongValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<long>);
+
+            }
+            else if (typeof(T) == typeof(ulong))
+            {
+                return DeCompressULongValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<ulong>);
+
+            }
+            else if (typeof(T) == typeof(DateTime))
+            {
+                return DeCompressDateTimeValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<DateTime>);
+
+            }
+            else if (typeof(T) == typeof(string))
+            {
+                return DeCompressStringValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<string>);
+            }
+            else
+            {
+                return DeCompressPointValue(source, sourceAddr, time,timeTick,type, result);
+            }
+
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public  int DeCompressAllPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result)
         {
             DateTime time;
 
@@ -3157,7 +3359,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override T DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  T DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
         {
             DateTime time1;
             int valuecount = 0;
@@ -3764,7 +3966,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
+        public  int DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
         {
             DateTime stime;
             int valuecount = 0;

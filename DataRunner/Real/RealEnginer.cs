@@ -174,6 +174,8 @@ namespace Cdy.Tag
             mMemory = new byte[mUsedSize];
             mMHandle = mMemory.AsMemory().Pin().Pointer;
 
+            LoggerService.Service.Info("RealEnginer","Cal memory size:"+ mUsedSize/1024.0/1024+"M",ConsoleColor.Cyan);
+
             foreach (var vv in mConfigDatabase.Tags)
             {
                 switch (vv.Value.Type)

@@ -20,7 +20,7 @@ High performance realtime database.Our goal is to store the second level data of
 2. DbInStudio,DbInStudioServer:提供分布式、多客户端数据变量的开发配置。
 3. HisDataTools:提供对已经记录的历史数据的查询、导入、导出和数据分析功能。
 4. DbProxy: 提供数据库的实时数据的访问代理服务。（尚未开发）。
-5. OPCProxy:居于OPC-UA协议的数据访问带来服务。（尚未开发)。
+5. OPCProxy:基于OPC-UA协议的数据访问代理服务。（尚未开发)。
 
 ## 运行环境
 系统采用.net core 3.1 平台开发,依赖于.net core 的跨平台性，可部署在window、Linux等操作系统中,也可以部署在Docker中。 

@@ -19,5 +19,22 @@ namespace Cdy.Tag
         /// </summary>
         public override TagType Type => TagType.Bool;
 
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="value"></param>
+        ///// <returns></returns>
+        //public override object ConvertValue<T>(object value)
+        //{
+        //    if (this.Conveter != null)
+        //    {
+        //       return this.Conveter.ConvertTo(value);
+        //    }
+        //    else
+        //    {
+        //        return Convert.ToBoolean(value);
+        //    }
+        //}
     }
 }

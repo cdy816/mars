@@ -61,6 +61,15 @@ namespace DBInRun.Properties {
         }
         
         /// <summary>
+        ///   查找类似 press any key to exit. 的本地化字符串。
+        /// </summary>
+        internal static string AnyKeyToExit {
+            get {
+                return ResourceManager.GetString("AnyKeyToExit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 generate a sample databse with special number tags 的本地化字符串。
         /// </summary>
         internal static string GDMsg {

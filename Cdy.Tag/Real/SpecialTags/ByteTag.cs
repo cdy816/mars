@@ -12,11 +12,21 @@ using System.Text;
 
 namespace Cdy.Tag
 {
-    public class ByteTag : Tagbase
+    public class ByteTag : NumberTagBase
     {
         /// <summary>
         /// 
         /// </summary>
         public override TagType Type => TagType.Byte;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override double AllowMaxValue => Byte.MaxValue;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override double AllowMinValue => Byte.MinValue;
     }
 }

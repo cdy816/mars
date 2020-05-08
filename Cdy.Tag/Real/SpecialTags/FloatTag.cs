@@ -12,13 +12,22 @@ using System.Text;
 
 namespace Cdy.Tag
 {
-    public class FloatTag : Tagbase
+    public class FloatTag : FloatingTagBase
     {
         /// <summary>
         /// 
         /// </summary>
         public override TagType Type => TagType.Float;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public override double AllowMaxValue => float.MaxValue;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override double AllowMinValue => float.MinValue;
 
     }
 }

@@ -26,6 +26,10 @@ namespace Cdy.Tag
         /// </summary>
         Bad= 20,
         /// <summary>
+        /// 超出范围
+        /// </summary>
+        OutOfRang = 30,
+        /// <summary>
         ///  初始状态
         /// </summary>
         Init = 63,

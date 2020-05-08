@@ -6,10 +6,13 @@ namespace DBInRun
 {
     class Program
     {
+        static bool mIsClosed = false;
         //static MarshalMemoryBlock block;
         static void Main(string[] args)
         {
-            bool mIsClosed = false;
+            Console.CancelKeyPress += Console_CancelKeyPress;
+            AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
+            
             Console.WriteLine(Res.Get("WelcomeMsg"));
             if (args.Length>0 && args[0]== "start")
             {
@@ -23,14 +26,16 @@ namespace DBInRun
                 }
             }
 
-            
-
             Console.WriteLine(Res.Get("HelpMsg"));
             while (!mIsClosed)
             {
                 Console.Write(">");
 
                 string smd = Console.ReadLine();
+                if (mIsClosed)
+                {
+                    break;
+                }
                 if (string.IsNullOrEmpty(smd)) continue;
 
                 string[] cmd = smd.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
@@ -51,11 +56,14 @@ namespace DBInRun
                         if (cmd.Length > 1)
                         {
                             Cdy.Tag.Runner.RunInstance.StartAsync(cmd[1]);
+                            Console.Title = "DbInRun-" + cmd[1];
                         }
                         else
                         {
                             Cdy.Tag.Runner.RunInstance.Start();
+                            Console.Title = "DbInRun-local";
                         }
+                       
                         break;
                     case "stop":
                         Cdy.Tag.Runner.RunInstance.Stop();
@@ -95,6 +103,31 @@ namespace DBInRun
                     //    break;
                 }
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private static void CurrentDomain_ProcessExit(object sender, EventArgs e)
+        {
+            if (Cdy.Tag.Runner.RunInstance.IsStarted)
+            {
+                Cdy.Tag.Runner.RunInstance.Stop();
+            }
+        }
+
+        private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
+        {
+            if (Cdy.Tag.Runner.RunInstance.IsStarted)
+            {
+                Cdy.Tag.Runner.RunInstance.Stop();
+            }
+            mIsClosed = true;
+            e.Cancel = true;
+            Console.WriteLine(Res.Get("AnyKeyToExit"));
+
         }
 
         /// <summary>

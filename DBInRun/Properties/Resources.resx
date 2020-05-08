@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AnyKeyToExit" xml:space="preserve">
+    <value>press any key to exit.</value>
+  </data>
   <data name="GDMsg" xml:space="preserve">
     <value>generate a sample databse with special number tags</value>
   </data>

@@ -1,13 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace Cdy.Tag.Driver
+namespace DbInRunWebApi.Model
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public interface ITagDriver
+    public class LoginUser
     {
-
         #region ... Variables  ...
 
         #endregion ...Variables...
@@ -25,27 +24,16 @@ namespace Cdy.Tag.Driver
         /// <summary>
         /// 
         /// </summary>
-        string Name { get; }
+        public string UserName { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        string[] Registors { get; }
+        public string Password { get; set; }
 
         #endregion ...Properties...
 
         #region ... Methods    ...
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        bool Start(IRealTagDriver tagQuery);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        bool Stop();
 
         #endregion ...Methods...
 
@@ -53,4 +41,6 @@ namespace Cdy.Tag.Driver
 
         #endregion ...Interfaces...
     }
+    
+
 }

@@ -8,7 +8,7 @@ using System.IO;
 
 namespace SimDriver
 {
-    public class Driver : Cdy.Tag.Driver.ITagDriver
+    public class Driver : Cdy.Tag.Driver.IProducterDriver
     {
 
         #region ... Variables  ...
@@ -19,7 +19,7 @@ namespace SimDriver
 
         private short mNumber = 0;
 
-        private IRealTagDriver mTagService;
+        private IRealTagProducter mTagService;
 
         private bool mIsBusy = false;
 
@@ -64,7 +64,7 @@ namespace SimDriver
         {
             get
             {
-                return new string[] { "cos", "sin", "step" };
+                return new string[] { "cos", "sin", "step","steppoint" };
             }
         }
 
@@ -85,9 +85,9 @@ namespace SimDriver
         /// 
         /// </summary>
         /// <param name="tagQuery"></param>
-        private void InitTagCach(IRealTagDriver tagQuery)
+        private void InitTagCach(IRealTagProducter tagQuery)
         {
-            mTagIdCach = tagQuery.GetTagsByLinkAddress(new List<string>() { "Sim:cos", "Sim:sin", "Sim:step" });
+            mTagIdCach = tagQuery.GetTagsByLinkAddress(new List<string>() { "Sim:cos", "Sim:sin", "Sim:step", "Sim:steppoint" });
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace SimDriver
         /// </summary>
         /// <param name="tagQuery"></param>
         /// <returns></returns>
-        public bool Start(IRealTagDriver tagQuery)
+        public bool Start(IRealTagProducter tagQuery)
         {
             mTagService = tagQuery;
             InitTagCach(tagQuery);
@@ -170,6 +170,10 @@ namespace SimDriver
                 else if (vv.Key == "Sim:step")
                 {
                     mTagService.SetTagValue(vv.Value, mNumber);
+                }
+                else if(vv.Key == "Sim:steppoint")
+                {
+                    mTagService.SetPointValue(vv.Value,mNumber,mNumber,mNumber);
                 }
             });
 

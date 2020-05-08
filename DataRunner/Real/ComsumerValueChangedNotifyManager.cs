@@ -16,7 +16,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class ValueChangedNotifyManager:IDisposable
+    public class ComsumerValueChangedNotifyManager : IDisposable
     {
 
         #region ... Variables  ...
@@ -26,7 +26,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public static ValueChangedNotifyManager Manager = new ValueChangedNotifyManager();
+        public static ComsumerValueChangedNotifyManager Manager = new ComsumerValueChangedNotifyManager();
 
         #endregion ...Variables...
 
@@ -39,7 +39,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public ValueChangedNotifyManager()
+        public ComsumerValueChangedNotifyManager()
         {
            
         }

@@ -230,6 +230,10 @@ namespace DBStudio
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         private static string GetDbManagerHelpString()
         {
             StringBuilder re = new StringBuilder();
@@ -743,8 +747,156 @@ namespace DBStudio
                     }
                 }
             }
+            else if (type == "intpoint")
+            {
+                if (repeat == 1)
+                {
+                    var vtag = new Cdy.Tag.IntPointTag() { Name = tag, LinkAddress = link };
+                    database.RealDatabase.Append(vtag);
+                    database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.IntPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                }
+                else
+                {
+                    for (int j = 0; j < repeat; j++)
+                    {
+                        var vtag = new Cdy.Tag.IntPointTag() { Name = tag + j, LinkAddress = link };
+                        database.RealDatabase.Append(vtag);
+                        database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.IntPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                    }
+                }
+            }
+            else if (type == "uintpoint")
+            {
+                if (repeat == 1)
+                {
+                    var vtag = new Cdy.Tag.UIntPointTag() { Name = tag, LinkAddress = link };
+                    database.RealDatabase.Append(vtag);
+                    database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.UIntPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                }
+                else
+                {
+                    for (int j = 0; j < repeat; j++)
+                    {
+                        var vtag = new Cdy.Tag.UIntPointTag() { Name = tag + j, LinkAddress = link };
+                        database.RealDatabase.Append(vtag);
+                        database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.UIntPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                    }
+                }
+            }
+            else if (type == "intpoint3")
+            {
+                if (repeat == 1)
+                {
+                    var vtag = new Cdy.Tag.IntPoint3Tag() { Name = tag, LinkAddress = link };
+                    database.RealDatabase.Append(vtag);
+                    database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.IntPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                }
+                else
+                {
+                    for (int j = 0; j < repeat; j++)
+                    {
+                        var vtag = new Cdy.Tag.IntPoint3Tag() { Name = tag + j, LinkAddress = link };
+                        database.RealDatabase.Append(vtag);
+                        database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.IntPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                    }
+                }
+            }
+            else if (type == "uintpoint3")
+            {
+                if (repeat == 1)
+                {
+                    var vtag = new Cdy.Tag.UIntPoint3Tag() { Name = tag, LinkAddress = link };
+                    database.RealDatabase.Append(vtag);
+                    database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.UIntPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                }
+                else
+                {
+                    for (int j = 0; j < repeat; j++)
+                    {
+                        var vtag = new Cdy.Tag.UIntPoint3Tag() { Name = tag + j, LinkAddress = link };
+                        database.RealDatabase.Append(vtag);
+                        database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.UIntPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                    }
+                }
+            }
+            else if (type == "longpoint3")
+            {
+                if (repeat == 1)
+                {
+                    var vtag = new Cdy.Tag.LongPoint3Tag() { Name = tag, LinkAddress = link };
+                    database.RealDatabase.Append(vtag);
+                    database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.LongPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                }
+                else
+                {
+                    for (int j = 0; j < repeat; j++)
+                    {
+                        var vtag = new Cdy.Tag.LongPoint3Tag() { Name = tag + j, LinkAddress = link };
+                        database.RealDatabase.Append(vtag);
+                        database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.LongPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                    }
+                }
+            }
+            else if (type == "longpoint")
+            {
+                if (repeat == 1)
+                {
+                    var vtag = new Cdy.Tag.LongPointTag() { Name = tag, LinkAddress = link };
+                    database.RealDatabase.Append(vtag);
+                    database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.LongPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                }
+                else
+                {
+                    for (int j = 0; j < repeat; j++)
+                    {
+                        var vtag = new Cdy.Tag.LongPointTag() { Name = tag + j, LinkAddress = link };
+                        database.RealDatabase.Append(vtag);
+                        database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.LongPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                    }
+                }
+            }
+            else if (type == "ulongpoint3")
+            {
+                if (repeat == 1)
+                {
+                    var vtag = new Cdy.Tag.ULongPoint3Tag() { Name = tag, LinkAddress = link };
+                    database.RealDatabase.Append(vtag);
+                    database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.ULongPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                }
+                else
+                {
+                    for (int j = 0; j < repeat; j++)
+                    {
+                        var vtag = new Cdy.Tag.ULongPoint3Tag() { Name = tag + j, LinkAddress = link };
+                        database.RealDatabase.Append(vtag);
+                        database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.ULongPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                    }
+                }
+            }
+            else if (type == "ulongpoint")
+            {
+                if (repeat == 1)
+                {
+                    var vtag = new Cdy.Tag.ULongPointTag() { Name = tag, LinkAddress = link };
+                    database.RealDatabase.Append(vtag);
+                    database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.ULongPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                }
+                else
+                {
+                    for (int j = 0; j < repeat; j++)
+                    {
+                        var vtag = new Cdy.Tag.ULongPointTag() { Name = tag + j, LinkAddress = link };
+                        database.RealDatabase.Append(vtag);
+                        database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.ULongPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
+                    }
+                }
+            }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         private static string GetHelpString()
         {
             StringBuilder re = new StringBuilder();

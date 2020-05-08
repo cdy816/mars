@@ -17,7 +17,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public unsafe class RealEnginer: IRealDataNotify, IRealData, Driver.IRealTagDriver
+    public unsafe class RealEnginer: IRealDataNotify, IRealDataNotifyForProducter, IRealData, Driver.IRealTagProducter
     {
 
         #region ... Variables  ...
@@ -173,6 +173,7 @@ namespace Cdy.Tag
             mUsedSize = (long)(msize * 1.2);
             mMemory = new byte[mUsedSize];
             mMHandle = mMemory.AsMemory().Pin().Pointer;
+            mMemory.AsSpan().Clear();
 
             LoggerService.Service.Info("RealEnginer","Cal memory size:"+ mUsedSize/1024.0/1024+"M",ConsoleColor.Cyan);
 
@@ -224,9 +225,9 @@ namespace Cdy.Tag
         /// 订购值改变事件
         /// </summary>
         /// <param name="name"></param>
-        public ValueChangedNotifyProcesser Subscribe(string name)
+        public ValueChangedNotifyProcesser SubscribeComsumer(string name)
         {
-             return ValueChangedNotifyManager.Manager.GetNotifier(name);
+             return ComsumerValueChangedNotifyManager.Manager.GetNotifier(name);
         }
 
         /// <summary>
@@ -235,9 +236,9 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         /// <param name="valueChanged"></param>
         /// <param name="tagRegistor"></param>
-        public void Subscribe(string name, ValueChangedNotifyProcesser.ValueChangedDelagete valueChanged,Func<List<int>> tagRegistor)
+        public void SubscribeComsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelagete valueChanged,Func<List<int>> tagRegistor)
         {
-            var re = ValueChangedNotifyManager.Manager.GetNotifier(name);
+            var re = ComsumerValueChangedNotifyManager.Manager.GetNotifier(name);
             if(tagRegistor!=null)
             {
                 foreach(var vv in tagRegistor())
@@ -254,29 +255,47 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="name"></param>
-        public void UnSubscribe(string name)
+        public void UnSubscribeComsumer(string name)
         {
-            ValueChangedNotifyManager.Manager.DisposeNotifier(name);
+            ComsumerValueChangedNotifyManager.Manager.DisposeNotifier(name);
         }
 
         /// <summary>
         /// 通知值改变了
         /// </summary>
         /// <param name="id"></param>
-        private void NotifyValueChanged(int id)
+        private void NotifyValueChangedToComsumer(int id)
         {
-            ValueChangedNotifyManager.Manager.UpdateValue(id);
-            ValueChangedNotifyManager.Manager.NotifyChanged();
+            ComsumerValueChangedNotifyManager.Manager.UpdateValue(id);
+            ComsumerValueChangedNotifyManager.Manager.NotifyChanged();
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="ids"></param>
-        private void NotifyValueChanged(List<int> ids)
+        private void NotifyValueChangedToComsumer(List<int> ids)
         {
-            ValueChangedNotifyManager.Manager.UpdateValue(ids);
-            ValueChangedNotifyManager.Manager.NotifyChanged();
+            ComsumerValueChangedNotifyManager.Manager.UpdateValue(ids);
+            ComsumerValueChangedNotifyManager.Manager.NotifyChanged();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        public void NotifyValueChangedToProducter(int id,object value)
+        {
+            ProducterValueChangedNotifyManager.Manager.UpdateValue(id,value);
+            ProducterValueChangedNotifyManager.Manager.NotifyChanged();
+        }
+
+
+        public void NotifyValueChangedToProducter(int id)
+        {
+            var value = GetTagValueForProductor(id);
+            ProducterValueChangedNotifyManager.Manager.UpdateValue(id, value);
+            ProducterValueChangedNotifyManager.Manager.NotifyChanged();
         }
 
         #region 通过地址写入数据
@@ -624,6 +643,7 @@ namespace Cdy.Tag
         }
         #endregion
 
+        #region SetValue By Id
         /// <summary>
         /// 
         /// </summary>
@@ -653,7 +673,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value,0,time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -671,7 +691,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -687,7 +707,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -702,7 +722,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value,quality,time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -717,7 +737,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -735,7 +755,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -750,7 +770,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -767,7 +787,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
 
@@ -781,7 +801,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -799,7 +819,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -814,7 +834,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -831,7 +851,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -844,7 +864,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -862,7 +882,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -877,7 +897,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -894,7 +914,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
 
@@ -908,7 +928,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -926,7 +946,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -941,7 +961,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -958,7 +978,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -971,7 +991,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -989,7 +1009,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -1004,7 +1024,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1021,7 +1041,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
 
@@ -1035,7 +1055,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1053,7 +1073,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -1068,7 +1088,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1085,7 +1105,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -1100,7 +1120,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetPointValueByAddr(mIdAndAddr[id], value.X,value.Y,quality,time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1116,7 +1136,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1132,7 +1152,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1148,7 +1168,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1164,7 +1184,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1180,7 +1200,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1196,7 +1216,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1212,7 +1232,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1227,7 +1247,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
         /// <summary>
@@ -1244,7 +1264,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -1259,7 +1279,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1276,7 +1296,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -1289,7 +1309,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1308,7 +1328,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -1323,7 +1343,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1340,7 +1360,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
 
@@ -1354,7 +1374,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1372,7 +1392,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -1387,7 +1407,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1404,7 +1424,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -1417,7 +1437,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1436,28 +1456,28 @@ namespace Cdy.Tag
                 switch (mConfigDatabase.Tags[id].Type)
                 {
                     case TagType.IntPoint:
-                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], quality, time);
+                        SetPointValueByAddr(mIdAndAddr[id], Convert.ToInt32(values[0]), Convert.ToInt32(values[1]), quality, time);
                         break;
                     case TagType.UIntPoint:
-                        SetPointValueByAddr(mIdAndAddr[id], (uint)values[0], (uint)values[1], quality, time);
+                        SetPointValueByAddr(mIdAndAddr[id], Convert.ToUInt32(values[0]), Convert.ToUInt32(values[1]), quality, time);
                         break;
                     case TagType.IntPoint3:
-                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], (int)values[2], quality, time);
+                        SetPointValueByAddr(mIdAndAddr[id], Convert.ToInt32(values[0]), Convert.ToInt32(values[1]), Convert.ToInt32(values[2]), quality, time);
                         break;
                     case TagType.UIntPoint3:
-                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], (int)values[2], quality, time);
+                        SetPointValueByAddr(mIdAndAddr[id], Convert.ToUInt32(values[0]), Convert.ToUInt32(values[1]), Convert.ToUInt32(values[2]), quality, time);
                         break;
                     case TagType.LongPoint:
-                        SetPointValueByAddr(mIdAndAddr[id], (long)values[0], (long)values[1], quality, time);
+                        SetPointValueByAddr(mIdAndAddr[id], Convert.ToInt64(values[0]), Convert.ToInt64(values[1]), quality, time);
                         break;
                     case TagType.ULongPoint:
-                        SetPointValueByAddr(mIdAndAddr[id], (ulong)values[0], (ulong)values[1], quality, time);
+                        SetPointValueByAddr(mIdAndAddr[id], Convert.ToUInt64(values[0]), Convert.ToUInt64(values[1]), quality, time);
                         break;
                     case TagType.LongPoint3:
-                        SetPointValueByAddr(mIdAndAddr[id], (long)values[0], (long)values[1], (long)values[2], quality, time);
+                        SetPointValueByAddr(mIdAndAddr[id], Convert.ToInt64(values[0]), Convert.ToInt64(values[1]), Convert.ToInt64(values[2]), quality, time);
                         break;
                     case TagType.ULongPoint3:
-                        SetPointValueByAddr(mIdAndAddr[id], (ulong)values[0], (ulong)values[1], (ulong)values[2], quality, time);
+                        SetPointValueByAddr(mIdAndAddr[id], Convert.ToUInt64(values[0]), Convert.ToUInt64(values[1]), Convert.ToUInt64(values[2]), quality, time);
                         break;
                 }
             }
@@ -1474,37 +1494,7 @@ namespace Cdy.Tag
         public bool SetPointValue(int id, byte quality,  params object[] values)
         {
             DateTime time = DateTime.Now;
-            if (mIdAndAddr.ContainsKey(id) && mConfigDatabase.Tags.ContainsKey(id))
-            {
-                switch (mConfigDatabase.Tags[id].Type)
-                {
-                    case TagType.IntPoint:
-                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], quality, time);
-                        break;
-                    case TagType.UIntPoint:
-                        SetPointValueByAddr(mIdAndAddr[id], (uint)values[0], (uint)values[1], quality, time);
-                        break;
-                    case TagType.IntPoint3:
-                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], (int)values[2], quality, time);
-                        break;
-                    case TagType.UIntPoint3:
-                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], (int)values[2], quality, time);
-                        break;
-                    case TagType.LongPoint:
-                        SetPointValueByAddr(mIdAndAddr[id], (long)values[0], (long)values[1], quality, time);
-                        break;
-                    case TagType.ULongPoint:
-                        SetPointValueByAddr(mIdAndAddr[id], (ulong)values[0], (ulong)values[1], quality, time);
-                        break;
-                    case TagType.LongPoint3:
-                        SetPointValueByAddr(mIdAndAddr[id], (long)values[0], (long)values[1], (long)values[2], quality, time);
-                        break;
-                    case TagType.ULongPoint3:
-                        SetPointValueByAddr(mIdAndAddr[id], (ulong)values[0], (ulong)values[1], (ulong)values[2], quality, time);
-                        break;
-                }
-            }
-            return true;
+            return SetPointValue(id, (byte)QualityConst.Good,time, values);
         }
 
         /// <summary>
@@ -1515,39 +1505,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetPointValue(int id,  params object[] values)
         {
-            DateTime time = DateTime.Now;
-            byte quality = 0;
-            if (mIdAndAddr.ContainsKey(id) && mConfigDatabase.Tags.ContainsKey(id))
-            {
-                switch (mConfigDatabase.Tags[id].Type)
-                {
-                    case TagType.IntPoint:
-                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], quality, time);
-                        break;
-                    case TagType.UIntPoint:
-                        SetPointValueByAddr(mIdAndAddr[id], (uint)values[0], (uint)values[1], quality, time);
-                        break;
-                    case TagType.IntPoint3:
-                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], (int)values[2], quality, time);
-                        break;
-                    case TagType.UIntPoint3:
-                        SetPointValueByAddr(mIdAndAddr[id], (int)values[0], (int)values[1], (int)values[2], quality, time);
-                        break;
-                    case TagType.LongPoint:
-                        SetPointValueByAddr(mIdAndAddr[id], (long)values[0], (long)values[1], quality, time);
-                        break;
-                    case TagType.ULongPoint:
-                        SetPointValueByAddr(mIdAndAddr[id], (ulong)values[0], (ulong)values[1], quality, time);
-                        break;
-                    case TagType.LongPoint3:
-                        SetPointValueByAddr(mIdAndAddr[id], (long)values[0], (long)values[1], (long)values[2], quality, time);
-                        break;
-                    case TagType.ULongPoint3:
-                        SetPointValueByAddr(mIdAndAddr[id], (ulong)values[0], (ulong)values[1], (ulong)values[2], quality, time);
-                        break;
-                }
-            }
-            return true;
+            return SetPointValue(id, (byte)QualityConst.Good, values);
         }
 
         /// <summary>
@@ -1564,7 +1522,7 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
 
         /// <summary>
@@ -1579,7 +1537,7 @@ namespace Cdy.Tag
             if (mIdAndAddr.ContainsKey(id))
             {
                 SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChanged(id);
+                NotifyValueChangedToComsumer(id);
             }
         }
 
@@ -1596,8 +1554,10 @@ namespace Cdy.Tag
                     SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
                 }
             //});
-            NotifyValueChanged(values.Keys.ToList());
+            NotifyValueChangedToComsumer(values.Keys.ToList());
         }
+        #endregion
+
         #endregion
 
         #region 数据读取
@@ -2670,6 +2630,16 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public List<int?> GetTagIdByName(List<string> name)
+        {
+            return mConfigDatabase.GetTagIdByName(name);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
         public List<int> GetTagByLinkAddress(string address)
@@ -2690,6 +2660,321 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="ids"></param>
+        /// <returns></returns>
+        public Dictionary<int, long> GetTagMemoryAddress(List<int> ids)
+        {
+            Dictionary<int, long> re = new Dictionary<int, long>();
+            foreach(var vv in mConfigDatabase.GetTagsById(ids))
+            {
+                re.Add(vv.Id, vv.ValueAddress);
+            }
+            return re;
+        }
+
+        #region Set value By Tag Instance  from driver
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        public void SetBoolTagValue(Tagbase tag,object value,byte qulity,DateTime time)
+        {
+            bool btmp = false;
+            if(tag.Conveter!=null)
+            {
+                btmp = Convert.ToBoolean(tag.Conveter.ConvertTo(value));
+            }
+            else
+            {
+                btmp = Convert.ToBoolean(value);
+            }
+            SetValueByAddr(tag.ValueAddress, btmp ? (byte)1 : (byte)0, qulity, time);
+            NotifyValueChangedToComsumer(tag.Id);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        public void SetByteTagValue(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as NumberTagBase;
+            
+            byte btmp = 0;
+            if (tag.Conveter != null)
+            {
+                
+                btmp = Convert.ToByte(tag.Conveter.ConvertTo(value));
+            }
+            else
+            {
+                btmp = Convert.ToByte(value);
+            }
+            if (vtag != null)
+            {
+                SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity :(byte)QualityConst.OutOfRang), time);
+                NotifyValueChangedToComsumer(tag.Id);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        public void SetShortTagValue(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as NumberTagBase;
+
+            short btmp = 0;
+            if (tag.Conveter != null)
+            {
+
+                btmp = Convert.ToInt16(tag.Conveter.ConvertTo(value));
+            }
+            else
+            {
+                btmp = Convert.ToInt16(value);
+            }
+            if (vtag != null)
+            {
+                SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                NotifyValueChangedToComsumer(tag.Id);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        public void SetUShortTagValue(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as NumberTagBase;
+
+            ushort btmp = 0;
+            if (tag.Conveter != null)
+            {
+
+                btmp = Convert.ToUInt16(tag.Conveter.ConvertTo(value));
+            }
+            else
+            {
+                btmp = Convert.ToUInt16(value);
+            }
+            if (vtag != null)
+            {
+                SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                NotifyValueChangedToComsumer(tag.Id);
+            }
+        }
+
+
+        public void SetIntTagValue(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as NumberTagBase;
+
+            int btmp = 0;
+            if (tag.Conveter != null)
+            {
+
+                btmp = Convert.ToInt32(tag.Conveter.ConvertTo(value));
+            }
+            else
+            {
+                btmp = Convert.ToInt32(value);
+            }
+            if (vtag != null)
+            {
+                SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                NotifyValueChangedToComsumer(tag.Id);
+            }
+        }
+
+        public void SetUIntTagValue(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as NumberTagBase;
+
+            uint btmp = 0;
+            if (tag.Conveter != null)
+            {
+
+                btmp = Convert.ToUInt32(tag.Conveter.ConvertTo(value));
+            }
+            else
+            {
+                btmp = Convert.ToUInt32(value);
+            }
+            if (vtag != null)
+            {
+                SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                NotifyValueChangedToComsumer(tag.Id);
+            }
+        }
+
+
+        public void SetLongTagValue(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as NumberTagBase;
+
+            long btmp = 0;
+            if (tag.Conveter != null)
+            {
+
+                btmp = Convert.ToInt64(tag.Conveter.ConvertTo(value));
+            }
+            else
+            {
+                btmp = Convert.ToInt64(value);
+            }
+            if (vtag != null)
+            {
+                SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                NotifyValueChangedToComsumer(tag.Id);
+            }
+        }
+
+
+        public void SetULongTagValue(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as NumberTagBase;
+
+            ulong btmp = 0;
+            if (tag.Conveter != null)
+            {
+
+                btmp = Convert.ToUInt64(tag.Conveter.ConvertTo(value));
+            }
+            else
+            {
+                btmp = Convert.ToUInt64(value);
+            }
+            if (vtag != null)
+            {
+                SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                NotifyValueChangedToComsumer(tag.Id);
+            }
+        }
+
+
+        public void SetDoubleTagValue(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as FloatingTagBase;
+
+            double btmp = 0;
+            if (tag.Conveter != null)
+            {
+
+                btmp = Math.Round(Convert.ToDouble(tag.Conveter.ConvertTo(value)),vtag.Precision);
+            }
+            else
+            {
+                btmp = Math.Round(Convert.ToDouble(value),vtag.Precision);
+            }
+            if (vtag != null)
+            {
+                SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                NotifyValueChangedToComsumer(tag.Id);
+            }
+        }
+
+
+        public void SetFloatTagValue(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as FloatingTagBase;
+
+            float btmp = 0;
+            if (tag.Conveter != null)
+            {
+
+                btmp = (float)Math.Round(Convert.ToSingle(tag.Conveter.ConvertTo(value)), vtag.Precision);
+            }
+            else
+            {
+                btmp = (float)Math.Round(Convert.ToSingle(value), vtag.Precision);
+            }
+            if (vtag != null)
+            {
+                SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                NotifyValueChangedToComsumer(tag.Id);
+            }
+        }
+
+
+        public void SetSrtingTagValue(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            string btmp = "";
+            if (tag.Conveter != null)
+            {
+                btmp = Convert.ToString(tag.Conveter.ConvertTo(value));
+            }
+            else
+            {
+                btmp = Convert.ToString(value);
+            }
+            SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
+            NotifyValueChangedToComsumer(tag.Id);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        public void SetDateTimeTagValue(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            DateTime btmp;
+            if (tag.Conveter != null)
+            {
+                btmp = Convert.ToDateTime(tag.Conveter.ConvertTo(value));
+            }
+            else
+            {
+                btmp = Convert.ToDateTime(value);
+            }
+            SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
+            NotifyValueChangedToComsumer(tag.Id);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        public void SetIntPointTagValue(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            IntPointData btmp;
+            if (tag.Conveter != null)
+            {
+                btmp = (IntPointData)(tag.Conveter.ConvertTo(value));
+            }
+            else
+            {
+                btmp = (IntPointData)(value);
+            }
+            SetPointValueByAddr(tag.ValueAddress, btmp.X,btmp.Y, qulity, time);
+            NotifyValueChangedToComsumer(tag.Id);
+        }
+
+        #endregion
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
@@ -2697,43 +2982,45 @@ namespace Cdy.Tag
         {
             try
             {
-                switch (mConfigDatabase.Tags[id].Type)
+                var tag = mConfigDatabase.Tags[id];
+                DateTime time = DateTime.Now;
+                switch (tag.Type)
                 {
                     case TagType.Bool:
-                        SetValue(id, Convert.ToBoolean(value));
+                        SetBoolTagValue(tag, value, (byte)QualityConst.Good, time);
                         break;
                     case TagType.Byte:
-                        SetValue(id, Convert.ToByte(value));
+                        SetByteTagValue(tag, value, (byte)QualityConst.Good, time);
                         break;
                     case TagType.DateTime:
-                        SetValue(id, (DateTime)(value));
+                        SetDateTimeTagValue(tag, value, (byte)QualityConst.Good, time);
                         break;
                     case TagType.Double:
-                        SetValue(id, Convert.ToDouble(value));
+                        SetDoubleTagValue(tag, value, (byte)QualityConst.Good, time);
                         break;
                     case TagType.Float:
-                        SetValue(id, Convert.ToSingle(value));
+                        SetFloatTagValue(tag, value, (byte)QualityConst.Good, time);
                         break;
                     case TagType.Int:
-                        SetValue(id, Convert.ToInt32(value));
+                        SetIntTagValue(tag, value, (byte)QualityConst.Good, time);
                         break;
                     case TagType.Long:
-                        SetValue(id, Convert.ToInt64(value));
+                        SetLongTagValue(tag, value, (byte)QualityConst.Good, time);
                         break;
                     case TagType.Short:
-                        SetValue(id, Convert.ToInt16(value));
+                        SetShortTagValue(tag, value, (byte)QualityConst.Good, time);
                         break;
                     case TagType.String:
-                        SetValue(id, Convert.ToString(value));
+                        SetSrtingTagValue(tag, value, (byte)QualityConst.Good, time);
                         break;
                     case TagType.UInt:
-                        SetValue(id, Convert.ToUInt32(value));
+                        SetUIntTagValue(tag, value, (byte)QualityConst.Good, time);
                         break;
                     case TagType.ULong:
-                        SetValue(id, Convert.ToUInt64(value));
+                        SetULongTagValue(tag, value, (byte)QualityConst.Good, time);
                         break;
                     case TagType.UShort:
-                        SetValue(id, Convert.ToUInt16(value));
+                        SetUShortTagValue(tag, value, (byte)QualityConst.Good, time);
                         break;
                 }
             }
@@ -2745,7 +3032,66 @@ namespace Cdy.Tag
 
         }
 
-        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValueNoValueCheck(int id, object value)
+        {
+            try
+            {
+                var tag = mConfigDatabase.Tags[id];
+                DateTime time = DateTime.Now;
+                switch (mConfigDatabase.Tags[id].Type)
+                {
+                    case TagType.Bool:
+                        SetValueByAddr(id, Convert.ToBoolean(value)?(byte)1:(byte)0,(byte)QualityConst.Good,time);
+                        break;
+                    case TagType.Byte:
+                        SetValueByAddr(id, Convert.ToByte(value), (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.DateTime:
+                        SetValueByAddr(id, (DateTime)(value), (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Double:
+                        SetValueByAddr(id, Convert.ToDouble(value), (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Float:
+                        SetValueByAddr(id, Convert.ToSingle(value), (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Int:
+                        SetValueByAddr(id, Convert.ToInt32(value), (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Long:
+                        SetValueByAddr(id, Convert.ToInt64(value), (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Short:
+                        SetValueByAddr(id, Convert.ToInt16(value), (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.String:
+                        SetValueByAddr(id, Convert.ToString(value), (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.UInt:
+                        SetValueByAddr(id, Convert.ToUInt32(value), (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.ULong:
+                        SetValueByAddr(id, Convert.ToUInt64(value), (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.UShort:
+                        SetValueByAddr(id, Convert.ToUInt16(value), (byte)QualityConst.Good, time);
+                        break;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+
+        }
+
 
         /// <summary>
         /// 
@@ -2783,6 +3129,650 @@ namespace Cdy.Tag
             return re;
         }
 
+
+
+        /// <summary>
+        /// 订购值改变事件
+        /// </summary>
+        /// <param name="name"></param>
+        public ProducterValueChangedNotifyProcesser SubscribeProducter(string name)
+        {
+            return ProducterValueChangedNotifyManager.Manager.GetNotifier(name);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="valueChanged"></param>
+        /// <param name="tagRegistor"></param>
+        public void SubscribeProducter(string name, ProducterValueChangedNotifyProcesser.ValueChangedDelagete valueChanged, Func<List<int>> tagRegistor)
+        {
+            var re = ProducterValueChangedNotifyManager.Manager.GetNotifier(name);
+            if (tagRegistor != null)
+            {
+                foreach (var vv in tagRegistor())
+                {
+                    re.Registor(vv);
+                }
+            }
+            re.ValueChanged = valueChanged;
+            re.Start();
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        public void UnSubscribeProducter(string name)
+        {
+            ProducterValueChangedNotifyManager.Manager.DisposeNotifier(name);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public object GetTagValueForProductor(int id)
+        {
+            var tag = mConfigDatabase.Tags[id];
+            object re=null;
+            switch (tag.Type)
+            {
+                case TagType.Bool:
+                     re = Convert.ToBoolean(ReadByteValueByAddr(tag.ValueAddress));
+                    break;
+                case TagType.Byte:
+                    re = ReadByteValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.DateTime:
+                    re = ReadDateTimeValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.Double:
+                    re = ReadDoubleValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.Float:
+                    re = ReadFloatValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.Int:
+                    re = ReadIntValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.Long:
+                    re = ReadInt64ValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.Short:
+                    re = ReadShortValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.String:
+                    re = ReadStringValueByAddr(tag.ValueAddress,Encoding.Unicode);
+                    break;
+                case TagType.UInt:
+                    re = (uint)ReadIntValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.ULong:
+                    re = (ulong)ReadInt64ValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.UShort:
+                    re = (ushort)ReadShortValueByAddr(tag.ValueAddress);
+                    break;
+            }
+
+            if (tag.Conveter != null) return tag.Conveter.ConvertBackTo(re); else return re;
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public object GetTagValue(int id,out byte quality,out DateTime time)
+        {
+            try
+            {
+                var tag = mConfigDatabase.Tags[id];
+                if (tag == null)
+                {
+                    time = DateTime.Now;
+                    quality = (byte)QualityConst.Null;
+                    return null;
+                }
+                switch (tag.Type)
+                {
+                    case TagType.Bool:
+                        return Convert.ToBoolean(ReadByteValueByAddr(tag.ValueAddress, out time, out quality));
+                    case TagType.Byte:
+                        return ReadByteValueByAddr(tag.ValueAddress, out time, out quality);
+                    case TagType.DateTime:
+                        return ReadDateTimeValueByAddr(tag.ValueAddress, out time, out quality);
+                    case TagType.Double:
+                        return ReadDoubleValueByAddr(tag.ValueAddress, out time, out quality);
+                    case TagType.Float:
+                        return ReadFloatValueByAddr(tag.ValueAddress, out time, out quality);
+                    case TagType.Int:
+                        return ReadIntValueByAddr(tag.ValueAddress, out time, out quality);
+                    case TagType.Long:
+                        return ReadInt64ValueByAddr(tag.ValueAddress, out time, out quality);
+                    case TagType.Short:
+                        return ReadShortValueByAddr(tag.ValueAddress, out time, out quality);
+                    case TagType.String:
+                        return ReadStringValueByAddr(tag.ValueAddress,Encoding.Unicode,out time,out quality);
+                    case TagType.UInt:
+                        return (uint)ReadIntValueByAddr(tag.ValueAddress, out time, out quality);
+                    case TagType.ULong:
+                        return (ulong)ReadInt64ValueByAddr(tag.ValueAddress, out time, out quality);
+                    case TagType.UShort:
+                        return (ushort)ReadShortValueByAddr(tag.ValueAddress, out time, out quality);
+                    case TagType.IntPoint:
+                        return  ReadIntPointValueByAddr(tag.ValueAddress, out quality, out time);
+                    case TagType.UIntPoint:
+                        return ReadUIntPointValueByAddr(tag.ValueAddress, out quality, out time);
+                    case TagType.IntPoint3:
+                        return ReadIntPoint3ValueByAddr(tag.ValueAddress, out quality, out time);
+                    case TagType.UIntPoint3:
+                        return ReadUIntPoint3ValueByAddr(tag.ValueAddress, out quality, out time);
+                    case TagType.LongPoint:
+                        return ReadLongPointValueByAddr(tag.ValueAddress, out quality, out time);
+                    case TagType.ULongPoint:
+                        return ReadULongPointValueByAddr(tag.ValueAddress, out quality, out time);
+                    case TagType.LongPoint3:
+                        return ReadLongPoint3ValueByAddr(tag.ValueAddress, out quality, out time);
+                    case TagType.ULongPoint3:
+                        return ReadULongPoint3ValueByAddr(tag.ValueAddress, out quality, out time);
+                }
+            }
+            catch
+            {
+            
+            }
+            time = DateTime.Now;
+            quality = (byte)QualityConst.Null;
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValueForConsumer(int id,object value)
+        {
+            try
+            {
+                var tag = mConfigDatabase.Tags[id];
+                DateTime time = DateTime.Now;
+                switch (tag.Type)
+                {
+                    case TagType.Bool:
+                        SetBoolTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Byte:
+                        SetByteTagValue(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.DateTime:
+                        SetDateTimeTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Double:
+                        SetDoubleTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Float:
+                        SetFloatTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Int:
+                        SetIntTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Long:
+                        SetLongTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Short:
+                        SetShortTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.String:
+                        SetSrtingTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.UInt:
+                        SetUIntTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.ULong:
+                        SetULongTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.UShort:
+                        SetUShortTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.IntPoint:
+                        SetIntPointTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.UIntPoint:
+                        SetUIntPointTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.IntPoint3:
+                        SetIntPoint3TagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.UIntPoint3:
+                        SetUIntPoint3TagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.LongPoint:
+                        SetLongPointTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.ULongPoint:
+                        SetULongPointTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.LongPoint3:
+                        SetLongPoint3TagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.ULongPoint3:
+                        SetULongPoint3TagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
+                        break;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public object GetTagValue(string name, out byte quality, out DateTime time)
+        {
+            var tag = mConfigDatabase.GetTagIdByName(name);
+            if(tag!=null)
+            {
+                return GetTagValue(tag.Value, out quality, out time);
+            }
+            quality = (byte)QualityConst.Null;
+            time = DateTime.Now;
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValueForConsumer(string name, object value)
+        {
+            var tag = mConfigDatabase.GetTagIdByName(name);
+            if(tag!=null)
+            {
+                return SetTagValueForConsumer(tag.Value, value);
+            }
+            return false;
+        }
+
+        #region Set value By Tag Instance  from Comsumer
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        public bool SetBoolTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            bool btmp = Convert.ToBoolean(value);
+            SetValueByAddr(tag.ValueAddress, btmp ? (byte)1 : (byte)0, qulity, time);
+            if (tag.Conveter != null)
+            {
+                btmp = Convert.ToBoolean(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        public bool SetByteTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as NumberTagBase;
+
+            byte btmp = Convert.ToByte(value);
+            if (btmp < vtag.MinValue || btmp > vtag.MaxValue) return false;
+
+            SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
+            if (tag.Conveter != null)
+            {
+                btmp = Convert.ToByte(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        public bool SetShortTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as NumberTagBase;
+
+            short btmp = Convert.ToInt16(value);
+            if (btmp < vtag.MinValue || btmp > vtag.MaxValue) return false;
+            SetValueByAddr(tag.ValueAddress, btmp,  qulity, time);
+            if (tag.Conveter != null)
+            {
+                btmp = Convert.ToInt16(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        public bool SetUShortTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as NumberTagBase;
+
+            ushort btmp = Convert.ToUInt16(value);
+            if (btmp < vtag.MinValue || btmp > vtag.MaxValue) return false;
+            SetValueByAddr(tag.ValueAddress, btmp, qulity , time);
+            if (tag.Conveter != null)
+            {
+                btmp = Convert.ToUInt16(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        public bool SetIntTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as NumberTagBase;
+
+            int btmp = Convert.ToInt32(value);
+            if (btmp < vtag.MinValue || btmp > vtag.MaxValue) return false;
+            SetValueByAddr(tag.ValueAddress, btmp,  qulity, time);
+            if (tag.Conveter != null)
+            {
+
+                btmp = Convert.ToInt32(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+        public bool SetUIntTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as NumberTagBase;
+
+            uint btmp = Convert.ToUInt32(value);
+            if (btmp < vtag.MinValue || btmp > vtag.MaxValue) return false;
+            SetValueByAddr(tag.ValueAddress, btmp, qulity , time);
+            if (tag.Conveter != null)
+            {
+                btmp = Convert.ToUInt32(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+
+        public bool SetLongTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as NumberTagBase;
+
+            long btmp = Convert.ToInt64(value);
+            if (btmp < vtag.MinValue || btmp > vtag.MaxValue) return false;
+            SetValueByAddr(tag.ValueAddress, btmp,  qulity , time);
+            if (tag.Conveter != null)
+            {
+
+                btmp = Convert.ToInt64(tag.Conveter.ConvertBackTo(value));
+            }
+
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+
+        public bool SetULongTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as NumberTagBase;
+            if (vtag == null) return false;
+
+            ulong btmp = Convert.ToUInt64(value);
+            if (btmp < vtag.MinValue || btmp > vtag.MaxValue) return false;
+            SetValueByAddr(tag.ValueAddress, btmp,  qulity , time);
+
+            if (tag.Conveter != null)
+            {
+
+                btmp = Convert.ToUInt64(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public bool SetDoubleTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as FloatingTagBase;
+            if (vtag == null) return false;
+
+            double btmp = Math.Round(Convert.ToDouble(value), vtag.Precision);
+            if (btmp < vtag.MinValue || btmp > vtag.MaxValue) return false;
+
+            SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+
+            if (tag.Conveter != null)
+            {
+                btmp = Math.Round(Convert.ToDouble(tag.Conveter.ConvertBackTo(value)), vtag.Precision);
+            }
+
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        public bool SetFloatTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            var vtag = tag as FloatingTagBase;
+            if (vtag == null) return false;
+
+            float btmp = (float)Math.Round(Convert.ToSingle(value), vtag.Precision);
+            if (btmp < vtag.MinValue || btmp > vtag.MaxValue) return false;
+            SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+
+            if (tag.Conveter != null)
+            {
+                btmp = (float)Math.Round(Convert.ToSingle(tag.Conveter.ConvertBackTo(value)), vtag.Precision);
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+
+        public bool SetSrtingTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            string btmp = Convert.ToString(value);
+            SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
+            if (tag.Conveter != null)
+            {
+                btmp = Convert.ToString(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        public bool SetDateTimeTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            DateTime btmp = Convert.ToDateTime(value);
+            SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
+            if (tag.Conveter != null)
+            {
+                btmp = Convert.ToDateTime(tag.Conveter.ConvertBackTo(value));
+            }
+
+            NotifyValueChangedToProducter(tag.Id,btmp);
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        public bool SetIntPointTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            IntPointData btmp = (IntPointData)(value);
+            SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
+            if (tag.Conveter != null)
+            {
+                btmp = (IntPointData)(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id,btmp);
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public bool SetUIntPointTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            UIntPointData btmp = (UIntPointData)(value);
+            SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
+            if (tag.Conveter != null)
+            {
+                btmp = (UIntPointData)(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+        public bool SetUIntPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            UIntPoint3Data btmp = (UIntPoint3Data)(value);
+            SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
+            if (tag.Conveter != null)
+            {
+                btmp = (UIntPoint3Data)(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+
+        public bool SetIntPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            IntPoint3Data btmp = (IntPoint3Data)(value);
+            SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
+            if (tag.Conveter != null)
+            {
+                btmp = (IntPoint3Data)(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+
+        public bool SetLongPointTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            LongPointData btmp = (LongPointData)(value);
+            SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
+            if (tag.Conveter != null)
+            {
+                btmp = (LongPointData)(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+        public bool SetULongPointTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            ULongPointData btmp = (ULongPointData)(value);
+            SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
+            if (tag.Conveter != null)
+            {
+                btmp = (ULongPointData)(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+
+        public bool SetLongPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            LongPoint3Data btmp = (LongPoint3Data)(value);
+            SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
+            if (tag.Conveter != null)
+            {
+                btmp = (LongPoint3Data)(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+        public bool SetULongPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
+        {
+            ULongPoint3Data btmp = (ULongPoint3Data)(value);
+            SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
+            if (tag.Conveter != null)
+            {
+                btmp = (ULongPoint3Data)(tag.Conveter.ConvertBackTo(value));
+            }
+            NotifyValueChangedToProducter(tag.Id, btmp);
+            return true;
+        }
+
+        #endregion
 
         #endregion ...Interfaces...
     }

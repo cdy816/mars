@@ -1,11 +1,11 @@
 ﻿using System;
 
-namespace Cdy.Tag.Consume
+namespace Cdy.Tag.Driver
 {
     /// <summary>
-    /// 上接口驱动
+    /// 
     /// </summary>
-    public interface IConsumeDriver
+    public interface IProducterDriver
     {
 
         #region ... Variables  ...
@@ -21,23 +21,25 @@ namespace Cdy.Tag.Consume
         #endregion ...Constructor...
 
         #region ... Properties ...
-        
+
         /// <summary>
         /// 
         /// </summary>
         string Name { get; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        string[] Registors { get; }
 
         #endregion ...Properties...
 
         #region ... Methods    ...
-
-
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        bool Start();
+        bool Start(IRealTagProducter tagQuery);
 
         /// <summary>
         /// 
@@ -45,12 +47,10 @@ namespace Cdy.Tag.Consume
         /// <returns></returns>
         bool Stop();
 
-
         #endregion ...Methods...
 
         #region ... Interfaces ...
 
         #endregion ...Interfaces...
-
     }
 }

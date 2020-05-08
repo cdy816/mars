@@ -18,6 +18,8 @@ namespace Cdy.Tag
     /// </summary>
     public struct IntPointData
     {
+        public static IntPointData Empty = new IntPointData();
+
         public IntPointData(int x,int y)
         {
             X = x;
@@ -41,6 +43,25 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public int Y { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static IntPointData ToIntPointData(object value)
+        {
+            if (value is IntPointData) return (IntPointData)value;
+            else if (value is UIntPointData) return new IntPointData(((UIntPointData)value).X, ((UIntPointData)value).Y);
+            else if (value is IntPoint3Data) return new IntPointData(((IntPoint3Data)value).X, ((IntPoint3Data)value).Y);
+            else if (value is UIntPoint3Data) return new IntPointData(((UIntPoint3Data)value).X, ((UIntPoint3Data)value).Y);
+            else if (value is LongPointData) return new IntPointData((int)(((LongPointData)value).X), (int)(((LongPointData)value).Y));
+            else if (value is ULongPointData) return new IntPointData((int)(((ULongPointData)value).X), (int)(((ULongPointData)value).Y));
+            else if (value is LongPoint3Data) return new IntPointData((int)(((LongPoint3Data)value).X), (int)(((LongPoint3Data)value).Y));
+            else if (value is ULongPoint3Data) return new IntPointData((int)(((ULongPoint3Data)value).X), (int)(((ULongPoint3Data)value).Y));
+            return Empty;
+        }
+
     }
     /// <summary>
     /// 

@@ -29,9 +29,9 @@ namespace Cdy.Tag
         /// </summary>
         public static DriverManager Manager = new DriverManager();
 
-        private Dictionary<string,ITagDriver> mDrivers = new Dictionary<string, ITagDriver>();
+        private Dictionary<string,IProducterDriver> mDrivers = new Dictionary<string, IProducterDriver>();
 
-        private IRealTagDriver mTagDriverService;
+        private IRealTagProducter mTagDriverService;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -52,7 +52,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="tagDriverService"></param>
-        public void Init(IRealTagDriver tagDriverService)
+        public void Init(IRealTagProducter tagDriverService)
         {
             mTagDriverService = tagDriverService;
             string cfgpath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location),"Config", "Driver.cfg");
@@ -67,7 +67,7 @@ namespace Cdy.Tag
                         string main = vv.Attribute("MainClass").Value;
                         if (System.IO.File.Exists(dll))
                         {
-                            var driver = Assembly.LoadFrom(dll).CreateInstance(main) as ITagDriver;
+                            var driver = Assembly.LoadFrom(dll).CreateInstance(main) as IProducterDriver;
                             if (!mDrivers.ContainsKey(driver.Name))
                             {
                                 mDrivers.Add(driver.Name, driver);

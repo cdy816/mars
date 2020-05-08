@@ -1,8 +1,8 @@
 ﻿//==============================================================
-//  Copyright (C) 2019  Inc. All rights reserved.
+//  Copyright (C) 2020  Inc. All rights reserved.
 //
 //==============================================================
-//  Create by 种道洋 at 2019/12/27 18:45:02.
+//  Create by 种道洋 at 2020/5/8 18:02:39.
 //  Version 1.0
 //  种道洋
 //==============================================================
@@ -13,29 +13,24 @@ using System.Text;
 namespace Cdy.Tag
 {
     /// <summary>
-    /// 值改变通知
+    /// 
     /// </summary>
-    public interface IRealDataNotify
+    public interface IRealDataNotifyForProducter
     {
-        ///// <summary>
-        ///// 订购
-        ///// </summary>
-        ///// <param name="name"></param>
-        ///// <returns></returns>
-        //ValueChangedNotifyProcesser SubscribeComsumer(string name);
-
         /// <summary>
-        /// 订购
+        /// 
         /// </summary>
         /// <param name="name"></param>
         /// <param name="valueChanged"></param>
         /// <param name="tagRegistor"></param>
-        void SubscribeComsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelagete valueChanged, Func<List<int>> tagRegistor);
+        public void SubscribeProducter(string name, ProducterValueChangedNotifyProcesser.ValueChangedDelagete valueChanged, Func<List<int>> tagRegistor);
+
 
         /// <summary>
-        /// 取消订购
+        /// 
         /// </summary>
         /// <param name="name"></param>
-        void UnSubscribeComsumer(string name);
+        public void UnSubscribeProducter(string name);
+
     }
 }

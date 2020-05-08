@@ -29,7 +29,7 @@ namespace Cdy.Tag
         /// </summary>
         public static DriverManager Manager = new DriverManager();
 
-        private Dictionary<string,ITagDriver> mDrivers = new Dictionary<string, ITagDriver>();
+        private Dictionary<string,IProducterDriver> mDrivers = new Dictionary<string, IProducterDriver>();
 
         #endregion ...Variables...
 
@@ -46,7 +46,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public Dictionary<string, ITagDriver> Drivers
+        public Dictionary<string, IProducterDriver> Drivers
         {
             get
             {
@@ -77,7 +77,7 @@ namespace Cdy.Tag
                         string main = vv.Attribute("MainClass").Value;
                         if (System.IO.File.Exists(dll))
                         {
-                            var driver = Assembly.LoadFrom(dll).CreateInstance(main) as ITagDriver;
+                            var driver = Assembly.LoadFrom(dll).CreateInstance(main) as IProducterDriver;
                             if (!mDrivers.ContainsKey(driver.Name))
                             {
                                 mDrivers.Add(driver.Name, driver);

@@ -12,12 +12,22 @@ using System.Text;
 
 namespace Cdy.Tag
 {
-    public class ShortTag : Tagbase
+    public class ShortTag : NumberTagBase
     {
         /// <summary>
         /// 
         /// </summary>
         public override TagType Type => TagType.Short;
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override double AllowMaxValue => short.MaxValue;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override double AllowMinValue => short.MinValue;
     }
 }

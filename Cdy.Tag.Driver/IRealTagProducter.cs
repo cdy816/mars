@@ -16,7 +16,7 @@ namespace Cdy.Tag.Driver
     /// <summary>
     /// 
     /// </summary>
-    public interface IRealTagDriver
+    public interface IRealTagProducter
     {
 
         #region ... Variables  ...
@@ -38,6 +38,12 @@ namespace Cdy.Tag.Driver
 
         #region ... Methods    ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        object GetTagValueForProductor(int id);
 
         /// <summary>
         /// 
@@ -47,6 +53,7 @@ namespace Cdy.Tag.Driver
         /// <returns></returns>
         bool SetTagValue(int id, object value);
 
+
         /// <summary>
         /// 
         /// </summary>
@@ -55,6 +62,8 @@ namespace Cdy.Tag.Driver
         /// <returns></returns>
         bool SetTagValue(List<int> ids, object value);
 
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -62,6 +71,7 @@ namespace Cdy.Tag.Driver
         /// <param name="values"></param>
         /// <returns></returns>
         bool SetPointValue(int id, params object[] values);
+
 
         /// <summary>
         /// 
@@ -72,6 +82,7 @@ namespace Cdy.Tag.Driver
 
         bool SetPointValue(List<int> ids, params object[] values);
 
+
         /// <summary>
         /// 
         /// </summary>
@@ -80,11 +91,27 @@ namespace Cdy.Tag.Driver
         List<int> GetTagByLinkAddress(string address);
 
         /// <summary>
-        /// 
+        /// 通过连接地址，获取变量ID
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
         Dictionary<string, List<int>> GetTagsByLinkAddress(List<string> address);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="valueChanged"></param>
+        /// <param name="tagRegistor"></param>
+        void SubscribeProducter(string name, ProducterValueChangedNotifyProcesser.ValueChangedDelagete valueChanged, Func<List<int>> tagRegistor);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        void UnSubscribeProducter(string name);
+
 
         #endregion ...Methods...
 

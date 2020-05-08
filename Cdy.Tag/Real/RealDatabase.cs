@@ -103,6 +103,24 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="ids"></param>
+        /// <returns></returns>
+        public List<Tagbase> GetTagsById(List<int> ids)
+        {
+            List<Tagbase> re = new List<Tagbase>();
+            foreach(var vv in ids)
+            {
+                if(Tags.ContainsKey(vv))
+                {
+                    re.Add(Tags[vv]);
+                }
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
         public Tagbase GetTagByName(string name)

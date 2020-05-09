@@ -97,6 +97,15 @@ namespace Cdy.Tag
 
         #region ... Constructor...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public NumberTagBase()
+        {
+            MaxValue = AllowMaxValue;
+            MinValue = AllowMinValue;
+        }
+
         #endregion ...Constructor...
 
         #region ... Properties ...

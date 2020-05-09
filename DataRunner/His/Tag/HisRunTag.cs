@@ -58,7 +58,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 历史缓存数据偏移地址
         /// </summary>
-        public static MarshalMemoryBlock HisAddr { get; set; }
+        public static MarshalFixedMemoryBlock HisAddr { get; set; }
 
         /// <summary>
         /// 
@@ -174,7 +174,7 @@ namespace Cdy.Tag
 
                 //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
                 //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
-                HisAddr.WriteUShort(TimerValueStartAddr + vcount * 2, (ushort)(tim));
+                HisAddr.WriteUShortDirect(TimerValueStartAddr + vcount * 2, (ushort)(tim));
 
                 //写入数值
                 //HisAddr.WriteBytesDirect(HisValueStartAddr + vcount * SizeOfValue, RealMemoryAddr, RealValueAddr, SizeOfValue);

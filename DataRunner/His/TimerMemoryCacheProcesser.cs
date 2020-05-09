@@ -34,7 +34,7 @@ namespace Cdy.Tag
         /// </summary>
         private Dictionary<long, long> mCount = new Dictionary<long, long>();
 
-        public const int MaxTagCount = 50000;
+        public const int MaxTagCount = 100000;
 
         private int mCurrentCount = 0;
 
@@ -218,7 +218,10 @@ namespace Cdy.Tag
         private void ProcessTags(List<HisRunTag> tags)
         {
             //Stopwatch sw = new Stopwatch();
-            //sw.Start();
+            ////if (Id == 0)
+            //{
+            //    sw.Start();
+            //}
 
             int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
             //System.Threading.Tasks.Parallel.ForEach(tags, (vv) =>
@@ -230,10 +233,11 @@ namespace Cdy.Tag
                 vv.UpdateValue(tim);
             }
 
-
+            ////if (Id == 0)
             //{
-            //sw.Stop();
-            //    LoggerService.Service.Info("ProcessTags", "TimerMemoryCacheProcesser" + Id + " 处理变量:" +tags.Count+"  " + sw.ElapsedMilliseconds);
+                
+            //    sw.Stop();
+            //    LoggerService.Service.Info("ProcessTags", "TimerMemoryCacheProcesser" + Id + " 处理变量:" + tags.Count + "  " + sw.ElapsedMilliseconds);
             //}
         }
 

@@ -33,7 +33,7 @@ namespace Cdy.Tag
         /// </summary>
         private long mPosition = 0;
 
-        private long mUsedSize = 0;
+        //private long mUsedSize = 0;
 
         private long mAllocSize = 0;
 
@@ -156,22 +156,22 @@ namespace Cdy.Tag
             set
             {
                 mPosition = value;
-                lock (mUserSizeLock)
-                    mUsedSize = mUsedSize < value ? value : mUsedSize;
+                //lock (mUserSizeLock)
+                //    mUsedSize = mUsedSize < value ? value : mUsedSize;
             }
         }
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public long UsedSize
-        {
-            get
-            {
-                return mUsedSize;
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public long UsedSize
+        //{
+        //    get
+        //    {
+        //        return mUsedSize;
+        //    }
+        //}
 
         /// <summary>
         /// 
@@ -238,7 +238,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="size"></param>
-        private void Init(long size)
+        protected void Init(long size)
         {
             int count = (int)(size / BufferItemSize);
 
@@ -367,7 +367,7 @@ namespace Cdy.Tag
                     Marshal.Copy(zoreData, 0, vv + i * zoreData.Length, zoreData.Length);
                 }
             }
-            mUsedSize = 0;
+            //mUsedSize = 0;
             mPosition = 0;
 
            // LoggerService.Service.Info("MemoryBlock", Name + " is clear !");
@@ -906,6 +906,7 @@ namespace Cdy.Tag
             }
             else
             {
+                //LoggerService.Service.Warn("WriteBytesDirect", " len+ost:"+len+ost);
                 int ll = BufferItemSize - (int)ost;
 
                 Buffer.MemoryCopy((void*)(values + valueOffset), (void*)(mHandles[id] + (int)ost), BufferItemSize - ost, ll);
@@ -1547,7 +1548,7 @@ namespace Cdy.Tag
             {
                 long ost;
                 var hd = RelocationAddress(offset, out ost);
-                return new string((sbyte*)hd, (int)offset + 1, len, encoding);
+                return new string((sbyte*)hd, (int)ost + 1, len, encoding);
             }
         }
 
@@ -1895,6 +1896,41 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceStart"></param>
+        /// <param name="targetStart"></param>
+        /// <param name="len"></param>
+        public void CopyFrom(MarshalFixedMemoryBlock source,long sourceStart,long targetStart,long len)
+        {
+            long targetAddr = targetStart;
+            long olen, ostt;
+
+            long sourceAddr = source.Handles.ToInt64()+ sourceStart;
+
+            var hdt = RelocationAddressToArrayIndex(targetAddr, out ostt);
+            if (ostt + len < BufferItemSize)
+            {
+                Buffer.MemoryCopy((void*)sourceAddr, (void*)(mHandles[hdt] + (int)ostt), BufferItemSize - ostt, len);
+            }
+            else
+            {
+                Buffer.MemoryCopy((void*)sourceAddr, (void*)(mHandles[hdt] + (int)ostt), BufferItemSize - ostt, (BufferItemSize - ostt));
+                hdt++;
+                olen = BufferItemSize - ostt;
+
+                while (olen<len)
+                {
+                    long ltmp = Math.Min((len - olen), BufferItemSize);
+                    Buffer.MemoryCopy((void*)(sourceAddr + olen), (void*)(mHandles[hdt]), BufferItemSize, ltmp);
+                    olen += ltmp;
+                    hdt++;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="target"></param>
         /// <param name="sourceStart"></param>
         /// <param name="targetStart"></param>
@@ -2030,11 +2066,13 @@ namespace Cdy.Tag
             byte[] bvals = new byte[1024*1024*4];
             int stmp = start;
             int ltmp = len;
+           
             while(ltmp>0)
             {
                 int ctmp = Math.Min(bvals.Length, ltmp);
                 Marshal.Copy(source + stmp, bvals, 0, ctmp);
                 stream.Write(bvals, 0, ctmp);
+                stmp += ctmp;
                 ltmp -= ctmp;
             }
         }

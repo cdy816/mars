@@ -476,9 +476,12 @@ namespace Cdy.Tag
 
             CurrentMemory = mCachMemory1;
 
-            mCachMemory1.Clear();
-            mCachMemory2.Clear();
-            mMergeMemory.Clear();
+            ClearMemoryHisData(mCachMemory1);
+            ClearMemoryHisData(mCachMemory2);
+            ClearMemoryHisData(mMergeMemory);
+            //mCachMemory1.Clear();
+            //mCachMemory2.Clear();
+            //mMergeMemory.Clear();
             
         }
 
@@ -547,7 +550,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="memory"></param>
-        private void CheckMemoryIsReady(MarshalMemoryBlock memory)
+        private void CheckMemoryIsReady(MarshalFixedMemoryBlock memory)
         {
             while (memory.IsBusy())
             {
@@ -629,13 +632,13 @@ namespace Cdy.Tag
                 //拷贝时间
                 var tcount = (tag.Value.HisValueStartAddr - tag.Value.TimerValueStartAddr);
                 var vtimeaddr = addrbase + tcount * count + 2;
-                mcc.CopyTo(mMergeMemory, tag.Value.TimerValueStartAddr, vtimeaddr, tcount);
+                mMergeMemory.CopyFrom(mcc, tag.Value.TimerValueStartAddr, vtimeaddr, tcount);
                 //LoggerService.Service.Info("HisEnginer","拷贝时间数据："+count+"," + tag.Value.TimerValueStartAddr +","+ vtimeaddr + "," + tcount);
 
                 //拷贝数值
                 tcount = tag.Value.HisQulityStartAddr - tag.Value.HisValueStartAddr;
                 vtimeaddr = addrbase + vaddrs.Item2 + tcount * count+tag.Value.SizeOfValue;
-                mcc.CopyTo(mMergeMemory, tag.Value.HisValueStartAddr, vtimeaddr, tcount);
+                mMergeMemory.CopyFrom(mcc, tag.Value.HisValueStartAddr, vtimeaddr, tcount);
 
                 //LoggerService.Service.Info("HisEnginer", "拷贝数值数据：" + count + "," + tag.Value.HisValueStartAddr + "," + vtimeaddr + "," + tcount);
 
@@ -643,7 +646,7 @@ namespace Cdy.Tag
                 //拷贝质量戳
                 tcount = tag.Value.DataSize - tag.Value.HisQulityStartAddr + tag.Value.BlockHeadStartAddr;
                 vtimeaddr = addrbase + vaddrs.Item3 + tcount * count+1;
-                mcc.CopyTo(mMergeMemory, tag.Value.HisQulityStartAddr, vtimeaddr, tcount);
+                mMergeMemory.CopyFrom(mcc, tag.Value.HisQulityStartAddr, vtimeaddr, tcount);
 
                 //LoggerService.Service.Info("HisEnginer", "拷贝质量戳数据：" + count + "," + tag.Value.HisQulityStartAddr + "," + vtimeaddr + "," + tcount);
 
@@ -902,18 +905,26 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="memory"></param>
+        public void ClearMemoryHisData(MarshalFixedMemoryBlock memory)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            memory.Clear();           
+            sw.Stop();
+            LoggerService.Service.Info("Record", memory.Name + "清空数据区耗时:" + sw.ElapsedMilliseconds);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
         public void ClearMemoryHisData(MarshalMemoryBlock memory)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
             memory.Clear();
-            memory.WriteByteDirect(0,0);
-            //foreach(var vv in mHisTags)
-            //{
-            //    vv.Value.ClearDataValue(memory);
-            //}
             sw.Stop();
-            LoggerService.Service.Info("Record", "清空数据区耗时:" + sw.ElapsedMilliseconds);
+            LoggerService.Service.Info("Record", memory.Name+ "清空数据区耗时:" + sw.ElapsedMilliseconds);
         }
 
         /// <summary>

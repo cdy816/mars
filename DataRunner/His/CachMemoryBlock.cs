@@ -17,7 +17,7 @@ namespace DBRuntime.His
     /// <summary>
     /// 
     /// </summary>
-    public class CachMemoryBlock : MarshalMemoryBlock
+    public class CachMemoryBlock : MarshalFixedMemoryBlock
     {
 
         #region ... Variables  ...
@@ -36,7 +36,7 @@ namespace DBRuntime.His
         /// <param name="size"></param>
         public CachMemoryBlock(long size):base(size)
         {
-
+            InitValue();
         }
 
         /// <summary>

@@ -3422,6 +3422,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetBoolTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             bool btmp = Convert.ToBoolean(value);
             SetValueByAddr(tag.ValueAddress, btmp ? (byte)1 : (byte)0, qulity, time);
             if (tag.Conveter != null)
@@ -3441,6 +3442,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetByteTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as NumberTagBase;
 
             byte btmp = Convert.ToByte(value);
@@ -3464,6 +3466,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetShortTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as NumberTagBase;
 
             short btmp = Convert.ToInt16(value);
@@ -3486,6 +3489,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetUShortTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as NumberTagBase;
 
             ushort btmp = Convert.ToUInt16(value);
@@ -3508,6 +3512,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetIntTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as NumberTagBase;
 
             int btmp = Convert.ToInt32(value);
@@ -3524,6 +3529,7 @@ namespace Cdy.Tag
 
         public bool SetUIntTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as NumberTagBase;
 
             uint btmp = Convert.ToUInt32(value);
@@ -3540,6 +3546,7 @@ namespace Cdy.Tag
 
         public bool SetLongTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as NumberTagBase;
 
             long btmp = Convert.ToInt64(value);
@@ -3558,6 +3565,7 @@ namespace Cdy.Tag
 
         public bool SetULongTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as NumberTagBase;
             if (vtag == null) return false;
 
@@ -3584,6 +3592,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetDoubleTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as FloatingTagBase;
             if (vtag == null) return false;
 
@@ -3610,6 +3619,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetFloatTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as FloatingTagBase;
             if (vtag == null) return false;
 
@@ -3628,6 +3638,7 @@ namespace Cdy.Tag
 
         public bool SetSrtingTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             string btmp = Convert.ToString(value);
             SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
             if (tag.Conveter != null)
@@ -3647,6 +3658,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetDateTimeTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             DateTime btmp = Convert.ToDateTime(value);
             SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
             if (tag.Conveter != null)
@@ -3667,6 +3679,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetIntPointTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             IntPointData btmp = (IntPointData)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)
@@ -3687,6 +3700,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetUIntPointTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             UIntPointData btmp = (UIntPointData)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)
@@ -3699,6 +3713,7 @@ namespace Cdy.Tag
 
         public bool SetUIntPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             UIntPoint3Data btmp = (UIntPoint3Data)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)
@@ -3712,6 +3727,7 @@ namespace Cdy.Tag
 
         public bool SetIntPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             IntPoint3Data btmp = (IntPoint3Data)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)
@@ -3725,6 +3741,7 @@ namespace Cdy.Tag
 
         public bool SetLongPointTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             LongPointData btmp = (LongPointData)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)
@@ -3737,6 +3754,7 @@ namespace Cdy.Tag
 
         public bool SetULongPointTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             ULongPointData btmp = (ULongPointData)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)
@@ -3750,6 +3768,7 @@ namespace Cdy.Tag
 
         public bool SetLongPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             LongPoint3Data btmp = (LongPoint3Data)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)
@@ -3762,6 +3781,7 @@ namespace Cdy.Tag
 
         public bool SetULongPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             ULongPoint3Data btmp = (ULongPoint3Data)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)

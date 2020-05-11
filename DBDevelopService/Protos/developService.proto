@@ -505,6 +505,11 @@ message RealTagMessage
   string Group = 4;
   string Desc = 5;
   string LinkAddress = 6;
+  string Convert=7;
+  int32 ReadWriteMode=8;
+  double MaxValue=9;
+  double MinValue=10;
+  int32 Precision=11;
 }
 
 //历史变量定义

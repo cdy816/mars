@@ -4,6 +4,7 @@ using System.Text;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
+using System.Diagnostics;
 
 namespace DBStudio
 {
@@ -36,7 +37,7 @@ namespace DBStudio
 
                 if (cmsg == "exit")
                 {
-                    OutByLine("","确定要退出?输入y确定,输入其他任意字符取消");
+                    OutByLine("", "确定要退出?输入y确定,输入其他任意字符取消");
                     cmd = Console.ReadLine().Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
                     if (cmd.Length == 0) continue;
                     if (cmd[0].ToLower() == "y")
@@ -53,7 +54,7 @@ namespace DBStudio
                 }
                 else if (cmsg == "h")
                 {
-                    OutByLine("",GetHelpString());
+                    OutByLine("", GetHelpString());
                 }
             }
             DBDevelopService.Service.Instanse.Stop();
@@ -65,9 +66,9 @@ namespace DBStudio
         /// </summary>
         /// <param name="prechar"></param>
         /// <param name="msg"></param>
-        private static void OutByLine(string prechar,string msg)
+        private static void OutByLine(string prechar, string msg)
         {
-            Console.WriteLine(prechar+">" + msg);
+            Console.WriteLine(prechar + ">" + msg);
         }
 
         /// <summary>
@@ -89,9 +90,9 @@ namespace DBStudio
                 DBDevelopService.DbManager.Instance.Load();
 
             StringBuilder sb = new StringBuilder();
-            foreach(var vdd in DBDevelopService.DbManager.Instance.ListDatabase())
+            foreach (var vdd in DBDevelopService.DbManager.Instance.ListDatabase())
             {
-                sb.Append(vdd+",");
+                sb.Append(vdd + ",");
             }
             sb.Length = sb.Length > 1 ? sb.Length - 1 : sb.Length;
             OutByLine("", sb.ToString());
@@ -102,7 +103,7 @@ namespace DBStudio
         /// </summary>
         /// <param name="db"></param>
         /// <param name="msg"></param>
-        private static void ProcessDatabaseCommand(Database db,string msg)
+        private static void ProcessDatabaseCommand(Database db, string msg)
         {
             try
             {
@@ -135,7 +136,7 @@ namespace DBStudio
             }
             catch
             {
-               
+
             }
         }
 
@@ -149,13 +150,13 @@ namespace DBStudio
                 DBDevelopService.DbManager.Instance.Load();
 
             Database db = DBDevelopService.DbManager.Instance.GetDatabase(name);
-            
+
             if (db == null)
             {
                 db = Database.New(name);
             }
 
-            OutByLine(name,Res.Get("HelpMsg"));
+            OutByLine(name, Res.Get("HelpMsg"));
             while (true)
             {
                 OutInLine(name, "");
@@ -184,6 +185,11 @@ namespace DBStudio
                     {
                         UpdateTag(db, cmd[1].ToLower(), cmd[2], cmd[3]);
                     }
+                    else if (cmsg == "start")
+                    {
+                        
+                        StartDb(db.Name);
+                    }
                     else if (cmsg == "updatehis")
                     {
                         UpdateHisTag(db, cmd[1].ToLower(), cmd[2], cmd[3]);
@@ -199,11 +205,11 @@ namespace DBStudio
                     }
                     else if (cmsg == "export")
                     {
-                        if(cmd.Length>1)
-                        ExportToCSV(db, cmd[1].ToLower());
+                        if (cmd.Length > 1)
+                            ExportToCSV(db, cmd[1].ToLower());
                         else
                         {
-                            ExportToCSV(db, name+".csv");
+                            ExportToCSV(db, name + ".csv");
                         }
                     }
                     else if (cmsg == "list")
@@ -213,10 +219,14 @@ namespace DBStudio
                     }
                     else if (cmsg == "h")
                     {
-                        if(cmd.Length==1)
+                        if (cmd.Length == 1)
                         {
                             Console.WriteLine(GetDbManagerHelpString());
                         }
+                    }
+                    else if (cmsg == "sp")
+                    {
+                        Sp(db, cmd.Skip(1).ToArray());
                     }
                     else if (cmsg == "exit")
                     {
@@ -225,7 +235,124 @@ namespace DBStudio
                 }
                 catch
                 {
-                    OutByLine(name ,Res.Get("ErroParameter"));
+                    OutByLine(name, Res.Get("ErroParameter"));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        private static void StartDb(string name)
+        {
+            var info = new ProcessStartInfo() { FileName = "DbInRun.exe" };
+            info.UseShellExecute = true;
+            info.Arguments = "start "+name;
+            info.WorkingDirectory = System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location);
+            Process.Start(info);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="paras"></param>
+        private static void Sp(Database db, params string[] paras)
+        {
+            Cdy.Tag.RealDatabase test = db.RealDatabase;
+            db.RealDatabase = test;
+            Cdy.Tag.HisDatabase htest = db.HisDatabase;
+
+            string address = "";
+            if (paras.Length > 0)
+            {
+                int dcount = int.Parse(paras[0]);
+                for (int i = 0; i < dcount; i++)
+                {
+                    if (i % 3 == 0)
+                    {
+                        address = "Sim:sin";
+                    }
+                    else if (i % 3 == 1)
+                    {
+                        address = "Sim:cos";
+                    }
+                    else
+                    {
+                        address = "Sim:step";
+                    }
+                    var vtag = new Cdy.Tag.DoubleTag() { Name = "Double" + i, Group = "Double", LinkAddress = address };
+                    test.Append(vtag);
+                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Double, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
+                }
+            }
+
+            if (paras.Length > 1)
+            {
+                int fcount = int.Parse(paras[1]);
+                for (int i = 0; i < fcount; i++)
+                {
+                    if (i % 3 == 0)
+                    {
+                        address = "Sim:sin";
+                    }
+                    else if (i % 3 == 1)
+                    {
+                        address = "Sim:cos";
+                    }
+                    else
+                    {
+                        address = "Sim:step";
+                    }
+                    var vtag = new Cdy.Tag.FloatTag() { Name = "Float" + i, Group = "Float", LinkAddress = address };
+                    test.Append(vtag);
+                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Float, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
+                }
+            }
+
+            if (paras.Length > 2)
+            {
+                int fcount = int.Parse(paras[2]);
+                for (int i = 0; i < fcount; i++)
+                {
+                    var vtag = new Cdy.Tag.LongTag() { Name = "Long" + i, Group = "Long", LinkAddress = "Sim:step" };
+                    test.Append(vtag);
+                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Long, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
+                }
+            }
+
+            if (paras.Length > 3)
+            {
+                int fcount = int.Parse(paras[3]);
+                for (int i = 0; i < fcount; i++)
+                {
+                    var vtag = new Cdy.Tag.IntTag() { Name = "Int" + i, Group = "Int", LinkAddress = "Sim:step" };
+                    test.Append(vtag);
+                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Int, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
+                }
+            }
+
+            if (paras.Length > 4)
+            {
+                int fcount = int.Parse(paras[4]);
+                for (int i = 0; i < fcount; i++)
+                {
+                    var vtag = new Cdy.Tag.BoolTag() { Name = "Bool" + i, Group = "Bool", LinkAddress = "Sim:square" };
+                    test.Append(vtag);
+                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Bool, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
+                }
+            }
+
+
+            if (paras.Length > 5)
+            {
+                int fcount = int.Parse(paras[5]);
+                for (int i = 0; i < fcount; i++)
+                {
+                    var vtag = new Cdy.Tag.IntPointTag() { Name = "IntPoint" + i, Group = "IntPoint", LinkAddress = "Sim:steppoint" };
+                    test.Append(vtag);
+                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.IntPoint, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
                 }
             }
         }
@@ -246,6 +373,7 @@ namespace DBStudio
             re.AppendLine("import    [filename]                                 //import tags from a csvfile");
             re.AppendLine("export    [filename]                                 //export tags to a csvfile");
             re.AppendLine("list      [tagtype]                                  //the sumery info of specical type tags or all tags");
+            re.AppendLine("sp       [double tag number] [float tag number] [long tag number] [int tag number] [bool tag number] [intpoint tag number]   //Quickly generate a specified number of tags for test purposes");
             re.AppendLine("exit                                                 //exit and back to parent");
 
             return re.ToString();
@@ -319,6 +447,32 @@ namespace DBStudio
             sb.Append(mRealTagMode.Group + ",");
             sb.Append(mRealTagMode.Type + ",");
             sb.Append(mRealTagMode.LinkAddress + ",");
+            sb.Append((int)mRealTagMode.ReadWriteType + ",");
+            if(mRealTagMode.Conveter!=null)
+            sb.Append(mRealTagMode.Conveter.SeriseToString() + ",");
+            else
+            {
+                sb.Append(",");
+            }
+            if (mRealTagMode is NumberTagBase)
+            {
+                sb.Append((mRealTagMode as  NumberTagBase).MaxValue.ToString() + ",");
+                sb.Append((mRealTagMode as NumberTagBase).MinValue.ToString() + ",");
+            }
+            else
+            {
+                sb.Append(",");
+                sb.Append(",");
+            }
+            if(mRealTagMode is FloatingTagBase)
+            {
+                sb.Append((mRealTagMode as FloatingTagBase).Precision + ",");
+            }
+            else
+            {
+                sb.Append(",");
+            }
+            
             if (mHisTagMode != null)
             {
                 sb.Append(mHisTagMode.Type + ",");
@@ -352,19 +506,35 @@ namespace DBStudio
             realtag.Desc = stmp[2];
             realtag.Group = stmp[3];
             realtag.LinkAddress = stmp[5];
+            realtag.ReadWriteType = (ReadWriteMode)(int.Parse(stmp[6]));
+            if(stmp[7]!=null)
+            {
+                realtag.Conveter = stmp[7].DeSeriseToValueConvert();
+            }
 
-            if (stmp.Length > 6)
+            if(realtag is NumberTagBase)
+            {
+                (realtag as NumberTagBase).MaxValue = double.Parse(stmp[8], System.Globalization.NumberStyles.Any);
+                (realtag as NumberTagBase).MinValue = double.Parse(stmp[9], System.Globalization.NumberStyles.Any);
+            }
+
+            if (realtag is FloatingTagBase)
+            {
+                (realtag as FloatingTagBase).Precision = byte.Parse(stmp[10]);
+            }
+
+            if (stmp.Length > 11)
             {
                 Cdy.Tag.HisTag histag = new HisTag();
-                histag.Type = (Cdy.Tag.RecordType)Enum.Parse(typeof(Cdy.Tag.RecordType), stmp[6]);
+                histag.Type = (Cdy.Tag.RecordType)Enum.Parse(typeof(Cdy.Tag.RecordType), stmp[11]);
 
-                histag.Circle = long.Parse(stmp[7]);
-                histag.CompressType = int.Parse(stmp[8]);
+                histag.Circle = long.Parse(stmp[12]);
+                histag.CompressType = int.Parse(stmp[13]);
                 histag.Parameters = new Dictionary<string, double>();
                 histag.TagType = realtag.Type;
                 histag.Id = realtag.Id;
 
-                for (int i = 9; i < stmp.Length; i++)
+                for (int i = 14; i < stmp.Length; i++)
                 {
                     string skey = stmp[i];
                     if (string.IsNullOrEmpty(skey))
@@ -522,6 +692,7 @@ namespace DBStudio
         private static void ClearTag(Database database)
         {
             database.RealDatabase.Tags.Clear();
+            database.RealDatabase.MaxId = 0;
             database.HisDatabase.HisTags.Clear();
         }
 

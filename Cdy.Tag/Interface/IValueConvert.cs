@@ -81,4 +81,35 @@ namespace Cdy.Tag
 
         #endregion ...Interfaces...
     }
+
+    public static class IValueConvertExtend
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="convert"></param>
+        /// <returns></returns>
+        public static string SeriseToString(this IValueConvert convert)
+        {
+            return convert.Name + ":" + convert.SaveToString();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="convert"></param>
+        /// <returns></returns>
+        public static IValueConvert DeSeriseToValueConvert(this string convert)
+        {
+            string[] sval = convert.Split(new char[] { ':' });
+            var vtmp = ValueConvertManager.manager.GetConvert(sval[0]);
+            if (vtmp != null)
+            {
+               return vtmp.LoadFromString(convert.Replace(sval[0] + ":", ""));
+            }
+            return null;
+        }
+
+    }
+
 }

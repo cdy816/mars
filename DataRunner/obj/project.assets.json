@@ -25,6 +25,19 @@
           "bin/placeholder/Cdy.Tag.Common.dll": {}
         }
       },
+      "Cdy.Tag.Consume/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.1",
+        "dependencies": {
+          "Cdy.Tag": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/Cdy.Tag.Consume.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Cdy.Tag.Consume.dll": {}
+        }
+      },
       "Cdy.Tag.Driver/1.0.0": {
         "type": "project",
         "framework": ".NETStandard,Version=v2.1",
@@ -65,6 +78,11 @@
       "path": "../Cdy.Tag.Common/Cdy.Tag.Common.csproj",
       "msbuildProject": "../Cdy.Tag.Common/Cdy.Tag.Common.csproj"
     },
+    "Cdy.Tag.Consume/1.0.0": {
+      "type": "project",
+      "path": "../Cdy.Tag.Consume/Cdy.Tag.Consume.csproj",
+      "msbuildProject": "../Cdy.Tag.Consume/Cdy.Tag.Consume.csproj"
+    },
     "Cdy.Tag.Driver/1.0.0": {
       "type": "project",
       "path": "../Cdy.Tag.Driver/Cdy.Tag.Driver.csproj",
@@ -80,6 +98,7 @@
     ".NETCoreApp,Version=v3.1": [
       "Cdy.Tag >= 1.0.0",
       "Cdy.Tag.Common >= 1.0.0",
+      "Cdy.Tag.Consume >= 1.0.0",
       "Cdy.Tag.Driver >= 1.0.0",
       "DBHisData >= 1.0.0"
     ]
@@ -116,6 +135,9 @@
           "projectReferences": {
             "D:\\Project\\Galaxy\\Cdy.Tag.Common\\Cdy.Tag.Common.csproj": {
               "projectPath": "D:\\Project\\Galaxy\\Cdy.Tag.Common\\Cdy.Tag.Common.csproj"
+            },
+            "D:\\Project\\Galaxy\\Cdy.Tag.Consume\\Cdy.Tag.Consume.csproj": {
+              "projectPath": "D:\\Project\\Galaxy\\Cdy.Tag.Consume\\Cdy.Tag.Consume.csproj"
             },
             "D:\\Project\\Galaxy\\Cdy.Tag.Driver\\Cdy.Tag.Driver.csproj": {
               "projectPath": "D:\\Project\\Galaxy\\Cdy.Tag.Driver\\Cdy.Tag.Driver.csproj"

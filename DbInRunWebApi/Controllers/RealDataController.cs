@@ -21,7 +21,23 @@ namespace DbInRunWebApi.Controllers
         [HttpGet()]
         public RealValueQueryResponse Get([FromBody] RealDataRequest request)
         {
-
+            if(DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token)&&DbInRunWebApi.SecurityManager.Manager.CheckReaderPermission(request.Token,request.Group))
+            {
+                RealValueQueryResponse response = new RealValueQueryResponse() { Result = true, Datas = new List<RealValue>(request.TagNames.Count) };
+                var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+                var ids = service.GetTagIdByName(request.TagNames);
+                for(int i=0;i<request.TagNames.Count;i++)
+                {
+                    if (ids[i].HasValue)
+                    {
+                        byte quality;
+                        DateTime time;
+                        var val = service.GetTagValue(ids[i].Value, out quality, out time);
+                        response.Datas.Add(new RealValue() { Quality = quality, Time = time, Value = val });
+                    }
+                }
+                return response;
+            }
             //ServiceLocator.Locator.Resolve<IRealTagComsumer>().GetTagValue()
             return new RealValueQueryResponse() { Result = false };
         }

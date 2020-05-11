@@ -18,37 +18,31 @@ namespace Cdy.Tag
     /// <summary>
     /// 划分内存
     /// </summary>
-    public unsafe class MarshalFixedMemoryBlock : IDisposable
+    public unsafe class FixedMemoryBlock : IDisposable
     {
 
         #region ... Variables  ...
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //private byte[] mDataBuffer;
+
+        private byte[] mBuffers;
 
         /// <summary>
         /// 
         /// </summary>
         private IntPtr mHandles;
 
-        private long mHandleValue;
-
         /// <summary>
         /// 
         /// </summary>
-        private long mPosition = 0;
+        private int mPosition = 0;
 
         //private long mUsedSize = 0;
 
         private long mAllocSize = 0;
-
-        private long mSize = 0;
-
-        private object mUserSizeLock = new object();
-
-
-        public const int BufferItemSize = 1024 * 4;
-
-        public static byte[] zoreData = new byte[BufferItemSize];
-
-        private int mRefCount = 0;
 
         #endregion ...Variables...
 
@@ -62,7 +56,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public MarshalFixedMemoryBlock()
+        public FixedMemoryBlock()
         {
 
         }
@@ -71,7 +65,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="size"></param>
-        public MarshalFixedMemoryBlock(long size)
+        public FixedMemoryBlock(long size)
         {
             Init(size);
         }
@@ -88,30 +82,23 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public IntPtr Buffers
+        public byte[] Buffers
         {
             get
             {
-                return mHandles;
+                return mBuffers;
             }
             internal set
             {
-                mHandles = value;
+                mBuffers = value;
             }
         }
 
 
         /// <summary>
-        /// 
+        /// 是否繁忙
         /// </summary>
-        public IntPtr StartMemory
-        {
-            get
-            {
-                return mHandles;
-            }
-        }
-
+        public bool IsBusy { get; set; }
 
 
         /// <summary>
@@ -121,14 +108,14 @@ namespace Cdy.Tag
         {
             get
             {
-                return mSize;
+                return mBuffers.Length;
             }
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public long Position
+        public int Position
         {
             get
             {
@@ -137,22 +124,9 @@ namespace Cdy.Tag
             set
             {
                 mPosition = value;
-                //lock (mUserSizeLock)
-                //    mUsedSize = mUsedSize < value ? value : mUsedSize;
             }
         }
 
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public long UsedSize
-        //{
-        //    get
-        //    {
-        //        return mUsedSize;
-        //    }
-        //}
 
         /// <summary>
         /// 
@@ -187,66 +161,28 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
-        public void CheckAndResize(long size)
-        {
-            if (size > mPosition)
-            {
-                IntPtr moldptr = mHandles;
-                long oldlen = mPosition;
-                Init(size);
-
-                Buffer.MemoryCopy((void*)moldptr, (void*)mHandles, size, oldlen);
-
-                Marshal.FreeHGlobal(moldptr);
-
-                GC.Collect();
-
-                LoggerService.Service.Info("CheckAndResize", "CheckAndResize " + this.Name + " " + size, ConsoleColor.Red);
-
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public void IncRef()
-        {
-            lock (mUserSizeLock)
-                Interlocked.Increment(ref mRefCount);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public void DecRef()
-        {
-            lock (mUserSizeLock)
-                mRefCount = mRefCount > 0 ? mRefCount - 1 : mRefCount;
-        }
-
-        /// <summary>
-        /// 是否繁忙
-        /// </summary>
-        /// <returns></returns>
-        public bool IsBusy()
-        {
-            return mRefCount > 0;
-        }
-
-
         /// <summary>
         /// 
         /// </summary>
         /// <param name="size"></param>
         private void Init(long size)
         {
-            long stmp = size % BufferItemSize > 0 ? ((size / BufferItemSize) + 1) * BufferItemSize : (size / BufferItemSize) * BufferItemSize;
-            mSize = stmp;
-            mHandles = Marshal.AllocHGlobal(new IntPtr(stmp));
-            mHandleValue = mHandles.ToInt64();
+            mBuffers = new byte[size];
+            mHandles = System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mBuffers, 0);
             mAllocSize = size;
         }
 
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <returns></returns>
+        //public  IEnumerable<MemoryStream> GetStream()
+        //{
+        //    foreach(var vv in mBuffers)
+        //    {
+        //        yield return new MemoryStream(vv);
+        //    }
+        //}
 
         /// <summary>
         /// 重新分配对象
@@ -258,58 +194,18 @@ namespace Cdy.Tag
             GC.Collect();
         }
 
-       
-
-
-
         /// <summary>
         /// 清空内存
         /// </summary>
         public void Clear()
         {
-            for (long i = 0; i < mSize / zoreData.Length; i++)
-            {
-                Marshal.Copy(zoreData, 0,new IntPtr( mHandleValue+ (i * zoreData.Length)), zoreData.Length);
-            }
+            mBuffers.AsSpan().Fill(0);
             
-            //mUsedSize = 0;
-            mPosition = 0;
+            LoggerService.Service.Info("FixedMemoryBlock", Name + " is clear !");
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        protected void InitValue()
-        {
-            for(int i=0;i<mSize/8;i++)
-            {
-                Write(long.MaxValue);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="target"></param>
-        /// <param name="start"></param>
-        /// <param name="len"></param>
-        private void Clear(IntPtr target, long start, long len)
-        {
-            int i = 0;
-            for (i = 0; i < len / zoreData.Length; i++)
-            {
-                Marshal.Copy(zoreData, 0, new IntPtr(target.ToInt64()+ start + i * zoreData.Length), zoreData.Length);
-            }
-            long zz = len % zoreData.Length;
-            if (zz > 0)
-            {
-                Marshal.Copy(zoreData, 0, new IntPtr(target.ToInt64() + start + i * zoreData.Length), (int)zz);
-            }
-        }
 
         #region ReadAndWrite
-
-
 
         /// <summary>
         /// 
@@ -446,21 +342,13 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="values"></param>
-        public void Write(Memory<byte> values)
-        {
-            WriteMemory(mPosition, values);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
-        public void WriteLong(long offset, long value)
+        public virtual void WriteLong(int offset, long value)
         {
             MemoryHelper.WriteInt64((void*)mHandles, offset, value);
             Position = offset + 8;
+            
         }
 
         /// <summary>
@@ -468,7 +356,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
-        public void WriteLongDirect(long offset, long value)
+        public void WriteLongDirect(int offset, long value)
         {
             MemoryHelper.WriteInt64((void*)mHandles, offset, value);
         }
@@ -478,10 +366,11 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
-        public void WriteULong(long offset, ulong value)
+        public virtual void WriteULong(int offset, ulong value)
         {
             MemoryHelper.WriteUInt64((void*)mHandles, offset, value);
             Position = offset + 8;
+
         }
 
         /// <summary>
@@ -489,7 +378,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
-        public void WriteFloat(long offset, float value)
+        public virtual void WriteFloat(int offset, float value)
         {
             MemoryHelper.WriteFloat((void*)mHandles, offset, value);
             Position = offset + 4;
@@ -501,10 +390,11 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
-        public void WriteDouble(long offset, double value)
+        public virtual void WriteDouble(int offset, double value)
         {
             MemoryHelper.WriteDouble((void*)mHandles, offset, value);
             Position = offset + 8;
+
         }
 
         /// <summary>
@@ -512,17 +402,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="values"></param>
-        public void WriteMemory(long offset,Memory<byte> values)
-        {
-            WriteMemory(offset, values, 0, values.Length);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="values"></param>
-        public void WriteBytes(long offset,byte[] values)
+        public virtual void WriteBytes(int offset,byte[] values)
         {
             WriteBytes(offset, values, 0, values.Length);
         }
@@ -532,7 +412,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="values"></param>
-        public void WriteBytesDirect(long offset, byte[] values)
+        public virtual void WriteBytesDirect(int offset, byte[] values)
         {
             WriteBytesDirect(offset, values, 0, values.Length);
         }
@@ -542,10 +422,9 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="len"></param>
-        public void Clear(long offset,long len)
+        public virtual void Clear(int offset,int len)
         {
-
-            Clear(mHandles, offset, (int)len);
+            mBuffers.AsSpan<byte>(offset, len).Fill(0);
         }
 
         /// <summary>
@@ -555,9 +434,9 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         /// <param name="valueoffset"></param>
         /// <param name="len"></param>
-        public void WriteMemory(long offset, Memory<byte> values, int valueoffset, int len)
+        public virtual void WriteBytes(int offset, byte[] values, int valueoffset, int len)
         {
-            Buffer.MemoryCopy((void*)((IntPtr)values.Pin().Pointer + valueoffset), (void*)(new IntPtr(mHandleValue+ offset)), mSize-offset, len);
+            Array.Copy(values, valueoffset, mBuffers,offset , len);
             Position = offset + len;
         }
 
@@ -568,34 +447,9 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         /// <param name="valueoffset"></param>
         /// <param name="len"></param>
-        public void WriteBytes(long offset, byte[] values, int valueoffset, int len)
+        public void WriteBytesDirect(int offset, byte[] values, int valueoffset, int len)
         {
-            Marshal.Copy(values, valueoffset, (new IntPtr(mHandleValue + offset)), len);
-            Position = offset + len;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="values"></param>
-        /// <param name="valueOffset"></param>
-        /// <param name="len"></param>
-        public void WriteBytesDirect(long offset,IntPtr values,int valueOffset,int len)
-        {
-           Buffer.MemoryCopy((void*)(values + valueOffset), (void*)((mHandleValue + offset)), mSize - offset, len);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="values"></param>
-        /// <param name="valueoffset"></param>
-        /// <param name="len"></param>
-        public void WriteBytesDirect(long offset, byte[] values, int valueoffset, int len)
-        {
-            Marshal.Copy(values, valueoffset, (new IntPtr(mHandleValue + offset)), len);
+            Array.Copy(values, valueoffset, mBuffers, offset, len);
         }
 
         /// <summary>
@@ -603,9 +457,9 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
-        public void WriteByte(long offset, byte value)
+        public virtual void WriteByte(int offset, byte value)
         {
-            MemoryHelper.WriteByte((void*)mHandles, offset, value);
+            mBuffers[offset] = value;
             Position = offset + 1;
         }
 
@@ -614,9 +468,9 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
-        public void WriteByteDirect(long offset, byte value)
+        public  void WriteByteDirect(int offset, byte value)
         {
-            MemoryHelper.WriteByte((void*)mHandles, offset, value);
+            mBuffers[offset] = value;
         }
 
         /// <summary>
@@ -634,7 +488,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
-        public void WriteDatetime(long offset, DateTime value)
+        public virtual void WriteDatetime(int offset, DateTime value)
         {
             MemoryHelper.WriteDateTime((void*)mHandles, offset, value);
             Position = offset + 8;
@@ -644,18 +498,14 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
-        public void WriteInt(long offset, int value)
+        public virtual void WriteInt(int offset, int value)
         {
             MemoryHelper.WriteInt32((void*)mHandles, offset, value);
             Position = offset + 4;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="value"></param>
-        public void WriteIntDirect(long offset, int value)
+
+        public void WriteIntDirect(int offset, int value)
         {
             MemoryHelper.WriteInt32((void*)mHandles, offset, value);
         }
@@ -665,7 +515,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
-        public void WriteUInt(long offset, uint value)
+        public virtual void WriteUInt(int offset, uint value)
         {
             MemoryHelper.WriteUInt32((void*)mHandles, offset, value);
             Position = offset + 4;
@@ -676,7 +526,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
-        public void WriteUIntDirect(long offset, uint value)
+        public void WriteUIntDirect(int offset, uint value)
         {
             MemoryHelper.WriteUInt32((void*)mHandles, offset, value);
         }
@@ -686,7 +536,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
-        public void WriteShort(long offset, short value)
+        public virtual void WriteShort(int offset, short value)
         {
             MemoryHelper.WriteShort((void*)mHandles, offset, value);
             Position = offset + 2;
@@ -697,7 +547,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
-        public void WriteShortDirect(long offset, short value)
+        public void WriteShortDirect(int offset, short value)
         {
             MemoryHelper.WriteShort((void*)mHandles, offset, value);
         }
@@ -707,7 +557,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
-        public void WriteUShort(long offset, ushort value)
+        public virtual void WriteUShort(int offset, ushort value)
         {
             MemoryHelper.WriteUShort((void*)mHandles, offset, value);
             Position = offset + 2;
@@ -718,7 +568,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
-        public void WriteUShortDirect(long offset, ushort value)
+        public void WriteUShortDirect(int offset, ushort value)
         {
             MemoryHelper.WriteUShort((void*)mHandles, offset, value);
         }
@@ -729,7 +579,7 @@ namespace Cdy.Tag
         /// <param name="offset"></param>
         /// <param name="value"></param>
         /// <param name="encode"></param>
-        public void WriteString(long offset, string value, Encoding encode)
+        public virtual void WriteString(int offset, string value, Encoding encode)
         {
             var sdata = encode.GetBytes(value);
             WriteByte(offset, (byte)sdata.Length);
@@ -743,7 +593,7 @@ namespace Cdy.Tag
         /// <param name="offset"></param>
         /// <param name="value"></param>
         /// <param name="encode"></param>
-        public void WriteStringDirect(long offset, string value, Encoding encode)
+        public void WriteStringDirect(int offset, string value, Encoding encode)
         {
             var sdata = encode.GetBytes(value);
             WriteByte(offset, (byte)sdata.Length);
@@ -755,20 +605,11 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public DateTime ReadDateTime(long offset)
+        public virtual DateTime ReadDateTime(int offset)
         {
             mPosition = offset + sizeof(DateTime);
-            return MemoryHelper.ReadDateTime((void*)mHandles, offset);
-        }
 
-        public List<DateTime> ReadDateTimes(long offset, int count)
-        {
-            List<DateTime> re = new List<DateTime>(count);
-            for (int i = 0; i < count; i++)
-            {
-                re.Add(ReadDateTime(offset + 8 * i));
-            }
-            return re;
+            return MemoryHelper.ReadDateTime((void*)mHandles, offset);
         }
 
         /// <summary>
@@ -776,62 +617,27 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public int ReadInt(long offset)
+
+        public virtual int ReadInt(int offset)
         {
             mPosition = offset + sizeof(int);
             return MemoryHelper.ReadInt32((void*)mHandles, offset);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
-        public List<int> ReadInts(long offset,int count)
-        {
-            List<int> re = new List<int>(count);
-            for (int i = 0; i < count; i++)
-            {
-                re.Add(ReadInt(offset + 4 * i));
-            }
-            return re;
-        }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public uint ReadUInt(long offset)
+        public virtual uint ReadUInt(int offset)
         {
             mPosition = offset + 4;
             return MemoryHelper.ReadUInt32((void*)mHandles, offset);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
-        public List<uint> ReadUInts(long offset, int count)
-        {
-            List<uint> re = new List<uint>(count);
-            for (int i = 0; i < count; i++)
-            {
-                re.Add(ReadUInt(offset + 4 * i));
-            }
-            return re;
-        }
-
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public short ReadShort(long offset)
+        public virtual short ReadShort(int offset)
         {
             mPosition = offset + 2;
             return MemoryHelper.ReadShort((void*)mHandles, offset);
@@ -842,7 +648,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public ushort ReadUShort(long offset)
+        public virtual ushort ReadUShort(int offset)
         {
             mPosition = offset + 2;
             return MemoryHelper.ReadUShort((void*)mHandles, offset);
@@ -854,45 +660,19 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public float ReadFloat(long offset)
+        public virtual float ReadFloat(int offset)
         {
             mPosition = offset + 4;
             return MemoryHelper.ReadFloat((void*)mHandles, offset);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
-        public List<float> ReadFloats(long offset, int count)
-        {
-            List<float> re = new List<float>(count);
-            for (int i = 0; i < count; i++)
-            {
-                re.Add(ReadFloat(offset + 4 * i));
-            }
-            return re;
-        }
-
-        //public T Read<T>(long offset)
-        //{
-        //    if (typeof(T) == typeof(double))
-        //    {
-                
-        //        return ReadDouble(offset);
-        //    }
-
-        //    return  default(T);
-        //}
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public double ReadDouble(long offset)
+        public virtual double ReadDouble(int offset)
         {
             mPosition = offset + 8;
             return MemoryHelper.ReadDouble((void*)mHandles, offset);
@@ -902,24 +682,8 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="offset"></param>
-        /// <param name="count"></param>
         /// <returns></returns>
-        public List<double> ReadDoubles(long offset,int count)
-        {
-            List<double> re = new List<double>(count);
-            for(int i=0;i<count;i++)
-            {
-                re.Add(ReadDouble(offset + 8 * i));
-            }
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public long ReadLong(long offset)
+        public virtual long ReadLong(int offset)
         {
             mPosition = offset + 8;
             return MemoryHelper.ReadInt64((void*)mHandles, offset);
@@ -930,12 +694,10 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public ulong ReadULong(long offset)
+        public virtual ulong ReadULong(int offset)
         {
             mPosition = offset + 8;
             return MemoryHelper.ReadUInt64((void*)mHandles, offset);
-            //mPosition = offset + sizeof(long);
-            //return MemoryHelper.ReadUInt64(handle, offset);
         }
 
         /// <summary>
@@ -943,7 +705,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public byte ReadByte(long offset)
+        public virtual byte ReadByte(int offset)
         {
             mPosition = offset + 1;
             return MemoryHelper.ReadByte((void*)mHandles, offset);
@@ -954,11 +716,11 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public string ReadString(long offset, Encoding encoding)
+        public virtual string ReadString(int offset, Encoding encoding)
         {
             var len = ReadByte(offset);
             mPosition = offset + len + 1;
-            return encoding.GetString(ReadBytesInner(offset + 1, len));
+            return new string((sbyte*)mHandles, (int)offset + 1, len, encoding);
         }
 
         /// <summary>
@@ -966,7 +728,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public string ReadString(long offset)
+        public virtual string ReadString(int offset)
         {
             return ReadString(offset, Encoding.Unicode);
         }
@@ -977,10 +739,10 @@ namespace Cdy.Tag
         /// <param name="offset"></param>
         /// <param name="len"></param>
         /// <returns></returns>
-        private byte[] ReadBytesInner(long offset,int len)
+        private byte[] ReadBytesInner(int offset,int len)
         {
             byte[] re = new byte[len];
-            Marshal.Copy(new IntPtr(mHandleValue + offset), re, 0, len);
+            Array.Copy(mBuffers, offset, re, 0, len);
             return re;
         }
 
@@ -988,20 +750,8 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="offset"></param>
-        /// <param name="target"></param>
-        /// <param name="len"></param>
-        public void ReadBytes(long offset, byte[] target, int len)
-        {
-            Marshal.Copy(new IntPtr(mHandleValue + offset), target, 0, len);
-            mPosition += len;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="offset"></param>
         /// <returns></returns>
-        public byte[] ReadBytes(long offset,int len)
+        public virtual byte[] ReadBytes(int offset,int len)
         {
             byte[] re = ReadBytesInner(offset, len);
             mPosition += len;
@@ -1029,42 +779,10 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
-        public List<long> ReadLongs(long offset, int count)
-        {
-            List<long> re = new List<long>(count);
-            for (int i = 0; i < count; i++)
-            {
-                re.Add(ReadLong(offset + 8 * i));
-            }
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <returns></returns>
         public ulong ReadULong()
         {
             return ReadULong(mPosition);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
-        public List<ulong> ReadULongs(long offset, int count)
-        {
-            List<ulong> re = new List<ulong>(count);
-            for (int i = 0; i < count; i++)
-            {
-                re.Add(ReadULong(offset + 8 * i));
-            }
-            return re;
         }
 
         /// <summary>
@@ -1103,8 +821,6 @@ namespace Cdy.Tag
             return ReadDouble(mPosition);
         }
 
-        
-
         /// <summary>
         /// 
         /// </summary>
@@ -1117,42 +833,10 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
-        public List<short> ReadShorts(long offset, int count)
-        {
-            List<short> re = new List<short>(count);
-            for (int i = 0; i < count; i++)
-            {
-                re.Add(ReadShort(offset + 2 * i));
-            }
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <returns></returns>
         public ushort ReadUShort()
         {
             return ReadUShort(mPosition);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
-        public List<ushort> ReadUShorts(long offset, int count)
-        {
-            List<ushort> re = new List<ushort>(count);
-            for (int i = 0; i < count; i++)
-            {
-                re.Add(ReadUShort(offset + 2 * i));
-            }
-            return re;
         }
 
         /// <summary>
@@ -1186,23 +870,6 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
-        public List<string> ReadStrings(long offset, int count)
-        {
-            mPosition = offset;
-            List<string> re = new List<string>(count);
-            for(int i=0;i<count;i++)
-            {
-                re.Add(ReadString());
-            }
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="len"></param>
         /// <returns></returns>
         public byte[] ReadBytes(int len)
@@ -1217,8 +884,9 @@ namespace Cdy.Tag
         /// </summary>
         public virtual void Dispose()
         {
-            Marshal.FreeHGlobal(mHandles);
-            LoggerService.Service.Erro("MarshalFixedMemoryBlock", Name +" Disposed " );
+            //mDataBuffer = null;
+            mBuffers = null;
+            LoggerService.Service.Erro("FixedMemoryBlock", Name + " Disposed ");
             GC.Collect();
         }
 
@@ -1232,11 +900,11 @@ namespace Cdy.Tag
         {
             get
             {
-                return Marshal.ReadByte(new IntPtr(mHandles.ToInt64() + index));
+                return this.mBuffers[index];
             }
             set
             {
-                Marshal.WriteByte(new IntPtr(mHandles.ToInt64() + index), value);
+                this.mBuffers[index] = value;
             }
         }
 
@@ -1247,51 +915,10 @@ namespace Cdy.Tag
         /// <param name="sourceStart"></param>
         /// <param name="targetStart"></param>
         /// <param name="len"></param>
-        public void CopyTo(MarshalFixedMemoryBlock target,long sourceStart, long targetStart, long len)
+        public void CopyTo(FixedMemoryBlock target,long sourceStart, long targetStart, long len)
         {
             if (target == null) return;
-
-            Buffer.MemoryCopy((void*)(new IntPtr(this.mHandleValue + sourceStart)), (void*)((target.mHandleValue + targetStart)), target.Length-targetStart, len);
-        }
-
-        
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="offset"></param>
-        /// <param name="len"></param>
-        /// <returns></returns>
-        public MarshalFixedMemoryBlock WriteToStream(Stream stream,long offset,long len)
-        {
-            byte[] bvals = new byte[1024 * 1024 * 4];
-            long ltmp = len;
-            IntPtr source = new IntPtr(mHandleValue + offset);
-            while (ltmp > 0)
-            {
-                long ctmp = Math.Min(bvals.Length, ltmp);
-                Marshal.Copy(source, bvals, 0, (int)ctmp);
-                stream.Write(bvals, 0, (int)ctmp);
-                source = new IntPtr(source.ToInt64() + ctmp);
-                ltmp -= ctmp;
-            }
-            return this;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="start"></param>
-        /// <param name="len"></param>
-        /// <returns></returns>
-        public byte[] ToBytes(int start,int len)
-        {
-            using(var mm = new System.IO.MemoryStream(len))
-            {
-                WriteToStream(mm, 0, len);
-                return mm.ToArray();
-            }
+            Array.Copy(mBuffers, sourceStart, target.mBuffers, targetStart, len);
         }
 
         #endregion ...Methods...
@@ -1301,19 +928,18 @@ namespace Cdy.Tag
         #endregion ...Interfaces...
     }
 
-    public static class MarshalFixedMemoryBlockExtends
+    public static class FixedMemoryBlockExtends
     {
-
         /// <summary>
         /// 
         /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public static List<long> ToLongList(this MarshalFixedMemoryBlock memory)
+        public static List<long> ToLongList(this FixedMemoryBlock memory)
         {
-            List<long> re = new List<long>((int)(memory.Length / 8));
+            List<long> re = new List<long>((int)(memory.AllocSize / 8));
             memory.Position = 0;
-            while (memory.Position < memory.Length)
+            while (memory.Position < memory.AllocSize)
             {
                 re.Add(memory.ReadLong());
             }
@@ -1325,7 +951,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public static List<int> ToIntList(this MarshalFixedMemoryBlock memory)
+        public static List<int> ToIntList(this FixedMemoryBlock memory)
         {
             List<int> re = new List<int>((int)(memory.Length / 4));
             memory.Position = 0;
@@ -1341,7 +967,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public static List<double> ToDoubleList(this MarshalFixedMemoryBlock memory)
+        public static List<double> ToDoubleList(this FixedMemoryBlock memory)
         {
             List<double> re = new List<double>((int)(memory.Length / 8));
             memory.Position = 0;
@@ -1357,7 +983,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public static List<double> ToFloatList(this MarshalFixedMemoryBlock memory)
+        public static List<double> ToFloatList(this FixedMemoryBlock memory)
         {
             List<double> re = new List<double>((int)(memory.Length / 4));
             memory.Position = 0;
@@ -1373,7 +999,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public static List<short> ToShortList(this MarshalFixedMemoryBlock memory)
+        public static List<short> ToShortList(this FixedMemoryBlock memory)
         {
             List<short> re = new List<short>((int)(memory.Length / 2));
             memory.Position = 0;
@@ -1389,7 +1015,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public static List<DateTime> ToDatetimeList(this MarshalFixedMemoryBlock memory)
+        public static List<DateTime> ToDatetimeList(this FixedMemoryBlock memory)
         {
             List<DateTime> re = new List<DateTime>((int)(memory.Length / 8));
             memory.Position = 0;
@@ -1405,7 +1031,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public static List<string> ToStringList(this MarshalFixedMemoryBlock memory, Encoding encoding)
+        public static List<string> ToffsetringList(this FixedMemoryBlock memory, Encoding encoding)
         {
             List<string> re = new List<string>();
             memory.Position = 0;
@@ -1423,7 +1049,7 @@ namespace Cdy.Tag
         /// <param name="offset"></param>
         /// <param name="encoding"></param>
         /// <returns></returns>
-        public static List<string> ToStringList(this MarshalFixedMemoryBlock memory,int offset, Encoding encoding)
+        public static List<string> ToffsetringList(this FixedMemoryBlock memory,int offset, Encoding encoding)
         {
             List<string> re = new List<string>();
             memory.Position = offset;
@@ -1434,17 +1060,14 @@ namespace Cdy.Tag
             return re;
         }
 
-
         /// <summary>
         /// 
         /// </summary>
         /// <param name="memory"></param>
-        public static void MakeMemoryBusy(this MarshalFixedMemoryBlock memory)
+        public static void MakeMemoryBusy(this FixedMemoryBlock memory)
         {
-            memory.IncRef();
-            LoggerService.Service.Info("MemoryBlock","make "+ memory.Name + " is busy.....");
-            //memory.IsBusy = true;
-            
+            LoggerService.Service.Info("FixedMemoryBlock", memory.Name + " is busy.....");
+            memory.IsBusy = true;
             //memory.StartMemory[0] = 1;
         }
 
@@ -1452,96 +1075,11 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="memory"></param>
-        public static void MakeMemoryNoBusy(this MarshalFixedMemoryBlock memory)
+        public static void MakeMemoryNoBusy(this FixedMemoryBlock memory)
         {
-            memory.DecRef();
-            LoggerService.Service.Info("MemoryBlock", "make " + memory.Name+ " is ready !");
-            
+            LoggerService.Service.Info("FixedMemoryBlock", memory.Name+ " is ready !");
+            memory.IsBusy = false;
             //memory.StartMemory[0] = 0;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="fileName"></param>
-        public static void Dump(this MarshalFixedMemoryBlock memory,string fileName)
-        {
-            using (var stream = System.IO.File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
-            {
-                byte[] bvals = new byte[1024];
-                for (long i = 0; i < memory.Length / 1024; i++)
-                {
-                    Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * 1024), bvals, 0, 1024);
-                    stream.Write(bvals, 0, 1024);
-                }
-                stream.Flush();
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="stream"></param>
-        public static void RecordToLog(this MarshalFixedMemoryBlock memory, Stream stream)
-        {
-            byte[] bvals = new byte[1024];
-            long totalsize = memory.AllocSize;
-            long csize = 0;
-            for (long i = 0; i < memory.Length / 1024; i++)
-            {
-                Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * 1024), bvals, 0, 1024);
-                int isize = (int)Math.Min(totalsize - csize, 1024);
-                csize += isize;
-                stream.Write(bvals, 0, isize);
-                if (csize >= totalsize)
-                    break;
-            }
-            stream.Flush();
-        }
-
-        public static void Dump(this MarshalFixedMemoryBlock memory,DateTime time)
-        {
-            string fileName = memory.Name + "_" + time.ToString("yyyy_MM_dd_HH_mm_ss") + ".dmp";
-            fileName = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(MarshalFixedMemoryBlock).Assembly.Location), fileName);
-            Dump(memory, fileName);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        public static void Dump(this MarshalFixedMemoryBlock memory)
-        {
-            string fileName = memory.Name + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss")+".dmp";
-            fileName = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(MarshalFixedMemoryBlock).Assembly.Location), fileName);
-            Dump(memory, fileName);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <returns></returns>
-        public static MarshalFixedMemoryBlock LoadDumpFromFile(this string file)
-        {
-            if(System.IO.File.Exists(file))
-            {
-                using (var stream = System.IO.File.OpenRead(file))
-                {
-                    MarshalFixedMemoryBlock block = new MarshalFixedMemoryBlock(stream.Length);
-                    byte[] bvals = new byte[1024 * 64];
-                    int len = 0;
-                    do
-                    {
-                        len = stream.Read(bvals, 0, bvals.Length);
-                        block.WriteBytes(block.Position, bvals, 0, len);
-                    }
-                    while (len > 0);
-                }
-            }
-            return null;
         }
     }
 }

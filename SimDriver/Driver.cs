@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 
 namespace SimDriver
 {
@@ -19,6 +20,8 @@ namespace SimDriver
 
         private short mNumber = 0;
 
+        private bool mBoolNumber = false;
+
         private IRealTagProducter mTagService;
 
         private bool mIsBusy = false;
@@ -28,6 +31,14 @@ namespace SimDriver
         private DateTime mLastProcessTime = DateTime.Now;
 
         private int mBusyCount = 0;
+
+        private bool mIsSecond = false;
+
+        private int mTickCount = 0;
+
+        private Thread mScanThread;
+
+        private bool mIsClosed = false;
 
         #endregion ...Variables...
 
@@ -64,7 +75,7 @@ namespace SimDriver
         {
             get
             {
-                return new string[] { "cos", "sin", "step","steppoint" };
+                return new string[] { "cos", "sin", "step","steppoint", "square" };
             }
         }
 
@@ -79,6 +90,7 @@ namespace SimDriver
         private void Log(string sval)
         {
             mWriter.WriteLine(sval);
+            mWriter.Flush();
         }
 
         /// <summary>
@@ -87,7 +99,7 @@ namespace SimDriver
         /// <param name="tagQuery"></param>
         private void InitTagCach(IRealTagProducter tagQuery)
         {
-            mTagIdCach = tagQuery.GetTagsByLinkAddress(new List<string>() { "Sim:cos", "Sim:sin", "Sim:step", "Sim:steppoint" });
+            mTagIdCach = tagQuery.GetTagsByLinkAddress(new List<string>() { "Sim:cos", "Sim:sin", "Sim:step", "Sim:steppoint", "Sim:square" });
         }
 
         /// <summary>
@@ -99,10 +111,94 @@ namespace SimDriver
         {
             mTagService = tagQuery;
             InitTagCach(tagQuery);
-            mScanTimer = new System.Timers.Timer(100);
-            mScanTimer.Elapsed += MScanTimer_Elapsed;
-            mScanTimer.Start();
+            mScanThread = new Thread(ScanThreadPro);
+            mScanThread.IsBackground = true;
+            mScanThread.Start();
+            //mScanTimer = new System.Timers.Timer(100);
+            //mScanTimer.Elapsed += MScanTimer_Elapsed;
+            //mScanTimer.Start();
             return true;
+        }
+
+        private void ScanThreadPro()
+        {
+            while (!mIsClosed)
+            {
+                mTickCount++;
+                DateTime time = DateTime.Now;
+                if (mTickCount < 5)
+                {
+                    mIsBusy = false;
+                    Thread.Sleep(100);
+                    continue;
+                }
+                else
+                {
+                    mTickCount = 0;
+                }
+
+                if((mLastProcessTime-time).TotalSeconds>1000)
+                {
+                    LoggerService.Service.Warn("Sim Driver", "出现阻塞");
+                }
+                mLastProcessTime = time;
+                if (!mIsSecond)
+                {
+                    mNumber++;
+                    mNumber = mNumber > (short)360 ? (short)0 : mNumber;
+                    mIsSecond = true;
+                }
+                else
+                {
+                    mIsSecond = false;
+                }
+
+
+                if (mNumber % 100 == 0) mBoolNumber = !mBoolNumber;
+
+                double fval = Math.Cos(mNumber / 180.0 * Math.PI);
+                double sval = Math.Sin(mNumber / 180.0 * Math.PI);
+
+//#if DEBUG
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            Log("Sim:Sin " + fval + " " + "Sim:Cos " + sval + " " + "Sim:step " + mNumber + "  " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+
+//#endif
+
+
+                System.Threading.Tasks.Parallel.ForEach(mTagIdCach, (vv) =>
+                {
+                    if (vv.Key == "Sim:cos")
+                    {
+                        mTagService.SetTagValue(vv.Value, fval);
+                    }
+                    else if (vv.Key == "Sim:sin")
+                    {
+                        mTagService.SetTagValue(vv.Value, sval);
+                    }
+                    else if (vv.Key == "Sim:step")
+                    {
+                        mTagService.SetTagValue(vv.Value, mNumber);
+                    }
+                    else if (vv.Key == "Sim:steppoint")
+                    {
+                        mTagService.SetPointValue(vv.Value, mNumber, mNumber, mNumber);
+                    }
+                    else if (vv.Key == "Sim:square")
+                    {
+                        mTagService.SetPointValue(vv.Value, mBoolNumber);
+                    }
+                });
+
+//#if DEBUG
+            sw.Stop();
+
+            LoggerService.Service.Info("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds);
+//#endif
+
+                Thread.Sleep(100);
+            }
         }
 
         /// <summary>
@@ -112,50 +208,55 @@ namespace SimDriver
         /// <param name="e"></param>
         private void MScanTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-           
+            mTickCount++;
             if (mIsBusy)
             {
                 mBusyCount++;
-                if(mBusyCount>=10)
-                LoggerService.Service.Warn("Sim Driver", "出现阻塞");
+                if (mBusyCount >= 10)
+                {
+                    mBusyCount = 0;
+                    LoggerService.Service.Warn("Sim Driver", "出现阻塞");
+                }
                 return;
             }
             mBusyCount = 0;
             mIsBusy = true;
             DateTime time = DateTime.Now;
-            if ((time - mLastProcessTime).Seconds < 1)
+            if (mTickCount <5)
             {
                 mIsBusy = false;
                 return;
             }
-            mLastProcessTime = time;
+            else
+            {
+                mTickCount = 0;
+            }
 
-            mNumber++;
-            mNumber = mNumber > (short)360 ? (short)0 : mNumber;
-//#if DEBUG
-//            Stopwatch sw = new Stopwatch();
-//            sw.Start();
-//#endif
+            mLastProcessTime = time;
+            if(!mIsSecond)
+            {
+                mNumber++;
+                mNumber = mNumber > (short)360 ? (short)0 : mNumber;
+                mIsSecond = true;
+            }
+            else
+            {
+                mIsSecond = false;
+            }
+            
+
+            if (mNumber % 100 == 0) mBoolNumber = !mBoolNumber;
+
             double fval = Math.Cos(mNumber / 180.0 * Math.PI);
             double sval = Math.Sin(mNumber / 180.0 * Math.PI);
 
+#if DEBUG
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             Log("Sim:Sin " + fval + " " + "Sim:Cos " + sval + " " + "Sim:step " + mNumber + "  " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
-            //foreach (var vv in mTagIdCach)
-            //{
-            //    if (vv.Key == "Sim:cos")
-            //    {
-            //        mTagService.SetTagValue(vv.Value, fval);
-            //    }
-            //    else if (vv.Key == "Sim:sin")
-            //    {
-            //        mTagService.SetTagValue(vv.Value, sval);
-            //    }
-            //    else if (vv.Key == "Sim:step")
-            //    {
-            //        mTagService.SetTagValue(vv.Value, mNumber);
-            //    }
-            //}
+#endif
+
 
             System.Threading.Tasks.Parallel.ForEach(mTagIdCach, (vv) =>
             {
@@ -175,13 +276,17 @@ namespace SimDriver
                 {
                     mTagService.SetPointValue(vv.Value,mNumber,mNumber,mNumber);
                 }
+                else if (vv.Key == "Sim:square")
+                {
+                    mTagService.SetPointValue(vv.Value, mBoolNumber);
+                }
             });
 
-//#if DEBUG
-//            sw.Stop();
+#if DEBUG
+            sw.Stop();
 
-//            LoggerService.Service.Info("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds + " total count:" + mNumber + " cos:" + Math.Cos(mNumber / 180.0 * Math.PI) + " sin:" + Math.Sin(mNumber / 180.0 * Math.PI));
-//#endif
+            LoggerService.Service.Info("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds + " total count:" + mNumber + " cos:" + Math.Cos(mNumber / 180.0 * Math.PI) + " sin:" + Math.Sin(mNumber / 180.0 * Math.PI));
+#endif
             mIsBusy = false;
         }
 
@@ -191,7 +296,9 @@ namespace SimDriver
         /// <returns></returns>
         public bool Stop()
         {
-            mScanTimer.Stop();
+            //mScanTimer.Stop();
+            mIsClosed = true;
+           // mScanThread.Abort();
             mWriter.Close();
             return true;
         }

@@ -33,7 +33,7 @@ namespace Cdy.Tag
 
         public PermissionDocument()
         {
-            var superPermission = new PermissionItem() { Name = "Super", SuperPermission = true, EnableWrite = true,Desc="Super Permission" };
+            var superPermission = new UserPermission() { Name = "Super", SuperPermission = true, EnableWrite = true,Desc="Super Permission" };
             Permissions.Add(superPermission.Name, superPermission);
         }
 
@@ -44,7 +44,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public Dictionary<string, PermissionItem> Permissions { get; set; } = new Dictionary<string, PermissionItem>();
+        public Dictionary<string, UserPermission> Permissions { get; set; } = new Dictionary<string, UserPermission>();
 
 
 
@@ -56,7 +56,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="permission"></param>
-        public void Add(PermissionItem permission)
+        public void Add(UserPermission permission)
         {
             if(!Permissions.ContainsKey(permission.Name))
             {

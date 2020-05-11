@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Linq;
+using Cdy.Tag;
 
 namespace HisDataTools.ViewModel
 {
@@ -155,6 +156,7 @@ namespace HisDataTools.ViewModel
                 if (mSelectTag != value)
                 {
                     mSelectTag = value;
+                    FilterData();
                     OnPropertyChanged("SelectTag");
                 }
             }
@@ -562,6 +564,30 @@ namespace HisDataTools.ViewModel
                 case (byte)Cdy.Tag.TagType.UShort:
                     ProcessDataQuery<ushort>(id, sTime, eTime);
                     break;
+                case (byte)Cdy.Tag.TagType.IntPoint:
+                    ProcessDataQuery<IntPointData>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.UIntPoint:
+                    ProcessDataQuery<UIntPointData>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.IntPoint3:
+                    ProcessDataQuery<IntPoint3Data>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.UIntPoint3:
+                    ProcessDataQuery<UIntPoint3Data>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.LongPoint:
+                    ProcessDataQuery<LongPointData>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.ULongPoint:
+                    ProcessDataQuery<ULongPointTag>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.LongPoint3:
+                    ProcessDataQuery<LongPoint3Data>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.ULongPoint3:
+                    ProcessDataQuery<ULongPoint3Data>(id, sTime, eTime);
+                    break;
             }
             mIsBusy = false;
         }
@@ -616,12 +642,14 @@ namespace HisDataTools.ViewModel
                 minx = minx > i ? i : minx;
                 maxx = maxx < i ? i : maxx;
 
-                miny = miny > Convert.ToDouble(value) ? Convert.ToDouble(value) : miny;
-                maxy = maxy < Convert.ToDouble(value) ? Convert.ToDouble(value) : maxy;
+                var dtmp = ConvertValue(vv);
+
+                miny = miny > dtmp ? dtmp : miny;
+                maxy = maxy < dtmp ? dtmp : maxy;
 
                 PointC point = new PointC();
                 point.X = i;
-                point.Y = Convert.ToDouble(value);
+                point.Y = dtmp;
                 point.Text = time.ToString("dd HH:mm:ss");
                 entity.Source.Add(point);
 
@@ -652,6 +680,15 @@ namespace HisDataTools.ViewModel
 
 
             YLineItems = yitems;
+        }
+
+        private double ConvertValue(object value)
+        {
+           if((value is UIntPointData)|| (value is IntPointData)|| (value is IntPoint3Data)|| (value is UIntPoint3Data)|| (value is LongPointData) || (value is ULongPointData) || (value is LongPoint3Data) || (value is ULongPoint3Data))
+            {
+                return Convert.ToDouble(((dynamic)value).X);
+            }
+            return Convert.ToDouble(value);
         }
 
         /// <summary>
@@ -694,12 +731,14 @@ namespace HisDataTools.ViewModel
                 minx = minx > i ? i : minx;
                 maxx = maxx < i ? i : maxx;
 
-                miny = miny > Convert.ToDouble(value) ? Convert.ToDouble(value) : miny;
-                maxy =maxy < Convert.ToDouble(value) ? Convert.ToDouble(value) : maxy;
+                double dtmp = ConvertValue(value);
+
+                miny = miny > dtmp ? dtmp : miny;
+                maxy =maxy < dtmp ? dtmp : maxy;
 
                 PointC point = new PointC();
                 point.X = i;
-                point.Y = Convert.ToDouble(value);
+                point.Y = dtmp;
                 point.Text = time.ToString("dd HH:mm:ss");
                 entity.Source.Add(point);
 

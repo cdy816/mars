@@ -62,6 +62,11 @@ namespace Cdy.Tag
             return Empty;
         }
 
+        public override string ToString()
+        {
+            return X+","+Y;
+        }
+
     }
     /// <summary>
     /// 
@@ -84,6 +89,11 @@ namespace Cdy.Tag
         public int X { get; set; }
         public int Y { get; set; }
         public int Z { get; set; }
+
+        public override string ToString()
+        {
+            return X + "," + Y+","+Z;
+        }
     }
 
     /// <summary>
@@ -104,6 +114,11 @@ namespace Cdy.Tag
         }
         public uint X { get; set; }
         public uint Y { get; set; }
+
+        public override string ToString()
+        {
+            return X + "," + Y;
+        }
     }
     /// <summary>
     /// 
@@ -126,6 +141,12 @@ namespace Cdy.Tag
         public uint X { get; set; }
         public uint Y { get; set; }
         public uint Z { get; set; }
+
+
+        public override string ToString()
+        {
+            return X + "," + Y + "," + Z;
+        }
     }
 
     /// <summary>
@@ -146,6 +167,11 @@ namespace Cdy.Tag
         }
         public long X { get; set; }
         public long Y { get; set; }
+
+        public override string ToString()
+        {
+            return X + "," + Y;
+        }
     }
 
     /// <summary>
@@ -169,6 +195,11 @@ namespace Cdy.Tag
         public long X { get; set; }
         public long Y { get; set; }
         public long Z { get; set; }
+
+        public override string ToString()
+        {
+            return X + "," + Y + "," + Z;
+        }
     }
 
     /// <summary>
@@ -189,6 +220,11 @@ namespace Cdy.Tag
         }
         public ulong X { get; set; }
         public ulong Y { get; set; }
+
+        public override string ToString()
+        {
+            return X + "," + Y;
+        }
     }
 
     /// <summary>
@@ -213,6 +249,11 @@ namespace Cdy.Tag
         public ulong X { get; set; }
         public ulong Y { get; set; }
         public ulong Z { get; set; }
+
+        public override string ToString()
+        {
+            return X + "," + Y + "," + Z;
+        }
     }
 
 }

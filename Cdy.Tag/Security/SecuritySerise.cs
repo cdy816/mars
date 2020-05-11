@@ -147,7 +147,7 @@ namespace Cdy.Tag
         public PermissionDocument LoadPermission(XElement element)
         {
             PermissionDocument re = new PermissionDocument();
-            re.Permissions = new Dictionary<string, PermissionItem>();
+            re.Permissions = new Dictionary<string, UserPermission>();
             foreach(var vv in element.Elements())
             {
                 var pp = LoadPermissionItem(vv);
@@ -260,7 +260,7 @@ namespace Cdy.Tag
             return xe;
         }
 
-        private XElement Save(PermissionItem permission)
+        private XElement Save(UserPermission permission)
         {
             XElement re = new XElement("PermissionItem");
             re.SetAttributeValue("Name", permission.Name);
@@ -280,9 +280,9 @@ namespace Cdy.Tag
             return re;
         }
 
-        private PermissionItem LoadPermissionItem(XElement xe)
+        private UserPermission LoadPermissionItem(XElement xe)
         {
-            PermissionItem re = new PermissionItem();
+            UserPermission re = new UserPermission();
             if(xe.Attribute("Name") !=null)
             {
                 re.Name = xe.Attribute("Name").Value;

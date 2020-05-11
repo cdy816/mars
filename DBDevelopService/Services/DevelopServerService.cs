@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
-
+using Cdy.Tag;
 namespace DBDevelopService
 {
     public class DevelopServerService : DevelopServer.DevelopServerBase
@@ -119,7 +119,7 @@ namespace DBDevelopService
             var db = DbManager.Instance.GetDatabase(request.Database);
             if (db != null)
             {
-                var pers = new Cdy.Tag.PermissionItem() { Name = request.Permission.Name, Desc = request.Permission.Desc, EnableWrite = request.Permission.EnableWrite};
+                var pers = new Cdy.Tag.UserPermission() { Name = request.Permission.Name, Desc = request.Permission.Desc, EnableWrite = request.Permission.EnableWrite};
                 pers.Group.AddRange(request.Permission.Group);
                 db.Security.Permission.Add(pers);
             }
@@ -171,7 +171,7 @@ namespace DBDevelopService
                 }
                 else
                 {
-                    var pp = new Cdy.Tag.PermissionItem() { Name = request.Permission.Name, Desc = request.Permission.Desc, EnableWrite = request.Permission.EnableWrite };
+                    var pp = new Cdy.Tag.UserPermission() { Name = request.Permission.Name, Desc = request.Permission.Desc, EnableWrite = request.Permission.EnableWrite };
                     pp.Group.AddRange(request.Permission.Group);
                     db.Security.Permission.Add(pp);
                 }
@@ -735,7 +735,7 @@ namespace DBDevelopService
                 {
                     if (cc >= from && cc < (from + PageCount))
                     {
-                        rre.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type });
+                        rre.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
 
                         if (db.HisDatabase.HisTags.ContainsKey(vv.Id))
                         {
@@ -791,7 +791,7 @@ namespace DBDevelopService
                 {
                     if (cc >= from && cc < (from + PageCount))
                     {
-                        rre.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type });
+                        rre.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
 
                         if (db.HisDatabase.HisTags.ContainsKey(vv.Id))
                         {
@@ -869,7 +869,7 @@ namespace DBDevelopService
             {
                 foreach (var vv in db.RealDatabase.ListAllTags())
                 {
-                    re.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name,  Desc = vv.Desc,Group = vv.Group,  LinkAddress = vv.LinkAddress,TagType=(uint)vv.Type });
+                    re.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name,  Desc = vv.Desc,Group = vv.Group,  LinkAddress = vv.LinkAddress,TagType=(uint)vv.Type,Convert=vv.Conveter!=null?vv.Conveter.SeriseToString():string.Empty,ReadWriteMode=(int)vv.ReadWriteType,MaxValue=(vv is Cdy.Tag.NumberTagBase)?(vv as Cdy.Tag.NumberTagBase).MaxValue:0,MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue:0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision:0 });
                 }
             }
             var msg = new GetRealTagMessageReply() { Result = true };
@@ -982,7 +982,7 @@ namespace DBDevelopService
                 List<RealTagMessage> re = new List<RealTagMessage>();
                 foreach (var vv in htags)
                 {
-                    re.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type });
+                    re.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
                 }
                 var msg = new GetRealTagMessageReply() { Result = true };
                 msg.Messages.AddRange(re);
@@ -1158,6 +1158,22 @@ namespace DBDevelopService
                 re.Group = tmsg.Group;
                 re.Desc = tmsg.Desc;
                 re.Id = (int)tmsg.Id;
+                re.ReadWriteType = (Cdy.Tag.ReadWriteMode)tmsg.ReadWriteMode;
+                if(!string.IsNullOrEmpty(tmsg.Convert))
+                {
+                    re.Conveter = tmsg.Convert.DeSeriseToValueConvert();
+                }
+                if(re is Cdy.Tag.NumberTagBase)
+                {
+                    (re as Cdy.Tag.NumberTagBase).MaxValue = tmsg.MaxValue;
+                    (re as Cdy.Tag.NumberTagBase).MinValue = tmsg.MinValue;
+                }
+
+                if (re is Cdy.Tag.FloatingTagBase)
+                {
+                    (re as Cdy.Tag.FloatingTagBase).Precision = (byte)tmsg.Precision;
+                }
+
             }
 
             return re;

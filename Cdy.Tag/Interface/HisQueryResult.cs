@@ -790,13 +790,13 @@ namespace Cdy.Tag
                     re = MemoryHelper.ReadInt32((void*)handle, index * 4);
                     break;
                 case 5:
-                    re = MemoryHelper.ReadInt32((void*)handle, index * 4);
+                    re = MemoryHelper.ReadUInt32((void*)handle, index * 4);
                     break;
                 case 6:
-                    re = MemoryHelper.ReadInt32((void*)handle, index * 8);
+                    re = MemoryHelper.ReadInt64((void*)handle, index * 8);
                     break;
                 case 7:
-                    re = MemoryHelper.ReadInt32((void*)handle, index * 8);
+                    re = MemoryHelper.ReadUInt64((void*)handle, index * 8);
                     break;
                 case 8:
                     re = MemoryHelper.ReadFloat((void*)handle, index * 4);
@@ -822,6 +822,32 @@ namespace Cdy.Tag
                         cc++;
                     }
                     re = new string((char*)handle, pos+1, MemoryHelper.ReadByte((void*)handle, pos));
+                    break;
+                case 12:
+                    var x = MemoryHelper.ReadInt32((void*)handle, index * 8);
+                    var y = MemoryHelper.ReadInt32((void*)handle, index * 8+4);
+                    re = new IntPointData(x, y);
+                    break;
+                case 13:
+                    re = new UIntPointData(MemoryHelper.ReadUInt32((void*)handle, index * 8), MemoryHelper.ReadUInt32((void*)handle, index * 8 + 4));
+                    break;
+                case 14:
+                    re = new IntPoint3Data(MemoryHelper.ReadInt32((void*)handle, index * 12), MemoryHelper.ReadInt32((void*)handle, index * 12 + 4), MemoryHelper.ReadInt32((void*)handle, index * 12 + 8));
+                    break;
+                case 15:
+                    re = new UIntPoint3Data(MemoryHelper.ReadUInt32((void*)handle, index * 12), MemoryHelper.ReadUInt32((void*)handle, index * 12 + 4), MemoryHelper.ReadUInt32((void*)handle, index * 12 + 8));
+                    break;
+                case 16:
+                    re = new LongPointData(MemoryHelper.ReadInt64((void*)handle, index * 16), MemoryHelper.ReadInt64((void*)handle, index * 16 + 8));
+                    break;
+                case 17:
+                    re = new ULongPointData(MemoryHelper.ReadUInt64((void*)handle, index * 16), MemoryHelper.ReadUInt64((void*)handle, index * 16 + 8));
+                    break;
+                case 18:
+                    re = new LongPoint3Data(MemoryHelper.ReadInt64((void*)handle, index * 24), MemoryHelper.ReadInt64((void*)handle, index * 24 + 8), MemoryHelper.ReadInt64((void*)handle, index * 24 + 16));
+                    break;
+                case 19:
+                    re = new ULongPoint3Data(MemoryHelper.ReadUInt64((void*)handle, index * 24), MemoryHelper.ReadUInt64((void*)handle, index * 24 + 8), MemoryHelper.ReadUInt64((void*)handle, index * 24 + 16));
                     break;
             }
 
@@ -905,28 +931,28 @@ namespace Cdy.Tag
                 case "string":
                     mDataType = 11;
                     return Const.StringSize;
-                case "IntPointdata":
+                case "intpointdata":
                     mDataType = 12;
                     return 8;
-                case "UIntPointdata":
+                case "uintpointdata":
                     mDataType = 13;
                     return 8;
-                case "IntPoint3data":
+                case "intpoint3data":
                     mDataType = 14;
                     return 12;
-                case "UIntPoint3data":
+                case "uintpoint3data":
                     mDataType = 15;
                     return 12;
-                case "LongPointdata":
+                case "longpointdata":
                     mDataType = 16;
                     return 16;
-                case "ULongPointdata":
+                case "ulongpointdata":
                     mDataType = 17;
                     return 16;
-                case "LongPoint3data":
+                case "longpoint3data":
                     mDataType = 18;
                     return 24;
-                case "ULongPoint3data":
+                case "ulongpoint3data":
                     mDataType = 19;
                     return 24;
             }

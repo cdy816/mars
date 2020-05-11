@@ -9,6 +9,7 @@
     <UserControl.Resources>
         <local:IndexConverter x:Key="ic" />
         <BooleanToVisibilityConverter x:Key="btv" />
+        <local:BoolInvertConvert x:Key="biv" />
     </UserControl.Resources>
     <Grid>
         <DataGrid ScrollViewer.CanContentScroll="True" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,32" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"  BorderThickness="0,0,0,1" Background="{x:Null}" >
@@ -55,6 +56,75 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{local:ResMarker ReadWriteMode}" MinWidth="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="5,0" Text="{Binding ReadWriteModeString}" VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <ComboBox Margin="0" BorderThickness="0" ItemsSource="{Binding ReadWriteModeList}" SelectedIndex="{Binding ReadWriteMode}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{local:ResMarker Convert}" MinWidth="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="5,0" Text="{Binding ConvertString}" VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Margin="5,0" Text="{Binding ConvertString}" VerticalAlignment="Center" />
+                                <Button Content="..." VerticalAlignment="Center" VerticalContentAlignment="Top" Click="{Binding ConvertEditCommand}" Width="30" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{local:ResMarker MaxValue}" MinWidth="100" IsReadOnly="{Binding IsNumberTag,Converter={StaticResource biv}}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="5,0" Text="{Binding MaxValue}" VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <TextBox Margin="5,0" Text="{Binding MaxValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{local:ResMarker MinValue}" MinWidth="100" IsReadOnly="{Binding IsNumberTag,Converter={StaticResource biv}}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="5,0" Text="{Binding MinValue}" VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <TextBox Margin="5,0" Text="{Binding MinValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{local:ResMarker Precision}" MinWidth="100" IsReadOnly="{Binding IsFloatingTag,Converter={StaticResource biv}}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="5,0" Text="{Binding Precision}" VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <TextBox Margin="5,0" Text="{Binding Precision,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+
                 <DataGridTemplateColumn Header="{local:ResMarker Record}" Width="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

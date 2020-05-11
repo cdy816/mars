@@ -135,6 +135,9 @@
   <data name="CompressType" xml:space="preserve">
     <value>CompressType</value>
   </data>
+  <data name="Convert" xml:space="preserve">
+    <value>Convert</value>
+  </data>
   <data name="databaseSelect" xml:space="preserve">
     <value>Database select</value>
     <comment>List database View Title</comment>
@@ -188,6 +191,12 @@
   <data name="MainwindowTitle" xml:space="preserve">
     <value>Mars database developer</value>
   </data>
+  <data name="MaxValue" xml:space="preserve">
+    <value>MaxValue</value>
+  </data>
+  <data name="MinValue" xml:space="preserve">
+    <value>MinValue</value>
+  </data>
   <data name="Name" xml:space="preserve">
     <value>Name</value>
   </data>
@@ -217,6 +226,18 @@
   </data>
   <data name="PermissionList" xml:space="preserve">
     <value>Permission list</value>
+  </data>
+  <data name="Precision" xml:space="preserve">
+    <value>Precision</value>
+  </data>
+  <data name="Read" xml:space="preserve">
+    <value>Read</value>
+  </data>
+  <data name="ReadWrite" xml:space="preserve">
+    <value>ReadWrite</value>
+  </data>
+  <data name="ReadWriteMode" xml:space="preserve">
+    <value>ReadWriteMode</value>
   </data>
   <data name="Record" xml:space="preserve">
     <value>Record</value>
@@ -278,5 +299,8 @@
   </data>
   <data name="UserName" xml:space="preserve">
     <value>UserName</value>
+  </data>
+  <data name="Write" xml:space="preserve">
+    <value>Write</value>
   </data>
 </root>

@@ -31,6 +31,7 @@ namespace DBInStudio.Desktop
         private static string[] mTagTypeList;
         private static string[] mRecordTypeList;
         private static string[] mCompressTypeList;
+        private static string[] mReadWriteModeList;
 
         /// <summary>
         /// 
@@ -45,6 +46,8 @@ namespace DBInStudio.Desktop
         private CompressParameterModelBase mCompressParameterModel;
 
         private string[] mRegistorList;
+
+        private ICommand mConvertEditCommand;
 
         #endregion ...Variables...
 
@@ -202,6 +205,18 @@ namespace DBInStudio.Desktop
                 return mTagTypeList;
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string[] ReadWriteModeList
+        {
+            get
+            {
+                return mReadWriteModeList;
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -454,6 +469,179 @@ namespace DBInStudio.Desktop
             }
         }
 
+        /// <summary>
+            /// 
+            /// </summary>
+        public string ConvertString
+        {
+            get
+            {
+                return mRealTagMode.Conveter != null ? mRealTagMode.Conveter.ToString() : string.Empty;
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public IValueConvert Convert
+        {
+            get
+            {
+                return mRealTagMode.Conveter;
+            }
+            set
+            {
+                if (mRealTagMode.Conveter != value)
+                {
+                    mRealTagMode.Conveter = value;
+                    OnPropertyChanged("Convert");
+                    OnPropertyChanged("ConvertString");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand ConvertEditCommand
+        {
+            get
+            {
+                if(mConvertEditCommand==null)
+                {
+                    mConvertEditCommand = new RelayCommand(() => { 
+                        // to do here
+                    });
+                }
+                return mConvertEditCommand;
+            }
+        }
+
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int ReadWriteMode
+        {
+            get
+            {
+                return (int)mRealTagMode.ReadWriteType;
+            }
+            set
+            {
+                if ((int)mRealTagMode.ReadWriteType != value)
+                {
+                    mRealTagMode.ReadWriteType = (Cdy.Tag.ReadWriteMode)value;
+                    OnPropertyChanged("ReadWriteMode");
+                    OnPropertyChanged("ReadWriteModeString");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public double AllowMaxValue
+        {
+            get
+            {
+                return mRealTagMode is Cdy.Tag.NumberTagBase ? (mRealTagMode as Cdy.Tag.NumberTagBase).AllowMaxValue : 0;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public double AllowMinValue
+        {
+            get
+            {
+                return mRealTagMode is Cdy.Tag.NumberTagBase ? (mRealTagMode as Cdy.Tag.NumberTagBase).AllowMinValue : 0;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public double MaxValue
+        {
+            get
+            {
+                return mRealTagMode is Cdy.Tag.NumberTagBase ? (mRealTagMode as Cdy.Tag.NumberTagBase).MaxValue : 0;
+            }
+            set
+            {
+                if (mRealTagMode is Cdy.Tag.NumberTagBase)
+                {
+                    if (value <= AllowMaxValue)
+                    {
+                        (mRealTagMode as Cdy.Tag.NumberTagBase).MaxValue = value;
+                    }
+                    OnPropertyChanged("MaxValue");
+                }
+            }
+        }
+
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public double MinValue
+        {
+            get
+            {
+                return mRealTagMode is Cdy.Tag.NumberTagBase ? (mRealTagMode as Cdy.Tag.NumberTagBase).MinValue : 0;
+            }
+            set
+            {
+                if (mRealTagMode is Cdy.Tag.NumberTagBase)
+                {
+                    if(value>=AllowMinValue)
+                    (mRealTagMode as Cdy.Tag.NumberTagBase).MinValue = value;
+                    OnPropertyChanged("MinValue");
+                }
+            }
+        }
+
+        public bool IsNumberTag
+        {
+            get
+            {
+                return mRealTagMode is Cdy.Tag.NumberTagBase;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public byte Precision
+        {
+            get
+            {
+                return mRealTagMode is Cdy.Tag.FloatingTagBase ? (mRealTagMode as Cdy.Tag.FloatingTagBase).Precision : (byte)0;
+            }
+            set
+            {
+                if (mRealTagMode is Cdy.Tag.FloatingTagBase)
+                {
+                    (mRealTagMode as Cdy.Tag.FloatingTagBase).Precision = value;
+                    OnPropertyChanged("Precision");
+                }
+            }
+        }
+
+        public bool IsFloatingTag
+        {
+            get
+            {
+                return mRealTagMode is Cdy.Tag.FloatingTagBase;
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -465,6 +653,18 @@ namespace DBInStudio.Desktop
                 return mHisTagMode!=null?mHisTagMode.Type.ToString():string.Empty;
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string ReadWriteModeString
+        {
+            get
+            {
+                return Res.Get(((Cdy.Tag.ReadWriteMode)ReadWriteMode).ToString());
+            }
+        }
+
 
 
         /// <summary>
@@ -541,6 +741,7 @@ namespace DBInStudio.Desktop
         {
             mTagTypeList = Enum.GetNames(typeof(Cdy.Tag.TagType));
             mRecordTypeList = Enum.GetNames(typeof(Cdy.Tag.RecordType));
+            mReadWriteModeList = Enum.GetNames(typeof(Cdy.Tag.ReadWriteMode));
         }
 
         /// <summary>
@@ -763,7 +964,32 @@ namespace DBInStudio.Desktop
             sb.Append(mRealTagMode.Group + ",");
             sb.Append(mRealTagMode.Type + ",");
             sb.Append(mRealTagMode.LinkAddress + ",");
-            if(this.mHisTagMode!=null)
+            sb.Append((int)mRealTagMode.ReadWriteType + ",");
+            if (mRealTagMode.Conveter != null)
+                sb.Append(mRealTagMode.Conveter.SeriseToString() + ",");
+            else
+            {
+                sb.Append(",");
+            }
+            if (mRealTagMode is NumberTagBase)
+            {
+                sb.Append((mRealTagMode as NumberTagBase).MaxValue.ToString() + ",");
+                sb.Append((mRealTagMode as NumberTagBase).MinValue.ToString() + ",");
+            }
+            else
+            {
+                sb.Append(",");
+                sb.Append(",");
+            }
+            if (mRealTagMode is FloatingTagBase)
+            {
+                sb.Append((mRealTagMode as FloatingTagBase).Precision + ",");
+            }
+            else
+            {
+                sb.Append(",");
+            }
+            if (this.mHisTagMode!=null)
             {
                 sb.Append(mHisTagMode.Type + ",");
                 sb.Append(mHisTagMode.Circle + ",");
@@ -796,19 +1022,34 @@ namespace DBInStudio.Desktop
             realtag.Desc = stmp[2];
             realtag.Group = stmp[3];
             realtag.LinkAddress = stmp[5];
+            realtag.ReadWriteType = (ReadWriteMode)(int.Parse(stmp[6]));
+            if (stmp[7] != null)
+            {
+                realtag.Conveter = stmp[7].DeSeriseToValueConvert();
+            }
 
-            if (stmp.Length > 6)
+            if (realtag is NumberTagBase)
+            {
+                (realtag as NumberTagBase).MaxValue = double.Parse(stmp[8], System.Globalization.NumberStyles.Any);
+                (realtag as NumberTagBase).MinValue = double.Parse(stmp[9], System.Globalization.NumberStyles.Any);
+            }
+
+            if (realtag is FloatingTagBase)
+            {
+                (realtag as FloatingTagBase).Precision = byte.Parse(stmp[10]);
+            }
+            if (stmp.Length > 11)
             {
                 Cdy.Tag.HisTag histag = new HisTag();
-                histag.Type = (Cdy.Tag.RecordType)Enum.Parse(typeof(Cdy.Tag.RecordType), stmp[6]);
+                histag.Type = (Cdy.Tag.RecordType)Enum.Parse(typeof(Cdy.Tag.RecordType), stmp[11]);
 
-                histag.Circle = long.Parse(stmp[7]);
-                histag.CompressType = int.Parse(stmp[8]);
+                histag.Circle = long.Parse(stmp[12]);
+                histag.CompressType = int.Parse(stmp[13]);
                 histag.Parameters = new Dictionary<string, double>();
                 histag.TagType = realtag.Type;
                 histag.Id = realtag.Id;
 
-                for (int i=9;i<stmp.Length;i++)
+                for (int i=14;i<stmp.Length;i++)
                 {
                     string skey = stmp[i];
                     if(string.IsNullOrEmpty(skey))

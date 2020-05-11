@@ -176,9 +176,9 @@ namespace Cdy.Tag
                 //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
                 HisAddr.WriteUShortDirect(TimerValueStartAddr + vcount * 2, (ushort)(tim));
 
-                //写入数值
-                //HisAddr.WriteBytesDirect(HisValueStartAddr + vcount * SizeOfValue, RealMemoryAddr, RealValueAddr, SizeOfValue);
-
+            //写入数值
+            //HisAddr.WriteBytesDirect(HisValueStartAddr + vcount * SizeOfValue, RealMemoryAddr, RealValueAddr, SizeOfValue);
+            //LoggerService.Service.Erro("HisTag","read from realmemory:"+ MemoryHelper.ReadDouble((void*)RealMemoryPtr, RealValueAddr));
                 HisAddr.WriteBytesDirect(HisValueStartAddr + vcount * SizeOfValue, RealMemoryPtr, RealValueAddr, SizeOfValue);
 
                 //更新质量戳

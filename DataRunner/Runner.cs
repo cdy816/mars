@@ -49,6 +49,8 @@ namespace Cdy.Tag
 
         private QuerySerivce querySerivce;
 
+        private SecurityRunner mSecurityRunner;
+
         private bool mIsStarted = false;
 
         #endregion ...Variables...
@@ -171,6 +173,9 @@ namespace Cdy.Tag
 
                 querySerivce = new QuerySerivce(this.mDatabaseName);
 
+                mSecurityRunner = new SecurityRunner() { Document = mDatabase.Security };
+
+
                 RegistorInterface();
 
                 DriverManager.Manager.Init(realEnginer);
@@ -204,6 +209,8 @@ namespace Cdy.Tag
             ServiceLocator.Locator.Registor<IHisQuery>(querySerivce);
 
             ServiceLocator.Locator.Registor<ITagManager>(mRealDatabase);
+
+            ServiceLocator.Locator.Registor<IRuntimeSecurity>(mSecurityRunner);
         }
 
         /// <summary>
@@ -239,6 +246,7 @@ namespace Cdy.Tag
             seriseEnginer.Start();
             compressEnginer.Start();
             hisEnginer.Start();
+            mSecurityRunner.Start();
             DriverManager.Manager.Start();
             mIsStarted = true;
             LoggerService.Service.Info("Runner", " 数据库 " + database + " 启动完成");
@@ -253,6 +261,8 @@ namespace Cdy.Tag
             hisEnginer.Stop();
             compressEnginer.Stop();
             seriseEnginer.Stop();
+            mSecurityRunner.Stop();
+            DriverManager.Manager.Stop();
             mIsStarted = false;
         }
 

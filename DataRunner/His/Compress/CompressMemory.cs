@@ -160,7 +160,7 @@ namespace Cdy.Tag
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            CheckTagAddress(source);
+             CheckTagAddress(source);
             long datasize = 0;
             int headOffset = 4 + 4;
             long Offset = headOffset + this.mTagAddress.Count * 8;
@@ -234,8 +234,10 @@ namespace Cdy.Tag
                 tp.Parameters = histag.Parameters;
                 var size = tp.Compress(mSourceMemory, addr, this, targetPosition + 5, len) + 1;
                 this.WriteInt(targetPosition, (int)size);
+                //this.Dump();
                 return size + 5;
             }
+            
             return 0;
         }
 

@@ -32,4 +32,6 @@ namespace DBInStudio.Desktop.View
             }
         }
     }
+
+    
 }

@@ -446,6 +446,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public void SetValueByAddr(long addr, double value, byte quality, DateTime time)
         {
+            //LoggerService.Service.Warn("RealEnginer", " write value:"+ value.ToString() + "");
             MemoryHelper.WriteDouble(mMHandle, addr, value);
             MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
             MemoryHelper.WriteByte(mMHandle, addr + 16, quality); ;
@@ -518,7 +519,7 @@ namespace Cdy.Tag
             MemoryHelper.WriteInt32(mMHandle, addr, value1);
             MemoryHelper.WriteInt32(mMHandle, addr+4, value2);
             MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
-            MemoryHelper.WriteByte(mMHandle, addr + 16, quality); ;
+            MemoryHelper.WriteByte(mMHandle, addr + 16, quality);
         }
 
         /// <summary>
@@ -534,7 +535,7 @@ namespace Cdy.Tag
             MemoryHelper.WriteUInt32(mMHandle, addr, value1);
             MemoryHelper.WriteUInt32(mMHandle, addr + 4, value2);
             MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
-            MemoryHelper.WriteByte(mMHandle, addr + 16, quality); ;
+            MemoryHelper.WriteByte(mMHandle, addr + 16, quality); 
         }
 
         /// <summary>
@@ -603,7 +604,7 @@ namespace Cdy.Tag
             MemoryHelper.WriteInt64(mMHandle, addr, value1);
             MemoryHelper.WriteInt64(mMHandle, addr + 8, value2);
             MemoryHelper.WriteDateTime(mMHandle, addr + 16, time);
-            MemoryHelper.WriteByte(mMHandle, addr + 24, quality); ;
+            MemoryHelper.WriteByte(mMHandle, addr + 24, quality); 
         }
 
         /// <summary>
@@ -621,7 +622,7 @@ namespace Cdy.Tag
             MemoryHelper.WriteInt64(mMHandle, addr + 8, value2);
             MemoryHelper.WriteInt64(mMHandle, addr + 16, value3);
             MemoryHelper.WriteDateTime(mMHandle, addr + 24, time);
-            MemoryHelper.WriteByte(mMHandle, addr + 32, quality); ;
+            MemoryHelper.WriteByte(mMHandle, addr + 32, quality); 
         }
 
         /// <summary>
@@ -639,7 +640,7 @@ namespace Cdy.Tag
             MemoryHelper.WriteUInt64(mMHandle, addr + 8, value2);
             MemoryHelper.WriteUInt64(mMHandle, addr + 16, value3);
             MemoryHelper.WriteDateTime(mMHandle, addr + 24, time);
-            MemoryHelper.WriteByte(mMHandle, addr + 32, quality); ;
+            MemoryHelper.WriteByte(mMHandle, addr + 32, quality); 
         }
         #endregion
 
@@ -2975,6 +2976,62 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="group"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool SetTagByGroup(string group, params object[] values)
+        {
+            var vatg = mConfigDatabase.GetTagsByGroup(group);
+            DateTime time = DateTime.Now;
+            for(int i=0;i<values.Length;i++)
+            {
+                var tag = vatg[i];
+                switch (tag.Type)
+                {
+                    case TagType.Bool:
+                        SetBoolTagValue(tag, values[i], (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Byte:
+                        SetByteTagValue(tag, values[i], (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.DateTime:
+                        SetDateTimeTagValue(tag, values[i], (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Double:
+                        SetDoubleTagValue(tag, values[i], (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Float:
+                        SetFloatTagValue(tag, values[i], (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Int:
+                        SetIntTagValue(tag, values[i], (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Long:
+                        SetLongTagValue(tag, values[i], (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.Short:
+                        SetShortTagValue(tag, values[i], (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.String:
+                        SetSrtingTagValue(tag, values[i], (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.UInt:
+                        SetUIntTagValue(tag, values[i], (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.ULong:
+                        SetULongTagValue(tag, values[i], (byte)QualityConst.Good, time);
+                        break;
+                    case TagType.UShort:
+                        SetUShortTagValue(tag, values[i], (byte)QualityConst.Good, time);
+                        break;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
@@ -3792,7 +3849,11 @@ namespace Cdy.Tag
             return true;
         }
 
+
+
         #endregion
+
+       
 
         #endregion ...Interfaces...
     }

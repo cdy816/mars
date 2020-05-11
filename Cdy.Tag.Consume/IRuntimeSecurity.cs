@@ -2,7 +2,7 @@
 //  Copyright (C) 2020  Inc. All rights reserved.
 //
 //==============================================================
-//  Create by 种道洋 at 2020/5/8 9:52:24.
+//  Create by 种道洋 at 2020/5/9 21:48:50.
 //  Version 1.0
 //  种道洋
 //==============================================================
@@ -16,20 +16,10 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class ValueConvertManager
+    public interface IRuntimeSecurity
     {
 
         #region ... Variables  ...
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public static ValueConvertManager manager = new ValueConvertManager();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private Dictionary<string, IValueConvert> mValueConverts = new Dictionary<string, IValueConvert>();
 
         #endregion ...Variables...
 
@@ -47,34 +37,49 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="valueConvert"></param>
-        public void Registor(IValueConvert valueConvert)
-        {
-            if(!mValueConverts.ContainsKey(valueConvert.Name))
-            {
-                mValueConverts.Add(valueConvert.Name, valueConvert);
-            }
-        }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="id"></param>
         /// <returns></returns>
-        public IValueConvert GetConvert(string name)
-        {
-            if(mValueConverts.ContainsKey(name))
-            {
-                return mValueConverts[name];
-            }
-            return null;
-        }
+        bool CheckLogin(string id);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        bool FreshUserId(string id);
 
-       
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="pass"></param>
+        /// <returns></returns>
+        string Login(string user, string pass);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        bool Logout(string id);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        string GetUserByLoginId(string id);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        List<UserPermission> GetPermission(string user);
 
         #endregion ...Methods...
 

@@ -153,7 +153,7 @@ namespace DBInStudio.Desktop.ViewModel
         private void Add()
         {
             string sname = GetAvaiabelName("Permission");
-            Cdy.Tag.PermissionItem pitem = new Cdy.Tag.PermissionItem() { Name = sname };
+            Cdy.Tag.UserPermission pitem = new Cdy.Tag.UserPermission() { Name = sname };
             //if(DBDevelopClientApi.DevelopServiceHelper.Helper.UpdateDatabasePermission(this.Database,pitem))
             //{
                 this.Permissions.Add(new PermissionItemViewModel(pitem) { IsNew = true });
@@ -195,7 +195,7 @@ namespace DBInStudio.Desktop.ViewModel
 
         #region ... Variables  ...
 
-        private Cdy.Tag.PermissionItem mModel;
+        private Cdy.Tag.UserPermission mModel;
 
         private string mGroupString;
 
@@ -222,7 +222,7 @@ namespace DBInStudio.Desktop.ViewModel
         /// 
         /// </summary>
         /// <param name="mode"></param>
-        public PermissionItemViewModel(Cdy.Tag.PermissionItem mode)
+        public PermissionItemViewModel(Cdy.Tag.UserPermission mode)
         {
             mModel = mode;
             MakeGroupString();
@@ -291,7 +291,7 @@ namespace DBInStudio.Desktop.ViewModel
         /// <summary>
         /// 
         /// </summary>
-        public Cdy.Tag.PermissionItem Model
+        public Cdy.Tag.UserPermission Model
         {
             get
             {

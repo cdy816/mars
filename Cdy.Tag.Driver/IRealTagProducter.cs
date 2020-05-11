@@ -48,6 +48,14 @@ namespace Cdy.Tag.Driver
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="group"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        bool SetTagByGroup(string group, params object[] values);
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>

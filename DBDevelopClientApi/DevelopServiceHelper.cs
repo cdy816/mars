@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Linq;
+using Cdy.Tag;
 
 namespace DBDevelopClientApi
 {
@@ -308,14 +309,14 @@ namespace DBDevelopClientApi
         /// </summary>
         /// <param name="database"></param>
         /// <returns></returns>
-        public List<Cdy.Tag.PermissionItem> GetAllDatabasePermission(string database)
+        public List<Cdy.Tag.UserPermission> GetAllDatabasePermission(string database)
         {
-            List<Cdy.Tag.PermissionItem> re = new List<Cdy.Tag.PermissionItem>();
+            List<Cdy.Tag.UserPermission> re = new List<Cdy.Tag.UserPermission>();
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
                 foreach (var vv in mCurrentClient.GetAllDatabasePermission(new DBDevelopService.GetAllDatabasePermissionRequest() { Database = database, LoginId = mLoginId }).Permission)
                 {
-                    Cdy.Tag.PermissionItem user = new Cdy.Tag.PermissionItem() { Name = vv.Name, Group = vv.Group.ToList(),Desc=vv.Desc,EnableWrite=vv.EnableWrite,SuperPermission=vv.SuperPermission };
+                    Cdy.Tag.UserPermission user = new Cdy.Tag.UserPermission() { Name = vv.Name, Group = vv.Group.ToList(),Desc=vv.Desc,EnableWrite=vv.EnableWrite,SuperPermission=vv.SuperPermission };
                     re.Add(user);
                 }
             }
@@ -343,7 +344,7 @@ namespace DBDevelopClientApi
         /// <param name="database"></param>
         /// <param name="permission"></param>
         /// <returns></returns>
-        public bool UpdateDatabasePermission(string database,Cdy.Tag.PermissionItem permission)
+        public bool UpdateDatabasePermission(string database,Cdy.Tag.UserPermission permission)
         {
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
@@ -491,6 +492,18 @@ namespace DBDevelopClientApi
                         tag.Name = vv.Name;
                         tag.Desc = vv.Desc;
                         tag.Group = vv.Group;
+                        tag.ReadWriteType = (Cdy.Tag.ReadWriteMode)vv.ReadWriteMode;
+                        tag.Conveter = !string.IsNullOrEmpty(vv.Convert) ? vv.Convert.DeSeriseToValueConvert():null;
+                        if (tag is Cdy.Tag.NumberTagBase)
+                        {
+                            (tag as Cdy.Tag.NumberTagBase).MaxValue = vv.MaxValue;
+                            (tag as Cdy.Tag.NumberTagBase).MinValue = vv.MinValue;
+                        }
+
+                        if (tag is Cdy.Tag.FloatingTagBase)
+                        {
+                            (tag as Cdy.Tag.FloatingTagBase).Precision = (byte)vv.Precision;
+                        }
                         mRealTag.Add(tag.Id, tag);
                     }
 
@@ -558,6 +571,18 @@ namespace DBDevelopClientApi
                         tag.Name = vv.Name;
                         tag.Desc = vv.Desc;
                         tag.Group = vv.Group;
+                        tag.ReadWriteType = (Cdy.Tag.ReadWriteMode)vv.ReadWriteMode;
+                        tag.Conveter = !string.IsNullOrEmpty(vv.Convert) ? vv.Convert.DeSeriseToValueConvert() : null;
+                        if (tag is Cdy.Tag.NumberTagBase)
+                        {
+                            (tag as Cdy.Tag.NumberTagBase).MaxValue = vv.MaxValue;
+                            (tag as Cdy.Tag.NumberTagBase).MinValue = vv.MinValue;
+                        }
+
+                        if (tag is Cdy.Tag.FloatingTagBase)
+                        {
+                            (tag as Cdy.Tag.FloatingTagBase).Precision = (byte)vv.Precision;
+                        }
                         mRealTag.Add(tag.Id, tag);
                     }
 
@@ -628,6 +653,18 @@ namespace DBDevelopClientApi
                         tag.Name = vv.Name;
                         tag.Desc = vv.Desc;
                         tag.Group = vv.Group;
+                        tag.ReadWriteType = (Cdy.Tag.ReadWriteMode)vv.ReadWriteMode;
+                        tag.Conveter = !string.IsNullOrEmpty(vv.Convert) ? vv.Convert.DeSeriseToValueConvert() : null;
+                        if (tag is Cdy.Tag.NumberTagBase)
+                        {
+                            (tag as Cdy.Tag.NumberTagBase).MaxValue = vv.MaxValue;
+                            (tag as Cdy.Tag.NumberTagBase).MinValue = vv.MinValue;
+                        }
+
+                        if (tag is Cdy.Tag.FloatingTagBase)
+                        {
+                            (tag as Cdy.Tag.FloatingTagBase).Precision = (byte)vv.Precision;
+                        }
                         mRealTag.Add(tag.Id, tag);
                     }
 
@@ -788,6 +825,18 @@ namespace DBDevelopClientApi
             re.TagType = (uint)tag.Type;
             re.Group = tag.Group;
             re.Desc = tag.Desc;
+            re.Convert = tag.Conveter != null ? tag.Conveter.SeriseToString() : string.Empty;
+            re.ReadWriteMode = (int)tag.ReadWriteType;
+            if(tag is NumberTagBase)
+            {
+                re.MaxValue = (tag as NumberTagBase).MaxValue;
+                re.MinValue = (tag as NumberTagBase).MinValue;
+            }
+
+            if (tag is FloatingTagBase)
+            {
+                re.Precision = (tag as FloatingTagBase).Precision;
+            }
             return re;
         }
 

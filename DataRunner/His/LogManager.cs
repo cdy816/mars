@@ -189,6 +189,7 @@ namespace Cdy.Tag
                     mNeedSaveMemory1.MakeMemoryBusy();
                     RecordToFile();
                     mNeedSaveMemory1.MakeMemoryNoBusy();
+                    ClearMemoryHisData(mNeedSaveMemory1);
                 }
                 CheckRemoveOldFiles();
                 sw.Stop();
@@ -197,6 +198,20 @@ namespace Cdy.Tag
             closedEvent.Set();
             LoggerService.Service.Info("LogManager", "退出!");
 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        public void ClearMemoryHisData(MarshalFixedMemoryBlock memory)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            while (memory.IsBusy()) ;
+            memory.Clear();
+            sw.Stop();
+            LoggerService.Service.Info("Record", memory.Name + "清空数据区耗时:" + sw.ElapsedMilliseconds);
         }
 
         /// <summary>
@@ -233,6 +248,7 @@ namespace Cdy.Tag
                 {
                     string sfileName = vv.Name;
                     DateTime dt = new DateTime(int.Parse(sfileName.Substring(0, 4)), int.Parse(sfileName.Substring(4, 2)), int.Parse(sfileName.Substring(6, 2)), int.Parse(sfileName.Substring(8, 2)), int.Parse(sfileName.Substring(10, 2)), int.Parse(sfileName.Substring(12, 2)));
+                    if(!logFiles.ContainsKey(dt))
                     logFiles.Add(dt, vv.FullName);
                 }
             }

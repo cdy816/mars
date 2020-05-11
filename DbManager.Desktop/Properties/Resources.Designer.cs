@@ -115,6 +115,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Convert 的本地化字符串。
+        /// </summary>
+        internal static string Convert {
+            get {
+                return ResourceManager.GetString("Convert", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Database select 的本地化字符串。
         /// </summary>
         internal static string databaseSelect {
@@ -268,6 +277,24 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 MaxValue 的本地化字符串。
+        /// </summary>
+        internal static string MaxValue {
+            get {
+                return ResourceManager.GetString("MaxValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 MinValue 的本地化字符串。
+        /// </summary>
+        internal static string MinValue {
+            get {
+                return ResourceManager.GetString("MinValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Name 的本地化字符串。
         /// </summary>
         internal static string Name {
@@ -354,6 +381,42 @@ namespace DBInStudio.Desktop.Properties {
         internal static string PermissionList {
             get {
                 return ResourceManager.GetString("PermissionList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Precision 的本地化字符串。
+        /// </summary>
+        internal static string Precision {
+            get {
+                return ResourceManager.GetString("Precision", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Read 的本地化字符串。
+        /// </summary>
+        internal static string Read {
+            get {
+                return ResourceManager.GetString("Read", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 ReadWrite 的本地化字符串。
+        /// </summary>
+        internal static string ReadWrite {
+            get {
+                return ResourceManager.GetString("ReadWrite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 ReadWriteMode 的本地化字符串。
+        /// </summary>
+        internal static string ReadWriteMode {
+            get {
+                return ResourceManager.GetString("ReadWriteMode", resourceCulture);
             }
         }
         
@@ -534,6 +597,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string UserName {
             get {
                 return ResourceManager.GetString("UserName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Write 的本地化字符串。
+        /// </summary>
+        internal static string Write {
+            get {
+                return ResourceManager.GetString("Write", resourceCulture);
             }
         }
     }

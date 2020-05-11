@@ -16,7 +16,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class PermissionItem
+    public class UserPermission
     {
         /// <summary>
         /// 

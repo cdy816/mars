@@ -163,7 +163,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 小数位数
         /// </summary>
-        public byte Precision { get; set; } = 3;
+        public byte Precision { get; set; } = 6;
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -193,7 +193,7 @@ namespace Cdy.Tag
             xe.SetAttributeValue("ReadWriteType", (int)tag.ReadWriteType);
             if(tag.Conveter!=null)
             {
-                xe.SetAttributeValue("Conveter", tag.Conveter+":"+ tag.Conveter.SaveToString());
+                xe.SetAttributeValue("Conveter", tag.Conveter.Name+":"+ tag.Conveter.SaveToString());
             }
             if(tag is NumberTagBase)
             {

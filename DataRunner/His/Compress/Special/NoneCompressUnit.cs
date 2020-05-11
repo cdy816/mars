@@ -48,6 +48,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override long Compress(MarshalMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size)
         {
+           // LoggerService.Service.Erro("NoneCompressUnit", "目标地址:"+targetAddr +" 数值地址: " + (targetAddr+10) +" 变量个数: "+ (size - this.QulityOffset));
             target.WriteDatetime(targetAddr,this.StartTime);
             target.Write((ushort)(size - this.QulityOffset));//写入值的个数
             if (size > 0)
@@ -3211,11 +3212,12 @@ namespace Cdy.Tag
 
                 var vals = source.ReadInts(valaddr, valuecount * 2);
 
-                for (i = 0; i < valuecount; i=i+2)
+                for (i = 0; i < vals.Count; i=i+2)
                 {
-                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    int j = i / 2;
+                    if (qs[j].Item2 && qq[j] < 100 && qs[j].Item1 >= startTime && qs[j].Item1 < endTime)
                     {
-                        result.AddPoint(vals[i],  vals[i + 1] , qs[i].Item1, qq[i]);
+                        result.AddPoint(vals[i],  vals[i + 1] , qs[j].Item1, qq[j]);
                         rcount++;
                     }
                 }
@@ -3229,11 +3231,12 @@ namespace Cdy.Tag
 
                 var vals = source.ReadUInts(valaddr, valuecount * 2);
 
-                for (i = 0; i < valuecount; i = i + 2)
+                for (i = 0; i < vals.Count; i = i + 2)
                 {
-                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    int j = i / 2;
+                    if (qs[j].Item2 && qq[j] < 100 && qs[j].Item1 >= startTime && qs[j].Item1 < endTime)
                     {
-                        result.AddPoint(vals[i], vals[i + 1], qs[i].Item1, qq[i]);
+                        result.AddPoint(vals[i], vals[i + 1], qs[j].Item1, qq[j]);
                         rcount++;
                     }
                 }
@@ -3247,11 +3250,12 @@ namespace Cdy.Tag
 
                 var vals = source.ReadInts(valaddr, valuecount * 3);
 
-                for (i = 0; i < valuecount; i = i + 3)
+                for (i = 0; i < vals.Count; i = i + 3)
                 {
-                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    int j = i / 3;
+                    if (qs[j].Item2 && qq[j] < 100 && qs[j].Item1 >= startTime && qs[j].Item1 < endTime)
                     {
-                        result.AddPoint(vals[i], vals[i + 1],vals[i + 2], qs[i].Item1, qq[i]);
+                        result.AddPoint(vals[i], vals[i + 1],vals[i + 2], qs[j].Item1, qq[j]);
                         rcount++;
                     }
                 }
@@ -3265,11 +3269,12 @@ namespace Cdy.Tag
 
                 var vals = source.ReadUInts(valaddr, valuecount * 3);
 
-                for (i = 0; i < valuecount; i = i + 3)
+                for (i = 0; i < vals.Count; i = i + 3)
                 {
-                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    int j = i / 3;
+                    if (qs[j].Item2 && qq[j] < 100 && qs[j].Item1 >= startTime && qs[j].Item1 < endTime)
                     {
-                        result.AddPoint(vals[i], vals[i + 1], vals[i + 2], qs[i].Item1, qq[i]);
+                        result.AddPoint(vals[i], vals[i + 1], vals[i + 2], qs[j].Item1, qq[j]);
                         rcount++;
                     }
                 }
@@ -3283,11 +3288,12 @@ namespace Cdy.Tag
 
                 var vals = source.ReadLongs(valaddr, valuecount * 2);
 
-                for (i = 0; i < valuecount; i = i + 2)
+                for (i = 0; i < vals.Count; i = i + 2)
                 {
-                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    int j = i / 2;
+                    if (qs[j].Item2 && qq[j] < 100 && qs[j].Item1 >= startTime && qs[j].Item1 < endTime)
                     {
-                        result.AddPoint(vals[i], vals[i + 1], qs[i].Item1, qq[i]);
+                        result.AddPoint(vals[i], vals[i + 1], qs[j].Item1, qq[j]);
                         rcount++;
                     }
                 }
@@ -3301,11 +3307,12 @@ namespace Cdy.Tag
 
                 var vals = source.ReadULongs(valaddr, valuecount * 2);
 
-                for (i = 0; i < valuecount; i = i + 2)
+                for (i = 0; i < vals.Count; i = i + 2)
                 {
-                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    int j = i / 2;
+                    if (qs[j].Item2 && qq[j] < 100 && qs[j].Item1 >= startTime && qs[j].Item1 < endTime)
                     {
-                        result.AddPoint(vals[i], vals[i + 1], qs[i].Item1, qq[i]);
+                        result.AddPoint(vals[i], vals[i + 1], qs[j].Item1, qq[j]);
                         rcount++;
                     }
                 }
@@ -3319,11 +3326,12 @@ namespace Cdy.Tag
 
                 var vals = source.ReadLongs(valaddr, valuecount * 3);
 
-                for (i = 0; i < valuecount; i = i + 3)
+                for (i = 0; i < vals.Count; i = i + 3)
                 {
-                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    int j = i / 3;
+                    if (qs[j].Item2 && qq[j] < 100 && qs[j].Item1 >= startTime && qs[j].Item1 < endTime)
                     {
-                        result.AddPoint(vals[i], vals[i + 1], vals[i + 2], qs[i].Item1, qq[i]);
+                        result.AddPoint(vals[i], vals[i + 1], vals[i + 2], qs[j].Item1, qq[j]);
                         rcount++;
                     }
                 }
@@ -3337,11 +3345,12 @@ namespace Cdy.Tag
 
                 var vals = source.ReadULongs(valaddr, valuecount * 3);
 
-                for (i = 0; i < valuecount; i = i + 3)
+                for (i = 0; i < vals.Count; i = i + 3)
                 {
-                    if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
+                    int j = i / 3;
+                    if (qs[j].Item2 && qq[j] < 100 && qs[j].Item1 >= startTime && qs[j].Item1 < endTime)
                     {
-                        result.AddPoint(vals[i], vals[i + 1], vals[i + 2], qs[i].Item1, qq[i]);
+                        result.AddPoint(vals[i], vals[i + 1], vals[i + 2], qs[j].Item1, qq[j]);
                         rcount++;
                     }
                 }

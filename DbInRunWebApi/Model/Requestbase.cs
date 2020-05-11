@@ -6,6 +6,73 @@ using System.Threading.Tasks;
 
 namespace DbInRunWebApi.Model
 {
+    public class ReponseBase
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Token { get; set; }
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+    public class LoginResponse:ReponseBase
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime Time { get; set; }
+
+
+
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+
+
     /// <summary>
     /// 
     /// </summary>
@@ -58,7 +125,12 @@ namespace DbInRunWebApi.Model
         #endregion ...Constructor...
 
         #region ... Properties ...
-        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Group { get; set; }
+
         /// <summary>
         /// 
         /// </summary>

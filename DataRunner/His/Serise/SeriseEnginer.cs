@@ -743,7 +743,7 @@ namespace Cdy.Tag
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
 
-                var totalsize = mProcessMemory.ReadInt(dataOffset);
+                var datasize = mProcessMemory.ReadInt(dataOffset);
                 var count = mProcessMemory.ReadInt(dataOffset + 4);
                 mTagCount = count;
                 mCurrentTime = time;
@@ -808,10 +808,17 @@ namespace Cdy.Tag
                 {
                     mFileWriter.GoToEnd();
                     long lpp = mFileWriter.CurrentPostion;
-                    mProcessMemory.WriteToStream(mFileWriter.GetStream(), start, totalsize - start);//直接拷贝数据块
-                  //  LoggerService.Service.Info("SeriseFileItem", "数据写入地址:" + lpp + ",更新指针地址：" + pointAddr+" block index:"+bid+" tagcount:"+count+" block point Start Addr:"+ mBlockPointOffset+" point values:"+sb.ToString());
 
-                    
+
+                    mProcessMemory.WriteToStream(mFileWriter.GetStream(), start, datasize);//直接拷贝数据块
+                     //  mProcessMemory.WriteToStream(mFileWriter.GetStream(), start, totalsize - start);//直接拷贝数据块
+
+
+                    LoggerService.Service.Info("SeriseFileItem", "数据写入地址:" + lpp + " 数据大小: "+(datasize)   +" 最后地址: "+mFileWriter.CurrentPostion+ ",更新指针地址：" + pointAddr + " block index:" + bid + " tagcount:" + count + " block point Start Addr:" + mBlockPointOffset, ConsoleColor.Red);
+
+                    //  LoggerService.Service.Info("SeriseFileItem", "数据写入地址:" + lpp + ",更新指针地址：" + pointAddr+" block index:"+bid+" tagcount:"+count+" block point Start Addr:"+ mBlockPointOffset+" point values:"+sb.ToString());
+
+
 
                     //this.mFileWriter.Append(mProcessMemory.Buffers, (int)start, (int)(totalsize - start)); 
                     mFileWriter.Write(mBlockPointMemory.Buffers, pointAddr, 0, (int)mBlockPointMemory.AllocSize);
@@ -820,7 +827,7 @@ namespace Cdy.Tag
                 }
                 sw.Stop();
                 
-                LoggerService.Service.Info("SeriseFileItem" + Id, "写入数据 " + mCurrentFileName + "  数据大小：" + ((totalsize - start) + mBlockPointMemory.AllocSize) / 1024.0 / 1024 + " m" +"其他脚本耗时:"+ltmp+","+(ltmp2-ltmp)+","+(ltmp3-ltmp2)+ "存储耗时:" + (sw.ElapsedMilliseconds-ltmp3));
+                LoggerService.Service.Info("SeriseFileItem" + Id, "写入数据 " + mCurrentFileName + "  数据大小：" + ((datasize) + mBlockPointMemory.AllocSize) / 1024.0 / 1024 + " m" +"其他脚本耗时:"+ltmp+","+(ltmp2-ltmp)+","+(ltmp3-ltmp2)+ "存储耗时:" + (sw.ElapsedMilliseconds-ltmp3));
                
             }
             catch(System.IO.IOException ex)

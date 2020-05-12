@@ -45,7 +45,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cdy.Tag.Consume", "Cdy.Tag.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DbInRunWebApi", "DbInRunWebApi\DbInRunWebApi.csproj", "{5D7F9E22-D683-4E27-8952-4A36EE8AB123}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cdy.Tag.Network", "Cdy.Tag.Network\Cdy.Tag.Network.csproj", "{3B08487A-442F-4ACF-BFC1-7A4EE5FD4AE2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cdy.Tag.Network", "Cdy.Tag.Network\Cdy.Tag.Network.csproj", "{3B08487A-442F-4ACF-BFC1-7A4EE5FD4AE2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNettyCore", "DotNettyCore\DotNettyCore.csproj", "{E0939EB9-A00C-4142-A948-71965B77FF17}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -125,6 +127,10 @@ Global
 		{3B08487A-442F-4ACF-BFC1-7A4EE5FD4AE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B08487A-442F-4ACF-BFC1-7A4EE5FD4AE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3B08487A-442F-4ACF-BFC1-7A4EE5FD4AE2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0939EB9-A00C-4142-A948-71965B77FF17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0939EB9-A00C-4142-A948-71965B77FF17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0939EB9-A00C-4142-A948-71965B77FF17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0939EB9-A00C-4142-A948-71965B77FF17}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -148,6 +154,7 @@ Global
 		{1B99F842-E366-43E8-8FAF-A14A10740B9E} = {2C104906-798F-4EEB-931C-F01600EA9F7F}
 		{5D7F9E22-D683-4E27-8952-4A36EE8AB123} = {95F6A9D4-42A9-483A-80F8-EADDD6CEFEDE}
 		{3B08487A-442F-4ACF-BFC1-7A4EE5FD4AE2} = {2C104906-798F-4EEB-931C-F01600EA9F7F}
+		{E0939EB9-A00C-4142-A948-71965B77FF17} = {2C104906-798F-4EEB-931C-F01600EA9F7F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {577CCEC3-4CDB-458A-B93D-F8579C2C3D8F}

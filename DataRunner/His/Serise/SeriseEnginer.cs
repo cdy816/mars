@@ -811,14 +811,8 @@ namespace Cdy.Tag
 
 
                     mProcessMemory.WriteToStream(mFileWriter.GetStream(), start, datasize);//直接拷贝数据块
-                     //  mProcessMemory.WriteToStream(mFileWriter.GetStream(), start, totalsize - start);//直接拷贝数据块
 
-
-                    LoggerService.Service.Info("SeriseFileItem", "数据写入地址:" + lpp + " 数据大小: "+(datasize)   +" 最后地址: "+mFileWriter.CurrentPostion+ ",更新指针地址：" + pointAddr + " block index:" + bid + " tagcount:" + count + " block point Start Addr:" + mBlockPointOffset, ConsoleColor.Red);
-
-                    //  LoggerService.Service.Info("SeriseFileItem", "数据写入地址:" + lpp + ",更新指针地址：" + pointAddr+" block index:"+bid+" tagcount:"+count+" block point Start Addr:"+ mBlockPointOffset+" point values:"+sb.ToString());
-
-
+                   // LoggerService.Service.Info("SeriseFileItem", "数据写入地址:" + lpp + " 数据大小: "+(datasize)   +" 最后地址: "+mFileWriter.CurrentPostion+ ",更新指针地址：" + pointAddr + " block index:" + bid + " tagcount:" + count + " block point Start Addr:" + mBlockPointOffset, ConsoleColor.Red);
 
                     //this.mFileWriter.Append(mProcessMemory.Buffers, (int)start, (int)(totalsize - start)); 
                     mFileWriter.Write(mBlockPointMemory.Buffers, pointAddr, 0, (int)mBlockPointMemory.AllocSize);

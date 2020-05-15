@@ -61,6 +61,21 @@ namespace Cdy.Tag.Driver
         /// <returns></returns>
         bool SetTagValue(int id, object value);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        bool SetTagValue(Tagbase tag, object value);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, object value);
 
         /// <summary>
         /// 
@@ -80,6 +95,14 @@ namespace Cdy.Tag.Driver
         /// <returns></returns>
         bool SetPointValue(int id, params object[] values);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        bool SetPointValue(Tagbase tag, params object[] values);
+
 
         /// <summary>
         /// 
@@ -90,21 +113,48 @@ namespace Cdy.Tag.Driver
 
         bool SetPointValue(List<int> ids, params object[] values);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tags"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        bool SetPointValue(List<Tagbase> tags, params object[] values);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        List<int> GetTagByLinkAddress(string address);
+        List<Tagbase> GetTagByLinkAddress(string address);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        List<int> GetTagIdsByLinkAddress(string address);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        Tagbase GetTagById(int id);
 
         /// <summary>
         /// 通过连接地址，获取变量ID
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        Dictionary<string, List<int>> GetTagsByLinkAddress(List<string> address);
+        Dictionary<string, List<int>> GetTagsIdByLinkAddress(List<string> address);
 
+        /// <summary>
+        /// 通过连接地址,获取变量
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        Dictionary<string, List<Tagbase>> GetTagsByLinkAddress(List<string> address);
 
         /// <summary>
         /// 

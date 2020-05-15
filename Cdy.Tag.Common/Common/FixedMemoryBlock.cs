@@ -1031,7 +1031,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="memory"></param>
         /// <returns></returns>
-        public static List<string> ToffsetringList(this FixedMemoryBlock memory, Encoding encoding)
+        public static List<string> ToStringList(this FixedMemoryBlock memory, Encoding encoding)
         {
             List<string> re = new List<string>();
             memory.Position = 0;
@@ -1049,7 +1049,7 @@ namespace Cdy.Tag
         /// <param name="offset"></param>
         /// <param name="encoding"></param>
         /// <returns></returns>
-        public static List<string> ToffsetringList(this FixedMemoryBlock memory,int offset, Encoding encoding)
+        public static List<string> ToStringList(this FixedMemoryBlock memory,int offset, Encoding encoding)
         {
             List<string> re = new List<string>();
             memory.Position = offset;

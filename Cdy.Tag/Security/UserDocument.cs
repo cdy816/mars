@@ -26,6 +26,11 @@ namespace Cdy.Tag
 
         #region ... Constructor...
 
+        public UserDocument()
+        {
+            Users.Add("Admin", new UserItem() { Name = "Admin",Password = "Admin",SuperUser=true });
+        }
+
         #endregion ...Constructor...
 
         #region ... Properties ...

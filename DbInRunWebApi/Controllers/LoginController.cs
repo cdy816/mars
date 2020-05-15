@@ -13,10 +13,12 @@ namespace DbInRunWebApi.Controllers
     public class LoginController : ControllerBase
     {
         // POST: Login
-        [HttpPost("Login")]
+        [HttpPost("TryLogin")]
         public LoginResponse Login([FromBody] LoginUser user)
         {
-            return new LoginResponse() { Token = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().Login(user.UserName, user.Password),Time=DateTime.Now };
+            string  Token = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().Login(user.UserName, user.Password);
+            //return null;
+            return new LoginResponse() { Token = Token,Result = !string.IsNullOrEmpty(Token), Time=DateTime.Now };
         }
 
         /// <summary>
@@ -27,6 +29,7 @@ namespace DbInRunWebApi.Controllers
         [HttpPost("Hart")]
         public bool Hart([FromBody] Requestbase token)
         {
+           // return true;
             return Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().FreshUserId(token.Token);
         }
 
@@ -38,6 +41,7 @@ namespace DbInRunWebApi.Controllers
         [HttpPost("Logout")]
         public bool Logout([FromBody] Requestbase token)
         {
+            //return true;
             return Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().Logout(token.Token);
         }
 

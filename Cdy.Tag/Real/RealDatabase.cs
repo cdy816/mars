@@ -80,7 +80,34 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        public List<int> GetTagIdByLinkAddress(string address)
+        public List<Tagbase> GetTagByLinkAddress(string address)
+        {
+            return Tags.Values.Where(e => e.LinkAddress == address).ToList();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public Dictionary<string, List<Tagbase>> GetTagsByLinkAddress(List<string> address)
+        {
+            Dictionary<string, List<Tagbase>> re = new Dictionary<string, List<Tagbase>>();
+            foreach (var vv in address)
+            {
+                re.Add(vv, GetTagByLinkAddress(vv));
+            }
+            return re;
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public List<int> GetTagIdsByLinkAddress(string address)
         {
             return Tags.Values.Where(e => e.LinkAddress == address).Select(e => e.Id).ToList();
         }
@@ -95,7 +122,7 @@ namespace Cdy.Tag
             Dictionary<string, List<int>> re = new Dictionary<string, List<int>>();
             foreach(var vv in address)
             {
-                re.Add(vv, GetTagIdByLinkAddress(vv));
+                re.Add(vv, GetTagIdsByLinkAddress(vv));
             }
             return re;
         }

@@ -21,6 +21,8 @@ namespace Cdy.Tag
 
         #region ... Variables  ...
 
+        public static string mCurrentDatabase = "";
+
         /// <summary>
         /// 
         /// </summary>
@@ -243,11 +245,15 @@ namespace Cdy.Tag
             {
                 return;
             }
+            DBRuntime.Api.DataService.Service.Start(14330);
             seriseEnginer.Start();
             compressEnginer.Start();
             hisEnginer.Start();
             mSecurityRunner.Start();
             DriverManager.Manager.Start();
+            
+            mCurrentDatabase = database;
+
             mIsStarted = true;
             LoggerService.Service.Info("Runner", " 数据库 " + database + " 启动完成");
         }
@@ -258,11 +264,12 @@ namespace Cdy.Tag
         /// </summary>
         public  void Stop()
         {
+            DBRuntime.Api.DataService.Service.Stop();
             hisEnginer.Stop();
+            DriverManager.Manager.Stop();
             compressEnginer.Stop();
             seriseEnginer.Stop();
             mSecurityRunner.Stop();
-            DriverManager.Manager.Stop();
             mIsStarted = false;
         }
 

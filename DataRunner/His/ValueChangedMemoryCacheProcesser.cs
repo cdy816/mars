@@ -107,7 +107,7 @@ namespace Cdy.Tag
         public void Start()
         {
             //注册值改变处理
-            ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeComsumer(this.Name, new ValueChangedNotifyProcesser.ValueChangedDelagete((ids) => {
+            ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeConsumer(this.Name, new ValueChangedNotifyProcesser.ValueChangedDelagete((ids) => {
                 foreach(var vv in ids)
                 {
                     if(mChangedTags.ContainsKey(vv))

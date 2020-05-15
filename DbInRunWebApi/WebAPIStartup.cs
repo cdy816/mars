@@ -40,6 +40,8 @@ namespace DbInRunWebApi
             {
                 endpoints.MapControllers();
             });
+            DatabaseRunner.Manager.Load();
+            DatabaseRunner.Manager.Start();
         }
     }
 }

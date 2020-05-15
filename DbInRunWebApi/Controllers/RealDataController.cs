@@ -26,13 +26,14 @@ namespace DbInRunWebApi.Controllers
                 RealValueQueryResponse response = new RealValueQueryResponse() { Result = true, Datas = new List<RealValue>(request.TagNames.Count) };
                 var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
                 var ids = service.GetTagIdByName(request.TagNames);
-                for(int i=0;i<request.TagNames.Count;i++)
+                for (int i = 0; i < request.TagNames.Count; i++)
                 {
                     if (ids[i].HasValue)
                     {
                         byte quality;
                         DateTime time;
-                        var val = service.GetTagValue(ids[i].Value, out quality, out time);
+                        byte tagtype = 0;
+                        var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
                         response.Datas.Add(new RealValue() { Quality = quality, Time = time, Value = val });
                     }
                 }
@@ -45,11 +46,46 @@ namespace DbInRunWebApi.Controllers
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="tag"></param>
+        /// <returns></returns>
+        private string GetGroupName(string tag)
+        {
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
         public RealDataSetResponse Post([FromBody] RealDataSetRequest request)
         {
+            List<string> grps = new List<string>();
+            foreach(var vv in request.Values.Keys)
+            {
+                var str = GetGroupName(vv);
+                if (!string.IsNullOrEmpty(str))
+                    grps.Add(str);
+            }
+
+            if (DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))
+            {
+                bool re = true;
+                foreach(var vv in grps)
+                {
+                    re &= DbInRunWebApi.SecurityManager.Manager.CheckReaderPermission(request.Token, vv);
+                }
+                if(!re) return new RealDataSetResponse() { Result = false };
+
+                var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+
+                re = true;
+                foreach (var vv in request.Values)
+                    re &= service.SetTagValueForConsumer(vv.Key, vv.Value);
+
+                return new RealDataSetResponse() { Result = re };
+            }
             return new RealDataSetResponse() { Result = false };
         }
     }

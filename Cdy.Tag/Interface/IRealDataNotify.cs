@@ -30,12 +30,12 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         /// <param name="valueChanged"></param>
         /// <param name="tagRegistor"></param>
-        void SubscribeComsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelagete valueChanged, Func<List<int>> tagRegistor);
+        void SubscribeConsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelagete valueChanged, Func<List<int>> tagRegistor);
 
         /// <summary>
         /// 取消订购
         /// </summary>
         /// <param name="name"></param>
-        void UnSubscribeComsumer(string name);
+        void UnSubscribeConsumer(string name);
     }
 }

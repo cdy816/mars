@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -65,6 +66,18 @@ namespace Cdy.Tag
         public MarshalFixedMemoryBlock()
         {
 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="size"></param>
+        public MarshalFixedMemoryBlock(IntPtr handle,long size)
+        {
+            mHandles = handle;
+            mAllocSize = size;
+            mSize = size;
         }
 
         /// <summary>
@@ -1254,7 +1267,19 @@ namespace Cdy.Tag
             Buffer.MemoryCopy((void*)(new IntPtr(this.mHandleValue + sourceStart)), (void*)((target.mHandleValue + targetStart)), target.Length-targetStart, len);
         }
 
-        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="sourceStart"></param>
+        /// <param name="targetStart"></param>
+        /// <param name="len"></param>
+        public void CopyTo(IntPtr target, long sourceStart, long targetStart, long len)
+        {
+            if (target == null) return;
+
+            Buffer.MemoryCopy((void*)(new IntPtr(this.mHandleValue + sourceStart)), (void*)(new IntPtr(target.ToInt64() + targetStart)), len, len);
+        }
 
         /// <summary>
         /// 
@@ -1463,6 +1488,17 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public unsafe static MemoryMappedViewStream MapFileToMemoryForWrite(string file,long datasize)
+        {
+            var cfile = MemoryMappedFile.CreateFromFile(file, FileMode.OpenOrCreate,file,datasize);
+            return cfile.CreateViewStream(0, datasize, MemoryMappedFileAccess.Write);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="memory"></param>
         /// <param name="fileName"></param>
         public static void Dump(this MarshalFixedMemoryBlock memory,string fileName)
@@ -1486,19 +1522,58 @@ namespace Cdy.Tag
         /// <param name="stream"></param>
         public static void RecordToLog(this MarshalFixedMemoryBlock memory, Stream stream)
         {
-            byte[] bvals = new byte[1024];
-            long totalsize = memory.AllocSize;
-            long csize = 0;
-            for (long i = 0; i < memory.Length / 1024; i++)
+            int ls = 1024 * 1024 * 4;
+            byte[] bvals = new byte[ls];
+            //long totalsize = memory.AllocSize;
+            //long csize = 0;
+
+            int stmp = 0;
+            int ltmp = (int)memory.AllocSize;
+            var source = memory.Handles;
+
+            while (ltmp > 0)
             {
-                Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * 1024), bvals, 0, 1024);
-                int isize = (int)Math.Min(totalsize - csize, 1024);
-                csize += isize;
-                stream.Write(bvals, 0, isize);
-                if (csize >= totalsize)
-                    break;
+                int ctmp = Math.Min(bvals.Length, ltmp);
+                Marshal.Copy(source + stmp, bvals, 0, ctmp);
+                stream.Write(bvals, 0, ctmp);
+                stmp += ctmp;
+                ltmp -= ctmp;
             }
+
+            //for (long i = 0; i < memory.Length / ls; i++)
+            //{
+            //    Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * ls), bvals, 0, ls);
+            //    int isize = (int)Math.Min(totalsize - csize, ls);
+            //    csize += isize;
+            //    stream.Write(bvals, 0, isize);
+            //    if (csize >= totalsize)
+            //        break;
+                
+            //}
             stream.Flush();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <param name="stream"></param>
+        public static void RecordToLog(this MarshalFixedMemoryBlock memory, IntPtr stream)
+        {
+            //byte[] bvals = new byte[1024];
+            long totalsize = memory.AllocSize;
+            //long csize = 0;
+            memory.CopyTo(stream, 0, 0, totalsize);
+            //for (long i = 0; i < memory.Length / 1024; i++)
+            //{
+            //Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * 1024), bvals, 0, 1024);
+            //    int isize = (int)Math.Min(totalsize - csize, 1024);
+            //    csize += isize;
+            //    stream.Write(bvals, 0, isize);
+            //    if (csize >= totalsize)
+            //        break;
+            //}
+            //stream.Flush();
         }
 
         public static void Dump(this MarshalFixedMemoryBlock memory,DateTime time)

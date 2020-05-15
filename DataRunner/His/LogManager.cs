@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -220,16 +221,47 @@ namespace Cdy.Tag
         private void RecordToFile()
         {
             //TimeSpan +  HeadLength+HeadData+Data
-
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             string fileName = GetLogFilePath(mStartTime,mEndTime);
             using (var stream = System.IO.File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
             {
+                //stream.SetLength(mNeedSaveMemory1.AllocSize + memory.Position + 6);
                 stream.Write(BitConverter.GetBytes(TimeLen));
                 stream.Write(BitConverter.GetBytes(memory.Position));
                 stream.Write(memory.Buffer, 0, memory.Position);
                 mNeedSaveMemory1.RecordToLog(stream);
             }
-            LoggerService.Service.Info("LogManager", "日志文件："+ fileName + " 记录完成!",ConsoleColor.Cyan );
+            sw.Stop();
+            LoggerService.Service.Info("LogManager", "日志文件："+ fileName + " 记录完成! 耗时:"+sw.ElapsedMilliseconds,ConsoleColor.Cyan );
+
+        }
+
+
+        private unsafe void RecordToFileForMemoryMap()
+        {
+            //TimeSpan +  HeadLength+HeadData+Data
+
+            string fileName = GetLogFilePath(mStartTime, mEndTime);
+            //using (var stream = System.IO.File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+            {
+                Stopwatch ssw = new Stopwatch();
+                ssw.Start();
+
+                var cfile = MemoryMappedFile.CreateFromFile(fileName, FileMode.Create,"logmanager", mNeedSaveMemory1.AllocSize + memory.Position + 6, MemoryMappedFileAccess.ReadWrite);
+                var acc = cfile.CreateViewStream();
+                long ltmp = ssw.ElapsedMilliseconds;
+                acc.Write(BitConverter.GetBytes(TimeLen));
+                acc.Write(BitConverter.GetBytes(memory.Position));
+                acc.Write(memory.Buffer, 0, memory.Position);
+                mNeedSaveMemory1.RecordToLog(acc);
+                acc.Close();
+                cfile.Dispose();
+
+                ssw.Stop();
+                LoggerService.Service.Info("LogManager", "日志文件：" + fileName + " 记录完成! "+ssw.ElapsedMilliseconds +"  "+ ltmp, ConsoleColor.Cyan);
+            }
+            
 
         }
 

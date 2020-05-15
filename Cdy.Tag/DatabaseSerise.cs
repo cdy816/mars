@@ -64,6 +64,21 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public Database LoadRealDatabase(string name)
+        {
+            Dbase = LoadDatabaseSelf(PathHelper.helper.GetDataPath(name, name + ".db"));
+            Dbase.RealDatabase = new RealDatabaseSerise().LoadByName(name);
+
+            Dbase.Security = new SecuritySerise().LoadByName(name);
+
+            return Dbase;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private Database LoadDatabaseSelf(string path)
         {
             Database doc = new Database();

@@ -58,7 +58,10 @@ namespace DbInRunWebApi.Model
         /// </summary>
         public DateTime Time { get; set; }
 
-
+        /// <summary>
+        /// 结果
+        /// </summary>
+        public bool Result { get; set; }
 
         #endregion ...Properties...
 

@@ -16,8 +16,10 @@
     <ProjectReference Include="..\Cdy.Tag.Common\Cdy.Tag.Common.csproj" />
     <ProjectReference Include="..\Cdy.Tag.Consume\Cdy.Tag.Consume.csproj" />
     <ProjectReference Include="..\Cdy.Tag.Driver\Cdy.Tag.Driver.csproj" />
+    <ProjectReference Include="..\Cdy.Tag.Network\Cdy.Tag.Network.csproj" />
     <ProjectReference Include="..\Cdy.Tag\Cdy.Tag.csproj" />
     <ProjectReference Include="..\DBHisData\DBHisData.csproj" />
+    <ProjectReference Include="..\DBRuntime.Real\DBRuntime.Real.csproj" />
   </ItemGroup>
 
   <ItemGroup>

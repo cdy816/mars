@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace Cdy.Tag
@@ -79,11 +80,18 @@ namespace Cdy.Tag
 
                 if (xe.Element("Tags") != null)
                 {
-                    foreach (var vv in xe.Element("Tags").Elements())
+                    Parallel.ForEach(xe.Element("Tags").Elements(), (vv) =>
                     {
                         var tag = vv.LoadHisTagFromXML();
-                        db.HisTags.Add(tag.Id, tag);
-                    }
+                        lock (db.HisTags)
+                            db.HisTags.Add(tag.Id, tag);
+                    });
+
+                    //foreach (var vv in xe.Element("Tags").Elements())
+                    //{
+                    //    var tag = vv.LoadHisTagFromXML();
+                    //    db.HisTags.Add(tag.Id, tag);
+                    //}
                 }
 
                 if(xe.Element("HisSetting") !=null)

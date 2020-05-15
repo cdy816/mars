@@ -39,7 +39,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 历史变量
         /// </summary>
-        public Dictionary<long,HisTag> HisTags { get; set; } = new Dictionary<long, HisTag>();
+        public SortedDictionary<long,HisTag> HisTags { get; set; } = new SortedDictionary<long, HisTag>();
 
         /// <summary>
         /// 设置

@@ -16,9 +16,9 @@ namespace Cdy.Tag
     /// </summary>
     public enum ReadWriteMode
     {
+        ReadWrite,
         Write,
-        Read,
-        ReadWrite
+        Read
     }
 
     /// <summary>
@@ -69,15 +69,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public ReadWriteMode ReadWriteType{ get; set; }
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <typeparam name="T"></typeparam>
-        ///// <param name="value"></param>
-        ///// <returns></returns>
-        //public abstract object ConvertValue<T>(object value);
+        public ReadWriteMode ReadWriteType { get; set; }
 
     }
 

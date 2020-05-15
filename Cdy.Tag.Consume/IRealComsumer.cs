@@ -44,7 +44,7 @@ namespace Cdy.Tag
         /// <param name="quality"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        object GetTagValue(int id, out byte quality, out DateTime time);
+        object GetTagValue(int id, out byte quality, out DateTime time,out byte valueType);
 
         /// <summary>
         /// 
@@ -53,7 +53,7 @@ namespace Cdy.Tag
         /// <param name="quality"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        object GetTagValue(string name, out byte quality, out DateTime time);
+        object GetTagValue(string name, out byte quality, out DateTime time, out byte valueType);
 
         /// <summary>
         /// 设置变量的值
@@ -61,7 +61,7 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValueForComsumer(int id, object value);
+        bool SetTagValueForConsumer(int id, object value);
 
 
         /// <summary>

@@ -50,6 +50,8 @@ namespace Cdy.Tag
 
         private object mLockObject = new object();
 
+        private bool mIsAll = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -113,7 +115,7 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         public void UpdateValue(int id,object value)
         {
-            if (mRegistorTagIds.ContainsKey(id))
+            if (mIsAll || mRegistorTagIds.ContainsKey(id))
             {
                 lock (mLockObject)
                 {
@@ -136,6 +138,12 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         public void Registor(int id)
         {
+            if (id == -1)
+            {
+                mIsAll = true;
+                return;
+            }
+
             if (!mRegistorTagIds.ContainsKey(id))
                 mRegistorTagIds.Add(id,0);
         }

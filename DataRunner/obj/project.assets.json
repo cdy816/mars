@@ -2,6 +2,94 @@
   "version": 3,
   "targets": {
     ".NETCoreApp,Version=v3.1": {
+      "Google.Protobuf/3.11.4": {
+        "type": "package",
+        "dependencies": {
+          "System.Memory": "4.5.2"
+        },
+        "compile": {
+          "lib/netstandard2.0/Google.Protobuf.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/Google.Protobuf.dll": {}
+        }
+      },
+      "Libuv/1.10.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.NETCore.Platforms": "1.0.1"
+        },
+        "runtimeTargets": {
+          "runtimes/linux-arm/native/libuv.so": {
+            "assetType": "native",
+            "rid": "linux-arm"
+          },
+          "runtimes/linux-arm64/native/libuv.so": {
+            "assetType": "native",
+            "rid": "linux-arm64"
+          },
+          "runtimes/linux-armel/native/libuv.so": {
+            "assetType": "native",
+            "rid": "linux-armel"
+          },
+          "runtimes/linux-x64/native/libuv.so": {
+            "assetType": "native",
+            "rid": "linux-x64"
+          },
+          "runtimes/osx/native/libuv.dylib": {
+            "assetType": "native",
+            "rid": "osx"
+          },
+          "runtimes/win-arm/native/libuv.dll": {
+            "assetType": "native",
+            "rid": "win-arm"
+          },
+          "runtimes/win-x64/native/libuv.dll": {
+            "assetType": "native",
+            "rid": "win-x64"
+          },
+          "runtimes/win-x86/native/libuv.dll": {
+            "assetType": "native",
+            "rid": "win-x86"
+          }
+        }
+      },
+      "Microsoft.NETCore.Platforms/1.0.1": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard1.0/_._": {}
+        },
+        "runtime": {
+          "lib/netstandard1.0/_._": {}
+        }
+      },
+      "System.Collections.Immutable/1.7.0": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/System.Collections.Immutable.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/System.Collections.Immutable.dll": {}
+        }
+      },
+      "System.Memory/4.5.2": {
+        "type": "package",
+        "compile": {
+          "ref/netcoreapp2.1/_._": {}
+        },
+        "runtime": {
+          "lib/netcoreapp2.1/_._": {}
+        }
+      },
+      "System.Runtime.CompilerServices.Unsafe/4.7.1": {
+        "type": "package",
+        "compile": {
+          "ref/netstandard2.0/System.Runtime.CompilerServices.Unsafe.dll": {}
+        },
+        "runtime": {
+          "lib/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.dll": {}
+        }
+      },
       "Cdy.Tag/1.0.0": {
         "type": "project",
         "framework": ".NETStandard,Version=v2.1",
@@ -51,6 +139,20 @@
           "bin/placeholder/Cdy.Tag.Driver.dll": {}
         }
       },
+      "Cdy.Tag.Network/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.1",
+        "dependencies": {
+          "Cdy.Tag.Common": "1.0.0",
+          "DotNettyCore": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/Cdy.Tag.Network.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Cdy.Tag.Network.dll": {}
+        }
+      },
       "DBHisData/1.0.0": {
         "type": "project",
         "framework": ".NETStandard,Version=v2.1",
@@ -64,10 +166,171 @@
         "runtime": {
           "bin/placeholder/DBHisData.dll": {}
         }
+      },
+      "DBRuntime.Real/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.1",
+        "dependencies": {
+          "Cdy.Tag": "1.0.0",
+          "Cdy.Tag.Common": "1.0.0",
+          "Cdy.Tag.Consume": "1.0.0",
+          "Cdy.Tag.Driver": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/DBRuntime.Real.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/DBRuntime.Real.dll": {}
+        }
+      },
+      "DotNettyCore/1.0.0": {
+        "type": "project",
+        "framework": ".NETStandard,Version=v2.1",
+        "dependencies": {
+          "Google.Protobuf": "3.11.4",
+          "Libuv": "1.10.0",
+          "System.Collections.Immutable": "1.7.0",
+          "System.Runtime.CompilerServices.Unsafe": "4.7.1"
+        },
+        "compile": {
+          "bin/placeholder/DotNettyCore.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/DotNettyCore.dll": {}
+        }
       }
     }
   },
   "libraries": {
+    "Google.Protobuf/3.11.4": {
+      "sha512": "dajCxjDCiPyZuqwZCkFJTwhn/0TJ5VesIs4fXvs56ez1VUi68JjhYMMsPjnJ9gcPqJwTMtXMU1WqUdXYiG1x4w==",
+      "type": "package",
+      "path": "google.protobuf/3.11.4",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "google.protobuf.3.11.4.nupkg.sha512",
+        "google.protobuf.nuspec",
+        "lib/net45/Google.Protobuf.dll",
+        "lib/net45/Google.Protobuf.pdb",
+        "lib/net45/Google.Protobuf.xml",
+        "lib/netstandard1.0/Google.Protobuf.dll",
+        "lib/netstandard1.0/Google.Protobuf.pdb",
+        "lib/netstandard1.0/Google.Protobuf.xml",
+        "lib/netstandard2.0/Google.Protobuf.dll",
+        "lib/netstandard2.0/Google.Protobuf.pdb",
+        "lib/netstandard2.0/Google.Protobuf.xml"
+      ]
+    },
+    "Libuv/1.10.0": {
+      "sha512": "GsCf4q+eyaI49rCPlgYxdxa1SQCysXFFdSJWdstrwxytg4+VPYLYrXD4AT2rjHVJ+UF7SSWX9CapWEYaU4ejVQ==",
+      "type": "package",
+      "path": "libuv/1.10.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "License.txt",
+        "libuv.1.10.0.nupkg.sha512",
+        "libuv.nuspec",
+        "runtimes/linux-arm/native/libuv.so",
+        "runtimes/linux-arm64/native/libuv.so",
+        "runtimes/linux-armel/native/libuv.so",
+        "runtimes/linux-x64/native/libuv.so",
+        "runtimes/osx/native/libuv.dylib",
+        "runtimes/win-arm/native/libuv.dll",
+        "runtimes/win-x64/native/libuv.dll",
+        "runtimes/win-x86/native/libuv.dll"
+      ]
+    },
+    "Microsoft.NETCore.Platforms/1.0.1": {
+      "sha512": "2G6OjjJzwBfNOO8myRV/nFrbTw5iA+DEm0N+qUqhrOmaVtn4pC77h38I1jsXGw5VH55+dPfQsqHD0We9sCl9FQ==",
+      "type": "package",
+      "path": "microsoft.netcore.platforms/1.0.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "ThirdPartyNotices.txt",
+        "dotnet_library_license.txt",
+        "lib/netstandard1.0/_._",
+        "microsoft.netcore.platforms.1.0.1.nupkg.sha512",
+        "microsoft.netcore.platforms.nuspec",
+        "runtime.json"
+      ]
+    },
+    "System.Collections.Immutable/1.7.0": {
+      "sha512": "RVSM6wZUo6L2y6P3vN6gjUtyJ2IF2RVtrepF3J7nrDKfFQd5u/SnSUFclchYQis8/k5scHy9E+fVeKVQLnnkzw==",
+      "type": "package",
+      "path": "system.collections.immutable/1.7.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/netstandard1.0/System.Collections.Immutable.dll",
+        "lib/netstandard1.0/System.Collections.Immutable.xml",
+        "lib/netstandard1.3/System.Collections.Immutable.dll",
+        "lib/netstandard1.3/System.Collections.Immutable.xml",
+        "lib/netstandard2.0/System.Collections.Immutable.dll",
+        "lib/netstandard2.0/System.Collections.Immutable.xml",
+        "lib/portable-net45+win8+wp8+wpa81/System.Collections.Immutable.dll",
+        "lib/portable-net45+win8+wp8+wpa81/System.Collections.Immutable.xml",
+        "system.collections.immutable.1.7.0.nupkg.sha512",
+        "system.collections.immutable.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
+      ]
+    },
+    "System.Memory/4.5.2": {
+      "sha512": "fvq1GNmUFwbKv+aLVYYdgu/+gc8Nu9oFujOxIjPrsf+meis9JBzTPDL6aP/eeGOz9yPj6rRLUbOjKMpsMEWpNg==",
+      "type": "package",
+      "path": "system.memory/4.5.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/netcoreapp2.1/_._",
+        "lib/netstandard1.1/System.Memory.dll",
+        "lib/netstandard1.1/System.Memory.xml",
+        "lib/netstandard2.0/System.Memory.dll",
+        "lib/netstandard2.0/System.Memory.xml",
+        "ref/netcoreapp2.1/_._",
+        "system.memory.4.5.2.nupkg.sha512",
+        "system.memory.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
+      ]
+    },
+    "System.Runtime.CompilerServices.Unsafe/4.7.1": {
+      "sha512": "zOHkQmzPCn5zm/BH+cxC1XbUS3P4Yoi3xzW7eRgVpDR2tPGSzyMZ17Ig1iRkfJuY0nhxkQQde8pgePNiA7z7TQ==",
+      "type": "package",
+      "path": "system.runtime.compilerservices.unsafe/4.7.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net461/System.Runtime.CompilerServices.Unsafe.dll",
+        "lib/net461/System.Runtime.CompilerServices.Unsafe.xml",
+        "lib/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "lib/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.xml",
+        "lib/netstandard1.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "lib/netstandard1.0/System.Runtime.CompilerServices.Unsafe.xml",
+        "lib/netstandard2.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "lib/netstandard2.0/System.Runtime.CompilerServices.Unsafe.xml",
+        "ref/net461/System.Runtime.CompilerServices.Unsafe.dll",
+        "ref/net461/System.Runtime.CompilerServices.Unsafe.xml",
+        "ref/netstandard1.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "ref/netstandard1.0/System.Runtime.CompilerServices.Unsafe.xml",
+        "ref/netstandard2.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "ref/netstandard2.0/System.Runtime.CompilerServices.Unsafe.xml",
+        "system.runtime.compilerservices.unsafe.4.7.1.nupkg.sha512",
+        "system.runtime.compilerservices.unsafe.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
+      ]
+    },
     "Cdy.Tag/1.0.0": {
       "type": "project",
       "path": "../Cdy.Tag/Cdy.Tag.csproj",
@@ -88,10 +351,25 @@
       "path": "../Cdy.Tag.Driver/Cdy.Tag.Driver.csproj",
       "msbuildProject": "../Cdy.Tag.Driver/Cdy.Tag.Driver.csproj"
     },
+    "Cdy.Tag.Network/1.0.0": {
+      "type": "project",
+      "path": "../Cdy.Tag.Network/Cdy.Tag.Network.csproj",
+      "msbuildProject": "../Cdy.Tag.Network/Cdy.Tag.Network.csproj"
+    },
     "DBHisData/1.0.0": {
       "type": "project",
       "path": "../DBHisData/DBHisData.csproj",
       "msbuildProject": "../DBHisData/DBHisData.csproj"
+    },
+    "DBRuntime.Real/1.0.0": {
+      "type": "project",
+      "path": "../DBRuntime.Real/DBRuntime.Real.csproj",
+      "msbuildProject": "../DBRuntime.Real/DBRuntime.Real.csproj"
+    },
+    "DotNettyCore/1.0.0": {
+      "type": "project",
+      "path": "../DotNettyCore/DotNettyCore.csproj",
+      "msbuildProject": "../DotNettyCore/DotNettyCore.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -100,7 +378,9 @@
       "Cdy.Tag.Common >= 1.0.0",
       "Cdy.Tag.Consume >= 1.0.0",
       "Cdy.Tag.Driver >= 1.0.0",
-      "DBHisData >= 1.0.0"
+      "Cdy.Tag.Network >= 1.0.0",
+      "DBHisData >= 1.0.0",
+      "DBRuntime.Real >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -142,11 +422,17 @@
             "D:\\Project\\Galaxy\\Cdy.Tag.Driver\\Cdy.Tag.Driver.csproj": {
               "projectPath": "D:\\Project\\Galaxy\\Cdy.Tag.Driver\\Cdy.Tag.Driver.csproj"
             },
+            "D:\\Project\\Galaxy\\Cdy.Tag.Network\\Cdy.Tag.Network.csproj": {
+              "projectPath": "D:\\Project\\Galaxy\\Cdy.Tag.Network\\Cdy.Tag.Network.csproj"
+            },
             "D:\\Project\\Galaxy\\Cdy.Tag\\Cdy.Tag.csproj": {
               "projectPath": "D:\\Project\\Galaxy\\Cdy.Tag\\Cdy.Tag.csproj"
             },
             "D:\\Project\\Galaxy\\DBHisData\\DBHisData.csproj": {
               "projectPath": "D:\\Project\\Galaxy\\DBHisData\\DBHisData.csproj"
+            },
+            "D:\\Project\\Galaxy\\DBRuntime.Real\\DBRuntime.Real.csproj": {
+              "projectPath": "D:\\Project\\Galaxy\\DBRuntime.Real\\DBRuntime.Real.csproj"
             }
           }
         }

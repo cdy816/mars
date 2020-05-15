@@ -30,10 +30,10 @@ namespace Cdy.Tag
         /// </summary>
         public string Group { get; set; }
 
-        ///// <summary>
-        ///// 超级用户
-        ///// </summary>
-        //public bool SuperUser { get; set; }
+        /// <summary>
+        /// 超级用户
+        /// </summary>
+        public bool SuperUser { get; set; }
 
         /// <summary>
         /// 

@@ -13,6 +13,7 @@ namespace DbInRunWebApi
     {
         public static void Main(string[] args)
         {
+            
             CreateHostBuilder(args).Build().Run();
         }
 

@@ -48,7 +48,8 @@ namespace DbInRunWebApi
         /// <returns></returns>
         public bool IsLogin(string token)
         {
-            return ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(token);
+            return true;
+            //return ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(token);
         }
 
         /// <summary>
@@ -60,36 +61,33 @@ namespace DbInRunWebApi
         /// <returns></returns>
         public bool CheckWritePermission(string token,string group)
         {
-            var securityService = ServiceLocator.Locator.Resolve<IRuntimeSecurity>();
+            //var securityService = ServiceLocator.Locator.Resolve<IRuntimeSecurity>();
 
-            var user = securityService.GetUserByLoginId(token);
+            //var user = securityService.GetUserByLoginId(token);
 
-            if (mUserWriterPermissionCach.ContainsKey(user))
-            {
-                return mSuperUsers[user] || (mUserWriterPermissionCach[user].Contains(group));
-            }
-            else
-            {
-                var pps = securityService.GetPermission(user);
-                bool issuerper = false;
-                List<string> mgroups = new List<string>();
-                foreach (var vv in pps)
-                {
-                    issuerper = issuerper | vv.SuperPermission;
-                    if (vv.Group != null && vv.EnableWrite)
-                        mgroups.AddRange(vv.Group);
-                }
-                if (mSuperUsers.ContainsKey(user)) mSuperUsers[user] = issuerper;
-                else mSuperUsers.Add(user, issuerper);
-                mUserWriterPermissionCach.Add(user, mgroups);
+            //if (mUserWriterPermissionCach.ContainsKey(user))
+            //{
+            //    return mSuperUsers[user] || (mUserWriterPermissionCach[user].Contains(group));
+            //}
+            //else
+            //{
+            //    var pps = securityService.GetPermission(user);
+            //    bool issuerper = false;
+            //    List<string> mgroups = new List<string>();
+            //    foreach (var vv in pps)
+            //    {
+            //        issuerper = issuerper | vv.SuperPermission;
+            //        if (vv.Group != null && vv.EnableWrite)
+            //            mgroups.AddRange(vv.Group);
+            //    }
+            //    if (mSuperUsers.ContainsKey(user)) mSuperUsers[user] = issuerper;
+            //    else mSuperUsers.Add(user, issuerper);
+            //    mUserWriterPermissionCach.Add(user, mgroups);
 
-                return mSuperUsers[user] || (mUserReaderPermissionCach[user].Contains(group));
-            }
+            //    return mSuperUsers[user] || (mUserReaderPermissionCach[user].Contains(group));
+            //}
+            return true;
 
-            //var pps = securityService.GetPermission(user);
-            //foreach(var vv in pps)
-            //if (vv.SuperPermission || (vv.Group.Contains(group)&& vv.EnableWrite )) return true;
-            //return false;
         }
 
 
@@ -101,32 +99,33 @@ namespace DbInRunWebApi
         /// <returns></returns>
         public bool CheckReaderPermission(string token, string group)
         {
-            var securityService = ServiceLocator.Locator.Resolve<IRuntimeSecurity>();
-            var user = securityService.GetUserByLoginId(token);
+            return true;
+            //var securityService = ServiceLocator.Locator.Resolve<IRuntimeSecurity>();
+            //var user = securityService.GetUserByLoginId(token);
           
-            if (mUserReaderPermissionCach.ContainsKey(user))
-            {
-                return mSuperUsers[user] || (mUserReaderPermissionCach[user].Contains(group));
-            }
-            else
-            {
-                var pps = securityService.GetPermission(user);
-                bool issuerper = false;
-                List<string> mgroups = new List<string>();
-                foreach(var vv in pps)
-                {
-                    issuerper = issuerper | vv.SuperPermission;
-                    if(vv.Group!=null)
-                    mgroups.AddRange(vv.Group);
-                }
+            //if (mUserReaderPermissionCach.ContainsKey(user))
+            //{
+            //    return mSuperUsers[user] || (mUserReaderPermissionCach[user].Contains(group));
+            //}
+            //else
+            //{
+            //    var pps = securityService.GetPermission(user);
+            //    bool issuerper = false;
+            //    List<string> mgroups = new List<string>();
+            //    foreach(var vv in pps)
+            //    {
+            //        issuerper = issuerper | vv.SuperPermission;
+            //        if(vv.Group!=null)
+            //        mgroups.AddRange(vv.Group);
+            //    }
 
-                if (mSuperUsers.ContainsKey(user)) mSuperUsers[user] = issuerper;
-                else mSuperUsers.Add(user, issuerper);
+            //    if (mSuperUsers.ContainsKey(user)) mSuperUsers[user] = issuerper;
+            //    else mSuperUsers.Add(user, issuerper);
 
-                mUserReaderPermissionCach.Add(user, mgroups);
+            //    mUserReaderPermissionCach.Add(user, mgroups);
 
-                return mSuperUsers[user] || (mUserReaderPermissionCach[user].Contains(group));
-            }
+            //    return mSuperUsers[user] || (mUserReaderPermissionCach[user].Contains(group));
+            //}
         }
 
         #endregion ...Methods...

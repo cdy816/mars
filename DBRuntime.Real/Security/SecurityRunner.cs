@@ -140,7 +140,7 @@ namespace Cdy.Tag
                     mLastLogin.Add(sid, DateTime.Now);
                     mUseIdMap.Add(sid, user);
                 }
-
+                return sid;
             }
             return string.Empty;
         }

@@ -14,9 +14,9 @@ namespace SimDriver
 
         #region ... Variables  ...
 
-        System.Collections.Generic.Dictionary<string, List<int>> mTagIdCach = new Dictionary<string, List<int>>();
+        System.Collections.Generic.Dictionary<string, List<Tagbase>> mTagIdCach = new Dictionary<string, List<Tagbase>>();
 
-        private System.Timers.Timer mScanTimer;
+        //private System.Timers.Timer mScanTimer;
 
         private short mNumber = 0;
 
@@ -124,23 +124,24 @@ namespace SimDriver
         {
             while (!mIsClosed)
             {
-                mTickCount++;
+                //mTickCount++;
                 DateTime time = DateTime.Now;
-                if (mTickCount < 5)
-                {
-                    mIsBusy = false;
-                    Thread.Sleep(100);
-                    continue;
-                }
-                else
-                {
-                    mTickCount = 0;
-                }
+                //if (mTickCount < 5)
+                //{
+                //    mIsBusy = false;
+                //    Thread.Sleep(100);
+                //    continue;
+                //}
+                //else
+                //{
+                //    mTickCount = 0;
+                //}
 
                 if((mLastProcessTime-time).TotalSeconds>1000)
                 {
                     LoggerService.Service.Warn("Sim Driver", "出现阻塞");
                 }
+
                 mLastProcessTime = time;
                 if (!mIsSecond)
                 {
@@ -162,6 +163,7 @@ namespace SimDriver
 //#if DEBUG
             Stopwatch sw = new Stopwatch();
             sw.Start();
+                //if(mNumber%10==0)
             Log("Sim:Sin " + fval + " " + "Sim:Cos " + sval + " " + "Sim:step " + mNumber + "  " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
 //#endif
@@ -187,108 +189,113 @@ namespace SimDriver
                     }
                     else if (vv.Key == "Sim:square")
                     {
-                        mTagService.SetPointValue(vv.Value, mBoolNumber);
+                        mTagService.SetTagValue(vv.Value, mBoolNumber);
                     }
                 });
 
 //#if DEBUG
             sw.Stop();
+                if (mNumber % 5 == 0 && mIsSecond)
+                    LoggerService.Service.Info("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds);
+                //#endif
 
-            LoggerService.Service.Info("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds);
-//#endif
-
-                Thread.Sleep(100);
+                int delay = (int)(500 - (DateTime.Now - mLastProcessTime).TotalMilliseconds);
+                if(delay < 0)
+                {
+                    delay = 1;
+                }
+                Thread.Sleep(delay);
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MScanTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            mTickCount++;
-            if (mIsBusy)
-            {
-                mBusyCount++;
-                if (mBusyCount >= 10)
-                {
-                    mBusyCount = 0;
-                    LoggerService.Service.Warn("Sim Driver", "出现阻塞");
-                }
-                return;
-            }
-            mBusyCount = 0;
-            mIsBusy = true;
-            DateTime time = DateTime.Now;
-            if (mTickCount <5)
-            {
-                mIsBusy = false;
-                return;
-            }
-            else
-            {
-                mTickCount = 0;
-            }
+//        /// <summary>
+//        /// 
+//        /// </summary>
+//        /// <param name="sender"></param>
+//        /// <param name="e"></param>
+//        private void MScanTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+//        {
+//            mTickCount++;
+//            if (mIsBusy)
+//            {
+//                mBusyCount++;
+//                if (mBusyCount >= 10)
+//                {
+//                    mBusyCount = 0;
+//                    LoggerService.Service.Warn("Sim Driver", "出现阻塞");
+//                }
+//                return;
+//            }
+//            mBusyCount = 0;
+//            mIsBusy = true;
+//            DateTime time = DateTime.Now;
+//            if (mTickCount <5)
+//            {
+//                mIsBusy = false;
+//                return;
+//            }
+//            else
+//            {
+//                mTickCount = 0;
+//            }
 
-            mLastProcessTime = time;
-            if(!mIsSecond)
-            {
-                mNumber++;
-                mNumber = mNumber > (short)360 ? (short)0 : mNumber;
-                mIsSecond = true;
-            }
-            else
-            {
-                mIsSecond = false;
-            }
+//            mLastProcessTime = time;
+//            if(!mIsSecond)
+//            {
+//                mNumber++;
+//                mNumber = mNumber > (short)360 ? (short)0 : mNumber;
+//                mIsSecond = true;
+//            }
+//            else
+//            {
+//                mIsSecond = false;
+//            }
             
 
-            if (mNumber % 100 == 0) mBoolNumber = !mBoolNumber;
+//            if (mNumber % 100 == 0) mBoolNumber = !mBoolNumber;
 
-            double fval = Math.Cos(mNumber / 180.0 * Math.PI);
-            double sval = Math.Sin(mNumber / 180.0 * Math.PI);
+//            double fval = Math.Cos(mNumber / 180.0 * Math.PI);
+//            double sval = Math.Sin(mNumber / 180.0 * Math.PI);
 
-#if DEBUG
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            Log("Sim:Sin " + fval + " " + "Sim:Cos " + sval + " " + "Sim:step " + mNumber + "  " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+//#if DEBUG
+//            Stopwatch sw = new Stopwatch();
+//            sw.Start();
+//            Log("Sim:Sin " + fval + " " + "Sim:Cos " + sval + " " + "Sim:step " + mNumber + "  " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
-#endif
+//#endif
 
 
-            System.Threading.Tasks.Parallel.ForEach(mTagIdCach, (vv) =>
-            {
-                if (vv.Key == "Sim:cos")
-                {
-                    mTagService.SetTagValue(vv.Value, fval);
-                }
-                else if (vv.Key == "Sim:sin")
-                {
-                    mTagService.SetTagValue(vv.Value, sval);
-                }
-                else if (vv.Key == "Sim:step")
-                {
-                    mTagService.SetTagValue(vv.Value, mNumber);
-                }
-                else if(vv.Key == "Sim:steppoint")
-                {
-                    mTagService.SetPointValue(vv.Value,mNumber,mNumber,mNumber);
-                }
-                else if (vv.Key == "Sim:square")
-                {
-                    mTagService.SetPointValue(vv.Value, mBoolNumber);
-                }
-            });
+//            System.Threading.Tasks.Parallel.ForEach(mTagIdCach, (vv) =>
+//            {
+//                if (vv.Key == "Sim:cos")
+//                {
+//                    mTagService.SetTagValue(vv.Value, fval);
+//                }
+//                else if (vv.Key == "Sim:sin")
+//                {
+//                    mTagService.SetTagValue(vv.Value, sval);
+//                }
+//                else if (vv.Key == "Sim:step")
+//                {
+//                    mTagService.SetTagValue(vv.Value, mNumber);
+//                }
+//                else if(vv.Key == "Sim:steppoint")
+//                {
+//                    mTagService.SetPointValue(vv.Value,mNumber,mNumber,mNumber);
+//                }
+//                else if (vv.Key == "Sim:square")
+//                {
+//                    mTagService.SetPointValue(vv.Value, mBoolNumber);
+//                }
+//            });
 
-#if DEBUG
-            sw.Stop();
+//#if DEBUG
+//            sw.Stop();
 
-            LoggerService.Service.Info("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds + " total count:" + mNumber + " cos:" + Math.Cos(mNumber / 180.0 * Math.PI) + " sin:" + Math.Sin(mNumber / 180.0 * Math.PI));
-#endif
-            mIsBusy = false;
-        }
+//            LoggerService.Service.Info("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds + " total count:" + mNumber + " cos:" + Math.Cos(mNumber / 180.0 * Math.PI) + " sin:" + Math.Sin(mNumber / 180.0 * Math.PI));
+//#endif
+//            mIsBusy = false;
+//        }
 
         /// <summary>
         /// 

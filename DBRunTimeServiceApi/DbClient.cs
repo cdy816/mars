@@ -71,7 +71,7 @@ namespace DBRunTime.ServiceApi
         /// <summary>
         /// 
         /// </summary>
-        public const byte RequestHisDataByTimePoint = 1;
+        public const byte RequestAllHisData = 1;
 
         /// <summary>
         /// 
@@ -147,9 +147,14 @@ namespace DBRunTime.ServiceApi
             {
                 datas.Retain();
                 //收到异步请求回调数据
-                if (datas.ReadableBytes==1&&datas.ReadByte()==byte.MaxValue)
+                if (datas.ReadableBytes==1)
                 {
-                    return;
+                    if(datas.ReadByte() == byte.MaxValue)
+                        return;
+                    else
+                    {
+                        Debug.Print("DbClient ProcessData Invailed data");
+                    }
                 }
                 else
                 {
@@ -554,6 +559,98 @@ namespace DBRunTime.ServiceApi
             return false;
         }
 
+
+        #endregion
+
+        #region HisData
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <returns></returns>
+        public IByteBuffer QueryAllHisValue(int id,DateTime startTime,DateTime endTime,int timeout=5000)
+        {
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, this.LoginId.Length + 20);
+            mb.WriteByte(ApiFunConst.RequestAllHisData);
+            mb.WriteString(this.LoginId);
+            mb.WriteInt(id);
+            mb.WriteLong(startTime.Ticks);
+            mb.WriteLong(endTime.Ticks);
+
+            this.hisRequreEvent.Reset();
+            Send(mb);
+
+            if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes>1)
+            {
+                return mHisRequreData;
+            }
+            mHisRequreData?.ReleaseBuffer();
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="matchType"></param>
+        /// <returns></returns>
+        public IByteBuffer QueryHisValueAtTimes(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType matchType, int timeout = 5000)
+        {
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, this.LoginId.Length + times.Count * 8 + 5);
+            mb.WriteByte(ApiFunConst.RequestHisDatasByTimePoint);
+            mb.WriteString(this.LoginId);
+            mb.WriteInt(id);
+            mb.WriteByte((byte)matchType);
+            mb.WriteInt(times.Count);
+            for (int i = 0; i < times.Count; i++)
+            {
+                mb.WriteLong(times[i].Ticks);
+            }
+
+            this.hisRequreEvent.Reset();
+            Send(mb);
+
+            if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+            {
+                return mHisRequreData;
+            }
+            mHisRequreData?.ReleaseBuffer();
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="span"></param>
+        /// <param name="matchType"></param>
+        /// <returns></returns>
+        public IByteBuffer QueryHisValueForTimeSpan(int id,DateTime startTime,DateTime endTime,TimeSpan span,QueryValueMatchType matchType, int timeout = 5000)
+        {
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, this.LoginId.Length + 24+ 5);
+            mb.WriteByte(ApiFunConst.RequestHisDataByTimeSpan);
+            mb.WriteString(this.LoginId);
+            mb.WriteInt(id);
+            mb.WriteByte((byte)matchType);
+            mb.WriteLong(startTime.Ticks);
+            mb.WriteLong(endTime.Ticks);
+            mb.WriteLong(span.Ticks);
+            this.hisRequreEvent.Reset();
+            Send(mb);
+
+            if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+            {
+                return mHisRequreData;
+            }
+            mHisRequreData?.ReleaseBuffer();
+            return null;
+        }
 
         #endregion
 

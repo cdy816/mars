@@ -60,9 +60,37 @@ namespace Cdy.Tag
             Init(count);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="count"></param>
+        public HisQueryResult(IntPtr handle,int count)
+        {
+            this.handle = handle;
+            mCount = count;
+            mTimeAddr = count * mDataSize;
+            mQulityAddr = count * (mDataSize + 8);
+            mLenght = count;
+            mLimite = count;
+            mPosition = 0;
+        }
+
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public IntPtr Address
+        {
+            get
+            {
+                return handle;
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -85,6 +113,18 @@ namespace Cdy.Tag
                 return mLenght;
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Position
+        {
+            get
+            {
+                return mPosition;
+            }
+        }
+
 
 
         #endregion ...Properties...

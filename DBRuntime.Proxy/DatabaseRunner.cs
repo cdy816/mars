@@ -1,12 +1,13 @@
 ﻿using Cdy.Tag;
-using DbWebApiProxy.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
-namespace DbInRunWebApi
+namespace DBRuntime.Proxy
 {
     /// <summary>
     /// 
@@ -59,6 +60,18 @@ namespace DbInRunWebApi
 
         public bool IsReady { get; set; } = false;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public DbServerProxy Proxy
+        {
+            get
+            {
+                return mProxy;
+            }
+        }
+
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -68,7 +81,34 @@ namespace DbInRunWebApi
         /// </summary>
         public void Load()
         {
+            
+            string sfileName = Assembly.GetEntryAssembly().Location;
+            string spath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(sfileName), "Config");
+            sfileName = System.IO.Path.Combine(spath, System.IO.Path.GetFileNameWithoutExtension(sfileName) + ".cfg");
 
+            if(System.IO.File.Exists(sfileName))
+            {
+                XElement xe = XElement.Load(sfileName);
+                if(xe.Attribute("Ip")!=null)
+                {
+                    mIp = xe.Attribute("Ip").Value;
+                }
+
+                if (xe.Attribute("Port") != null)
+                {
+                    mPort = int.Parse(xe.Attribute("Port").Value);
+                }
+
+                if (xe.Attribute("LoginUser") != null)
+                {
+                    mUserName = xe.Attribute("LoginUser").Value;
+                }
+
+                if (xe.Attribute("LoginPassword") != null)
+                {
+                    mPassword = xe.Attribute("LoginPassword").Value;
+                }
+            }
         }
 
         /// <summary>
@@ -79,12 +119,9 @@ namespace DbInRunWebApi
             mProxy = new DbServerProxy() { UserName = mUserName, Password = mPassword };
             mProxy.Connect(mIp, mPort);
             mProxy.PropertyChanged += MProxy_PropertyChanged;
-            
             mMonitorThread = new Thread(MonitorThreadPro);
             mMonitorThread.IsBackground = true;
             mMonitorThread.Start();
-
-
         }
 
         /// <summary>

@@ -14,8 +14,13 @@
     <ProjectReference Include="..\Cdy.Tag.Common\Cdy.Tag.Common.csproj" />
     <ProjectReference Include="..\Cdy.Tag.Network\Cdy.Tag.Network.csproj" />
     <ProjectReference Include="..\Cdy.Tag\Cdy.Tag.csproj" />
-    <ProjectReference Include="..\DBRuntime.Real\DBRuntime.Real.csproj" />
-    <ProjectReference Include="..\DBRunTimeServiceApi\DBRunTime.ServiceApi.csproj" />
+    <ProjectReference Include="..\DBRuntime.Proxy\DBRuntime.Proxy.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Config\DbWebApiProxy.cfg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 

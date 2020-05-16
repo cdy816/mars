@@ -212,7 +212,7 @@ namespace DbInRunWebApi.Model
         /// <summary>
         /// 
         /// </summary>
-        public List<string> TagNames { get; set; }
+        public string TagName { get; set; }
 
         /// <summary>
         /// 
@@ -258,7 +258,7 @@ namespace DbInRunWebApi.Model
         /// <summary>
         /// 
         /// </summary>
-        public List<string> TagNames { get; set; }
+        public string TagName { get; set; }
 
         /// <summary>
         /// 
@@ -270,6 +270,52 @@ namespace DbInRunWebApi.Model
         /// 
         /// </summary>
         public DateTime EndTime { get; set; }
+
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+    public class AllHisDataRequest : Requestbase
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string TagName { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime StartTime { get; set; }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime EndTime { get; set; }
+
 
         #endregion ...Properties...
 

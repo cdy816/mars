@@ -202,7 +202,9 @@ namespace Cdy.Tag
         {
             ServiceLocator.Locator.Registor<IRealData>(realEnginer);
             ServiceLocator.Locator.Registor<IRealDataNotify>(realEnginer);
-
+            ServiceLocator.Locator.Registor<IRealDataNotifyForProducter>(realEnginer);
+            ServiceLocator.Locator.Registor<IRealTagComsumer>(realEnginer);
+            
             ServiceLocator.Locator.Registor<IHisEngine>(hisEnginer);
 
             ServiceLocator.Locator.Registor<IDataCompress>(compressEnginer);

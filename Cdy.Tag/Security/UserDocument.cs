@@ -28,7 +28,9 @@ namespace Cdy.Tag
 
         public UserDocument()
         {
-            Users.Add("Admin", new UserItem() { Name = "Admin",Password = "Admin",SuperUser=true });
+            var pp = new UserItem() { Name = "Admin", Password = "Admin", SuperUser = true };
+            pp.Permissions.Add("Super");
+            Users.Add("Admin", pp);
         }
 
         #endregion ...Constructor...

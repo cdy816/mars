@@ -79,6 +79,13 @@ namespace Cdy.Tag
         /// <returns></returns>
         List<int?> GetTagIdByName(List<string> name);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        unsafe void* GetDataRawAddr(int id);
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

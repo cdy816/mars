@@ -62,6 +62,11 @@ namespace Cdy.Tag
         public long ValueAddress { get; set; }
 
         /// <summary>
+        /// 指的大小
+        /// </summary>
+        public abstract  int ValueSize { get; }
+
+        /// <summary>
         /// 值转换函数
         /// </summary>
         public IValueConvert Conveter { get; set; }

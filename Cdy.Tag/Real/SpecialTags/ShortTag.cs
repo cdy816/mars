@@ -19,6 +19,8 @@ namespace Cdy.Tag
         /// </summary>
         public override TagType Type => TagType.Short;
 
+        public override int ValueSize => 11;
+
 
         /// <summary>
         /// 

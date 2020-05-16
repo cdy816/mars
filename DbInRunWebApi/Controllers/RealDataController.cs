@@ -50,6 +50,10 @@ namespace DbInRunWebApi.Controllers
         /// <returns></returns>
         private string GetGroupName(string tag)
         {
+            if(tag.LastIndexOf(".")>0)
+            {
+                return tag.Substring(0, tag.LastIndexOf(".") - 1);
+            }
             return string.Empty;
         }
 
@@ -61,12 +65,14 @@ namespace DbInRunWebApi.Controllers
         [HttpPost]
         public RealDataSetResponse Post([FromBody] RealDataSetRequest request)
         {
-            List<string> grps = new List<string>();
+            HashSet<string> grps = new HashSet<string>();
             foreach(var vv in request.Values.Keys)
             {
                 var str = GetGroupName(vv);
                 if (!string.IsNullOrEmpty(str))
                     grps.Add(str);
+                else
+                    grps.Add("");
             }
 
             if (DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))

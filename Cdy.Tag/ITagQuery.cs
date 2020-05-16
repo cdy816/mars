@@ -49,6 +49,18 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <returns></returns>
+        int MaxTagId();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        int MinTagId();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         ICollection<Tagbase> ListAllTags();
 
     }

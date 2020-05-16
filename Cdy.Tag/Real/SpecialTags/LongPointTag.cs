@@ -19,6 +19,8 @@ namespace Cdy.Tag
         /// </summary>
         public override TagType Type => TagType.LongPoint;
 
+        public override int ValueSize => 25;
+
 
     }
 }

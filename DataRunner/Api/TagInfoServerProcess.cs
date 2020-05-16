@@ -63,7 +63,7 @@ namespace DBRuntime.Api
             switch (sfun)
             {
                 case GetTagIdByNameFun:
-                    string loginId = ReadString(data);
+                    string loginId = data.ReadString();
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
                         int count = data.ReadInt();
@@ -72,7 +72,7 @@ namespace DBRuntime.Api
                             var re = BufferManager.Manager.Allocate(ApiFunConst.TagInfoRequest,count * 4);
                             for(int i=0;i<count;i++)
                             {
-                                var ival = mm.GetTagIdByName(ReadString(data));
+                                var ival = mm.GetTagIdByName(data.ReadString());
                                 if (ival.HasValue)
                                 {
                                     re.WriteInt(ival.Value);
@@ -87,8 +87,8 @@ namespace DBRuntime.Api
                     }
                     break;
                 case Login:
-                    string user = ReadString(data);
-                    string pass = ReadString(data);
+                    string user = data.ReadString();
+                    string pass = data.ReadString();
                     string result = Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().Login(user, pass);
                     if (!string.IsNullOrEmpty(result))
                     {
@@ -99,20 +99,8 @@ namespace DBRuntime.Api
                         Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, ""));
                     }
                     break;
-                case RegistValueCallBack:
-                    loginId = ReadString(data);
-                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
-                    {
-                        int minid = data.ReadInt();
-                        int maxid = data.ReadInt();
-                        //call back registor
-                        var re = BufferManager.Manager.Allocate(ApiFunConst.TagInfoRequest, 1);
-                        re.WriteByte(1);
-                        Parent.AsyncCallback(client, re);
-                    }
-                    break;
                 case GetdatabaseName:
-                    loginId = ReadString(data);
+                    loginId = data.ReadString();
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
                         Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, Runner.mCurrentDatabase));

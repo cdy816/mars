@@ -22,6 +22,11 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        public override int ValueSize => 11;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public override double AllowMaxValue => ushort.MaxValue;
 
         /// <summary>

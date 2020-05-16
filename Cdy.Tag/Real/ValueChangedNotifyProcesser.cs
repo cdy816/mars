@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Cdy.Tag
 {
@@ -30,7 +31,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        private long[] mChangedIds = null;
+        private int[] mChangedIds = null;
 
         /// <summary>
         /// 
@@ -51,6 +52,10 @@ namespace Cdy.Tag
         private int mLenght = 0;
 
         private object mLockObject = new object();
+
+        private bool mIsAll = false;
+
+        private DateTime mLastNotiyTime = DateTime.Now;
 
         #endregion ...Variables...
 
@@ -91,7 +96,14 @@ namespace Cdy.Tag
         /// </summary>
         public void Start()
         {
-            mChangedIds = new long[(int)(mRegistorTagIds.Count * 1.2)];
+            if (mIsAll)
+            {
+                mChangedIds = new int[1024];
+            }
+            else
+            {
+                mChangedIds = new int[(int)(mRegistorTagIds.Count * 1.2)];
+            }
             mProcessThread = new Thread(ThreadProcess);
             mProcessThread.IsBackground = true;
             mProcessThread.Start();
@@ -115,7 +127,7 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         public void UpdateValue(int id)
         {
-            if (mRegistorTagIds.ContainsKey(id))
+            if (mIsAll || mRegistorTagIds.ContainsKey(id))
             {
                 lock (mLockObject)
                 {
@@ -134,7 +146,7 @@ namespace Cdy.Tag
         /// <param name="len"></param>
         private void ReAllocMemory(int len)
         {
-            long[] ltmp = new long[len];
+            int[] ltmp = new int[len];
             Array.Copy(mChangedIds, 0, ltmp, 0, mChangedIds.Length);
             mChangedIds = ltmp;
         }
@@ -145,9 +157,13 @@ namespace Cdy.Tag
         /// <param name="ids"></param>
         public void UpdateValue(List<int> ids)
         {
+            if(mLenght+ids.Count>mChangedIds.Length)
+            {
+                ReAllocMemory((int)((mLenght + ids.Count) * 1.2));
+            }
             foreach (var id in ids)
             {
-                if (mRegistorTagIds.ContainsKey(id))
+                if (mIsAll || mRegistorTagIds.ContainsKey(id))
                 {
                     lock (mChangedIds)
                     {
@@ -164,6 +180,11 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         public void Registor(int id)
         {
+            if (id == -1)
+            {
+                mIsAll = true;
+                return;
+            }
             if (!mRegistorTagIds.ContainsKey(id))
                 mRegistorTagIds.Add(id,0);
         }
@@ -209,6 +230,7 @@ namespace Cdy.Tag
                     }
                     ValueChanged?.Invoke(vtmp);
                 }
+                Thread.Sleep(10);
             }
         }
 

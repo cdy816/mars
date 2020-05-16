@@ -114,6 +114,7 @@ namespace Cdy.Tag
                     {
                         mChangedTags[vv] = true;
                     }
+                    
                 }
             }), new Func<List<int>>(() => { return mTags.Keys.ToList(); }));
 

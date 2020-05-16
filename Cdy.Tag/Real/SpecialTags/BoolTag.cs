@@ -19,6 +19,8 @@ namespace Cdy.Tag
         /// </summary>
         public override TagType Type => TagType.Bool;
 
+        public override int ValueSize => 10;
+
         ///// <summary>
         ///// 
         ///// </summary>

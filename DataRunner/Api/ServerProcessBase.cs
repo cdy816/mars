@@ -58,10 +58,6 @@ namespace DBRuntime.Api
 
         #region ... Methods    ...
 
-        protected string ReadString(IByteBuffer buffer)
-        {
-            return buffer.ReadString(buffer.ReadInt(), Encoding.UTF8);
-        }
 
         /// <summary>
         /// 
@@ -70,12 +66,17 @@ namespace DBRuntime.Api
         /// <returns></returns>
         protected IByteBuffer ToByteBuffer(byte id, string value)
         {
-            var re = BufferManager.Manager.Allocate(ApiFunConst.TagInfoRequest, value.Length);
-            re.WriteInt(value.Length);
-            re.WriteString(value, Encoding.UTF8);
+            var re = BufferManager.Manager.Allocate(ApiFunConst.TagInfoRequest, value.Length*2);
+            re.WriteString(value);
             return re;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         protected IByteBuffer ToByteBuffer(byte id, byte value)
         {
             var re = BufferManager.Manager.Allocate(ApiFunConst.TagInfoRequest, 1);
@@ -89,6 +90,7 @@ namespace DBRuntime.Api
         /// <param name="data"></param>
         public virtual void ProcessData(string client, IByteBuffer data)
         {
+            data.Retain();
             if (mDatasCach.ContainsKey(client))
             {
                 mDatasCach[client].Enqueue(data);
@@ -130,7 +132,7 @@ namespace DBRuntime.Api
         /// <param name="data"></param>
         protected virtual void ProcessSingleData(string client, IByteBuffer data)
         {
-
+            data.Release();
         }
 
 

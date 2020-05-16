@@ -156,6 +156,16 @@ namespace DBRuntime.Api
         /// 
         /// </summary>
         /// <param name="clientId"></param>
+        /// <param name="value"></param>
+        public void PushRealDatatoClient(string clientId, IByteBuffer value)
+        {
+            this.SendData(clientId, value);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
         /// <param name="fun"></param>
         /// <param name="value"></param>
         public void AsyncCallback(string clientId,byte fun, byte[] value,int len)

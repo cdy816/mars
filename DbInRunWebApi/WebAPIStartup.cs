@@ -39,6 +39,8 @@ namespace DbInRunWebApi
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+              
+                endpoints.MapDefaultControllerRoute();
             });
             DatabaseRunner.Manager.Load();
             DatabaseRunner.Manager.Start();

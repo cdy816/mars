@@ -19,6 +19,8 @@ namespace Cdy.Tag
         /// </summary>
         public override TagType Type => TagType.UIntPoint3;
 
+        public override int ValueSize => 21;
+
 
     }
 }

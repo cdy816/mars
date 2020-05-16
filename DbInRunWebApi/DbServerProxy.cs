@@ -15,7 +15,7 @@ namespace DbInRunWebApi
 
         public static DbServerProxy Proxy = new DbServerProxy();
 
-        DbClient dbClient;
+        ApiClient dbClient;
 
         private bool mIsConnected;
 
@@ -80,7 +80,7 @@ namespace DbInRunWebApi
         /// <summary>
         /// 
         /// </summary>
-        public DbClient NetworkClient
+        public ApiClient NetworkClient
         {
             get
             {
@@ -137,7 +137,7 @@ namespace DbInRunWebApi
         /// </summary>
         private void Init()
         {
-            dbClient = new DbClient();
+            dbClient = new ApiClient();
             dbClient.PropertyChanged += DbClient_PropertyChanged;
         }
 

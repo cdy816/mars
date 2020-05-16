@@ -79,7 +79,7 @@ namespace DBRunTime.ServiceApi
         public const byte RequestHisDataByTimeSpan = 2;
     }
 
-    public class DbClient:SocketClient
+    public class ApiClient:SocketClient
     {
 
         #region ... Variables  ...
@@ -138,18 +138,16 @@ namespace DBRunTime.ServiceApi
         /// <param name="datas"></param>
         protected override void ProcessData(byte fun, IByteBuffer datas)
         {
-            datas.Retain();
+           
             if(fun == ApiFunConst.RealDataPushFun)
             {
-                datas.Retain();
                 ProcessDataPush?.Invoke(datas);
-                datas.Release();
             }
             else
             {
-
+                datas.Retain();
                 //收到异步请求回调数据
-                if(datas.ReadableBytes==1&&datas.ReadByte()==byte.MaxValue)
+                if (datas.ReadableBytes==1&&datas.ReadByte()==byte.MaxValue)
                 {
                     return;
                 }
@@ -185,15 +183,14 @@ namespace DBRunTime.ServiceApi
             int size = username.Length + password.Length + 9;
             var mb = GetBuffer(ApiFunConst.TagInfoRequest, size);
             mb.WriteByte(ApiFunConst.Login);
-            WriteString(mb, username);
-            WriteString(mb, password);
+            mb.WriteString(username);
+            mb.WriteString(password);
             Send(mb);
             if(infoRequreEvent.WaitOne(timeount)  && mInfoRequreData.ReadableBytes>4)
             {
                 if (mInfoRequreData.ReferenceCount > 0)
                 {
-                    int dsize = mInfoRequreData.ReadInt();
-                    LoginId = mInfoRequreData.ReadString(dsize, Encoding.UTF8);
+                    LoginId = mInfoRequreData.ReadString();
                     return IsLogin;
                 }
             }
@@ -202,16 +199,7 @@ namespace DBRunTime.ServiceApi
             return IsLogin;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="value"></param>
-        private void WriteString(IByteBuffer buffer,string value)
-        {
-            buffer.WriteInt(value.Length);
-            buffer.WriteString(value, Encoding.UTF8);
-        }
+       
 
         /// <summary>
         /// 
@@ -224,11 +212,11 @@ namespace DBRunTime.ServiceApi
 
             var mb = GetBuffer(ApiFunConst.TagInfoRequest,tagNames.Count*24+1);
             mb.WriteByte(ApiFunConst.GetTagIdByNameFun);
-            WriteString(mb, LoginId);
+            mb.WriteString(LoginId);
             mb.WriteInt(tagNames.Count);
             foreach(var vv in tagNames)
             {
-                WriteString(mb, vv);
+                mb.WriteString(vv);
             }
             infoRequreEvent.Reset();
             Send(mb);
@@ -256,16 +244,16 @@ namespace DBRunTime.ServiceApi
         {
             var mb = GetBuffer(ApiFunConst.TagInfoRequest,loginid.Length+ 1);
             mb.WriteByte(ApiFunConst.GetRunnerDatabase);
-            WriteString(mb, loginid);
+            mb.WriteString(loginid);
             infoRequreEvent.Reset();
             Send(mb);
 
             if (infoRequreEvent.WaitOne(timeout))
             {
-                int dsize = mInfoRequreData.ReadInt();
-                return mInfoRequreData.ReadString(dsize, Encoding.UTF8);
+                return mInfoRequreData.ReadString();
             }
-            mInfoRequreData?.Release();
+            
+            mInfoRequreData?.ReleaseBuffer();
             return string.Empty;
         }
 
@@ -283,7 +271,7 @@ namespace DBRunTime.ServiceApi
         {
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length + 8);
             mb.WriteByte(ApiFunConst.RegistorValueCallback);
-            WriteString(mb, this.LoginId);
+            mb.WriteString(this.LoginId);
             mb.WriteInt(minid);
             mb.WriteInt(maxid);
             this.realRequreEvent.Reset();
@@ -293,7 +281,7 @@ namespace DBRunTime.ServiceApi
             {
                 return mRealRequreData.ReadByte() > 0;
             }
-            mRealRequreData?.Release();
+            mRealRequreData?.ReleaseBuffer();
             return true;
         }
 
@@ -306,7 +294,7 @@ namespace DBRunTime.ServiceApi
         {
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length + 8);
             mb.WriteByte(ApiFunConst.ResetValueChangeNotify);
-            WriteString(mb, this.LoginId);
+            mb.WriteString(this.LoginId);
             realRequreEvent.Reset();
             Send(mb);
 
@@ -314,7 +302,7 @@ namespace DBRunTime.ServiceApi
             {
                 return mRealRequreData.ReadByte() > 0;
             }
-            mRealRequreData?.Release();
+            mRealRequreData?.ReleaseBuffer();
             return true;
         }
 
@@ -324,9 +312,9 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public IByteBuffer GetRealData(List<int> ids,int timeout=5000)
         {
-            var mb = GetBuffer(ApiFunConst.RequestRealData, this.LoginId.Length +ids.Count* 4);
+            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length +ids.Count* 4);
             mb.WriteByte(ApiFunConst.RequestRealData);
-            WriteString(mb, this.LoginId);
+            mb.WriteString(this.LoginId);
             mb.WriteInt(ids.Count);
             for(int i=0;i<ids.Count;i++)
             {
@@ -347,9 +335,9 @@ namespace DBRunTime.ServiceApi
         public IByteBuffer GetRealData(int ids,int ide, int timeout = 5000)
         {
          
-            var mb = GetBuffer(ApiFunConst.RequestRealData, this.LoginId.Length + (ide - ids) * 4);
-            mb.WriteByte(ApiFunConst.RequestRealData);
-            WriteString(mb, this.LoginId);
+            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length + (ide - ids) * 4);
+            mb.WriteByte(ApiFunConst.RequestRealData2);
+            mb.WriteString(this.LoginId);
             mb.WriteInt(ids);
             mb.WriteInt(ide);
             realRequreEvent.Reset();
@@ -372,10 +360,12 @@ namespace DBRunTime.ServiceApi
         /// <param name="value"></param>
         public bool SetTagValue(int id,byte valueType,object value,int timeout=5000)
         {
-            var mb = GetBuffer(ApiFunConst.RequestRealData, this.LoginId.Length + 30);
+            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length + 30);
             mb.WriteByte(ApiFunConst.SetDataValue);
+            mb.WriteString(this.LoginId);
             mb.WriteInt(1);
             mb.WriteInt(id);
+            mb.WriteByte(valueType);
             switch (valueType)
             {
                 case (byte)TagType.Bool:
@@ -409,7 +399,7 @@ namespace DBRunTime.ServiceApi
                 case (byte)TagType.String:
                     string sval = value.ToString();
                     mb.WriteInt(sval.Length);
-                    mb.WriteString(sval, Encoding.UTF8);
+                    mb.WriteString(sval, Encoding.Unicode);
                     break;
                 case (byte)TagType.DateTime:
                     mb.WriteLong(((DateTime)value).Ticks);
@@ -471,8 +461,9 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public bool SetTagValue(List<int> id, List<byte> valueType, List<object> value, int timeout = 5000)
         {
-            var mb = GetBuffer(ApiFunConst.RequestRealData, this.LoginId.Length + 30);
+            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length + 30);
             mb.WriteByte(ApiFunConst.SetDataValue);
+            mb.WriteString(this.LoginId);
             mb.WriteInt(1);
             for (int i = 0; i < id.Count; i++)
             {
@@ -510,7 +501,7 @@ namespace DBRunTime.ServiceApi
                     case (byte)TagType.String:
                         string sval = value[i].ToString();
                         mb.WriteInt(sval.Length);
-                        mb.WriteString(sval, Encoding.UTF8);
+                        mb.WriteString(sval, Encoding.Unicode);
                         break;
                     case (byte)TagType.DateTime:
                         mb.WriteLong(((DateTime)value[i]).Ticks);

@@ -52,6 +52,7 @@ namespace Cdy.Tag
 
         private bool mIsAll = false;
 
+        private bool mIsClosed = false;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -177,6 +178,7 @@ namespace Cdy.Tag
             while(true)
             {
                 resetEvent.WaitOne();
+                if (mIsClosed) break;
                 resetEvent.Reset();
                 if (mChangedIds.Count > 0)
                 {
@@ -200,8 +202,9 @@ namespace Cdy.Tag
         public void Dispose()
         {
             ValueChanged = null;
+            mIsClosed = true;
+            resetEvent.Set();
             resetEvent.Close();
-            resetEvent = null;
         }
         #endregion ...Interfaces...
     }

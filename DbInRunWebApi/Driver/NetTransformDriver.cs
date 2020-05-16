@@ -4,6 +4,7 @@ using DBRunTime.ServiceApi;
 using DotNetty.Buffers;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -41,7 +42,7 @@ namespace DbWebApiProxy.Driver
         /// <summary>
         /// 
         /// </summary>
-        public DbClient Client { get; set; }
+        public ApiClient Client { get; set; }
 
         #endregion ...Properties...
 
@@ -61,7 +62,7 @@ namespace DbWebApiProxy.Driver
 
         protected string ReadString(IByteBuffer buffer)
         {
-            return buffer.ReadString(buffer.ReadInt(), Encoding.UTF8);
+            return buffer.ReadString(buffer.ReadInt(), Encoding.Unicode);
         }
 
         /// <summary>
@@ -83,10 +84,15 @@ namespace DbWebApiProxy.Driver
 
         private void ProcessSingleBufferData(IByteBuffer block)
         {
+            if (block == null) return;
             var count = block.ReadInt();
             for (int i = 0; i < count; i++)
             {
                 var vid = block.ReadInt();
+                if(vid<0)
+                {
+                    Debug.Print("Invaild value!");
+                }
                 var typ = block.ReadByte();
                 object value = null;
                 switch (typ)
@@ -153,21 +159,50 @@ namespace DbWebApiProxy.Driver
                         value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                         break;
                 }
-                mServier.SetTagValue(vid, value);
+                var time = new DateTime(block.ReadLong());
+                var qua = block.ReadByte();
+                mServier.SetTagValue(vid, value, time, qua);
             }
             block.Release();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void RegistorTag()
         {
             if (Client != null)
             {
                 Client.RegistorTagValueCallBack(-1, int.MaxValue, 5000);
-                Client.ProcessDataPush = new DbClient.ProcessDataPushDelegate((block) => {
+                Client.ProcessDataPush = new ApiClient.ProcessDataPushDelegate((block) => {
                     //block.re
                     block.Retain();
                     mCachDatas.Enqueue(block);
+                    resetEvent.Set();
                 });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void ReadAllData()
+        {
+            if(Client!=null)
+            {
+                int maxid = ServiceLocator.Locator.Resolve<ITagManager>().MaxTagId();
+                int minid = ServiceLocator.Locator.Resolve<ITagManager>().MinTagId();
+                int len = maxid - minid;
+                int countpercall = 10000;
+
+                int executed = 0;
+                while(executed<len)
+                {
+                    var ex = Math.Min(len - executed, countpercall);
+                    var res = Client.GetRealData(executed, executed + ex);
+                    ProcessSingleBufferData(res);
+                    executed += len;
+                }
             }
         }
 
@@ -184,6 +219,7 @@ namespace DbWebApiProxy.Driver
                 new Func<List<int>>(() => { return new List<int>() { -1 }; })
                 );
             RegistorTag();
+            ReadAllData();
             mScanThread = new Thread(RemoteDataudpatePro);
             mScanThread.IsBackground = true;
             mScanThread.Start();
@@ -211,7 +247,9 @@ namespace DbWebApiProxy.Driver
         /// <returns></returns>
         public bool Stop()
         {
-            throw new NotImplementedException();
+            mIsClosed = true;
+            resetEvent.Set();
+            return true;
         }
     }
 }

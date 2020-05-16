@@ -173,7 +173,7 @@ namespace DbInRunWebApi.Model
         /// <summary>
         /// 
         /// </summary>
-        public Dictionary<string,object> Values { get; set; }
+        public Dictionary<string,string> Values { get; set; }
 
         #endregion ...Properties...
 

@@ -19,6 +19,7 @@ namespace Cdy.Tag
         /// </summary>
         public override TagType Type => TagType.String;
 
+        public override int ValueSize => Const.StringSize+9;
 
     }
 }

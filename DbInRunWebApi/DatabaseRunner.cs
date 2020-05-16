@@ -1,4 +1,5 @@
 ﻿using Cdy.Tag;
+using DbWebApiProxy.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +30,8 @@ namespace DbInRunWebApi
         private SecurityRunner mSecurityRunner;
 
         private DbServerProxy mProxy;
+
+        private NetTransformDriver mDriver;
 
         private string mIp="127.0.0.1";
         private int mPort = 14330;
@@ -80,6 +83,8 @@ namespace DbInRunWebApi
             mMonitorThread = new Thread(MonitorThreadPro);
             mMonitorThread.IsBackground = true;
             mMonitorThread.Start();
+
+
         }
 
         /// <summary>
@@ -150,6 +155,9 @@ namespace DbInRunWebApi
         {
             if (database == mDatabaseName) return;
 
+            if (mDriver != null)
+                mDriver.Stop();
+
             if (System.IO.Path.IsPathRooted(database))
             {
                 this.mDatabaseName = System.IO.Path.GetFileNameWithoutExtension(database);
@@ -170,6 +178,9 @@ namespace DbInRunWebApi
 
             RegistorInterface();
             IsReady = true;
+
+            mDriver = new NetTransformDriver() { Client = mProxy.NetworkClient };
+            mDriver.Start(realEnginer);
         }
 
         /// <summary>
@@ -179,8 +190,11 @@ namespace DbInRunWebApi
         {
             ServiceLocator.Locator.Registor<IRealData>(realEnginer);
             ServiceLocator.Locator.Registor<IRealDataNotify>(realEnginer);
+            ServiceLocator.Locator.Registor<IRealDataNotifyForProducter>(realEnginer);
+            ServiceLocator.Locator.Registor<IRealTagComsumer>(realEnginer);
             ServiceLocator.Locator.Registor<ITagManager>(mRealDatabase);
             ServiceLocator.Locator.Registor<IRuntimeSecurity>(mSecurityRunner);
+            
         }
 
         private bool CheckDatabaseExist(string name)

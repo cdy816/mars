@@ -23,7 +23,7 @@ namespace Cdy.Tag
         /// </summary>
         public RealDatabase()
         {
-            Tags = new Dictionary<int, Tagbase>();
+            Tags = new SortedDictionary<int, Tagbase>();
             NamedTags = new Dictionary<string, Tagbase>();
             Groups = new Dictionary<string, TagGroup>();
         }
@@ -51,12 +51,24 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public Dictionary<int,Tagbase> Tags { get; set; }
+        public SortedDictionary<int,Tagbase> Tags { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
         public Dictionary<string,TagGroup> Groups { get; set; }
+
+        public void BuildNameMap()
+        {
+            NamedTags.Clear();
+            foreach(var vv in Tags)
+            {
+                if(!NamedTags.ContainsKey(vv.Value.Name))
+                {
+                    NamedTags.Add(vv.Value.Name, vv.Value);
+                }
+            }
+        }
 
         /// <summary>
         /// 
@@ -127,6 +139,7 @@ namespace Cdy.Tag
             return re;
         }
 
+        #region ITagManager
         /// <summary>
         /// 
         /// </summary>
@@ -164,6 +177,8 @@ namespace Cdy.Tag
         {
             return Tags.ContainsKey(id) ? Tags[id] : null;
         }
+
+        #endregion
 
 
         /// <summary>
@@ -585,6 +600,24 @@ namespace Cdy.Tag
                 re.Add(GetTagIdByName(vv));
             }
             return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public int MaxTagId()
+        {
+            return MaxId;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public int MinTagId()
+        {
+            return Tags.Keys.Min();
         }
     }
 }

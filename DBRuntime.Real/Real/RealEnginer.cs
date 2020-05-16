@@ -3111,6 +3111,83 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(int id, object value, DateTime time, byte quality)
+        {
+            try
+            {
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value,  time,  quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(Tagbase tag, object value, DateTime time, byte quality)
+        {
+            try
+            {
+               
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+
+                switch (tag.Type)
+                {
+                    case TagType.Bool:
+                        SetBoolTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.Byte:
+                        SetByteTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.DateTime:
+                        SetDateTimeTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.Double:
+                        SetDoubleTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.Float:
+                        SetFloatTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.Int:
+                        SetIntTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.Long:
+                        SetLongTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.Short:
+                        SetShortTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.String:
+                        SetSrtingTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.UInt:
+                        SetUIntTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.ULong:
+                        SetULongTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.UShort:
+                        SetUShortTagValue(tag, value, quality, time);
+                        break;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
         /// <returns></returns>
         public bool SetTagValueNoValueCheck(int id, object value)
         {
@@ -3175,11 +3252,9 @@ namespace Cdy.Tag
         public bool SetTagValue(Tagbase tag, object value)
         {
             try
-            {
-                DateTime time = DateTime.Now;
-                
+            {                
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-
+                DateTime time = DateTime.Now;
                 switch (tag.Type)
                 {
                     case TagType.Bool:
@@ -3623,7 +3698,7 @@ namespace Cdy.Tag
             {
                 return SetTagValueForConsumer(tag.Value, value);
             }
-            return false;
+            return true;
         }
 
 
@@ -4024,7 +4099,9 @@ namespace Cdy.Tag
             mConfigDatabase = null;
         }
 
-        
+
+
+
 
         #endregion ...Interfaces...
     }

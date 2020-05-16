@@ -86,6 +86,7 @@ namespace Cdy.Tag
                         lock(db.Tags)
                          db.Tags.Add(tag.Id, tag);
                     });
+                    db.BuildNameMap();
                     //foreach(var vv in xe.Element("Tags").Elements())
                     //{
                     //    var tag = vv.LoadTagFromXML();

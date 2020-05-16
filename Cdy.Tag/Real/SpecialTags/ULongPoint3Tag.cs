@@ -12,12 +12,17 @@ using System.Text;
 
 namespace Cdy.Tag
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class ULongPoint3Tag : Tagbase
     {
         /// <summary>
         /// 
         /// </summary>
         public override TagType Type => TagType.ULongPoint3;
+
+        public override int ValueSize => 33;
 
 
     }

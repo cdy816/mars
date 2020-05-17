@@ -43,6 +43,8 @@ namespace Cdy.Tag
 
         public static byte[] zoreData = new byte[1024 * 10];
 
+        private int mSize;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -60,21 +62,21 @@ namespace Cdy.Tag
             Init(count);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="handle"></param>
-        /// <param name="count"></param>
-        public HisQueryResult(IntPtr handle,int count)
-        {
-            this.handle = handle;
-            mCount = count;
-            mTimeAddr = count * mDataSize;
-            mQulityAddr = count * (mDataSize + 8);
-            mLenght = count;
-            mLimite = count;
-            mPosition = 0;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="handle"></param>
+        ///// <param name="count"></param>
+        //public HisQueryResult(IntPtr handle,int count)
+        //{
+        //    this.handle = handle;
+        //    mCount = count;
+        //    mTimeAddr = count * mDataSize;
+        //    mQulityAddr = count * (mDataSize + 8);
+        //    mLenght = count;
+        //    mLimite = count;
+        //    mPosition = 0;
+        //}
 
         #endregion ...Constructor...
 
@@ -101,6 +103,10 @@ namespace Cdy.Tag
             {
                 return mCount;
             }
+            set
+            {
+                mCount = value;
+            }
         }
 
         /// <summary>
@@ -123,13 +129,40 @@ namespace Cdy.Tag
             {
                 return mPosition;
             }
+            set
+            {
+                mPosition = value;
+            }
         }
+
+        public int Size
+        {
+            get
+            {
+                return mSize;
+            }
+        }
+
 
 
 
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public HisQueryResult<T> Contracts()
+        {
+            HisQueryResult<T> re = new HisQueryResult<T>(this.Count);
+            Buffer.MemoryCopy((void*)this.handle, (void*)re.handle, re.Size, mDataSize * Count);
+            Buffer.MemoryCopy((void*)(this.handle+ mTimeAddr), (void*)(re.handle+ re.mTimeAddr), re.Size, 8 * Count);
+            Buffer.MemoryCopy((void*)(this.handle + mQulityAddr), (void*)(re.handle + re.mQulityAddr), re.Size, Count);
+            re.mCount = this.mCount;
+            return re;
+        }
 
         /// <summary>
         /// 
@@ -156,6 +189,7 @@ namespace Cdy.Tag
             handle = Marshal.AllocHGlobal(csize);
            // handle = (void*)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mDataBuffer, 0);
             mLimite = count;
+            mSize = csize;
         }
 
         /// <summary>

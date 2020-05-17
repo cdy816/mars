@@ -79,7 +79,7 @@ namespace DbInRunWebApi.Model
         /// <summary>
         /// 
         /// </summary>
-        public Dictionary<DateTime,object> Datas { get; set; }
+        public List<ValueItem> Values { get; set; }
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -90,6 +90,47 @@ namespace DbInRunWebApi.Model
 
         #endregion ...Interfaces...
     }
+
+    public class ValueItem
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime Time { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Value { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public byte Quality { get; set; }
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
 
 
     /// <summary>
@@ -180,7 +221,7 @@ namespace DbInRunWebApi.Model
         /// <summary>
         /// 
         /// </summary>
-        public List<HisValue> Datas { get; set; }
+        public HisValue Datas { get; set; }
         #endregion ...Properties...
 
         #region ... Methods    ...

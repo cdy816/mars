@@ -7,17 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DbWebApiProxy.Controllers
 {
-    [Route("[controller]")]
-    [ApiController]
-    public class HomeController : ControllerBase
+    
+    public class HomeController : Controller
     {
         // GET: api/Home
         [HttpGet]
         public string Index()
         {
-            return "welcome to mar realtime datase web api.";
+            return Res.Get("WelcomeMsg");
         }
-
-        
     }
 }

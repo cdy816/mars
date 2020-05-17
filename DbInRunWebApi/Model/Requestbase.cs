@@ -217,7 +217,7 @@ namespace DbInRunWebApi.Model
         /// <summary>
         /// 
         /// </summary>
-        public List<DateTime> Times { get; set; }
+        public List<string> Times { get; set; }
 
         #endregion ...Properties...
 
@@ -263,13 +263,18 @@ namespace DbInRunWebApi.Model
         /// <summary>
         /// 
         /// </summary>
-        public DateTime StartTime { get; set; }
+        public string StartTime { get; set; }
 
 
         /// <summary>
         /// 
         /// </summary>
-        public DateTime EndTime { get; set; }
+        public string EndTime { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Duration { get; set; }
 
         #endregion ...Properties...
 
@@ -308,13 +313,13 @@ namespace DbInRunWebApi.Model
         /// <summary>
         /// 
         /// </summary>
-        public DateTime StartTime { get; set; }
+        public string StartTime { get; set; }
 
 
         /// <summary>
         /// 
         /// </summary>
-        public DateTime EndTime { get; set; }
+        public string EndTime { get; set; }
 
 
         #endregion ...Properties...

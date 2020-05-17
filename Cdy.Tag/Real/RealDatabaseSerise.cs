@@ -74,6 +74,8 @@ namespace Cdy.Tag
             RealDatabase db = new RealDatabase();
             if (System.IO.File.Exists(path))
             {
+                db.UpdateTime = new System.IO.FileInfo(path).LastWriteTimeUtc.ToString();
+
                 XElement xe = XElement.Load(path);
 
                 db.Name = xe.Attribute("Name").Value;

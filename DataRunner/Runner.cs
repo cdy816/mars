@@ -21,7 +21,11 @@ namespace Cdy.Tag
 
         #region ... Variables  ...
 
-        public static string mCurrentDatabase = "";
+        public static string CurrentDatabase = "";
+
+        public static string CurrentDatabaseVersion = "";
+
+        public static string CurrentDatabaseLastUpdateTime = "";
 
         /// <summary>
         /// 
@@ -124,10 +128,12 @@ namespace Cdy.Tag
         /// </summary>
         private void LoadDatabase()
         {
-           
             this.mDatabase = new DatabaseSerise().Load(mDatabaseName);
             this.mRealDatabase = this.mDatabase.RealDatabase;
             this.mHisDatabase = this.mDatabase.HisDatabase;
+            CurrentDatabaseVersion = this.mRealDatabase.Version;
+            CurrentDatabase = mRealDatabase.Name;
+            CurrentDatabaseLastUpdateTime = mRealDatabase.UpdateTime;
         }
 
         /// <summary>
@@ -181,6 +187,8 @@ namespace Cdy.Tag
                 RegistorInterface();
 
                 DriverManager.Manager.Init(realEnginer);
+
+                HisQueryManager.Instance.Registor(mDatabaseName);
 
                 await task;
 
@@ -253,8 +261,6 @@ namespace Cdy.Tag
             hisEnginer.Start();
             mSecurityRunner.Start();
             DriverManager.Manager.Start();
-            
-            mCurrentDatabase = database;
 
             mIsStarted = true;
             LoggerService.Service.Info("Runner", " 数据库 " + database + " 启动完成");

@@ -180,17 +180,25 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadAllValue<T>(int id, DateTime startTime, DateTime endTime, HisQueryResult<T> result)
         {
-            Tuple<DateTime, DateTime> mLogFileTimes;
-            var vfiles = GetFileManager().GetDataFiles(startTime, endTime, out mLogFileTimes, id);
-            vfiles.ForEach(e => {
-                DateTime sstart = e.StartTime > startTime ? e.StartTime : startTime;
-                DateTime eend = e.EndTime > endTime ? endTime : endTime;
-                e.ReadAllValue(id, sstart, eend, result);
-            });
-
-            if (mLogFileTimes.Item1 != DateTime.MinValue)
+            try
             {
-                ReadLogFileAllValue(id, mLogFileTimes.Item1, mLogFileTimes.Item2, result);
+                Tuple<DateTime, DateTime> mLogFileTimes;
+                var vfiles = GetFileManager().GetDataFiles(startTime, endTime, out mLogFileTimes, id);
+                vfiles.ForEach(e =>
+                {
+                    DateTime sstart = e.StartTime > startTime ? e.StartTime : startTime;
+                    DateTime eend = e.EndTime > endTime ? endTime : endTime;
+                    e.ReadAllValue(id, sstart, eend, result);
+                });
+
+                if (mLogFileTimes.Item1 != DateTime.MinValue)
+                {
+                    ReadLogFileAllValue(id, mLogFileTimes.Item1, mLogFileTimes.Item2, result);
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Erro("QueryService", ex.StackTrace);
             }
         }
 

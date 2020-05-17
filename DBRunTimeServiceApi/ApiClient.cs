@@ -252,13 +252,17 @@ namespace DBRunTime.ServiceApi
             mb.WriteString(loginid);
             infoRequreEvent.Reset();
             Send(mb);
-
-            if (infoRequreEvent.WaitOne(timeout))
+            try
             {
-                return mInfoRequreData.ReadString();
+                if (infoRequreEvent.WaitOne(timeout))
+                {
+                    return mInfoRequreData.ReadString();
+                }
             }
-            
-            mInfoRequreData?.ReleaseBuffer();
+            finally
+            {
+                mInfoRequreData?.ReleaseBuffer();
+            }
             return string.Empty;
         }
 
@@ -281,12 +285,17 @@ namespace DBRunTime.ServiceApi
             mb.WriteInt(maxid);
             this.realRequreEvent.Reset();
             Send(mb);
-
-            if (realRequreEvent.WaitOne(timeout))
+            try
             {
-                return mRealRequreData.ReadByte() > 0;
+                if (realRequreEvent.WaitOne(timeout))
+                {
+                    return mRealRequreData.ReadByte() > 0;
+                }
             }
-            mRealRequreData?.ReleaseBuffer();
+            finally
+            {
+                mRealRequreData?.ReleaseBuffer();
+            }
             return true;
         }
 
@@ -303,11 +312,17 @@ namespace DBRunTime.ServiceApi
             realRequreEvent.Reset();
             Send(mb);
 
-            if (realRequreEvent.WaitOne(timeout))
+            try
             {
-                return mRealRequreData.ReadByte() > 0;
+                if (realRequreEvent.WaitOne(timeout))
+                {
+                    return mRealRequreData.ReadByte() > 0;
+                }
             }
-            mRealRequreData?.ReleaseBuffer();
+            finally
+            {
+                mRealRequreData?.ReleaseBuffer();
+            }
             return true;
         }
 
@@ -328,11 +343,18 @@ namespace DBRunTime.ServiceApi
             realRequreEvent.Reset();
             Send(mb);
 
-            if (realRequreEvent.WaitOne(timeout))
+            try
             {
-                return mRealRequreData;
+                if (realRequreEvent.WaitOne(timeout))
+                {
+                    return mRealRequreData;
+                }
             }
-            mRealRequreData?.Release();
+            finally
+            {
+                mRealRequreData?.ReleaseBuffer();
+            }
+            
 
             return null;
         }
@@ -352,7 +374,7 @@ namespace DBRunTime.ServiceApi
             {
                 return mRealRequreData;
             }
-            mRealRequreData?.Release();
+            mRealRequreData?.ReleaseBuffer();
 
             return null;
         }
@@ -448,10 +470,16 @@ namespace DBRunTime.ServiceApi
             }
             realRequreEvent.Reset();
             Send(mb);
-
-            if (realRequreEvent.WaitOne(timeout))
+            try
             {
-                return mRealRequreData.ReadByte()>0;
+                if (realRequreEvent.WaitOne(timeout))
+                {
+                    return mRealRequreData.ReadByte() > 0;
+                }
+            }
+            finally
+            {
+                mRealRequreData?.ReleaseBuffer();
             }
             return false;
         }
@@ -551,10 +579,16 @@ namespace DBRunTime.ServiceApi
             }
             realRequreEvent.Reset();
             Send(mb);
-
-            if (realRequreEvent.WaitOne(timeout))
+            try
             {
-                return mRealRequreData.ReadByte() > 0;
+                if (realRequreEvent.WaitOne(timeout))
+                {
+                    return mRealRequreData.ReadByte() > 0;
+                }
+            }
+            finally
+            {
+                mRealRequreData?.ReleaseBuffer();
             }
             return false;
         }
@@ -582,12 +616,17 @@ namespace DBRunTime.ServiceApi
 
             this.hisRequreEvent.Reset();
             Send(mb);
-
-            if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes>1)
+            try
             {
-                return mHisRequreData;
+                if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+                {
+                    return mHisRequreData;
+                }
             }
-            mHisRequreData?.ReleaseBuffer();
+            finally
+            {
+                mHisRequreData?.ReleaseBuffer();
+            }
             return null;
         }
 
@@ -613,12 +652,17 @@ namespace DBRunTime.ServiceApi
 
             this.hisRequreEvent.Reset();
             Send(mb);
-
-            if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+            try
             {
-                return mHisRequreData;
+                if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+                {
+                    return mHisRequreData;
+                }
             }
-            mHisRequreData?.ReleaseBuffer();
+            finally
+            {
+                mHisRequreData?.ReleaseBuffer();
+            }
             return null;
         }
 
@@ -643,12 +687,17 @@ namespace DBRunTime.ServiceApi
             mb.WriteLong(span.Ticks);
             this.hisRequreEvent.Reset();
             Send(mb);
-
-            if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+            try
             {
-                return mHisRequreData;
+                if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+                {
+                    return mHisRequreData;
+                }
             }
-            mHisRequreData?.ReleaseBuffer();
+            finally
+            {
+                mHisRequreData?.ReleaseBuffer();
+            }
             return null;
         }
 

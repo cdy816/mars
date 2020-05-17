@@ -12,6 +12,14 @@ using System.Threading.Tasks;
 
 namespace DBRuntime.Proxy
 {
+    public enum NetTransformWorkMode
+    {
+        //主动获取模式
+        Poll,
+        //服务器主动推送
+        Push
+    }
+
     public class NetTransformDriver : Cdy.Tag.Driver.IProducterDriver
     {
 
@@ -26,6 +34,8 @@ namespace DBRuntime.Proxy
         private bool mIsClosed = false;
 
         private Thread mScanThread;
+
+
 
         #endregion ...Variables...
 
@@ -43,6 +53,17 @@ namespace DBRuntime.Proxy
         /// 
         /// </summary>
         public ApiClient Client { get; set; }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public NetTransformWorkMode WorkMode { get; set; }
+
+        /// <summary>
+        /// 查询周期
+        /// </summary>
+        public int PollCircle { get; set; } = 1000;
 
         #endregion ...Properties...
 
@@ -72,12 +93,23 @@ namespace DBRuntime.Proxy
         {
             while(!mIsClosed)
             {
-                resetEvent.WaitOne();
-                if (mIsClosed) break;
-                resetEvent.Reset();
-                while(mCachDatas.Count>0)
+                if (WorkMode == NetTransformWorkMode.Push)
                 {
-                    ProcessSingleBufferData(mCachDatas.Dequeue());
+                    resetEvent.WaitOne();
+                    if (mIsClosed) break;
+                    resetEvent.Reset();
+                    while (mCachDatas.Count > 0)
+                    {
+                        ProcessSingleBufferData(mCachDatas.Dequeue());
+                    }
+                }
+                else
+                {
+                    DateTime stime = DateTime.Now;
+                    ReadAllData();
+                    double span = (DateTime.Now - stime).TotalMilliseconds;
+                    int sleeptime = span > PollCircle ? 1 : (int)(PollCircle - span);
+                    Thread.Sleep(sleeptime);
                 }
             }
         }
@@ -218,7 +250,10 @@ namespace DBRuntime.Proxy
             ServiceLocator.Locator.Resolve<IRealDataNotifyForProducter>().SubscribeProducter("NetTransformDriver", ProcessValueChanged,
                 new Func<List<int>>(() => { return new List<int>() { -1 }; })
                 );
-            RegistorTag();
+            
+            if (WorkMode == NetTransformWorkMode.Push)
+                RegistorTag();
+
             ReadAllData();
             mScanThread = new Thread(RemoteDataudpatePro);
             mScanThread.IsBackground = true;

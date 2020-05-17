@@ -1,4 +1,4 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Config Ip="127.0.0.1" Port="14330" LoginUser="Admin" LoginPassword="Admin" >
-  
+<Config>
+  <ProxyClient  Ip="127.0.0.1" Port="14330" LoginUser="Admin" LoginPassword="Admin" WorkMode="0"  PollCircle="1000" />
 </Config>

@@ -34,6 +34,11 @@ namespace Cdy.Tag
         public string Name { get; set; } = "local";
 
         /// <summary>
+        /// 最后生成时间
+        /// </summary>
+        public string UpdateTime { get; set; } = "";
+
+        /// <summary>
         /// 
         /// </summary>
         public string Version { get; set; } = "0.0.1";

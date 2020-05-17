@@ -126,8 +126,6 @@ namespace Cdy.Tag
         /// </summary>
         public async Task Int()
         {
-           
-
             string datapath = GetPrimaryHisDataPath();
             await Scan(datapath);
             if (System.IO.Directory.Exists(datapath))

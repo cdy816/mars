@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -193,69 +194,281 @@ namespace DBRuntime.Proxy
             return dbClient.GetRunnerDatabase(dbClient.LoginId);
         }
 
-        private unsafe HisQueryResult<T> ProcessHisResult<T>(IByteBuffer data)
+        //private unsafe Dictionary<DateTime,Tuple<object,byte>> ProcessHisResult<T>(IByteBuffer data, TagType tp)
+        //{
+        //    Dictionary<DateTime, Tuple<object, byte>> re = new Dictionary<DateTime, Tuple<object, byte>>();
+        //    int count = data.ReadInt();
+        //    DateTime time;
+        //    byte qu = 0;
+
+        //    switch (tp)
+        //    {
+        //        case Cdy.Tag.TagType.Bool:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var val = data.ReadBoolean();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(val, qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.Byte:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var val = data.ReadByte();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(val, qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.DateTime:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var val = new DateTime(data.ReadLong());
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(val, qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.Double:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var val = data.ReadDouble();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(val, qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.Float:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var val = data.ReadFloat();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(val, qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.Int:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var val = data.ReadInt();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(val, qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.Long:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var val = data.ReadLong();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(val, qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.Short:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var val = data.ReadShort();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(val, qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.String:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var val = data.ReadString();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(val, qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.UInt:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var val = (uint)data.ReadUnsignedInt();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(val, qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.ULong:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var val = (ulong)data.ReadLong();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(val, qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.UShort:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var val = (ulong)data.ReadUnsignedShort();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(val, qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.IntPoint:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var x = data.ReadInt();
+        //                var y = data.ReadInt();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(new IntPointData(x,y), qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.UIntPoint:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var x = data.ReadUnsignedInt();
+        //                var y = data.ReadUnsignedInt();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(new UIntPointData(x, y), qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.IntPoint3:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var x = data.ReadInt();
+        //                var y = data.ReadInt();
+        //                var z = data.ReadInt();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(new IntPoint3Data(x, y,z), qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.UIntPoint3:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var x = data.ReadUnsignedInt();
+        //                var y = data.ReadUnsignedInt();
+        //                var z = data.ReadUnsignedInt();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(new UIntPoint3Data(x, y,z), qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.LongPoint:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var x = data.ReadLong();
+        //                var y = data.ReadLong();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(new LongPointData(x, y), qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.ULongPoint:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var x = (ulong)data.ReadLong();
+        //                var y = (ulong)data.ReadLong();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(new ULongPointData(x, y), qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.LongPoint3:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var x = data.ReadLong();
+        //                var y = data.ReadLong();
+        //                var z = data.ReadLong();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(new LongPoint3Data(x, y,z), qu));
+        //            }
+        //            break;
+        //        case Cdy.Tag.TagType.ULongPoint3:
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                var x = (ulong)data.ReadLong();
+        //                var y = (ulong)data.ReadLong();
+        //                var z = (ulong)data.ReadLong();
+        //                time = new DateTime(data.ReadLong());
+        //                qu = data.ReadByte();
+        //                re.Add(time, new Tuple<object, byte>(new ULongPoint3Data(x, y, z), qu));
+        //            }
+        //            break;
+        //    }
+
+            
+
+        //    return re;
+        //}
+
+        private unsafe HisQueryResult<T> ProcessHisResultByMemory<T>(IByteBuffer data, TagType tp)
         {
-            int size = data.Capacity - data.ReaderIndex;
-            HisQueryResult<T> re = new HisQueryResult<T>(size);
-            Buffer.MemoryCopy((void*)(data.AddressOfPinnedMemory() + data.ReaderIndex), (void*)re.Address, size, size);
+           
+            int count = data.ReadInt();
+            HisQueryResult<T> re = new HisQueryResult<T>(count);
+            Marshal.Copy(data.Array, data.ArrayOffset + data.ReaderIndex, re.Address, data.ReadableBytes);
+            re.Count = count;
             return re;
         }
 
         /// <summary>
         /// 
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="id"></param>
         /// <param name="stime"></param>
         /// <param name="etime"></param>
         /// <returns></returns>
-        public HisQueryResult<T> QueryAllHisData<T>(int id,DateTime stime,DateTime etime)
+        public HisQueryResult<T> QueryAllHisData<T>(int id, DateTime stime, DateTime etime)
         {
-            if(IsConnected)
+            if (IsConnected)
             {
                 var res = dbClient.QueryAllHisValue(id, stime, etime);
-                TagType tp = (TagType) res.ReadByte();
+                if (res == null || res.ReadableBytes == 0) return null;
+                TagType tp = (TagType)res.ReadByte();
                 switch (tp)
                 {
                     case Cdy.Tag.TagType.Bool:
-                        return ProcessHisResult<bool>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<bool>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Byte:
-                        return ProcessHisResult<byte>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<byte>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.DateTime:
-                        return ProcessHisResult<DateTime>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<DateTime>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Double:
-                        return ProcessHisResult<double>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<double>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Float:
-                        return ProcessHisResult<float>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<float>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Int:
-                        return ProcessHisResult<int>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<int>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Long:
-                        return ProcessHisResult<long>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<long>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Short:
-                        return ProcessHisResult<short>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<short>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.String:
-                        return ProcessHisResult<string>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<string>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.UInt:
-                        return ProcessHisResult<uint>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<uint>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.ULong:
-                        return ProcessHisResult<ulong>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<ulong>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.UShort:
-                        return ProcessHisResult<ushort>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<ushort>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.IntPoint:
-                        return ProcessHisResult<int>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<int>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.UIntPoint:
-                        return ProcessHisResult<uint>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<uint>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.IntPoint3:
-                        return ProcessHisResult<IntPoint3Data>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<IntPoint3Data>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.UIntPoint3:
-                        return ProcessHisResult<UIntPoint3Data>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<UIntPoint3Data>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.LongPoint:
-                        return ProcessHisResult<LongPointData>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<LongPointData>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.ULongPoint:
-                        return ProcessHisResult<ULongPointTag>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<ULongPointTag>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.LongPoint3:
-                        return ProcessHisResult<LongPoint3Data>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<LongPoint3Data>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.ULongPoint3:
-                        return ProcessHisResult<ULongPoint3Data>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<ULongPoint3Data>(res, tp) as HisQueryResult<T>;
                 }
 
             }
@@ -272,121 +485,307 @@ namespace DBRuntime.Proxy
         /// <param name="span"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public HisQueryResult<T> QueryHisData<T>(int id, DateTime stime, DateTime etime,TimeSpan span,Cdy.Tag.QueryValueMatchType type)
+        public HisQueryResult<T> QueryHisData<T>(int id, DateTime stime, DateTime etime, TimeSpan span, Cdy.Tag.QueryValueMatchType type)
         {
             if (IsConnected)
             {
-                var res = dbClient.QueryHisValueForTimeSpan(id, stime, etime,span,type);
+                var res = dbClient.QueryHisValueForTimeSpan(id, stime, etime, span, type);
+                if (res == null) return null;
                 TagType tp = (TagType)res.ReadByte();
                 switch (tp)
                 {
                     case Cdy.Tag.TagType.Bool:
-                        return ProcessHisResult<bool>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<bool>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Byte:
-                        return ProcessHisResult<byte>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<byte>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.DateTime:
-                        return ProcessHisResult<DateTime>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<DateTime>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Double:
-                        return ProcessHisResult<double>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<double>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Float:
-                        return ProcessHisResult<float>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<float>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Int:
-                        return ProcessHisResult<int>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<int>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Long:
-                        return ProcessHisResult<long>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<long>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Short:
-                        return ProcessHisResult<short>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<short>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.String:
-                        return ProcessHisResult<string>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<string>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.UInt:
-                        return ProcessHisResult<uint>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<uint>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.ULong:
-                        return ProcessHisResult<ulong>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<ulong>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.UShort:
-                        return ProcessHisResult<ushort>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<ushort>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.IntPoint:
-                        return ProcessHisResult<int>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<int>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.UIntPoint:
-                        return ProcessHisResult<uint>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<uint>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.IntPoint3:
-                        return ProcessHisResult<IntPoint3Data>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<IntPoint3Data>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.UIntPoint3:
-                        return ProcessHisResult<UIntPoint3Data>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<UIntPoint3Data>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.LongPoint:
-                        return ProcessHisResult<LongPointData>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<LongPointData>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.ULongPoint:
-                        return ProcessHisResult<ULongPointTag>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<ULongPointTag>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.LongPoint3:
-                        return ProcessHisResult<LongPoint3Data>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<LongPoint3Data>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.ULongPoint3:
-                        return ProcessHisResult<ULongPoint3Data>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<ULongPoint3Data>(res, tp) as HisQueryResult<T>;
                 }
 
             }
             return null;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="id"></param>
-        /// <param name="times"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
         public HisQueryResult<T> QueryHisData<T>(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType type)
         {
             if (IsConnected)
             {
                 var res = dbClient.QueryHisValueAtTimes(id, times, type);
+                if (res == null) return null;
                 TagType tp = (TagType)res.ReadByte();
                 switch (tp)
                 {
                     case Cdy.Tag.TagType.Bool:
-                        return ProcessHisResult<bool>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<bool>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Byte:
-                        return ProcessHisResult<byte>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<byte>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.DateTime:
-                        return ProcessHisResult<DateTime>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<DateTime>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Double:
-                        return ProcessHisResult<double>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<double>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Float:
-                        return ProcessHisResult<float>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<float>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Int:
-                        return ProcessHisResult<int>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<int>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Long:
-                        return ProcessHisResult<long>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<long>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.Short:
-                        return ProcessHisResult<short>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<short>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.String:
-                        return ProcessHisResult<string>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<string>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.UInt:
-                        return ProcessHisResult<uint>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<uint>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.ULong:
-                        return ProcessHisResult<ulong>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<ulong>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.UShort:
-                        return ProcessHisResult<ushort>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<ushort>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.IntPoint:
-                        return ProcessHisResult<int>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<int>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.UIntPoint:
-                        return ProcessHisResult<uint>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<uint>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.IntPoint3:
-                        return ProcessHisResult<IntPoint3Data>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<IntPoint3Data>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.UIntPoint3:
-                        return ProcessHisResult<UIntPoint3Data>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<UIntPoint3Data>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.LongPoint:
-                        return ProcessHisResult<LongPointData>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<LongPointData>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.ULongPoint:
-                        return ProcessHisResult<ULongPointTag>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<ULongPointTag>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.LongPoint3:
-                        return ProcessHisResult<LongPoint3Data>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<LongPoint3Data>(res, tp) as HisQueryResult<T>;
                     case Cdy.Tag.TagType.ULongPoint3:
-                        return ProcessHisResult<ULongPoint3Data>(res) as HisQueryResult<T>;
+                        return ProcessHisResultByMemory<ULongPoint3Data>(res, tp) as HisQueryResult<T>;
                 }
 
             }
             return null;
         }
+
+        #region obslute QueryHisValue
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="stime"></param>
+        ///// <param name="etime"></param>
+        ///// <returns></returns>
+        //public Dictionary<DateTime, Tuple<object, byte>> QueryAllHisData<T>(int id,DateTime stime,DateTime etime)
+        //{
+        //    if(IsConnected)
+        //    {
+        //        var res = dbClient.QueryAllHisValue(id, stime, etime);
+        //        if (res == null || res.ReadableBytes==0) return null;
+        //        TagType tp = (TagType) res.ReadByte();
+        //        switch (tp)
+        //        {
+        //            case Cdy.Tag.TagType.Bool:
+        //                return ProcessHisResult<bool>(res,tp);
+        //            case Cdy.Tag.TagType.Byte:
+        //                return ProcessHisResult<byte>(res,tp);
+        //            case Cdy.Tag.TagType.DateTime:
+        //                return ProcessHisResult<DateTime>(res,tp);
+        //            case Cdy.Tag.TagType.Double:
+        //                return ProcessHisResult<double>(res,tp);
+        //            case Cdy.Tag.TagType.Float:
+        //                return ProcessHisResult<float>(res,tp);
+        //            case Cdy.Tag.TagType.Int:
+        //                return ProcessHisResult<int>(res,tp);
+        //            case Cdy.Tag.TagType.Long:
+        //                return ProcessHisResult<long>(res,tp);
+        //            case Cdy.Tag.TagType.Short:
+        //                return ProcessHisResult<short>(res,tp);
+        //            case Cdy.Tag.TagType.String:
+        //                return ProcessHisResult<string>(res,tp);
+        //            case Cdy.Tag.TagType.UInt:
+        //                return ProcessHisResult<uint>(res,tp);
+        //            case Cdy.Tag.TagType.ULong:
+        //                return ProcessHisResult<ulong>(res,tp);
+        //            case Cdy.Tag.TagType.UShort:
+        //                return ProcessHisResult<ushort>(res,tp);
+        //            case Cdy.Tag.TagType.IntPoint:
+        //                return ProcessHisResult<int>(res,tp);
+        //            case Cdy.Tag.TagType.UIntPoint:
+        //                return ProcessHisResult<uint>(res,tp);
+        //            case Cdy.Tag.TagType.IntPoint3:
+        //                return ProcessHisResult<IntPoint3Data>(res,tp);
+        //            case Cdy.Tag.TagType.UIntPoint3:
+        //                return ProcessHisResult<UIntPoint3Data>(res,tp);
+        //            case Cdy.Tag.TagType.LongPoint:
+        //                return ProcessHisResult<LongPointData>(res,tp);
+        //            case Cdy.Tag.TagType.ULongPoint:
+        //                return ProcessHisResult<ULongPointTag>(res,tp);
+        //            case Cdy.Tag.TagType.LongPoint3:
+        //                return ProcessHisResult<LongPoint3Data>(res,tp);
+        //            case Cdy.Tag.TagType.ULongPoint3:
+        //                return ProcessHisResult<ULongPoint3Data>(res,tp);
+        //        }
+
+        //    }
+        //    return null;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="id"></param>
+        ///// <param name="stime"></param>
+        ///// <param name="etime"></param>
+        ///// <param name="span"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public Dictionary<DateTime, Tuple<object, byte>> QueryHisData<T>(int id, DateTime stime, DateTime etime,TimeSpan span,Cdy.Tag.QueryValueMatchType type)
+        //{
+        //    if (IsConnected)
+        //    {
+        //        var res = dbClient.QueryHisValueForTimeSpan(id, stime, etime,span,type);
+        //        if (res == null) return null;
+        //        TagType tp = (TagType)res.ReadByte();
+        //        switch (tp)
+        //        {
+        //            case Cdy.Tag.TagType.Bool:
+        //                return ProcessHisResult<bool>(res,tp) ;
+        //            case Cdy.Tag.TagType.Byte:
+        //                return ProcessHisResult<byte>(res,tp) ;
+        //            case Cdy.Tag.TagType.DateTime:
+        //                return ProcessHisResult<DateTime>(res,tp) ;
+        //            case Cdy.Tag.TagType.Double:
+        //                return ProcessHisResult<double>(res,tp) ;
+        //            case Cdy.Tag.TagType.Float:
+        //                return ProcessHisResult<float>(res,tp) ;
+        //            case Cdy.Tag.TagType.Int:
+        //                return ProcessHisResult<int>(res,tp) ;
+        //            case Cdy.Tag.TagType.Long:
+        //                return ProcessHisResult<long>(res,tp) ;
+        //            case Cdy.Tag.TagType.Short:
+        //                return ProcessHisResult<short>(res,tp) ;
+        //            case Cdy.Tag.TagType.String:
+        //                return ProcessHisResult<string>(res,tp) ;
+        //            case Cdy.Tag.TagType.UInt:
+        //                return ProcessHisResult<uint>(res,tp) ;
+        //            case Cdy.Tag.TagType.ULong:
+        //                return ProcessHisResult<ulong>(res,tp) ;
+        //            case Cdy.Tag.TagType.UShort:
+        //                return ProcessHisResult<ushort>(res,tp) ;
+        //            case Cdy.Tag.TagType.IntPoint:
+        //                return ProcessHisResult<int>(res,tp) ;
+        //            case Cdy.Tag.TagType.UIntPoint:
+        //                return ProcessHisResult<uint>(res,tp) ;
+        //            case Cdy.Tag.TagType.IntPoint3:
+        //                return ProcessHisResult<IntPoint3Data>(res,tp) ;
+        //            case Cdy.Tag.TagType.UIntPoint3:
+        //                return ProcessHisResult<UIntPoint3Data>(res,tp) ;
+        //            case Cdy.Tag.TagType.LongPoint:
+        //                return ProcessHisResult<LongPointData>(res,tp) ;
+        //            case Cdy.Tag.TagType.ULongPoint:
+        //                return ProcessHisResult<ULongPointTag>(res,tp) ;
+        //            case Cdy.Tag.TagType.LongPoint3:
+        //                return ProcessHisResult<LongPoint3Data>(res,tp) ;
+        //            case Cdy.Tag.TagType.ULongPoint3:
+        //                return ProcessHisResult<ULongPoint3Data>(res,tp) ;
+        //        }
+
+        //    }
+        //    return null;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="id"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public Dictionary<DateTime, Tuple<object, byte>> QueryHisData<T>(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType type)
+        //{
+        //    if (IsConnected)
+        //    {
+        //        var res = dbClient.QueryHisValueAtTimes(id, times, type);
+        //        if (res == null) return null;
+        //        TagType tp = (TagType)res.ReadByte();
+        //        switch (tp)
+        //        {
+        //            case Cdy.Tag.TagType.Bool:
+        //                return ProcessHisResult<bool>(res,tp) ;
+        //            case Cdy.Tag.TagType.Byte:
+        //                return ProcessHisResult<byte>(res,tp) ;
+        //            case Cdy.Tag.TagType.DateTime:
+        //                return ProcessHisResult<DateTime>(res,tp) ;
+        //            case Cdy.Tag.TagType.Double:
+        //                return ProcessHisResult<double>(res,tp) ;
+        //            case Cdy.Tag.TagType.Float:
+        //                return ProcessHisResult<float>(res,tp) ;
+        //            case Cdy.Tag.TagType.Int:
+        //                return ProcessHisResult<int>(res,tp) ;
+        //            case Cdy.Tag.TagType.Long:
+        //                return ProcessHisResult<long>(res,tp) ;
+        //            case Cdy.Tag.TagType.Short:
+        //                return ProcessHisResult<short>(res,tp) ;
+        //            case Cdy.Tag.TagType.String:
+        //                return ProcessHisResult<string>(res,tp) ;
+        //            case Cdy.Tag.TagType.UInt:
+        //                return ProcessHisResult<uint>(res,tp) ;
+        //            case Cdy.Tag.TagType.ULong:
+        //                return ProcessHisResult<ulong>(res,tp) ;
+        //            case Cdy.Tag.TagType.UShort:
+        //                return ProcessHisResult<ushort>(res,tp) ;
+        //            case Cdy.Tag.TagType.IntPoint:
+        //                return ProcessHisResult<int>(res,tp) ;
+        //            case Cdy.Tag.TagType.UIntPoint:
+        //                return ProcessHisResult<uint>(res,tp) ;
+        //            case Cdy.Tag.TagType.IntPoint3:
+        //                return ProcessHisResult<IntPoint3Data>(res,tp) ;
+        //            case Cdy.Tag.TagType.UIntPoint3:
+        //                return ProcessHisResult<UIntPoint3Data>(res,tp) ;
+        //            case Cdy.Tag.TagType.LongPoint:
+        //                return ProcessHisResult<LongPointData>(res,tp) ;
+        //            case Cdy.Tag.TagType.ULongPoint:
+        //                return ProcessHisResult<ULongPointTag>(res,tp) ;
+        //            case Cdy.Tag.TagType.LongPoint3:
+        //                return ProcessHisResult<LongPoint3Data>(res,tp) ;
+        //            case Cdy.Tag.TagType.ULongPoint3:
+        //                return ProcessHisResult<ULongPoint3Data>(res,tp) ;
+        //        }
+
+        //    }
+        //    return null;
+        //}
+        #endregion
 
         #endregion ...Methods...
 

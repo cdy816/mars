@@ -46,6 +46,10 @@ namespace DBRuntime.Proxy
 
         private bool mIsClosed = false;
 
+        private NetTransformWorkMode mWorkMode = NetTransformWorkMode.Poll;
+
+        private int mPollCircle = 1000;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -53,6 +57,12 @@ namespace DBRuntime.Proxy
         #endregion ...Events...
 
         #region ... Constructor...
+
+        static DatabaseRunner()
+        {
+            //注册日志
+            ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
+        }
 
         #endregion ...Constructor...
 
@@ -89,6 +99,9 @@ namespace DBRuntime.Proxy
             if(System.IO.File.Exists(sfileName))
             {
                 XElement xe = XElement.Load(sfileName);
+                if (xe.Element("ProxyClient") == null)
+                    return;
+                xe = xe.Element("ProxyClient");
                 if(xe.Attribute("Ip")!=null)
                 {
                     mIp = xe.Attribute("Ip").Value;
@@ -107,6 +120,16 @@ namespace DBRuntime.Proxy
                 if (xe.Attribute("LoginPassword") != null)
                 {
                     mPassword = xe.Attribute("LoginPassword").Value;
+                }
+
+                if (xe.Attribute("WorkMode") != null)
+                {
+                    mWorkMode = (NetTransformWorkMode) int.Parse(xe.Attribute("WorkMode").Value);
+                }
+
+                if (xe.Attribute("PollCircle") != null)
+                {
+                    mPollCircle = int.Parse(xe.Attribute("PollCircle").Value);
                 }
             }
         }
@@ -174,7 +197,7 @@ namespace DBRuntime.Proxy
                         string sname = mProxy.GetRunnerDatabase();
                         if(!string.IsNullOrEmpty(sname))
                         {
-                            Load(sname);
+                            CheckAndLoadDatabase(sname);
                             break;
                         }
                     }
@@ -187,8 +210,17 @@ namespace DBRuntime.Proxy
         /// <summary>
         /// 
         /// </summary>
+        private void CheckAndLoadDatabase(string database)
+        {
+            string[] sbase = database.Split(new char[] { ',' });
+            Load(sbase[0], sbase[1] + sbase[2]);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="database"></param>
-        public void Load(string database)
+        public void Load(string database,string checkKey)
         {
             if (database == mDatabaseName) return;
 
@@ -207,6 +239,14 @@ namespace DBRuntime.Proxy
             if (CheckDatabaseExist(mDatabaseName))
             {
                 var mDatabase = new DatabaseSerise().Load(mDatabaseName);
+
+                string skey = mDatabase.RealDatabase.Version + mDatabase.RealDatabase.UpdateTime;
+
+                if(skey!=checkKey)
+                {
+                    LoggerService.Service.Warn("Proxy","代理使用的数据库和服务器使用的数据库不一致.");
+                }
+
                 this.mRealDatabase = mDatabase.RealDatabase;
                 mSecurityRunner = new SecurityRunner() { Document = mDatabase.Security };
             }
@@ -216,7 +256,7 @@ namespace DBRuntime.Proxy
             RegistorInterface();
             IsReady = true;
 
-            mDriver = new NetTransformDriver() { Client = mProxy.NetworkClient };
+            mDriver = new NetTransformDriver() { Client = mProxy.NetworkClient ,WorkMode=mWorkMode,PollCircle=mPollCircle};
             mDriver.Start(realEnginer);
         }
 

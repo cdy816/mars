@@ -1,6 +1,8 @@
 ﻿using Cdy.Tag;
 using System;
+using System.IO.Pipes;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DBInRun
 {
@@ -24,6 +26,10 @@ namespace DBInRun
                 {
                     Cdy.Tag.Runner.RunInstance.Start();
                 }
+                Task.Run(() => {
+                    StartMonitor(args.Length > 1 ? args[1] : "local");
+                });
+                
             }
 
             Console.WriteLine(Res.Get("HelpMsg"));
@@ -53,17 +59,22 @@ namespace DBInRun
                         mIsClosed = true;
                         break;
                     case "start":
+                        string dbname = "local";
                         if (cmd.Length > 1)
                         {
                             Cdy.Tag.Runner.RunInstance.StartAsync(cmd[1]);
                             Console.Title = "DbInRun-" + cmd[1];
+                            dbname = cmd[1];
                         }
                         else
                         {
                             Cdy.Tag.Runner.RunInstance.Start();
                             Console.Title = "DbInRun-local";
+                            dbname = "local";
                         }
-                       
+                        Task.Run(() => {
+                            StartMonitor(dbname);
+                        });
                         break;
                     case "stop":
                         Cdy.Tag.Runner.RunInstance.Stop();
@@ -128,6 +139,55 @@ namespace DBInRun
             e.Cancel = true;
             Console.WriteLine(Res.Get("AnyKeyToExit"));
 
+        }
+
+        private static void StartMonitor(string name)
+        {
+            try
+            {
+                while (!mIsClosed)
+                {
+                    using (var server = new NamedPipeServerStream(name, PipeDirection.InOut))
+                    {
+                        server.WaitForConnection();
+                        while (!mIsClosed)
+                        {
+                            try
+                            {
+                                if (!server.IsConnected) break;
+                                var cmd = server.ReadByte();
+                                if (cmd == 0)
+                                {
+                                    if (Cdy.Tag.Runner.RunInstance.IsStarted)
+                                    {
+                                        Cdy.Tag.Runner.RunInstance.Stop();
+                                    }
+                                    mIsClosed = true;
+                                    server.WriteByte(1);
+                                    server.WaitForPipeDrain();
+                                    Console.WriteLine(Res.Get("AnyKeyToExit"));
+                                    break;
+                                    //退出系统
+                                }
+                                else
+                                {
+
+                                }
+                            }
+                            catch
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    
+                }
+                
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
         /// <summary>

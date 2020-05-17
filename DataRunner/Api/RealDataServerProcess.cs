@@ -80,6 +80,7 @@ namespace DBRuntime.Api
                         mChangedTags.Add(vv, true);
                     }
                 }
+                if(!mIsClosed)
                 resetEvent.Set();
             }), new Func<List<int>>(() => { return new List<int>() { -1 }; }));
             mTagManager = ServiceLocator.Locator.Resolve<ITagManager>();

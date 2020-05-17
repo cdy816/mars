@@ -5,6 +5,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
+using System.IO.Pipes;
+using System.Threading;
 
 namespace DBStudio
 {
@@ -46,7 +48,7 @@ namespace DBStudio
                 else if (cmsg == "db")
                 {
                     if (cmd.Length > 1)
-                        ProcessDatabaseCreat(cmd[1]);
+                        ProcessDatabaseCreate(cmd[1]);
                 }
                 else if (cmsg == "list")
                 {
@@ -144,7 +146,7 @@ namespace DBStudio
         /// 
         /// </summary>
         /// <param name="name"></param>
-        private static void ProcessDatabaseCreat(string name)
+        private static void ProcessDatabaseCreate(string name)
         {
             if (!DBDevelopService.DbManager.Instance.IsLoaded)
                 DBDevelopService.DbManager.Instance.Load();
@@ -187,8 +189,35 @@ namespace DBStudio
                     }
                     else if (cmsg == "start")
                     {
-                        
+                        if (!CheckStart(db.Name))
+                        {
+                            StartDb(db.Name);
+                        }
+                        else
+                        {
+                            Console.WriteLine("database " + db.Name + " is in running.");
+                        }
+                    }
+                    else if (cmsg == "restart")
+                    {
+                        StopDatabase(db.Name);
+                        while (CheckStart(db.Name)) Thread.Sleep(100);
                         StartDb(db.Name);
+                    }
+                    else if (cmsg == "isstart")
+                    {
+                        if(CheckStart(db.Name))
+                        {
+                            Console.WriteLine("database "+db.Name+" is start.");
+                        }
+                        else
+                        {
+                            Console.WriteLine("database " + db.Name + " is stop.");
+                        }
+                    }
+                    else if (cmsg == "stop")
+                    {
+                        StopDatabase(db.Name);
                     }
                     else if (cmsg == "updatehis")
                     {
@@ -233,7 +262,7 @@ namespace DBStudio
                         break;
                     }
                 }
-                catch
+                catch(Exception ex)
                 {
                     OutByLine(name, Res.Get("ErroParameter"));
                 }
@@ -365,6 +394,9 @@ namespace DBStudio
         {
             StringBuilder re = new StringBuilder();
             re.AppendLine();
+            re.AppendLine("start                                                 // start database ");
+            re.AppendLine("restart                                                 // restart database ");
+            re.AppendLine("stop                                                 // stop database ");
             re.AppendLine("add       [tagtype] [tagname] [linkaddress] [repeat] // add numbers tag to database ");
             re.AppendLine("remove    [tagname]                                  // remove a tag");
             re.AppendLine("clear                                                // clear all tags in database");
@@ -1079,7 +1111,45 @@ namespace DBStudio
             return re.ToString();
         }
 
+        public static void StopDatabase(string name)
+        {
+            using (var client = new NamedPipeClientStream(".", name, PipeDirection.InOut))
+            {
+                try
+                {
+                    client.Connect(2000);
+                    client.WriteByte(0);
+                    client.WaitForPipeDrain();
+                    var res = client.ReadByte();
+                    if (res == 1)
+                    {
+                        Console.WriteLine("Stop database" + name + " sucessfull.");
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine("Stop database " + name + "  failed.");
+                }
+            }
+        }
 
+        public static bool CheckStart(string name)
+        {
+            using (var client = new NamedPipeClientStream(".", name, PipeDirection.InOut))
+            {
+                try
+                {
+                    client.Connect(1000);
+                    client.Close();
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+    
        
     }
 }

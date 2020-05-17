@@ -103,11 +103,13 @@ namespace Cdy.Tag
         /// </summary>
         public void Close()
         {
-            if (mProcessThread != null)
-            {
-                mProcessThread.Abort();
-                mProcessThread = null;
-            }
+            mIsClosed = true;
+            resetEvent.Set();
+            //if (mProcessThread != null)
+            //{
+            //    mProcessThread.Abort();
+            //    mProcessThread = null;
+            //}
         }
 
         /// <summary>

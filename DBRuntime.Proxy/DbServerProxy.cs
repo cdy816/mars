@@ -20,6 +20,8 @@ namespace DBRuntime.Proxy
 
         ApiClient dbClient;
 
+        ApiClient mHisClient;
+
         private bool mIsConnected;
 
         private ManualResetEvent resetEvent;
@@ -32,6 +34,8 @@ namespace DBRuntime.Proxy
         public event PropertyChangedEventHandler PropertyChanged;
 
         private bool mIsClosed = false;
+
+        ApiClient mUsedHisClient;
 
         #endregion ...Variables...
 
@@ -46,7 +50,7 @@ namespace DBRuntime.Proxy
         /// </summary>
         public DbServerProxy()
         {
-            Init();
+           
             resetEvent = new ManualResetEvent(false);
         }
 
@@ -91,6 +95,7 @@ namespace DBRuntime.Proxy
             }
         }
 
+        public bool IsUseStandardHisDataServer { get; set; } = false;
 
         #endregion ...Properties...
 
@@ -110,6 +115,17 @@ namespace DBRuntime.Proxy
             {
                 dbClient.Connect(mIp, mPort);
             }
+            if (IsUseStandardHisDataServer)
+            {
+                if (!mHisClient.IsConnected)
+                {
+                    mHisClient.Connect(mIp, mPort + 1);
+                }
+                else
+                {
+                    mHisClient.Login(UserName, Password);
+                }
+            }
             resetEvent.Set();
             while (!mIsClosed)
             {
@@ -125,6 +141,18 @@ namespace DBRuntime.Proxy
                     {
                         dbClient.Connect(mIp, mPort);
                     }
+                    if (IsUseStandardHisDataServer)
+                    {
+                        if (mHisClient.IsConnected)
+                        {
+                            mHisClient.Login(UserName, Password);
+                        }
+                        else if (mHisClient.NeedReConnected)
+                        {
+                            mHisClient.Connect(mIp, mPort + 1);
+                        }
+                    }
+
                     Thread.Sleep(1000);
                 }
                 else
@@ -142,6 +170,31 @@ namespace DBRuntime.Proxy
         {
             dbClient = new ApiClient();
             dbClient.PropertyChanged += DbClient_PropertyChanged;
+
+            if (IsUseStandardHisDataServer)
+            {
+                mHisClient = new ApiClient();
+                mHisClient.PropertyChanged += MHisClient_PropertyChanged;
+                mUsedHisClient = mHisClient;
+            }
+            else
+            {
+                mUsedHisClient = dbClient;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MHisClient_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "IsConnected")
+            {
+                if (!mHisClient.IsConnected)
+                    resetEvent.Set();
+            }
         }
 
         /// <summary>
@@ -166,9 +219,15 @@ namespace DBRuntime.Proxy
         /// <param name="port"></param>
         public void Connect(string ip,int port)
         {
+            Init();
             mIp = ip;
             mPort = port;
             dbClient.Connect(ip, port);
+            if (IsUseStandardHisDataServer)
+            {
+                mHisClient.Connect(ip, port + 1);
+
+            }
             mScanThread = new Thread(ConnectProcess);
             mScanThread.IsBackground = true;
             mScanThread.Start();
@@ -183,6 +242,11 @@ namespace DBRuntime.Proxy
             resetEvent.Set();
             dbClient.PropertyChanged -= DbClient_PropertyChanged;
             dbClient.Close();
+            if (IsUseStandardHisDataServer)
+            {
+                mHisClient.PropertyChanged -= MHisClient_PropertyChanged;
+                mHisClient.Close();
+            }
         }
 
         /// <summary>
@@ -424,8 +488,8 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                var res = dbClient.QueryAllHisValue(id, stime, etime);
-                if (res == null || res.ReadableBytes == 0) return null;
+                var res = this.mUsedHisClient.QueryAllHisValue(id, stime, etime);
+                if (res == null || res.ReferenceCount == 0) return null;
                 TagType tp = (TagType)res.ReadByte();
                 switch (tp)
                 {
@@ -489,7 +553,7 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                var res = dbClient.QueryHisValueForTimeSpan(id, stime, etime, span, type);
+                var res = mUsedHisClient.QueryHisValueForTimeSpan(id, stime, etime, span, type);
                 if (res == null) return null;
                 TagType tp = (TagType)res.ReadByte();
                 switch (tp)
@@ -544,7 +608,7 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                var res = dbClient.QueryHisValueAtTimes(id, times, type);
+                var res = mUsedHisClient.QueryHisValueAtTimes(id, times, type);
                 if (res == null) return null;
                 TagType tp = (TagType)res.ReadByte();
                 switch (tp)

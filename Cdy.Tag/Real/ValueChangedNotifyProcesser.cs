@@ -57,6 +57,8 @@ namespace Cdy.Tag
 
         private DateTime mLastNotiyTime = DateTime.Now;
 
+        private bool mIsClosed = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -114,11 +116,14 @@ namespace Cdy.Tag
         /// </summary>
         public void Close()
         {
-            if (mProcessThread != null)
-            {
-                mProcessThread.Abort();
-                mProcessThread = null;
-            }
+            mIsClosed = true;
+            resetEvent.Set();
+            
+            //if (mProcessThread != null)
+            //{
+            //    mProcessThread.Abort();
+            //    mProcessThread = null;
+            //}
         }
 
         /// <summary>
@@ -215,9 +220,11 @@ namespace Cdy.Tag
         /// </summary>
         private void ThreadProcess()
         {
-            while(true)
+            while(!mIsClosed)
             {
                 resetEvent.WaitOne();
+                if (mIsClosed) break;
+
                 resetEvent.Reset();
                 if (mLenght > 0)
                 {

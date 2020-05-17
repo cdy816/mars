@@ -127,6 +127,9 @@ namespace DBRunTime.ServiceApi
 
         public ProcessDataPushDelegate ProcessDataPush { get; set; }
 
+        private string mUser;
+        private string mPass;
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -185,6 +188,8 @@ namespace DBRunTime.ServiceApi
         /// <param name="password"></param>
         public bool Login(string username,string password,int timeount=5000)
         {
+            mUser = username;
+            mPass = password;
             int size = username.Length + password.Length + 9;
             var mb = GetBuffer(ApiFunConst.TagInfoRequest, size);
             mb.WriteByte(ApiFunConst.Login);
@@ -199,7 +204,7 @@ namespace DBRunTime.ServiceApi
                     return IsLogin;
                 }
             }
-            mInfoRequreData?.Release();
+            //mInfoRequreData?.Release();
             LoginId = string.Empty;
             return IsLogin;
         }
@@ -261,7 +266,7 @@ namespace DBRunTime.ServiceApi
             }
             finally
             {
-                mInfoRequreData?.ReleaseBuffer();
+                //mInfoRequreData?.ReleaseBuffer();
             }
             return string.Empty;
         }
@@ -278,6 +283,7 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public bool RegistorTagValueCallBack(int minid, int maxid, int timeout = 5000)
         {
+            CheckLogin();
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length + 8);
             mb.WriteByte(ApiFunConst.RegistorValueCallback);
             mb.WriteString(this.LoginId);
@@ -294,7 +300,7 @@ namespace DBRunTime.ServiceApi
             }
             finally
             {
-                mRealRequreData?.ReleaseBuffer();
+                //mRealRequreData?.ReleaseBuffer();
             }
             return true;
         }
@@ -306,6 +312,7 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public bool ClearRegistorTagValueCallBack(int timeout = 5000)
         {
+            CheckLogin();
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length + 8);
             mb.WriteByte(ApiFunConst.ResetValueChangeNotify);
             mb.WriteString(this.LoginId);
@@ -321,7 +328,7 @@ namespace DBRunTime.ServiceApi
             }
             finally
             {
-                mRealRequreData?.ReleaseBuffer();
+                //mRealRequreData?.ReleaseBuffer();
             }
             return true;
         }
@@ -332,6 +339,7 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public IByteBuffer GetRealData(List<int> ids,int timeout=5000)
         {
+            CheckLogin();
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length +ids.Count* 4);
             mb.WriteByte(ApiFunConst.RequestRealData);
             mb.WriteString(this.LoginId);
@@ -352,7 +360,7 @@ namespace DBRunTime.ServiceApi
             }
             finally
             {
-                mRealRequreData?.ReleaseBuffer();
+                //mRealRequreData?.ReleaseBuffer();
             }
             
 
@@ -361,7 +369,7 @@ namespace DBRunTime.ServiceApi
 
         public IByteBuffer GetRealData(int ids,int ide, int timeout = 5000)
         {
-         
+            CheckLogin();
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length + (ide - ids) * 4);
             mb.WriteByte(ApiFunConst.RequestRealData2);
             mb.WriteString(this.LoginId);
@@ -374,7 +382,7 @@ namespace DBRunTime.ServiceApi
             {
                 return mRealRequreData;
             }
-            mRealRequreData?.ReleaseBuffer();
+            //mRealRequreData?.ReleaseBuffer();
 
             return null;
         }
@@ -387,6 +395,7 @@ namespace DBRunTime.ServiceApi
         /// <param name="value"></param>
         public bool SetTagValue(int id,byte valueType,object value,int timeout=5000)
         {
+            CheckLogin();
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length + 30);
             mb.WriteByte(ApiFunConst.SetDataValue);
             mb.WriteString(this.LoginId);
@@ -479,7 +488,7 @@ namespace DBRunTime.ServiceApi
             }
             finally
             {
-                mRealRequreData?.ReleaseBuffer();
+                //mRealRequreData?.ReleaseBuffer();
             }
             return false;
         }
@@ -494,6 +503,7 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public bool SetTagValue(List<int> id, List<byte> valueType, List<object> value, int timeout = 5000)
         {
+            CheckLogin();
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length + 30);
             mb.WriteByte(ApiFunConst.SetDataValue);
             mb.WriteString(this.LoginId);
@@ -588,13 +598,21 @@ namespace DBRunTime.ServiceApi
             }
             finally
             {
-                mRealRequreData?.ReleaseBuffer();
+                //mRealRequreData?.ReleaseBuffer();
             }
             return false;
         }
 
 
         #endregion
+
+        private void CheckLogin()
+        {
+            if(string.IsNullOrEmpty(LoginId))
+            {
+                Login(mUser, mPass);
+            }
+        }
 
         #region HisData
 
@@ -607,6 +625,7 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public IByteBuffer QueryAllHisValue(int id,DateTime startTime,DateTime endTime,int timeout=5000)
         {
+            CheckLogin();
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, this.LoginId.Length + 20);
             mb.WriteByte(ApiFunConst.RequestAllHisData);
             mb.WriteString(this.LoginId);
@@ -625,7 +644,7 @@ namespace DBRunTime.ServiceApi
             }
             finally
             {
-                mHisRequreData?.ReleaseBuffer();
+                //mHisRequreData?.ReleaseBuffer();
             }
             return null;
         }
@@ -639,6 +658,7 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public IByteBuffer QueryHisValueAtTimes(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType matchType, int timeout = 5000)
         {
+            CheckLogin();
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, this.LoginId.Length + times.Count * 8 + 5);
             mb.WriteByte(ApiFunConst.RequestHisDatasByTimePoint);
             mb.WriteString(this.LoginId);
@@ -661,7 +681,7 @@ namespace DBRunTime.ServiceApi
             }
             finally
             {
-                mHisRequreData?.ReleaseBuffer();
+                //mHisRequreData?.ReleaseBuffer();
             }
             return null;
         }
@@ -677,6 +697,7 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public IByteBuffer QueryHisValueForTimeSpan(int id,DateTime startTime,DateTime endTime,TimeSpan span,QueryValueMatchType matchType, int timeout = 5000)
         {
+            CheckLogin();
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, this.LoginId.Length + 24+ 5);
             mb.WriteByte(ApiFunConst.RequestHisDataByTimeSpan);
             mb.WriteString(this.LoginId);
@@ -696,7 +717,7 @@ namespace DBRunTime.ServiceApi
             }
             finally
             {
-                mHisRequreData?.ReleaseBuffer();
+                //mHisRequreData?.ReleaseBuffer();
             }
             return null;
         }

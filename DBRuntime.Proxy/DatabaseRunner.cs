@@ -50,6 +50,8 @@ namespace DBRuntime.Proxy
 
         private int mPollCircle = 1000;
 
+        private bool mUseStandardHisDataServer = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -131,6 +133,11 @@ namespace DBRuntime.Proxy
                 {
                     mPollCircle = int.Parse(xe.Attribute("PollCircle").Value);
                 }
+
+                if (xe.Attribute("IsUseStandardHisDataServer") != null)
+                {
+                    mUseStandardHisDataServer = bool.Parse(xe.Attribute("IsUseStandardHisDataServer").Value);
+                }
             }
         }
 
@@ -139,7 +146,7 @@ namespace DBRuntime.Proxy
         /// </summary>
         public void Start()
         {
-            mProxy = new DbServerProxy() { UserName = mUserName, Password = mPassword };
+            mProxy = new DbServerProxy() { UserName = mUserName, Password = mPassword,IsUseStandardHisDataServer= mUseStandardHisDataServer };
             mProxy.Connect(mIp, mPort);
             mProxy.PropertyChanged += MProxy_PropertyChanged;
             mMonitorThread = new Thread(MonitorThreadPro);

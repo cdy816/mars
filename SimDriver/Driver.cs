@@ -164,7 +164,7 @@ namespace SimDriver
             Stopwatch sw = new Stopwatch();
             sw.Start();
                 //if(mNumber%10==0)
-            Log("Sim:Sin " + fval + " " + "Sim:Cos " + sval + " " + "Sim:step " + mNumber + "  " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+            //Log("Sim:Sin " + fval + " " + "Sim:Cos " + sval + " " + "Sim:step " + mNumber + "  " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
 //#endif
 

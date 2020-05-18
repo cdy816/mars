@@ -158,8 +158,8 @@ namespace Cdy.Tag
                         {
                             pipeline.AddLast(TlsHandler.Server(tlsCertificate));
                         }
-                        pipeline.AddLast("framing-enc", new LengthFieldPrepender(2));
-                        pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(ushort.MaxValue, 0, 2, 0, 2));
+                        pipeline.AddLast("framing-enc", new LengthFieldPrepender(4));
+                        pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(Int32.MaxValue, 0, 4, 0, 4));
                         mProcessHandle = new ServerChannelHandler(this);
                         mProcessHandle.DataArrived = new ServerChannelHandler.DataArrivedDelegate((context,fun, data) => { return ExecuteCallBack(context,fun,data); });
                         pipeline.AddLast(mProcessHandle);

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -106,7 +107,7 @@ namespace DBRuntime.Proxy
                 else
                 {
                     DateTime stime = DateTime.Now;
-                    ReadAllData();
+                    Client.SyncRealMemory();
                     double span = (DateTime.Now - stime).TotalMilliseconds;
                     int sleeptime = span > PollCircle ? 1 : (int)(PollCircle - span);
                     Thread.Sleep(sleeptime);
@@ -198,6 +199,7 @@ namespace DBRuntime.Proxy
             block.Release();
         }
 
+
         /// <summary>
         /// 
         /// </summary>
@@ -207,7 +209,6 @@ namespace DBRuntime.Proxy
             {
                 Client.RegistorTagValueCallBack(-1, int.MaxValue, 5000);
                 Client.ProcessDataPush = new ApiClient.ProcessDataPushDelegate((block) => {
-                    //block.re
                     block.Retain();
                     mCachDatas.Enqueue(block);
                     resetEvent.Set();
@@ -218,7 +219,7 @@ namespace DBRuntime.Proxy
         /// <summary>
         /// 
         /// </summary>
-        private void ReadAllData()
+        public void ReadAllData()
         {
             if(Client!=null)
             {
@@ -254,7 +255,7 @@ namespace DBRuntime.Proxy
             if (WorkMode == NetTransformWorkMode.Push)
                 RegistorTag();
 
-            ReadAllData();
+            Client.SyncRealMemory();
             mScanThread = new Thread(RemoteDataudpatePro);
             mScanThread.IsBackground = true;
             mScanThread.Start();
@@ -287,4 +288,82 @@ namespace DBRuntime.Proxy
             return true;
         }
     }
+
+    public static class ApiClientExtends
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public static void SyncRealMemory(this ApiClient Client)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            var realenginer = (ServiceLocator.Locator.Resolve<IRealTagComsumer>() as RealEnginer);
+            if (Client != null && Client.IsConnected)
+            {
+                int i = 0;
+                foreach (var vv in Client.SyncRealMemory(realenginer.Memory.Length))
+                {
+                    if (vv != null)
+                    {
+                        int size = vv.ReadableBytes;
+                        Buffer.BlockCopy(vv.Array, vv.ArrayOffset + vv.ReaderIndex, realenginer.Memory, i, size);
+                        vv.SetReaderIndex(vv.ReaderIndex + size);
+                        i += size;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+            sw.Stop();
+            LoggerService.Service.Info("SyncRealMemory", "数据大小:"+ (realenginer.Memory.Length/1024/1024) + " 耗时: "+ sw.ElapsedMilliseconds);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static void ReadAllDataByMemoryCopy(this ApiClient Client)
+        {
+            if (Client != null)
+            {
+                int maxid = ServiceLocator.Locator.Resolve<ITagManager>().MaxTagId();
+                int minid = ServiceLocator.Locator.Resolve<ITagManager>().MinTagId();
+                int len = maxid - minid;
+                int countpercall = 10000;
+
+                int executed = 0;
+                while (executed < len)
+                {
+                    var ex = Math.Min(len - executed, countpercall);
+                    var res = Client.GetRealDataByMemoryCopy(executed, executed + ex);
+                    ProcessSingleBufferDataByMemoryCopy(executed, executed + ex, res);
+                    executed += len;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="block"></param>
+        private static void ProcessSingleBufferDataByMemoryCopy(int sid, int eid, IByteBuffer block)
+        {
+            if (block == null) return;
+            var count = block.ReadInt();
+            var tserver = ServiceLocator.Locator.Resolve<ITagManager>();
+            var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+            int targetbaseoffset = block.ArrayOffset + block.ReaderIndex;
+            for (int i = sid; i <= eid; i++)
+            {
+                var tag = tserver.GetTagById(i);
+                Marshal.Copy(block.Array, targetbaseoffset, (service as RealEnginer).MemoryHandle + (int)tag.ValueAddress, tag.ValueSize);
+                block.SetReaderIndex(block.ReaderIndex + tag.ValueSize);
+                targetbaseoffset = block.ArrayOffset + block.ReaderIndex;
+            }
+            block.Release();
+        }
+    }
+
 }

@@ -34,7 +34,25 @@ namespace DBRunTime.ServiceApi
         /// </summary>
         public const byte RequestRealData = 0;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public const byte RequestRealData2 = 10;
+
+        /// <summary>
+        /// 请求所有数据
+        /// </summary>
+        public const byte RealMemorySync = 13;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte RequestRealDataByMemoryCopy = 11;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte RequestRealData2ByMemoryCopy = 12;
 
         /// <summary>
         /// 设置实时值
@@ -367,11 +385,116 @@ namespace DBRunTime.ServiceApi
             return null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public IByteBuffer GetRealDataByMemoryCopy(List<int> ids, int timeout = 5000)
+        {
+            CheckLogin();
+            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length + ids.Count * 4);
+            mb.WriteByte(ApiFunConst.RequestRealDataByMemoryCopy);
+            mb.WriteString(this.LoginId);
+            mb.WriteInt(ids.Count);
+            for (int i = 0; i < ids.Count; i++)
+            {
+                mb.WriteInt(ids[i]);
+            }
+            realRequreEvent.Reset();
+            Send(mb);
+
+            try
+            {
+                if (realRequreEvent.WaitOne(timeout))
+                {
+                    return mRealRequreData;
+                }
+            }
+            finally
+            {
+                //mRealRequreData?.ReleaseBuffer();
+            }
+
+
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="ide"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
         public IByteBuffer GetRealData(int ids,int ide, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length + (ide - ids) * 4);
+            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length + 8);
             mb.WriteByte(ApiFunConst.RequestRealData2);
+            mb.WriteString(this.LoginId);
+            mb.WriteInt(ids);
+            mb.WriteInt(ide);
+            realRequreEvent.Reset();
+            Send(mb);
+
+            if (realRequreEvent.WaitOne(timeout))
+            {
+                return mRealRequreData;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="minid"></param>
+        /// <param name="maxid"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public IEnumerable<IByteBuffer> SyncRealMemory(int totalsize, int timeout = 5000)
+        {
+            CheckLogin();
+            int start = 0;
+            int len = 1024 * 1024 * 10;
+            while (start <= totalsize)
+            {
+                if (start + len > totalsize)
+                {
+                    len = totalsize - start;
+                }
+                
+                if (len <= 0) break;
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length + 4);
+                mb.WriteByte(ApiFunConst.RealMemorySync);
+                mb.WriteString(this.LoginId);
+                mb.WriteInt(len);
+                mb.WriteInt(start);
+                realRequreEvent.Reset();
+                Send(mb);
+                if (realRequreEvent.WaitOne(timeout))
+                {
+                    yield return mRealRequreData;
+                }
+                yield return null;
+                start += len;
+            }
+           
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="ide"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public IByteBuffer GetRealDataByMemoryCopy(int ids, int ide, int timeout = 5000)
+        {
+            CheckLogin();
+            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length + (ide - ids) * 4);
+            mb.WriteByte(ApiFunConst.RequestRealData2ByMemoryCopy);
             mb.WriteString(this.LoginId);
             mb.WriteInt(ids);
             mb.WriteInt(ide);

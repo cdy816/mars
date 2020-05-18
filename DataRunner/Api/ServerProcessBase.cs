@@ -132,7 +132,7 @@ namespace DBRuntime.Api
         /// <param name="data"></param>
         protected virtual void ProcessSingleData(string client, IByteBuffer data)
         {
-            data.Release();
+            data.ReleaseBuffer();
         }
 
 

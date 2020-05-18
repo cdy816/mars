@@ -171,7 +171,7 @@ namespace Cdy.Tag
                 }
             }
             //留20%的余量
-            mUsedSize = (long)(msize * 1.2);
+            mUsedSize = (msize);
             mMemory = new byte[mUsedSize];
             mMHandle = mMemory.AsMemory().Pin().Pointer;
             mMemory.AsSpan().Clear();

@@ -71,9 +71,16 @@ namespace DBRunTime.ServiceApi
 
 
         /// <summary>
+        /// 块改变通知
+        /// </summary>
+        public const byte BlockValueChangeNotify = 4;
+
+
+        /// <summary>
         /// 
         /// </summary>
         public const byte RealDataPushFun = 12;
+
 
         /// <summary>
         /// 
@@ -307,6 +314,33 @@ namespace DBRunTime.ServiceApi
             mb.WriteString(this.LoginId);
             mb.WriteInt(minid);
             mb.WriteInt(maxid);
+            this.realRequreEvent.Reset();
+            Send(mb);
+            try
+            {
+                if (realRequreEvent.WaitOne(timeout))
+                {
+                    return mRealRequreData.ReadByte() > 0;
+                }
+            }
+            finally
+            {
+                //mRealRequreData?.ReleaseBuffer();
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool RegistorTagBlockValueCallBack(int timeout = 5000)
+        {
+            CheckLogin();
+            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, this.LoginId.Length);
+            mb.WriteByte(ApiFunConst.BlockValueChangeNotify);
+            mb.WriteString(this.LoginId);
             this.realRequreEvent.Reset();
             Send(mb);
             try

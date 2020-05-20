@@ -1388,17 +1388,38 @@ namespace Cdy.Tag
             var valaddr = qs.Count * 2+10 + sourceAddr;
 
             int count = 0;
+
+            int icount = 0;
+            int icount1 = 0;
+
             foreach (var time1 in time)
             {
-                for (int i = 0; i < vv.Length - 1; i++)
+                //for (int i = 0; i < vv.Length - 1; i++)
+                while(icount<vv.Length-1)
                 {
-                    var skey = vv[i];
-
-                    var snext = vv[i + 1];
-
-                    if (time1 == skey.Value.Item1)
+                    while (!vv[icount].Value.Item2)
                     {
-                        var val = source.ReadDouble(valaddr + i*8);
+                        icount++;
+                        if (icount > (vv.Length - 1))
+                            return count;
+                    }
+               
+                    var skey = vv[icount];
+
+                    icount1 = icount + 1;
+
+                    while (!vv[icount1].Value.Item2)
+                    {
+                        icount1++;
+                        if (icount1 > (vv.Length))
+                            return count;
+                    }
+
+                    var snext = vv[icount1];
+
+                    if (time1 <= skey.Value.Item1)
+                    {
+                        var val = source.ReadDouble(valaddr + icount * 8);
                         result.Add(val, time1, qq[skey.Key]);
                         count++;
                         break;
@@ -1409,12 +1430,12 @@ namespace Cdy.Tag
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                var val = source.ReadDouble(valaddr + i*8);
+                                var val = source.ReadDouble(valaddr + icount * 8);
                                 result.Add(val, time1, qq[skey.Key]);
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                val = source.ReadDouble(valaddr + (i + 1)*8);
+                                val = source.ReadDouble(valaddr + icount1 * 8);
                                 result.Add(val, time1, qq[snext.Key]);
                                 count++;
                                 break;
@@ -1423,19 +1444,19 @@ namespace Cdy.Tag
                                 {
                                     var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                     var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-                                    var sval1 = source.ReadDouble(valaddr + i*8);
-                                    var sval2 = source.ReadDouble(valaddr + (i + 1)*8);
+                                    var sval1 = source.ReadDouble(valaddr + icount * 8);
+                                    var sval2 = source.ReadDouble(valaddr + icount1 * 8);
                                     var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
                                     result.Add(val1, time1, 0);
                                 }
                                 else if (qq[skey.Key] < 20)
                                 {
-                                    val = source.ReadDouble(valaddr + i*8);
+                                    val = source.ReadDouble(valaddr + icount * 8);
                                     result.Add(val, time1, qq[skey.Key]);
                                 }
                                 else if (qq[snext.Key] < 20)
                                 {
-                                    val = source.ReadDouble(valaddr + (i + 1)*8);
+                                    val = source.ReadDouble(valaddr + icount1 * 8);
                                     result.Add(val, time1, qq[snext.Key]);
                                 }
                                 else
@@ -1450,12 +1471,12 @@ namespace Cdy.Tag
 
                                 if (pval < fval)
                                 {
-                                    val = source.ReadDouble(valaddr + i*8);
+                                    val = source.ReadDouble(valaddr + icount * 8);
                                     result.Add(val, time1, qq[skey.Key]);
                                 }
                                 else
                                 {
-                                    val = source.ReadDouble(valaddr + (i + 1)*8);
+                                    val = source.ReadDouble(valaddr + icount1 * 8);
                                     result.Add(val, time1, qq[snext.Key]);
                                 }
                                 count++;
@@ -1466,12 +1487,12 @@ namespace Cdy.Tag
                     }
                     else if (time1 == snext.Value.Item1)
                     {
-                        var val = source.ReadDouble(valaddr + (i + 1)*8);
+                        var val = source.ReadDouble(valaddr + icount1 * 8);
                         result.Add(val, time1, qq[snext.Key]);
                         count++;
                         break;
                     }
-
+                    icount = icount1;
                 }
             }
             return count;
@@ -3171,6 +3192,14 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(string))
             {
                 return DeCompressStringValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<string>);
+            }
+            else if (typeof(T) == typeof(double))
+            {
+                return DeCompressDoubleValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<double>);
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                return DeCompressFloatValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<float>);
             }
             else
             {

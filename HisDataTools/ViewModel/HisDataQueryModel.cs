@@ -519,6 +519,7 @@ namespace HisDataTools.ViewModel
         {
             mIsBusy = true;
 
+            if (!mTags.ContainsKey(mSelectTag)) return;
 
             int id = mTags[mSelectTag].Item1;
             DateTime sTime = StartTime.AddHours(StartTimeHour);
@@ -642,7 +643,7 @@ namespace HisDataTools.ViewModel
                 minx = minx > i ? i : minx;
                 maxx = maxx < i ? i : maxx;
 
-                var dtmp = ConvertValue(vv);
+                var dtmp = ConvertValue(value);
 
                 miny = miny > dtmp ? dtmp : miny;
                 maxy = maxy < dtmp ? dtmp : maxy;
@@ -680,6 +681,7 @@ namespace HisDataTools.ViewModel
 
 
             YLineItems = yitems;
+            result.Dispose();
         }
 
         private double ConvertValue(object value)
@@ -766,6 +768,7 @@ namespace HisDataTools.ViewModel
             yitems.Add(new SplitItem() { SpliteType = SplitItemType.HeighLight, Text = (miny + (maxy - miny) / 2).ToString("f2"), IsShowText = true, Value = miny + (maxy - miny) / 2, Color = System.Windows.Media.Brushes.DeepSkyBlue, IsShowTrangle = true });
 
             YLineItems = yitems;
+            result.Dispose();
         }
 
         /// <summary>

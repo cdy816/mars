@@ -74,7 +74,7 @@ namespace Cdy.Tag
                         mPreFile = null;
                         mtime.Clear();
                     }
-                    result.Add(false, vv.Key, (byte)QualityConst.Null);
+                    result.Add(default(T), vv.Key, (byte)QualityConst.Null);
                 }
                 else if (vv.Value != mPreFile)
                 {

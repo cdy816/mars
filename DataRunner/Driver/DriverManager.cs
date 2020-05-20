@@ -31,7 +31,7 @@ namespace Cdy.Tag
 
         private Dictionary<string,IProducterDriver> mDrivers = new Dictionary<string, IProducterDriver>();
 
-        private IRealTagProducter mTagDriverService;
+        private IRealTagProduct mTagDriverService;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -52,7 +52,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="tagDriverService"></param>
-        public void Init(IRealTagProducter tagDriverService)
+        public void Init(IRealTagProduct tagDriverService)
         {
             mTagDriverService = tagDriverService;
             string cfgpath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location),"Config", "Driver.cfg");

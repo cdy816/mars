@@ -26,7 +26,7 @@ namespace DBRuntime.Proxy
 
         #region ... Variables  ...
         
-        private IRealTagProducter mServier;
+        private IRealTagProduct mServier;
 
         private Queue<IByteBuffer> mCachDatas = new Queue<IByteBuffer>();
 
@@ -36,7 +36,11 @@ namespace DBRuntime.Proxy
 
         private Thread mScanThread;
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte RealDataBlockPush = 1;
+        public const byte RealDataPush = 0;
 
         #endregion ...Variables...
 
@@ -101,7 +105,8 @@ namespace DBRuntime.Proxy
                     resetEvent.Reset();
                     while (mCachDatas.Count > 0)
                     {
-                        ProcessSingleBufferData(mCachDatas.Dequeue());
+                        // ProcessSingleBufferData(mCachDatas.Dequeue());
+                        ProcessBufferData(mCachDatas.Dequeue());
                     }
                 }
                 else
@@ -113,6 +118,66 @@ namespace DBRuntime.Proxy
                     Thread.Sleep(sleeptime);
                 }
             }
+        }
+
+        private void ProcessBufferData(IByteBuffer block)
+        {
+
+            if (block == null) return;
+            var vtp = block.ReadByte();
+            if (vtp == RealDataBlockPush)
+            {
+                //LoggerService.Service.Info("ProcessBufferData", "block data");
+                ProcessBlockBufferData(block);
+            }
+            else if(vtp == RealDataPush)
+            {
+                ProcessSingleBufferDataByMemoryCopy(block);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="block"></param>
+        private void ProcessBlockBufferData(IByteBuffer block)
+        {
+           
+            var realenginer = (ServiceLocator.Locator.Resolve<IRealTagComsumer>() as RealEnginer);
+            var start = block.ReadInt();
+            var size = block.ReadInt();
+            //LoggerService.Service.Info("ProcessBlockBufferData", "block start" +start +", size:"+size);
+            Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, realenginer.Memory, start, size);
+            block.SetReaderIndex(block.ReaderIndex + size);
+            block.ReleaseBuffer();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="block"></param>
+        private void ProcessSingleBufferDataByMemoryCopy(IByteBuffer block)
+        {
+            var realenginer = (ServiceLocator.Locator.Resolve<IRealTagComsumer>() as RealEnginer);
+            var mTagManager = ServiceLocator.Locator.Resolve<ITagManager>();
+
+            var count = block.ReadInt();
+            for (int i = 0; i < count; i++)
+            {
+               
+                var vid = block.ReadInt();
+                if (vid < 0)
+                {
+                    Debug.Print("Invaild value!");
+                }
+                var tag = mTagManager.GetTagById(vid);
+                if (tag != null)
+                {
+                    Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, realenginer.Memory, (int)tag.ValueAddress, tag.ValueSize);
+                    block.SetReaderIndex(block.ReaderIndex + tag.ValueSize);
+                }
+            }
+            block.ReleaseBuffer();
         }
 
         private void ProcessSingleBufferData(IByteBuffer block)
@@ -219,6 +284,22 @@ namespace DBRuntime.Proxy
         /// <summary>
         /// 
         /// </summary>
+        private void RegistorBlockTag()
+        {
+            if (Client != null)
+            {
+                Client.RegistorTagBlockValueCallBack();
+                Client.ProcessDataPush = new ApiClient.ProcessDataPushDelegate((block) => {
+                    block.Retain();
+                    mCachDatas.Enqueue(block);
+                    resetEvent.Set();
+                });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public void ReadAllData()
         {
             if(Client!=null)
@@ -244,16 +325,19 @@ namespace DBRuntime.Proxy
         /// </summary>
         /// <param name="tagQuery"></param>
         /// <returns></returns>
-        public bool Start(IRealTagProducter tagQuery)
+        public bool Start(IRealTagProduct tagQuery)
         {
             mServier = tagQuery;
             resetEvent = new ManualResetEvent(false);
-            ServiceLocator.Locator.Resolve<IRealDataNotifyForProducter>().SubscribeProducter("NetTransformDriver", ProcessValueChanged,
+            ServiceLocator.Locator.Resolve<IRealDataNotifyForProducter>().SubscribeValueChangedForProducter("NetTransformDriver", ProcessValueChanged,
                 new Func<List<int>>(() => { return new List<int>() { -1 }; })
                 );
             
             if (WorkMode == NetTransformWorkMode.Push)
-                RegistorTag();
+            {
+                RegistorBlockTag();
+            }
+            //RegistorTag();
 
             Client.SyncRealMemory();
             mScanThread = new Thread(RemoteDataudpatePro);

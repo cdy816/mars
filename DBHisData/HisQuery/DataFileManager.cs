@@ -51,6 +51,8 @@ namespace Cdy.Tag
         private System.IO.FileSystemWatcher hisDataWatcher;
 
         private System.IO.FileSystemWatcher logDataWatcher;
+
+        private object mLocker = new object();
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -172,30 +174,35 @@ namespace Cdy.Tag
         {
             if(e.ChangeType == System.IO.WatcherChangeTypes.Created)
             {
-                LoggerService.Service.Info("DataFileMananger", "HisDataFile " + e.Name + " is Created & will be add to dataFileCach！", ConsoleColor.Cyan);
-                var vifno = new System.IO.FileInfo(e.FullPath);
-                if(vifno.Extension == DataFileExtends)
+                lock (mLocker)
                 {
-                    ParseFileName(vifno);
+                    LoggerService.Service.Info("DataFileMananger", "HisDataFile " + e.Name + " is Created & will be add to dataFileCach！", ConsoleColor.Cyan);
+                    var vifno = new System.IO.FileInfo(e.FullPath);
+                    if (vifno.Extension == DataFileExtends)
+                    {
+                        ParseFileName(vifno);
+                    }
                 }
             }
             else if(e.ChangeType == System.IO.WatcherChangeTypes.Changed)
             {
-                LoggerService.Service.Info("DataFileMananger", "HisDataFile "+ e.Name + " is changed & will be processed！", ConsoleColor.Cyan);
-                var vtmp = new System.IO.FileInfo(e.FullPath);
-                if(vtmp.Extension == DataFileExtends)
+                lock (mLocker)
                 {
-                    var vfile = CheckAndGetDataFile(e.Name);
-                    if (vfile != null)
+                    LoggerService.Service.Info("DataFileMananger", "HisDataFile " + e.Name + " is changed & will be processed！", ConsoleColor.Cyan);
+                    var vtmp = new System.IO.FileInfo(e.FullPath);
+                    if (vtmp.Extension == DataFileExtends)
                     {
-                        vfile.UpdateLastDatetime();
-                    }
-                    else
-                    {
-                        ParseFileName(vtmp);
+                        var vfile = CheckAndGetDataFile(e.Name);
+                        if (vfile != null)
+                        {
+                            vfile.UpdateLastDatetime();
+                        }
+                        else
+                        {
+                            ParseFileName(vtmp);
+                        }
                     }
                 }
-                
             }
         }
 
@@ -293,10 +300,16 @@ namespace Cdy.Tag
 
 
             DateTime startTime = new DateTime(yy, mm, dd, hh, 0, 0);
-
-            if (mTimeFileMaps.ContainsKey(id))
+            try
             {
-                return mTimeFileMaps[id][yy].GetDataFile(startTime);
+                if (mTimeFileMaps.ContainsKey(id))
+                {
+                    return mTimeFileMaps[id][yy].GetDataFile(startTime);
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Erro("DataFileMananger", ex.StackTrace);
             }
             return null;
         }
@@ -383,7 +396,13 @@ namespace Cdy.Tag
         /// <returns></returns>
         private bool  CheckDataInLogFile(DateTime time,int id)
         {
-            return CurrentDateTime[mDatabaseName + id] < time;
+            string sname = mDatabaseName + id;
+            if(CurrentDateTime.ContainsKey(sname))
+            return CurrentDateTime[sname] < time;
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>

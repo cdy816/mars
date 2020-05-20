@@ -32,10 +32,14 @@ namespace DBRuntime.Api
         /// </summary>
         public const byte RealDataPushFun = 12;
 
+
         /// <summary>
         /// 
         /// </summary>
         public const byte HisDataRequestFun = 20;
+
+
+
 
         public const byte AysncReturn = byte.MaxValue;
     }
@@ -229,6 +233,14 @@ namespace DBRuntime.Api
             return GetAsyncData();
         }
 
+
+        protected override void OnClientDisConnected(string id)
+        {
+            mRealProcess.OnClientDisconnected(id);
+            mHisProcess.OnClientDisconnected(id);
+            mInfoProcess.OnClientDisconnected(id);
+            base.OnClientDisConnected(id);
+        }
 
         #endregion ...Methods...
 

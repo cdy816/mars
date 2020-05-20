@@ -23,14 +23,14 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         /// <param name="valueChanged"></param>
         /// <param name="tagRegistor"></param>
-        public void SubscribeProducter(string name, ProducterValueChangedNotifyProcesser.ValueChangedDelagete valueChanged, Func<List<int>> tagRegistor);
+        public void SubscribeValueChangedForProducter(string name, ProducterValueChangedNotifyProcesser.ValueChangedDelagete valueChanged, Func<List<int>> tagRegistor);
 
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="name"></param>
-        public void UnSubscribeProducter(string name);
+        public void UnSubscribeValueChangedForProducter(string name);
 
     }
 }

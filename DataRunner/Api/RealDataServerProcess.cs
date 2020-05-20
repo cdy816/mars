@@ -60,13 +60,30 @@ namespace DBRuntime.Api
         public const byte ValueChangeNotify = 2;
 
         /// <summary>
+        /// 块改变通知
+        /// </summary>
+        public const byte BlockValueChangeNotify = 4;
+
+        /// <summary>
         /// 清空值改变通知
         /// </summary>
         public const byte ResetValueChangeNotify = 3;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte RealDataBlockPush = 1;
+        public const byte RealDataPush = 0;
+
         private Dictionary<string,Tuple<HashSet<int>,bool>> mCallBackRegistorIds = new Dictionary<string, Tuple<HashSet<int>, bool>>();
 
-        private SortedDictionary<int, bool> mChangedTags = new SortedDictionary<int, bool>();
+        private Dictionary<string, bool> mBlockCallBackRegistorIds = new Dictionary<string, bool>();
+
+        // private SortedDictionary<int, bool> mChangedTags = new SortedDictionary<int, bool>();
+
+        private Queue<int[]> mChangedTags = new Queue<int[]>(10);
+
+        private Queue<BlockItem> mChangedBlocks = new Queue<BlockItem>();
 
         private Thread mScanThread;
 
@@ -75,6 +92,10 @@ namespace DBRuntime.Api
         private bool mIsClosed = false;
         private ITagManager mTagManager;
         private IRealTagComsumer mTagConsumer;
+
+        private Dictionary<string, IByteBuffer> buffers = new Dictionary<string, IByteBuffer>();
+
+        private Dictionary<string, int> mDataCounts = new Dictionary<string, int>();
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -85,21 +106,29 @@ namespace DBRuntime.Api
 
         public RealDataServerProcess()
         {
-            BuildCach();
-            ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeConsumer("RealDataServerProcess", new ValueChangedNotifyProcesser.ValueChangedDelagete((ids) => {
-
+            mTagManager = ServiceLocator.Locator.Resolve<ITagManager>();
+            mTagConsumer = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+            
+            ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeValueChangedForConsumer("RealDataServerProcess", new ValueChangedNotifyProcesser.ValueChangedDelegate((ids) => {
                 lock (mChangedTags)
                 {
-                    foreach (var vv in ids)
-                    {
-                        mChangedTags[vv] = true;
-                    }
+                    mChangedTags.Enqueue(ids);
                 }
                 if(!mIsClosed)
                 resetEvent.Set();
-            }), new Func<List<int>>(() => { return new List<int>() { -1 }; }));
-            mTagManager = ServiceLocator.Locator.Resolve<ITagManager>();
-            mTagConsumer = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+            }),new ValueChangedNotifyProcesser.BlockChangedDelegate((bids)=> {
+
+                if (mBlockCallBackRegistorIds.Count > 0)
+                {
+                    lock (mChangedBlocks)
+                        mChangedBlocks.Enqueue(bids);
+
+                    if (!mIsClosed)
+                        resetEvent.Set();
+                }
+
+            }), new Func<List<int>>(() => { return null; }));
+            
         }
 
         #endregion ...Constructor...
@@ -151,6 +180,9 @@ namespace DBRuntime.Api
                     case ValueChangeNotify:
                         ProcessValueChangeNotify(client, data);
                         break;
+                    case BlockValueChangeNotify:
+                        BlockProcessValueChangeNotify(client, data);
+                        break;
                     case ResetValueChangeNotify:
                         ProcessResetValueChangedNotify(client, data);
                         break;
@@ -179,6 +211,27 @@ namespace DBRuntime.Api
             Buffer.BlockCopy(cc.Memory, start, re.Array, re.ArrayOffset + re.WriterIndex, size);
             re.SetWriterIndex(re.WriterIndex + size);
             Parent.AsyncCallback(clientId, re);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="item"></param>
+        private IByteBuffer GetBlockSendBuffer(BlockItem item)
+        {
+            int start = item.StartAddress;
+            int size = item.EndAddress - start;
+            var cc = ServiceLocator.Locator.Resolve<IRealTagComsumer>() as RealEnginer;
+            if (start >= cc.Memory.Length) return null;
+            var re = BufferManager.Manager.Allocate(ApiFunConst.RealDataPushFun, size+9);
+            re.WriteByte(RealDataBlockPush);
+            re.WriteInt(start);
+            re.WriteInt(size);
+            Buffer.BlockCopy(cc.Memory, start, re.Array, re.ArrayOffset + re.WriterIndex, size);
+            re.SetWriterIndex(re.WriterIndex + size);
+            return re;
         }
 
         /// <summary>
@@ -465,6 +518,31 @@ namespace DBRuntime.Api
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="block"></param>
+        private void BlockProcessValueChangeNotify(string clientId, IByteBuffer block)
+        {
+            try
+            {
+                
+                if (mBlockCallBackRegistorIds.ContainsKey(clientId))
+                {
+                    mBlockCallBackRegistorIds[clientId] = true;
+                }
+                else
+                {
+                    mBlockCallBackRegistorIds.Add(clientId, true);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="block"></param>
         private void ProcessValueChangeNotify(string clientId, IByteBuffer block)
         {
@@ -496,6 +574,11 @@ namespace DBRuntime.Api
                 {
                     mCallBackRegistorIds.Add(clientId, new Tuple<HashSet<int>, bool>(ids, isall));
                 }
+
+                if (!mDataCounts.ContainsKey(clientId))
+                {
+                    mDataCounts.Add(clientId, 0);
+                }
             }
             catch(Exception ex)
             {
@@ -512,6 +595,10 @@ namespace DBRuntime.Api
             if (mCallBackRegistorIds.ContainsKey(clientId))
             {
                 mCallBackRegistorIds.Remove(clientId);
+            }
+            if(mDataCounts.ContainsKey(clientId))
+            {
+                mDataCounts.Remove(clientId);
             }
         }
 
@@ -635,9 +722,20 @@ namespace DBRuntime.Api
             re.WriteByte(qu);
             //Debug.Print(buffer.WriterIndex.ToString());
         }
-        private Dictionary<string, IByteBuffer> buffers = new Dictionary<string, IByteBuffer>();
 
-        private Dictionary<string, int> mDataCounts = new Dictionary<string, int>();
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="re"></param>
+        /// <param name="id"></param>
+        private void ProcessTagPushByMemoryCopy(IByteBuffer re, int id)
+        {
+            var tag = mTagManager.GetTagById(id);
+            re.WriteInt(id);
+            Buffer.BlockCopy((mTagConsumer as RealEnginer).Memory, (int)tag.ValueAddress, re.Array, re.ArrayOffset + re.WriterIndex, tag.ValueSize);
+            re.SetWriterIndex(re.WriterIndex + tag.ValueSize);
+        }
+
 
         /// <summary>
         /// 
@@ -654,65 +752,88 @@ namespace DBRuntime.Api
 
                     HashSet<int> hval = new HashSet<int>();
 
-                    List<KeyValuePair<int, bool>> changtags;
+                    int[] changtags;
 
-                    lock (mChangedTags)
-                        changtags = mChangedTags.Where(e => e.Value).ToList();
-
-                    foreach (var cb in mCallBackRegistorIds)
+                    while (mChangedTags.Count > 0)
                     {
-                        var buffer = BufferManager.Manager.Allocate(Api.ApiFunConst.RealDataPushFun, changtags.Count * 64);
-                        buffer.WriteInt(0);
-                        buffers.Add(cb.Key, buffer);
-                        mDataCounts.Add(cb.Key, 0);
-                    }
 
-                    foreach (var vv in changtags)
-                    {
-                        //if (vv.Value)
+                        changtags = mChangedTags.Dequeue();
+
+                        if (mCallBackRegistorIds.Count == 0) break;
+
+                        var clients = mCallBackRegistorIds.ToArray();
+
+                        //Stopwatch sw = new Stopwatch();
+                        //sw.Start();
+                        foreach (var cb in clients)
                         {
-                            foreach (var vvc in mCallBackRegistorIds)
+                            var buffer = BufferManager.Manager.Allocate(Api.ApiFunConst.RealDataPushFun, changtags.Length * 64+1);
+                            buffer.WriteByte(RealDataPush);
+                            buffer.WriteInt(0);
+                            buffers.Add(cb.Key, buffer);
+                            mDataCounts[cb.Key]= 0;
+                        }
+
+                        foreach (var vv in changtags)
+                        {
+                            foreach (var vvc in clients)
                             {
-                                if (vvc.Value.Item2 || vvc.Value.Item1.Contains(vv.Key))
+                                if (vvc.Value.Item2 || vvc.Value.Item1.Contains(vv))
                                 {
-                                    ProcessTagPush(buffers[vvc.Key], vv.Key);
+                                    ProcessTagPushByMemoryCopy(buffers[vvc.Key], vv);
                                     mDataCounts[vvc.Key]++;
                                 }
                             }
-                            mChangedTags[vv.Key] = false;
                         }
 
+                        foreach (var cb in buffers)
+                        {
+                            cb.Value.MarkWriterIndex();
+                            cb.Value.SetWriterIndex(2);
+                            cb.Value.WriteInt(mDataCounts[cb.Key]);
+                            cb.Value.ResetWriterIndex();
+
+                            Parent.PushRealDatatoClient(cb.Key, cb.Value);
+                        }
+                        buffers.Clear();
+                        //sw.Stop();
+                        //LoggerService.Service.Erro("RealDataServerProcess", "推送数据耗时"+sw.ElapsedMilliseconds+" 大小:"+ changtags.Length);
                     }
 
-                    foreach (var cb in buffers)
+                    if(mBlockCallBackRegistorIds.Count>0)
                     {
-                        cb.Value.MarkWriterIndex();
-                        cb.Value.SetWriterIndex(1);
-                        cb.Value.WriteInt(mDataCounts[cb.Key]);
-                        cb.Value.ResetWriterIndex();
+                        Stopwatch sw = new Stopwatch();
+                        sw.Start();
+                        int count = 0;
+                        while (mChangedBlocks.Count>0)
+                        {
+                            var vv = mChangedBlocks.Dequeue();
+                            if (vv == null) continue;
 
-                        Parent.PushRealDatatoClient(cb.Key, cb.Value);
+                            var buffer = GetBlockSendBuffer(vv);
+                            foreach (var vvb in mBlockCallBackRegistorIds.ToArray())
+                            {
+                              //  buffer.Retain();
+                                Parent.PushRealDatatoClient(vvb.Key, buffer);
+                                //buffer.ReleaseBuffer();
+                            }
+
+                            //while(buffer.ReferenceCount>0)
+                            //buffer.ReleaseBuffer();
+                            count++;
+                        }
+                        sw.Stop();
+                        LoggerService.Service.Erro("RealDataServerProcess", "推送数据耗时"+sw.ElapsedMilliseconds+" 大小:"+ count);
                     }
-                    mDataCounts.Clear();
-                    buffers.Clear();
+                    else
+                    {
+                        mChangedBlocks.Clear();
+                    }
                 }
                 catch(Exception ex)
                 {
                     LoggerService.Service.Erro("RealDataServerProcess", ex.StackTrace);
                 }
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private void BuildCach()
-        {
-            int minid = ServiceLocator.Locator.Resolve<ITagManager>().MinTagId();
-            int maxid = ServiceLocator.Locator.Resolve<ITagManager>().MaxTagId();
-            for(int i=minid;i<=maxid;i++)
-            {
-                mChangedTags.Add(i, false);
             }
         }
 
@@ -740,6 +861,19 @@ namespace DBRuntime.Api
             resetEvent.Set();
             resetEvent.Close();
             base.Stop();
+        }
+
+        public override void OnClientDisconnected(string id)
+        {
+            if(mBlockCallBackRegistorIds.ContainsKey(id))
+            {
+                mBlockCallBackRegistorIds.Remove(id);
+            }
+            if(mCallBackRegistorIds.ContainsKey(id))
+            {
+                mCallBackRegistorIds.Remove(id);
+            }
+            base.OnClientDisconnected(id);
         }
 
         #endregion ...Methods...

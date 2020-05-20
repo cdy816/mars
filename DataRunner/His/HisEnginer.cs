@@ -127,6 +127,8 @@ namespace Cdy.Tag
 
         private bool mMegerProcessIsClosed = false;
 
+        private int mStartMergeCount = 0;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -550,6 +552,10 @@ namespace Cdy.Tag
             CurrentMemory.CurrentDatetime = mLastProcessTime;
             SnapeAllTag();
             RecordAllFirstValue();
+            mMergeMemory.CurrentDatetime = CurrentMemory.CurrentDatetime;
+
+            mStartMergeCount = (int)((mLastProcessTime - new DateTime(mLastProcessTime.Year, mLastProcessTime.Month, mLastProcessTime.Day, ((mLastProcessTime.Hour / mManager.Setting.FileDataDuration) * mManager.Setting.FileDataDuration), 0, 0)).TotalMinutes % (MergeMemoryTime / CachMemoryTime));
+            mMergeCount = mStartMergeCount;
 
             mRecordTimer = new System.Timers.Timer(MemoryTimeTick);
             mRecordTimer.Elapsed += MRecordTimer_Elapsed;
@@ -594,7 +600,7 @@ namespace Cdy.Tag
         private void MergerMemoryProcess()
         {
             int number = MergeMemoryTime / CachMemoryTime;
-            int count = 0;
+            int count = mStartMergeCount;
 
             while (!mIsClosed)
             {

@@ -161,7 +161,8 @@ namespace Cdy.Tag
 
                     if (idaddrs.ContainsKey(tid))
                         return idaddrs[tid];
-
+                    vcm.Dispose();
+                    data.Dispose();
                 }
                 else
                 {

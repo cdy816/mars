@@ -17,25 +17,18 @@ namespace Cdy.Tag
     /// </summary>
     public interface IRealDataNotify
     {
-        ///// <summary>
-        ///// 订购
-        ///// </summary>
-        ///// <param name="name"></param>
-        ///// <returns></returns>
-        //ValueChangedNotifyProcesser SubscribeComsumer(string name);
-
         /// <summary>
         /// 订购
         /// </summary>
         /// <param name="name"></param>
         /// <param name="valueChanged"></param>
         /// <param name="tagRegistor"></param>
-        void SubscribeConsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelagete valueChanged, Func<List<int>> tagRegistor);
+        void SubscribeValueChangedForConsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelegate valueChanged,ValueChangedNotifyProcesser.BlockChangedDelegate blockChanged, Func<List<int>> tagRegistor);
 
         /// <summary>
         /// 取消订购
         /// </summary>
         /// <param name="name"></param>
-        void UnSubscribeConsumer(string name);
+        void UnSubscribeValueChangedForConsumer(string name);
     }
 }

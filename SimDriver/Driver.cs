@@ -22,19 +22,19 @@ namespace SimDriver
 
         private bool mBoolNumber = false;
 
-        private IRealTagProducter mTagService;
+        private IRealTagProduct mTagService;
 
-        private bool mIsBusy = false;
+        //private bool mIsBusy = false;
 
         private StreamWriter mWriter;
 
         private DateTime mLastProcessTime = DateTime.Now;
 
-        private int mBusyCount = 0;
+        //private int mBusyCount = 0;
 
         private bool mIsSecond = false;
 
-        private int mTickCount = 0;
+        //private int mTickCount = 0;
 
         private Thread mScanThread;
 
@@ -97,7 +97,7 @@ namespace SimDriver
         /// 
         /// </summary>
         /// <param name="tagQuery"></param>
-        private void InitTagCach(IRealTagProducter tagQuery)
+        private void InitTagCach(IRealTagProduct tagQuery)
         {
             mTagIdCach = tagQuery.GetTagsByLinkAddress(new List<string>() { "Sim:cos", "Sim:sin", "Sim:step", "Sim:steppoint", "Sim:square" });
         }
@@ -107,7 +107,7 @@ namespace SimDriver
         /// </summary>
         /// <param name="tagQuery"></param>
         /// <returns></returns>
-        public bool Start(IRealTagProducter tagQuery)
+        public bool Start(IRealTagProduct tagQuery)
         {
             mTagService = tagQuery;
             InitTagCach(tagQuery);
@@ -146,7 +146,7 @@ namespace SimDriver
                 if (!mIsSecond)
                 {
                     mNumber++;
-                    mNumber = mNumber > (short)360 ? (short)0 : mNumber;
+                    mNumber = mNumber >= (short)360 ? (short)0 : mNumber;
                     mIsSecond = true;
                 }
                 else
@@ -164,7 +164,7 @@ namespace SimDriver
             Stopwatch sw = new Stopwatch();
             sw.Start();
                 //if(mNumber%10==0)
-            //Log("Sim:Sin " + fval + " " + "Sim:Cos " + sval + " " + "Sim:step " + mNumber + "  " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+            Log("Sim:Sin " + fval + " " + "Sim:Cos " + sval + " " + "Sim:step " + mNumber + "  " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
 //#endif
 
@@ -192,7 +192,7 @@ namespace SimDriver
                         mTagService.SetTagValue(vv.Value, mBoolNumber);
                     }
                 });
-
+                mTagService.SubmiteNotifyChanged();
 //#if DEBUG
             sw.Stop();
                 if (mNumber % 5 == 0 && mIsSecond)

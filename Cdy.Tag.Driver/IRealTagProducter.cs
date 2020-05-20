@@ -16,7 +16,7 @@ namespace Cdy.Tag.Driver
     /// <summary>
     /// 
     /// </summary>
-    public interface IRealTagProducter
+    public interface IRealTagProduct
     {
 
         #region ... Variables  ...
@@ -182,15 +182,18 @@ namespace Cdy.Tag.Driver
         /// <param name="name"></param>
         /// <param name="valueChanged"></param>
         /// <param name="tagRegistor"></param>
-        void SubscribeProducter(string name, ProducterValueChangedNotifyProcesser.ValueChangedDelagete valueChanged, Func<List<int>> tagRegistor);
+        void SubscribeValueChangedForProducter(string name, ProducterValueChangedNotifyProcesser.ValueChangedDelagete valueChanged, Func<List<int>> tagRegistor);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="name"></param>
-        void UnSubscribeProducter(string name);
+        void UnSubscribeValueChangedForProducter(string name);
 
-
+        /// <summary>
+        /// 通知值发生了改变
+        /// </summary>
+        void SubmiteNotifyChanged();
         #endregion ...Methods...
 
         #region ... Interfaces ...

@@ -141,24 +141,24 @@ namespace DotNetty.Common
 
         void ReportLeak(DefaultResourceLeak resourceLeak)
         {
-            if (!Logger.ErrorEnabled)
+            //if (!Logger.ErrorEnabled)
             {
                 resourceLeak.Dispose();
                 return;
             }
 
-            string records = resourceLeak.Dump();
-            if (this.reportedLeaks.TryAdd(records, true))
-            {
-                if (records.Length == 0)
-                {
-                    this.ReportUntracedLeak(this.resourceType);
-                }
-                else
-                {
-                    this.ReportTracedLeak(this.resourceType, records);
-                }
-            }
+            //string records = resourceLeak.Dump();
+            //if (this.reportedLeaks.TryAdd(records, true))
+            //{
+            //    if (records.Length == 0)
+            //    {
+            //        this.ReportUntracedLeak(this.resourceType);
+            //    }
+            //    else
+            //    {
+            //        this.ReportTracedLeak(this.resourceType, records);
+            //    }
+            //}
         }
 
         protected void ReportTracedLeak(string type, string records)

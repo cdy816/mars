@@ -15,6 +15,30 @@ using System.Threading.Tasks;
 
 namespace Cdy.Tag
 {
+    public class BlockItem
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int StartAddress { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int EndAddress { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsDirty { get; set; }
+    }
+
+
     /// <summary>
     /// 变量值改变通知处理
     /// </summary>
@@ -26,7 +50,9 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        private Dictionary<int, int> mRegistorTagIds = new Dictionary<int, int>();
+        private Dictionary<int, bool> mRegistorTagIds = new Dictionary<int, bool>();
+
+        private Dictionary<int, BlockItem> mBlockChangeds = new Dictionary<int, BlockItem>();
 
         /// <summary>
         /// 
@@ -47,7 +73,13 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="tagIds"></param>
-        public delegate void ValueChangedDelagete(int[] tagIds);
+        public delegate void ValueChangedDelegate(int[] tagIds);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="blockids"></param>
+        public delegate void BlockChangedDelegate(BlockItem block);
 
         private int mLenght = 0;
 
@@ -58,6 +90,8 @@ namespace Cdy.Tag
         private DateTime mLastNotiyTime = DateTime.Now;
 
         private bool mIsClosed = false;
+
+        public const int BlockSize = 10000;
 
         #endregion ...Variables...
 
@@ -91,8 +125,12 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public ValueChangedDelagete ValueChanged { get; set; }
+        public ValueChangedDelegate ValueChanged { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public BlockChangedDelegate BlockChanged { get; set; }
         /// <summary>
         /// 
         /// </summary>
@@ -118,12 +156,6 @@ namespace Cdy.Tag
         {
             mIsClosed = true;
             resetEvent.Set();
-            
-            //if (mProcessThread != null)
-            //{
-            //    mProcessThread.Abort();
-            //    mProcessThread = null;
-            //}
         }
 
         /// <summary>
@@ -136,10 +168,18 @@ namespace Cdy.Tag
             {
                 lock (mLockObject)
                 {
-                    mChangedIds[mLenght++] = id;
-                    if(mLenght>=mChangedIds.Length)
+                    if (mIsAll)
                     {
-                        ReAllocMemory((int)(mLenght * 1.2));
+                        lock (mBlockChangeds)
+                            mBlockChangeds[id / BlockSize].IsDirty = true;
+                    }
+                    else
+                    {
+                        mChangedIds[mLenght++] = id;
+                        if (mLenght >= mChangedIds.Length)
+                        {
+                            ReAllocMemory((int)(mLenght * 1.2));
+                        }
                     }
                 }
             }
@@ -162,21 +202,44 @@ namespace Cdy.Tag
         /// <param name="ids"></param>
         public void UpdateValue(List<int> ids)
         {
-            if(mLenght+ids.Count>mChangedIds.Length)
+            if (!mIsAll)
             {
-                ReAllocMemory((int)((mLenght + ids.Count) * 1.2));
+                if ((mLenght + ids.Count) > mChangedIds.Length)
+                {
+                    ReAllocMemory((int)((mLenght + ids.Count) * 1.2));
+                }
             }
+
             foreach (var id in ids)
             {
                 if (mIsAll || mRegistorTagIds.ContainsKey(id))
                 {
                     lock (mChangedIds)
                     {
-                        mChangedIds[mLenght++] = id;
-                        mLenght = mLenght >= mChangedIds.Length ? mChangedIds.Length - 1 : mLenght;
+                        //int blockid = id / BlockSize;
+                        if (mIsAll)
+                        {
+                            lock (mBlockChangeds)
+                                mBlockChangeds[id / BlockSize].IsDirty = true;
+                        }
+                        else
+                        {
+                            mChangedIds[mLenght++] = id;
+                            mLenght = mLenght >= mChangedIds.Length ? mChangedIds.Length - 1 : mLenght;
+                        }
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        public void RegistorAll()
+        {
+            mIsAll = true;
         }
 
         /// <summary>
@@ -185,13 +248,8 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         public void Registor(int id)
         {
-            if (id == -1)
-            {
-                mIsAll = true;
-                return;
-            }
             if (!mRegistorTagIds.ContainsKey(id))
-                mRegistorTagIds.Add(id,0);
+                mRegistorTagIds.Add(id, false);
         }
 
         /// <summary>
@@ -203,7 +261,7 @@ namespace Cdy.Tag
             foreach(var id in ids)
             {
                 if (!mRegistorTagIds.ContainsKey(id))
-                    mRegistorTagIds.Add(id, 0);
+                    mRegistorTagIds.Add(id, false);
             }
         }
 
@@ -226,7 +284,7 @@ namespace Cdy.Tag
                 if (mIsClosed) break;
 
                 resetEvent.Reset();
-                if (mLenght > 0)
+                if (ValueChanged!=null && mLenght > 0)
                 {
                     int[] vtmp = null;
                     lock (mLockObject)
@@ -237,7 +295,40 @@ namespace Cdy.Tag
                     }
                     ValueChanged?.Invoke(vtmp);
                 }
+                if (BlockChanged != null)
+                {
+                    foreach (var vv in mBlockChangeds)
+                    {
+                        if (vv.Value.IsDirty)
+                        {
+                            lock (mBlockChangeds)
+                            {
+                                BlockChanged?.Invoke(vv.Value);
+                                vv.Value.IsDirty = false;
+                            }
+                        }
+                    }
+
+                }
                 Thread.Sleep(10);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="maxid"></param>
+        /// <param name="getAddress"></param>
+        public void BuildBlock(int maxid,Func<int,int> getAddress)
+        {
+            int count = maxid / BlockSize;
+            count = maxid % BlockSize > 0 ? count + 1 : count;
+            for(int i=0;i<count;i++)
+            {
+                int start = getAddress(i * BlockSize);
+                int end = getAddress(i * BlockSize + BlockSize);
+
+                mBlockChangeds.Add(i, new BlockItem() { Id = i, StartAddress = start, EndAddress = end });
             }
         }
 

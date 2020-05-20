@@ -278,7 +278,6 @@ namespace DBRuntime.Proxy
             ServiceLocator.Locator.Registor<IRealTagComsumer>(realEnginer);
             ServiceLocator.Locator.Registor<ITagManager>(mRealDatabase);
             ServiceLocator.Locator.Registor<IRuntimeSecurity>(mSecurityRunner);
-            
         }
 
         private bool CheckDatabaseExist(string name)

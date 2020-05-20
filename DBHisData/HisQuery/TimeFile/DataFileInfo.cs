@@ -89,16 +89,18 @@ namespace Cdy.Tag
             {
                 mTimeOffsets.Clear();
                 Scan();
+
+                if (DataFileManager.CurrentDateTime.ContainsKey(FId))
+                {
+                    DataFileManager.CurrentDateTime[FId] = mLastTime;
+                }
+                else
+                {
+                    DataFileManager.CurrentDateTime.Add(FId, mLastTime);
+                }
             }
 
-            if (DataFileManager.CurrentDateTime.ContainsKey(FId))
-            {
-                DataFileManager.CurrentDateTime[FId] = mLastTime;
-            }
-            else
-            {
-                DataFileManager.CurrentDateTime.Add(FId, mLastTime);
-            }
+            
 
         }
 
@@ -258,7 +260,7 @@ namespace Cdy.Tag
                 DateTime etime = vv.Key + vv.Value.Item1 > endTime ? endTime : vv.Key + vv.Value.Item1;
                 vff.ReadAllValue(vv.Value.Item2, tid, stime, etime, result);
             }
-
+            vff.Close();
             //GeneratorTime(moffs, startTime, endTime, file);
 
             //foreach (var vf in moffs)
@@ -1235,9 +1237,11 @@ namespace Cdy.Tag
         /// <returns></returns>
         public static object Read<T>(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
         {
-            var vff = file.GetFileSeriser();
-            var offset = file.GetFileOffsets(time);
-            return vff.Read<T>(offset, tid, time, type);
+            using (var vff = file.GetFileSeriser())
+            {
+                var offset = file.GetFileOffsets(time);
+                return vff.Read<T>(offset, tid, time, type);
+            }
         }
 
         /// <summary>
@@ -1267,23 +1271,33 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public static void Read<T>(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
         {
-            var vff = file.GetFileSeriser();
-            Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
-            foreach (var vv in times)
+            using (var vff = file.GetFileSeriser())
             {
-                var ff = file.GetFileOffsets(vv);
-                if (moffs.ContainsKey(ff))
+                Dictionary<long, List<DateTime>> moffs = new Dictionary<long, List<DateTime>>();
+                foreach (var vv in times)
                 {
-                    moffs[ff].Add(vv);
+                    var ff = file.GetFileOffsets(vv);
+                    if (moffs.ContainsKey(ff))
+                    {
+                        moffs[ff].Add(vv);
+                    }
+                    else
+                    {
+                        moffs.Add(ff, new List<DateTime>() { vv });
+                    }
                 }
-                else
+                foreach (var vf in moffs)
                 {
-                    moffs.Add(ff, new List<DateTime>() { vv });
+                    if(vf.Key>-1)
+                    vff.Read<T>(vf.Key, tid, vf.Value, type, result);
+                    else
+                    {
+                        foreach(var vv in vf.Value)
+                        {
+                            result.Add(default(T), vv, (byte)QualityConst.Null);
+                        }
+                    }
                 }
-            }
-            foreach (var vf in moffs)
-            {
-                vff.Read<T>(vf.Key, tid, vf.Value, type, result);
             }
         }
         #endregion
@@ -1700,6 +1714,11 @@ namespace Cdy.Tag
             {
                 DeCompressDataBlockValue<T>(vv.Key, vv.Value, timetick, type, res);
             }
+            foreach (var vv in data)
+            {
+                vv.Key.Dispose();
+            }
+            data.Clear();
         }
 
         /// <summary>
@@ -1715,8 +1734,10 @@ namespace Cdy.Tag
         public static object Read<T>(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
         {
             int timetick = 0;
-            var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick);
-            return DeCompressDataBlockValue<T>(data, dataTime, timetick, type);
+            using (var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick))
+            {
+                return DeCompressDataBlockValue<T>(data, dataTime, timetick, type);
+            }
         }
 
         /// <summary>
@@ -1736,6 +1757,12 @@ namespace Cdy.Tag
             {
                 DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
             }
+            foreach(var vv in data)
+            {
+                vv.Key.Dispose();
+               
+            }
+            data.Clear();
         }
 
         ///// <summary>
@@ -1962,7 +1989,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         private static object DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
         {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+            //MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -1984,7 +2011,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         private static void DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
         {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+            //MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2482,7 +2509,7 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         private static void DeCompressDataBlockAllValue<T>(MarshalMemoryBlock memory, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result)
         {
-            MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
+            //MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             var tp = CompressUnitManager.Manager.GetCompress(ctype);
@@ -2701,10 +2728,15 @@ namespace Cdy.Tag
         /// <param name="blockDuration"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static Dictionary<int, int> CheckBlockHeadCach(this DataFileSeriserbase datafile, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick,out long blockPointer)
+        public static Dictionary<int, int> CheckBlockHeadCach(this DataFileSeriserbase datafile, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick,out long blockPointer,out DateTime time)
         {
             //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+tagcount(4)+ tagid sum(8) +file duration(4)+ block duration(4)+Time tick duration(4)+ { + tagid1+tagid2+...+tagidn }+ {[tag1 block point1(8) + tag2 block point1+ tag3 block point1+...] + [tag1 block point2(8) + tag2 block point2+ tag3 block point2+...]....}
-            var dataoffset = offset + 24;
+            var dataoffset = offset + 16;
+
+            //读取时间
+            time = datafile.ReadDateTime(dataoffset);
+            dataoffset += 8;
+
             //读取变量个数
             int count = datafile.ReadInt(dataoffset);
             dataoffset += 4;
@@ -2745,13 +2777,14 @@ namespace Cdy.Tag
                     dataoffset += 4;
 
                     blockPointer = dataoffset + dsize - offset;
-
+                    var dtmp = new Dictionary<int, int>();
                     using (var dd = datafile.Read(dataoffset, dsize))
                     {
                         MarshalVarintCodeMemory vcm = new MarshalVarintCodeMemory(dd.StartMemory, dsize);
                         var ltmp = vcm.ToIntList();
+                        //vcm.Dispose();
 
-                        var dtmp = new Dictionary<int, int>();
+                        
                         if (ltmp.Count > 0)
                         {
                             int preid = ltmp[0];
@@ -2765,8 +2798,9 @@ namespace Cdy.Tag
                         }
                         TagHeadOffsetManager.manager.Add(idsum, count, dtmp,blockPointer);
 
-                        return dtmp;
+                       
                     }
+                    return dtmp;
                 }
                 else
                 {
@@ -2787,9 +2821,9 @@ namespace Cdy.Tag
         /// <param name="blockDuration"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static int ReadTagIndexInDataPointer(this DataFileSeriserbase datafile, int tid, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick,out long blockpointer)
+        public static int ReadTagIndexInDataPointer(this DataFileSeriserbase datafile, int tid, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick,out long blockpointer,out DateTime time)
         {
-            var hfile = datafile.CheckBlockHeadCach(offset, out tagCount, out fileDuration, out blockDuration, out timetick,out blockpointer);
+            var hfile = datafile.CheckBlockHeadCach(offset, out tagCount, out fileDuration, out blockDuration, out timetick,out blockpointer,out time);
             if (hfile.ContainsKey(tid))
             {
                 return hfile[tid];
@@ -2807,9 +2841,9 @@ namespace Cdy.Tag
         /// <param name="blockDuration"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static List<long> ReadTargetBlockAddress(this DataFileSeriserbase datafile, List<int> tid, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick, out long blockpointer)
+        public static List<long> ReadTargetBlockAddress(this DataFileSeriserbase datafile, List<int> tid, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick, out long blockpointer, out DateTime time)
         {
-            var hfile = datafile.CheckBlockHeadCach(offset, out tagCount, out fileDuration, out blockDuration, out timetick,out blockpointer);
+            var hfile = datafile.CheckBlockHeadCach(offset, out tagCount, out fileDuration, out blockDuration, out timetick,out blockpointer,out time);
             List<long> re = new List<long>();
             foreach (var vv in tid)
             {
@@ -2841,10 +2875,10 @@ namespace Cdy.Tag
         {
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
-
+            DateTime time;
             long blockpointer = 0;
 
-            var blockIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick,out blockpointer);
+            var blockIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick,out blockpointer,out time);
             int blockcount = fileDuration * 60 / blockDuration;
 
             var startTime = datafile.ReadDateTime(16);
@@ -2881,7 +2915,8 @@ namespace Cdy.Tag
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
             long blockpointer = 0;
-            var blockIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick,out blockpointer);
+            DateTime time;
+            var blockIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick,out blockpointer,out time);
             int blockcount = fileDuration * 60 / blockDuration;
 
             var startTime = datafile.ReadDateTime(16);
@@ -2936,17 +2971,19 @@ namespace Cdy.Tag
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
             long blockpointer = 0;
-
-            var tagIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick,out blockpointer);
+            DateTime time;
+            var tagIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick,out blockpointer,out time);
             
-            int blockcount = fileDuration * 60 / blockDuration;
-
-            var startTime = datafile.ReadDateTime(0);
-
             Dictionary<long, MarshalMemoryBlock> rtmp = new Dictionary<long, MarshalMemoryBlock>();
 
             Dictionary<MarshalMemoryBlock, List<DateTime>> re = new Dictionary<MarshalMemoryBlock, List<DateTime>>();
 
+            if (tagCount == 0) return re;
+
+            int blockcount = fileDuration * 60 / blockDuration;
+
+            var startTime = datafile.ReadDateTime(0);
+            //var startTime = time;
             foreach (var vdd in dataTimes)
             {
                 var ttmp = (vdd - startTime).TotalMinutes;
@@ -2960,7 +2997,6 @@ namespace Cdy.Tag
                 {
                     throw new Exception("DataPointer index is out of total block number");
                 }
-
 
                 var dataPointer = datafile.ReadLong(offset + blockpointer + tagIndex * 8 + blockindex * tagCount * 8); //读取DataBlock的地址
 
@@ -3024,11 +3060,13 @@ namespace Cdy.Tag
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
             long blockpointer = 0;
-            var tagIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick,out blockpointer);
+            DateTime time;
+            var tagIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick,out blockpointer,out time);
             int blockcount = fileDuration * 60 / blockDuration;
 
             //读取文件开始时间
             var startTime = datafile.ReadDateTime(0);
+            //var startTime = time;
 
             Dictionary<MarshalMemoryBlock, Tuple<DateTime, DateTime>> re = new Dictionary<MarshalMemoryBlock, Tuple<DateTime, DateTime>>();
 
@@ -3037,13 +3075,17 @@ namespace Cdy.Tag
 
             while (sstart < end)
             {
-                var ttmp = (sstart - startTime).TotalMinutes;
-                send = (sstart  - new TimeSpan(0, 0, 0, sstart.Second, sstart.Millisecond)).AddMinutes(blockDuration);
+                var ttmp = Math.Round((sstart - startTime).TotalSeconds,3);
+                var vv = blockDuration*60 - (ttmp %(blockDuration * 60));
+
+                send = sstart.AddSeconds(vv);
+
+                //send = (sstart  - new TimeSpan(0, 0, 0, sstart.Second, sstart.Millisecond)).AddMinutes(blockDuration);
                 if (send > end)
                 {
                     send = end;
                 }
-                int blockindex = (int)(ttmp / blockDuration);
+                int blockindex = (int)(ttmp / (blockDuration * 60));
                 //if (ttmp % blockDuration > 0)
                 //{
                 //    dindex++;
@@ -3064,7 +3106,7 @@ namespace Cdy.Tag
                         var rmm = datafile.Read(dataPointer+4, (int)datasize);
                         if (!re.ContainsKey(rmm))
                         {
-                            re.Add(rmm, new Tuple<DateTime, DateTime>(sstart, end));
+                            re.Add(rmm, new Tuple<DateTime, DateTime>(sstart, send));
                         }
                     }
                 }

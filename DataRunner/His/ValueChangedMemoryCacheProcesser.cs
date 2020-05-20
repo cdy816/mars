@@ -107,16 +107,15 @@ namespace Cdy.Tag
         public void Start()
         {
             //注册值改变处理
-            ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeConsumer(this.Name, new ValueChangedNotifyProcesser.ValueChangedDelagete((ids) => {
+            ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeValueChangedForConsumer(this.Name, new ValueChangedNotifyProcesser.ValueChangedDelegate((ids) => {
                 foreach(var vv in ids)
                 {
                     if(mChangedTags.ContainsKey(vv))
                     {
                         mChangedTags[vv] = true;
                     }
-                    
                 }
-            }), new Func<List<int>>(() => { return mTags.Keys.ToList(); }));
+            }),null, new Func<List<int>>(() => { return  mTags.Keys.ToList(); }));
 
             mRecordThread = new Thread(ThreadProcess);
             mRecordThread.IsBackground=true;

@@ -168,7 +168,15 @@ namespace Cdy.Tag
         /// <param name="exception"></param>
         public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
         {
-            Console.WriteLine("Exception: " + exception);
+            // Console.WriteLine("Exception: " + exception);
+            try
+            {
+                Console.WriteLine(context.Channel.RemoteAddress.ToString() + " is closed.");
+            }
+            catch
+            {
+
+            }
             context.CloseAsync();
         }
 

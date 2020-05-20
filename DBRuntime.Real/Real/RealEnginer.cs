@@ -18,7 +18,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public unsafe class RealEnginer: IRealDataNotify, IRealDataNotifyForProducter, IRealData, IRealTagProducter, IRealTagComsumer,IDisposable
+    public unsafe class RealEnginer: IRealDataNotify, IRealDataNotifyForProducter, IRealData, IRealTagProduct, IRealTagComsumer,IDisposable
     {
 
         #region ... Variables  ...
@@ -222,62 +222,13 @@ namespace Cdy.Tag
 
         }
 
-        /// <summary>
-        /// 订购值改变事件
-        /// </summary>
-        /// <param name="name"></param>
-        public ValueChangedNotifyProcesser SubscribeComsumer(string name)
-        {
-             return ComsumerValueChangedNotifyManager.Manager.GetNotifier(name);
-        }
+        
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="valueChanged"></param>
-        /// <param name="tagRegistor"></param>
-        public void SubscribeConsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelagete valueChanged,Func<List<int>> tagRegistor)
+        public void SubmiteNotifyChanged()
         {
-            var re = ComsumerValueChangedNotifyManager.Manager.GetNotifier(name);
-            if(tagRegistor!=null)
-            {
-                foreach(var vv in tagRegistor())
-                {
-                    re.Registor(vv);
-                }
-            }
-            re.ValueChanged = valueChanged;
-            re.Start();
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="name"></param>
-        public void UnSubscribeConsumer(string name)
-        {
-            ComsumerValueChangedNotifyManager.Manager.DisposeNotifier(name);
-        }
-
-        /// <summary>
-        /// 通知值改变了
-        /// </summary>
-        /// <param name="id"></param>
-        private void NotifyValueChangedToConsumer(int id)
-        {
-            ComsumerValueChangedNotifyManager.Manager.UpdateValue(id);
-            ComsumerValueChangedNotifyManager.Manager.NotifyChanged();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="ids"></param>
-        private void NotifyValueChangedToConsumer(List<int> ids)
-        {
-            ComsumerValueChangedNotifyManager.Manager.UpdateValue(ids);
             ComsumerValueChangedNotifyManager.Manager.NotifyChanged();
         }
 
@@ -2695,7 +2646,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        List<Tagbase> IRealTagProducter.GetTagByLinkAddress(string address)
+        List<Tagbase> IRealTagProduct.GetTagByLinkAddress(string address)
         {
             return mConfigDatabase.GetTagByLinkAddress(address);
         }
@@ -2705,7 +2656,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        Dictionary<string, List<Tagbase>> IRealTagProducter.GetTagsByLinkAddress(List<string> address)
+        Dictionary<string, List<Tagbase>> IRealTagProduct.GetTagsByLinkAddress(List<string> address)
         {
             return mConfigDatabase.GetTagsByLinkAddress(address);
         }
@@ -3400,7 +3351,7 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         /// <param name="valueChanged"></param>
         /// <param name="tagRegistor"></param>
-        public void SubscribeProducter(string name, ProducterValueChangedNotifyProcesser.ValueChangedDelagete valueChanged, Func<List<int>> tagRegistor)
+        public void SubscribeValueChangedForProducter(string name, ProducterValueChangedNotifyProcesser.ValueChangedDelagete valueChanged, Func<List<int>> tagRegistor)
         {
             var re = ProducterValueChangedNotifyManager.Manager.GetNotifier(name);
             if (tagRegistor != null)
@@ -3419,7 +3370,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="name"></param>
-        public void UnSubscribeProducter(string name)
+        public void UnSubscribeValueChangedForProducter(string name)
         {
             ProducterValueChangedNotifyManager.Manager.DisposeNotifier(name);
         }
@@ -3488,9 +3439,86 @@ namespace Cdy.Tag
         }
 
 
+        
+
+        /// <summary>
+        /// 通知值改变了
+        /// </summary>
+        /// <param name="id"></param>
+        private void NotifyValueChangedToConsumer(int id)
+        {
+            ComsumerValueChangedNotifyManager.Manager.UpdateValue(id);
+            //ComsumerValueChangedNotifyManager.Manager.NotifyChanged();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        private void NotifyValueChangedToConsumer(List<int> ids)
+        {
+            ComsumerValueChangedNotifyManager.Manager.UpdateValue(ids);
+            //ComsumerValueChangedNotifyManager.Manager.NotifyChanged();
+        }
+
         #endregion
 
         #region Interface IConsumer
+
+        /// <summary>
+        /// 订购值改变事件
+        /// </summary>
+        /// <param name="name"></param>
+        public ValueChangedNotifyProcesser SubscribeComsumer(string name)
+        {
+            return ComsumerValueChangedNotifyManager.Manager.GetNotifier(name);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="valueChanged"></param>
+        /// <param name="tagRegistor"></param>
+        public void SubscribeValueChangedForConsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelegate valueChanged, ValueChangedNotifyProcesser.BlockChangedDelegate blockchanged, Func<List<int>> tagRegistor)
+        {
+            var re = ComsumerValueChangedNotifyManager.Manager.GetNotifier(name);
+            if (tagRegistor != null)
+            {
+                var val = tagRegistor();
+                if (val == null)
+                {
+                    re.RegistorAll();
+                    re.BuildBlock(mConfigDatabase.MaxTagId(), (id) => 
+                    { 
+                        var itmp = (int)GetDataAddr(id);
+                        if (itmp < 0)
+                            return (int)(mIdAndAddr.Last().Value);
+                        else
+                        {
+                            return itmp;
+                        }
+                    });
+                }
+                else
+                {
+                    re.Registor(val);
+                }
+            }
+            re.ValueChanged = valueChanged;
+            re.BlockChanged = blockchanged;
+            re.Start();
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        public void UnSubscribeValueChangedForConsumer(string name)
+        {
+            ComsumerValueChangedNotifyManager.Manager.DisposeNotifier(name);
+        }
 
         /// <summary>
         /// 

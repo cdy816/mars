@@ -1,7 +1,0 @@
-D:\Project\Galaxy\Cdy.Tag.API\bin\Debug\netstandard2.0\Cdy.Tag.API.deps.json
-D:\Project\Galaxy\Cdy.Tag.API\bin\Debug\netstandard2.0\Cdy.Tag.API.dll
-D:\Project\Galaxy\Cdy.Tag.API\bin\Debug\netstandard2.0\Cdy.Tag.API.pdb
-D:\Project\Galaxy\Cdy.Tag.API\obj\Debug\netstandard2.0\Cdy.Tag.API.AssemblyInfoInputs.cache
-D:\Project\Galaxy\Cdy.Tag.API\obj\Debug\netstandard2.0\Cdy.Tag.API.AssemblyInfo.cs
-D:\Project\Galaxy\Cdy.Tag.API\obj\Debug\netstandard2.0\Cdy.Tag.API.dll
-D:\Project\Galaxy\Cdy.Tag.API\obj\Debug\netstandard2.0\Cdy.Tag.API.pdb

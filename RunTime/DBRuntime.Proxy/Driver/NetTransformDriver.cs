@@ -103,6 +103,7 @@ namespace DBRuntime.Proxy
                     resetEvent.WaitOne();
                     if (mIsClosed) break;
                     resetEvent.Reset();
+                    int icount = mCachDatas.Count;
                     while (mCachDatas.Count > 0)
                     {
                         // ProcessSingleBufferData(mCachDatas.Dequeue());
@@ -142,7 +143,6 @@ namespace DBRuntime.Proxy
         /// <param name="block"></param>
         private void ProcessBlockBufferData(IByteBuffer block)
         {
-           
             var realenginer = (ServiceLocator.Locator.Resolve<IRealTagComsumer>() as RealEnginer);
             var start = block.ReadInt();
             var size = block.ReadInt();
@@ -150,6 +150,7 @@ namespace DBRuntime.Proxy
             Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, realenginer.Memory, start, size);
             block.SetReaderIndex(block.ReaderIndex + size);
             block.ReleaseBuffer();
+           
         }
 
         /// <summary>

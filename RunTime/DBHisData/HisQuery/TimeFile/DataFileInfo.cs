@@ -25,7 +25,7 @@ namespace Cdy.Tag
 
         private bool mInited = false;
 
-        private object mLockObj = new object();
+        private static object mLockObj = new object();
 
         private DateTime mLastTime;
 
@@ -1757,10 +1757,10 @@ namespace Cdy.Tag
             {
                 DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
             }
-            foreach(var vv in data)
+            foreach (var vv in data)
             {
                 vv.Key.Dispose();
-               
+
             }
             data.Clear();
         }

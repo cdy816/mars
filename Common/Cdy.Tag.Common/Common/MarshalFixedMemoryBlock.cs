@@ -268,7 +268,7 @@ namespace Cdy.Tag
         public void ReAlloc(long size)
         {
             Init(size);
-            GC.Collect();
+            //GC.Collect();
         }
 
        
@@ -1232,7 +1232,7 @@ namespace Cdy.Tag
         {
             Marshal.FreeHGlobal(mHandles);
             LoggerService.Service.Erro("MarshalFixedMemoryBlock", Name +" Disposed " );
-            GC.Collect();
+            //GC.Collect();
         }
 
 

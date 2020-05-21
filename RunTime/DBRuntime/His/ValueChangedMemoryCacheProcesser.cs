@@ -115,7 +115,7 @@ namespace Cdy.Tag
                         mChangedTags[vv] = true;
                     }
                 }
-            }),null, new Func<List<int>>(() => { return  mTags.Keys.ToList(); }));
+            }),null,null, new Func<List<int>>(() => { return  mTags.Keys.ToList(); }));
 
             mRecordThread = new Thread(ThreadProcess);
             mRecordThread.IsBackground=true;

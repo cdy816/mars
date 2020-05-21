@@ -131,6 +131,12 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public BlockChangedDelegate BlockChanged { get; set; }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Action BlockChangedNotify { get; set; }
         /// <summary>
         /// 
         /// </summary>
@@ -308,6 +314,7 @@ namespace Cdy.Tag
                             }
                         }
                     }
+                    BlockChangedNotify?.Invoke();
 
                 }
                 Thread.Sleep(10);

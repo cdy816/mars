@@ -186,10 +186,11 @@ namespace Cdy.Tag
             }
             else if(e.ChangeType == System.IO.WatcherChangeTypes.Changed)
             {
+                LoggerService.Service.Info("DataFileMananger", "HisDataFile " + e.Name + " is changed & will be processed！", ConsoleColor.Cyan);
+                var vtmp = new System.IO.FileInfo(e.FullPath);
                 lock (mLocker)
                 {
-                    LoggerService.Service.Info("DataFileMananger", "HisDataFile " + e.Name + " is changed & will be processed！", ConsoleColor.Cyan);
-                    var vtmp = new System.IO.FileInfo(e.FullPath);
+                   
                     if (vtmp.Extension == DataFileExtends)
                     {
                         var vfile = CheckAndGetDataFile(e.Name);

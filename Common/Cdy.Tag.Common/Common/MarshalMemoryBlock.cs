@@ -1840,14 +1840,17 @@ namespace Cdy.Tag
         public virtual void Dispose()
         {
             //mDataBuffer = null;
-            foreach(var vv in mHandles)
+            if (mHandles.Count > 0)
             {
-                Marshal.FreeHGlobal(vv);
+                foreach (var vv in mHandles)
+                {
+                    Marshal.FreeHGlobal(vv);
+                }
+                mHandles.Clear();
             }
-            mHandles.Clear();
-            LoggerService.Service.Erro("MarshalMemoryBlock", Name +" Disposed " );
+          //  LoggerService.Service.Erro("MarshalMemoryBlock", Name +" Disposed " );
 
-            GC.Collect();
+            //GC.Collect();
         }
 
         ///// <summary>

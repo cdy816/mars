@@ -122,12 +122,14 @@ namespace DBRuntime.Api
                 {
                     lock (mChangedBlocks)
                         mChangedBlocks.Enqueue(bids);
-
-                    if (!mIsClosed)
-                        resetEvent.Set();
                 }
 
-            }), new Func<List<int>>(() => { return null; }));
+            }),()=> {
+                if (!mIsClosed)
+                {
+                    resetEvent.Set();
+                }
+            }, new Func<List<int>>(() => { return null; }));
             
         }
 
@@ -207,10 +209,14 @@ namespace DBRuntime.Api
             var cc = ServiceLocator.Locator.Resolve<IRealTagComsumer>() as RealEnginer;
            
             if (start >= cc.Memory.Length) return;
-            var re = BufferManager.Manager.Allocate(ApiFunConst.RealDataRequestFun, size);
-            Buffer.BlockCopy(cc.Memory, start, re.Array, re.ArrayOffset + re.WriterIndex, size);
-            re.SetWriterIndex(re.WriterIndex + size);
-            Parent.AsyncCallback(clientId, re);
+            var re = BufferManager.Manager.Allocate(ApiFunConst.RealDataRequestFun, 0);
+
+
+            var ob = Unpooled.CompositeBuffer().AddComponents(true, re, Unpooled.WrappedBuffer(cc.Memory, start, size));
+            //var re = BufferManager.Manager.Allocate(ApiFunConst.RealDataRequestFun, size);
+            //Buffer.BlockCopy(cc.Memory, start, re.Array, re.ArrayOffset + re.WriterIndex, size);
+            //re.SetWriterIndex(re.WriterIndex + size);
+            Parent.AsyncCallback(clientId, ob);
         }
 
 
@@ -232,6 +238,28 @@ namespace DBRuntime.Api
             Buffer.BlockCopy(cc.Memory, start, re.Array, re.ArrayOffset + re.WriterIndex, size);
             re.SetWriterIndex(re.WriterIndex + size);
             return re;
+        }
+
+        private IByteBuffer GetBlockSendBuffer2(BlockItem item)
+        {
+            int start = item.StartAddress;
+            int size = item.EndAddress - start;
+            var cc = ServiceLocator.Locator.Resolve<IRealTagComsumer>() as RealEnginer;
+            if (start >= cc.Memory.Length) return null;
+
+            //var re = Unpooled.Buffer(10);
+
+            //re.WriteByte(ApiFunConst.RealDataPushFun);
+            var re = BufferManager.Manager.Allocate(ApiFunConst.RealDataPushFun,  9);
+            re.WriteByte(RealDataBlockPush);
+            re.WriteInt(start);
+            re.WriteInt(size);
+
+            return Unpooled.CompositeBuffer().AddComponents(true,re, Unpooled.WrappedBuffer(cc.Memory, start, size));
+       
+           // Buffer.BlockCopy(cc.Memory, start, re.Array, re.ArrayOffset + re.WriterIndex, size);
+           // re.SetWriterIndex(re.WriterIndex + size);
+           // return re;
         }
 
         /// <summary>
@@ -802,15 +830,15 @@ namespace DBRuntime.Api
 
                     if(mBlockCallBackRegistorIds.Count>0)
                     {
-                        Stopwatch sw = new Stopwatch();
-                        sw.Start();
+                        //Stopwatch sw = new Stopwatch();
+                        //sw.Start();
                         int count = 0;
                         while (mChangedBlocks.Count>0)
                         {
                             var vv = mChangedBlocks.Dequeue();
                             if (vv == null) continue;
 
-                            var buffer = GetBlockSendBuffer(vv);
+                            var buffer = GetBlockSendBuffer2(vv);
                             foreach (var vvb in mBlockCallBackRegistorIds.ToArray())
                             {
                               //  buffer.Retain();
@@ -822,8 +850,8 @@ namespace DBRuntime.Api
                             //buffer.ReleaseBuffer();
                             count++;
                         }
-                        sw.Stop();
-                        LoggerService.Service.Erro("RealDataServerProcess", "推送数据耗时"+sw.ElapsedMilliseconds+" 大小:"+ count);
+                        //sw.Stop();
+                        //LoggerService.Service.Erro("RealDataServerProcess", "推送数据耗时"+sw.ElapsedMilliseconds+" 大小:"+ count);
                     }
                     else
                     {

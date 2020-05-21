@@ -3480,7 +3480,7 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         /// <param name="valueChanged"></param>
         /// <param name="tagRegistor"></param>
-        public void SubscribeValueChangedForConsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelegate valueChanged, ValueChangedNotifyProcesser.BlockChangedDelegate blockchanged, Func<List<int>> tagRegistor)
+        public void SubscribeValueChangedForConsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelegate valueChanged, ValueChangedNotifyProcesser.BlockChangedDelegate blockchanged,Action BlockChangedNotify, Func<List<int>> tagRegistor)
         {
             var re = ComsumerValueChangedNotifyManager.Manager.GetNotifier(name);
             if (tagRegistor != null)
@@ -3507,6 +3507,7 @@ namespace Cdy.Tag
             }
             re.ValueChanged = valueChanged;
             re.BlockChanged = blockchanged;
+            re.BlockChangedNotify = BlockChangedNotify;
             re.Start();
         }
 

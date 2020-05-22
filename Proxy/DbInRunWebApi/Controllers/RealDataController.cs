@@ -43,6 +43,57 @@ namespace DbInRunWebApi.Controllers
             return new RealValueQueryResponse() { Result = false };
         }
 
+        [HttpGet("Value")]
+        public RealValueOnlyQueryResponse GetValueOnly([FromBody] RealDataRequest request)
+        {
+            if (DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token) && DbInRunWebApi.SecurityManager.Manager.CheckReaderPermission(request.Token, request.Group))
+            {
+                RealValueOnlyQueryResponse response = new RealValueOnlyQueryResponse() { Result = true, Datas = new List<object>() };
+                var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+                var ids = service.GetTagIdByName(request.TagNames);
+                for (int i = 0; i < request.TagNames.Count; i++)
+                {
+                    if (ids[i].HasValue)
+                    {
+                        byte quality;
+                        DateTime time;
+                        byte tagtype = 0;
+                        var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
+                        response.Datas.Add(val);
+                    }
+                }
+                return response;
+            }
+            //ServiceLocator.Locator.Resolve<IRealTagComsumer>().GetTagValue()
+            return new RealValueOnlyQueryResponse() { Result = false };
+        }
+
+
+        [HttpGet("ValueAndQuality")]
+        public RealValueAndQualityQueryResponse GetValueAndQuality([FromBody] RealDataRequest request)
+        {
+            if (DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token) && DbInRunWebApi.SecurityManager.Manager.CheckReaderPermission(request.Token, request.Group))
+            {
+                RealValueAndQualityQueryResponse response = new RealValueAndQualityQueryResponse() { Result = true, Datas = new List<RealValueAndQuality>() };
+                var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+                var ids = service.GetTagIdByName(request.TagNames);
+                for (int i = 0; i < request.TagNames.Count; i++)
+                {
+                    if (ids[i].HasValue)
+                    {
+                        byte quality;
+                        DateTime time;
+                        byte tagtype = 0;
+                        var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
+                        response.Datas.Add(new RealValueAndQuality() { Quality = quality, Value = val });
+                    }
+                }
+                return response;
+            }
+            //ServiceLocator.Locator.Resolve<IRealTagComsumer>().GetTagValue()
+            return new RealValueAndQualityQueryResponse() { Result = false };
+        }
+
         /// <summary>
         /// 
         /// </summary>

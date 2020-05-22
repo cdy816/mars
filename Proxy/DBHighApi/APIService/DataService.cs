@@ -13,7 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DBRuntime.Api
+namespace DBHighApi.Api
 {
     public class ApiFunConst
     {
@@ -101,7 +101,6 @@ namespace DBRuntime.Api
             mRealProcess.Start();
             mInfoProcess.Start();
             base.StartInner(port);
-
         }
 
         /// <summary>

@@ -68,7 +68,7 @@ namespace DBRuntime.Api
                 return;
             }
             byte cmd = data.ReadByte();
-            string id = data.ReadString();
+            long id = data.ReadLong();
             if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(id))
             {
                 switch(cmd)

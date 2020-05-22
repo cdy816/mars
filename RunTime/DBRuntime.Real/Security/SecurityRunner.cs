@@ -10,6 +10,7 @@
 using Cdy.Tag;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -27,6 +28,10 @@ namespace Cdy.Tag
         private Dictionary<string, DateTime> mLastLogin = new Dictionary<string, DateTime>();
 
         private Dictionary<string, string> mUseIdMap = new Dictionary<string, string>();
+
+
+        private Dictionary<long, DateTime> mLastLogin2 = new Dictionary<long, DateTime>();
+        private Dictionary<long, string> mUseIdMap2 = new Dictionary<long, string>();
 
         public const int Timeout = 10;
 
@@ -127,6 +132,39 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool CheckLogin(long id)
+        {
+            return mLastLogin2.ContainsKey(id);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private string GetUId()
+        {
+            return Guid.NewGuid().ToString().Replace("-", "");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private long GetUIdByLong()
+        {
+            byte[] buffer = Guid.NewGuid().ToByteArray();
+            var re = BitConverter.ToInt64(buffer, 0);
+            if (re <= 0)
+                return GetUIdByLong();
+            else
+                return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="user"></param>
         /// <param name="pass"></param>
         /// <returns></returns>
@@ -157,6 +195,21 @@ namespace Cdy.Tag
                 mLastLogin.Remove(id);
             }
             if (mUseIdMap.ContainsKey(id)) return mUseIdMap.Remove(id);
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool Logout(long id)
+        {
+            if (mLastLogin2.ContainsKey(id))
+            {
+                mLastLogin2.Remove(id);
+            }
+            if (mUseIdMap2.ContainsKey(id)) return mUseIdMap2.Remove(id);
             return true;
         }
 
@@ -211,6 +264,42 @@ namespace Cdy.Tag
                 mLastLogin[id] = DateTime.Now;
             }
             return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="pass"></param>
+        /// <returns></returns>
+        public long Login(string user, string pass,string clientid)
+        {
+            if (mDocument != null && mDocument.User.Users.ContainsKey(user) && mDocument.User.Users[user].Password == pass)
+            {
+                long sid = GetUIdByLong();
+                lock (mLockObj)
+                {
+                    mLastLogin2.Add(sid, DateTime.Now);
+                    mUseIdMap2.Add(sid, clientid);
+                }
+                return sid;
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool LogoutByClientId(string id)
+        {
+           var vv=  mUseIdMap2.Where(e => e.Value == id);
+            if(vv!=null && vv.Count()>0)
+            {
+               return Logout(vv.First().Key);
+            }
+            return false;
         }
 
 

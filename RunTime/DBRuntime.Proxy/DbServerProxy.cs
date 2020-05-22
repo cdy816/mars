@@ -255,7 +255,7 @@ namespace DBRuntime.Proxy
         /// <returns></returns>
         public string GetRunnerDatabase()
         {
-            return dbClient.GetRunnerDatabase(dbClient.LoginId);
+            return dbClient.GetRunnerDatabase();
         }
 
         //private unsafe Dictionary<DateTime,Tuple<object,byte>> ProcessHisResult<T>(IByteBuffer data, TagType tp)
@@ -474,6 +474,56 @@ namespace DBRuntime.Proxy
             Marshal.Copy(data.Array, data.ArrayOffset + data.ReaderIndex, re.Address, data.ReadableBytes);
             re.Count = count;
             return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="stime"></param>
+        /// <param name="etime"></param>
+        /// <returns></returns>
+        public IByteBuffer QueryAllHisValue(int id, DateTime stime, DateTime etime)
+        {
+            if (IsConnected)
+            {
+               return this.mUsedHisClient.QueryAllHisValue(id, stime, etime);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="stime"></param>
+        /// <param name="etime"></param>
+        /// <param name="span"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public IByteBuffer QueryHisData(int id, DateTime stime, DateTime etime, TimeSpan span, Cdy.Tag.QueryValueMatchType type)
+        {
+            if (IsConnected)
+            {
+                return mUsedHisClient.QueryHisValueForTimeSpan(id, stime, etime, span, type);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public IByteBuffer QueryHisData(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType type)
+        {
+            if (IsConnected)
+            {
+                return mUsedHisClient.QueryHisValueAtTimes(id, times, type);
+            }
+            return null;
         }
 
         /// <summary>

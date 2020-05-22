@@ -14,7 +14,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace DBRuntime.Api
+namespace DBHighApi.Api
 {
     public abstract class ServerProcessBase:IDisposable
     {

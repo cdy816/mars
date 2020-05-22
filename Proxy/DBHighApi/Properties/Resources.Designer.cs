@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DbWebApi.Properties {
+namespace DBHighApi.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace DbWebApi.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DbWebApi.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DBHighApi.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,11 +61,11 @@ namespace DbWebApi.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Welcome to  Web Api of Mars high performance realtime iot database 的本地化字符串。
+        ///   查找类似 DBHighAPI Service start at {0}. 的本地化字符串。
         /// </summary>
-        internal static string WelcomeMsg {
+        internal static string serverstartmsg {
             get {
-                return ResourceManager.GetString("WelcomeMsg", resourceCulture);
+                return ResourceManager.GetString("serverstartmsg", resourceCulture);
             }
         }
     }

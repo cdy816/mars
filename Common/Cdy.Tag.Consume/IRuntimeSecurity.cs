@@ -50,6 +50,14 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        bool CheckLogin(long id);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         bool FreshUserId(string id);
 
         /// <summary>
@@ -63,9 +71,31 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="user"></param>
+        /// <param name="pass"></param>
+        /// <returns></returns>
+        long Login(string user, string pass,string clientId);
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
         bool Logout(string id);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        bool Logout(long id);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        bool LogoutByClientId(string id);
 
         /// <summary>
         /// 

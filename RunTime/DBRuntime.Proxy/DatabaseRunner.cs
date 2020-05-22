@@ -52,6 +52,10 @@ namespace DBRuntime.Proxy
 
         private bool mUseStandardHisDataServer = false;
 
+        public delegate void IsReadyDelegate(bool value);
+
+        public event IsReadyDelegate IsReadyEvent;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -182,6 +186,7 @@ namespace DBRuntime.Proxy
                     {
                         CloseDatabase();
                     }
+                    IsReadyEvent?.BeginInvoke(false, null, null);
                 }
 
             });
@@ -221,6 +226,8 @@ namespace DBRuntime.Proxy
         {
             string[] sbase = database.Split(new char[] { ',' });
             Load(sbase[0], sbase[1] + sbase[2]);
+
+            IsReadyEvent?.Invoke(true);
         }
 
         /// <summary>

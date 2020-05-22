@@ -133,7 +133,7 @@ namespace DBHisDataServer
                 return;
             }
             DBRuntime.Api.DataService.Service.Start(14331);
-            mSecurityRunner.Start();
+            //mSecurityRunner.Start();
             mIsStarted = true;
         }
 

@@ -4,6 +4,8 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <StartupObject>DbInRunWebApi.Program</StartupObject>
     <OutputType>Exe</OutputType>
+    <AssemblyName>DbWebApi</AssemblyName>
+    <RootNamespace>DbWebApi</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

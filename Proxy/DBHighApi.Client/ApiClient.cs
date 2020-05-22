@@ -6,7 +6,7 @@ using System.Threading;
 using Cdy.Tag;
 using DotNetty.Buffers;
 
-namespace DBRunTime.ServiceApi
+namespace DBHighApi
 {
     public class ApiFunConst
     {
@@ -33,6 +33,29 @@ namespace DBRunTime.ServiceApi
         /// 获取实时值
         /// </summary>
         public const byte RequestRealData = 0;
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte RequestRealDataValue = 7;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte RequestRealDataValueAndQuality = 8;
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte RequestReal2DataValue = 17;
+
+        /// <summary>
+        /// 
+        /// </summary>
+
+        public const byte RequestReal2DataValueAndQuality = 18;
 
         /// <summary>
         /// 
@@ -126,7 +149,7 @@ namespace DBRunTime.ServiceApi
         /// </summary>
         private Dictionary<byte, IByteBuffer> mReceivedDatas = new Dictionary<byte, IByteBuffer>();
 
-        public delegate void ProcessDataPushDelegate(IByteBuffer datas);
+        public delegate void ProcessDataPushDelegate(Dictionary<int, Tuple<object, DateTime, byte>> datas);
 
         #endregion ...Variables...
 
@@ -166,10 +189,9 @@ namespace DBRunTime.ServiceApi
         /// <param name="datas"></param>
         protected override void ProcessData(byte fun, IByteBuffer datas)
         {
-           
             if(fun == ApiFunConst.RealDataPushFun)
             {
-                ProcessDataPush?.Invoke(datas);
+                ProcessDataPush?.Invoke(ProcessSingleBufferData(datas));
             }
             else
             {
@@ -335,33 +357,6 @@ namespace DBRunTime.ServiceApi
         /// </summary>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool RegistorTagBlockValueCallBack(int timeout = 5000)
-        {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun,8);
-            mb.WriteByte(ApiFunConst.BlockValueChangeNotify);
-            mb.WriteLong(this.LoginId);
-            this.realRequreEvent.Reset();
-            Send(mb);
-            try
-            {
-                if (realRequreEvent.WaitOne(timeout))
-                {
-                    return mRealRequreData.ReadByte() > 0;
-                }
-            }
-            finally
-            {
-                //mRealRequreData?.ReleaseBuffer();
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
         public bool ClearRegistorTagValueCallBack(int timeout = 5000)
         {
             CheckLogin();
@@ -389,7 +384,7 @@ namespace DBRunTime.ServiceApi
         /// 
         /// </summary>
         /// <returns></returns>
-        public IByteBuffer GetRealData(List<int> ids,int timeout=5000)
+        public IByteBuffer GetRealDataInner(List<int> ids,int timeout=5000)
         {
             CheckLogin();
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 +ids.Count* 4);
@@ -419,17 +414,42 @@ namespace DBRunTime.ServiceApi
             return null;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="ids"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public IByteBuffer GetRealDataByMemoryCopy(List<int> ids, int timeout = 5000)
+
+        public IByteBuffer GetRealDataInnerValueOnly(List<int> ids, int timeout = 5000)
         {
             CheckLogin();
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + ids.Count * 4);
-            mb.WriteByte(ApiFunConst.RequestRealDataByMemoryCopy);
+            mb.WriteByte(ApiFunConst.RequestRealDataValue);
+            mb.WriteLong(this.LoginId);
+            mb.WriteInt(ids.Count);
+            for (int i = 0; i < ids.Count; i++)
+            {
+                mb.WriteInt(ids[i]);
+            }
+            realRequreEvent.Reset();
+            Send(mb);
+
+            try
+            {
+                if (realRequreEvent.WaitOne(timeout))
+                {
+                    return mRealRequreData;
+                }
+            }
+            finally
+            {
+                //mRealRequreData?.ReleaseBuffer();
+            }
+
+
+            return null;
+        }
+
+        public IByteBuffer GetRealDataInnerValueAndQualityOnly(List<int> ids, int timeout = 5000)
+        {
+            CheckLogin();
+            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + ids.Count * 4);
+            mb.WriteByte(ApiFunConst.RequestRealDataValueAndQuality);
             mb.WriteLong(this.LoginId);
             mb.WriteInt(ids.Count);
             for (int i = 0; i < ids.Count; i++)
@@ -462,7 +482,7 @@ namespace DBRunTime.ServiceApi
         /// <param name="ide"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public IByteBuffer GetRealData(int ids,int ide, int timeout = 5000)
+        public IByteBuffer GetRealDataInner(int ids, int ide, int timeout = 5000)
         {
             CheckLogin();
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
@@ -483,52 +503,15 @@ namespace DBRunTime.ServiceApi
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="minid"></param>
-        /// <param name="maxid"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public IEnumerable<IByteBuffer> SyncRealMemory(int totalsize, int timeout = 5000)
-        {
-            CheckLogin();
-            int start = 0;
-            int len = 1024 * 1024 * 10;
-            while (start <= totalsize)
-            {
-                if (start + len > totalsize)
-                {
-                    len = totalsize - start;
-                }
-                
-                if (len <= 0) break;
-                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 4);
-                mb.WriteByte(ApiFunConst.RealMemorySync);
-                mb.WriteLong(this.LoginId);
-                mb.WriteInt(len);
-                mb.WriteInt(start);
-                realRequreEvent.Reset();
-                Send(mb);
-                if (realRequreEvent.WaitOne(timeout))
-                {
-                    yield return mRealRequreData;
-                }
-                yield return null;
-                start += len;
-            }
-           
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="ids"></param>
         /// <param name="ide"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public IByteBuffer GetRealDataByMemoryCopy(int ids, int ide, int timeout = 5000)
+        public IByteBuffer GetRealDataInnerValueOnly(int ids, int ide, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + (ide - ids) * 4);
-            mb.WriteByte(ApiFunConst.RequestRealData2ByMemoryCopy);
+            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
+            mb.WriteByte(ApiFunConst.RequestReal2DataValue);
             mb.WriteLong(this.LoginId);
             mb.WriteInt(ids);
             mb.WriteInt(ide);
@@ -539,10 +522,377 @@ namespace DBRunTime.ServiceApi
             {
                 return mRealRequreData;
             }
-            //mRealRequreData?.ReleaseBuffer();
-
             return null;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="ide"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public IByteBuffer GetRealDataInnerValueAndQualityOnly(int ids, int ide, int timeout = 5000)
+        {
+            CheckLogin();
+            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
+            mb.WriteByte(ApiFunConst.RequestReal2DataValueAndQuality);
+            mb.WriteLong(this.LoginId);
+            mb.WriteInt(ids);
+            mb.WriteInt(ide);
+            realRequreEvent.Reset();
+            Send(mb);
+
+            if (realRequreEvent.WaitOne(timeout))
+            {
+                return mRealRequreData;
+            }
+            return null;
+        }
+
+        protected string ReadString(IByteBuffer buffer)
+        {
+            return buffer.ReadString(buffer.ReadInt(), Encoding.Unicode);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="block"></param>
+        private Dictionary<int,Tuple<object,DateTime,byte>> ProcessSingleBufferData(IByteBuffer block)
+        {
+            if (block == null) return null;
+            Dictionary<int, Tuple<object, DateTime, byte>> re = new Dictionary<int, Tuple<object, DateTime, byte>>();
+
+            var count = block.ReadInt();
+            for (int i = 0; i < count; i++)
+            {
+                var vid = block.ReadInt();
+                if (vid < 0)
+                {
+                    Debug.Print("Invaild value!");
+                }
+                var typ = block.ReadByte();
+                object value = null;
+                switch (typ)
+                {
+                    case (byte)TagType.Bool:
+                        value = block.ReadByte();
+                        break;
+                    case (byte)TagType.Byte:
+                        value = block.ReadByte();
+                        break;
+                    case (byte)TagType.Short:
+                        value = block.ReadShort();
+                        break;
+                    case (byte)TagType.UShort:
+                        value = (ushort)block.ReadShort();
+                        break;
+                    case (byte)TagType.Int:
+                        value = block.ReadInt();
+                        break;
+                    case (byte)TagType.UInt:
+                        value = (uint)block.ReadInt();
+                        break;
+                    case (byte)TagType.Long:
+                        value = block.ReadLong();
+                        break;
+                    case (byte)TagType.ULong:
+                        value = (ulong)block.ReadLong();
+                        break;
+                    case (byte)TagType.Float:
+                        value = block.ReadFloat();
+                        break;
+                    case (byte)TagType.Double:
+                        value = block.ReadDouble();
+                        break;
+                    case (byte)TagType.String:
+                        value = ReadString(block);
+                        break;
+                    case (byte)TagType.DateTime:
+                        var tick = block.ReadLong();
+                        value = new DateTime(tick);
+                        break;
+                    case (byte)TagType.IntPoint:
+                        value = new IntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint:
+                        value = new UIntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.IntPoint3:
+                        value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint3:
+                        value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.LongPoint:
+                        value = new LongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint:
+                        value = new ULongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.LongPoint3:
+                        value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint3:
+                        value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                }
+                var time = new DateTime(block.ReadLong());
+                var qua = block.ReadByte();
+                re.Add(vid, new Tuple<object, DateTime, byte>(value,time, qua));
+            }
+            block.Release();
+            return re;
+        }
+
+
+        private Dictionary<int, Tuple<object, byte>> ProcessSingleBufferDataValueAndQuality(IByteBuffer block)
+        {
+            if (block == null) return null;
+            Dictionary<int, Tuple<object,  byte>> re = new Dictionary<int, Tuple<object,  byte>>();
+
+            var count = block.ReadInt();
+            for (int i = 0; i < count; i++)
+            {
+                var vid = block.ReadInt();
+                if (vid < 0)
+                {
+                    Debug.Print("Invaild value!");
+                }
+                var typ = block.ReadByte();
+                object value = null;
+                switch (typ)
+                {
+                    case (byte)TagType.Bool:
+                        value = block.ReadByte();
+                        break;
+                    case (byte)TagType.Byte:
+                        value = block.ReadByte();
+                        break;
+                    case (byte)TagType.Short:
+                        value = block.ReadShort();
+                        break;
+                    case (byte)TagType.UShort:
+                        value = (ushort)block.ReadShort();
+                        break;
+                    case (byte)TagType.Int:
+                        value = block.ReadInt();
+                        break;
+                    case (byte)TagType.UInt:
+                        value = (uint)block.ReadInt();
+                        break;
+                    case (byte)TagType.Long:
+                        value = block.ReadLong();
+                        break;
+                    case (byte)TagType.ULong:
+                        value = (ulong)block.ReadLong();
+                        break;
+                    case (byte)TagType.Float:
+                        value = block.ReadFloat();
+                        break;
+                    case (byte)TagType.Double:
+                        value = block.ReadDouble();
+                        break;
+                    case (byte)TagType.String:
+                        value = ReadString(block);
+                        break;
+                    case (byte)TagType.DateTime:
+                        var tick = block.ReadLong();
+                        value = new DateTime(tick);
+                        break;
+                    case (byte)TagType.IntPoint:
+                        value = new IntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint:
+                        value = new UIntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.IntPoint3:
+                        value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint3:
+                        value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.LongPoint:
+                        value = new LongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint:
+                        value = new ULongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.LongPoint3:
+                        value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint3:
+                        value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                }
+                var qua = block.ReadByte();
+                re.Add(vid, new Tuple<object, byte>(value, qua));
+            }
+            block.Release();
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="block"></param>
+        /// <returns></returns>
+        private Dictionary<int, object> ProcessSingleBufferDataValue(IByteBuffer block)
+        {
+            if (block == null) return null;
+            Dictionary<int, object> re = new Dictionary<int, object>();
+
+            var count = block.ReadInt();
+            for (int i = 0; i < count; i++)
+            {
+                var vid = block.ReadInt();
+                if (vid < 0)
+                {
+                    Debug.Print("Invaild value!");
+                }
+                var typ = block.ReadByte();
+                object value = null;
+                switch (typ)
+                {
+                    case (byte)TagType.Bool:
+                        value = block.ReadByte();
+                        break;
+                    case (byte)TagType.Byte:
+                        value = block.ReadByte();
+                        break;
+                    case (byte)TagType.Short:
+                        value = block.ReadShort();
+                        break;
+                    case (byte)TagType.UShort:
+                        value = (ushort)block.ReadShort();
+                        break;
+                    case (byte)TagType.Int:
+                        value = block.ReadInt();
+                        break;
+                    case (byte)TagType.UInt:
+                        value = (uint)block.ReadInt();
+                        break;
+                    case (byte)TagType.Long:
+                        value = block.ReadLong();
+                        break;
+                    case (byte)TagType.ULong:
+                        value = (ulong)block.ReadLong();
+                        break;
+                    case (byte)TagType.Float:
+                        value = block.ReadFloat();
+                        break;
+                    case (byte)TagType.Double:
+                        value = block.ReadDouble();
+                        break;
+                    case (byte)TagType.String:
+                        value = ReadString(block);
+                        break;
+                    case (byte)TagType.DateTime:
+                        var tick = block.ReadLong();
+                        value = new DateTime(tick);
+                        break;
+                    case (byte)TagType.IntPoint:
+                        value = new IntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint:
+                        value = new UIntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.IntPoint3:
+                        value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint3:
+                        value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.LongPoint:
+                        value = new LongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint:
+                        value = new ULongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.LongPoint3:
+                        value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint3:
+                        value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                }
+                re.Add(vid, value);
+            }
+            block.Release();
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public Dictionary<int, Tuple<object, DateTime, byte>> GetRealData(List<int> ids, int timeout = 5000)
+        {
+            return ProcessSingleBufferData(GetRealDataInner(ids, timeout));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public Dictionary<int, object> GetRealDataValueOnly(List<int> ids, int timeout = 5000)
+        {
+            return ProcessSingleBufferDataValue(GetRealDataInnerValueOnly(ids, timeout));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public Dictionary<int, Tuple<object,byte>> GetRealDataValueAndQualityOnly(List<int> ids, int timeout = 5000)
+        {
+            return ProcessSingleBufferDataValueAndQuality(GetRealDataInnerValueAndQualityOnly(ids, timeout));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="startId"></param>
+        /// <param name="endId"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public Dictionary<int, Tuple<object, DateTime, byte>> GetRealData(int startId,int endId, int timeout = 5000)
+        {
+            return ProcessSingleBufferData(GetRealDataInner(startId,endId, timeout));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="startId"></param>
+        /// <param name="endId"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public Dictionary<int, object> GetRealDataValueOnly(int startId, int endId, int timeout = 5000)
+        {
+            return ProcessSingleBufferDataValue(GetRealDataInnerValueOnly(startId,endId, timeout));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="startId"></param>
+        /// <param name="endId"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+
+        public Dictionary<int, Tuple<object, byte>> GetRealDataValueAndQualityOnly(int startId, int endId, int timeout = 5000)
+        {
+            return ProcessSingleBufferDataValueAndQuality(GetRealDataInnerValueAndQualityOnly(startId, endId, timeout));
+        }
+
 
         /// <summary>
         /// 

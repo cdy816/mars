@@ -259,7 +259,7 @@ namespace Cdy.Tag
             seriseEnginer.Start();
             compressEnginer.Start();
             hisEnginer.Start();
-            mSecurityRunner.Start();
+            //mSecurityRunner.Start();
             DriverManager.Manager.Start();
 
             mIsStarted = true;
@@ -277,7 +277,7 @@ namespace Cdy.Tag
             DriverManager.Manager.Stop();
             compressEnginer.Stop();
             seriseEnginer.Stop();
-            mSecurityRunner.Stop();
+           // mSecurityRunner.Stop();
             mIsStarted = false;
         }
 

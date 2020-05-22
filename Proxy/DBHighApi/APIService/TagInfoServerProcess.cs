@@ -14,7 +14,7 @@ using System.Threading;
 using Cdy.Tag;
 using DotNetty.Buffers;
 
-namespace DBRuntime.Api
+namespace DBHighApi.Api
 {
     public class TagInfoServerProcess : ServerProcessBase
     {
@@ -25,10 +25,6 @@ namespace DBRuntime.Api
 
         public const byte Login = 1;
 
-        public const byte RegistValueCallBack = 2;
-
-        public const byte GetdatabaseName = 3;
-
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -36,8 +32,6 @@ namespace DBRuntime.Api
         #endregion ...Events...
 
         #region ... Constructor...
-
-
 
         #endregion ...Constructor...
 
@@ -92,18 +86,7 @@ namespace DBRuntime.Api
                     long result = Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().Login(user, pass,client);
                     Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, result));
                     break;
-                case GetdatabaseName:
-                    loginId = data.ReadLong();
-                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
-                    {
-                        Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, Runner.CurrentDatabase+","+Runner.CurrentDatabaseVersion+","+Runner.CurrentDatabaseLastUpdateTime));
-                    }
-                    break;
-
-
             }
-
-           
         }
 
         #endregion ...Methods...

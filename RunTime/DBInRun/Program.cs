@@ -280,31 +280,31 @@ namespace DBInRun
             int id = 0;
             for (int i = 0; i < dcount; i++)
             {
-                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Double, Circle = 1000,Type = Cdy.Tag.RecordType.Timer,CompressType=0 });
+                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Double, Circle = 1000,Type = Cdy.Tag.RecordType.Timer,CompressType=1 });
                 id++;
             }
 
             for (int i = 0; i < fcount; i++)
             {
-                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Float, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
+                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Float, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 1 });
                 id++;
             }
 
             for (int i = 0; i < lcount; i++)
             {
-                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Long, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
+                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Long, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType =1 });
                 id++;
             }
 
             for (int i = 0; i < icount; i++)
             {
-                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Int, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
+                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Int, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 1});
                 id++;
             }
 
             for (int i = 0; i < bcount; i++)
             {
-                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Bool, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
+                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Bool, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType =1 });
                 id++;
             }
             db.HisDatabase = htest;

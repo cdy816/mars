@@ -1632,7 +1632,7 @@ namespace Cdy.Tag
             }
 
             int count = 0;
-            var timers = GetTimers(source, sourceAddr + 8,timeTick, out count);
+            var timers = GetTimers(source, sourceAddr,timeTick, out count);
 
             var valuesize = source.ReadInt();
             var value = DeCompressValue<T>(source.ReadBytes(valuesize), count);
@@ -1651,13 +1651,14 @@ namespace Cdy.Tag
                     var skey = timers[i];
 
                     var snext = timers[i + 1];
+                    j = i;
 
-                    if (time1 == skey)
+                    if ((time1==skey) ||(time1 < skey && (skey - time1).TotalSeconds<1))
                     {
                         var val = value[i];
                         result.Add(val, time1, qulityes[i]);
                         resultCount++;
-
+                        
                         break;
                     }
                     else if (time1 > skey && time1 < snext)
@@ -1793,7 +1794,7 @@ namespace Cdy.Tag
 
                 var snext = timers[i + 1];
 
-                if (time == skey)
+                if ((time == skey) || (time < skey && (skey - time).TotalSeconds < 1))
                 {
                     return value[i];
                 }
@@ -1937,7 +1938,7 @@ namespace Cdy.Tag
 
                 var snext = timers[i + 1];
 
-                if (time1 == skey)
+                if ((time1 == skey) || (time1 < skey && (skey - time1).TotalSeconds < 1))
                 {
                     return value[i];
 
@@ -2118,7 +2119,7 @@ namespace Cdy.Tag
 
                     var snext = timers[i + 1];
 
-                    if (time1 == skey)
+                    if ((time1 == skey) || (time1 < skey && (skey - time1).TotalSeconds < 1))
                     {
                         var val = value[i];
                         result.Add(val, time1, qulityes[i]);

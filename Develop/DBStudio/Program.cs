@@ -63,6 +63,8 @@ namespace DBStudio
 
         }
 
+ 
+
         /// <summary>
         /// 
         /// </summary>
@@ -255,7 +257,7 @@ namespace DBStudio
                     }
                     else if (cmsg == "sp")
                     {
-                        Sp(db, cmd.Skip(1).ToArray());
+                        Sp(db,int.Parse(cmd[1]), cmd.Skip(2).ToArray());
                     }
                     else if (cmsg == "exit")
                     {
@@ -287,7 +289,7 @@ namespace DBStudio
         /// </summary>
         /// <param name="db"></param>
         /// <param name="paras"></param>
-        private static void Sp(Database db, params string[] paras)
+        private static void Sp(Database db,int ctp, params string[] paras)
         {
             Cdy.Tag.RealDatabase test = db.RealDatabase;
             db.RealDatabase = test;
@@ -313,7 +315,7 @@ namespace DBStudio
                     }
                     var vtag = new Cdy.Tag.DoubleTag() { Name = "Double" + i, Group = "Double", LinkAddress = address };
                     test.Append(vtag);
-                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Double, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
+                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Double, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = ctp });
                 }
             }
 
@@ -336,7 +338,7 @@ namespace DBStudio
                     }
                     var vtag = new Cdy.Tag.FloatTag() { Name = "Float" + i, Group = "Float", LinkAddress = address };
                     test.Append(vtag);
-                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Float, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
+                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Float, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = ctp });
                 }
             }
 
@@ -347,7 +349,7 @@ namespace DBStudio
                 {
                     var vtag = new Cdy.Tag.LongTag() { Name = "Long" + i, Group = "Long", LinkAddress = "Sim:step" };
                     test.Append(vtag);
-                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Long, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
+                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Long, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = ctp });
                 }
             }
 
@@ -358,7 +360,7 @@ namespace DBStudio
                 {
                     var vtag = new Cdy.Tag.IntTag() { Name = "Int" + i, Group = "Int", LinkAddress = "Sim:step" };
                     test.Append(vtag);
-                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Int, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
+                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Int, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = ctp });
                 }
             }
 
@@ -369,7 +371,7 @@ namespace DBStudio
                 {
                     var vtag = new Cdy.Tag.BoolTag() { Name = "Bool" + i, Group = "Bool", LinkAddress = "Sim:square" };
                     test.Append(vtag);
-                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Bool, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
+                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Bool, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = ctp });
                 }
             }
 
@@ -381,7 +383,7 @@ namespace DBStudio
                 {
                     var vtag = new Cdy.Tag.IntPointTag() { Name = "IntPoint" + i, Group = "IntPoint", LinkAddress = "Sim:steppoint" };
                     test.Append(vtag);
-                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.IntPoint, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 0 });
+                    htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.IntPoint, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = ctp });
                 }
             }
         }
@@ -405,7 +407,7 @@ namespace DBStudio
             re.AppendLine("import    [filename]                                 //import tags from a csvfile");
             re.AppendLine("export    [filename]                                 //export tags to a csvfile");
             re.AppendLine("list      [tagtype]                                  //the sumery info of specical type tags or all tags");
-            re.AppendLine("sp       [double tag number] [float tag number] [long tag number] [int tag number] [bool tag number] [intpoint tag number]   //Quickly generate a specified number of tags for test purposes");
+            re.AppendLine("sp        [compressType] [double tag number] [float tag number] [long tag number] [int tag number] [bool tag number] [intpoint tag number]   //Quickly generate a specified number of tags for test purposes");
             re.AppendLine("exit                                                 //exit and back to parent");
 
             return re.ToString();

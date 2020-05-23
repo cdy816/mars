@@ -843,6 +843,95 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
+        public T GetValue(int index)
+        {
+            object re = null;
+            switch (mDataType)
+            {
+                case 0:
+                    re = Convert.ToBoolean(MemoryHelper.ReadByte((void*)handle, index));
+                    break;
+                case 1:
+                    re = MemoryHelper.ReadByte((void*)handle, index);
+                    break;
+                case 2:
+                    re = MemoryHelper.ReadShort((void*)handle, index * 2);
+                    break;
+                case 3:
+                    re = MemoryHelper.ReadShort((void*)handle, index * 2);
+                    break;
+                case 4:
+                    re = MemoryHelper.ReadInt32((void*)handle, index * 4);
+                    break;
+                case 5:
+                    re = MemoryHelper.ReadUInt32((void*)handle, index * 4);
+                    break;
+                case 6:
+                    re = MemoryHelper.ReadInt64((void*)handle, index * 8);
+                    break;
+                case 7:
+                    re = MemoryHelper.ReadUInt64((void*)handle, index * 8);
+                    break;
+                case 8:
+                    re = MemoryHelper.ReadFloat((void*)handle, index * 4);
+                    break;
+                case 9:
+                    re = MemoryHelper.ReadDouble((void*)handle, index * 8);
+                    break;
+                case 10:
+                    re = MemoryHelper.ReadDateTime((void*)handle, index * 8);
+                    break;
+                case 11:
+
+                    int cc = 0;
+                    int pos = 0;
+                    while (true)
+                    {
+                        if (cc >= index)
+                        {
+                            break;
+                        }
+                        //pos += (mDataBuffer[pos]+1);
+                        pos += MemoryHelper.ReadByte((void*)handle, pos) + 1;
+                        cc++;
+                    }
+                    re = new string((char*)handle, pos + 1, MemoryHelper.ReadByte((void*)handle, pos));
+                    break;
+                case 12:
+                    var x = MemoryHelper.ReadInt32((void*)handle, index * 8);
+                    var y = MemoryHelper.ReadInt32((void*)handle, index * 8 + 4);
+                    re = new IntPointData(x, y);
+                    break;
+                case 13:
+                    re = new UIntPointData(MemoryHelper.ReadUInt32((void*)handle, index * 8), MemoryHelper.ReadUInt32((void*)handle, index * 8 + 4));
+                    break;
+                case 14:
+                    re = new IntPoint3Data(MemoryHelper.ReadInt32((void*)handle, index * 12), MemoryHelper.ReadInt32((void*)handle, index * 12 + 4), MemoryHelper.ReadInt32((void*)handle, index * 12 + 8));
+                    break;
+                case 15:
+                    re = new UIntPoint3Data(MemoryHelper.ReadUInt32((void*)handle, index * 12), MemoryHelper.ReadUInt32((void*)handle, index * 12 + 4), MemoryHelper.ReadUInt32((void*)handle, index * 12 + 8));
+                    break;
+                case 16:
+                    re = new LongPointData(MemoryHelper.ReadInt64((void*)handle, index * 16), MemoryHelper.ReadInt64((void*)handle, index * 16 + 8));
+                    break;
+                case 17:
+                    re = new ULongPointData(MemoryHelper.ReadUInt64((void*)handle, index * 16), MemoryHelper.ReadUInt64((void*)handle, index * 16 + 8));
+                    break;
+                case 18:
+                    re = new LongPoint3Data(MemoryHelper.ReadInt64((void*)handle, index * 24), MemoryHelper.ReadInt64((void*)handle, index * 24 + 8), MemoryHelper.ReadInt64((void*)handle, index * 24 + 16));
+                    break;
+                case 19:
+                    re = new ULongPoint3Data(MemoryHelper.ReadUInt64((void*)handle, index * 24), MemoryHelper.ReadUInt64((void*)handle, index * 24 + 8), MemoryHelper.ReadUInt64((void*)handle, index * 24 + 16));
+                    break;
+            }
+            return (T)re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
         public T GetValue(int index,out DateTime time,out byte qulity)
         {
             object re = null;

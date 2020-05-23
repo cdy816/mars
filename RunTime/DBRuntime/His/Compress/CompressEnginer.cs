@@ -102,7 +102,7 @@ namespace Cdy.Tag
                 }
             }
 
-            long psize = mTotalSize/mTargetMemorys.Count;
+            long psize = (long)(mTotalSize*1.5)/mTargetMemorys.Count;
 
             System.Threading.Tasks.Parallel.ForEach(mTargetMemorys, (vv) => {
                 vv.Value.ReAlloc(vv.Value.HeadSize + psize);

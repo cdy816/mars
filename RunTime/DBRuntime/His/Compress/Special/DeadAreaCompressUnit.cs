@@ -65,7 +65,7 @@ namespace Cdy.Tag
         /// <param name="count"></param>
         /// <param name="emptyIds"></param>
         /// <returns></returns>
-        protected override Memory<byte> CompressValues<T>(MarshalMemoryBlock source, long offset, int count, Queue<int> emptyIds)
+        protected override Memory<byte> CompressValues<T>(MarshalMemoryBlock source, long offset, int count, CustomQueue<int> emptys, TagType type)
         {
             var deadArea = this.Parameters.ContainsKey("DeadValue") ? this.Parameters["DeadValue"] : 0;
             var deadType = (int)(this.Parameters.ContainsKey("DeadType") ? this.Parameters["DeadType"] : 0);
@@ -76,7 +76,7 @@ namespace Cdy.Tag
             bool isFirst = true;
 
             int ig = -1;
-            emptyIds.TryDequeue(out ig);
+            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
 
             if (typeof(T) == typeof(byte))
             {
@@ -103,8 +103,8 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
+                       
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                     }
                 }
                 return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
@@ -134,8 +134,8 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
+                       
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                     }
                 }
 
@@ -165,8 +165,8 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
+                        
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                     }
                 }
 
@@ -196,8 +196,8 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
+                        
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                     }
                 }
 
@@ -227,8 +227,8 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
+                        
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                     }
                 }
             }
@@ -257,8 +257,8 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
+                        
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                     }
                 }
 
@@ -288,8 +288,8 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
+                        
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                     }
                 }
 
@@ -319,8 +319,8 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
+                       
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                     }
                 }
                 return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
@@ -350,8 +350,8 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
+                        
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                     }
                 }
                 return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);

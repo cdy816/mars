@@ -822,7 +822,7 @@ namespace Cdy.Tag
         /// <param name="targetAddr"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        protected override long Compress<T>(MarshalMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size)
+        protected override  long Compress<T>(MarshalMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size, TagType type)
         {
             var count = (int)(size - this.QulityOffset);
             var tims = source.ReadUShorts(sourceAddr, (int)count);
@@ -842,243 +842,237 @@ namespace Cdy.Tag
 
             long rsize = 0;
 
-
-            if (typeof(T) == typeof(byte))
+            switch (TagType)
             {
-                var cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, emptys, tims,out usedIndex);
+                case TagType.Byte:
+                    var cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
 
-                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
-                rsize += 2;
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    rsize += 2;
 
-                var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, new Queue<int>(usedIndex));
-                var timeData = CompressTimers(tims, usedIndex);
+                    var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, new Queue<int>(usedIndex));
+                    var timeData = CompressTimers(tims, usedIndex);
 
-                target.Write((int)timeData.Length);
-                target.Write(timeData);
-                rsize += 4;
-                rsize += timeData.Length;
+                    target.Write((int)timeData.Length);
+                    target.Write(timeData);
+                    rsize += 4;
+                    rsize += timeData.Length;
 
-                target.Write(cval.Length);
-                target.Write(cval);
-                rsize += 4;
-                rsize += cval.Length;
+                    target.Write(cval.Length);
+                    target.Write(cval);
+                    rsize += 4;
+                    rsize += cval.Length;
 
-               
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
+
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.Short:
+                    var res = CompressValues<short>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
+
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    rsize += 2;
+
+                    cqus = CompressQulitys(source, count * 4 + sourceAddr, count, new Queue<int>(usedIndex));
+                    timeData = CompressTimers(tims, usedIndex);
+
+                    target.Write((int)timeData.Length);
+                    target.Write(timeData);
+                    rsize += 4;
+                    rsize += timeData.Length;
+
+                    target.Write(res.Length);
+                    target.Write(res);
+                    rsize += 4;
+                    rsize += res.Length;
+
+
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.UShort:
+                    var ures = CompressValues<ushort>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
+
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    rsize += 2;
+
+                     cqus = CompressQulitys(source, count * 4 + sourceAddr, count, new Queue<int>(usedIndex));
+                     timeData = CompressTimers(tims, usedIndex);
+
+                    target.Write((int)timeData.Length);
+                    target.Write(timeData);
+                    rsize += 4;
+                    rsize += timeData.Length;
+
+                    target.Write(ures.Length);
+                    target.Write(ures);
+                    rsize += 4;
+                    rsize += ures.Length;
+
+
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.Int:
+                    var ires = CompressValues<int>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
+
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    rsize += 2;
+
+                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, new Queue<int>(usedIndex));
+                    timeData = CompressTimers(tims, usedIndex);
+
+                    target.Write((int)timeData.Length);
+                    target.Write(timeData);
+                    rsize += 4;
+                    rsize += timeData.Length;
+
+                    target.Write(ires.Length);
+                    target.Write(ires);
+                    rsize += 4;
+                    rsize += ires.Length;
+
+
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.UInt:
+                    var uires = CompressValues<uint>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    rsize += 2;
+
+                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, new Queue<int>(usedIndex));
+                    timeData = CompressTimers(tims, usedIndex);
+
+                    target.Write((int)timeData.Length);
+                    target.Write(timeData);
+                    rsize += 4;
+                    rsize += timeData.Length;
+
+
+                    target.Write(uires.Length);
+                    target.Write(uires);
+                    rsize += 4;
+                    rsize += uires.Length;
+
+
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.Long:
+                    var lres = CompressValues<long>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
+
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    rsize += 2;
+                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, new Queue<int>(usedIndex));
+
+                    timeData = CompressTimers(tims, usedIndex);
+
+                    target.Write((int)timeData.Length);
+                    target.Write(timeData);
+                    rsize += 4;
+                    rsize += timeData.Length;
+
+                    target.Write(lres.Length);
+                    target.Write(lres);
+                    rsize += 4;
+                    rsize += lres.Length;
+
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.ULong:
+                    var ulres = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    rsize += 2;
+
+                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, new Queue<int>(usedIndex));
+
+                    timeData = CompressTimers(tims, usedIndex);
+                    target.Write((int)timeData.Length);
+                    target.Write(timeData);
+                    rsize += 4;
+                    rsize += timeData.Length;
+
+                    target.Write(ulres.Length);
+                    target.Write(ulres);
+                    rsize += 4;
+                    rsize += ulres.Length;
+
+
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.Double:
+                    var dres = CompressValues<double>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
+
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    rsize += 2;
+
+                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, new Queue<int>(usedIndex));
+
+                    timeData = CompressTimers(tims, usedIndex);
+                    target.Write((int)timeData.Length);
+                    target.Write(timeData);
+                    rsize += 4;
+                    rsize += timeData.Length;
+
+
+                    target.Write(dres.Length);
+                    target.Write(dres);
+                    rsize += 4;
+                    rsize += dres.Length;
+
+
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.Float:
+                    var fres = CompressValues<float>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
+
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    rsize += 2;
+
+                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, new Queue<int>(usedIndex));
+
+                    timeData = CompressTimers(tims, usedIndex);
+                    target.Write((int)timeData.Length);
+                    target.Write(timeData);
+                    rsize += 4;
+                    rsize += timeData.Length;
+
+
+                    target.Write(fres.Length);
+                    target.Write(fres);
+                    rsize += 4;
+                    rsize += fres.Length;
+
+
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                default:
+                    base.Compress<T>(source, sourceAddr, target, targetAddr, size, type);
+                    break;
             }
-            else if (typeof(T) == typeof(short))
-            {
-                var res = CompressValues<short>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
-
-                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
-                rsize += 2;
-
-                var cqus = CompressQulitys(source, count * 4 + sourceAddr, count,new Queue<int>(usedIndex));
-                var timeData = CompressTimers(tims, usedIndex);
-
-                target.Write((int)timeData.Length);
-                target.Write(timeData);
-                rsize += 4;
-                rsize += timeData.Length;
-              
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-                
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(ushort))
-            {
-                var res = CompressValues<ushort>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
-
-                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
-                rsize += 2;
-
-                var cqus = CompressQulitys(source, count * 4 + sourceAddr, count, new Queue<int>(usedIndex));
-                var timeData = CompressTimers(tims, usedIndex);
-
-                target.Write((int)timeData.Length);
-                target.Write(timeData);
-                rsize += 4;
-                rsize += timeData.Length;
-
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-              
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(int))
-            {
-                var res = CompressValues<int>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
-
-                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
-                rsize += 2;
-
-                var cqus = CompressQulitys(source, count * 6 + sourceAddr, count, new Queue<int>(usedIndex));
-                var timeData = CompressTimers(tims, usedIndex);
-
-                target.Write((int)timeData.Length);
-                target.Write(timeData);
-                rsize += 4;
-                rsize += timeData.Length;
-
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-               
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(uint))
-            {
-                var res = CompressValues<uint>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
-                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
-                rsize += 2;
-
-                var cqus = CompressQulitys(source, count * 6 + sourceAddr, count, new Queue<int>(usedIndex));
-                var timeData = CompressTimers(tims, usedIndex);
-
-                target.Write((int)timeData.Length);
-                target.Write(timeData);
-                rsize += 4;
-                rsize += timeData.Length;
-
-
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-                
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(long))
-            {
-                var res = CompressValues<long>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
-
-                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
-                rsize += 2;
-                var cqus = CompressQulitys(source, count * 10 + sourceAddr, count, new Queue<int>(usedIndex));
-
-                var timeData = CompressTimers(tims, usedIndex);
-
-                target.Write((int)timeData.Length);
-                target.Write(timeData);
-                rsize += 4;
-                rsize += timeData.Length;
-
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(ulong))
-            {
-                var res = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
-                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
-                rsize += 2;
-
-                var cqus = CompressQulitys(source, count * 10 + sourceAddr, count, new Queue<int>(usedIndex));
-
-                var timeData = CompressTimers(tims, usedIndex);
-                target.Write((int)timeData.Length);
-                target.Write(timeData);
-                rsize += 4;
-                rsize += timeData.Length;
-
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-                
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            
-            else if (typeof(T) == typeof(double))
-            {
-                var res = CompressValues<double>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
-
-                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
-                rsize += 2;
-
-                var cqus = CompressQulitys(source, count * 10 + sourceAddr, count, new Queue<int>(usedIndex));
-
-                var timeData = CompressTimers(tims, usedIndex);
-                target.Write((int)timeData.Length);
-                target.Write(timeData);
-                rsize += 4;
-                rsize += timeData.Length;
-
-
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-              
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(float))
-            {
-                var res = CompressValues<float>(source, count * 2 + sourceAddr, count, emptys, tims, out usedIndex);
-
-                target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
-                rsize += 2;
-
-                var cqus = CompressQulitys(source, count * 6 + sourceAddr, count, new Queue<int>(usedIndex));
-
-                var timeData = CompressTimers(tims, usedIndex);
-                target.Write((int)timeData.Length);
-                target.Write(timeData);
-                rsize += 4;
-                rsize += timeData.Length;
-
-
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-               
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            
             return rsize;
         }
                 

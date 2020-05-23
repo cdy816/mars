@@ -47,7 +47,7 @@ namespace Cdy.Tag
         private object mUserSizeLock = new object();
 
 
-        public int BufferItemSize = 1024 * 1024 * 128;
+        public int BufferItemSize = 1024 * 1024 * 4;
 
         public static byte[] zoreData = new byte[1024 * 10];
 

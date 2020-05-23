@@ -396,6 +396,7 @@ namespace DBStudio
         {
             StringBuilder re = new StringBuilder();
             re.AppendLine();
+            re.AppendLine("save                                                 // save database ");
             re.AppendLine("start                                                 // start database ");
             re.AppendLine("restart                                                 // restart database ");
             re.AppendLine("stop                                                 // stop database ");

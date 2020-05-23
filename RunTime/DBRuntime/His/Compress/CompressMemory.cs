@@ -28,6 +28,8 @@ namespace Cdy.Tag
         private Dictionary<int, Tuple<long, int, int, int>> mTagAddress;
         private DateTime mCurrentTime;
         private IHisEngine mHisTagService;
+        private Dictionary<int, CompressUnitbase> mCompressCach = new Dictionary<int, CompressUnitbase>();
+        private Dictionary<int, long> dtmp = new Dictionary<int, long>();
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -66,6 +68,8 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public static int TagCountPerMemory { get; set; }
+
+       
 
         /// <summary>
         /// 
@@ -120,14 +124,15 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public void ResetTagAddress()
-        {
-            mTagAddress.Clear();
-            mTagAddress = null;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public void ResetTagAddress()
+        //{
+        //    mTagAddress.Clear();
+        //    mTagAddress = null;
+        //    mCompressCach.Clear();
+        //}
 
         /// <summary>
         /// 
@@ -135,12 +140,20 @@ namespace Cdy.Tag
         /// <param name="sourceM"></param>
         private void CheckTagAddress(MergeMemoryBlock sourceM)
         {
-            if(mTagAddress==null && sourceM!=null)
+            
+            if (mTagAddress==null && sourceM!=null)
             {
                 mTagAddress = new Dictionary<int, Tuple<long, int, int, int>>();
+                dtmp.Clear();
                 foreach (var vv in sourceM.TagAddress.Where(e=>e.Key>=Id* TagCountPerMemory && e.Key<(Id+1)* TagCountPerMemory))
                 {
                     mTagAddress.Add(vv.Key,vv.Value);
+                    dtmp.Add(vv.Key, 0);
+                    var cpt = mHisTagService.GetHisTag(vv.Key).CompressType;
+                    if(!mCompressCach.ContainsKey(cpt))
+                    {
+                        mCompressCach.Add(cpt, CompressUnitManager.Manager.GetCompressQuick(cpt).Clone());
+                    }
                 }
             }
         }
@@ -165,16 +178,15 @@ namespace Cdy.Tag
             int headOffset = 4 + 4;
             long Offset = headOffset + this.mTagAddress.Count * 8;
 
-            
-            Dictionary<int, long> dtmp = new Dictionary<int, long>();
-
             this.MakeMemoryBusy();
+
+            long ltmp1 = sw.ElapsedMilliseconds;
 
             //更新数据区域
             foreach(var vv in mTagAddress)
             {
                 var size = CompressBlockMemory(source, vv.Value.Item1, Offset,vv.Value.Item3, vv.Value.Item4, vv.Key);
-                dtmp.Add(vv.Key, Offset);
+                dtmp[vv.Key]= Offset;
                 Offset += size;
                 datasize += size;
             }
@@ -182,6 +194,8 @@ namespace Cdy.Tag
             //更新指针区域
             this.WriteInt(0,(int)datasize);
             this.Write((int)this.mTagAddress.Count);
+
+            long ltmp2 = sw.ElapsedMilliseconds;
 
             int count = 0;
             foreach (var vv in dtmp)
@@ -191,10 +205,12 @@ namespace Cdy.Tag
                 count+=8;
             }
 
+            long ltmp3 = sw.ElapsedMilliseconds;
+
             ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSeriseFile(this, mCurrentTime);
             sw.Stop();
-
-            LoggerService.Service.Info("CompressEnginer", Id+ "压缩完成 耗时:"+sw.ElapsedMilliseconds);
+            
+            LoggerService.Service.Info("CompressEnginer", Id+ "压缩完成 耗时:"+sw.ElapsedMilliseconds +" ltmp1:"+ltmp1 +" ltmp2:"+(ltmp2-ltmp1)+" ltmp3:"+(ltmp3-ltmp2),ConsoleColor.Red);
         }
 
         /// <summary>
@@ -219,12 +235,12 @@ namespace Cdy.Tag
 
             var comtype = histag.CompressType;//压缩类型
 
-            this.CheckAndResize(targetPosition + len);
+          //  this.CheckAndResize(targetPosition + len);
 
             //写入压缩类型
             this.WriteByte(targetPosition + 4, (byte)comtype);
 
-            var tp = CompressUnitManager.Manager.GetCompress(comtype);
+            var tp = mCompressCach[comtype];
             if (tp != null)
             {
                 tp.QulityOffset = (int)qulityoffset;
@@ -235,6 +251,7 @@ namespace Cdy.Tag
                 var size = tp.Compress(mSourceMemory, addr, this, targetPosition + 5, len) + 1;
                 this.WriteInt(targetPosition, (int)size);
                 //this.Dump();
+            
                 return size + 5;
             }
             

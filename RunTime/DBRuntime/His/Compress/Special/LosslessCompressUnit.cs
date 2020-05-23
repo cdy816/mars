@@ -59,43 +59,44 @@ namespace Cdy.Tag
             switch (TagType)
             {
                 case TagType.Bool:
-                    return Compress<bool>(source, sourceAddr, target, targetAddr+8, size) + 8;
+                    return Compress<bool>(source, sourceAddr, target, targetAddr+8, size,TagType) + 8;
                 case TagType.Byte:
-                    return Compress<byte>(source, sourceAddr, target, targetAddr+8, size) + 8;
+                    return Compress<byte>(source, sourceAddr, target, targetAddr+8, size, TagType) + 8;
                 case TagType.UShort:
-                    return Compress<ushort>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<ushort>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.Short:
-                    return Compress<short>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<short>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.UInt:
-                    return Compress<uint>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<uint>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.Int:
-                    return Compress<int>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<int>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.ULong:
-                    return Compress<ulong>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<ulong>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.Long:
-                    return Compress<long>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<long>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.Double:
-                    return Compress<double>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                     return Compress<double>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    
                 case TagType.Float:
-                    return Compress<float>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<float>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.String:
-                    return Compress<string>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<string>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.IntPoint:
-                    return Compress<IntPointData>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<IntPointData>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.UIntPoint:
-                    return Compress<UIntPointData>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<UIntPointData>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.LongPoint:
-                    return Compress<LongPointData>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<LongPointData>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.ULongPoint:
-                    return Compress<ULongPointData>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<ULongPointData>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.IntPoint3:
-                    return Compress<IntPoint3Data>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<IntPoint3Data>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.UIntPoint3:
-                    return Compress<UIntPoint3Data>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<UIntPoint3Data>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.LongPoint3:
-                    return Compress<LongPoint3Data>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<LongPoint3Data>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.ULongPoint3:
-                    return Compress<ULongPoint3Data>(source, sourceAddr, target, targetAddr + 8, size) + 8;
+                    return Compress<ULongPoint3Data>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
             }
             return 8;
         }
@@ -106,10 +107,11 @@ namespace Cdy.Tag
         /// <param name="timerVals"></param>
         /// <param name="emptyIds"></param>
         /// <returns></returns>
-        protected byte[] CompressTimers(List<ushort> timerVals, Queue<int> emptyIds)
+        protected Memory<byte> CompressTimers(List<ushort> timerVals, CustomQueue<int> emptyIds)
         {
             int preids = 0;
             mVarintMemory.Position = 0;
+            emptys.Index = -1;
             bool isFirst = true;
             for (int i = 0; i < timerVals.Count; i++)
             {
@@ -129,12 +131,45 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    emptyIds.Enqueue(i);
+                    emptyIds.Insert(i);
                 }
             }
-            return mVarintMemory.Buffer.AsSpan(0, mVarintMemory.Position).ToArray();
+            return mVarintMemory.Buffer.AsMemory(0, mVarintMemory.Position);
         }
-                       
+
+        protected Memory<byte> CompressTimers(MarshalMemoryBlock timerVals,long startaddr,int count, CustomQueue<int> emptyIds)
+        {
+            int preids = 0;
+            mVarintMemory.Position = 0;
+            emptyIds.Index = -1;
+            bool isFirst = true;
+            int id = 0;
+            for (int i = 0; i < count; i++)
+            {
+                
+                if (timerVals[i] > 0 || i == 0)
+                {
+                    id = timerVals.ReadShort(startaddr + i * 2);
+                    //var id = timerVals[i];
+                    if (isFirst)
+                    {
+                        mVarintMemory.WriteInt32(id);
+                        isFirst = false;
+                    }
+                    else
+                    {
+                        mVarintMemory.WriteInt32(id - preids);
+                    }
+                    preids = id;
+                }
+                else
+                {
+                    emptyIds.Insert(i);
+                }
+            }
+            return mVarintMemory.Buffer.AsMemory(0, mVarintMemory.Position);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -144,508 +179,464 @@ namespace Cdy.Tag
         /// <param name="count"></param>
         /// <param name="emptyIds"></param>
         /// <returns></returns>
-        protected virtual Memory<byte> CompressValues<T>(MarshalMemoryBlock source,long offset,int count, Queue<int> emptyIds)
+        protected virtual Memory<byte> CompressValues<T>(MarshalMemoryBlock source,long offset,int count, CustomQueue<int> emptyIds,TagType type)
         {
             mMarshalMemory.Position = 0;
             mVarintMemory.Position = 0;
             int ig = -1;
-            emptyIds.TryDequeue(out ig);
+            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+            // emptyIds.TryDequeue(out ig);
             bool isFirst = true;
-
-            if (typeof(T) == typeof(byte))
+            switch (type)
             {
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
+                case TagType.Byte:
+                    for (int i = 0; i < count; i++)
                     {
-                        var id = source.ReadByte(offset + i);
-                        mMarshalMemory.Write(id);
-                    }
-                    else
-                    {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-                return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
-            }
-            else if (typeof(T) == typeof(short))
-            {
-                short sval = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadShort(offset + i * 2);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            mVarintMemory.WriteSInt32(id);
-                            isFirst = false;
-                            sval = id;
+                            var id = source.ReadByte(offset + i);
+                            mMarshalMemory.Write(id);
                         }
                         else
                         {
-                            mVarintMemory.WriteSInt32(id - sval);
-                            sval = id;
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            //    emptyIds.TryDequeue(out ig);
                         }
                     }
-                    else
+                    return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
+                case TagType.Short:
+                    short sval = 0;
+                    for (int i = 0; i < count; i++)
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-                
-            }
-            else if (typeof(T) == typeof(ushort))
-            {
-                ushort sval = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadUShort(offset + i * 2);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            mVarintMemory.WriteSInt32(id);
-                            isFirst = false;
-                            sval = id;
+                            var id = source.ReadShort(offset + i * 2);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteSInt32(id);
+                                isFirst = false;
+                                sval = id;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt32(id - sval);
+                                sval = id;
+                            }
                         }
                         else
                         {
-                            mVarintMemory.WriteSInt32(id - sval);
-                            sval = id;
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                         }
                     }
-                    else
+                    break;
+                case TagType.UShort:
+                    ushort ssval = 0;
+                    for (int i = 0; i < count; i++)
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-               
-            }
-            else if (typeof(T) == typeof(int))
-            {
-                int sval = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadInt(offset + i * 4);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            mVarintMemory.WriteInt32(id);
-                            isFirst = false;
-                            sval = id;
+                            var id = source.ReadUShort(offset + i * 2);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteSInt32(id);
+                                isFirst = false;
+                                ssval = id;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt32(id - ssval);
+                                ssval = id;
+                            }
                         }
                         else
                         {
-                            mVarintMemory.WriteSInt32(id - sval);
-                            sval = id;
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                         }
                     }
-                    else
+                    break;
+                case TagType.Int:
+                    int isval = 0;
+                    for (int i = 0; i < count; i++)
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-               
-            }
-            else if (typeof(T) == typeof(uint))
-            {
-                uint sval = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadUInt(offset + i * 4);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            mVarintMemory.WriteInt32(id);
-                            isFirst = false;
+                            var id = source.ReadInt(offset + i * 4);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt32(id);
+                                isFirst = false;
+                                isval = id;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt32(id - isval);
+                                isval = id;
+                            }
                         }
                         else
                         {
-                            mVarintMemory.WriteSInt32((int)(id - sval));
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                         }
-                        sval = id;
                     }
-                    else
+                    break;
+                case TagType.UInt:
+                    uint uisval = 0;
+                    for (int i = 0; i < count; i++)
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-            }
-            else if (typeof(T) == typeof(long))
-            {
-                long sval = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadLong(offset + i * 8);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            mVarintMemory.WriteInt64(id);
-                            isFirst = false;
-                            sval = id;
+                            var id = source.ReadUInt(offset + i * 4);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt32(id);
+                                isFirst = false;
+                                uisval = id;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt32((int)(id - uisval));
+                            }
+                            uisval = id;
                         }
                         else
                         {
-                            mVarintMemory.WriteSInt64((id - sval));
-                            sval = id;
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                         }
                     }
-                    else
+                    break;
+                case TagType.Long:
+                    long lsval = 0;
+                    for (int i = 0; i < count; i++)
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-                
-            }
-            else if (typeof(T) == typeof(ulong))
-            {
-                ulong sval = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadULong(offset + i * 8);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            mVarintMemory.WriteInt64(id);
-                            isFirst = false;
-                            sval = id;
+                            var id = source.ReadLong(offset + i * 8);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt64(id);
+                                isFirst = false;
+                                lsval = id;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt64((id - lsval));
+                                lsval = id;
+                            }
                         }
                         else
                         {
-                            mVarintMemory.WriteSInt64((long)(id - sval));
-                            sval = id;
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                         }
                     }
-                    else
+                    break;
+                case TagType.ULong:
+                    ulong ulsval = 0;
+                    for (int i = 0; i < count; i++)
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-                
-            }
-            else if (typeof(T) == typeof(double))
-            {
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadDouble(offset + i * 8);
-                        mMarshalMemory.Write(id);
-                    }
-                    else
-                    {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-                return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
-            }
-            else if (typeof(T) == typeof(float))
-            {
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadFloat(offset + i * 4);
-                        mMarshalMemory.Write(id);
-                    }
-                    else
-                    {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-                return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
-            }
-            else if (typeof(T) == typeof(IntPointData))
-            {
-                int sval = 0;
-                int sval2 = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadInt(offset + i * 8);
-                        var id2 = source.ReadInt(offset + i * 8 + 4);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            mVarintMemory.WriteInt32(id);
-                            mVarintMemory.WriteInt32(id2);
-                            isFirst = false;
+                            var id = source.ReadULong(offset + i * 8);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt64(id);
+                                isFirst = false;
+                                ulsval = id;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt64((long)(id - ulsval));
+                                ulsval = id;
+                            }
                         }
                         else
                         {
-                            mVarintMemory.WriteSInt32(id - sval);
-                            mVarintMemory.WriteSInt32(id2 - sval2);
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                         }
-                        sval = id;
-                        sval2 = id2;
                     }
-                    else
+                    break;
+                case TagType.Double:
+                    for (int i = 0; i < count; i++)
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-
-            }
-            else if (typeof(T) == typeof(UIntPointData))
-            {
-                uint sval = 0;
-                uint sval2 = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadUInt(offset + i * 8);
-                        var id2 = source.ReadUInt(offset + i * 8 + 4);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            mVarintMemory.WriteInt32(id);
-                            mVarintMemory.WriteInt32(id2);
-                            isFirst = false;
+                            var id = source.ReadDouble(offset + i * 8);
+                            mMarshalMemory.Write(id);
                         }
                         else
                         {
-                            mVarintMemory.WriteSInt32((int)(id - sval));
-                            mVarintMemory.WriteSInt32((int)(id2 - sval2));
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                         }
-                        sval = id;
-                        sval2 = id2;
                     }
-                    else
+                    return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
+                case TagType.Float:
+                    for (int i = 0; i < count; i++)
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-
-            }
-            else if (typeof(T) == typeof(IntPoint3Data))
-            {
-                int sval = 0;
-                int sval2 = 0;
-                int sval3 = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadInt(offset + i * 12);
-                        var id2 = source.ReadInt(offset + i * 12 + 4);
-                        var id3 = source.ReadInt(offset + i * 12 + 8);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            mVarintMemory.WriteInt32(id);
-                            mVarintMemory.WriteInt32(id2);
-                            mVarintMemory.WriteInt32(id3);
-                            isFirst = false;
+                            var id = source.ReadFloat(offset + i * 4);
+                            mMarshalMemory.Write(id);
                         }
                         else
                         {
-                            mVarintMemory.WriteSInt32((int)(id - sval));
-                            mVarintMemory.WriteSInt32((int)(id2 - sval2));
-                            mVarintMemory.WriteSInt32((int)(id3 - sval3));
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                         }
-                        sval = id;
-                        sval2 = id2;
-                        sval3 = id3;
                     }
-                    else
+                    return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
+                case TagType.IntPoint:
+                    int psval = 0;
+                    int psval2 = 0;
+                    for (int i = 0; i < count; i++)
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-
-            }
-            else if (typeof(T) == typeof(UIntPoint3Data))
-            {
-                uint sval = 0;
-                uint sval2 = 0;
-                uint sval3 = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadUInt(offset + i * 12);
-                        var id2 = source.ReadUInt(offset + i * 12 + 4);
-                        var id3 = source.ReadUInt(offset + i * 12 + 8);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            mVarintMemory.WriteInt32(id);
-                            mVarintMemory.WriteInt32(id2);
-                            mVarintMemory.WriteInt32(id3);
-                            isFirst = false;
+                            var id = source.ReadInt(offset + i * 8);
+                            var id2 = source.ReadInt(offset + i * 8 + 4);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt32(id);
+                                mVarintMemory.WriteInt32(id2);
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt32(id - psval);
+                                mVarintMemory.WriteSInt32(id2 - psval2);
+                            }
+                            psval = id;
+                            psval2 = id2;
                         }
                         else
                         {
-                            mVarintMemory.WriteSInt32((int)(id - sval));
-                            mVarintMemory.WriteSInt32((int)(id2 - sval2));
-                            mVarintMemory.WriteSInt32((int)(id3 - sval3));
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                         }
-                        sval = id;
-                        sval2 = id2;
-                        sval3 = id3;
                     }
-                    else
+                    break;
+                case TagType.UIntPoint:
+                    uint upsval = 0;
+                    uint upsval2 = 0;
+                    for (int i = 0; i < count; i++)
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-
-            }
-            else if (typeof(T) == typeof(LongPointData))
-            {
-                long sval = 0;
-                long sval2 = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadLong(offset + i * 16);
-                        var id2 = source.ReadLong(offset + i * 16 + 8);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            mVarintMemory.WriteInt64(id);
-                            mVarintMemory.WriteInt64(id2);
-                            isFirst = false;
+                            var id = source.ReadUInt(offset + i * 8);
+                            var id2 = source.ReadUInt(offset + i * 8 + 4);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt32(id);
+                                mVarintMemory.WriteInt32(id2);
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt32((int)(id - upsval));
+                                mVarintMemory.WriteSInt32((int)(id2 - upsval2));
+                            }
+                            upsval = id;
+                            upsval2 = id2;
                         }
                         else
                         {
-                            mVarintMemory.WriteSInt64(id - sval);
-                            mVarintMemory.WriteSInt64(id2 - sval2);
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                         }
-                        sval = id;
-                        sval2 = id2;
                     }
-                    else
+                    break;
+                case TagType.IntPoint3:
+                     psval = 0;
+                     psval2 = 0;
+                    int psval3 = 0;
+                    for (int i = 0; i < count; i++)
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-
-            }
-            else if (typeof(T) == typeof(ULongPointData))
-            {
-                ulong sval = 0;
-                ulong sval2 = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadULong(offset + i * 16);
-                        var id2 = source.ReadULong(offset + i * 16 + 8);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            mVarintMemory.WriteInt64(id);
-                            mVarintMemory.WriteInt64(id2);
-                            isFirst = false;
+                            var id = source.ReadInt(offset + i * 12);
+                            var id2 = source.ReadInt(offset + i * 12 + 4);
+                            var id3 = source.ReadInt(offset + i * 12 + 8);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt32(id);
+                                mVarintMemory.WriteInt32(id2);
+                                mVarintMemory.WriteInt32(id3);
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt32((int)(id - psval));
+                                mVarintMemory.WriteSInt32((int)(id2 - psval2));
+                                mVarintMemory.WriteSInt32((int)(id3 - psval3));
+                            }
+                            psval = id;
+                            psval2 = id2;
+                            psval3 = id3;
                         }
                         else
                         {
-                            mVarintMemory.WriteSInt64((long)(id - sval));
-                            mVarintMemory.WriteSInt64((long)(id2 - sval2));
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                         }
-                        sval = id;
-                        sval2 = id2;
                     }
-                    else
+                    break;
+                case TagType.UIntPoint3:
+                     upsval = 0;
+                     upsval2 = 0;
+                    uint upsval3 = 0;
+                    for (int i = 0; i < count; i++)
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-
-            }
-            else if (typeof(T) == typeof(LongPoint3Data))
-            {
-                long sval = 0;
-                long sval2 = 0;
-                long sval3 = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadLong(offset + i * 24);
-                        var id2 = source.ReadLong(offset + i * 24 + 8);
-                        var id3 = source.ReadLong(offset + i * 24 + 16);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            mVarintMemory.WriteInt64(id);
-                            mVarintMemory.WriteInt64(id2);
-                            mVarintMemory.WriteInt64(id3);
-                            isFirst = false;
+                            var id = source.ReadUInt(offset + i * 12);
+                            var id2 = source.ReadUInt(offset + i * 12 + 4);
+                            var id3 = source.ReadUInt(offset + i * 12 + 8);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt32(id);
+                                mVarintMemory.WriteInt32(id2);
+                                mVarintMemory.WriteInt32(id3);
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt32((int)(id - upsval));
+                                mVarintMemory.WriteSInt32((int)(id2 - upsval2));
+                                mVarintMemory.WriteSInt32((int)(id3 - upsval3));
+                            }
+                            upsval = id;
+                            upsval2 = id2;
+                            upsval3 = id3;
                         }
                         else
                         {
-                            mVarintMemory.WriteSInt64(id - sval);
-                            mVarintMemory.WriteSInt64(id2 - sval2);
-                            mVarintMemory.WriteSInt64(id3 - sval3);
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                         }
-                        sval = id;
-                        sval2 = id2;
-                        sval3 = id3;
                     }
-                    else
+                    break;
+                case TagType.LongPoint:
+                    long lpsval = 0;
+                    long lpsval2 = 0;
+                    for (int i = 0; i < count; i++)
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
-                    }
-                }
-
-            }
-            else if (typeof(T) == typeof(ULongPoint3Data))
-            {
-                ulong sval = 0;
-                ulong sval2 = 0;
-                ulong sval3 = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadULong(offset + i * 24);
-                        var id2 = source.ReadULong(offset + i * 24 + 8);
-                        var id3 = source.ReadULong(offset + i * 24 + 16);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            mVarintMemory.WriteInt64(id);
-                            mVarintMemory.WriteInt64(id2);
-                            mVarintMemory.WriteInt64(id3);
-                            isFirst = false;
+                            var id = source.ReadLong(offset + i * 16);
+                            var id2 = source.ReadLong(offset + i * 16 + 8);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt64(id);
+                                mVarintMemory.WriteInt64(id2);
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt64(id - lpsval);
+                                mVarintMemory.WriteSInt64(id2 - lpsval2);
+                            }
+                            lpsval = id;
+                            lpsval2 = id2;
                         }
                         else
                         {
-                            mVarintMemory.WriteSInt64((long)(id - sval));
-                            mVarintMemory.WriteSInt64((long)(id2 - sval2));
-                            mVarintMemory.WriteSInt64((long)(id3 - sval3));
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                         }
-                        sval = id;
-                        sval2 = id2;
-                        sval3 = id3;
                     }
-                    else
+                    break;
+                case TagType.ULongPoint:
+                    ulong ulpsval = 0;
+                    ulong ulpsval2 = 0;
+                    for (int i = 0; i < count; i++)
                     {
-                        if (emptyIds.Count > 0)
-                            emptyIds.TryDequeue(out ig);
+                        if (i != ig)
+                        {
+                            var id = source.ReadULong(offset + i * 16);
+                            var id2 = source.ReadULong(offset + i * 16 + 8);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt64(id);
+                                mVarintMemory.WriteInt64(id2);
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt64((long)(id - ulpsval));
+                                mVarintMemory.WriteSInt64((long)(id2 - ulpsval2));
+                            }
+                            ulpsval = id;
+                            ulpsval2 = id2;
+                        }
+                        else
+                        {
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                        }
                     }
-                }
-
+                    break;
+                case TagType.LongPoint3:
+                    lpsval = 0;
+                    lpsval2 = 0;
+                    long lpsval3 = 0;
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (i != ig)
+                        {
+                            var id = source.ReadLong(offset + i * 24);
+                            var id2 = source.ReadLong(offset + i * 24 + 8);
+                            var id3 = source.ReadLong(offset + i * 24 + 16);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt64(id);
+                                mVarintMemory.WriteInt64(id2);
+                                mVarintMemory.WriteInt64(id3);
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt64(id - lpsval);
+                                mVarintMemory.WriteSInt64(id2 - lpsval2);
+                                mVarintMemory.WriteSInt64(id3 - lpsval3);
+                            }
+                            lpsval = id;
+                            lpsval2 = id2;
+                            lpsval3 = id3;
+                        }
+                        else
+                        {
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                        }
+                    }
+                    break;
+                case TagType.ULongPoint3:
+                    ulpsval = 0;
+                    ulpsval2 = 0;
+                    ulong ulpsval3 = 0;
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (i != ig)
+                        {
+                            var id = source.ReadULong(offset + i * 24);
+                            var id2 = source.ReadULong(offset + i * 24 + 8);
+                            var id3 = source.ReadULong(offset + i * 24 + 16);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt64(id);
+                                mVarintMemory.WriteInt64(id2);
+                                mVarintMemory.WriteInt64(id3);
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt64((long)(id - ulpsval));
+                                mVarintMemory.WriteSInt64((long)(id2 - ulpsval2));
+                                mVarintMemory.WriteSInt64((long)(id3 - ulpsval3));
+                            }
+                            ulpsval = id;
+                            ulpsval2 = id2;
+                            ulpsval3 = id3;
+                        }
+                        else
+                        {
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                        }
+                    }
+                    break;
+                default:
+                    break;
             }
-
             return mVarintMemory.Buffer.AsMemory<byte>(0, (int)mVarintMemory.Position);
 
         }
@@ -656,11 +647,11 @@ namespace Cdy.Tag
         /// <param name="timerVals"></param>
         /// <param name="emptyIds"></param>
         /// <returns></returns>
-        protected Memory<byte> CompressValues(List<string> timerVals, Queue<int> emptyIds)
+        protected Memory<byte> CompressValues(List<string> timerVals, CustomQueue<int> emptyIds)
         {
             mMarshalMemory.Position = 0;
             int ig = -1;
-            emptyIds.TryDequeue(out ig);
+            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
             for (int i = 0; i < timerVals.Count; i++)
             {
                 if(i != ig)
@@ -670,8 +661,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    if (emptyIds.Count > 0)
-                        emptyIds.TryDequeue(out ig);
+                    ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                 }
             }
             return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
@@ -687,14 +677,15 @@ namespace Cdy.Tag
         /// <param name="totalcount"></param>
         /// <param name="emptyIds"></param>
         /// <returns></returns>
-        protected Memory<byte> CompressQulitys(MarshalMemoryBlock source, long offset, int totalcount, Queue<int> emptyIds)
+        protected Memory<byte> CompressQulitys(MarshalMemoryBlock source, long offset, int totalcount, CustomQueue<int> emptyIds)
         {
             int count = 1;
             byte qus = source.ReadByte(offset);
             //using (VarintCodeMemory memory = new VarintCodeMemory(qulitys.Length * 2))
             mVarintMemory.Position = 0;
             int ig = -1;
-            emptyIds.TryDequeue(out ig);
+            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+            //emptyIds.TryDequeue(out ig);
             mVarintMemory.WriteInt32(qus);
             for (int i = 1; i < totalcount; i++)
             {
@@ -715,8 +706,8 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    if (emptyIds.Count > 0)
-                        emptyIds.TryDequeue(out ig);
+                    ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                    //    emptyIds.TryDequeue(out ig);
                 }
             }
             mVarintMemory.WriteInt32(count);
@@ -729,14 +720,14 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="qulitys"></param>
         /// <returns></returns>
-        protected Memory<byte> CompressQulitys(byte[] qulitys, Queue<int> emptyIds)
+        protected Memory<byte> CompressQulitys(byte[] qulitys, CustomQueue<int> emptyIds)
         {
             int count = 1;
             byte qus = qulitys[0];
             //using (VarintCodeMemory memory = new VarintCodeMemory(qulitys.Length * 2))
             mVarintMemory.Position = 0;
             int ig = -1;
-            emptyIds.TryDequeue(out ig);
+            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
             mVarintMemory.WriteInt32(qus);
             for (int i = 1; i < qulitys.Length; i++)
             {
@@ -756,8 +747,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    if (emptyIds.Count > 0)
-                        emptyIds.TryDequeue(out ig);
+                    ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                 }
             }
             mVarintMemory.WriteInt32(count);
@@ -769,13 +759,14 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
-        protected Memory<byte> CompressBoolValues(MarshalMemoryBlock source, long offset, int totalcount, Queue<int> emptyIds)
+        protected Memory<byte> CompressBoolValues(MarshalMemoryBlock source, long offset, int totalcount, CustomQueue<int> emptyIds)
         {
             List<short> re = new List<short>(totalcount);
             byte bval = source.ReadByte(offset);
             short scount = 1;
             int ig = -1;
-            emptyIds.TryDequeue(out ig);
+            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+            //emptyIds.TryDequeue(out ig);
 
             short sval = (short)(bval << 15);
             for(int i=0;i< totalcount; i++)
@@ -798,8 +789,8 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    if (emptyIds.Count > 0)
-                        emptyIds.TryDequeue(out ig);
+                    ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                    //   emptyIds.TryDequeue(out ig);
                 }
             }
             sval = (short)(sval | scount);
@@ -813,6 +804,8 @@ namespace Cdy.Tag
             return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
         }
 
+        CustomQueue<int> emptys = new CustomQueue<int>(604);
+
         /// <summary>
         /// 
         /// </summary>
@@ -821,10 +814,10 @@ namespace Cdy.Tag
         /// <param name="target"></param>
         /// <param name="targetAddr"></param>
         /// <param name="size"></param>
-        protected virtual long Compress<T>(MarshalMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size)
+        protected virtual long Compress<T>(MarshalMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size, TagType type)
         {
             var count = (int)(size - this.QulityOffset);
-            var tims = source.ReadUShorts(sourceAddr, (int)count);
+            //var tims = source.ReadUShorts(sourceAddr, (int)count);
 
             if(mMarshalMemory==null)
             {
@@ -836,14 +829,14 @@ namespace Cdy.Tag
                 mVarintMemory = new VarintCodeMemory(count * 10);
             }
 
-            Queue<int> emptys = new Queue<int>();
-            var datas = CompressTimers(tims, emptys);
-
-            var emptys2 = new Queue<int>(emptys);
+            //Queue<int> emptys = new Queue<int>();
+            //var datas = CompressTimers(tims, emptys);
+            var datas = CompressTimers(source, sourceAddr, (int)count, emptys);
+            //var emptys2 = new Queue<int>(emptys);
 
             long rsize = 0;
             //byte[] qus = null;
-            int rcount = count - emptys.Count;
+            int rcount = count - emptys.Index;
 
             target.WriteUShort(targetAddr,(ushort)rcount);
             rsize += 2;
@@ -851,208 +844,271 @@ namespace Cdy.Tag
             target.Write(datas);
             rsize += 4;
             rsize += datas.Length;
-
-            if (typeof(T) == typeof(bool))
+            int idx = emptys.Index;
+            switch (TagType)
             {
-                //var vals = source.ReadBytes(count * 2 + sourceAddr, (int)count);
-                var cval = CompressBoolValues(source, count * 2 + sourceAddr, count, emptys);
-                target.Write(cval.Length);
-                target.Write(cval);
-                rsize += 4;
-                rsize += cval.Length;
-
-                var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, emptys2);
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(byte))
-            {
-                //var vals = source.ReadBytes(count * 2 + sourceAddr, (int)count);
-               // qus = source.ReadBytes(count * 3 + sourceAddr, (int)count);
-
-                var cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, emptys);
-                target.Write(cval.Length);
-                target.Write(cval);
-                rsize += 4;
-                rsize += cval.Length;
-
-                var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, emptys2);
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(short))
-            {
-                //var vals = source.ReadShorts(count * 2 + sourceAddr, (int)count);
-                //qus = source.ReadBytes(count * 4 + sourceAddr, (int)count);
-
-                var res = CompressValues<short>(source, count * 2 + sourceAddr, count, emptys);
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-                var cqus = CompressQulitys(source, count * 4 + sourceAddr, count, emptys2);
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(ushort))
-            {
-                //var vals = source.ReadUShorts(count * 2 + sourceAddr, (int)count);
-                //qus = source.ReadBytes(count * 4 + sourceAddr, (int)count);
-
-                var res = CompressValues<ushort>(source, count * 2 + sourceAddr, count, emptys);
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-                var cqus = CompressQulitys(source, count * 4 + sourceAddr, count, emptys2);
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(int))
-            {
-                //var vals = source.ReadInts(count * 2 + sourceAddr, (int)count);
-                //qus = source.ReadBytes(count * 6 + sourceAddr, (int)count);
-
-                var res = CompressValues<int>(source, count * 2 + sourceAddr, count, emptys);
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-                var cqus = CompressQulitys(source, count * 6 + sourceAddr, count, emptys2);
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(uint))
-            {
-                //var vals = source.ReadUInts(count * 2 + sourceAddr, (int)count);
-                //qus = source.ReadBytes(count * 6 + sourceAddr, (int)count);
-
-                var res = CompressValues<uint>(source, count * 2 + sourceAddr, count, emptys);
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-                var cqus = CompressQulitys(source, count * 6 + sourceAddr, count, emptys2);
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(long))
-            {
-                //var vals = source.ReadLongs(count * 2 + sourceAddr, (int)count);
-                //qus = source.ReadBytes(count * 10 + sourceAddr, (int)count);
-
-                var res = CompressValues<long>(source, count * 2 + sourceAddr, count, emptys);
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-                var cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys2);
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(ulong))
-            {
-                //var vals = source.ReadULongs(count * 2 + sourceAddr, (int)count);
-                //qus = source.ReadBytes(count * 10 + sourceAddr, (int)count);
-
-                var res = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys);
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-                var cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys2);
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(DateTime))
-            {
-                //var vals = source.ReadULongs(count * 2 + sourceAddr, (int)count);
-                //qus = source.ReadBytes(count * 10 + sourceAddr, (int)count);
-
-                var res = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys);
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-                var cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys2);
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(double))
-            {
-                //var vals = source.ReadDoubles(count * 2 + sourceAddr, (int)count);
-                //qus = source.ReadBytes(count * 10 + sourceAddr, (int)count);
-
-                var res = CompressValues<double>(source, count * 2 + sourceAddr, count, emptys);
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-                var cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys2);
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(float))
-            {
-                //var vals = source.ReadFloats(count * 2 + sourceAddr, (int)count);
-                //qus = source.ReadBytes(count * 6 + sourceAddr, (int)count);
-
-                var res = CompressValues<float>(source, count * 2 + sourceAddr, count, emptys);
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-                var cqus = CompressQulitys(source, count * 6 + sourceAddr, count, emptys2);
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
-            }
-            else if (typeof(T) == typeof(string))
-            {
-
-                var vals = source.ReadStrings(count * 2 + sourceAddr, count);
-                var qus = source.ReadBytes(count);
-                var res = CompressValues(vals, emptys);
-                target.Write(res.Length);
-                target.Write(res);
-                rsize += 4;
-                rsize += res.Length;
-
-                var cqus = CompressQulitys(qus, emptys2);
-                target.Write(cqus.Length);
-                target.Write(cqus);
-                rsize += 4;
-                rsize += cqus.Length;
+                case TagType.Bool:
+                    var cval = CompressBoolValues(source, count * 2 + sourceAddr, count, emptys);
+                    target.Write(cval.Length);
+                    target.Write(cval);
+                    rsize += 4;
+                    rsize += cval.Length;
+                    emptys.Index = idx;
+                    var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.Byte:
+                    cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, emptys,TagType);
+                    target.Write(cval.Length);
+                    target.Write(cval);
+                    rsize += 4;
+                    rsize += cval.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 3 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.UShort:
+                    var ures = CompressValues<ushort>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(ures.Length);
+                    target.Write(ures);
+                    rsize += 4;
+                    rsize += ures.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 4 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.Short:
+                   var  res = CompressValues<short>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(res.Length);
+                    target.Write(res);
+                    rsize += 4;
+                    rsize += res.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 4 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.UInt:
+                    var uires = CompressValues<uint>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(uires.Length);
+                    target.Write(uires);
+                    rsize += 4;
+                    rsize += uires.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.Int:
+                    var ires = CompressValues<int>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(ires.Length);
+                    target.Write(ires);
+                    rsize += 4;
+                    rsize += ires.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.ULong:
+                    var ulres = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(ulres.Length);
+                    target.Write(ulres);
+                    rsize += 4;
+                    rsize += ulres.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.Long:
+                    var lres = CompressValues<long>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(lres.Length);
+                    target.Write(lres);
+                    rsize += 4;
+                    rsize += lres.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.DateTime:
+                    var dres = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(dres.Length);
+                    target.Write(dres);
+                    rsize += 4;
+                    rsize += dres.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.Double:
+                    var ddres = CompressValues<double>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(ddres.Length);
+                    target.Write(ddres);
+                    rsize += 4;
+                    rsize += ddres.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.Float:
+                    var fres = CompressValues<float>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(fres.Length);
+                    target.Write(fres);
+                    rsize += 4;
+                    rsize += fres.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.String:
+                    var vals = source.ReadStrings(count * 2 + sourceAddr, count);
+                    var qus = source.ReadBytes(count);
+                    var sres = CompressValues(vals, emptys);
+                    target.Write(sres.Length);
+                    target.Write(sres);
+                    rsize += 4;
+                    rsize += sres.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(qus, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.IntPoint:
+                    var ipres = CompressValues<IntPointData>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(ipres.Length);
+                    target.Write(ipres);
+                    rsize += 4;
+                    rsize += ipres.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.UIntPoint:
+                    ipres = CompressValues<UIntPointData>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(ipres.Length);
+                    target.Write(ipres);
+                    rsize += 4;
+                    rsize += ipres.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.LongPoint:
+                    ipres = CompressValues<LongPointData>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(ipres.Length);
+                    target.Write(ipres);
+                    rsize += 4;
+                    rsize += ipres.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 18 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.ULongPoint:
+                    ipres = CompressValues<ULongPointData>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(ipres.Length);
+                    target.Write(ipres);
+                    rsize += 4;
+                    rsize += ipres.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 18 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.IntPoint3:
+                    ipres = CompressValues<IntPoint3Data>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(ipres.Length);
+                    target.Write(ipres);
+                    rsize += 4;
+                    rsize += ipres.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 14 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.UIntPoint3:
+                    ipres = CompressValues<UIntPoint3Data>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(ipres.Length);
+                    target.Write(ipres);
+                    rsize += 4;
+                    rsize += ipres.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 14 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.LongPoint3:
+                    ipres = CompressValues<LongPoint3Data>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(ipres.Length);
+                    target.Write(ipres);
+                    rsize += 4;
+                    rsize += ipres.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 26 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
+                case TagType.ULongPoint3:
+                    ipres = CompressValues<ULongPoint3Data>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    target.Write(ipres.Length);
+                    target.Write(ipres);
+                    rsize += 4;
+                    rsize += ipres.Length;
+                    emptys.Index = idx;
+                    cqus = CompressQulitys(source, count * 26 + sourceAddr, count, emptys);
+                    target.Write(cqus.Length);
+                    target.Write(cqus);
+                    rsize += 4;
+                    rsize += cqus.Length;
+                    break;
             }
             return rsize;
         }

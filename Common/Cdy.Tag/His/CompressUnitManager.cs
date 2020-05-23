@@ -29,7 +29,14 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        private Dictionary<int, Queue<CompressUnitbase>> mPoolCompressUnits = new Dictionary<int, Queue<CompressUnitbase>>();
+
+        /// <summary>
+        /// 
+        /// </summary>
         public static CompressUnitManager Manager = new CompressUnitManager();
+
+
 
         #endregion ...Variables...
 
@@ -54,7 +61,52 @@ namespace Cdy.Tag
         /// <returns></returns>
         public CompressUnitbase GetCompress(int type)
         {
-            return mCompressUnit.ContainsKey(type) ? mCompressUnit[type] : null;
+            lock (mPoolCompressUnits)
+            {
+                if (mCompressUnit.ContainsKey(type))
+                {
+                    if (mPoolCompressUnits.ContainsKey(type) && mPoolCompressUnits[type].Count > 0)
+                    {
+                        return mPoolCompressUnits[type].Dequeue();
+                    }
+                    else
+                    {
+                        return mCompressUnit[type].Clone();
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public CompressUnitbase GetCompressQuick(int type)
+        {
+            return mCompressUnit.ContainsKey(type)?mCompressUnit[type]:null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="compress"></param>
+        public void ReleaseCompress(CompressUnitbase compress)
+        {
+            lock (mPoolCompressUnits)
+            {
+                if (mPoolCompressUnits.ContainsKey(compress.TypeCode))
+                {
+                    mPoolCompressUnits[compress.TypeCode].Enqueue(compress);
+                }
+                else
+                {
+                    var dd = new Queue<CompressUnitbase>();
+                    dd.Enqueue(compress);
+                    mPoolCompressUnits.Add(compress.TypeCode, dd);
+                }
+            }
         }
 
         /// <summary>

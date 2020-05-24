@@ -96,8 +96,15 @@ namespace Cdy.Tag
         /// </summary>
         public  void Start(int port)
         {
-          
-            StartInner(port);
+            try
+            {
+                StartInner(port);
+                LoggerService.Service.Info("SocketServer", "Start data service at port " + port);
+            }
+            catch
+            {
+                LoggerService.Service.Erro("SocketServer", "Start data service at port " + port+" failed." );
+            }
         }
 
         /// <summary>

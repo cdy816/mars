@@ -104,18 +104,18 @@ namespace Cdy.Tag
 
             long psize = (long)(mTotalSize*1.5)/mTargetMemorys.Count;
 
-            System.Threading.Tasks.Parallel.ForEach(mTargetMemorys, (vv) => {
-                vv.Value.ReAlloc(vv.Value.HeadSize + psize);
-                vv.Value.Clear();
-                LoggerService.Service.Info("CompressEnginer", "Cal CompressMemory memory size:" + (vv.Value.HeadSize + psize) / 1024.0 / 1024 + "M", ConsoleColor.Cyan);
-            });
-
-            //foreach(var vv in mTargetMemorys)
-            //{
+            //System.Threading.Tasks.Parallel.ForEach(mTargetMemorys, (vv) => {
             //    vv.Value.ReAlloc(vv.Value.HeadSize + psize);
             //    vv.Value.Clear();
             //    LoggerService.Service.Info("CompressEnginer", "Cal CompressMemory memory size:" + (vv.Value.HeadSize + psize) / 1024.0 / 1024 + "M", ConsoleColor.Cyan);
-            //}
+            //});
+
+            foreach (var vv in mTargetMemorys)
+            {
+                vv.Value.ReAlloc(vv.Value.HeadSize + psize);
+                vv.Value.Clear();
+                LoggerService.Service.Info("CompressEnginer", "Cal CompressMemory memory size:" + (vv.Value.HeadSize + psize) / 1024.0 / 1024 + "M", ConsoleColor.Cyan);
+            }
         }
 
         /// <summary>

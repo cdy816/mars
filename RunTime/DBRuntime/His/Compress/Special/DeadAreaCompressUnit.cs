@@ -76,7 +76,7 @@ namespace Cdy.Tag
             bool isFirst = true;
 
             int ig = -1;
-            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
 
             switch(type)
             {
@@ -105,7 +105,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
                         }
                     }
                     return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
@@ -134,7 +134,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
                         }
                     }
                     break;
@@ -163,7 +163,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
                         }
                     }
                     break;
@@ -192,7 +192,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
                         }
                     }
                     break;
@@ -221,7 +221,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
                         }
                     }
                     break;
@@ -250,7 +250,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
                         }
                     }
                     break;
@@ -279,7 +279,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
                         }
                     }
                     break;
@@ -308,7 +308,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
                         }
                     }
                     return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
@@ -337,7 +337,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
                         }
                     }
                     return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);

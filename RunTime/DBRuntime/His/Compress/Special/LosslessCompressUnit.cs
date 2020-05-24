@@ -76,7 +76,6 @@ namespace Cdy.Tag
                     return Compress<long>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.Double:
                      return Compress<double>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
-                    
                 case TagType.Float:
                     return Compress<float>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
                 case TagType.String:
@@ -111,7 +110,7 @@ namespace Cdy.Tag
         {
             int preids = 0;
             mVarintMemory.Position = 0;
-            emptys.Index = -1;
+            emptys.WriteIndex = 0;
             bool isFirst = true;
             for (int i = 0; i < timerVals.Count; i++)
             {
@@ -141,15 +140,15 @@ namespace Cdy.Tag
         {
             int preids = 0;
             mVarintMemory.Position = 0;
-            emptyIds.Index = -1;
+            emptyIds.WriteIndex = 0;
             bool isFirst = true;
             int id = 0;
             for (int i = 0; i < count; i++)
             {
-                
-                if (timerVals[i] > 0 || i == 0)
+                id = timerVals.ReadUShort(startaddr + i * 2);
+                if (id > 0 || i == 0)
                 {
-                    id = timerVals.ReadShort(startaddr + i * 2);
+                    
                     //var id = timerVals[i];
                     if (isFirst)
                     {
@@ -184,7 +183,8 @@ namespace Cdy.Tag
             mMarshalMemory.Position = 0;
             mVarintMemory.Position = 0;
             int ig = -1;
-            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+            
+            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
             // emptyIds.TryDequeue(out ig);
             bool isFirst = true;
             switch (type)
@@ -199,7 +199,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                             //    emptyIds.TryDequeue(out ig);
                         }
                     }
@@ -225,7 +225,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -250,7 +250,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -275,7 +275,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -300,7 +300,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -325,7 +325,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -350,7 +350,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -364,7 +364,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
@@ -378,7 +378,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
@@ -407,7 +407,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -436,7 +436,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -470,7 +470,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -504,7 +504,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -533,7 +533,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -562,7 +562,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -596,7 +596,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -630,7 +630,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -651,7 +651,7 @@ namespace Cdy.Tag
         {
             mMarshalMemory.Position = 0;
             int ig = -1;
-            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
             for (int i = 0; i < timerVals.Count; i++)
             {
                 if(i != ig)
@@ -661,7 +661,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                    ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                 }
             }
             return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
@@ -684,7 +684,7 @@ namespace Cdy.Tag
             //using (VarintCodeMemory memory = new VarintCodeMemory(qulitys.Length * 2))
             mVarintMemory.Position = 0;
             int ig = -1;
-            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
             //emptyIds.TryDequeue(out ig);
             mVarintMemory.WriteInt32(qus);
             for (int i = 1; i < totalcount; i++)
@@ -706,7 +706,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                    ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                     //    emptyIds.TryDequeue(out ig);
                 }
             }
@@ -727,7 +727,7 @@ namespace Cdy.Tag
             //using (VarintCodeMemory memory = new VarintCodeMemory(qulitys.Length * 2))
             mVarintMemory.Position = 0;
             int ig = -1;
-            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
             mVarintMemory.WriteInt32(qus);
             for (int i = 1; i < qulitys.Length; i++)
             {
@@ -747,7 +747,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                    ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                 }
             }
             mVarintMemory.WriteInt32(count);
@@ -765,7 +765,7 @@ namespace Cdy.Tag
             byte bval = source.ReadByte(offset);
             short scount = 1;
             int ig = -1;
-            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
             //emptyIds.TryDequeue(out ig);
 
             short sval = (short)(bval << 15);
@@ -789,7 +789,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                    ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                     //   emptyIds.TryDequeue(out ig);
                 }
             }
@@ -836,7 +836,7 @@ namespace Cdy.Tag
 
             long rsize = 0;
             //byte[] qus = null;
-            int rcount = count - emptys.Index;
+            int rcount = count - emptys.WriteIndex;
 
             target.WriteUShort(targetAddr,(ushort)rcount);
             rsize += 2;
@@ -844,7 +844,7 @@ namespace Cdy.Tag
             target.Write(datas);
             rsize += 4;
             rsize += datas.Length;
-            int idx = emptys.Index;
+            
             switch (TagType)
             {
                 case TagType.Bool:
@@ -853,7 +853,7 @@ namespace Cdy.Tag
                     target.Write(cval);
                     rsize += 4;
                     rsize += cval.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -866,7 +866,7 @@ namespace Cdy.Tag
                     target.Write(cval);
                     rsize += 4;
                     rsize += cval.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 3 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -879,7 +879,7 @@ namespace Cdy.Tag
                     target.Write(ures);
                     rsize += 4;
                     rsize += ures.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 4 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -892,7 +892,7 @@ namespace Cdy.Tag
                     target.Write(res);
                     rsize += 4;
                     rsize += res.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 4 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -905,7 +905,7 @@ namespace Cdy.Tag
                     target.Write(uires);
                     rsize += 4;
                     rsize += uires.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 6 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -918,7 +918,7 @@ namespace Cdy.Tag
                     target.Write(ires);
                     rsize += 4;
                     rsize += ires.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 6 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -931,7 +931,7 @@ namespace Cdy.Tag
                     target.Write(ulres);
                     rsize += 4;
                     rsize += ulres.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -944,7 +944,7 @@ namespace Cdy.Tag
                     target.Write(lres);
                     rsize += 4;
                     rsize += lres.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -957,7 +957,7 @@ namespace Cdy.Tag
                     target.Write(dres);
                     rsize += 4;
                     rsize += dres.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -970,7 +970,7 @@ namespace Cdy.Tag
                     target.Write(ddres);
                     rsize += 4;
                     rsize += ddres.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -983,7 +983,7 @@ namespace Cdy.Tag
                     target.Write(fres);
                     rsize += 4;
                     rsize += fres.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 6 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -998,7 +998,7 @@ namespace Cdy.Tag
                     target.Write(sres);
                     rsize += 4;
                     rsize += sres.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(qus, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -1011,7 +1011,7 @@ namespace Cdy.Tag
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -1024,7 +1024,7 @@ namespace Cdy.Tag
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -1037,7 +1037,7 @@ namespace Cdy.Tag
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 18 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -1050,7 +1050,7 @@ namespace Cdy.Tag
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 18 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -1063,7 +1063,7 @@ namespace Cdy.Tag
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 14 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -1076,7 +1076,7 @@ namespace Cdy.Tag
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 14 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -1089,7 +1089,7 @@ namespace Cdy.Tag
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 26 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -1102,7 +1102,7 @@ namespace Cdy.Tag
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
-                    emptys.Index = idx;
+                    emptys.ReadIndex = 0;
                     cqus = CompressQulitys(source, count * 26 + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
@@ -1515,6 +1515,14 @@ namespace Cdy.Tag
                 var vtime = sTime.AddMilliseconds(timers[i] * timeTick);
                 if (vtime >= startTime && vtime < endTime)
                     re.Add(i, vtime);
+                else if(vtime>endTime && (vtime - endTime).TotalMilliseconds<100)
+                {
+                    re.Add(i, vtime);
+                }
+                else if (vtime < startTime && (startTime - vtime).TotalMilliseconds < 100)
+                {
+                    re.Add(i, vtime);
+                }
             }
             valueCount = count;
             return re;
@@ -1579,7 +1587,7 @@ namespace Cdy.Tag
             int resultCount = 0;
             for (int i = 0; i < count; i++)
             {
-                if (qulityes[i] < 100)
+                if (qulityes[i] < 100 && timers.ContainsKey(i))
                 {
                     result.Add<T>(value[i], timers[i], qulityes[i]);
                     resultCount++;

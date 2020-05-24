@@ -19,7 +19,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 历史数据引擎
     /// </summary>
-    public class HisEnginer : IHisEngine
+    public class HisEnginerSingleMergerBuffer : IHisEngine
     {
 
         #region ... Variables  ...
@@ -69,22 +69,12 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        private MergeMemoryBlock mMergeMemory1;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private MergeMemoryBlock mMergeMemory2;
+        private MergeMemoryBlock mMergeMemory;
 
         /// <summary>
         /// 当前正在使用的内存
         /// </summary>
         private CachMemoryBlock mCurrentMemory;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private MergeMemoryBlock mCurrentMergeMemory;
 
 
         private CachMemoryBlock mWaitForMergeMemory;
@@ -149,7 +139,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public HisEnginer()
+        public HisEnginerSingleMergerBuffer()
         {
 
         }
@@ -159,7 +149,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="manager"></param>
         /// <param name="realEnginer"></param>
-        public HisEnginer(Cdy.Tag.HisDatabase manager, Cdy.Tag.RealEnginer realEnginer)
+        public HisEnginerSingleMergerBuffer(Cdy.Tag.HisDatabase manager, Cdy.Tag.RealEnginer realEnginer)
         {
             mManager = manager;
             mRealEnginer = realEnginer;
@@ -176,7 +166,7 @@ namespace Cdy.Tag
         {
             get
             {
-                return mMergeMemory1 != null ? mMergeMemory1.Length : 0;
+                return mMergeMemory != null ? mMergeMemory.Length : 0;
             }
         }
     
@@ -494,26 +484,23 @@ namespace Cdy.Tag
                 //vv.Value.Init();
             }
 
-            mMergeMemory1 = new MergeMemoryBlock(storeHeadSize) { Name = "StoreMemory1",TagAddress = addressoffset };
-
-            mMergeMemory2 = new MergeMemoryBlock(storeHeadSize) { Name = "StoreMemory2", TagAddress = addressoffset };
+            mMergeMemory = new MergeMemoryBlock(storeHeadSize) { Name = "StoreMemory",TagAddress = addressoffset };
 
             mCachMemory1 = new CachMemoryBlock(cachHeadSize) { Name = "CachMemory1" };
             mCachMemory2 = new CachMemoryBlock(cachHeadSize) { Name = "CachMemory2" };
 
-            LoggerService.Service.Info("HisEnginer", "Cal MergeMemory memory size:" + (storeHeadSize/1024.0/1024 *2)+"M", ConsoleColor.Cyan);
+            LoggerService.Service.Info("HisEnginer", "Cal MergeMemory memory size:" + (storeHeadSize/1024.0/1024)+"M", ConsoleColor.Cyan);
             LoggerService.Service.Info("HisEnginer", "Cal CachMemoryBlock memory size:" + (cachHeadSize / 1024.0 / 1024 *2) + "M", ConsoleColor.Cyan);
 
             CurrentMemory = mCachMemory1;
 
             ClearMemoryHisData(mCachMemory1);
             ClearMemoryHisData(mCachMemory2);
-            ClearMemoryHisData(mMergeMemory1);
-            ClearMemoryHisData(mMergeMemory2);
+            ClearMemoryHisData(mMergeMemory);
             //mCachMemory1.Clear();
             //mCachMemory2.Clear();
             //mMergeMemory.Clear();
-
+            
         }
 
         ///// <summary>
@@ -557,20 +544,15 @@ namespace Cdy.Tag
 
             mCachMemory1.MakeMemoryNoBusy();
             mCachMemory2.MakeMemoryNoBusy();
-            mMergeMemory1.MakeMemoryNoBusy();
-            mMergeMemory2.MakeMemoryNoBusy();
+            mMergeMemory.MakeMemoryNoBusy();
 
             mLastProcessTime = DateTime.Now;
             HisRunTag.StartTime = mLastProcessTime;
             CurrentMemory = mCachMemory1;
             CurrentMemory.CurrentDatetime = mLastProcessTime;
-
-            mCurrentMergeMemory = mMergeMemory1;
-            mCurrentMergeMemory.CurrentDatetime = CurrentMemory.CurrentDatetime;
-
             SnapeAllTag();
             RecordAllFirstValue();
-           
+            mMergeMemory.CurrentDatetime = CurrentMemory.CurrentDatetime;
 
             mStartMergeCount = (int)((mLastProcessTime - new DateTime(mLastProcessTime.Year, mLastProcessTime.Month, mLastProcessTime.Day, ((mLastProcessTime.Hour / mManager.Setting.FileDataDuration) * mManager.Setting.FileDataDuration), 0, 0)).TotalMinutes % (MergeMemoryTime / CachMemoryTime));
             mMergeCount = mStartMergeCount;
@@ -639,31 +621,18 @@ namespace Cdy.Tag
                 if(count>=number || mForceSubmiteToCompress)
                 {
                     
-                    if (mCurrentMergeMemory != null)
+                    if (mMergeMemory != null)
                     {
                         RecordAllLastValue();
                         //mMergeMemory.Dump();
 
-                        mCurrentMergeMemory.MakeMemoryBusy();
+                        mMergeMemory.MakeMemoryBusy();
                         //提交到数据压缩流程
-                        ServiceLocator.Locator.Resolve<IDataCompress>().RequestToCompress(mCurrentMergeMemory);
-                        LoggerService.Service.Info("HisEnginer", "提交内存 " + mCurrentMergeMemory.Name + " 进行压缩",ConsoleColor.Green);
+                        ServiceLocator.Locator.Resolve<IDataCompress>().RequestToCompress(mMergeMemory);
+                        LoggerService.Service.Info("HisEnginer", "提交内存 " + mMergeMemory.Name + " 进行压缩",ConsoleColor.Green);
 
                         //等待压缩完成
-                       // while(mMergeMemory1.IsBusy()) Thread.Sleep(1);
-
-                        //切换工作合并内存
-                        if(mCurrentMergeMemory == mMergeMemory1)
-                        {
-                            mCurrentMergeMemory = mMergeMemory2;
-                        }
-                        else
-                        {
-                            mCurrentMergeMemory = mMergeMemory1;
-                        }
-
-                        LoggerService.Service.Info("HisEnginer", "切换工作 合并内存:" + mCurrentMergeMemory.Name, ConsoleColor.Green);
-                        while (mCurrentMergeMemory.IsBusy()) Thread.Sleep(1);
+                        while(mMergeMemory.IsBusy()) Thread.Sleep(1);
                         RecordAllFirstValue();
                     }
                     count = 0;
@@ -681,8 +650,8 @@ namespace Cdy.Tag
         {
             if (count == 0)
             {
-                mCurrentMergeMemory.CurrentDatetime = mWaitForMergeMemory.CurrentDatetime;
-                LoggerService.Service.Info("HisEnginer", "MergeMemory 使用新的时间起点:" + mWaitForMergeMemory.Name+" " + formateDatetime(this.mCurrentMergeMemory.CurrentDatetime), ConsoleColor.Cyan);
+                mMergeMemory.CurrentDatetime = mWaitForMergeMemory.CurrentDatetime;
+                LoggerService.Service.Info("HisEnginer", "MergeMemory 使用新的时间起点:" + mWaitForMergeMemory.Name+" " + formateDatetime(mMergeMemory.CurrentDatetime), ConsoleColor.Cyan);
             }
 
             var mcc = mWaitForMergeMemory;
@@ -693,15 +662,15 @@ namespace Cdy.Tag
             //System.Threading.Tasks.Parallel.ForEach(mHisTags, (tag) => {
             foreach (var tag in mHisTags)
             {
-                var vaddrs = mCurrentMergeMemory.TagAddress[tag.Value.Id];
+                var vaddrs = mMergeMemory.TagAddress[tag.Value.Id];
                 var addrbase = vaddrs.Item1;
 
                 //拷贝时间
                 var tcount = (tag.Value.HisValueStartAddr - tag.Value.TimerValueStartAddr);
                 var vtimeaddr = addrbase + tcount * count + 2;
-                // mcc.CopyTo(mMergeMemory, tag.Value.TimerValueStartAddr, vtimeaddr, tcount);
+               // mcc.CopyTo(mMergeMemory, tag.Value.TimerValueStartAddr, vtimeaddr, tcount);
 
-                mCurrentMergeMemory.CopyFrom(mcc, tag.Value.TimerValueStartAddr, vtimeaddr, tcount);
+                  mMergeMemory.CopyFrom(mcc, tag.Value.TimerValueStartAddr, vtimeaddr, tcount);
                 //LoggerService.Service.Info("HisEnginer","拷贝时间数据："+count+"," + tag.Value.TimerValueStartAddr +","+ vtimeaddr + "," + tcount);
 
                 //拷贝数值
@@ -709,7 +678,7 @@ namespace Cdy.Tag
                 vtimeaddr = addrbase + vaddrs.Item2 + tcount * count+tag.Value.SizeOfValue;
                 //mcc.CopyTo(mMergeMemory, tag.Value.HisValueStartAddr, vtimeaddr, tcount);
 
-                mCurrentMergeMemory.CopyFrom(mcc, tag.Value.HisValueStartAddr, vtimeaddr, tcount);
+                 mMergeMemory.CopyFrom(mcc, tag.Value.HisValueStartAddr, vtimeaddr, tcount);
 
                 //LoggerService.Service.Info("HisEnginer", "拷贝数值数据：" + count + "," + tag.Value.HisValueStartAddr + "," + vtimeaddr + "," + tcount);
 
@@ -717,8 +686,8 @@ namespace Cdy.Tag
                 //拷贝质量戳
                 tcount = tag.Value.DataSize - tag.Value.HisQulityStartAddr + tag.Value.BlockHeadStartAddr;
                 vtimeaddr = addrbase + vaddrs.Item3 + tcount * count+1;
-                // mcc.CopyTo(mMergeMemory, tag.Value.HisQulityStartAddr, vtimeaddr, tcount);
-                mCurrentMergeMemory.CopyFrom(mcc, tag.Value.HisQulityStartAddr, vtimeaddr, tcount);
+               // mcc.CopyTo(mMergeMemory, tag.Value.HisQulityStartAddr, vtimeaddr, tcount);
+                mMergeMemory.CopyFrom(mcc, tag.Value.HisQulityStartAddr, vtimeaddr, tcount);
 
                 //LoggerService.Service.Info("HisEnginer", "拷贝质量戳数据：" + count + "," + tag.Value.HisQulityStartAddr + "," + vtimeaddr + "," + tcount);
 
@@ -809,8 +778,7 @@ namespace Cdy.Tag
         /// <param name="dt"></param>
         private void RecordAllFirstValue()
         {
-            
-            foreach(var vv in mCurrentMergeMemory.TagAddress)
+            foreach(var vv in mMergeMemory.TagAddress)
             {
                 //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
                 //实时数据内存结构为:实时值+时间戳+质量戳
@@ -822,13 +790,13 @@ namespace Cdy.Tag
                 var tag = mHisTags[vv.Key];
 
 
-                mCurrentMergeMemory.WriteShort(timeraddr, 0);
+                mMergeMemory.WriteShort(timeraddr, 0);
 
                 //写入数值
-                mCurrentMergeMemory.WriteBytesDirect(valueaddr,tag.ValueSnape);
+                mMergeMemory.WriteBytesDirect(valueaddr,tag.ValueSnape);
 
                 //更新质量戳,在现有质量戳的基础添加100，用于表示这是一个强制更新的值
-                mCurrentMergeMemory.WriteByteDirect(qaddr, (byte)(tag.QulitySnape+100));
+                mMergeMemory.WriteByteDirect(qaddr, (byte)(tag.QulitySnape+100));
             }
         }
 
@@ -840,8 +808,8 @@ namespace Cdy.Tag
         {
             DateTime time = mSnapAllTagTime;
             LoggerService.Service.Info("HisEnginer", "RecordAllLastValue:" + formateDatetime(time), ConsoleColor.Cyan);
-            ushort timespan = (ushort)((time - mCurrentMergeMemory.CurrentDatetime).TotalMilliseconds / 100);
-            foreach (var vv in mCurrentMergeMemory.TagAddress)
+            ushort timespan = (ushort)((time - mMergeMemory.CurrentDatetime).TotalMilliseconds / 100);
+            foreach (var vv in mMergeMemory.TagAddress)
             {
                 //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
                 //实时数据内存结构为:实时值+时间戳+质量戳
@@ -852,13 +820,13 @@ namespace Cdy.Tag
                 long valueaddr = vv.Value.Item1 + vv.Value.Item3-tag.SizeOfValue;
                 long qaddr = vv.Value.Item1 + vv.Value.Item4-1;
 
-                mCurrentMergeMemory.WriteUShort(timeraddr, timespan);
+                mMergeMemory.WriteUShort(timeraddr, timespan);
 
                 //写入数值
-                mCurrentMergeMemory.WriteBytesDirect(valueaddr,tag.ValueSnape);
+                mMergeMemory.WriteBytesDirect(valueaddr,tag.ValueSnape);
 
                 //更新质量戳
-                mCurrentMergeMemory.WriteByteDirect(qaddr, (byte)(tag.QulitySnape+100));
+                mMergeMemory.WriteByteDirect(qaddr, (byte)(tag.QulitySnape+100));
             }
         }
 
@@ -971,8 +939,7 @@ namespace Cdy.Tag
 
             mCachMemory1?.Dispose();
             mCachMemory2?.Dispose();
-            mMergeMemory1?.Dispose();
-            mMergeMemory2?.Dispose();
+            mMergeMemory?.Dispose();
         }
 
         /// <summary>

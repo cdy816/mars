@@ -43,7 +43,13 @@ namespace Cdy.Tag
 
 
 
-        public int Index { get; set; }
+        public int WriteIndex { get; set; } = 0;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int ReadIndex { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -54,8 +60,42 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void Insert(T value)
         {
-            Index++;
-            mColections[Index] = value;
+            mColections[WriteIndex++] = value;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public T IncRead()
+        {
+            if (ReadIndex <= WriteIndex)
+            {
+                return mColections[ReadIndex++];
+            }
+            else
+            {
+                ReadIndex++;
+                return default(T);
+            }
+            
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public T DescRead()
+        {
+           
+            if (ReadIndex >=0)
+            {
+                return mColections[ReadIndex--];
+            }
+            else
+            {
+                ReadIndex--;
+                return default(T);
+            }
         }
 
         /// <summary>
@@ -64,15 +104,15 @@ namespace Cdy.Tag
         /// <returns></returns>
         public T Remove()
         {
-            Index--;
-            if (Index < 0)
+            WriteIndex--;
+            if (WriteIndex < 0)
             {
-                Index = -1;
+                WriteIndex = -1;
                 return default(T);
             }
             else
             {
-                return mColections[Index];
+                return mColections[WriteIndex];
             }
         }
 

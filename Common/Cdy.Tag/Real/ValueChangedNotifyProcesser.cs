@@ -177,7 +177,11 @@ namespace Cdy.Tag
                     if (mIsAll)
                     {
                         lock (mBlockChangeds)
-                            mBlockChangeds[id / BlockSize].IsDirty = true;
+                        {
+                            int idd = id / BlockSize;
+                            if(mBlockChangeds.ContainsKey(idd))
+                            mBlockChangeds[idd].IsDirty = true;
+                        }
                     }
                     else
                     {

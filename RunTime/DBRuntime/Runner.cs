@@ -237,7 +237,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public void Start()
+        public void Start(int port = 14330)
         {
             StartAsync("local");
             
@@ -247,7 +247,7 @@ namespace Cdy.Tag
         /// 启动
         /// </summary>
         /// <param name="database"></param>
-        public async void StartAsync(string database)
+        public async void StartAsync(string database,int port = 14330)
         {
             LoggerService.Service.Info("Runner", " 数据库 " + database+" 开始启动");
             var re = await InitAsync(database);
@@ -255,7 +255,7 @@ namespace Cdy.Tag
             {
                 return;
             }
-            DBRuntime.Api.DataService.Service.Start(14330);
+            DBRuntime.Api.DataService.Service.Start(port);
             seriseEnginer.Start();
             compressEnginer.Start();
             hisEnginer.Start();

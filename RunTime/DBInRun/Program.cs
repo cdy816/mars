@@ -20,7 +20,12 @@ namespace DBInRun
             {
                 if (args.Length > 1)
                 {
-                    Cdy.Tag.Runner.RunInstance.StartAsync(args[1]);
+                    int port = 14330;
+                    if (args.Length > 2)
+                    {
+                        int.TryParse(args[2], out port);
+                    }
+                    Cdy.Tag.Runner.RunInstance.StartAsync(args[1], port);
                 }
                 else
                 {
@@ -292,19 +297,19 @@ namespace DBInRun
 
             for (int i = 0; i < lcount; i++)
             {
-                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Long, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType =1 });
+                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Long, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 1 });
                 id++;
             }
 
             for (int i = 0; i < icount; i++)
             {
-                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Int, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 1});
+                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Int, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 1 });
                 id++;
             }
 
             for (int i = 0; i < bcount; i++)
             {
-                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Bool, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType =1 });
+                htest.AddHisTags(new Cdy.Tag.HisTag() { Id = id, TagType = Cdy.Tag.TagType.Bool, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = 1 });
                 id++;
             }
             db.HisDatabase = htest;

@@ -78,285 +78,272 @@ namespace Cdy.Tag
             int ig = -1;
             ig = emptys.Index >= 0 ? emptys.Remove() : -1;
 
-            if (typeof(T) == typeof(byte))
+            switch(type)
             {
-                byte sval = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
+                case TagType.Byte:
+                    byte sval = 0;
+                    for (int i = 0; i < count; i++)
                     {
-                        var id = source.ReadByte(offset + i);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            sval = id;
-                            mMarshalMemory.Write(id);
-                            isFirst = false;
+                            var id = source.ReadByte(offset + i);
+                            if (isFirst)
+                            {
+                                sval = id;
+                                mMarshalMemory.Write(id);
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                if (CheckIsNeedRecord(sval, id, deadArea, deadType))
+                                {
+                                    mMarshalMemory.Write(id);
+                                    sval = id;
+                                }
+                            }
                         }
                         else
                         {
-                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
+
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                        }
+                    }
+                    return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
+                case TagType.Short:
+                    short ssval = 0;
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (i != ig)
+                        {
+                            var id = source.ReadShort(offset + i * 2);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteSInt32(id);
+                                isFirst = false;
+                                ssval = id;
+                            }
+                            else
+                            {
+                                if (CheckIsNeedRecord(ssval, id, deadArea, deadType))
+                                {
+                                    mVarintMemory.WriteSInt32(id - ssval);
+                                    ssval = id;
+                                }
+                            }
+                        }
+                        else
+                        {
+
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                        }
+                    }
+                    break;
+                case TagType.UShort:
+                    ushort ussval = 0;
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (i != ig)
+                        {
+                            var id = source.ReadUShort(offset + i * 2);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteSInt32(id);
+                                isFirst = false;
+                                ussval = id;
+                            }
+                            else
+                            {
+                                if (CheckIsNeedRecord(ussval, id, deadArea, deadType))
+                                {
+                                    mVarintMemory.WriteSInt32(id - ussval);
+                                    ussval = id;
+                                }
+                            }
+                        }
+                        else
+                        {
+
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                        }
+                    }
+                    break;
+                case TagType.Int:
+                    int isval = 0;
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (i != ig)
+                        {
+                            var id = source.ReadInt(offset + i * 4);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt32(id);
+                                isFirst = false;
+                                isval = id;
+                            }
+                            else
+                            {
+                                if (CheckIsNeedRecord(isval, id, deadArea, deadType))
+                                {
+                                    mVarintMemory.WriteSInt32(id - isval);
+                                    isval = id;
+                                }
+                            }
+                        }
+                        else
+                        {
+
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                        }
+                    }
+                    break;
+                case TagType.UInt:
+                    uint usval = 0;
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (i != ig)
+                        {
+                            var id = source.ReadUInt(offset + i * 4);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt32(id);
+                                isFirst = false;
+                                usval = id;
+                            }
+                            else
+                            {
+                                if (CheckIsNeedRecord(usval, id, deadArea, deadType))
+                                {
+                                    mVarintMemory.WriteSInt32((int)(id - usval));
+                                    usval = id;
+                                }
+                            }
+                        }
+                        else
+                        {
+
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                        }
+                    }
+                    break;
+                case TagType.Long:
+                    long lsval = 0;
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (i != ig)
+                        {
+                            var id = source.ReadLong(offset + i * 8);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt64(id);
+                                isFirst = false;
+                                lsval = id;
+                            }
+                            else
+                            {
+                                if (CheckIsNeedRecord(lsval, id, deadArea, deadType))
+                                {
+                                    mVarintMemory.WriteSInt64((id - lsval));
+                                    lsval = id;
+                                }
+                            }
+                        }
+                        else
+                        {
+
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                        }
+                    }
+                    break;
+                case TagType.ULong:
+                    ulong ulsval = 0;
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (i != ig)
+                        {
+                            var id = source.ReadULong(offset + i * 8);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt64(id);
+                                isFirst = false;
+                                ulsval = id;
+                            }
+                            else
+                            {
+                                if (CheckIsNeedRecord(ulsval, id, deadArea, deadType))
+                                {
+                                    mVarintMemory.WriteSInt64((long)(id - ulsval));
+                                    ulsval = id;
+                                }
+                            }
+                        }
+                        else
+                        {
+
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
+                        }
+                    }
+                    break;
+                case TagType.Double:
+                    double dsval = 0;
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (i != ig)
+                        {
+                            var id = source.ReadDouble(offset + i * 8);
+                            if (isFirst)
                             {
                                 mMarshalMemory.Write(id);
-                                sval = id;
+                                isFirst = false;
+                                dsval = id;
                             }
-                        }
-                    }
-                    else
-                    {
-                       
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
-                    }
-                }
-                return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
-            }
-            else if (typeof(T) == typeof(short))
-            {
-                short sval = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadShort(offset + i * 2);
-                        if (isFirst)
-                        {
-                            mVarintMemory.WriteSInt32(id);
-                            isFirst = false;
-                            sval = id;
+                            else
+                            {
+                                if (CheckIsNeedRecord(dsval, id, deadArea, deadType))
+                                {
+                                    mMarshalMemory.Write(id);
+                                    dsval = id;
+                                }
+                            }
                         }
                         else
                         {
-                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
-                            {
-                                mVarintMemory.WriteSInt32(id - sval);
-                                sval = id;
-                            }
-                        }
-                    }
-                    else
-                    {
-                       
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
-                    }
-                }
 
-            }
-            else if (typeof(T) == typeof(ushort))
-            {
-                ushort sval = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadUShort(offset + i * 2);
-                        if (isFirst)
-                        {
-                            mVarintMemory.WriteSInt32(id);
-                            isFirst = false;
-                            sval = id;
-                        }
-                        else
-                        {
-                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
-                            {
-                                mVarintMemory.WriteSInt32(id - sval);
-                                sval = id;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        
                             ig = emptys.Index >= 0 ? emptys.Remove() : -1;
-                    }
-                }
-
-            }
-            else if (typeof(T) == typeof(int))
-            {
-                int sval = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadInt(offset + i * 4);
-                        if (isFirst)
-                        {
-                            mVarintMemory.WriteInt32(id);
-                            isFirst = false;
-                            sval = id;
-                        }
-                        else
-                        {
-                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
-                            {
-                                mVarintMemory.WriteSInt32(id - sval);
-                                sval = id;
-                            }
                         }
                     }
-                    else
+                    return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
+                case TagType.Float:
+                    float fsval = 0;
+                    for (int i = 0; i < count; i++)
                     {
-                        
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
-                    }
-                }
-
-            }
-            else if (typeof(T) == typeof(uint))
-            {
-                uint sval = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadUInt(offset + i * 4);
-                        if (isFirst)
+                        if (i != ig)
                         {
-                            mVarintMemory.WriteInt32(id);
-                            isFirst = false;
-                            sval = id;
-                        }
-                        else
-                        {
-                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
-                            {
-                                mVarintMemory.WriteSInt32((int)(id - sval));
-                                sval = id;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
-                    }
-                }
-            }
-            else if (typeof(T) == typeof(long))
-            {
-                long sval = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadLong(offset + i * 8);
-                        if (isFirst)
-                        {
-                            mVarintMemory.WriteInt64(id);
-                            isFirst = false;
-                            sval = id;
-                        }
-                        else
-                        {
-                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
-                            {
-                                mVarintMemory.WriteSInt64((id - sval));
-                                sval = id;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
-                    }
-                }
-
-            }
-            else if (typeof(T) == typeof(ulong))
-            {
-                ulong sval = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadULong(offset + i * 8);
-                        if (isFirst)
-                        {
-                            mVarintMemory.WriteInt64(id);
-                            isFirst = false;
-                            sval = id;
-                        }
-                        else
-                        {
-                            if (CheckIsNeedRecord(sval, id, deadArea, deadType))
-                            {
-                                mVarintMemory.WriteSInt64((long)(id - sval));
-                                sval = id;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
-                    }
-                }
-
-            }
-            else if (typeof(T) == typeof(double))
-            {
-                double sval = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadDouble(offset + i * 8);
-                        if (isFirst)
-                        {
-                            mMarshalMemory.Write(id);
-                            isFirst = false;
-                            sval = id;
-                        }
-                        else
-                        {
-                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
+                            var id = source.ReadFloat(offset + i * 4);
+                            if (isFirst)
                             {
                                 mMarshalMemory.Write(id);
-                                sval = id;
+                                isFirst = false;
+                                fsval = id;
                             }
-                        }
-                    }
-                    else
-                    {
-                       
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
-                    }
-                }
-                return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
-            }
-            else if (typeof(T) == typeof(float))
-            {
-                float sval = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (i != ig)
-                    {
-                        var id = source.ReadFloat(offset + i * 4);
-                        if (isFirst)
-                        {
-                            mMarshalMemory.Write(id);
-                            isFirst = false;
-                            sval = id;
+                            else
+                            {
+                                if (CheckIsNeedRecord(fsval, id, deadArea, deadType))
+                                {
+                                    mMarshalMemory.Write(id);
+                                    fsval = id;
+                                }
+                            }
                         }
                         else
                         {
-                            if (CheckIsNeedRecord(sval,id,deadArea,deadType))
-                            {
-                                mMarshalMemory.Write(id);
-                                sval = id;
-                            }
+
+                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
                         }
                     }
-                    else
-                    {
-                        
-                            ig = emptys.Index >= 0 ? emptys.Remove() : -1;
-                    }
-                }
-                return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
+                    return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
+                default:
+                   return base.CompressValues<T>(source, offset, count, emptys, type);
             }
-
             return mVarintMemory.Buffer.AsMemory<byte>(0, (int)mVarintMemory.Position);
         }
     }

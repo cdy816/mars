@@ -59,6 +59,10 @@ namespace DBStudio
                 {
                     OutByLine("", GetHelpString());
                 }
+                else if(cmsg=="**")
+                {
+                    LogoHelper.PrintAuthor();
+                }
             }
             DBDevelopService.Service.Instanse.Stop();
 

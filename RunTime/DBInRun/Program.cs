@@ -117,6 +117,9 @@ namespace DBInRun
                     case "h":
                         Console.WriteLine(GetHelpString());
                         break;
+                    case "**":
+                        LogoHelper.PrintAuthor();
+                        break;
                     //case "mtest":
                     //    block = new MarshalMemoryBlock((long)(1024 * 1024 * 1024)*2);
                     //    //block.Clear();

@@ -887,10 +887,17 @@ namespace Cdy.Tag
             var mm = dt.Minute;
             if (mm!=mLastProcessTick )
             {
+                ///处理第一次运行的情况，轻质到一秒的开始部分
+                if (mLastProcessTick == -1 && dt.Millisecond > 400)
+                {
+                    mIsBusy = false;
+                    return;
+                }
+
                 LoggerService.Service.Info("Record", mm+"!="+mLastProcessTick+ "-------------------------------------------------------------------------", ConsoleColor.Green);
                 LoggerService.Service.Info("Record", "准备新的内存，提交内存 "+ CurrentMemory.Name+ " 到压缩");
-                Stopwatch sw = new Stopwatch();
-                sw.Start();
+                //Stopwatch sw = new Stopwatch();
+                //sw.Start();
                 if (mLastProcessTick != -1)
                 {
                     mLastProcessTime = dt;
@@ -899,8 +906,8 @@ namespace Cdy.Tag
                     SubmiteMemory(dt);
                 }
                 mLastProcessTick = mm;
-                sw.Stop();
-                LoggerService.Service.Info("Record", (CurrentMemory!=null? CurrentMemory.Name:"")+" 内存初始化:" + sw.ElapsedMilliseconds);
+                //sw.Stop();
+                // LoggerService.Service.Info("Record", (CurrentMemory!=null? CurrentMemory.Name:"")+" 内存初始化:" + sw.ElapsedMilliseconds);
                 LoggerService.Service.Info("Record", "*************************************************************************", ConsoleColor.Green);
 
             }

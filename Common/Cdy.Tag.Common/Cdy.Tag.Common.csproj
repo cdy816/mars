@@ -13,10 +13,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Logo\Author.txt" />
     <None Remove="Logo\Logo.txt" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Logo\Author.txt" />
     <EmbeddedResource Include="Logo\Logo.txt">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>

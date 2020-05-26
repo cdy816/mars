@@ -7,6 +7,7 @@
 //  种道洋
 //==============================================================
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -1610,6 +1611,61 @@ namespace Cdy.Tag
             return ReadString(offset, Encoding.Unicode);
         }
 
+        private unsafe Memory<byte> ReadBytesInner2(long offset, int len)
+        {
+            var  mm = MemoryPool<byte>.Shared;
+            var vm = mm.Rent(len).Memory;
+
+            int id = (int)(offset / BufferItemSize);
+
+            long ost = offset % BufferItemSize;
+
+            using(var vp = vm.Pin())
+            {
+                if (len + ost <= BufferItemSize)
+                {
+                    Buffer.MemoryCopy((void*)(mHandles[id] + (int)ost), vp.Pointer, len, len);
+                }
+                else
+                {
+                    int ll = BufferItemSize - (int)ost;
+
+                  //  Marshal.Copy(mHandles[id] + (int)ost, re, 0, ll);
+
+                    Buffer.MemoryCopy((void*)(mHandles[id] + (int)ost), vp.Pointer, ll, ll);
+
+                    if (len - ll <= BufferItemSize)
+                    {
+                        id++;
+                        //Marshal.Copy(mHandles[id], re, ll, len - ll);
+                        Buffer.MemoryCopy((void*)(mHandles[id] + (int)ost), (void*)((IntPtr)vp.Pointer+ll), len - ll, len - ll);
+                    }
+                    else
+                    {
+                        long ltmp = len - ll;
+                        int bcount = ll / BufferItemSize;
+                        int i = 0;
+                        for (i = 0; i < bcount; i++)
+                        {
+                            id++;
+                         //   Marshal.Copy(mHandles[id], re, ll + i * BufferItemSize, BufferItemSize);
+                            Buffer.MemoryCopy((void*)(mHandles[id] ), (void*)((IntPtr)vp.Pointer + +(int)ll + i * BufferItemSize), BufferItemSize, BufferItemSize);
+                        }
+                        int otmp = ll % BufferItemSize;
+                        if (otmp > 0)
+                        {
+                            id++;
+                            //Marshal.Copy(mHandles[id], re, ll + i * BufferItemSize, otmp);
+                            Buffer.MemoryCopy((void*)(mHandles[id]), (void*)((IntPtr)vp.Pointer + +(int)ll + i * BufferItemSize), otmp, otmp);
+                        }
+                    }
+                }
+            }
+            
+
+            return vm;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -1927,6 +1983,18 @@ namespace Cdy.Tag
         public byte[] ReadBytes(int len)
         {
             return ReadBytes(mPosition, len);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="len"></param>
+        /// <returns></returns>
+        public Memory<byte> ReadBytesByMemory(int len)
+        {
+            var re = ReadBytesInner2(mPosition, len);
+            mPosition += len;
+            return re;
         }
 
         #endregion

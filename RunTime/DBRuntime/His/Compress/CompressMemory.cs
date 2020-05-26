@@ -214,7 +214,7 @@ namespace Cdy.Tag
 
                 ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSeriseFile(this, mCurrentTime);
                 sw.Stop();
-                LoggerService.Service.Info("CompressEnginer", Id + "压缩完成 耗时:" + sw.ElapsedMilliseconds + " ltmp1:" + ltmp1 + " ltmp2:" + (ltmp2 - ltmp1) + " ltmp3:" + (ltmp3 - ltmp2), ConsoleColor.Red);
+                LoggerService.Service.Info("CompressEnginer", Id + "压缩完成 耗时:" + sw.ElapsedMilliseconds + " ltmp1:" + ltmp1 + " ltmp2:" + (ltmp2 - ltmp1) + " ltmp3:" + (ltmp3 - ltmp2), ConsoleColor.Blue);
                 
             }
             catch(Exception ex)

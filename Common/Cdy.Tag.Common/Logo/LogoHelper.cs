@@ -42,6 +42,16 @@ namespace Cdy.Tag
             //"Cdy.Tag.Common.Logo.Logo.txt"
             Console.WriteLine(new StreamReader(typeof(LogoHelper).Assembly.GetManifestResourceStream("Cdy.Tag.Common.Logo.Logo.txt")).ReadToEnd());
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static void PrintAuthor()
+        {
+            Console.WriteLine(new StreamReader(typeof(LogoHelper).Assembly.GetManifestResourceStream("Cdy.Tag.Common.Logo.Author.txt")).ReadToEnd());
+            Console.WriteLine("Created by chongdaoyang.Powered by dotnet core.");
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

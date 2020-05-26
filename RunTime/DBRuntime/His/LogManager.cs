@@ -233,7 +233,7 @@ namespace Cdy.Tag
                 mNeedSaveMemory1.RecordToLog(stream);
             }
             sw.Stop();
-            LoggerService.Service.Info("LogManager", "日志文件："+ fileName + " 记录完成! 耗时:"+sw.ElapsedMilliseconds,ConsoleColor.Cyan );
+            LoggerService.Service.Info("LogManager", "日志文件："+ fileName + " 记录完成! 耗时:"+sw.ElapsedMilliseconds );
 
         }
 

@@ -1,5 +1,6 @@
 ﻿using Cdy.Tag;
 using System;
+using System.IO;
 using System.IO.Pipes;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,8 +15,11 @@ namespace DBInRun
         {
             Console.CancelKeyPress += Console_CancelKeyPress;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
-            
+
+            WindowConsolHelper.DisbleQuickEditMode();
+
             Console.WriteLine(Res.Get("WelcomeMsg"));
+            PrintLogo();
             if (args.Length>0 && args[0]== "start")
             {
                 if (args.Length > 1)
@@ -119,6 +123,14 @@ namespace DBInRun
                     //    break;
                 }
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private static void PrintLogo()
+        {
+            LogoHelper.Print();
         }
 
         /// <summary>

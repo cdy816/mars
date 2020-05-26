@@ -102,7 +102,7 @@ namespace Cdy.Tag
                 }
             }
 
-            long psize = (long)(mTotalSize*1.5)/mTargetMemorys.Count;
+            long psize = (long)(mTotalSize*1.3)/mTargetMemorys.Count;
 
             //System.Threading.Tasks.Parallel.ForEach(mTargetMemorys, (vv) => {
             //    vv.Value.ReAlloc(vv.Value.HeadSize + psize);
@@ -214,17 +214,15 @@ namespace Cdy.Tag
                     Thread.Sleep(500);
                 }
 
-                foreach (var mm in mTargetMemorys)
-                {
-                    mm.Value.Compress(sm);
-                }
-
-                //System.Threading.Tasks.Parallel.ForEach(mTargetMemorys, (mm) =>
+                //foreach (var mm in mTargetMemorys)
                 //{
                 //    mm.Value.Compress(sm);
-                //});
+                //}
 
-                //sm.Dump();
+                System.Threading.Tasks.Parallel.ForEach(mTargetMemorys, (mm) =>
+                {
+                    mm.Value.Compress(sm);
+                });
 
                 ServiceLocator.Locator.Resolve<IHisEngine>().ClearMemoryHisData(sm);
                 sm.MakeMemoryNoBusy();

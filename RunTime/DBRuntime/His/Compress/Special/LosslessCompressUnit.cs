@@ -111,6 +111,7 @@ namespace Cdy.Tag
             int preids = 0;
             mVarintMemory.Position = 0;
             emptys.WriteIndex = 0;
+            emptyIds.ReadIndex = 0;
             bool isFirst = true;
             for (int i = 0; i < timerVals.Count; i++)
             {
@@ -141,6 +142,8 @@ namespace Cdy.Tag
             int preids = 0;
             mVarintMemory.Position = 0;
             emptyIds.WriteIndex = 0;
+            emptyIds.ReadIndex = 0;
+
             bool isFirst = true;
             int id = 0;
             for (int i = 0; i < count; i++)

@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Common\Cdy.Tag.Common\Cdy.Tag.Common.csproj" />
     <ProjectReference Include="..\..\Driver\SimDriver\SimDriver.csproj" />
     <ProjectReference Include="..\DBDevelopService\DBDevelopService.csproj" />
   </ItemGroup>

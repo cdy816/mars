@@ -40,7 +40,7 @@ namespace Cdy.Tag
         /// </summary>
         private long mPosition = 0;
 
-        private long mUsedSize = 0;
+        //private long mUsedSize = 0;
 
         private long mAllocSize = 0;
 
@@ -164,22 +164,22 @@ namespace Cdy.Tag
             set
             {
                 mPosition = value;
-                lock (mUserSizeLock)
-                    mUsedSize = mUsedSize < value ? value : mUsedSize;
+                //lock (mUserSizeLock)
+                //    mUsedSize = mUsedSize < value ? value : mUsedSize;
             }
         }
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public long UsedSize
-        {
-            get
-            {
-                return mUsedSize;
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public long UsedSize
+        //{
+        //    get
+        //    {
+        //        return mUsedSize;
+        //    }
+        //}
 
         /// <summary>
         /// 
@@ -345,10 +345,10 @@ namespace Cdy.Tag
                         {
                             mHandles.Add(System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mBuffers[i], 0));
                         }
-                        GC.Collect();
+                        //GC.Collect();
                     }
                     mAllocSize = size;
-                    GC.Collect();
+                    //GC.Collect();
 
                     LoggerService.Service.Info("CheckAndResize", "CheckAndResize " + this.Name + " " + size, ConsoleColor.Red);
                 }
@@ -374,7 +374,7 @@ namespace Cdy.Tag
                     Buffer.BlockCopy(zoreData, 0, vv,i * zoreData.Length, zoreData.Length);
                 }
             }
-            mUsedSize = 0;
+            //mUsedSize = 0;
             mPosition = 0;
 
             LoggerService.Service.Info("MemoryBlock", Name + " is clear !");

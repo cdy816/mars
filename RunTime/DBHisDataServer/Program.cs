@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cdy.Tag;
+using System;
 using System.IO.Pipes;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +14,7 @@ namespace DBHisDataServer
         {
             Console.CancelKeyPress += Console_CancelKeyPress;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
-
+            WindowConsolHelper.DisbleQuickEditMode();
             Console.WriteLine(Res.Get("WelcomeMsg"));
             if (args.Length > 0 && args[0] == "start")
             {

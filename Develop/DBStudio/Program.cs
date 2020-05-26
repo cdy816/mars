@@ -25,9 +25,10 @@ namespace DBStudio
             {
                 webPort = int.Parse(args[1]);
             }
-
+            WindowConsolHelper.DisbleQuickEditMode();
+            LogoHelper.Print();
             DBDevelopService.Service.Instanse.Start(port, webPort);
-            OutByLine("", "输入exit退出服务");
+            //OutByLine("", "输入exit退出服务");
             OutByLine("", Res.Get("HelpMsg"));
             while (true)
             {

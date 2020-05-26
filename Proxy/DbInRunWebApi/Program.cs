@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Cdy.Tag;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -13,7 +14,7 @@ namespace DbInRunWebApi
     {
         public static void Main(string[] args)
         {
-            
+            WindowConsolHelper.DisbleQuickEditMode();
             CreateHostBuilder(args).Build().Run();
         }
 

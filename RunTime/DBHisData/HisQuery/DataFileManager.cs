@@ -165,7 +165,7 @@ namespace Cdy.Tag
             }
             else 
             {
-                LoggerService.Service.Info("DataFileMananger", "LogFile "+ e.Name + " add to FileCach！", ConsoleColor.Cyan);
+                LoggerService.Service.Info("DataFileMananger", "LogFile "+ e.Name + " add to FileCach！");
                 ParseLogFile(e.FullPath);
             }
         }
@@ -176,7 +176,7 @@ namespace Cdy.Tag
             {
                 lock (mLocker)
                 {
-                    LoggerService.Service.Info("DataFileMananger", "HisDataFile " + e.Name + " is Created & will be add to dataFileCach！", ConsoleColor.Cyan);
+                    LoggerService.Service.Info("DataFileMananger", "HisDataFile " + e.Name + " is Created & will be add to dataFileCach！");
                     var vifno = new System.IO.FileInfo(e.FullPath);
                     if (vifno.Extension == DataFileExtends)
                     {
@@ -186,7 +186,7 @@ namespace Cdy.Tag
             }
             else if(e.ChangeType == System.IO.WatcherChangeTypes.Changed)
             {
-                LoggerService.Service.Info("DataFileMananger", "HisDataFile " + e.Name + " is changed & will be processed！", ConsoleColor.Cyan);
+                LoggerService.Service.Info("DataFileMananger", "HisDataFile " + e.Name + " is changed & will be processed！");
                 var vtmp = new System.IO.FileInfo(e.FullPath);
                 lock (mLocker)
                 {

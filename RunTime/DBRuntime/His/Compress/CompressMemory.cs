@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Cdy.Tag
 {
@@ -30,6 +31,8 @@ namespace Cdy.Tag
         private IHisEngine mHisTagService;
         private Dictionary<int, CompressUnitbase> mCompressCach = new Dictionary<int, CompressUnitbase>();
         private Dictionary<int, long> dtmp = new Dictionary<int, long>();
+        private bool mIsDisposed=false;
+        private bool mIsRunning=false;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -169,48 +172,56 @@ namespace Cdy.Tag
              数据区指针:[ID(4) + address(4)]
              数据区:[data block]
              */
-
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-
-             CheckTagAddress(source);
-            long datasize = 0;
-            int headOffset = 4 + 4;
-            long Offset = headOffset + this.mTagAddress.Count * 8;
-
-            this.MakeMemoryBusy();
-
-            long ltmp1 = sw.ElapsedMilliseconds;
-
-            //更新数据区域
-            foreach(var vv in mTagAddress)
+            mIsRunning = true;
+            try
             {
-                var size = CompressBlockMemory(source, vv.Value.Item1, Offset,vv.Value.Item3, vv.Value.Item4, vv.Key);
-                dtmp[vv.Key]= Offset;
-                Offset += size;
-                datasize += size;
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+
+                CheckTagAddress(source);
+                long datasize = 0;
+                int headOffset = 4 + 4;
+                long Offset = headOffset + this.mTagAddress.Count * 8;
+
+                this.MakeMemoryBusy();
+
+                long ltmp1 = sw.ElapsedMilliseconds;
+
+                //更新数据区域
+                foreach (var vv in mTagAddress)
+                {
+                    var size = CompressBlockMemory(source, vv.Value.Item1, Offset, vv.Value.Item3, vv.Value.Item4, vv.Key);
+                    dtmp[vv.Key] = Offset;
+                    Offset += size;
+                    datasize += size;
+                }
+
+                //更新指针区域
+                this.WriteInt(0, (int)datasize);
+                this.Write((int)this.mTagAddress.Count);
+
+                long ltmp2 = sw.ElapsedMilliseconds;
+
+                int count = 0;
+                foreach (var vv in dtmp)
+                {
+                    this.WriteInt(headOffset + count, (int)vv.Key);
+                    this.WriteInt(headOffset + count + 4, (int)vv.Value);
+                    count += 8;
+                }
+
+                long ltmp3 = sw.ElapsedMilliseconds;
+
+                ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSeriseFile(this, mCurrentTime);
+                sw.Stop();
+                LoggerService.Service.Info("CompressEnginer", Id + "压缩完成 耗时:" + sw.ElapsedMilliseconds + " ltmp1:" + ltmp1 + " ltmp2:" + (ltmp2 - ltmp1) + " ltmp3:" + (ltmp3 - ltmp2), ConsoleColor.Red);
+                
             }
-
-            //更新指针区域
-            this.WriteInt(0,(int)datasize);
-            this.Write((int)this.mTagAddress.Count);
-
-            long ltmp2 = sw.ElapsedMilliseconds;
-
-            int count = 0;
-            foreach (var vv in dtmp)
+            catch(Exception ex)
             {
-                this.WriteInt(headOffset + count, (int)vv.Key);
-                this.WriteInt(headOffset + count+4, (int)vv.Value);
-                count+=8;
+                LoggerService.Service.Erro("CompressEnginer", ex.Message);
             }
-
-            long ltmp3 = sw.ElapsedMilliseconds;
-
-            ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSeriseFile(this, mCurrentTime);
-            sw.Stop();
-            
-            LoggerService.Service.Info("CompressEnginer", Id+ "压缩完成 耗时:"+sw.ElapsedMilliseconds +" ltmp1:"+ltmp1 +" ltmp2:"+(ltmp2-ltmp1)+" ltmp3:"+(ltmp3-ltmp2),ConsoleColor.Red);
+            mIsRunning = false;
         }
 
         /// <summary>
@@ -263,9 +274,11 @@ namespace Cdy.Tag
         /// </summary>
         public override void Dispose()
         {
+            while (mIsRunning) Thread.Sleep(1);
             mHisTagService = null;
             mTagAddress.Clear();
             mTagAddress = null;
+            mIsDisposed = true;
             base.Dispose();
         }
 

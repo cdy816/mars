@@ -921,6 +921,38 @@ namespace Cdy.Tag
             Array.Copy(mBuffers, sourceStart, target.mBuffers, targetStart, len);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="values"></param>
+        /// <param name="valueoffset"></param>
+        /// <param name="len"></param>
+        public void WriteMemory(long offset, Memory<byte> values, int valueoffset, int len)
+        {
+            using (var vpp = values.Pin())
+            {
+                Marshal.Copy((IntPtr)vpp.Pointer + valueoffset, this.Buffers, (int)offset, len);
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="values"></param>
+        public void WriteMemory(long offset, Memory<byte> values)
+        {
+            WriteMemory(offset, values, 0, values.Length);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        public void Write(Memory<byte> values)
+        {
+            WriteMemory(mPosition, values);
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

@@ -1,4 +1,5 @@
-﻿using DBHighApi.Api;
+﻿using Cdy.Tag;
+using DBHighApi.Api;
 using DBRuntime.Proxy;
 using System;
 
@@ -11,6 +12,7 @@ namespace DBHighApi
         {
             Console.CancelKeyPress += Console_CancelKeyPress;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
+            WindowConsolHelper.DisbleQuickEditMode();
             Start();
             while (!mIsClosed)
             {

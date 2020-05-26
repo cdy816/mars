@@ -45,6 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Common\Cdy.Tag.Common\Cdy.Tag.Common.csproj" />
     <ProjectReference Include="..\..\Driver\SimDriver\SimDriver.csproj" />
     <ProjectReference Include="..\DBRuntime\DBRuntime.csproj" />
   </ItemGroup>

@@ -42,9 +42,31 @@ namespace Cdy.Tag
 
         public int BufferItemSize = 1024 * 1024 * 128;
 
+        public const int BufferSize256 = 1024 * 1024 * 256;
+
+        public const int BufferSize512 = 1024 * 1024 * 512;
+
+        public const int BufferSize128 = 1024 * 1024 * 128;
+
+        public const int BufferSize64 = 1024 * 1024 * 64;
+
+        public const int BufferSize32 = 1024 * 1024 * 32;
+
+        public const int BufferSize16 = 1024 * 1024 * 16;
+
+        public const int BufferSize8 = 1024 * 1024 * 8;
+
+        public const int BufferSize4 = 1024 * 1024 * 4;
+
+        public const int BufferSize2 = 1024 * 1024 * 2;
+
+        public const int BufferSize1 = 1024 * 1024 * 1;
+
         public static byte[] zoreData = new byte[1024 * 10];
 
         private int mRefCount = 0;
+
+        private bool mIsDisposed = false;
 
         #endregion ...Variables...
 
@@ -360,12 +382,21 @@ namespace Cdy.Tag
         /// </summary>
         public void Clear()
         {
-            foreach (var vv in mHandles)
+            try
             {
-                for(int i=0;i<BufferItemSize/ zoreData.Length;i++)
+                foreach (var vv in mHandles)
                 {
-                    Marshal.Copy(zoreData, 0, vv + i * zoreData.Length, zoreData.Length);
+                    if (mIsDisposed) break;
+                    for (int i = 0; i < BufferItemSize / zoreData.Length; i++)
+                    {
+                        if (mIsDisposed) break;
+                        Marshal.Copy(zoreData, 0, vv + i * zoreData.Length, zoreData.Length);
+                    }
                 }
+            }
+            catch
+            {
+
             }
             //mUsedSize = 0;
             mPosition = 0;
@@ -382,14 +413,21 @@ namespace Cdy.Tag
         private void Clear(IntPtr target, int start, int len)
         {
             int i = 0;
-            for (i = 0; i < len / zoreData.Length; i++)
+            try
             {
-                Marshal.Copy(zoreData, 0, target+ start + i * zoreData.Length, zoreData.Length);
+                for (i = 0; i < len / zoreData.Length; i++)
+                {
+                    Marshal.Copy(zoreData, 0, target + start + i * zoreData.Length, zoreData.Length);
+                }
+                int zz = len % zoreData.Length;
+                if (zz > 0)
+                {
+                    Marshal.Copy(zoreData, 0, target + start + i * zoreData.Length, zz);
+                }
             }
-            int zz = len % zoreData.Length;
-            if (zz > 0)
+            catch
             {
-                Marshal.Copy(zoreData, 0, target + start + i * zoreData.Length, zz);
+
             }
         }
 
@@ -776,28 +814,23 @@ namespace Cdy.Tag
             int id = (int)(offset / BufferItemSize);
 
             long ost = offset % BufferItemSize;
-
+            var vpp = values.Pin();
             if (len + ost < BufferItemSize)
             {
 
-                //Marshal.Copy(values, valueoffset, mHandles[id] + (int)ost, len);
-                Buffer.MemoryCopy((void*)((IntPtr)values.Pin().Pointer+valueoffset),(void*)(mHandles[id] + (int)ost), BufferItemSize, len);
+                Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer+valueoffset),(void*)(mHandles[id] + (int)ost), BufferItemSize, len);
             }
             else
             {
                 int ll = BufferItemSize - (int)ost;
 
-                 //Marshal.Copy(values, valueoffset, mHandles[id] + (int)ost, ll);
 
-                 Buffer.MemoryCopy((void*)((IntPtr)values.Pin().Pointer + valueoffset), (void*)(mHandles[id] + (int)ost), BufferItemSize, ll);
+                 Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset), (void*)(mHandles[id] + (int)ost), BufferItemSize, ll);
 
                 if (len - ll < BufferItemSize)
                 {
                     id++;
-                   // Marshal.Copy(values, valueoffset + ll, mHandles[id], len - ll);
-                    Buffer.MemoryCopy((void*)((IntPtr)values.Pin().Pointer + valueoffset+ll), (void*)(mHandles[id]), BufferItemSize,len- ll);
-
-                    // Buffer.BlockCopy(values, ll + valueoffset, mBuffers[id], 0, len - ll);
+                    Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset+ll), (void*)(mHandles[id]), BufferItemSize,len- ll);
                 }
                 else
                 {
@@ -807,23 +840,17 @@ namespace Cdy.Tag
                     for (i = 0; i < bcount; i++)
                     {
                         id++;
-                       // Marshal.Copy(values, valueoffset + ll + i * BufferItemSize, mHandles[id], BufferItemSize);
-                        Buffer.MemoryCopy((void*)((IntPtr)values.Pin().Pointer + valueoffset + ll + i * BufferItemSize), (void*)(mHandles[id]), BufferItemSize, BufferItemSize);
-
-                        // Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, BufferItemSize);
+                        Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset + ll + i * BufferItemSize), (void*)(mHandles[id]), BufferItemSize, BufferItemSize);
                     }
                     int otmp = ll % BufferItemSize;
                     if (otmp > 0)
                     {
                         id++;
-                       // Marshal.Copy(values, valueoffset + ll + i * BufferItemSize, mHandles[id], otmp);
-                        Buffer.MemoryCopy((void*)((IntPtr)values.Pin().Pointer + valueoffset + ll + i * BufferItemSize), (void*)(mHandles[id]), BufferItemSize, otmp);
-
-                        //Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, otmp);
+                        Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset + ll + i * BufferItemSize), (void*)(mHandles[id]), BufferItemSize, otmp);
                     }
                 }
             }
-
+            vpp.Dispose();
             Position = offset + len;
         }
 
@@ -1462,6 +1489,27 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="offset"></param>
+        /// <returns></returns>
+        public void ReadDoubleBytes(long offset,ref byte[] bytes)
+        {
+            mPosition = offset + 8;
+            if (IsCrossDataBuffer(offset, 8))
+            {
+                ReadBytesInner(offset, 8,ref bytes);
+            }
+            else
+            {
+                long ost;
+                var hd = RelocationAddress(offset, out ost);
+                Marshal.Copy(hd+ (int)ost, bytes,0 , 8);
+                //return MemoryHelper.ReadDouble((void*)hd, ost);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
         /// <param name="count"></param>
         /// <returns></returns>
         public List<double> ReadDoubles(long offset,int count)
@@ -1604,6 +1652,55 @@ namespace Cdy.Tag
                         id++;
                         Marshal.Copy(mHandles[id], re, ll + i * BufferItemSize, BufferItemSize);
                        // Buffer.BlockCopy(mBuffers[id], 0, re, ll + i * BufferItemSize, BufferItemSize);
+                    }
+                    int otmp = ll % BufferItemSize;
+                    if (otmp > 0)
+                    {
+                        id++;
+                        Marshal.Copy(mHandles[id], re, ll + i * BufferItemSize, otmp);
+                        //Buffer.BlockCopy(mBuffers[id], 0,re, ll + i * BufferItemSize, otmp);
+                    }
+                }
+            }
+
+            return re;
+        }
+
+        private byte[] ReadBytesInner(long offset, int len,ref byte[] re)
+        {
+            int id = (int)(offset / BufferItemSize);
+
+            long ost = offset % BufferItemSize;
+
+            if (len + ost <= BufferItemSize)
+            {
+                Marshal.Copy(mHandles[id] + (int)ost, re, 0, len);
+                // Buffer.BlockCopy(mBuffers[id], (int)ost,re, 0, len);
+            }
+            else
+            {
+                int ll = BufferItemSize - (int)ost;
+
+                Marshal.Copy(mHandles[id] + (int)ost, re, 0, ll);
+
+                // Buffer.BlockCopy(mBuffers[id], (int)ost,re,0, ll);
+
+                if (len - ll <= BufferItemSize)
+                {
+                    id++;
+                    Marshal.Copy(mHandles[id], re, ll, len - ll);
+                    // Buffer.BlockCopy(mBuffers[id], 0, re, ll, len - ll);
+                }
+                else
+                {
+                    long ltmp = len - ll;
+                    int bcount = ll / BufferItemSize;
+                    int i = 0;
+                    for (i = 0; i < bcount; i++)
+                    {
+                        id++;
+                        Marshal.Copy(mHandles[id], re, ll + i * BufferItemSize, BufferItemSize);
+                        // Buffer.BlockCopy(mBuffers[id], 0, re, ll + i * BufferItemSize, BufferItemSize);
                     }
                     int otmp = ll % BufferItemSize;
                     if (otmp > 0)
@@ -1840,6 +1937,7 @@ namespace Cdy.Tag
         public virtual void Dispose()
         {
             //mDataBuffer = null;
+            mIsDisposed = true;
             if (mHandles.Count > 0)
             {
                 foreach (var vv in mHandles)
@@ -1928,6 +2026,68 @@ namespace Cdy.Tag
                     olen += ltmp;
                     hdt++;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="sourceSrart"></param>
+        /// <param name="targetStart"></param>
+        /// <param name="len"></param>
+        public void CopyTo(FixedMemoryBlock target,long sourceStart, long targetStart,long len)
+        {
+            if (target == null) return;
+
+            long osts, ostt;
+
+            var hds = RelocationAddressToArrayIndex(sourceStart, out osts);
+
+            //计算从源数据需要读取数据块索引
+            //Array Index,Start Address,Data Len
+            List<Tuple<int, int, long>> mSourceIndex = new List<Tuple<int, int, long>>();
+            if (osts + len < BufferItemSize)
+            {
+                mSourceIndex.Add(new Tuple<int, int, long>(hds, (int)osts, len));
+            }
+            else
+            {
+                int ll = BufferItemSize - (int)osts;
+
+                mSourceIndex.Add(new Tuple<int, int, long>(hds, (int)osts, ll));
+
+                if ((len - ll) < BufferItemSize)
+                {
+                    hds++;
+                    mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, len - ll));
+                }
+                else
+                {
+                    long ltmp = len - ll;
+                    int bcount = (int)(ltmp / BufferItemSize);
+                    int i = 0;
+                    for (i = 0; i < bcount; i++)
+                    {
+                        hds++;
+                        mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, BufferItemSize));
+                    }
+                    int otmp = (int)(ltmp % BufferItemSize);
+                    if (otmp > 0)
+                    {
+                        hds++;
+                        mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, otmp));
+                    }
+                }
+            }
+
+            long targetAddr = targetStart;
+
+            //拷贝数据到目标数据块中
+            foreach (var vv in mSourceIndex)
+            {
+                Marshal.Copy(this.mHandles[vv.Item1] + vv.Item2, target.Buffers, (int)targetAddr, (int)vv.Item3);
+                targetAddr += vv.Item3;
             }
         }
 

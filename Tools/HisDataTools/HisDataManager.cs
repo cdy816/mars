@@ -68,7 +68,11 @@ namespace HisDataTools
             {
                 if(mDatabase.RealDatabase.Tags.ContainsKey((int)vv.Key))
                 {
-                    re.Add(mDatabase.RealDatabase.Tags[(int)vv.Key].Name,new Tuple<int, byte>((int)vv.Key,(byte)vv.Value.TagType));
+                    string sname = mDatabase.RealDatabase.Tags[(int)vv.Key].Name;
+                    if(!re.ContainsKey(sname))
+                    {
+                        re.Add(sname, new Tuple<int, byte>((int)vv.Key, (byte)vv.Value.TagType));
+                    }
                 }
             }
             return re;

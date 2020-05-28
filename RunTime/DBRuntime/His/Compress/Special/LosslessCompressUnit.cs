@@ -21,7 +21,7 @@ namespace Cdy.Tag
     {
         protected MemoryBlock mMarshalMemory;
 
-        protected VarintCodeMemory mVarintMemory;
+        protected ProtoMemory mVarintMemory;
 
         /// <summary>
         /// 
@@ -109,7 +109,7 @@ namespace Cdy.Tag
         protected Memory<byte> CompressTimers(List<ushort> timerVals, CustomQueue<int> emptyIds)
         {
             int preids = 0;
-            mVarintMemory.Position = 0;
+            mVarintMemory.Reset();
             emptys.WriteIndex = 0;
             emptyIds.ReadIndex = 0;
             bool isFirst = true;
@@ -134,13 +134,13 @@ namespace Cdy.Tag
                     emptyIds.Insert(i);
                 }
             }
-            return mVarintMemory.Buffer.AsMemory(0, mVarintMemory.Position);
+            return mVarintMemory.DataBuffer.AsMemory(0, (int)mVarintMemory.WritePosition);
         }
 
         protected Memory<byte> CompressTimers(MarshalMemoryBlock timerVals,long startaddr,int count, CustomQueue<int> emptyIds)
         {
             int preids = 0;
-            mVarintMemory.Position = 0;
+            mVarintMemory.Reset();
             emptyIds.WriteIndex = 0;
             emptyIds.ReadIndex = 0;
 
@@ -169,7 +169,7 @@ namespace Cdy.Tag
                     emptyIds.Insert(i);
                 }
             }
-            return mVarintMemory.Buffer.AsMemory(0, mVarintMemory.Position);
+            return mVarintMemory.DataBuffer.AsMemory(0, (int)mVarintMemory.WritePosition);
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace Cdy.Tag
         protected virtual Memory<byte> CompressValues<T>(MarshalMemoryBlock source,long offset,int count, CustomQueue<int> emptyIds,TagType type)
         {
             mMarshalMemory.Position = 0;
-            mVarintMemory.Position = 0;
+            mVarintMemory.Reset();
             int ig = -1;
             
             ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
@@ -640,7 +640,7 @@ namespace Cdy.Tag
                 default:
                     break;
             }
-            return mVarintMemory.Buffer.AsMemory<byte>(0, (int)mVarintMemory.Position);
+            return mVarintMemory.DataBuffer.AsMemory<byte>(0, (int)mVarintMemory.WritePosition);
 
         }
 
@@ -684,8 +684,8 @@ namespace Cdy.Tag
         {
             int count = 1;
             byte qus = source.ReadByte(offset);
-            //using (VarintCodeMemory memory = new VarintCodeMemory(qulitys.Length * 2))
-            mVarintMemory.Position = 0;
+            //using (ProtoMemory memory = new ProtoMemory(qulitys.Length * 2))
+            mVarintMemory.Reset();
             int ig = -1;
             ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
             //emptyIds.TryDequeue(out ig);
@@ -714,7 +714,8 @@ namespace Cdy.Tag
                 }
             }
             mVarintMemory.WriteInt32(count);
-            return mVarintMemory.Buffer.AsMemory(0, mVarintMemory.Position);
+            
+            return mVarintMemory.DataBuffer.AsMemory(0, (int)mVarintMemory.WritePosition);
         }
 
 
@@ -727,8 +728,8 @@ namespace Cdy.Tag
         {
             int count = 1;
             byte qus = qulitys[0];
-            //using (VarintCodeMemory memory = new VarintCodeMemory(qulitys.Length * 2))
-            mVarintMemory.Position = 0;
+            //using (ProtoMemory memory = new ProtoMemory(qulitys.Length * 2))
+            mVarintMemory.Reset();
             int ig = -1;
             ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
             mVarintMemory.WriteInt32(qus);
@@ -754,7 +755,7 @@ namespace Cdy.Tag
                 }
             }
             mVarintMemory.WriteInt32(count);
-            return mVarintMemory.Buffer.AsMemory(0, mVarintMemory.Position);
+            return mVarintMemory.DataBuffer.AsMemory(0, (int)mVarintMemory.WritePosition);
         }
 
         /// <summary>
@@ -829,7 +830,7 @@ namespace Cdy.Tag
 
             if(mVarintMemory==null)
             {
-                mVarintMemory = new VarintCodeMemory(count * 10);
+                mVarintMemory = new ProtoMemory(count * 10);
             }
 
             //Queue<int> emptys = new Queue<int>();
@@ -1128,7 +1129,7 @@ namespace Cdy.Tag
         private List<ushort> DeCompressTimers(byte[] timerVals, int count)
         {
             List<ushort> re = new List<ushort>();
-            using (VarintCodeMemory memory = new VarintCodeMemory(timerVals))
+            using (ProtoMemory memory = new ProtoMemory(timerVals))
             {
                 ushort sval = (ushort)memory.ReadInt32();
                 re.Add(sval);
@@ -1152,9 +1153,9 @@ namespace Cdy.Tag
         private List<byte> DeCompressQulity(byte[] values)
         {
             List<byte> re = new List<byte>();
-            using (VarintCodeMemory memory = new VarintCodeMemory(values))
+            using (ProtoMemory memory = new ProtoMemory(values))
             {
-                while(memory.Position<values.Length)
+                while(memory.ReadPosition<values.Length)
                 {
                     byte sval = (byte)memory.ReadInt32(); //读取质量戳
                     int ival = memory.ReadInt32(); //读取质量戳重复次数
@@ -1177,6 +1178,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         private List<T> DeCompressValue<T>(byte[] value, int count)
         {
+
             if (typeof(T) == typeof(byte))
             {
                 return value.ToList() as List<T>;
@@ -1184,7 +1186,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(short))
             {
                 List<short> re = new List<short>();
-                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                using (ProtoMemory memory = new ProtoMemory(value))
                 {
                     var vv = (short)memory.ReadInt32();
                     re.Add(vv);
@@ -1201,7 +1203,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(ushort))
             {
                 List<ushort> re = new List<ushort>();
-                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                using (ProtoMemory memory = new ProtoMemory(value))
                 {
                     var vv = (short)memory.ReadInt32();
                     re.Add((ushort)vv);
@@ -1218,7 +1220,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(int))
             {
                 List<int> re = new List<int>();
-                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                using (ProtoMemory memory = new ProtoMemory(value))
                 {
                     var vv = (int)memory.ReadInt32();
                     re.Add(vv);
@@ -1234,7 +1236,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(uint))
             {
                 List<uint> re = new List<uint>();
-                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                using (ProtoMemory memory = new ProtoMemory(value))
                 {
                     var vv = memory.ReadInt32();
                     re.Add((uint)vv);
@@ -1250,7 +1252,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(long))
             {
                 List<long> re = new List<long>();
-                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                using (ProtoMemory memory = new ProtoMemory(value))
                 {
                     var vv = (long)memory.ReadInt64();
                     re.Add(vv);
@@ -1266,7 +1268,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(ulong))
             {
                 List<ulong> re = new List<ulong>();
-                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                using (ProtoMemory memory = new ProtoMemory(value))
                 {
                     var vv = memory.ReadInt64();
                     re.Add((ulong)vv);
@@ -1282,7 +1284,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(DateTime))
             {
                 List<DateTime> re = new List<DateTime>();
-                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                using (ProtoMemory memory = new ProtoMemory(value))
                 {
                     var vv = (ulong)memory.ReadInt64();
                     re.Add(MemoryHelper.ReadDateTime(BitConverter.GetBytes(vv)));
@@ -1338,7 +1340,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(IntPointData))
             {
                 List<IntPointData> re = new List<IntPointData>();
-                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                using (ProtoMemory memory = new ProtoMemory(value))
                 {
                     var vv = (int)memory.ReadInt32();
                     var vv2 = (int)memory.ReadInt32();
@@ -1357,7 +1359,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(UIntPointData))
             {
                 List<UIntPointData> re = new List<UIntPointData>();
-                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                using (ProtoMemory memory = new ProtoMemory(value))
                 {
                     var vv = (int)memory.ReadInt32();
                     var vv2 = (int)memory.ReadInt32();
@@ -1376,7 +1378,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(LongPointData))
             {
                 List<LongPointData> re = new List<LongPointData>();
-                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                using (ProtoMemory memory = new ProtoMemory(value))
                 {
                     var vv = (long)memory.ReadInt64();
                     var vv2 = (long)memory.ReadInt64();
@@ -1395,7 +1397,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(ULongPointData))
             {
                 List<ULongPointData> re = new List<ULongPointData>();
-                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                using (ProtoMemory memory = new ProtoMemory(value))
                 {
                     var vv = memory.ReadInt64();
                     var vv2 = memory.ReadInt64();
@@ -1414,7 +1416,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(IntPoint3Data))
             {
                 List<IntPoint3Data> re = new List<IntPoint3Data>();
-                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                using (ProtoMemory memory = new ProtoMemory(value))
                 {
                     var vv = (int)memory.ReadInt32();
                     var vv2 = (int)memory.ReadInt32();
@@ -1436,7 +1438,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(UIntPoint3Data))
             {
                 List<UIntPoint3Data> re = new List<UIntPoint3Data>();
-                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                using (ProtoMemory memory = new ProtoMemory(value))
                 {
                     var vv = (int)memory.ReadInt32();
                     var vv2 = (int)memory.ReadInt32();
@@ -1458,7 +1460,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(LongPoint3Data))
             {
                 List<LongPoint3Data> re = new List<LongPoint3Data>();
-                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                using (ProtoMemory memory = new ProtoMemory(value))
                 {
                     var vv = (long)memory.ReadInt64();
                     var vv2 = (long)memory.ReadInt64();
@@ -1480,7 +1482,7 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(ULongPoint3Data))
             {
                 List<ULongPoint3Data> re = new List<ULongPoint3Data>();
-                using (VarintCodeMemory memory = new VarintCodeMemory(value))
+                using (ProtoMemory memory = new ProtoMemory(value))
                 {
                     var vv = (long)memory.ReadInt64();
                     var vv2 = (long)memory.ReadInt64();

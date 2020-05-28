@@ -71,7 +71,7 @@ namespace Cdy.Tag
             var deadType = (int)(this.Parameters.ContainsKey("DeadType") ? this.Parameters["DeadType"] : 0);
 
             mMarshalMemory.Position = 0;
-            mVarintMemory.Position = 0;
+            mVarintMemory.Reset();
 
             bool isFirst = true;
 
@@ -344,7 +344,7 @@ namespace Cdy.Tag
                 default:
                    return base.CompressValues<T>(source, offset, count, emptys, type);
             }
-            return mVarintMemory.Buffer.AsMemory<byte>(0, (int)mVarintMemory.Position);
+            return mVarintMemory.DataBuffer.AsMemory<byte>(0, (int)mVarintMemory.WritePosition);
         }
     }
 }

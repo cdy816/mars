@@ -836,8 +836,8 @@ namespace Cdy.Tag
         {
             mBuffer=null;
             mHandles = IntPtr.Zero;
-            LoggerService.Service.Erro("MemoryBlock", Name + " Disposed ");
-            GC.Collect();
+            //LoggerService.Service.Erro("MemoryBlock", Name + " Disposed ");
+            //GC.Collect();
         }
 
         /// <summary>

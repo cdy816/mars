@@ -697,7 +697,7 @@ namespace Cdy.Tag
 
             var valaddr = valuecount * 2+10 + sourceAddr;
 
-            var vals = source.ReadDoubles(valaddr, valuecount);
+            var vals = source.ReadDoubleByMemory(valaddr, valuecount);
 
             int i = 0;
             int rcount = 0;
@@ -705,10 +705,11 @@ namespace Cdy.Tag
             {
                 if(qs[i].Item2&&qq[i]<100 && qs[i].Item1>=startTime&&qs[i].Item1<endTime)
                 {
-                    result.Add(vals[i], qs[i].Item1, qq[i]);
+                    result.Add(vals.Span[i], qs[i].Item1, qq[i]);
                     rcount++;
                 }
             }
+            
             
             return rcount;
         }

@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Cdy.Tag.Consume\Cdy.Tag.Consume.csproj" />
+    <ProjectReference Include="..\..\Common\Cdy.Tag.Driver\Cdy.Tag.Driver.csproj" />
+    <ProjectReference Include="..\..\Common\Cdy.Tag.Network\Cdy.Tag.Network.csproj" />
+    <ProjectReference Include="..\..\Common\Cdy.Tag\Cdy.Tag.csproj" />
+  </ItemGroup>
+
+</Project>

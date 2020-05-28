@@ -71,7 +71,7 @@ namespace Cdy.Tag
             usedIndex.TryDequeue(out ig);
             bool isFirst = true;
 
-            mVarintMemory.Position = 0;
+            mVarintMemory.Reset();
             mVarintMemory.WriteInt32(preids);
             for (int i = 1; i < timerVals.Count; i++)
             {
@@ -92,7 +92,7 @@ namespace Cdy.Tag
                         usedIndex.TryDequeue(out ig);
                 }
             }
-            return mVarintMemory.Buffer.AsSpan(0, mVarintMemory.Position).ToArray();
+            return mVarintMemory.DataBuffer.AsSpan(0, (int)mVarintMemory.WritePosition).ToArray();
         }
 
 
@@ -100,7 +100,7 @@ namespace Cdy.Tag
         {
             Queue<int> emptyIds = new Queue<int>();
             int preids = timerVals[0];
-            mVarintMemory.Position = 0;
+            mVarintMemory.Reset();
             {
                 for (int i = 1; i < timerVals.Count; i++)
                 {
@@ -127,7 +127,7 @@ namespace Cdy.Tag
             int count = 1;
             byte qus = source.ReadByte(offset);
             //using (VarintCodeMemory memory = new VarintCodeMemory(qulitys.Length * 2))
-            mVarintMemory.Position = 0;
+            mVarintMemory.Reset();
             int ig = -1;
             usedIndex.TryDequeue(out ig);
             mVarintMemory.WriteInt32(qus);
@@ -152,7 +152,7 @@ namespace Cdy.Tag
                 }
             }
             mVarintMemory.WriteInt32(count);
-            return mVarintMemory.Buffer.AsMemory(0, mVarintMemory.Position);
+            return mVarintMemory.DataBuffer.AsMemory(0, (int)mVarintMemory.WritePosition);
         }
 
         
@@ -240,7 +240,7 @@ namespace Cdy.Tag
                 }
             }
             mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
         }
 
 
@@ -288,7 +288,7 @@ namespace Cdy.Tag
                 }
             }
             mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
         }
 
 
@@ -336,7 +336,7 @@ namespace Cdy.Tag
                 }
             }
             mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
         }
 
         private Memory<byte> SlopeCompress(Dictionary<ushort, int> values, out Queue<int> mUsedTimerIndex)
@@ -383,7 +383,7 @@ namespace Cdy.Tag
                 }
             }
             mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
         }
 
         private Memory<byte> SlopeCompress(Dictionary<ushort, uint> values, out Queue<int> mUsedTimerIndex)
@@ -430,7 +430,7 @@ namespace Cdy.Tag
                 }
             }
             mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
         }
 
         private Memory<byte> SlopeCompress(Dictionary<ushort, long> values, out Queue<int> mUsedTimerIndex)
@@ -477,7 +477,7 @@ namespace Cdy.Tag
                 }
             }
             mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
         }
 
         private Memory<byte> SlopeCompress(Dictionary<ushort, ulong> values, out Queue<int> mUsedTimerIndex)
@@ -524,7 +524,7 @@ namespace Cdy.Tag
                 }
             }
             mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
         }
 
         private Memory<byte> SlopeCompress(Dictionary<ushort, double> values, out Queue<int> mUsedTimerIndex)
@@ -571,7 +571,7 @@ namespace Cdy.Tag
                 }
             }
             mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
         }
 
         /// <summary>
@@ -624,7 +624,7 @@ namespace Cdy.Tag
                 }
             }
             mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, mVarintMemory.Position); ;
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
         }
         #endregion
 
@@ -834,7 +834,7 @@ namespace Cdy.Tag
 
             if (mVarintMemory == null)
             {
-                mVarintMemory = new VarintCodeMemory(count * 10);
+                mVarintMemory = new ProtoMemory(count * 10);
             }
 
             Queue<int> emptys = GetEmpityTimers(tims);

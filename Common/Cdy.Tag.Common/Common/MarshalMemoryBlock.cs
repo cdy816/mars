@@ -1527,6 +1527,22 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public Memory<double> ReadDoubleByMemory(long offset,int count)
+        {
+            var re = MemoryPool<double>.Shared.Rent(count).Memory;
+            for (int i = 0; i < count; i++)
+            {
+                re.Span[i]=(ReadDouble(offset + 8 * i));
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
         /// <returns></returns>
         public long ReadLong(long offset)
         {

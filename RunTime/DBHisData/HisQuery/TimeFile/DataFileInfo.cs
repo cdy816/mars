@@ -1757,6 +1757,8 @@ namespace Cdy.Tag
             {
                 DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
             }
+            // System.Threading.Tasks.Parallel.ForEach(data, (vv) => { DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result); });
+
             foreach (var vv in data)
             {
                 vv.Key.Dispose();

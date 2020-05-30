@@ -143,7 +143,7 @@ namespace DBRuntime.Proxy
         /// <param name="block"></param>
         private void ProcessBlockBufferData(IByteBuffer block)
         {
-            var realenginer = (ServiceLocator.Locator.Resolve<IRealTagComsumer>() as RealEnginer);
+            var realenginer = (ServiceLocator.Locator.Resolve<IRealTagConsumer>() as RealEnginer);
             var start = block.ReadInt();
             var size = block.ReadInt();
             //LoggerService.Service.Info("ProcessBlockBufferData", "block start" +start +", size:"+size);
@@ -159,7 +159,7 @@ namespace DBRuntime.Proxy
         /// <param name="block"></param>
         private void ProcessSingleBufferDataByMemoryCopy(IByteBuffer block)
         {
-            var realenginer = (ServiceLocator.Locator.Resolve<IRealTagComsumer>() as RealEnginer);
+            var realenginer = (ServiceLocator.Locator.Resolve<IRealTagConsumer>() as RealEnginer);
             var mTagManager = ServiceLocator.Locator.Resolve<ITagManager>();
 
             var count = block.ReadInt();
@@ -383,7 +383,7 @@ namespace DBRuntime.Proxy
         {
             //Stopwatch sw = new Stopwatch();
             //sw.Start();
-            var realenginer = (ServiceLocator.Locator.Resolve<IRealTagComsumer>() as RealEnginer);
+            var realenginer = (ServiceLocator.Locator.Resolve<IRealTagConsumer>() as RealEnginer);
             if (Client != null && Client.IsConnected)
             {
                 int i = 0;
@@ -438,7 +438,7 @@ namespace DBRuntime.Proxy
             if (block == null) return;
             var count = block.ReadInt();
             var tserver = ServiceLocator.Locator.Resolve<ITagManager>();
-            var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
             int targetbaseoffset = block.ArrayOffset + block.ReaderIndex;
             for (int i = sid; i <= eid; i++)
             {

@@ -6,6 +6,7 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>DbWebApi</AssemblyName>
     <RootNamespace>DbWebApi</RootNamespace>
+    <ApplicationIcon>mrdbw.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,7 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Config\DbWebApiProxy.cfg">
+    <None Update="Config\DbWebApi.cfg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -450,7 +450,7 @@ namespace Cdy.Tag
         public void Dispose()
         {
             this.mDataBuffer = null;
-            GC.Collect();
+            //GC.Collect();
         }
 
         #endregion ...Methods...

@@ -6,6 +6,7 @@
 //  Version 1.0
 //  种道洋
 //==============================================================
+using Cdy.Tag.Driver;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -211,8 +212,9 @@ namespace Cdy.Tag
             ServiceLocator.Locator.Registor<IRealData>(realEnginer);
             ServiceLocator.Locator.Registor<IRealDataNotify>(realEnginer);
             ServiceLocator.Locator.Registor<IRealDataNotifyForProducter>(realEnginer);
-            ServiceLocator.Locator.Registor<IRealTagComsumer>(realEnginer);
-            
+            ServiceLocator.Locator.Registor<IRealTagConsumer>(realEnginer);
+            ServiceLocator.Locator.Registor<IRealTagProduct>(realEnginer);
+
             ServiceLocator.Locator.Registor<IHisEngine>(hisEnginer);
 
             ServiceLocator.Locator.Registor<IDataCompress>(compressEnginer);

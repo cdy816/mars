@@ -69,6 +69,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Demo", "Demo", "{64EDEEAB-1
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpiderDriver", "Driver\SpiderDriver\SpiderDriver.csproj", "{FF1A8DED-B788-45F8-9F52-4ABFE986A7EB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpiderDriver.ClientApi", "Driver\SpiderDriver.ClientApi\SpiderDriver.ClientApi.csproj", "{A35D2BB4-379D-4C96-8B3F-E655DE6E432E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -175,6 +177,10 @@ Global
 		{FF1A8DED-B788-45F8-9F52-4ABFE986A7EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF1A8DED-B788-45F8-9F52-4ABFE986A7EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF1A8DED-B788-45F8-9F52-4ABFE986A7EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A35D2BB4-379D-4C96-8B3F-E655DE6E432E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A35D2BB4-379D-4C96-8B3F-E655DE6E432E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A35D2BB4-379D-4C96-8B3F-E655DE6E432E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A35D2BB4-379D-4C96-8B3F-E655DE6E432E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -206,6 +212,7 @@ Global
 		{786F338E-1E4C-42D7-9645-17E29C7EFEFD} = {15D0D528-DC48-4E43-A8E8-3EFEC938951B}
 		{64EDEEAB-16E4-451E-AF39-C10948F92FE9} = {15D0D528-DC48-4E43-A8E8-3EFEC938951B}
 		{FF1A8DED-B788-45F8-9F52-4ABFE986A7EB} = {CF1EEDD8-FFFF-4E17-B61A-86A1110D9F7C}
+		{A35D2BB4-379D-4C96-8B3F-E655DE6E432E} = {CF1EEDD8-FFFF-4E17-B61A-86A1110D9F7C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {577CCEC3-4CDB-458A-B93D-F8579C2C3D8F}

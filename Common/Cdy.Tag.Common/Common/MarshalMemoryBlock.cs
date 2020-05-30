@@ -2257,46 +2257,53 @@ namespace Cdy.Tag
         /// <returns></returns>
         public MarshalMemoryBlock WriteToStream(Stream stream,long offset,long len)
         {
-            long osts = 0;
-            var hds = RelocationAddressToArrayIndex(offset, out osts);
-
-            if ((osts + len) < BufferItemSize)
+            try
             {
-                WriteToStream(stream, mHandles[hds], (int)osts, (int)len);
-            }
-            else
-            {
-                List<Tuple<int, int, long>> mSourceIndex = new List<Tuple<int, int, long>>();
-                int ll = BufferItemSize - (int)osts;
+                long osts = 0;
+                var hds = RelocationAddressToArrayIndex(offset, out osts);
 
-                mSourceIndex.Add(new Tuple<int, int, long>(hds, (int)osts, ll));
-
-                if (len - ll < BufferItemSize)
+                if ((osts + len) < BufferItemSize)
                 {
-                    hds++;
-                    mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, len - ll));
+                    WriteToStream(stream, mHandles[hds], (int)osts, (int)len);
                 }
                 else
                 {
-                    int bcount = (int)((len - ll) / BufferItemSize);
-                    int i = 0;
-                    for (i = 0; i < bcount; i++)
-                    {
-                        hds++;
-                        mSourceIndex.Add(new Tuple<int, int,  long>(hds, 0, BufferItemSize));
-                    }
-                    int otmp = (int)((len - ll) % BufferItemSize);
-                    if (otmp > 0)
-                    {
-                        hds++;
-                        mSourceIndex.Add(new Tuple<int, int,long>(hds, 0, otmp));
-                    }
+                    List<Tuple<int, int, long>> mSourceIndex = new List<Tuple<int, int, long>>();
+                    int ll = BufferItemSize - (int)osts;
 
-                    foreach (var vv in mSourceIndex)
+                    mSourceIndex.Add(new Tuple<int, int, long>(hds, (int)osts, ll));
+
+                    if (len - ll < BufferItemSize)
                     {
-                        WriteToStream(stream, this.mHandles[vv.Item1], vv.Item2, (int)vv.Item3);
+                        hds++;
+                        mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, len - ll));
+                    }
+                    else
+                    {
+                        int bcount = (int)((len - ll) / BufferItemSize);
+                        int i = 0;
+                        for (i = 0; i < bcount; i++)
+                        {
+                            hds++;
+                            mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, BufferItemSize));
+                        }
+                        int otmp = (int)((len - ll) % BufferItemSize);
+                        if (otmp > 0)
+                        {
+                            hds++;
+                            mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, otmp));
+                        }
+
+                        foreach (var vv in mSourceIndex)
+                        {
+                            WriteToStream(stream, this.mHandles[vv.Item1], vv.Item2, (int)vv.Item3);
+                        }
                     }
                 }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Erro("MarshalMemoryBlock", "WriteToStream:"+ex.Message);
             }
             return this;
         }

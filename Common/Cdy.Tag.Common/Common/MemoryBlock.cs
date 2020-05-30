@@ -1533,7 +1533,7 @@ namespace Cdy.Tag
             mBuffers.Clear();
             mHandles.Clear();
             LoggerService.Service.Erro("MemoryBlock", Name + " Disposed ");
-            GC.Collect();
+            //GC.Collect();
         }
 
         ///// <summary>

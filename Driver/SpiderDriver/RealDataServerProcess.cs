@@ -20,6 +20,9 @@ using DotNetty.Buffers;
 
 namespace SpiderDriver
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class RealDataServerProcess : ServerProcessBase
     {
 
@@ -110,9 +113,6 @@ namespace SpiderDriver
             }
             base.ProcessSingleData(client, data);
         }
-
-
-       
         
 
         /// <summary>
@@ -216,7 +216,7 @@ namespace SpiderDriver
                             itmp.Remove(ival);
                     }
                 }
-                
+                Parent.AsyncCallback(clientId, ToByteBuffer(APIConst.RealValueFun, (byte)1));
             }
             catch (Exception ex)
             {
@@ -259,6 +259,8 @@ namespace SpiderDriver
                 {
                     mDataCounts.Add(clientId, 0);
                 }
+
+                Parent.AsyncCallback(clientId, ToByteBuffer(APIConst.RealValueFun, (byte)1));
             }
             catch(Exception ex)
             {
@@ -272,14 +274,22 @@ namespace SpiderDriver
         /// <param name="block"></param>
         private void ProcessResetValueChangedNotify(string clientId, IByteBuffer block)
         {
-            if (mCallBackRegistorIds.ContainsKey(clientId))
+            try
             {
-                mCallBackRegistorIds.Remove(clientId);
+                if (mCallBackRegistorIds.ContainsKey(clientId))
+                {
+                    mCallBackRegistorIds.Remove(clientId);
+                }
+                if (mDataCounts.ContainsKey(clientId))
+                {
+                    mDataCounts.Remove(clientId);
+                }
             }
-            if(mDataCounts.ContainsKey(clientId))
+            catch
             {
-                mDataCounts.Remove(clientId);
+
             }
+            Parent.AsyncCallback(clientId, ToByteBuffer(APIConst.RealValueFun, (byte)1));
         }
 
 

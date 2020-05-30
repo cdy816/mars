@@ -887,7 +887,7 @@ namespace Cdy.Tag
             //mDataBuffer = null;
             mBuffers = null;
             LoggerService.Service.Erro("FixedMemoryBlock", Name + " Disposed ");
-            GC.Collect();
+            //GC.Collect();
         }
 
 

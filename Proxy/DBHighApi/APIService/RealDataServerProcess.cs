@@ -100,7 +100,7 @@ namespace DBHighApi.Api
 
         private bool mIsClosed = false;
         private ITagManager mTagManager;
-        private IRealTagComsumer mTagConsumer;
+        private IRealTagConsumer mTagConsumer;
 
         private Dictionary<string, IByteBuffer> buffers = new Dictionary<string, IByteBuffer>();
 
@@ -116,7 +116,7 @@ namespace DBHighApi.Api
         public RealDataServerProcess()
         {
             mTagManager = ServiceLocator.Locator.Resolve<ITagManager>();
-            mTagConsumer = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+            mTagConsumer = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
             
             ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeValueChangedForConsumer("RealDataServerProcess", new ValueChangedNotifyProcesser.ValueChangedDelegate((ids) => {
                 lock (mChangedTags)
@@ -201,7 +201,7 @@ namespace DBHighApi.Api
         /// <param name="block"></param>
         private void ProcessSetRealData(string clientid, IByteBuffer block)
         {
-            var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
             int count = block.ReadInt();
             for (int i = 0; i < count; i++)
             {
@@ -285,7 +285,7 @@ namespace DBHighApi.Api
         /// <param name="re"></param>
         private void ProcessRealData(List<int> cc,IByteBuffer re)
         {
-            var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
             re.WriteInt(cc.Count);
             foreach (var vv in cc)
             {
@@ -381,7 +381,7 @@ namespace DBHighApi.Api
 
         private void ProcessRealDataValueAndQuality(List<int> cc, IByteBuffer re)
         {
-            var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
             re.WriteInt(cc.Count);
             foreach (var vv in cc)
             {
@@ -475,7 +475,7 @@ namespace DBHighApi.Api
 
         private void ProcessRealDataValue(List<int> cc, IByteBuffer re)
         {
-            var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
             re.WriteInt(cc.Count);
             foreach (var vv in cc)
             {

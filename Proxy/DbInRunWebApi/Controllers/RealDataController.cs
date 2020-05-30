@@ -24,7 +24,7 @@ namespace DbInRunWebApi.Controllers
             if(DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token)&&DbInRunWebApi.SecurityManager.Manager.CheckReaderPermission(request.Token,request.Group))
             {
                 RealValueQueryResponse response = new RealValueQueryResponse() { Result = true, Datas = new List<RealValue>(request.TagNames.Count) };
-                var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+                var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
                 var ids = service.GetTagIdByName(request.TagNames);
                 for (int i = 0; i < request.TagNames.Count; i++)
                 {
@@ -49,7 +49,7 @@ namespace DbInRunWebApi.Controllers
             if (DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token) && DbInRunWebApi.SecurityManager.Manager.CheckReaderPermission(request.Token, request.Group))
             {
                 RealValueOnlyQueryResponse response = new RealValueOnlyQueryResponse() { Result = true, Datas = new List<object>() };
-                var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+                var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
                 var ids = service.GetTagIdByName(request.TagNames);
                 for (int i = 0; i < request.TagNames.Count; i++)
                 {
@@ -75,7 +75,7 @@ namespace DbInRunWebApi.Controllers
             if (DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token) && DbInRunWebApi.SecurityManager.Manager.CheckReaderPermission(request.Token, request.Group))
             {
                 RealValueAndQualityQueryResponse response = new RealValueAndQualityQueryResponse() { Result = true, Datas = new List<RealValueAndQuality>() };
-                var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+                var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
                 var ids = service.GetTagIdByName(request.TagNames);
                 for (int i = 0; i < request.TagNames.Count; i++)
                 {
@@ -135,7 +135,7 @@ namespace DbInRunWebApi.Controllers
                 }
                 if(!re) return new RealDataSetResponse() { Result = false };
 
-                var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+                var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
 
                 re = true;
                 foreach (var vv in request.Values)

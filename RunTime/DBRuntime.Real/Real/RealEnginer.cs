@@ -18,7 +18,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public unsafe class RealEnginer: IRealDataNotify, IRealDataNotifyForProducter, IRealData, IRealTagProduct, IRealTagComsumer,IDisposable
+    public unsafe class RealEnginer: IRealDataNotify, IRealDataNotifyForProducter, IRealData, IRealTagProduct, IRealTagConsumer,IDisposable
     {
 
         #region ... Variables  ...

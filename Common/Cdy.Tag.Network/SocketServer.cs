@@ -19,7 +19,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class SocketServer
+    public abstract class SocketServer
     {
 
         #region ... Variables  ...
@@ -55,6 +55,11 @@ namespace Cdy.Tag
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public abstract string Name { get; }
 
         /// <summary>
         /// 是否使用异步通信库
@@ -99,11 +104,11 @@ namespace Cdy.Tag
             try
             {
                 StartInner(port);
-                LoggerService.Service.Info("SocketServer", "Start data service at port " + port);
+                LoggerService.Service.Info("SocketServer", "Server " + this.Name + " start  at port " + port,ConsoleColor.Cyan);
             }
             catch
             {
-                LoggerService.Service.Erro("SocketServer", "Start data service at port " + port+" failed." );
+                LoggerService.Service.Erro("SocketServer", "Server " + this.Name + " start at port " + port+" failed." );
             }
         }
 
@@ -117,7 +122,6 @@ namespace Cdy.Tag
             {
                 GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
             }
-           
 
             if (UseLibuv)
             {

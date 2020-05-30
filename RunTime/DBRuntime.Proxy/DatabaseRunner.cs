@@ -282,7 +282,7 @@ namespace DBRuntime.Proxy
             ServiceLocator.Locator.Registor<IRealData>(realEnginer);
             ServiceLocator.Locator.Registor<IRealDataNotify>(realEnginer);
             ServiceLocator.Locator.Registor<IRealDataNotifyForProducter>(realEnginer);
-            ServiceLocator.Locator.Registor<IRealTagComsumer>(realEnginer);
+            ServiceLocator.Locator.Registor<IRealTagConsumer>(realEnginer);
             ServiceLocator.Locator.Registor<ITagManager>(mRealDatabase);
             ServiceLocator.Locator.Registor<IRuntimeSecurity>(mSecurityRunner);
         }

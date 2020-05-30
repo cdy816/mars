@@ -84,6 +84,12 @@ namespace SpiderDriver
             return re;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         protected IByteBuffer ToByteBuffer(byte id, long value)
         {
             var re = BufferManager.Manager.Allocate(id, 1);
@@ -142,7 +148,9 @@ namespace SpiderDriver
             data.ReleaseBuffer();
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
         public virtual void Start()
         {
             resetEvent = new ManualResetEvent(false);

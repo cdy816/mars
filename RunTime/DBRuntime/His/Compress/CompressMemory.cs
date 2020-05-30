@@ -143,21 +143,29 @@ namespace Cdy.Tag
         /// <param name="sourceM"></param>
         private void CheckTagAddress(MergeMemoryBlock sourceM)
         {
-            
-            if (mTagAddress==null && sourceM!=null)
+            try
             {
-                mTagAddress = new Dictionary<int, Tuple<long, int, int, int>>();
-                dtmp.Clear();
-                foreach (var vv in sourceM.TagAddress.Where(e=>e.Key>=Id* TagCountPerMemory && e.Key<(Id+1)* TagCountPerMemory))
+                if (mTagAddress == null && sourceM != null)
                 {
-                    mTagAddress.Add(vv.Key,vv.Value);
-                    dtmp.Add(vv.Key, 0);
-                    var cpt = mHisTagService.GetHisTag(vv.Key).CompressType;
-                    if(!mCompressCach.ContainsKey(cpt))
+                    mTagAddress = new Dictionary<int, Tuple<long, int, int, int>>();
+                    dtmp.Clear();
+                    if (sourceM.TagAddress == null) return;
+
+                    foreach (var vv in sourceM.TagAddress.Where(e => e.Key >= Id * TagCountPerMemory && e.Key < (Id + 1) * TagCountPerMemory))
                     {
-                        mCompressCach.Add(cpt, CompressUnitManager.Manager.GetCompressQuick(cpt).Clone());
+                        mTagAddress.Add(vv.Key, vv.Value);
+                        dtmp.Add(vv.Key, 0);
+                        var cpt = mHisTagService.GetHisTag(vv.Key).CompressType;
+                        if (!mCompressCach.ContainsKey(cpt))
+                        {
+                            mCompressCach.Add(cpt, CompressUnitManager.Manager.GetCompressQuick(cpt).Clone());
+                        }
                     }
                 }
+            }
+            catch
+            {
+
             }
         }
 

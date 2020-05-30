@@ -6,6 +6,7 @@
     <UseWPF>true</UseWPF>
     <Authors>Chongdaoyang</Authors>
     <Description>历史数据查询工具</Description>
+    <ApplicationIcon>mrdbt.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

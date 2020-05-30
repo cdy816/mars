@@ -457,7 +457,7 @@ namespace Cdy.Tag
         public void Dispose()
         {
             Marshal.FreeHGlobal(mDataBuffer);
-            GC.Collect();
+            //GC.Collect();
         }
 
         #endregion ...Methods...

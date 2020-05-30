@@ -65,6 +65,11 @@ namespace DBRuntime.Api
         /// </summary>
         public static DataService Service = new DataService();
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public override string Name => "ConsumeDataService";
+
         #endregion ...Variables...
 
         #region ... Events     ...

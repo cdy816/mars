@@ -16,7 +16,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public interface IRealTagComsumer
+    public interface IRealTagConsumer
     {
 
         #region ... Variables  ...

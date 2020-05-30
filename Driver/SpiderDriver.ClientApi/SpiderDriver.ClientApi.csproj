@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Cdy.Tag.Network\Cdy.Tag.Network.csproj" />
+    <ProjectReference Include="..\..\Common\Cdy.Tag\Cdy.Tag.csproj" />
+  </ItemGroup>
+
+</Project>

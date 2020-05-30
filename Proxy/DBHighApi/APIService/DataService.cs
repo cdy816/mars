@@ -79,10 +79,14 @@ namespace DBHighApi.Api
         {
             RegistorInit();
         }
+
         #endregion ...Constructor...
 
         #region ... Properties ...
-
+        /// <summary>
+        /// 
+        /// </summary>
+        public override string Name => "ConsumeDataService";
         #endregion ...Properties...
 
         #region ... Methods    ...

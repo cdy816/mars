@@ -8,6 +8,7 @@
     <SignAssembly>false</SignAssembly>
     <Authors>Chongdaoyang</Authors>
     <Description>数据库管理工具</Description>
+    <ApplicationIcon>mrdbd.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

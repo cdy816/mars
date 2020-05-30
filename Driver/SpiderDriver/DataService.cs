@@ -25,7 +25,7 @@ namespace SpiderDriver
         private TagInfoServerProcess mInfoProcess;
         private RealDataServerProcess mRealProcess;
         private IByteBuffer mAsyncCalldata;
-       
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -37,7 +37,10 @@ namespace SpiderDriver
         #endregion ...Constructor...
 
         #region ... Properties ...
-
+        /// <summary>
+        /// 
+        /// </summary>
+        public override string Name => "SpiderDriveDataService";
         #endregion ...Properties...
 
         #region ... Methods    ...

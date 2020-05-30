@@ -91,7 +91,7 @@ namespace DBRuntime.Api
 
         private bool mIsClosed = false;
         private ITagManager mTagManager;
-        private IRealTagComsumer mTagConsumer;
+        private IRealTagConsumer mTagConsumer;
 
         private Dictionary<string, IByteBuffer> buffers = new Dictionary<string, IByteBuffer>();
 
@@ -107,7 +107,7 @@ namespace DBRuntime.Api
         public RealDataServerProcess()
         {
             mTagManager = ServiceLocator.Locator.Resolve<ITagManager>();
-            mTagConsumer = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+            mTagConsumer = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
             
             ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeValueChangedForConsumer("RealDataServerProcess", new ValueChangedNotifyProcesser.ValueChangedDelegate((ids) => {
                 lock (mChangedTags)
@@ -206,7 +206,7 @@ namespace DBRuntime.Api
         {
             int size = block.ReadInt();
             int start = block.ReadInt();
-            var cc = ServiceLocator.Locator.Resolve<IRealTagComsumer>() as RealEnginer;
+            var cc = ServiceLocator.Locator.Resolve<IRealTagConsumer>() as RealEnginer;
            
             if (start >= cc.Memory.Length) return;
             var re = BufferManager.Manager.Allocate(ApiFunConst.RealDataRequestFun, 0);
@@ -229,7 +229,7 @@ namespace DBRuntime.Api
         {
             int start = item.StartAddress;
             int size = item.EndAddress - start;
-            var cc = ServiceLocator.Locator.Resolve<IRealTagComsumer>() as RealEnginer;
+            var cc = ServiceLocator.Locator.Resolve<IRealTagConsumer>() as RealEnginer;
             if (start >= cc.Memory.Length) return null;
             var re = BufferManager.Manager.Allocate(ApiFunConst.RealDataPushFun, size+9);
             re.WriteByte(RealDataBlockPush);
@@ -244,7 +244,7 @@ namespace DBRuntime.Api
         {
             int start = item.StartAddress;
             int size = item.EndAddress - start;
-            var cc = ServiceLocator.Locator.Resolve<IRealTagComsumer>() as RealEnginer;
+            var cc = ServiceLocator.Locator.Resolve<IRealTagConsumer>() as RealEnginer;
             if (start >= cc.Memory.Length) return null;
 
             //var re = Unpooled.Buffer(10);
@@ -269,7 +269,7 @@ namespace DBRuntime.Api
         /// <param name="block"></param>
         private void ProcessSetRealData(string clientid, IByteBuffer block)
         {
-            var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
             int count = block.ReadInt();
             for (int i = 0; i < count; i++)
             {
@@ -352,7 +352,7 @@ namespace DBRuntime.Api
         /// <param name="re"></param>
         private void ProcessRealDataByMemoryCopy(List<int> cc,IByteBuffer re)
         {
-            var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
             var tagservice = ServiceLocator.Locator.Resolve<ITagManager>();
 
             re.WriteInt(cc.Count);
@@ -373,7 +373,7 @@ namespace DBRuntime.Api
         /// <param name="re"></param>
         private void ProcessRealData(List<int> cc,IByteBuffer re)
         {
-            var service = ServiceLocator.Locator.Resolve<IRealTagComsumer>();
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
             re.WriteInt(cc.Count);
             foreach (var vv in cc)
             {

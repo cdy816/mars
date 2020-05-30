@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using Cdy.Tag;
@@ -23,11 +24,9 @@ namespace SpiderDriver
         
         public const byte GetTagIdByNameFun = 0;
 
+        public const byte QueryAllTagNameAndIds = 2;
+
         public const byte Login = 1;
-
-        public const byte RegistValueCallBack = 2;
-
-        public const byte GetdatabaseName = 3;
 
         #endregion ...Variables...
 
@@ -84,18 +83,61 @@ namespace SpiderDriver
                         }
                     }
                     break;
+                case QueryAllTagNameAndIds:
+                    loginId = data.ReadLong();
+                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
+                    {
+                        int psize = 100000;
+                        var vtags = mm.ListAllTags();
+                        int tcount = vtags.Count / psize;
+                        tcount += vtags.Count % psize > 0 ? tcount++ : tcount;
+                        for(int i=0;i<tcount;i++)
+                        {
+                            if((i+1)*psize>vtags.Count)
+                            {
+                                var vv = vtags.Skip(i * psize).Take(psize);
+                                Parent.AsyncCallback(client, GetTagBuffer(vv, (short)i, (short)tcount));
+                            }
+                            else
+                            {
+                                var vv = vtags.Skip(i * psize).Take(vtags.Count % psize);
+                                Parent.AsyncCallback(client, GetTagBuffer(vv, (short)i, (short)tcount));
+                            }
+                        }
+                    }
+                    break;
                 case Login:
                     string user = data.ReadString();
                     string pass = data.ReadString();
                     long result = Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().Login(user, pass, client);
                     Parent.AsyncCallback(client, ToByteBuffer(APIConst.TagInfoRequestFun, result));
                     break;
-                
-
 
             }
 
 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tags"></param>
+        /// <param name="bcount"></param>
+        /// <param name="totalcount"></param>
+        /// <returns></returns>
+        private IByteBuffer GetTagBuffer(IEnumerable<Tagbase> tags,short bcount,short totalcount)
+        {
+            IByteBuffer re = BufferManager.Manager.Allocate(APIConst.TagInfoRequestFun, tags.Count() * 64+5);
+            re.WriteByte(QueryAllTagNameAndIds);
+            re.WriteShort(totalcount);
+            re.WriteShort(bcount);
+            re.WriteInt(tags.Count());
+            foreach(var vv in tags)
+            {
+                re.WriteInt(vv.Id);
+                re.WriteString(vv.Name);
+            }
+            return re;
         }
 
         #endregion ...Methods...

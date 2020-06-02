@@ -70,6 +70,8 @@ namespace DBRuntime.Proxy
         /// </summary>
         public int PollCircle { get; set; } = 1000;
 
+        public event EventHandler ValueUpdateEvent;
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -109,6 +111,7 @@ namespace DBRuntime.Proxy
                         // ProcessSingleBufferData(mCachDatas.Dequeue());
                         ProcessBufferData(mCachDatas.Dequeue());
                     }
+                    ValueUpdateEvent?.Invoke(this, null);
                 }
                 else
                 {
@@ -116,6 +119,7 @@ namespace DBRuntime.Proxy
                     Client.SyncRealMemory();
                     double span = (DateTime.Now - stime).TotalMilliseconds;
                     int sleeptime = span > PollCircle ? 1 : (int)(PollCircle - span);
+                    ValueUpdateEvent?.Invoke(this,null);
                     Thread.Sleep(sleeptime);
                 }
             }

@@ -215,6 +215,9 @@ namespace SpiderDriver.ClientApi
             return IsLogin;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void CheckLogin()
         {
             if (mLoginId < 0)
@@ -223,6 +226,12 @@ namespace SpiderDriver.ClientApi
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <param name="re"></param>
         private void SetTagValueToBuffer(TagType type,object value,IByteBuffer re)
         {
             re.WriteByte((byte)type);
@@ -302,7 +311,6 @@ namespace SpiderDriver.ClientApi
                     break;
             }
         }
-
 
 
         /// <summary>

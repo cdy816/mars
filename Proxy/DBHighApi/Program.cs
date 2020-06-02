@@ -39,7 +39,10 @@ namespace DBHighApi
             DatabaseRunner.Manager.Load();
             DatabaseRunner.Manager.Start();
             DatabaseRunner.Manager.IsReadyEvent += Manager_IsReadyEvent;
+        
         }
+
+
 
         /// <summary>
         /// 
@@ -49,7 +52,7 @@ namespace DBHighApi
         {
             if (value)
             {
-                Cdy.Tag.LoggerService.Service.Info("Start", string.Format(Res.Get("serverstartmsg"), 14332));
+                Cdy.Tag.LoggerService.Service.Info("DBHighAPI", string.Format(Res.Get("serverstartmsg"), 14332));
                 DataService.Service.Start("127.0.0.1", 14332);
             }
             else

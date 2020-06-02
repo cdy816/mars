@@ -56,6 +56,8 @@ namespace DBRuntime.Proxy
 
         public event IsReadyDelegate IsReadyEvent;
 
+        public event EventHandler ValueUpdateEvent;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -271,7 +273,13 @@ namespace DBRuntime.Proxy
             IsReady = true;
 
             mDriver = new NetTransformDriver() { Client = mProxy.NetworkClient ,WorkMode=mWorkMode,PollCircle=mPollCircle};
+            mDriver.ValueUpdateEvent += MDriver_ValueUpdateEvent;
             mDriver.Start(realEnginer);
+        }
+
+        private void MDriver_ValueUpdateEvent(object sender, EventArgs e)
+        {
+            ValueUpdateEvent?.Invoke(this, e);
         }
 
         /// <summary>

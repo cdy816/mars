@@ -149,7 +149,14 @@ namespace DBHighApi
         /// </summary>
         private Dictionary<byte, IByteBuffer> mReceivedDatas = new Dictionary<byte, IByteBuffer>();
 
-        public delegate void ProcessDataPushDelegate(Dictionary<int, Tuple<object, DateTime, byte>> datas);
+        public delegate void TagValueChangedCallBackDelegate(Dictionary<int, Tuple<object, byte>> datas);
+
+        private object mlockRealObj = new object();
+
+        private object mlockRealSetObj = new object();
+
+
+        private object mlockHisQueryObj = new object();
 
         #endregion ...Variables...
 
@@ -171,9 +178,9 @@ namespace DBHighApi
         /// <summary>
         /// 
         /// </summary>
-        public long LoginId { get; set; }
+        public long LoginId { get; private set; }
 
-        public ProcessDataPushDelegate ProcessDataPush { get; set; }
+        public TagValueChangedCallBackDelegate TagValueChangedCallBack { get; set; }
 
         private string mUser;
         private string mPass;
@@ -191,39 +198,25 @@ namespace DBHighApi
         {
             if(fun == ApiFunConst.RealDataPushFun)
             {
-                ProcessDataPush?.Invoke(ProcessSingleBufferData(datas));
+                TagValueChangedCallBack?.Invoke(ProcessPushSingleBufferData(datas));
             }
             else
             {
                 datas.Retain();
-                //收到异步请求回调数据
-                if (datas.ReadableBytes==1)
+                switch (fun)
                 {
-                    if(datas.ReadByte() == byte.MaxValue)
-                        return;
-                    else
-                    {
-                        Debug.Print("DbClient ProcessData Invailed data");
-                    }
-                }
-                else
-                {
-                    switch (fun)
-                    {
-                        case ApiFunConst.TagInfoRequest:
-                            mInfoRequreData = datas ;
-                            infoRequreEvent.Set();
-                            break;
-                        case ApiFunConst.RealDataRequestFun:
-                            mRealRequreData = datas;
-                            this.realRequreEvent.Set();
-                            break;
-                        case ApiFunConst.HisDataRequestFun:
-                            mHisRequreData = datas;
-                            hisRequreEvent.Set();
-                            break;
-                    }
-
+                    case ApiFunConst.TagInfoRequest:
+                        mInfoRequreData = datas;
+                        infoRequreEvent.Set();
+                        break;
+                    case ApiFunConst.RealDataRequestFun:
+                        mRealRequreData = datas;
+                        this.realRequreEvent.Set();
+                        break;
+                    case ApiFunConst.HisDataRequestFun:
+                        mHisRequreData = datas;
+                        hisRequreEvent.Set();
+                        break;
                 }
             }
         }
@@ -233,30 +226,35 @@ namespace DBHighApi
         /// </summary>
         /// <param name="username"></param>
         /// <param name="password"></param>
-        public bool Login(string username,string password,int timeount=5000)
+        public bool Login(string username,string password,int timeount= 30000)
         {
-            mUser = username;
-            mPass = password;
-            int size = username.Length + password.Length + 9;
-            var mb = GetBuffer(ApiFunConst.TagInfoRequest, size);
-            mb.WriteByte(ApiFunConst.Login);
-            mb.WriteString(username);
-            mb.WriteString(password);
-            Send(mb);
-            if(infoRequreEvent.WaitOne(timeount)  && mInfoRequreData.ReadableBytes>4)
+
+            lock (mReceivedDatas)
             {
-                if (mInfoRequreData.ReferenceCount > 0)
+                if (IsLogin) return true;
+
+                mUser = username;
+                mPass = password;
+                int size = username.Length + password.Length + 9;
+                var mb = GetBuffer(ApiFunConst.TagInfoRequest, size);
+                mb.WriteByte(ApiFunConst.Login);
+                mb.WriteString(username);
+                mb.WriteString(password);
+                Send(mb);
+                if (infoRequreEvent.WaitOne(timeount))
                 {
-                    LoginId = mInfoRequreData.ReadLong();
-                    return IsLogin;
+                    if (mInfoRequreData.ReferenceCount > 0)
+                    {
+                        LoginId = mInfoRequreData.ReadLong();
+                        return IsLogin;
+                    }
                 }
+                //mInfoRequreData?.Release();
+                LoginId = -1;
+                return IsLogin;
             }
-            //mInfoRequreData?.Release();
-            LoginId = -1;
-            return IsLogin;
         }
 
-       
 
         /// <summary>
         /// 
@@ -330,26 +328,30 @@ namespace DBHighApi
         /// <returns></returns>
         public bool RegistorTagValueCallBack(int minid, int maxid, int timeout = 5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
-            mb.WriteByte(ApiFunConst.RegistorValueCallback);
-            mb.WriteLong(this.LoginId);
-            mb.WriteInt(minid);
-            mb.WriteInt(maxid);
-            this.realRequreEvent.Reset();
-            Send(mb);
-            try
+            lock (mlockRealObj)
             {
-                if (realRequreEvent.WaitOne(timeout))
+                CheckLogin();
+                if (!IsLogin) return false;
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
+                mb.WriteByte(ApiFunConst.RegistorValueCallback);
+                mb.WriteLong(this.LoginId);
+                mb.WriteInt(minid);
+                mb.WriteInt(maxid);
+                this.realRequreEvent.Reset();
+                Send(mb);
+                try
                 {
-                    return mRealRequreData.ReadByte() > 0;
+                    if (realRequreEvent.WaitOne(timeout))
+                    {
+                        return mRealRequreData.ReadByte() > 0;
+                    }
                 }
+                finally
+                {
+                    //mRealRequreData?.ReleaseBuffer();
+                }
+                return true;
             }
-            finally
-            {
-                //mRealRequreData?.ReleaseBuffer();
-            }
-            return true;
         }
 
         /// <summary>
@@ -359,34 +361,39 @@ namespace DBHighApi
         /// <returns></returns>
         public bool ClearRegistorTagValueCallBack(int timeout = 5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
-            mb.WriteByte(ApiFunConst.ResetValueChangeNotify);
-            mb.WriteLong(this.LoginId);
-            realRequreEvent.Reset();
-            Send(mb);
+            lock (mlockRealObj)
+            {
+                CheckLogin();
+                if (!IsLogin) return false;
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
+                mb.WriteByte(ApiFunConst.ResetValueChangeNotify);
+                mb.WriteLong(this.LoginId);
+                realRequreEvent.Reset();
+                Send(mb);
 
-            try
-            {
-                if (realRequreEvent.WaitOne(timeout))
+                try
                 {
-                    return mRealRequreData.ReadByte() > 0;
+                    if (realRequreEvent.WaitOne(timeout))
+                    {
+                        return mRealRequreData.ReadByte() > 0;
+                    }
                 }
+                finally
+                {
+                    //mRealRequreData?.ReleaseBuffer();
+                }
+                return true;
             }
-            finally
-            {
-                //mRealRequreData?.ReleaseBuffer();
-            }
-            return true;
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public IByteBuffer GetRealDataInner(List<int> ids,int timeout=5000)
+        private IByteBuffer GetRealDataInner(List<int> ids,int timeout=5000)
         {
             CheckLogin();
+            if (!IsLogin) return null;
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 +ids.Count* 4);
             mb.WriteByte(ApiFunConst.RequestRealData);
             mb.WriteLong(this.LoginId);
@@ -415,9 +422,10 @@ namespace DBHighApi
         }
 
 
-        public IByteBuffer GetRealDataInnerValueOnly(List<int> ids, int timeout = 5000)
+        private IByteBuffer GetRealDataInnerValueOnly(List<int> ids, int timeout = 5000)
         {
             CheckLogin();
+            if (!IsLogin) return null;
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + ids.Count * 4);
             mb.WriteByte(ApiFunConst.RequestRealDataValue);
             mb.WriteLong(this.LoginId);
@@ -445,9 +453,10 @@ namespace DBHighApi
             return null;
         }
 
-        public IByteBuffer GetRealDataInnerValueAndQualityOnly(List<int> ids, int timeout = 5000)
+        private IByteBuffer GetRealDataInnerValueAndQualityOnly(List<int> ids, int timeout = 5000)
         {
             CheckLogin();
+            if (!IsLogin) return null;
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + ids.Count * 4);
             mb.WriteByte(ApiFunConst.RequestRealDataValueAndQuality);
             mb.WriteLong(this.LoginId);
@@ -482,9 +491,10 @@ namespace DBHighApi
         /// <param name="ide"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public IByteBuffer GetRealDataInner(int ids, int ide, int timeout = 5000)
+        private IByteBuffer GetRealDataInner(int ids, int ide, int timeout = 5000)
         {
             CheckLogin();
+            if (!IsLogin) return null;
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
             mb.WriteByte(ApiFunConst.RequestRealData2);
             mb.WriteLong(this.LoginId);
@@ -507,9 +517,10 @@ namespace DBHighApi
         /// <param name="ide"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public IByteBuffer GetRealDataInnerValueOnly(int ids, int ide, int timeout = 5000)
+        private IByteBuffer GetRealDataInnerValueOnly(int ids, int ide, int timeout = 5000)
         {
             CheckLogin();
+            if (!IsLogin) return null;
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
             mb.WriteByte(ApiFunConst.RequestReal2DataValue);
             mb.WriteLong(this.LoginId);
@@ -532,9 +543,10 @@ namespace DBHighApi
         /// <param name="ide"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public IByteBuffer GetRealDataInnerValueAndQualityOnly(int ids, int ide, int timeout = 5000)
+        private IByteBuffer GetRealDataInnerValueAndQualityOnly(int ids, int ide, int timeout = 5000)
         {
             CheckLogin();
+            if (!IsLogin) return null;
             var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
             mb.WriteByte(ApiFunConst.RequestReal2DataValueAndQuality);
             mb.WriteLong(this.LoginId);
@@ -646,6 +658,92 @@ namespace DBHighApi
             return re;
         }
 
+        private Dictionary<int, Tuple<object,byte>> ProcessPushSingleBufferData(IByteBuffer block)
+        {
+            if (block == null) return null;
+            Dictionary<int, Tuple<object,  byte>> re = new Dictionary<int, Tuple<object,  byte>>();
+
+            var count = block.ReadInt();
+            for (int i = 0; i < count; i++)
+            {
+                var vid = block.ReadInt();
+                if (vid < 0)
+                {
+                    Debug.Print("Invaild value!");
+                }
+                var typ = block.ReadByte();
+                object value = null;
+                switch (typ)
+                {
+                    case (byte)TagType.Bool:
+                        value = block.ReadByte();
+                        break;
+                    case (byte)TagType.Byte:
+                        value = block.ReadByte();
+                        break;
+                    case (byte)TagType.Short:
+                        value = block.ReadShort();
+                        break;
+                    case (byte)TagType.UShort:
+                        value = (ushort)block.ReadShort();
+                        break;
+                    case (byte)TagType.Int:
+                        value = block.ReadInt();
+                        break;
+                    case (byte)TagType.UInt:
+                        value = (uint)block.ReadInt();
+                        break;
+                    case (byte)TagType.Long:
+                        value = block.ReadLong();
+                        break;
+                    case (byte)TagType.ULong:
+                        value = (ulong)block.ReadLong();
+                        break;
+                    case (byte)TagType.Float:
+                        value = block.ReadFloat();
+                        break;
+                    case (byte)TagType.Double:
+                        value = block.ReadDouble();
+                        break;
+                    case (byte)TagType.String:
+                        value = ReadString(block);
+                        break;
+                    case (byte)TagType.DateTime:
+                        var tick = block.ReadLong();
+                        value = new DateTime(tick);
+                        break;
+                    case (byte)TagType.IntPoint:
+                        value = new IntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint:
+                        value = new UIntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.IntPoint3:
+                        value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint3:
+                        value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.LongPoint:
+                        value = new LongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint:
+                        value = new ULongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.LongPoint3:
+                        value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint3:
+                        value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                }
+                var qua = block.ReadByte();
+                re.Add(vid, new Tuple<object,byte>(value,qua));
+            }
+            //block.Release();
+            return re;
+        }
+
 
         private Dictionary<int, Tuple<object, byte>> ProcessSingleBufferDataValueAndQuality(IByteBuffer block)
         {
@@ -750,6 +848,7 @@ namespace DBHighApi
                 if (vid < 0)
                 {
                     Debug.Print("Invaild value!");
+                    break;
                 }
                 var typ = block.ReadByte();
                 object value = null;
@@ -831,6 +930,7 @@ namespace DBHighApi
         /// <returns></returns>
         public Dictionary<int, Tuple<object, DateTime, byte>> GetRealData(List<int> ids, int timeout = 5000)
         {
+            lock(mlockRealObj)
             return ProcessSingleBufferData(GetRealDataInner(ids, timeout));
         }
 
@@ -842,7 +942,8 @@ namespace DBHighApi
         /// <returns></returns>
         public Dictionary<int, object> GetRealDataValueOnly(List<int> ids, int timeout = 5000)
         {
-            return ProcessSingleBufferDataValue(GetRealDataInnerValueOnly(ids, timeout));
+            lock (mlockRealObj)
+                return ProcessSingleBufferDataValue(GetRealDataInnerValueOnly(ids, timeout));
         }
 
         /// <summary>
@@ -853,7 +954,8 @@ namespace DBHighApi
         /// <returns></returns>
         public Dictionary<int, Tuple<object,byte>> GetRealDataValueAndQualityOnly(List<int> ids, int timeout = 5000)
         {
-            return ProcessSingleBufferDataValueAndQuality(GetRealDataInnerValueAndQualityOnly(ids, timeout));
+            lock (mlockRealObj)
+                return ProcessSingleBufferDataValueAndQuality(GetRealDataInnerValueAndQualityOnly(ids, timeout));
         }
 
         /// <summary>
@@ -865,7 +967,8 @@ namespace DBHighApi
         /// <returns></returns>
         public Dictionary<int, Tuple<object, DateTime, byte>> GetRealData(int startId,int endId, int timeout = 5000)
         {
-            return ProcessSingleBufferData(GetRealDataInner(startId,endId, timeout));
+            lock (mlockRealObj)
+                return ProcessSingleBufferData(GetRealDataInner(startId,endId, timeout));
         }
 
         /// <summary>
@@ -877,7 +980,8 @@ namespace DBHighApi
         /// <returns></returns>
         public Dictionary<int, object> GetRealDataValueOnly(int startId, int endId, int timeout = 5000)
         {
-            return ProcessSingleBufferDataValue(GetRealDataInnerValueOnly(startId,endId, timeout));
+            lock (mlockRealObj)
+                return ProcessSingleBufferDataValue(GetRealDataInnerValueOnly(startId,endId, timeout));
         }
 
         /// <summary>
@@ -890,7 +994,8 @@ namespace DBHighApi
 
         public Dictionary<int, Tuple<object, byte>> GetRealDataValueAndQualityOnly(int startId, int endId, int timeout = 5000)
         {
-            return ProcessSingleBufferDataValueAndQuality(GetRealDataInnerValueAndQualityOnly(startId, endId, timeout));
+            lock (mlockRealObj)
+                return ProcessSingleBufferDataValueAndQuality(GetRealDataInnerValueAndQualityOnly(startId, endId, timeout));
         }
 
 
@@ -902,102 +1007,106 @@ namespace DBHighApi
         /// <param name="value"></param>
         public bool SetTagValue(int id,byte valueType,object value,int timeout=5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 30);
-            mb.WriteByte(ApiFunConst.SetDataValue);
-            mb.WriteLong(this.LoginId);
-            mb.WriteInt(1);
-            mb.WriteInt(id);
-            mb.WriteByte(valueType);
-            switch (valueType)
+            lock (mlockRealSetObj)
             {
-                case (byte)TagType.Bool:
-                    mb.WriteByte((byte)value);
-                    break;
-                case (byte)TagType.Byte:
-                    mb.WriteByte((byte)value);
-                    break;
-                case (byte)TagType.Short:
-                    mb.WriteShort((short)value);
-                    break;
-                case (byte)TagType.UShort:
-                    mb.WriteUnsignedShort((ushort)value);
-                    break;
-                case (byte)TagType.Int:
-                    mb.WriteInt((int)value);
-                    break;
-                case (byte)TagType.UInt:
-                    mb.WriteInt((int)value);
-                    break;
-                case (byte)TagType.Long:
-                case (byte)TagType.ULong:
-                    mb.WriteLong((long)value);
-                    break;
-                case (byte)TagType.Float:
-                    mb.WriteFloat((float)value);
-                    break;
-                case (byte)TagType.Double:
-                    mb.WriteDouble((double)value);
-                    break;
-                case (byte)TagType.String:
-                    string sval = value.ToString();
-                    mb.WriteInt(sval.Length);
-                    mb.WriteString(sval, Encoding.Unicode);
-                    break;
-                case (byte)TagType.DateTime:
-                    mb.WriteLong(((DateTime)value).Ticks);
-                    break;
-                case (byte)TagType.IntPoint:
-                    mb.WriteInt(((IntPointData)value).X);
-                    mb.WriteInt(((IntPointData)value).Y);
-                    break;
-                case (byte)TagType.UIntPoint:
-                    mb.WriteInt((int)((UIntPointData)value).X);
-                    mb.WriteInt((int)((UIntPointData)value).Y);
-                    break;
-                case (byte)TagType.IntPoint3:
-                    mb.WriteInt(((IntPoint3Data)value).X);
-                    mb.WriteInt(((IntPoint3Data)value).Y);
-                    mb.WriteInt(((IntPoint3Data)value).Z);
-                    break;
-                case (byte)TagType.UIntPoint3:
-                    mb.WriteInt((int)((UIntPoint3Data)value).X);
-                    mb.WriteInt((int)((UIntPoint3Data)value).Y);
-                    mb.WriteInt((int)((UIntPoint3Data)value).Z);
-                    break;
-                case (byte)TagType.LongPoint:
-                    mb.WriteLong(((LongPointData)value).X);
-                    mb.WriteLong(((LongPointData)value).Y);
-                    break;
-                case (byte)TagType.ULongPoint:
-                    mb.WriteLong((long)((ULongPointData)value).X);
-                    mb.WriteLong((long)((ULongPointData)value).Y);
-                    break;
-                case (byte)TagType.LongPoint3:
-                    mb.WriteLong(((LongPoint3Data)value).X);
-                    mb.WriteLong(((LongPoint3Data)value).Y);
-                    mb.WriteLong(((LongPoint3Data)value).Z);
-                    break;
-                case (byte)TagType.ULongPoint3:
-                    mb.WriteLong((long)((ULongPoint3Data)value).X);
-                    mb.WriteLong((long)((ULongPoint3Data)value).Y);
-                    mb.WriteLong((long)((ULongPoint3Data)value).Z);
-                    break;
-            }
-            realRequreEvent.Reset();
-            Send(mb);
-            try
-            {
-                if (realRequreEvent.WaitOne(timeout))
+                CheckLogin();
+                if (!IsLogin) return false;
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 30);
+                mb.WriteByte(ApiFunConst.SetDataValue);
+                mb.WriteLong(this.LoginId);
+                mb.WriteInt(1);
+                mb.WriteInt(id);
+                mb.WriteByte(valueType);
+                switch (valueType)
                 {
-                    return mRealRequreData.ReadByte() > 0;
+                    case (byte)TagType.Bool:
+                        mb.WriteByte((byte)value);
+                        break;
+                    case (byte)TagType.Byte:
+                        mb.WriteByte((byte)value);
+                        break;
+                    case (byte)TagType.Short:
+                        mb.WriteShort((short)value);
+                        break;
+                    case (byte)TagType.UShort:
+                        mb.WriteUnsignedShort((ushort)value);
+                        break;
+                    case (byte)TagType.Int:
+                        mb.WriteInt((int)value);
+                        break;
+                    case (byte)TagType.UInt:
+                        mb.WriteInt((int)value);
+                        break;
+                    case (byte)TagType.Long:
+                    case (byte)TagType.ULong:
+                        mb.WriteLong((long)value);
+                        break;
+                    case (byte)TagType.Float:
+                        mb.WriteFloat((float)value);
+                        break;
+                    case (byte)TagType.Double:
+                        mb.WriteDouble((double)value);
+                        break;
+                    case (byte)TagType.String:
+                        string sval = value.ToString();
+                        mb.WriteInt(sval.Length);
+                        mb.WriteString(sval, Encoding.Unicode);
+                        break;
+                    case (byte)TagType.DateTime:
+                        mb.WriteLong(((DateTime)value).Ticks);
+                        break;
+                    case (byte)TagType.IntPoint:
+                        mb.WriteInt(((IntPointData)value).X);
+                        mb.WriteInt(((IntPointData)value).Y);
+                        break;
+                    case (byte)TagType.UIntPoint:
+                        mb.WriteInt((int)((UIntPointData)value).X);
+                        mb.WriteInt((int)((UIntPointData)value).Y);
+                        break;
+                    case (byte)TagType.IntPoint3:
+                        mb.WriteInt(((IntPoint3Data)value).X);
+                        mb.WriteInt(((IntPoint3Data)value).Y);
+                        mb.WriteInt(((IntPoint3Data)value).Z);
+                        break;
+                    case (byte)TagType.UIntPoint3:
+                        mb.WriteInt((int)((UIntPoint3Data)value).X);
+                        mb.WriteInt((int)((UIntPoint3Data)value).Y);
+                        mb.WriteInt((int)((UIntPoint3Data)value).Z);
+                        break;
+                    case (byte)TagType.LongPoint:
+                        mb.WriteLong(((LongPointData)value).X);
+                        mb.WriteLong(((LongPointData)value).Y);
+                        break;
+                    case (byte)TagType.ULongPoint:
+                        mb.WriteLong((long)((ULongPointData)value).X);
+                        mb.WriteLong((long)((ULongPointData)value).Y);
+                        break;
+                    case (byte)TagType.LongPoint3:
+                        mb.WriteLong(((LongPoint3Data)value).X);
+                        mb.WriteLong(((LongPoint3Data)value).Y);
+                        mb.WriteLong(((LongPoint3Data)value).Z);
+                        break;
+                    case (byte)TagType.ULongPoint3:
+                        mb.WriteLong((long)((ULongPoint3Data)value).X);
+                        mb.WriteLong((long)((ULongPoint3Data)value).Y);
+                        mb.WriteLong((long)((ULongPoint3Data)value).Z);
+                        break;
                 }
+                realRequreEvent.Reset();
+                Send(mb);
+                try
+                {
+                    if (realRequreEvent.WaitOne(timeout))
+                    {
+                        return mRealRequreData.ReadByte() > 0;
+                    }
+                }
+                finally
+                {
+                    //mRealRequreData?.ReleaseBuffer();
+                }
+                return false;
             }
-            finally
-            {
-                //mRealRequreData?.ReleaseBuffer();
-            }
-            return false;
         }
 
         /// <summary>
@@ -1010,104 +1119,108 @@ namespace DBHighApi
         /// <returns></returns>
         public bool SetTagValue(List<int> id, List<byte> valueType, List<object> value, int timeout = 5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 30);
-            mb.WriteByte(ApiFunConst.SetDataValue);
-            mb.WriteLong(this.LoginId);
-            mb.WriteInt(1);
-            for (int i = 0; i < id.Count; i++)
+            lock (mlockRealSetObj)
             {
-                mb.WriteInt(id[i]);
-                switch (valueType[i])
+                CheckLogin();
+                if (!IsLogin) return false;
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 30);
+                mb.WriteByte(ApiFunConst.SetDataValue);
+                mb.WriteLong(this.LoginId);
+                mb.WriteInt(1);
+                for (int i = 0; i < id.Count; i++)
                 {
-                    case (byte)TagType.Bool:
-                        mb.WriteByte((byte)value[i]);
-                        break;
-                    case (byte)TagType.Byte:
-                        mb.WriteByte((byte)value[i]);
-                        break;
-                    case (byte)TagType.Short:
-                        mb.WriteShort((short)value[i]);
-                        break;
-                    case (byte)TagType.UShort:
-                        mb.WriteUnsignedShort((ushort)value[i]);
-                        break;
-                    case (byte)TagType.Int:
-                        mb.WriteInt((int)value[i]);
-                        break;
-                    case (byte)TagType.UInt:
-                        mb.WriteInt((int)value[i]);
-                        break;
-                    case (byte)TagType.Long:
-                    case (byte)TagType.ULong:
-                        mb.WriteLong((long)value[i]);
-                        break;
-                    case (byte)TagType.Float:
-                        mb.WriteFloat((float)value[i]);
-                        break;
-                    case (byte)TagType.Double:
-                        mb.WriteDouble((double)value[i]);
-                        break;
-                    case (byte)TagType.String:
-                        string sval = value[i].ToString();
-                        mb.WriteInt(sval.Length);
-                        mb.WriteString(sval, Encoding.Unicode);
-                        break;
-                    case (byte)TagType.DateTime:
-                        mb.WriteLong(((DateTime)value[i]).Ticks);
-                        break;
-                    case (byte)TagType.IntPoint:
-                        mb.WriteInt(((IntPointData)value[i]).X);
-                        mb.WriteInt(((IntPointData)value[i]).Y);
-                        break;
-                    case (byte)TagType.UIntPoint:
-                        mb.WriteInt((int)((UIntPointData)value[i]).X);
-                        mb.WriteInt((int)((UIntPointData)value[i]).Y);
-                        break;
-                    case (byte)TagType.IntPoint3:
-                        mb.WriteInt(((IntPoint3Data)value[i]).X);
-                        mb.WriteInt(((IntPoint3Data)value[i]).Y);
-                        mb.WriteInt(((IntPoint3Data)value[i]).Z);
-                        break;
-                    case (byte)TagType.UIntPoint3:
-                        mb.WriteInt((int)((UIntPoint3Data)value[i]).X);
-                        mb.WriteInt((int)((UIntPoint3Data)value[i]).Y);
-                        mb.WriteInt((int)((UIntPoint3Data)value[i]).Z);
-                        break;
-                    case (byte)TagType.LongPoint:
-                        mb.WriteLong(((LongPointData)value[i]).X);
-                        mb.WriteLong(((LongPointData)value[i]).Y);
-                        break;
-                    case (byte)TagType.ULongPoint:
-                        mb.WriteLong((long)((ULongPointData)value[i]).X);
-                        mb.WriteLong((long)((ULongPointData)value[i]).Y);
-                        break;
-                    case (byte)TagType.LongPoint3:
-                        mb.WriteLong(((LongPoint3Data)value[i]).X);
-                        mb.WriteLong(((LongPoint3Data)value[i]).Y);
-                        mb.WriteLong(((LongPoint3Data)value[i]).Z);
-                        break;
-                    case (byte)TagType.ULongPoint3:
-                        mb.WriteLong((long)((ULongPoint3Data)value[i]).X);
-                        mb.WriteLong((long)((ULongPoint3Data)value[i]).Y);
-                        mb.WriteLong((long)((ULongPoint3Data)value[i]).Z);
-                        break;
+                    mb.WriteInt(id[i]);
+                    switch (valueType[i])
+                    {
+                        case (byte)TagType.Bool:
+                            mb.WriteByte((byte)value[i]);
+                            break;
+                        case (byte)TagType.Byte:
+                            mb.WriteByte((byte)value[i]);
+                            break;
+                        case (byte)TagType.Short:
+                            mb.WriteShort((short)value[i]);
+                            break;
+                        case (byte)TagType.UShort:
+                            mb.WriteUnsignedShort((ushort)value[i]);
+                            break;
+                        case (byte)TagType.Int:
+                            mb.WriteInt((int)value[i]);
+                            break;
+                        case (byte)TagType.UInt:
+                            mb.WriteInt((int)value[i]);
+                            break;
+                        case (byte)TagType.Long:
+                        case (byte)TagType.ULong:
+                            mb.WriteLong((long)value[i]);
+                            break;
+                        case (byte)TagType.Float:
+                            mb.WriteFloat((float)value[i]);
+                            break;
+                        case (byte)TagType.Double:
+                            mb.WriteDouble((double)value[i]);
+                            break;
+                        case (byte)TagType.String:
+                            string sval = value[i].ToString();
+                            mb.WriteInt(sval.Length);
+                            mb.WriteString(sval, Encoding.Unicode);
+                            break;
+                        case (byte)TagType.DateTime:
+                            mb.WriteLong(((DateTime)value[i]).Ticks);
+                            break;
+                        case (byte)TagType.IntPoint:
+                            mb.WriteInt(((IntPointData)value[i]).X);
+                            mb.WriteInt(((IntPointData)value[i]).Y);
+                            break;
+                        case (byte)TagType.UIntPoint:
+                            mb.WriteInt((int)((UIntPointData)value[i]).X);
+                            mb.WriteInt((int)((UIntPointData)value[i]).Y);
+                            break;
+                        case (byte)TagType.IntPoint3:
+                            mb.WriteInt(((IntPoint3Data)value[i]).X);
+                            mb.WriteInt(((IntPoint3Data)value[i]).Y);
+                            mb.WriteInt(((IntPoint3Data)value[i]).Z);
+                            break;
+                        case (byte)TagType.UIntPoint3:
+                            mb.WriteInt((int)((UIntPoint3Data)value[i]).X);
+                            mb.WriteInt((int)((UIntPoint3Data)value[i]).Y);
+                            mb.WriteInt((int)((UIntPoint3Data)value[i]).Z);
+                            break;
+                        case (byte)TagType.LongPoint:
+                            mb.WriteLong(((LongPointData)value[i]).X);
+                            mb.WriteLong(((LongPointData)value[i]).Y);
+                            break;
+                        case (byte)TagType.ULongPoint:
+                            mb.WriteLong((long)((ULongPointData)value[i]).X);
+                            mb.WriteLong((long)((ULongPointData)value[i]).Y);
+                            break;
+                        case (byte)TagType.LongPoint3:
+                            mb.WriteLong(((LongPoint3Data)value[i]).X);
+                            mb.WriteLong(((LongPoint3Data)value[i]).Y);
+                            mb.WriteLong(((LongPoint3Data)value[i]).Z);
+                            break;
+                        case (byte)TagType.ULongPoint3:
+                            mb.WriteLong((long)((ULongPoint3Data)value[i]).X);
+                            mb.WriteLong((long)((ULongPoint3Data)value[i]).Y);
+                            mb.WriteLong((long)((ULongPoint3Data)value[i]).Z);
+                            break;
+                    }
                 }
-            }
-            realRequreEvent.Reset();
-            Send(mb);
-            try
-            {
-                if (realRequreEvent.WaitOne(timeout))
+                realRequreEvent.Reset();
+                Send(mb);
+                try
                 {
-                    return mRealRequreData.ReadByte() > 0;
+                    if (realRequreEvent.WaitOne(timeout))
+                    {
+                        return mRealRequreData.ReadByte() > 0;
+                    }
                 }
+                finally
+                {
+                    //mRealRequreData?.ReleaseBuffer();
+                }
+                return false;
             }
-            finally
-            {
-                //mRealRequreData?.ReleaseBuffer();
-            }
-            return false;
         }
 
 
@@ -1115,7 +1228,7 @@ namespace DBHighApi
 
         private void CheckLogin()
         {
-            if(LoginId<0)
+            if(LoginId<=0)
             {
                 Login(mUser, mPass);
             }
@@ -1132,28 +1245,32 @@ namespace DBHighApi
         /// <returns></returns>
         public IByteBuffer QueryAllHisValue(int id,DateTime startTime,DateTime endTime,int timeout=5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20);
-            mb.WriteByte(ApiFunConst.RequestAllHisData);
-            mb.WriteLong(this.LoginId);
-            mb.WriteInt(id);
-            mb.WriteLong(startTime.Ticks);
-            mb.WriteLong(endTime.Ticks);
+            lock (mlockHisQueryObj)
+            {
+                CheckLogin();
+                if (!IsLogin) return null;
+                var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20);
+                mb.WriteByte(ApiFunConst.RequestAllHisData);
+                mb.WriteLong(this.LoginId);
+                mb.WriteInt(id);
+                mb.WriteLong(startTime.Ticks);
+                mb.WriteLong(endTime.Ticks);
 
-            this.hisRequreEvent.Reset();
-            Send(mb);
-            try
-            {
-                if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+                this.hisRequreEvent.Reset();
+                Send(mb);
+                try
                 {
-                    return mHisRequreData;
+                    if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+                    {
+                        return mHisRequreData;
+                    }
                 }
+                finally
+                {
+                    //mHisRequreData?.ReleaseBuffer();
+                }
+                return null;
             }
-            finally
-            {
-                //mHisRequreData?.ReleaseBuffer();
-            }
-            return null;
         }
 
         /// <summary>
@@ -1165,32 +1282,36 @@ namespace DBHighApi
         /// <returns></returns>
         public IByteBuffer QueryHisValueAtTimes(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType matchType, int timeout = 5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + times.Count * 8 + 5);
-            mb.WriteByte(ApiFunConst.RequestHisDatasByTimePoint);
-            mb.WriteLong(this.LoginId);
-            mb.WriteInt(id);
-            mb.WriteByte((byte)matchType);
-            mb.WriteInt(times.Count);
-            for (int i = 0; i < times.Count; i++)
+            lock (mlockHisQueryObj)
             {
-                mb.WriteLong(times[i].Ticks);
-            }
-
-            this.hisRequreEvent.Reset();
-            Send(mb);
-            try
-            {
-                if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+                CheckLogin();
+                if (!IsLogin) return null;
+                var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + times.Count * 8 + 5);
+                mb.WriteByte(ApiFunConst.RequestHisDatasByTimePoint);
+                mb.WriteLong(this.LoginId);
+                mb.WriteInt(id);
+                mb.WriteByte((byte)matchType);
+                mb.WriteInt(times.Count);
+                for (int i = 0; i < times.Count; i++)
                 {
-                    return mHisRequreData;
+                    mb.WriteLong(times[i].Ticks);
                 }
+
+                this.hisRequreEvent.Reset();
+                Send(mb);
+                try
+                {
+                    if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+                    {
+                        return mHisRequreData;
+                    }
+                }
+                finally
+                {
+                    //mHisRequreData?.ReleaseBuffer();
+                }
+                return null;
             }
-            finally
-            {
-                //mHisRequreData?.ReleaseBuffer();
-            }
-            return null;
         }
 
         /// <summary>
@@ -1204,29 +1325,33 @@ namespace DBHighApi
         /// <returns></returns>
         public IByteBuffer QueryHisValueForTimeSpan(int id,DateTime startTime,DateTime endTime,TimeSpan span,QueryValueMatchType matchType, int timeout = 5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 24+ 5);
-            mb.WriteByte(ApiFunConst.RequestHisDataByTimeSpan);
-            mb.WriteLong(this.LoginId);
-            mb.WriteInt(id);
-            mb.WriteByte((byte)matchType);
-            mb.WriteLong(startTime.Ticks);
-            mb.WriteLong(endTime.Ticks);
-            mb.WriteLong(span.Ticks);
-            this.hisRequreEvent.Reset();
-            Send(mb);
-            try
+            lock (mlockHisQueryObj)
             {
-                if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+                CheckLogin();
+                if (!IsLogin) return null;
+                var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 24 + 5);
+                mb.WriteByte(ApiFunConst.RequestHisDataByTimeSpan);
+                mb.WriteLong(this.LoginId);
+                mb.WriteInt(id);
+                mb.WriteByte((byte)matchType);
+                mb.WriteLong(startTime.Ticks);
+                mb.WriteLong(endTime.Ticks);
+                mb.WriteLong(span.Ticks);
+                this.hisRequreEvent.Reset();
+                Send(mb);
+                try
                 {
-                    return mHisRequreData;
+                    if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+                    {
+                        return mHisRequreData;
+                    }
                 }
+                finally
+                {
+                    //mHisRequreData?.ReleaseBuffer();
+                }
+                return null;
             }
-            finally
-            {
-                //mHisRequreData?.ReleaseBuffer();
-            }
-            return null;
         }
 
         #endregion

@@ -29,9 +29,12 @@ namespace DBRuntime.Proxy
         private Thread mScanThread;
 
         private string mIp;
+
         private int mPort = 0;
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public event EventHandler ValueUpdateEvent;
 
         private bool mIsClosed = false;
 

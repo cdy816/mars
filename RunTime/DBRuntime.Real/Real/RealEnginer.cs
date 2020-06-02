@@ -1754,6 +1754,11 @@ namespace Cdy.Tag
             return new IntPointData(MemoryHelper.ReadInt32(mMHandle, addr), MemoryHelper.ReadInt32(mMHandle, addr + 4));
         }
 
+        public IntPointData ReadIntPointValueByAddr(long addr)
+        {
+            return new IntPointData(MemoryHelper.ReadInt32(mMHandle, addr), MemoryHelper.ReadInt32(mMHandle, addr + 4));
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -1782,6 +1787,16 @@ namespace Cdy.Tag
             time = MemoryHelper.ReadDateTime(mMHandle, addr + 8);
             quality = MemoryHelper.ReadByte(mMHandle, addr + 16);
            return  new UIntPointData(MemoryHelper.ReadUInt32(mMHandle, addr), MemoryHelper.ReadUInt32(mMHandle, addr + 4));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <returns></returns>
+        public UIntPointData ReadUIntPointValueByAddr(long addr)
+        {
+            return new UIntPointData(MemoryHelper.ReadUInt32(mMHandle, addr), MemoryHelper.ReadUInt32(mMHandle, addr + 4));
         }
 
         /// <summary>
@@ -1818,6 +1833,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="addr"></param>
+        /// <returns></returns>
+        public IntPoint3Data ReadIntPoint3ValueByAddr(long addr)
+        {
+            return new IntPoint3Data(MemoryHelper.ReadInt32(mMHandle, addr), MemoryHelper.ReadInt32(mMHandle, addr + 4), MemoryHelper.ReadInt32(mMHandle, addr + 8));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
         /// <param name="quality"></param>
         /// <param name="time"></param>
         /// <param name="x"></param>
@@ -1844,6 +1869,11 @@ namespace Cdy.Tag
         {
             time = MemoryHelper.ReadDateTime(mMHandle, addr + 12);
             quality = MemoryHelper.ReadByte(mMHandle, addr + 20);
+            return new UIntPoint3Data(MemoryHelper.ReadUInt32(mMHandle, addr), MemoryHelper.ReadUInt32(mMHandle, addr + 4), MemoryHelper.ReadUInt32(mMHandle, addr + 8));
+        }
+
+        public UIntPoint3Data ReadUIntPoint3ValueByAddr(long addr)
+        {
             return new UIntPoint3Data(MemoryHelper.ReadUInt32(mMHandle, addr), MemoryHelper.ReadUInt32(mMHandle, addr + 4), MemoryHelper.ReadUInt32(mMHandle, addr + 8));
         }
 
@@ -1884,6 +1914,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="addr"></param>
+        /// <returns></returns>
+        public LongPointData ReadLongPointValueByAddr(long addr)
+        {
+            return new LongPointData(MemoryHelper.ReadInt64(mMHandle, addr), MemoryHelper.ReadInt64(mMHandle, addr + 8));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
         /// <param name="quality"></param>
         /// <param name="time"></param>
         /// <param name="x"></param>
@@ -1907,6 +1947,16 @@ namespace Cdy.Tag
         {
             time = MemoryHelper.ReadDateTime(mMHandle, addr + 16);
             quality = MemoryHelper.ReadByte(mMHandle, addr + 24);
+            return new ULongPointData(MemoryHelper.ReadUInt64(mMHandle, addr), MemoryHelper.ReadUInt64(mMHandle, addr + 8));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <returns></returns>
+        public ULongPointData ReadULongPointValueByAddr(long addr)
+        {
             return new ULongPointData(MemoryHelper.ReadUInt64(mMHandle, addr), MemoryHelper.ReadUInt64(mMHandle, addr + 8));
         }
 
@@ -1940,6 +1990,12 @@ namespace Cdy.Tag
             return new LongPoint3Data(MemoryHelper.ReadInt64(mMHandle, addr), MemoryHelper.ReadInt64(mMHandle, addr + 8), MemoryHelper.ReadInt64(mMHandle, addr + 16));
         }
 
+
+        public LongPoint3Data ReadLongPoint3ValueByAddr(long addr)
+        {
+            return new LongPoint3Data(MemoryHelper.ReadInt64(mMHandle, addr), MemoryHelper.ReadInt64(mMHandle, addr + 8), MemoryHelper.ReadInt64(mMHandle, addr + 16));
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -1969,6 +2025,16 @@ namespace Cdy.Tag
         {
             time = MemoryHelper.ReadDateTime(mMHandle, addr + 24);
             quality = MemoryHelper.ReadByte(mMHandle, addr + 32);
+            return new ULongPoint3Data(MemoryHelper.ReadUInt64(mMHandle, addr), MemoryHelper.ReadUInt64(mMHandle, addr + 8), MemoryHelper.ReadUInt64(mMHandle, addr + 16));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <returns></returns>
+        public ULongPoint3Data ReadULongPoint3ValueByAddr(long addr)
+        {
             return new ULongPoint3Data(MemoryHelper.ReadUInt64(mMHandle, addr), MemoryHelper.ReadUInt64(mMHandle, addr + 8), MemoryHelper.ReadUInt64(mMHandle, addr + 16));
         }
 
@@ -3584,6 +3650,110 @@ namespace Cdy.Tag
             time = DateTime.Now;
             quality = (byte)QualityConst.Null;
             return null;
+        }
+
+        public object GetTagValue(Tagbase tag)
+        {
+            try
+            {
+
+                switch (tag.Type)
+                {
+                    case TagType.Bool:
+                        return Convert.ToBoolean(ReadByteValueByAddr(tag.ValueAddress));
+                    case TagType.Byte:
+                        return ReadByteValueByAddr(tag.ValueAddress);
+                    case TagType.DateTime:
+                        return ReadDateTimeValueByAddr(tag.ValueAddress);
+                    case TagType.Double:
+                        return ReadDoubleValueByAddr(tag.ValueAddress);
+                    case TagType.Float:
+                        return ReadFloatValueByAddr(tag.ValueAddress);
+                    case TagType.Int:
+                        return ReadIntValueByAddr(tag.ValueAddress);
+                    case TagType.Long:
+                        return ReadInt64ValueByAddr(tag.ValueAddress);
+                    case TagType.Short:
+                        return ReadShortValueByAddr(tag.ValueAddress);
+                    case TagType.String:
+                        return ReadStringValueByAddr(tag.ValueAddress, Encoding.Unicode);
+                    case TagType.UInt:
+                        return (uint)ReadIntValueByAddr(tag.ValueAddress);
+                    case TagType.ULong:
+                        return (ulong)ReadInt64ValueByAddr(tag.ValueAddress);
+                    case TagType.UShort:
+                        return (ushort)ReadShortValueByAddr(tag.ValueAddress);
+                    case TagType.IntPoint:
+                        return ReadIntPointValueByAddr(tag.ValueAddress);
+                    case TagType.UIntPoint:
+                        return ReadUIntPointValueByAddr(tag.ValueAddress);
+                    case TagType.IntPoint3:
+                        return ReadIntPoint3ValueByAddr(tag.ValueAddress);
+                    case TagType.UIntPoint3:
+                        return ReadUIntPoint3ValueByAddr(tag.ValueAddress);
+                    case TagType.LongPoint:
+                        return ReadLongPointValueByAddr(tag.ValueAddress);
+                    case TagType.ULongPoint:
+                        return ReadULongPointValueByAddr(tag.ValueAddress);
+                    case TagType.LongPoint3:
+                        return ReadLongPoint3ValueByAddr(tag.ValueAddress);
+                    case TagType.ULongPoint3:
+                        return ReadULongPoint3ValueByAddr(tag.ValueAddress);
+                }
+            }
+            catch
+            {
+
+            }
+            return null;
+        }
+
+        public object GetTagValue(int id)
+        {
+            var tag = mConfigDatabase.Tags[id];
+            object re = null;
+            switch (tag.Type)
+            {
+                case TagType.Bool:
+                    re = Convert.ToBoolean(ReadByteValueByAddr(tag.ValueAddress));
+                    break;
+                case TagType.Byte:
+                    re = ReadByteValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.DateTime:
+                    re = ReadDateTimeValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.Double:
+                    re = ReadDoubleValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.Float:
+                    re = ReadFloatValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.Int:
+                    re = ReadIntValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.Long:
+                    re = ReadInt64ValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.Short:
+                    re = ReadShortValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.String:
+                    re = ReadStringValueByAddr(tag.ValueAddress, Encoding.Unicode);
+                    break;
+                case TagType.UInt:
+                    re = (uint)ReadIntValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.ULong:
+                    re = (ulong)ReadInt64ValueByAddr(tag.ValueAddress);
+                    break;
+                case TagType.UShort:
+                    re = (ushort)ReadShortValueByAddr(tag.ValueAddress);
+                    break;
+            }
+
+            if (tag.Conveter != null) return tag.Conveter.ConvertBackTo(re); else return re;
+
         }
 
         /// <summary>

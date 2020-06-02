@@ -209,7 +209,7 @@ namespace DBHighApi.Api
         private IByteBuffer TagInfoRequest(string clientId, IByteBuffer memory)
         {
             mInfoProcess.ProcessData(clientId,memory);
-            return GetAsyncData();
+            return null;
         }
 
         /// <summary>
@@ -221,7 +221,7 @@ namespace DBHighApi.Api
         private IByteBuffer ReadDataRequest(string clientId, IByteBuffer memory)
         {
             this.mRealProcess.ProcessData(clientId, memory);
-            return GetAsyncData();
+            return null;
         }
 
         /// <summary>
@@ -233,7 +233,7 @@ namespace DBHighApi.Api
         private IByteBuffer HisDataRequest(string clientId, IByteBuffer memory)
         {
             this.mHisProcess.ProcessData(clientId, memory);
-            return GetAsyncData();
+            return null;
         }
 
 

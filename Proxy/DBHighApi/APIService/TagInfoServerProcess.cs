@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using Cdy.Tag;
@@ -85,6 +86,7 @@ namespace DBHighApi.Api
                     string pass = data.ReadString();
                     long result = Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().Login(user, pass,client);
                     Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, result));
+                    Debug.Print("处理登录并返回:"+result);
                     break;
             }
         }

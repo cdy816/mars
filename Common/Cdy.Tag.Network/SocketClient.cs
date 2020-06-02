@@ -20,6 +20,7 @@ using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Cdy.Tag
 {
@@ -61,7 +62,18 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public bool IsConnected { get { return mIsConnected; } set { mIsConnected = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsConnected")); } }
+        public bool IsConnected
+        {
+            get { return mIsConnected; }
+            set
+            {
+                mIsConnected = value;
+                if (PropertyChanged != null)
+                {
+                    Task.Run(() => { PropertyChanged(this, new PropertyChangedEventArgs("IsConnected")); });
+                }
+            }
+        }
 
         /// <summary>
         /// 

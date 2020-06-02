@@ -11,6 +11,7 @@ using Cdy.Tag;
 using DotNetty.Buffers;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -30,6 +31,8 @@ namespace DBHighApi.Api
         private ManualResetEvent resetEvent;
 
         private bool mIsClosed = false;
+
+        private object mLockObj = new object();
 
         #endregion ...Variables...
 
@@ -66,7 +69,7 @@ namespace DBHighApi.Api
         /// <returns></returns>
         protected IByteBuffer ToByteBuffer(byte id, string value)
         {
-            var re = BufferManager.Manager.Allocate(ApiFunConst.TagInfoRequest, value.Length*2);
+            var re = BufferManager.Manager.Allocate(id, value.Length*2);
             re.WriteString(value);
             return re;
         }
@@ -79,14 +82,14 @@ namespace DBHighApi.Api
         /// <returns></returns>
         protected IByteBuffer ToByteBuffer(byte id, byte value)
         {
-            var re = BufferManager.Manager.Allocate(ApiFunConst.TagInfoRequest, 1);
+            var re = BufferManager.Manager.Allocate(id, 1);
             re.WriteByte(value);
             return re;
         }
 
         protected IByteBuffer ToByteBuffer(byte id, long value)
         {
-            var re = BufferManager.Manager.Allocate(ApiFunConst.TagInfoRequest, 1);
+            var re = BufferManager.Manager.Allocate(id, 1);
             re.WriteLong(value);
             return re;
         }
@@ -106,6 +109,7 @@ namespace DBHighApi.Api
             {
                 var vq = new Queue<IByteBuffer>();
                 vq.Enqueue(data);
+                lock(mLockObj)
                 mDatasCach.Add(client, vq);
             }
             resetEvent.Set();
@@ -121,14 +125,19 @@ namespace DBHighApi.Api
                 resetEvent.WaitOne();
                 if (mIsClosed) return;
                 resetEvent.Reset();
-                foreach (var vv in mDatasCach)
+                lock (mDatasCach)
                 {
-                    while(vv.Value.Count>0)
+                    var vvv = mDatasCach.ToArray();
+                    foreach (var vv in vvv)
                     {
-                        var dd = vv.Value.Dequeue();
-                        ProcessSingleData(vv.Key, dd);
+                        while (vv.Value.Count > 0)
+                        {
+                            var dd = vv.Value.Dequeue();
+                            ProcessSingleData(vv.Key, dd);
+                        }
                     }
                 }
+                
             }
         }
 

@@ -64,31 +64,17 @@ namespace SpiderDriver.ClientApi
             else
             {
                 datas.Retain();
-                //收到异步请求回调数据
-                if (datas.ReadableBytes == 1)
+                switch (fun)
                 {
-                    if (datas.ReadByte() == byte.MaxValue)
-                        return;
-                    else
-                    {
-                        Debug.Print("DbClient ProcessData Invailed data");
-                    }
-                }
-                else
-                {
-                    switch (fun)
-                    {
-                        case ApiFunConst.TagInfoRequestFun:
-                            lock (mInfoRequreData)
-                                mInfoRequreData.Enqueue(datas);
-                            infoRequreEvent.Set();
-                            break;
-                        case ApiFunConst.RealValueFun:
-                            mRealRequreData = datas;
-                            this.realRequreEvent.Set();
-                            break;
-                    }
-
+                    case ApiFunConst.TagInfoRequestFun:
+                        lock (mInfoRequreData)
+                            mInfoRequreData.Enqueue(datas);
+                        infoRequreEvent.Set();
+                        break;
+                    case ApiFunConst.RealValueFun:
+                        mRealRequreData = datas;
+                        this.realRequreEvent.Set();
+                        break;
                 }
             }
         }
@@ -426,7 +412,7 @@ namespace SpiderDriver.ClientApi
         {
             CheckLogin();
             var mb = GetBuffer(ApiFunConst.RealValueFun, 8);
-            mb.WriteByte(ApiFunConst.UnRegistorTag);
+            mb.WriteByte(ApiFunConst.ClearRegistorTag);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(1);
             realRequreEvent.Reset();
@@ -455,7 +441,7 @@ namespace SpiderDriver.ClientApi
         {
             List<int> re = new List<int>();
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + tags.Count * 256);
+            var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8 + tags.Count * 256);
             mb.WriteByte(ApiFunConst.GetTagIdByNameFun);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(tags.Count);
@@ -493,12 +479,12 @@ namespace SpiderDriver.ClientApi
         /// </summary>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public Dictionary<string,int> QueryAllTagIdAndNames(int timeout=5000)
+        public Dictionary<int, Tuple<string, byte>> QueryAllTagIdAndNames(int timeout=5000)
         {
-            Dictionary<string, int> re = new Dictionary<string, int>();
+            Dictionary<int,Tuple<string,byte>> re = new Dictionary<int, Tuple<string, byte>>();
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 8);
-            mb.WriteByte(ApiFunConst.GetTagIdByNameFun);
+            var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8);
+            mb.WriteByte(ApiFunConst.QueryAllTagNameAndIds);
             mb.WriteLong(this.mLoginId);
             DateTime dt = DateTime.Now;
             infoRequreEvent.Reset();
@@ -515,7 +501,7 @@ namespace SpiderDriver.ClientApi
                         {
                             var vdata = mInfoRequreData.Peek();
                             var cmd = vdata.ReadByte();
-                            if(cmd == ApiFunConst.QueryAllTagFun)
+                            if(cmd == ApiFunConst.QueryAllTagNameAndIds)
                             {
                                 int total = vdata.ReadShort();
                                 int icount = vdata.ReadShort();
@@ -524,14 +510,17 @@ namespace SpiderDriver.ClientApi
                                 {
                                     var id = vdata.ReadInt();
                                     var name = vdata.ReadString();
-                                    if(!re.ContainsKey(name))
+                                    var type = vdata.ReadByte();
+                                    if(!re.ContainsKey(id))
                                     {
-                                        re.Add(name, id);
+                                        re.Add(id,new Tuple<string, byte>(name,type));
                                     }
                                 }
-                                if (total <= icount) break;
+                             
                                 lock (mInfoRequreData)
                                     mInfoRequreData.Dequeue();
+
+                                if (icount >= (total - 1)) break;
                             }
                             else
                             {

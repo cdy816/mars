@@ -7,6 +7,7 @@ using System.IO;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace DBStudio
 {
@@ -262,7 +263,7 @@ namespace DBStudio
                     }
                     else if (cmsg == "sp")
                     {
-                        Sp(db,int.Parse(cmd[1]), cmd.Skip(2).ToArray());
+                        Sp(db,int.Parse(cmd[1]),int.Parse(cmd[2]), cmd.Skip(3).ToArray());
                     }
                     else if (cmsg == "exit")
                     {
@@ -294,7 +295,7 @@ namespace DBStudio
         /// </summary>
         /// <param name="db"></param>
         /// <param name="paras"></param>
-        private static void Sp(Database db,int ctp, params string[] paras)
+        private static void Sp(Database db,int ctp,int addressType, params string[] paras)
         {
             Cdy.Tag.RealDatabase test = db.RealDatabase;
             db.RealDatabase = test;
@@ -306,17 +307,24 @@ namespace DBStudio
                 int dcount = int.Parse(paras[0]);
                 for (int i = 0; i < dcount; i++)
                 {
-                    if (i % 3 == 0)
+                    if(addressType==0)
                     {
-                        address = "Sim:sin";
-                    }
-                    else if (i % 3 == 1)
-                    {
-                        address = "Sim:cos";
+                        address = "";
                     }
                     else
                     {
-                        address = "Sim:step";
+                        if (i % 3 == 0)
+                        {
+                            address = "Sim:sin";
+                        }
+                        else if (i % 3 == 1)
+                        {
+                            address = "Sim:cos";
+                        }
+                        else
+                        {
+                            address = "Sim:step";
+                        }
                     }
                     var vtag = new Cdy.Tag.DoubleTag() { Name = "Double" + i, Group = "Double", LinkAddress = address };
                     test.Append(vtag);
@@ -329,17 +337,24 @@ namespace DBStudio
                 int fcount = int.Parse(paras[1]);
                 for (int i = 0; i < fcount; i++)
                 {
-                    if (i % 3 == 0)
+                    if (addressType == 0)
                     {
-                        address = "Sim:sin";
-                    }
-                    else if (i % 3 == 1)
-                    {
-                        address = "Sim:cos";
+                        address = "";
                     }
                     else
                     {
-                        address = "Sim:step";
+                        if (i % 3 == 0)
+                        {
+                            address = "Sim:sin";
+                        }
+                        else if (i % 3 == 1)
+                        {
+                            address = "Sim:cos";
+                        }
+                        else
+                        {
+                            address = "Sim:step";
+                        }
                     }
                     var vtag = new Cdy.Tag.FloatTag() { Name = "Float" + i, Group = "Float", LinkAddress = address };
                     test.Append(vtag);
@@ -350,9 +365,17 @@ namespace DBStudio
             if (paras.Length > 2)
             {
                 int fcount = int.Parse(paras[2]);
+                if (addressType == 0)
+                {
+                    address = "";
+                }
+                else
+                {
+                    address = "Sim:step";
+                }
                 for (int i = 0; i < fcount; i++)
                 {
-                    var vtag = new Cdy.Tag.LongTag() { Name = "Long" + i, Group = "Long", LinkAddress = "Sim:step" };
+                    var vtag = new Cdy.Tag.LongTag() { Name = "Long" + i, Group = "Long", LinkAddress = address };
                     test.Append(vtag);
                     htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Long, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = ctp });
                 }
@@ -360,10 +383,18 @@ namespace DBStudio
 
             if (paras.Length > 3)
             {
+                if (addressType == 0)
+                {
+                    address = "";
+                }
+                else
+                {
+                    address = "Sim:step";
+                }
                 int fcount = int.Parse(paras[3]);
                 for (int i = 0; i < fcount; i++)
                 {
-                    var vtag = new Cdy.Tag.IntTag() { Name = "Int" + i, Group = "Int", LinkAddress = "Sim:step" };
+                    var vtag = new Cdy.Tag.IntTag() { Name = "Int" + i, Group = "Int", LinkAddress = address };
                     test.Append(vtag);
                     htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Int, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = ctp });
                 }
@@ -371,10 +402,18 @@ namespace DBStudio
 
             if (paras.Length > 4)
             {
+                if (addressType == 0)
+                {
+                    address = "";
+                }
+                else
+                {
+                    address = "Sim:square";
+                }
                 int fcount = int.Parse(paras[4]);
                 for (int i = 0; i < fcount; i++)
                 {
-                    var vtag = new Cdy.Tag.BoolTag() { Name = "Bool" + i, Group = "Bool", LinkAddress = "Sim:square" };
+                    var vtag = new Cdy.Tag.BoolTag() { Name = "Bool" + i, Group = "Bool", LinkAddress = address };
                     test.Append(vtag);
                     htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Bool, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = ctp });
                 }
@@ -383,10 +422,18 @@ namespace DBStudio
 
             if (paras.Length > 5)
             {
+                if (addressType == 0)
+                {
+                    address = "";
+                }
+                else
+                {
+                    address = "Sim:steppoint";
+                }
                 int fcount = int.Parse(paras[5]);
                 for (int i = 0; i < fcount; i++)
                 {
-                    var vtag = new Cdy.Tag.IntPointTag() { Name = "IntPoint" + i, Group = "IntPoint", LinkAddress = "Sim:steppoint" };
+                    var vtag = new Cdy.Tag.IntPointTag() { Name = "IntPoint" + i, Group = "IntPoint", LinkAddress = address };
                     test.Append(vtag);
                     htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.IntPoint, Circle = 1000, Type = Cdy.Tag.RecordType.Timer, CompressType = ctp });
                 }
@@ -413,7 +460,7 @@ namespace DBStudio
             re.AppendLine("import    [filename]                                 //import tags from a csvfile");
             re.AppendLine("export    [filename]                                 //export tags to a csvfile");
             re.AppendLine("list      [tagtype]                                  //the sumery info of specical type tags or all tags");
-            re.AppendLine("sp        [compressType] [double tag number] [float tag number] [long tag number] [int tag number] [bool tag number] [intpoint tag number]   //Quickly generate a specified number of tags for test purposes");
+            re.AppendLine("sp        [compressType] [enable sim address][double tag number] [float tag number] [long tag number] [int tag number] [bool tag number] [intpoint tag number]   //Quickly generate a specified number of tags for test purposes");
             re.AppendLine("exit                                                 //exit and back to parent");
 
             return re.ToString();

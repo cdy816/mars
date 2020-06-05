@@ -3710,8 +3710,10 @@ namespace Cdy.Tag
 
         public object GetTagValue(int id)
         {
-            var tag = mConfigDatabase.Tags[id];
+            var tag = mConfigDatabase.GetTagById(id);
             object re = null;
+            if (tag == null) return re;
+
             switch (tag.Type)
             {
                 case TagType.Bool:
@@ -3765,7 +3767,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public object GetTagValue(int id, out byte quality, out DateTime time, out byte valueType)
         {
-            var tag = mConfigDatabase.Tags[id];
+            var tag = mConfigDatabase.GetTagById(id);
             if (tag == null)
             {
                 time = DateTime.Now;

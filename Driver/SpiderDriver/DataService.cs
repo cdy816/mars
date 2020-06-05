@@ -24,7 +24,7 @@ namespace SpiderDriver
         #region ... Variables  ...
         private TagInfoServerProcess mInfoProcess;
         private RealDataServerProcess mRealProcess;
-        private IByteBuffer mAsyncCalldata;
+        //private IByteBuffer mAsyncCalldata;
 
         #endregion ...Variables...
 
@@ -33,7 +33,13 @@ namespace SpiderDriver
         #endregion ...Events...
 
         #region ... Constructor...
-
+        /// <summary>
+        /// 
+        /// </summary>
+        public DataService()
+        {
+            RegistorInit();
+        }
         #endregion ...Constructor...
 
         #region ... Properties ...
@@ -53,6 +59,8 @@ namespace SpiderDriver
             this.RegistorFunCallBack(APIConst.TagInfoRequestFun, TagInfoRequest);
             this.RegistorFunCallBack(APIConst.RealValueFun, ReadDataRequest);
         }
+
+       
 
         /// <summary>
         /// 
@@ -106,16 +114,16 @@ namespace SpiderDriver
             this.SendData(clientId, fun, value, len);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        private IByteBuffer GetAsyncData()
-        {
-            mAsyncCalldata = BufferManager.Manager.Allocate(APIConst.AysncReturn, 4);
-            mAsyncCalldata.WriteInt(0);
-            return mAsyncCalldata;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <returns></returns>
+        //private IByteBuffer GetAsyncData()
+        //{
+        //    mAsyncCalldata = BufferManager.Manager.Allocate(APIConst.AysncReturn, 4);
+        //    mAsyncCalldata.WriteInt(0);
+        //    return mAsyncCalldata;
+        //}
 
         /// <summary>
         /// 
@@ -123,7 +131,7 @@ namespace SpiderDriver
         private IByteBuffer TagInfoRequest(string clientId, IByteBuffer memory)
         {
             mInfoProcess.ProcessData(clientId, memory);
-            return GetAsyncData();
+            return null;
         }
 
         /// <summary>
@@ -135,7 +143,7 @@ namespace SpiderDriver
         private IByteBuffer ReadDataRequest(string clientId, IByteBuffer memory)
         {
             this.mRealProcess.ProcessData(clientId, memory);
-            return GetAsyncData();
+            return null;
         }
 
 

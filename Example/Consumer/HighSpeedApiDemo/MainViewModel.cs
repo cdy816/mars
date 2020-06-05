@@ -124,7 +124,7 @@ namespace HighSpeedApiDemo
         /// </summary>
         private void Init()
         {
-            for(int i=0;i<1000;i++)
+            for(int i=1;i<1000;i++)
             {
                 mTags.Add(new TagItemInfo() { Id = i, Value = "0" });
             }
@@ -133,6 +133,7 @@ namespace HighSpeedApiDemo
             {
                 foreach (var vv in val)
                 {
+                    if(vv.Key<mTags.Count)
                     mTags[vv.Key].Value = vv.Value.Item1.ToString();
                 }
             };
@@ -186,6 +187,7 @@ namespace HighSpeedApiDemo
             {
                 for (int i = 0; i < 500; i++)
                 {
+                    if(vals.ContainsKey(i))
                     mTags[i].Value = vals[i].ToString();
                 }
             }

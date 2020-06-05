@@ -18,7 +18,7 @@ namespace SpiderDriver.ClientApi
         /// <summary>
         /// 
         /// </summary>
-        public const byte LoginFun = 0;
+        public const byte LoginFun = 1;
 
         /// <summary>
         /// 
@@ -60,7 +60,11 @@ namespace SpiderDriver.ClientApi
         /// </summary>
         public const byte QueryAllTagFun = 45;
 
+
+
         public const byte GetTagIdByNameFun = 0;
+
+        public const byte QueryAllTagNameAndIds = 2;
 
         /// <summary>
         /// 

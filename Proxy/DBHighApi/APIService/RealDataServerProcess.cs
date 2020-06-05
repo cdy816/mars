@@ -18,6 +18,7 @@ using System.Threading;
 using Cdy.Tag;
 using DBRuntime.Proxy;
 using DotNetty.Buffers;
+using Microsoft.VisualBasic;
 
 namespace DBHighApi.Api
 {
@@ -347,16 +348,20 @@ namespace DBHighApi.Api
         private void ProcessRealData(List<int> cc,IByteBuffer re)
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+            var sindex = re.WriterIndex;
             re.WriteInt(cc.Count);
+            int count = 0;
             foreach (var vv in cc)
             {
                 byte qu, type;
                 DateTime time;
                 object value;
                 value = service.GetTagValue(vv, out qu, out time, out type);
-                re.WriteInt(vv);
+               
                 if (value != null)
                 {
+                    count++;
+                    re.WriteInt(vv);
                     re.WriteByte(type);
                     switch (type)
                     {
@@ -438,21 +443,31 @@ namespace DBHighApi.Api
                     re.WriteByte(qu);
                 }
             }
+            if (count != cc.Count)
+            {
+                int idtmp = re.WriterIndex;
+                re.SetWriterIndex(sindex);
+                re.WriteInt(count);
+                re.SetWriterIndex(idtmp);
+            }
         }
 
         private void ProcessRealDataValueAndQuality(List<int> cc, IByteBuffer re)
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+            var sindex = re.WriterIndex;
             re.WriteInt(cc.Count);
+            int count = 0;
             foreach (var vv in cc)
             {
                 byte qu, type;
                 DateTime time;
                 object value;
                 value = service.GetTagValue(vv, out qu, out time, out type);
-                re.WriteInt(vv);
                 if (value != null)
                 {
+                    re.WriteInt(vv);
+                    count++;
                     re.WriteByte(type);
                     switch (type)
                     {
@@ -532,22 +547,33 @@ namespace DBHighApi.Api
                     re.WriteByte(qu);
                 }
             }
+            if (count != cc.Count)
+            {
+                int idtmp = re.WriterIndex;
+                re.SetWriterIndex(sindex);
+                re.WriteInt(count);
+                re.SetWriterIndex(idtmp);
+            }
         }
 
         private void ProcessRealDataValue(List<int> cc, IByteBuffer re)
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+            var sindex = re.WriterIndex;
             re.WriteInt(cc.Count);
-            Debug.Print("ProcessRealDataValue:" + cc.Count);
+            int count = 0;
+            //Debug.Print("ProcessRealDataValue:" + cc.Count);
             foreach (var vv in cc)
             {
                 byte qu, type;
                 DateTime time;
                 object value;
                 value = service.GetTagValue(vv, out qu, out time, out type);
-                re.WriteInt(vv);
+             
                 if (value != null)
                 {
+                    count++;
+                    re.WriteInt(vv);
                     re.WriteByte(type);
                     switch (type)
                     {
@@ -625,6 +651,13 @@ namespace DBHighApi.Api
                             break;
                     }
                 }
+            }
+            if(count!=cc.Count)
+            {
+                int idtmp = re.WriterIndex;
+                re.SetWriterIndex(sindex);
+                re.WriteInt(count);
+                re.SetWriterIndex(idtmp);
             }
         }
 
@@ -781,6 +814,7 @@ namespace DBHighApi.Api
                     mCallBackRegistorIds.Add(clientId, ids);
                 }
 
+                lock(mDataCounts)
                 if (!mDataCounts.ContainsKey(clientId))
                 {
                     mDataCounts.Add(clientId, 0);
@@ -816,9 +850,12 @@ namespace DBHighApi.Api
                     }
                     mCallBackRegistorIds.Remove(clientId);
                 }
-                if (mDataCounts.ContainsKey(clientId))
+                lock (mDataCounts)
                 {
-                    mDataCounts.Remove(clientId);
+                    if (mDataCounts.ContainsKey(clientId))
+                    {
+                        mDataCounts.Remove(clientId);
+                    }
                 }
                 Parent.AsyncCallback(clientId, ToByteBuffer(ApiFunConst.RealDataRequestFun, 1));
             }
@@ -980,7 +1017,11 @@ namespace DBHighApi.Api
                             var buffer = BufferManager.Manager.Allocate(Api.ApiFunConst.RealDataPushFun, i * 64 + 4);
                             buffer.WriteInt(0);
                             buffers.Add(cb.Key, buffer);
-                            mDataCounts[cb.Key] = 0;
+                            lock (mDataCounts)
+                            {
+                                if(mDataCounts.ContainsKey(cb.Key))
+                                mDataCounts[cb.Key] = 0;
+                            }
                         }
 
                         for(int j=0;j<i;j++)
@@ -992,7 +1033,10 @@ namespace DBHighApi.Api
                                 if (vvc.Value.Contains(vid))
                                 {
                                     ProcessTagPush(buffers[vvc.Key], vid, (byte)tag.Type,tag.Value,tag.Quality);
-                                    mDataCounts[vvc.Key]++;
+                                    lock (mDataCounts)
+                                    {
+                                        if (mDataCounts.ContainsKey(vvc.Key)) mDataCounts[vvc.Key]++;
+                                    }
                                 }
                             }
                         }
@@ -1001,10 +1045,15 @@ namespace DBHighApi.Api
                         {
                             cb.Value.MarkWriterIndex();
                             cb.Value.SetWriterIndex(1);
-                            cb.Value.WriteInt(mDataCounts[cb.Key]);
-                            cb.Value.ResetWriterIndex();
-
-                            Parent.PushRealDatatoClient(cb.Key, cb.Value);
+                            lock (mDataCounts)
+                            {
+                                if (mDataCounts.ContainsKey(cb.Key))
+                                {
+                                    cb.Value.WriteInt(mDataCounts[cb.Key]);
+                                    cb.Value.ResetWriterIndex();
+                                    Parent.PushRealDatatoClient(cb.Key, cb.Value);
+                                }
+                            }
                         }
                         buffers.Clear();
                     }
@@ -1054,6 +1103,7 @@ namespace DBHighApi.Api
             }
             if(mCallBackRegistorIds.ContainsKey(id))
             {
+                ProcessResetValueChangedNotify(id, null);
                 mCallBackRegistorIds.Remove(id);
             }
             base.OnClientDisconnected(id);

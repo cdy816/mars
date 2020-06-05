@@ -90,7 +90,7 @@ namespace SpiderDriver
                         int psize = 100000;
                         var vtags = mm.ListAllTags();
                         int tcount = vtags.Count / psize;
-                        tcount += vtags.Count % psize > 0 ? tcount++ : tcount;
+                        tcount += (vtags.Count % psize > 0 ? 1 : 0);
                         for(int i=0;i<tcount;i++)
                         {
                             if((i+1)*psize>vtags.Count)
@@ -136,6 +136,7 @@ namespace SpiderDriver
             {
                 re.WriteInt(vv.Id);
                 re.WriteString(vv.Name);
+                re.WriteByte((byte)vv.Type);
             }
             return re;
         }

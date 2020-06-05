@@ -67,7 +67,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBHighApi.Client", "Proxy\D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpiderDriver", "Driver\SpiderDriver\SpiderDriver.csproj", "{FF1A8DED-B788-45F8-9F52-4ABFE986A7EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpiderDriver.ClientApi", "Driver\SpiderDriver.ClientApi\SpiderDriver.ClientApi.csproj", "{A35D2BB4-379D-4C96-8B3F-E655DE6E432E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpiderDriver.ClientApi", "Driver\SpiderDriver.ClientApi\SpiderDriver.ClientApi.csproj", "{A35D2BB4-379D-4C96-8B3F-E655DE6E432E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Example", "Example", "{B48ACA8E-45C0-4F17-9638-5CEAC9E5A185}"
 EndProject
@@ -75,7 +75,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Producer", "Producer", "{4D
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Consumer", "Consumer", "{723CADA9-2D52-4F05-9661-1655F8182084}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HighSpeedApiDemo", "Example\Consumer\HighSpeedApiDemo\HighSpeedApiDemo.csproj", "{319E920E-9017-4B50-BBC3-D71D546B7DB2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighSpeedApiDemo", "Example\Consumer\HighSpeedApiDemo\HighSpeedApiDemo.csproj", "{319E920E-9017-4B50-BBC3-D71D546B7DB2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpiderDriverDemo", "Example\Producter\SpiderDriverDemo\SpiderDriverDemo.csproj", "{D30BF45C-2F6F-4A36-BDEB-761DE11AF3A4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -191,6 +193,10 @@ Global
 		{319E920E-9017-4B50-BBC3-D71D546B7DB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{319E920E-9017-4B50-BBC3-D71D546B7DB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{319E920E-9017-4B50-BBC3-D71D546B7DB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D30BF45C-2F6F-4A36-BDEB-761DE11AF3A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D30BF45C-2F6F-4A36-BDEB-761DE11AF3A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D30BF45C-2F6F-4A36-BDEB-761DE11AF3A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D30BF45C-2F6F-4A36-BDEB-761DE11AF3A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -225,6 +231,7 @@ Global
 		{4DA41AEA-AE61-458B-B516-EE6BDDE180E2} = {B48ACA8E-45C0-4F17-9638-5CEAC9E5A185}
 		{723CADA9-2D52-4F05-9661-1655F8182084} = {B48ACA8E-45C0-4F17-9638-5CEAC9E5A185}
 		{319E920E-9017-4B50-BBC3-D71D546B7DB2} = {723CADA9-2D52-4F05-9661-1655F8182084}
+		{D30BF45C-2F6F-4A36-BDEB-761DE11AF3A4} = {4DA41AEA-AE61-458B-B516-EE6BDDE180E2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {577CCEC3-4CDB-458A-B93D-F8579C2C3D8F}

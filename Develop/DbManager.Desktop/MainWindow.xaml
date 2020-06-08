@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DBInStudio.Desktop"
     
         mc:Ignorable="d"
-        Title="{local:ResMarker MainwindowTitle}" Height="450" Width="800" WindowState="Maximized" WindowStartupLocation="CenterScreen" Icon="/Image/Database2.png">
+        Title="{local:ResMarker MainwindowTitle}" Height="450" Width="800" WindowState="Maximized" WindowStartupLocation="CenterScreen" Icon="/Image/mrdbd.ico">
     <Window.Resources>
         <local:IndexConverter x:Key="ic" />
         <BooleanToVisibilityConverter x:Key="btv" />
@@ -139,10 +139,18 @@
                     </Style>
 
                     <ContextMenu x:Key="groupMenu">
-                        <MenuItem Header="{local:ResMarker Add}"  Command="{Binding DataContext.AddCommand,RelativeSource={RelativeSource AncestorType=Window,Mode=FindAncestor}}" />
-                        <MenuItem Header="{local:ResMarker Remove}"  Command="{Binding DataContext.RemoveCommand,RelativeSource={RelativeSource AncestorType=Window,Mode=FindAncestor}}" />
+                        <MenuItem Header="{local:ResMarker Add}"  Command="{Binding AddCommand}" />
+                        <MenuItem Header="{local:ResMarker Remove}"  Command="{Binding RemoveCommand}" />
                         <MenuItem Header="{local:ResMarker ReName}"  Command="{Binding ReNameCommand}" />
+                        <MenuItem Header="{local:ResMarker Copy}" Command="{Binding CopyCommand}" />
+                        <MenuItem Header="{local:ResMarker Paste}" Command="{Binding PasteCommand}" />
                     </ContextMenu>
+
+                    <ContextMenu x:Key="rootgroupMenu">
+                        <MenuItem Header="{local:ResMarker Add}"  Command="{Binding AddCommand}" />
+                        <MenuItem Header="{local:ResMarker Paste}" Command="{Binding PasteCommand}" />
+                    </ContextMenu>
+                    
                     <HierarchicalDataTemplate  DataType="{x:Type local:TagGroupViewModel}"  ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal" Height="24">
                             <Image Focusable="False" Source="/Image/文件夹.png"  Margin="0,0,4,0" Height="18" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
@@ -161,7 +169,7 @@
                     </HierarchicalDataTemplate>
 
                     <HierarchicalDataTemplate  DataType="{x:Type local:RootTagGroupViewModel}"  ItemsSource="{Binding Children}">
-                        <StackPanel Orientation="Horizontal" Height="24">
+                        <StackPanel ContextMenu="{StaticResource rootgroupMenu}" Orientation="Horizontal" Height="24">
                             <Image Focusable="False" Source="/Image/文件夹.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="18" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                             <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
                         </StackPanel>

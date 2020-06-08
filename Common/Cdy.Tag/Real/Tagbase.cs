@@ -26,6 +26,8 @@ namespace Cdy.Tag
     /// </summary>
     public abstract class Tagbase
     {
+        private string mFullName;
+        private string mGroup;
         /// <summary>
         /// 编号
         /// </summary>
@@ -42,9 +44,18 @@ namespace Cdy.Tag
         public string Name { get; set; } = "";
 
         /// <summary>
+        /// 
+        /// </summary>
+        public string FullName
+        {
+            get { return mFullName; }
+            private set { mFullName = value; }
+        }
+
+        /// <summary>
         /// 组
         /// </summary>
-        public string Group { get; set; } = "";
+        public string Group { get { return mGroup; } set { mGroup = value; UpdateFullName(); } }
 
         /// <summary>
         /// 描述
@@ -75,6 +86,22 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public ReadWriteMode ReadWriteType { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void UpdateFullName()
+        {
+            if(string.IsNullOrEmpty(Group))
+            {
+                mFullName = Name;
+            }
+            else
+            {
+                mFullName = Group + "." + Name;
+            }
+        }
+
 
     }
 
@@ -314,6 +341,11 @@ namespace Cdy.Tag
                 }
             }
             return re;
+        }
+
+        public static Tagbase Clone(this Tagbase tag)
+        {
+            return tag.SaveToXML().LoadTagFromXML();
         }
     }
 

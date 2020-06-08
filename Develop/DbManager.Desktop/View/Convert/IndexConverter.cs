@@ -110,4 +110,47 @@ namespace DBInStudio.Desktop
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    public class DoubleValueConvert : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            double dtmp = (double)value;
+            if (dtmp == double.MaxValue)
+            {
+                return "Max";
+            }
+            else if (dtmp == double.MinValue)
+            {
+                return "Min";
+            }
+            else
+            {
+                return dtmp;
+            }
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is double)
+            {
+                return value;
+            }
+            else
+            {
+                if (value.ToString().Equals("Max", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return double.MaxValue;
+                }
+                else if (value.ToString().Equals("Min", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return double.MinValue;
+                }
+                return double.Parse(value.ToString());
+            }
+        }
+    }
+
 }

@@ -21,6 +21,7 @@
     <None Remove="Image\export.png" />
     <None Remove="Image\hidden.png" />
     <None Remove="Image\import.png" />
+    <None Remove="Image\mrdbd.ico" />
     <None Remove="Image\permissions.png" />
     <None Remove="Image\save.png" />
     <None Remove="Image\Security.png" />
@@ -41,6 +42,7 @@
     <Resource Include="Image\export.png" />
     <Resource Include="Image\hidden.png" />
     <Resource Include="Image\import.png" />
+    <Resource Include="Image\mrdbd.ico" />
     <Resource Include="Image\permissions.png" />
     <Resource Include="Image\save.png" />
     <Resource Include="Image\Security.png" />

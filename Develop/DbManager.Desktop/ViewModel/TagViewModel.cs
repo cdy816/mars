@@ -49,6 +49,8 @@ namespace DBInStudio.Desktop
 
         private ICommand mConvertEditCommand;
 
+        private bool mIsSelected;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -91,6 +93,19 @@ namespace DBInStudio.Desktop
         /// 
         /// </summary>
         public bool IsChanged { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsSelected 
+        { 
+            get { return mIsSelected; } 
+            set 
+            { 
+                mIsSelected = value; 
+                OnPropertyChanged("IsSelected"); 
+            }
+        }
 
         /// <summary>
         /// 是否新建
@@ -297,6 +312,7 @@ namespace DBInStudio.Desktop
                     IsChanged = true;
                     OnPropertyChanged("Type");
                     OnPropertyChanged("TypeString");
+                    OnPropertyChanged("IsNumberTag");
                 }
             }
         }
@@ -1087,7 +1103,7 @@ namespace DBInStudio.Desktop
     {
 
         #region ... Variables  ...
-
+        public static TagGroupViewModel CopyTarget { get; set; }
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -1107,6 +1123,38 @@ namespace DBInStudio.Desktop
 
         #region ... Methods    ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override bool CanPaste()
+        {
+            return CopyTarget!=null && !(this.FullName.Contains(CopyTarget.FullName) || (CopyTarget.FullName.Contains(this.FullName)&&!string.IsNullOrEmpty(this.FullName)));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override bool CanCopy()
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override bool CanAdd()
+        {
+            return true;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public override bool CanRemove()
         {
             return true;
@@ -1125,8 +1173,41 @@ namespace DBInStudio.Desktop
                     (Parent as HasChildrenTreeItemViewModel).Children.Remove(this);
                     Parent = null;
                 }
+                if (CopyTarget == this)
+                    CopyTarget = null;
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override void Add()
+        {
+            ServiceLocator.Locator.Resolve<ITagGroupAdd>().AddGroup(this.FullName);
+            base.Add();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override void Copy()
+        {
+            CopyTarget=this;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override void Paste()
+        {
+            string sgroup = DevelopServiceHelper.Helper.PasteTagGroup(Database, CopyTarget.FullName, FullName);
+            if (!string.IsNullOrEmpty(sgroup))
+            {
+                this.Children.Add(new TagGroupViewModel() { Database = this.Database, mName = sgroup });
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -1147,7 +1228,7 @@ namespace DBInStudio.Desktop
         {
             foreach(var vv in groups.Where(e=>e.Value==this.FullName))
             {
-                TagGroupViewModel groupViewModel = new TagGroupViewModel() { Name = vv.Key,Database=Database };
+                TagGroupViewModel groupViewModel = new TagGroupViewModel() { mName = vv.Key,Database=Database };
                 groupViewModel.Parent = this;
                 this.Children.Add(groupViewModel);
             }
@@ -1185,9 +1266,18 @@ namespace DBInStudio.Desktop
         /// 
         /// </summary>
         public override string FullName => string.Empty;
+
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+
+
+        public override bool CanCopy()
+        {
+            return false;
+        }
+
         /// <summary>
         /// 
         /// </summary>

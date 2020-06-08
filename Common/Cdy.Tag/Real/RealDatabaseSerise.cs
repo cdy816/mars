@@ -81,20 +81,7 @@ namespace Cdy.Tag
                 db.Name = xe.Attribute("Name").Value;
                 db.Version = xe.Attribute("Version").Value;
 
-                if(xe.Element("Tags") !=null)
-                {
-                    Parallel.ForEach(xe.Element("Tags").Elements(), (vv) => {
-                        var tag = vv.LoadTagFromXML();
-                        lock(db.Tags)
-                         db.Tags.Add(tag.Id, tag);
-                    });
-                    db.BuildNameMap();
-                    //foreach(var vv in xe.Element("Tags").Elements())
-                    //{
-                    //    var tag = vv.LoadTagFromXML();
-                    //    db.Tags.Add(tag.Id, tag);
-                    //}
-                }
+               
 
                 Dictionary<string, TagGroup> groups = new Dictionary<string, TagGroup>();
                 Dictionary<TagGroup, string> parents = new Dictionary<TagGroup, string>(); 
@@ -104,7 +91,7 @@ namespace Cdy.Tag
                     {
                         TagGroup group = new TagGroup();
                         group.Name = vv.Attribute("Name").Value;
-                        string parent = vv.Attribute("Parent") != null ? xe.Attribute("Parent").Value : "";
+                        string parent = vv.Attribute("Parent") != null ? vv.Attribute("Parent").Value : "";
 
                         string fullName = vv.Attribute("FullName").Value;
 
@@ -125,6 +112,23 @@ namespace Cdy.Tag
                         vv.Key.Parent = db.Groups[vv.Value];
                     }
                 }
+
+                if (xe.Element("Tags") != null)
+                {
+                    Parallel.ForEach(xe.Element("Tags").Elements(), (vv) => {
+                        var tag = vv.LoadTagFromXML();
+                        lock (db.Tags)
+                            db.Tags.Add(tag.Id, tag);
+                    });
+                    db.BuildNameMap();
+                    db.BuildGroupMap();
+                    //foreach(var vv in xe.Element("Tags").Elements())
+                    //{
+                    //    var tag = vv.LoadTagFromXML();
+                    //    db.Tags.Add(tag.Id, tag);
+                    //}
+                }
+
                 if (xe.Attribute("MaxId") != null)
                 {
                     db.MaxId = int.Parse(xe.Attribute("MaxId").Value);

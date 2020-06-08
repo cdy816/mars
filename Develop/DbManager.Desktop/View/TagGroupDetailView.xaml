@@ -10,9 +10,96 @@
         <local:IndexConverter x:Key="ic" />
         <BooleanToVisibilityConverter x:Key="btv" />
         <local:BoolInvertConvert x:Key="biv" />
+        <local:DoubleValueConvert x:Key="dvc" />
+        <ContextMenu x:Key="ctxmenu">
+            <MenuItem Header="{local:ResMarker Add}" Command="{Binding AddCommand}" />
+            <MenuItem Header="{local:ResMarker Remove}" Command="{Binding RemoveCommand}" />
+
+            <MenuItem Header="{local:ResMarker Import}" Command="{Binding ImportCommand}" />
+            <MenuItem Header="{local:ResMarker Export}" Command="{Binding ExportCommand}" />
+
+            <MenuItem Header="{local:ResMarker Copy}" Command="{Binding CopyCommand}" />
+            <MenuItem Header="{local:ResMarker Paste}" Command="{Binding PasteCommand}" />
+        </ContextMenu>
+        <Style x:Key="DataGridRowStyle1" TargetType="{x:Type DataGridRow}">
+            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"/>
+            <Setter Property="SnapsToDevicePixels" Value="true"/>
+            <Setter Property="Validation.ErrorTemplate" Value="{x:Null}"/>
+            <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+            <Setter Property="ValidationErrorTemplate">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <TextBlock Foreground="Red" Margin="2,0,0,0" Text="!" VerticalAlignment="Center"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DataGridRow}">
+                        <Border x:Name="DGR_Border" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" SnapsToDevicePixels="True">
+                            <SelectiveScrollingGrid>
+                                <SelectiveScrollingGrid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </SelectiveScrollingGrid.ColumnDefinitions>
+                                <SelectiveScrollingGrid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </SelectiveScrollingGrid.RowDefinitions>
+                                <DataGridCellsPresenter Grid.Column="1" ItemsPanel="{TemplateBinding ItemsPanel}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                <DataGridDetailsPresenter Grid.Column="1" Grid.Row="1" SelectiveScrollingGrid.SelectiveScrollingOrientation="{Binding AreRowDetailsFrozen, Converter={x:Static DataGrid.RowDetailsScrollingConverter}, ConverterParameter={x:Static SelectiveScrollingOrientation.Vertical}, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}" Visibility="{TemplateBinding DetailsVisibility}"/>
+                                <DataGridRowHeader Grid.RowSpan="2" SelectiveScrollingGrid.SelectiveScrollingOrientation="Vertical" Visibility="{Binding HeadersVisibility, Converter={x:Static DataGrid.HeadersVisibilityConverter}, ConverterParameter={x:Static DataGridHeadersVisibility.Row}, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"/>
+                            </SelectiveScrollingGrid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsNewItem" Value="True">
+                    <Setter Property="Margin" Value="{Binding NewItemMargin, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <SolidColorBrush x:Key="{x:Static DataGrid.FocusBorderBrushKey}" Color="#FF000000"/>
+        <Style x:Key="DataGridCellStyle1" TargetType="{x:Type DataGridCell}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DataGridCell}">
+                        <Border Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" SnapsToDevicePixels="True">
+                            <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+                </Trigger>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource {x:Static DataGrid.FocusBorderBrushKey}}"/>
+                </Trigger>
+
+                <Trigger Property="IsEnabled" Value="false">
+                    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
     <Grid>
-        <DataGrid ScrollViewer.CanContentScroll="True" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,32" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"  BorderThickness="0,0,0,1" Background="{x:Null}" >
+        <Grid.InputBindings>
+            <KeyBinding Command="{Binding CopyCommand}" Key="C" Modifiers="Ctrl" />
+            <KeyBinding Command="{Binding PasteCommand}" Key="C" Modifiers="Ctrl" />
+            <KeyBinding Command="{Binding RemoveCommand}" Key="Delete" />
+            <KeyBinding Command="{Binding AddCommand}" Key="A"  Modifiers="Alt" />
+            <KeyBinding Command="{Binding ImportCommand}" Key="I"  Modifiers="Alt" />
+            <KeyBinding Command="{Binding ExportCommand}" Key="O" Modifiers="Alt" />
+        </Grid.InputBindings>
+        <DataGrid CellStyle="{DynamicResource DataGridCellStyle1}" RowStyle="{DynamicResource DataGridRowStyle1}" ScrollViewer.CanContentScroll="True" ContextMenu="{StaticResource ctxmenu}" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,32" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"   BorderThickness="0,0,0,1" Background="{x:Null}" >
             <DataGrid.Columns>
                 <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="30" Header="{local:ResMarker Id}">
                     <DataGridTemplateColumn.CellTemplate>
@@ -21,8 +108,7 @@
                                 <TextBlock.Text>
                                     <MultiBinding Converter="{StaticResource ic}">
                                         <Binding />
-                                        <Binding Path="ItemsSource" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type DataGrid}}" />
-                                        <Binding Path="ItemsSource.Count" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type DataGrid}}" />
+                                        <Binding Path="DataContext.SelectGroupTags" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type DataGrid}}" />
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
@@ -80,21 +166,21 @@
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Margin="5,0" Text="{Binding ConvertString}" VerticalAlignment="Center" />
-                                <Button Content="..." VerticalAlignment="Center" VerticalContentAlignment="Top" Click="{Binding ConvertEditCommand}" Width="30" />
+                                <Button Content="..." VerticalAlignment="Center" VerticalContentAlignment="Top" Command="{Binding ConvertEditCommand}" Width="30" />
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="{local:ResMarker MaxValue}" MinWidth="100" IsReadOnly="{Binding IsNumberTag,Converter={StaticResource biv}}">
+                <DataGridTemplateColumn Header="{local:ResMarker MaxValue}" MinWidth="100"  IsReadOnly="{Binding IsNumberTag,Converter={StaticResource biv}}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Text="{Binding MaxValue}" VerticalAlignment="Center" />
+                            <TextBlock Margin="5,0" Text="{Binding MaxValue,Converter={StaticResource dvc}}" IsEnabled="{Binding IsNumberTag}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox Margin="5,0" Text="{Binding MaxValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            <TextBox Margin="5,0" Text="{Binding MaxValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}"  IsEnabled="{Binding IsNumberTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -102,12 +188,12 @@
                 <DataGridTemplateColumn Header="{local:ResMarker MinValue}" MinWidth="100" IsReadOnly="{Binding IsNumberTag,Converter={StaticResource biv}}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Text="{Binding MinValue}" VerticalAlignment="Center" />
+                            <TextBlock Margin="5,0"  IsEnabled="{Binding IsNumberTag}" Text="{Binding MinValue,Converter={StaticResource dvc}}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox Margin="5,0" Text="{Binding MinValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            <TextBox Margin="5,0"  IsEnabled="{Binding IsNumberTag}" Text="{Binding MinValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -115,12 +201,12 @@
                 <DataGridTemplateColumn Header="{local:ResMarker Precision}" MinWidth="100" IsReadOnly="{Binding IsFloatingTag,Converter={StaticResource biv}}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Text="{Binding Precision}" VerticalAlignment="Center" />
+                            <TextBlock Margin="5,0" Text="{Binding Precision}" IsEnabled="{Binding IsFloatingTag}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox Margin="5,0" Text="{Binding Precision,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            <TextBox Margin="5,0" Text="{Binding Precision,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsFloatingTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>

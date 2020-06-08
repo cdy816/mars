@@ -599,21 +599,97 @@ namespace DBDevelopService
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public override Task<BoolResultReplay> AddTagGroup(AddGroupRequest request, ServerCallContext context)
+        public override Task<AddGroupReplay> AddTagGroup(AddGroupRequest request, ServerCallContext context)
         {
             if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
             {
-                return Task.FromResult(new BoolResultReplay() { Result = false });
+                return Task.FromResult(new AddGroupReplay() { Result = false });
             }
             string name = request.Name;
             string parentName = request.ParentName;
             var db = DbManager.Instance.GetDatabase(request.Database);
             if(db!=null)
             {
-                db.RealDatabase.CheckAndAddGroup(parentName + "." + name);
-                return Task.FromResult(new BoolResultReplay() { Result = true });
+                var vtg = db.RealDatabase.Groups.ContainsKey(request.ParentName) ? db.RealDatabase.Groups[request.ParentName] : null;
+
+                int i = 1;
+                while (db.RealDatabase.HasChildGroup(vtg, name))
+                {
+                    name = request.Name + i;
+                    i++;
+                }
+
+                string ntmp = name;
+
+                if (!string.IsNullOrEmpty(parentName))
+                {
+                    name = parentName + "." + name;
+                }
+
+                db.RealDatabase.CheckAndAddGroup(name);
+                return Task.FromResult(new AddGroupReplay() { Result = true,Group= ntmp });
             }
-            return Task.FromResult(new BoolResultReplay() { Result = false,ErroMessage="database not exist!" });
+            return Task.FromResult(new AddGroupReplay() { Result = false,ErroMessage="database not exist!" });
+        }
+
+        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<PasteGroupReplay> PasteTagGroup(PasteGroupRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+            {
+                return Task.FromResult(new PasteGroupReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var tags = db.RealDatabase.GetTagsByGroup(request.GroupFullName);
+                var vtg = db.RealDatabase.Groups.ContainsKey(request.TargetParentName) ? db.RealDatabase.Groups[request.TargetParentName] : null;
+                
+                var vsg = db.RealDatabase.Groups.ContainsKey(request.GroupFullName) ? db.RealDatabase.Groups[request.GroupFullName] : null;
+
+                if(vtg==vsg)
+                {
+                    return Task.FromResult(new PasteGroupReplay() { Result = false });
+                }
+
+                string sname = vsg.Name;
+                int i = 1;
+                while(db.RealDatabase.HasChildGroup(vtg, sname))
+                {
+                    sname = vsg.Name + i;
+                    i++;
+                }
+
+                Cdy.Tag.TagGroup tgg = vsg != null ? new Cdy.Tag.TagGroup() { Name = sname, Parent = vtg } : null;
+
+                if(tgg==null) return Task.FromResult(new PasteGroupReplay() { Result = false });
+
+                tgg = db.RealDatabase.CheckAndAddGroup(tgg.FullName);
+
+                foreach (var vv in tags)
+                {
+                    var tmp = vv.Clone();
+                    tmp.Group = tgg.FullName;
+                    db.RealDatabase.Append(tmp);
+
+                    var vid = vv.Id;
+                    if(db.HisDatabase.HisTags.ContainsKey(vid))
+                    {
+                        var vhis = db.HisDatabase.HisTags[vid].Clone();
+                        vhis.Id = tmp.Id;
+                        db.HisDatabase.AddHisTags(vhis);
+                    }
+                }
+                return Task.FromResult(new PasteGroupReplay() { Result = true,Group = sname });
+            }
+            return Task.FromResult(new PasteGroupReplay() { Result = false, ErroMessage = "database not exist!" });
         }
 
         /// <summary>

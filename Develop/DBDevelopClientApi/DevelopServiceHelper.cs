@@ -758,13 +758,29 @@ namespace DBDevelopClientApi
         /// <param name="database"></param>
         /// <param name="name"></param>
         /// <param name="parentName"></param>
-        public bool AddTagGroup(string database,string name,string parentName)
+        public string AddTagGroup(string database,string name,string parentName)
         {
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
-                return mCurrentClient.AddTagGroup(new DBDevelopService.AddGroupRequest() { Database = database, LoginId = mLoginId, Name = name, ParentName = parentName }).Result;
+                return mCurrentClient.AddTagGroup(new DBDevelopService.AddGroupRequest() { Database = database, LoginId = mLoginId, Name = name, ParentName = parentName }).Group;
             }
-            return false;
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="sourceGroup"></param>
+        /// <param name="targetParentGroup"></param>
+        /// <returns></returns>
+        public string PasteTagGroup(string database, string sourceGroup,string targetParentGroup)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.PasteTagGroup(new DBDevelopService.PasteGroupRequest() { Database = database, LoginId = mLoginId, GroupFullName = sourceGroup, TargetParentName = targetParentGroup }).Group;
+            }
+            return string.Empty;
         }
 
         /// <summary>

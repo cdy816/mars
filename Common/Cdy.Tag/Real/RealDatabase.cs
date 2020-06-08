@@ -78,6 +78,17 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        public void BuildGroupMap()
+        {
+            foreach(var vv in Groups)
+            {
+                vv.Value.Tags.AddRange(Tags.Where(e => e.Value.Group == vv.Value.FullName).Select(e=>e.Value));
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
         public int? GetTagIdByName(string name)
@@ -198,13 +209,13 @@ namespace Cdy.Tag
                 CheckAndAddGroup(tag.Group)?.Tags.Add(tag);
                 MaxId = Math.Max(MaxId, tag.Id);
 
-                if (!NamedTags.ContainsKey(tag.Name))
+                if (!NamedTags.ContainsKey(tag.FullName))
                 {
-                    NamedTags.Add(tag.Name, tag);
+                    NamedTags.Add(tag.FullName, tag);
                 }
                 else
                 {
-                    NamedTags[tag.Name] = tag;
+                    NamedTags[tag.FullName] = tag;
                 }
 
                 return true;
@@ -213,13 +224,13 @@ namespace Cdy.Tag
             {
                 Tags[tag.Id] = tag;
 
-                if (!NamedTags.ContainsKey(tag.Name))
+                if (!NamedTags.ContainsKey(tag.FullName))
                 {
-                    NamedTags.Add(tag.Name, tag);
+                    NamedTags.Add(tag.FullName, tag);
                 }
                 else
                 {
-                    NamedTags[tag.Name] = tag;
+                    NamedTags[tag.FullName] = tag;
                 }
             }
             return false;
@@ -236,26 +247,26 @@ namespace Cdy.Tag
                 Tags.Add(tag.Id, tag);
                 CheckAndAddGroup(tag.Group)?.Tags.Add(tag);
 
-                if (!NamedTags.ContainsKey(tag.Name))
+                if (!NamedTags.ContainsKey(tag.FullName))
                 {
-                    NamedTags.Add(tag.Name, tag);
+                    NamedTags.Add(tag.FullName, tag);
                 }
                 else
                 {
-                    NamedTags[tag.Name] = tag;
+                    NamedTags[tag.FullName] = tag;
                 }
             }
             else
             {
                 Tags[tag.Id] = tag;
 
-                if (!NamedTags.ContainsKey(tag.Name))
+                if (!NamedTags.ContainsKey(tag.FullName))
                 {
-                    NamedTags.Add(tag.Name, tag);
+                    NamedTags.Add(tag.FullName, tag);
                 }
                 else
                 {
-                    NamedTags[tag.Name] = tag;
+                    NamedTags[tag.FullName] = tag;
                 }
             }
             MaxId = Math.Max(MaxId, tag.Id);
@@ -394,6 +405,22 @@ namespace Cdy.Tag
         public List<TagGroup> GetGroups(TagGroup parent)
         {
             return Groups.Values.Where(e => e.Parent == parent).ToList();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="chileGroupName"></param>
+        /// <returns></returns>
+        public bool HasChildGroup(TagGroup parent, string childGroupName)
+        {
+            var vss = Groups.Values.Where(e => e.Parent == parent).Select(e => e.Name);
+            if (vss.Count() > 0 && vss.Contains(childGroupName))
+            {
+                return true;
+            }
+            return false;
         }
 
         /// <summary>

@@ -1,6 +1,7 @@
 ﻿using DBInStudio.Desktop.ViewModel;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -34,4 +35,7 @@ namespace DBInStudio.Desktop.View
     }
 
     
+
+
+
 }

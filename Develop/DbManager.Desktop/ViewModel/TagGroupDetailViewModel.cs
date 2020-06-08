@@ -34,12 +34,17 @@ namespace DBInStudio.Desktop.ViewModel
         private ICommand mImportCommand;
         private ICommand mExportCommand;
 
+        private ICommand mCopyCommand;
+        private ICommand mPasteCommand;
+
         private TagViewModel mCurrentSelectTag;
 
         private int mTotalPageNumber = 0;
         private int mCurrentPageIndex = 0;
 
         private bool mIsLoading = false;
+
+        private static List<TagViewModel> mCopyTags = new List<TagViewModel>();
 
         #endregion ...Variables...
 
@@ -72,6 +77,36 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
+        public ICommand CopyCommand
+        {
+            get
+            {
+                if(mCopyCommand==null)
+                {
+                    mCopyCommand = new RelayCommand(() => {
+                        CopyTag();
+                    });
+                }
+                return mCopyCommand;
+            }
+         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand PasteCommand
+        {
+            get
+            {
+                if (mPasteCommand == null)
+                {
+                    mPasteCommand = new RelayCommand(() => {
+                        PasteTag();
+                    },()=> { return mCopyTags.Count > 0; });
+                }
+                return mPasteCommand;
+            }
+        }
 
         /// <summary>
         /// 
@@ -298,7 +333,8 @@ namespace DBInStudio.Desktop.ViewModel
 
             if (mTotalPageNumber == -1)
             {
-                var vtags = new System.Collections.ObjectModel.ObservableCollection<TagViewModel>();
+                SelectGroupTags.Clear();
+              //  var vtags = new System.Collections.ObjectModel.ObservableCollection<TagViewModel>();
                 mCurrentPageIndex = 0;
 
                 var vv = DevelopServiceHelper.Helper.QueryTagByGroup(this.GroupModel.Database, this.GroupModel.FullName,mCurrentPageIndex, out mTotalPageNumber);
@@ -307,10 +343,9 @@ namespace DBInStudio.Desktop.ViewModel
                     foreach (var vvv in vv)
                     {
                         TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2);
-                        vtags.Add(model);
+                        SelectGroupTags.Add(model);
                     }
                 }
-                SelectGroupTags = vtags;
             }
             else
             {
@@ -375,6 +410,36 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
+        private void CopyTag()
+        {
+            mCopyTags.Clear();
+            foreach(var vv in mSelectGroupTags.Where(e=>e.IsSelected))
+            {
+                mCopyTags.Add(vv);
+            }
+        }
+
+        private void PasteTag()
+        {
+            if(mCopyTags.Count>0)
+            {
+                TagViewModel tm = null;
+                foreach(var vv in mCopyTags)
+                {
+                    var vtag = vv.Clone();
+                    vtag.Name = GetNewName(vv.Name);
+                    vtag.IsNew = true;
+                    if (UpdateTag(vtag))
+                    {
+                        this.SelectGroupTags.Add(vtag);
+                        tm = vtag;
+                    }
+                }
+                if (tm != null)
+                    CurrentSelectTag = tm;
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -411,13 +476,13 @@ namespace DBInStudio.Desktop.ViewModel
         /// 
         /// </summary>
         /// <returns></returns>
-        private string GetNewName()
+        private string GetNewName(string baseName="tag")
         {
             var vtmps = mSelectGroupTags.Select(e => e.Name).ToList();
-            string tagName = "tag";
+            string tagName = baseName;
             for (int i = 1; i < int.MaxValue; i++)
             {
-                tagName = "tag" + i;
+                tagName = baseName + i;
                 if (!vtmps.Contains(tagName))
                 {
                     return tagName;

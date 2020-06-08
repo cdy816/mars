@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Windows.Input;
 
@@ -22,8 +23,11 @@ namespace DBInStudio.Desktop
         private bool mIsSelected = false;
         private bool mIsExpanded = false;
         private bool mIsEdit;
+        private ICommand mAddCommand;
         private ICommand mRenameCommand;
         private ICommand mRemoveCommand;
+        private ICommand mCopyCommand;
+        private ICommand mPasteCommand;
         private TreeItemViewModel mParent;
         #endregion ...Variables...
 
@@ -36,6 +40,54 @@ namespace DBInStudio.Desktop
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        public ICommand AddCommand
+        {
+            get
+            {
+                if(mAddCommand==null)
+                {
+                    mAddCommand = new RelayCommand(() => {
+                        Add();
+                    },()=> { return CanAdd(); });
+                }
+                return mAddCommand;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand CopyCommand
+        {
+            get
+            {
+                if(mCopyCommand==null)
+                {
+                    mCopyCommand = new RelayCommand(() => { Copy(); },()=> { return CanCopy(); });
+                }
+                return mCopyCommand;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand PasteCommand
+        {
+            get
+            {
+                if(mPasteCommand==null)
+                {
+                    mPasteCommand = new RelayCommand(() => { Paste(); },()=> { return CanPaste(); });
+                }
+                return mPasteCommand;
+            }
+        }
+
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -79,15 +131,18 @@ namespace DBInStudio.Desktop
             }
         }
 
-        public ICommand ReMoveCommand
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand RemoveCommand
         {
             get
             {
                 if (mRemoveCommand == null)
                 {
                     mRemoveCommand = new RelayCommand(() => {
-                        IsEdit = true;
-                    });
+                        Remove();
+                    },()=> { return CanRemove(); });
                 }
                 return mRemoveCommand;
             }
@@ -175,6 +230,58 @@ namespace DBInStudio.Desktop
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public virtual void Add()
+        {
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public virtual bool CanAdd()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public virtual void Copy()
+        {
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public virtual void Paste()
+        {
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public virtual bool CanCopy()
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public virtual bool CanPaste()
+        {
+            return false;
+        }
+
 
         public virtual bool CanAddChild()
         {

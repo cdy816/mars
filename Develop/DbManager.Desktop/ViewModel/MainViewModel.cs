@@ -19,10 +19,11 @@ using System.Windows;
 using DBDevelopClientApi;
 using Microsoft.Win32;
 using System.IO;
+using Cdy.Tag;
 
 namespace DBInStudio.Desktop
 {
-    public class MainViewModel : ViewModelBase
+    public class MainViewModel : ViewModelBase, ITagGroupAdd
     {
 
         #region ... Variables  ...
@@ -64,6 +65,13 @@ namespace DBInStudio.Desktop
         #endregion ...Events...
 
         #region ... Constructor...
+        /// <summary>
+        /// 
+        /// </summary>
+        public MainViewModel()
+        {
+            ServiceLocator.Locator.Registor<ITagGroupAdd>(this);
+        }
 
         #endregion ...Constructor...
 
@@ -226,7 +234,7 @@ namespace DBInStudio.Desktop
                 if (mRemoveGroupCommand == null)
                 {
                     mRemoveGroupCommand = new RelayCommand(() => {
-                        (CurrentSelectGroup).ReMoveCommand.Execute(null);
+                        (CurrentSelectGroup).RemoveCommand.Execute(null);
                     },()=> { return CurrentSelectGroup != null && CurrentSelectGroup.CanRemove() ; });
                 }
                 return mRemoveGroupCommand;
@@ -372,7 +380,23 @@ namespace DBInStudio.Desktop
             }
         }
 
-
+        public bool AddGroup(string parent)
+        {
+            string chileName = GetNewGroupName();
+            chileName = DevelopServiceHelper.Helper.AddTagGroup(mDatabase, chileName, parent);
+            if (!string.IsNullOrEmpty(chileName))
+            {
+                if (mCurrentSelectTreeItem != null && mCurrentSelectTreeItem is TagGroupViewModel)
+                {
+                    (mCurrentSelectTreeItem as TagGroupViewModel).Children.Add(new TagGroupViewModel() { mName = chileName, Parent = (mCurrentSelectTreeItem as TagGroupViewModel), Database = this.mDatabase });
+                }
+                else
+                {
+                    this.TagGroup.Add(new TagGroupViewModel() { Name = chileName, Database = this.mDatabase });
+                }
+            }
+            return false;
+        }
 
         /// <summary>
         /// 
@@ -380,18 +404,7 @@ namespace DBInStudio.Desktop
         private void NewGroup()
         {
             string sparent = mCurrentSelectTreeItem!=null && mCurrentSelectTreeItem is TagGroupViewModel? (mCurrentSelectTreeItem as TagGroupViewModel).FullName:string.Empty;
-            string name = GetNewGroupName();
-            if(DevelopServiceHelper.Helper.AddTagGroup(mDatabase,name,sparent))
-            {
-                if (mCurrentSelectTreeItem != null && mCurrentSelectTreeItem is TagGroupViewModel)
-                {
-                    (mCurrentSelectTreeItem as TagGroupViewModel).Children.Add(new TagGroupViewModel() { Name = name, Parent = (mCurrentSelectTreeItem as TagGroupViewModel) });
-                }
-                else
-                {
-                    this.TagGroup.Add(new TagGroupViewModel() { Name = name });
-                }
-            }
+            AddGroup(sparent);
         }
 
         /// <summary>
@@ -526,4 +539,10 @@ namespace DBInStudio.Desktop
 
         #endregion ...Interfaces...
     }
+
+    public interface ITagGroupAdd
+    {
+        bool AddGroup(string parent);
+    }
+
 }

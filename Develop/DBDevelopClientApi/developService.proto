@@ -91,7 +91,10 @@ service DevelopServer {
   rpc GetTagGroup(GetRequest) returns (GetTagGroupMessageReply);
 
   //
-  rpc AddTagGroup(AddGroupRequest) returns (BoolResultReplay);
+  rpc AddTagGroup(AddGroupRequest) returns (AddGroupReplay);
+
+  //粘贴组
+  rpc PasteTagGroup(PasteGroupRequest) returns (PasteGroupReplay);
 
   //
   rpc RemoveTagGroup(RemoveGroupRequest) returns (BoolResultReplay);
@@ -356,6 +359,22 @@ message UpdateHisTagRequestMessage
     HisTagMessage tag = 3;
 }
 
+//复制组
+message PasteGroupRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string GroupFullName=3;
+    string TargetParentName=4;
+}
+
+message PasteGroupReplay
+{
+    bool Result =1;
+    string ErroMessage=2;
+    string Group=3;
+}
+
 //添加组
 message AddGroupRequest
 {
@@ -363,6 +382,13 @@ message AddGroupRequest
     string Database=2;
     string Name=3;
     string ParentName=4;
+}
+
+message AddGroupReplay
+{
+    bool Result =1;
+    string ErroMessage=2;
+    string Group=3;
 }
 
 //通过名称删除用户

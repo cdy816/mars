@@ -120,6 +120,17 @@ namespace Cdy.Tag
             //hisTag.CompressParameter3 = float.Parse(xe.Attribute("CompressParameter3").Value);
             return hisTag;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <returns></returns>
+        public static HisTag Clone(this HisTag tag)
+        {
+            return tag.SaveToXML().LoadHisTagFromXML();
+        }
+
     }
 
 

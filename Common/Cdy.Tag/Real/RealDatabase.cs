@@ -600,7 +600,14 @@ namespace Cdy.Tag
                     string sparentName = groupName.Substring(0, groupName.LastIndexOf("."));
                     parent = CheckAndAddGroup(sparentName);
                 }
-                TagGroup tg = new TagGroup() { Parent = parent,Name = groupName };
+
+                string sname = groupName;
+                if (parent != null)
+                {
+                    sname = groupName.Substring(parent.FullName.Length + 1);
+                }
+
+                TagGroup tg = new TagGroup() { Parent = parent,Name = sname };
                 Groups.Add(tg.FullName, tg);
                 return tg;
             }

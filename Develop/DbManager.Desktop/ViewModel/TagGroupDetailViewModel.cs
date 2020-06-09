@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 
@@ -473,6 +474,35 @@ namespace DBInStudio.Desktop.ViewModel
         }
 
         /// <summary>
+        /// 获取字符串中的数字
+        /// </summary>
+        /// <param name="str">字符串</param>
+        /// <returns>数字</returns>
+        public static int GetNumberInt(string str)
+        {
+            int result = -1;
+            if (str != null && str != string.Empty)
+            {
+                // 正则表达式剔除非数字字符（不包含小数点.）
+                str = Regex.Replace(str, @"[^\d.\d]", "");
+                // 如果是数字，则转换为decimal类型
+                if (Regex.IsMatch(str, @"^[+-]?\d*[.]?\d*$"))
+                {
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(str))
+                            result = int.Parse(str);
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
@@ -480,9 +510,19 @@ namespace DBInStudio.Desktop.ViewModel
         {
             var vtmps = mSelectGroupTags.Select(e => e.Name).ToList();
             string tagName = baseName;
+
+            int number = GetNumberInt(baseName);
+            if(number>=0)
+            {
+                if(tagName.EndsWith(number.ToString()))
+                {
+                    tagName = tagName.Substring(0, tagName.IndexOf(number.ToString()));
+                }
+            }
+            string sname = tagName;
             for (int i = 1; i < int.MaxValue; i++)
             {
-                tagName = baseName + i;
+                tagName = sname + i;
                 if (!vtmps.Contains(tagName))
                 {
                     return tagName;

@@ -1273,7 +1273,14 @@ namespace DBDevelopService
 
                 Cdy.Tag.Tagbase tag = GetRealTag(request.RealTag);
 
-                db.RealDatabase.AddOrUpdate(tag);
+                if (tag.Id < 0)
+                {
+                    db.RealDatabase.Append(tag);
+                }
+                else
+                {
+                    db.RealDatabase.AddOrUpdate(tag);
+                }
 
                 var vtag = request.HisTag;
                 if (vtag.Id != uint.MaxValue)

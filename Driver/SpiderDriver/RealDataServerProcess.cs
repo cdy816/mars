@@ -47,6 +47,13 @@ namespace SpiderDriver
 
         private ITagManager mTagManager;
 
+        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static HashSet<int> AllowTagIds = new HashSet<int>();
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -127,6 +134,7 @@ namespace SpiderDriver
             for (int i = 0; i < count; i++)
             {
                 var id = block.ReadInt();
+
                 byte typ = block.ReadByte();
                 object value = null;
                 switch (typ)
@@ -193,6 +201,7 @@ namespace SpiderDriver
                         value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                         break;
                 }
+                if(AllowTagIds.Contains(id))
                service.SetTagValue(id, value);
             }
             service.SubmiteNotifyChanged();
@@ -234,9 +243,11 @@ namespace SpiderDriver
             {
                 int minid = block.ReadInt();
                 HashSet<int> ids = new HashSet<int>();
-                for(int i=0;i<minid;i++)
+                for (int i = 0; i < minid; i++)
                 {
-                    ids.Add(block.ReadInt());
+                    var vv = block.ReadInt();
+                    if (AllowTagIds.Contains(vv))
+                        ids.Add(vv);
                 }
 
                 if (mCallBackRegistorIds.ContainsKey(clientId))

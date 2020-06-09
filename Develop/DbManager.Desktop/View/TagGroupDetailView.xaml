@@ -91,15 +91,15 @@
         </Style>
     </UserControl.Resources>
     <Grid>
-        <Grid.InputBindings>
-            <KeyBinding Command="{Binding CopyCommand}" Key="C" Modifiers="Ctrl" />
-            <KeyBinding Command="{Binding PasteCommand}" Key="C" Modifiers="Ctrl" />
-            <KeyBinding Command="{Binding RemoveCommand}" Key="Delete" />
-            <KeyBinding Command="{Binding AddCommand}" Key="A"  Modifiers="Alt" />
-            <KeyBinding Command="{Binding ImportCommand}" Key="I"  Modifiers="Alt" />
-            <KeyBinding Command="{Binding ExportCommand}" Key="O" Modifiers="Alt" />
-        </Grid.InputBindings>
         <DataGrid CellStyle="{DynamicResource DataGridCellStyle1}" RowStyle="{DynamicResource DataGridRowStyle1}" ScrollViewer.CanContentScroll="True" ContextMenu="{StaticResource ctxmenu}" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,32" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"   BorderThickness="0,0,0,1" Background="{x:Null}" >
+            <DataGrid.InputBindings>
+                <KeyBinding Command="{Binding CopyCommand}" Key="C" Modifiers="Ctrl" />
+                <KeyBinding Command="{Binding PasteCommand}" Key="V" Modifiers="Ctrl" />
+                <KeyBinding Command="{Binding RemoveCommand}" Key="Delete" />
+                <KeyBinding Command="{Binding AddCommand}" Key="A"  Modifiers="Alt" />
+                <KeyBinding Command="{Binding ImportCommand}" Key="I"  Modifiers="Alt" />
+                <KeyBinding Command="{Binding ExportCommand}" Key="O" Modifiers="Alt" />
+            </DataGrid.InputBindings>
             <DataGrid.Columns>
                 <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="30" Header="{local:ResMarker Id}">
                     <DataGridTemplateColumn.CellTemplate>

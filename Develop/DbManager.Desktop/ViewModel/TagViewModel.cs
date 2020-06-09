@@ -1228,7 +1228,12 @@ namespace DBInStudio.Desktop
         {
             foreach(var vv in groups.Where(e=>e.Value==this.FullName))
             {
-                TagGroupViewModel groupViewModel = new TagGroupViewModel() { mName = vv.Key,Database=Database };
+                string sname = vv.Key;
+                if(!string.IsNullOrEmpty(vv.Value))
+                {
+                    sname = sname.Substring(sname.IndexOf(vv.Value)+vv.Value.Length+1);
+                }
+                TagGroupViewModel groupViewModel = new TagGroupViewModel() { mName = sname, Database=Database };
                 groupViewModel.Parent = this;
                 this.Children.Add(groupViewModel);
             }

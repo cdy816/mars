@@ -49,7 +49,7 @@ namespace DBInStudio.Desktop
                 {
                     mAddCommand = new RelayCommand(() => {
                         Add();
-                    },()=> { return CanAdd(); });
+                    },()=> { return CanAddChild(); });
                 }
                 return mAddCommand;
             }
@@ -106,8 +106,8 @@ namespace DBInStudio.Desktop
                     {
                         mName = value;
                     }
-                    OnPropertyChanged("Name");
                 }
+                OnPropertyChanged("Name");
                 IsEdit = false;
             }
         }
@@ -159,8 +159,8 @@ namespace DBInStudio.Desktop
                 if (mIsEdit != value)
                 {
                     mIsEdit = value;
-                    OnPropertyChanged("IsEdit");
                 }
+                OnPropertyChanged("IsEdit");
             }
         }
 
@@ -237,15 +237,6 @@ namespace DBInStudio.Desktop
         public virtual void Add()
         {
 
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public virtual bool CanAdd()
-        {
-            return false;
         }
 
         /// <summary>

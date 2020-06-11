@@ -7,6 +7,7 @@
 //  种道洋
 //==============================================================
 
+using Cdy.Tag;
 using DBDevelopClientApi;
 using Microsoft.Win32;
 using System;
@@ -15,6 +16,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
@@ -284,19 +287,15 @@ namespace DBInStudio.Desktop.ViewModel
                 stream.Close();
             }
 
-            var tags = mSelectGroupTags.ToDictionary(e => e.RealTagMode.Id);
-            foreach(var vv in ltmp)
-            {
-                if(tags.ContainsKey(vv.RealTagMode.Id))
+            Task.Run(() => {
+                ServiceLocator.Locator.Resolve<IProcessNotify>().BeginShowNotify();
+
+                var tags = mSelectGroupTags.ToDictionary(e => e.RealTagMode.Name);
+                int tcount = ltmp.Count;
+                int icount = 0;
+                foreach (var vv in ltmp)
                 {
-                    if(!DevelopServiceHelper.Helper.UpdateTag(GroupModel.Database, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(vv.RealTagMode, vv.HisTagMode)))
-                    {
-                        MessageBox.Show(string.Format(Res.Get("UpdateTagFail"), vv.RealTagMode.Name),Res.Get("erro"),MessageBoxButton.OK,MessageBoxImage.Error);
-                        break;
-                    }
-                }
-                else
-                {
+                    vv.Group = this.GroupModel.FullName;
                     int id;
                     if (!DevelopServiceHelper.Helper.AddTag(GroupModel.Database, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(vv.RealTagMode, vv.HisTagMode), out id))
                     {
@@ -310,10 +309,26 @@ namespace DBInStudio.Desktop.ViewModel
                         vv.IsChanged = false;
                         vv.IsNew = false;
                     }
+                    icount++;
+                    ServiceLocator.Locator.Resolve<IProcessNotify>().ShowNotifyValue(((icount * 1.0 / tcount) * 100));
                 }
-            }
 
-            System.Threading.Tasks.Task.Run(() => { mCurrentPageIndex--; ContinueQueryTags(); });
+                mCurrentPageIndex--;
+                ContinueQueryTags();
+                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    ServiceLocator.Locator.Resolve<IProcessNotify>().EndShowNotify();
+                }));
+
+            });
+
+            
+
+          
+
+            //System.Threading.Tasks.Task.Run(() => {
+               
+            //});
 
         }
 
@@ -428,6 +443,7 @@ namespace DBInStudio.Desktop.ViewModel
                 foreach(var vv in mCopyTags)
                 {
                     var vtag = vv.Clone();
+                    vtag.RealTagMode.Id = -1;
                     vtag.Name = GetNewName(vv.Name);
                     vtag.IsNew = true;
                     if (UpdateTag(vtag))

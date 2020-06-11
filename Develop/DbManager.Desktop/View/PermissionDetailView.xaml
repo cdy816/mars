@@ -20,7 +20,7 @@
         <Border BorderBrush="Gray" BorderThickness="0,0,0,1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Label Content="{res:ResMarker PermissionList}" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Center"/>
         </Border>
-        <DataGrid ItemsSource="{Binding Permissions}" BorderThickness="0" Grid.Row="1" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False">
+        <DataGrid ItemsSource="{Binding Permissions}" BorderThickness="0" Grid.Row="1" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" MinRowHeight="24">
             <DataGrid.Columns>
                 <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="30" Header="{res:ResMarker Id}">
                     <DataGridTemplateColumn.CellTemplate>

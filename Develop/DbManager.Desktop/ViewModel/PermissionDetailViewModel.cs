@@ -154,10 +154,10 @@ namespace DBInStudio.Desktop.ViewModel
         {
             string sname = GetAvaiabelName("Permission");
             Cdy.Tag.UserPermission pitem = new Cdy.Tag.UserPermission() { Name = sname };
-            //if(DBDevelopClientApi.DevelopServiceHelper.Helper.UpdateDatabasePermission(this.Database,pitem))
-            //{
+            if (DBDevelopClientApi.DevelopServiceHelper.Helper.UpdateDatabasePermission(this.Database, pitem))
+            {
                 this.Permissions.Add(new PermissionItemViewModel(pitem) { IsNew = true });
-            //}
+            }
         }
 
         /// <summary>
@@ -413,6 +413,8 @@ namespace DBInStudio.Desktop.ViewModel
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+       
 
         private void ParserGroupString()
         {

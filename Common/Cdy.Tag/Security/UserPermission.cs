@@ -26,7 +26,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public string Desc { get; set; }
+        public string Desc { get; set; } = "";
 
         /// <summary>
         /// 允许修改

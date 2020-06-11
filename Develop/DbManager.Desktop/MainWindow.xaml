@@ -72,48 +72,52 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Border BorderThickness="0,0,0,1" BorderBrush="LightGray" Background="AliceBlue">
-            <StackPanel Orientation="Horizontal">
-                <Button Style="{DynamicResource MenuButton}"  Command="{Binding LoginCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80"  >
-                    <Button.ContentTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <Image Source="/Image/登录.png" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                                <TextBlock Text="{local:ResMarker Login}" VerticalAlignment="Center" Margin="5,0"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </Button.ContentTemplate>
-                </Button>
-                <Button Style="{DynamicResource MenuButton}"  Command="{Binding SaveCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
-                    <Button.ContentTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <Image Source="/Image/Save.png" Height="24" RenderOptions.BitmapScalingMode="NearestNeighbor" />
-                                <TextBlock Text="{local:ResMarker Save}" VerticalAlignment="Center" Margin="5,0"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </Button.ContentTemplate>
-                </Button>
-                <Button Style="{DynamicResource MenuButton}"  Command="{Binding ExportCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
-                    <Button.ContentTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <Image Source="/Image/export.png" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor" />
-                                <TextBlock Text="{local:ResMarker Export}" VerticalAlignment="Center" Margin="5,0"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </Button.ContentTemplate>
-                </Button>
-                <Button Style="{DynamicResource MenuButton}"  Command="{Binding ImportCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
-                    <Button.ContentTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <Image Source="/Image/import.png" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor" />
-                                <TextBlock Text="{local:ResMarker Import}" VerticalAlignment="Center" Margin="5,0"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </Button.ContentTemplate>
-                </Button>
-            </StackPanel>
+            <Grid>
+                <ProgressBar Maximum="100"  Minimum="0" Value="{Binding ProcessNotify}" Background="Transparent" VerticalAlignment="Top" Height="5" BorderThickness="0" BorderBrush="Transparent" />
+                <StackPanel Orientation="Horizontal">
+                    <Button Style="{DynamicResource MenuButton}"  Command="{Binding LoginCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80"  >
+                        <Button.ContentTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="/Image/登录.png" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                                    <TextBlock Text="{local:ResMarker Login}" VerticalAlignment="Center" Margin="5,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </Button.ContentTemplate>
+                    </Button>
+                    <Button Style="{DynamicResource MenuButton}"  Command="{Binding SaveCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                        <Button.ContentTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="/Image/Save.png" Height="24" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                                    <TextBlock Text="{local:ResMarker Save}" VerticalAlignment="Center" Margin="5,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </Button.ContentTemplate>
+                    </Button>
+                    <Button Style="{DynamicResource MenuButton}"  Command="{Binding ExportCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                        <Button.ContentTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="/Image/export.png" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                                    <TextBlock Text="{local:ResMarker Export}" VerticalAlignment="Center" Margin="5,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </Button.ContentTemplate>
+                    </Button>
+                    <Button Style="{DynamicResource MenuButton}"  Command="{Binding ImportCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                        <Button.ContentTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="/Image/import.png" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                                    <TextBlock Text="{local:ResMarker Import}" VerticalAlignment="Center" Margin="5,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </Button.ContentTemplate>
+                    </Button>
+                </StackPanel>
+            </Grid>
+            
         </Border>
         <Grid Grid.Row="1">
             
@@ -156,7 +160,7 @@
                             <Image Focusable="False" Source="/Image/文件夹.png"  Margin="0,0,4,0" Height="18" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                             <Grid ContextMenu="{StaticResource groupMenu}"  Background="{Binding Background}" VerticalAlignment="Center" Focusable="False"  Name="spanel"    >
                                 <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                                <TextBox Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Center" Visibility="{Binding IsEdit,Converter={StaticResource btv}}"  />
+                                <TextBox LostFocus="TextBox_LostFocus" KeyDown="TextBox_KeyDown" IsVisibleChanged="TextBox_IsVisibleChanged" Text="{Binding Name,Mode=TwoWay,NotifyOnTargetUpdated=True,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Center" Visibility="{Binding IsEdit,Converter={StaticResource btv}}"  />
                             </Grid>
                         </StackPanel>
                     </HierarchicalDataTemplate>
@@ -206,8 +210,14 @@
             
             <GridSplitter VerticalAlignment="Stretch" Width="5" HorizontalAlignment="Right" Background="Transparent" />
             <ContentControl Grid.Column="1" Content="{Binding ContentViewModel}"/>
+            
         </Grid>
-        
+        <Grid Visibility="{Binding NotifyVisiblity}" HorizontalAlignment="Stretch" Grid.ColumnSpan="2" Grid.RowSpan="2" VerticalAlignment="Stretch" Background="#2F000000">
+
+            <Image Width="64" Height="64" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center" Source="/Image/wait.png" >
+
+            </Image>
+        </Grid>
 
     </Grid>
 </Window>

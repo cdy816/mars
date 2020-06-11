@@ -84,6 +84,20 @@ namespace DBInStudio.Desktop
             }
         }
 
+        public override bool CanRemove()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override bool CanAddChild()
+        {
+            return false;
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...
@@ -116,6 +130,11 @@ namespace DBInStudio.Desktop
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        public override bool CanRemove()
+        {
+            return false;
+        }
 
         #endregion ...Methods...
 
@@ -197,6 +216,21 @@ namespace DBInStudio.Desktop
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+
+        public override bool CanAddChild()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override bool CanRemove()
+        {
+            return false;
+        }
 
         #endregion ...Methods...
 

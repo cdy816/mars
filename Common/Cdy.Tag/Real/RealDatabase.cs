@@ -51,7 +51,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        private Dictionary<string,Tagbase> NamedTags { get; set; }
+        public Dictionary<string,Tagbase> NamedTags { get; set; }
 
         /// <summary>
         /// 
@@ -237,39 +237,36 @@ namespace Cdy.Tag
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sname"></param>
+        /// <param name="tag"></param>
+        public void Update(string sname,Tagbase tag)
+        {
+            if(NamedTags.ContainsKey(sname))
+            {
+                var vtag = NamedTags[sname];
+                var vid = vtag.Id;
+                tag.Id = vid;
+                NamedTags[sname] = tag;
+                Tags[vid] = tag;
+            }
+        }
+
+        /// <summary>
         /// 添加或更新
         /// </summary>
         /// <param name="id"></param>
         public void AddOrUpdate(Tagbase tag)
         {
-            if (!Tags.ContainsKey(tag.Id))
+            if (!NamedTags.ContainsKey(tag.FullName))
             {
-                Tags.Add(tag.Id, tag);
-                CheckAndAddGroup(tag.Group)?.Tags.Add(tag);
-
-                if (!NamedTags.ContainsKey(tag.FullName))
-                {
-                    NamedTags.Add(tag.FullName, tag);
-                }
-                else
-                {
-                    NamedTags[tag.FullName] = tag;
-                }
+                Append(tag);
             }
             else
             {
-                Tags[tag.Id] = tag;
-
-                if (!NamedTags.ContainsKey(tag.FullName))
-                {
-                    NamedTags.Add(tag.FullName, tag);
-                }
-                else
-                {
-                    NamedTags[tag.FullName] = tag;
-                }
+                Update(tag.FullName, tag);
             }
-            MaxId = Math.Max(MaxId, tag.Id);
         }
 
         /// <summary>
@@ -505,13 +502,23 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="group"></param>
         /// <param name="newName"></param>
-        public void ChangeGroupName(string oldgroupFullName,string newName)
+        public bool ChangeGroupName(string oldgroupFullName,string newName)
         {
             if (Groups.ContainsKey(oldgroupFullName))
             {
                 var grp = Groups[oldgroupFullName];
+
+                var ss = grp.Parent != null ? grp.Parent.FullName + "." + newName : newName;
+
+                if (Groups.ContainsKey(ss))
+                {
+                    return false;
+                }
+
                 //获取改组的所有子组
                 var gg = GetAllChildGroups(grp);
+
+                
 
                 //从Groups删除目标组以及所有子组
                 Groups.Remove(oldgroupFullName);
@@ -552,7 +559,10 @@ namespace Cdy.Tag
                 {
                     Groups.Add(vv.FullName, vv);
                 }
+
+                return true;
             }
+            return false;
         }
 
         /// <summary>

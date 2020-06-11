@@ -27,6 +27,7 @@
     <None Remove="Image\Security.png" />
     <None Remove="Image\show.png" />
     <None Remove="Image\user.png" />
+    <None Remove="Image\wait.png" />
     <None Remove="Image\文件夹.png" />
     <None Remove="Image\登录.png" />
   </ItemGroup>
@@ -48,6 +49,7 @@
     <Resource Include="Image\Security.png" />
     <Resource Include="Image\show.png" />
     <Resource Include="Image\user.png" />
+    <Resource Include="Image\wait.png" />
     <Resource Include="Image\文件夹.png" />
     <Resource Include="Image\登录.png" />
   </ItemGroup>

@@ -707,8 +707,8 @@ namespace DBDevelopService
             var db = DbManager.Instance.GetDatabase(request.Database);
             if (db != null)
             {
-                db.RealDatabase.ChangeGroupName(request.OldFullName, request.NewName);
-                return Task.FromResult(new BoolResultReplay() { Result = true });
+                var re = db.RealDatabase.ChangeGroupName(request.OldFullName, request.NewName);
+                return Task.FromResult(new BoolResultReplay() { Result = re });
             }
             return Task.FromResult(new BoolResultReplay() { Result = false, ErroMessage = "database not exist!" });
         }
@@ -1168,11 +1168,16 @@ namespace DBDevelopService
                 }
                 var tag = GetRealTag(request.Tag);
                 var db = DbManager.Instance.GetDatabase(request.Database);
-                //if (db.RealDatabase.Tags.ContainsKey(tag.Id))
+                if (db.RealDatabase.NamedTags.ContainsKey(tag.FullName))
                 {
-                    db.RealDatabase.AddOrUpdate(tag);
+                    db.RealDatabase.Update(tag.FullName, tag);
+                    return Task.FromResult(new BoolResultReplay() { Result = true });
                 }
-                return Task.FromResult(new BoolResultReplay() { Result = true });
+                else
+                {
+                    return Task.FromResult(new BoolResultReplay() { Result = false,ErroMessage="Tag not exist" });
+                }
+               
             }
             catch(Exception ex)
             {

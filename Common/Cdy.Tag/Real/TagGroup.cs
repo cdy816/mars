@@ -33,40 +33,11 @@ namespace Cdy.Tag
         /// </summary>
         public string FullName { get { return Parent == null ? Name : Parent.FullName + "." + Name; } }
 
-        ///// <summary>
-        ///// 用作加载时，建立父子关系
-        ///// </summary>
-        //internal string ParentName { get; set; }
-
-        ///// <summary>
-        ///// 用作加载时，表示一个全名称
-        ///// </summary>
-        //internal string FullNameString { get; set; }
-
         /// <summary>
         /// 
         /// </summary>
         public List<Tagbase> Tags { get; set; } = new List<Tagbase>();
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        public override bool Equals(object obj)
-        {
-            if (obj == null||!(obj is TagGroup)) return false;
-            return this.FullName == (obj as TagGroup).FullName;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override int GetHashCode()
-        {
-            return this.Name.GetHashCode();
-        }
     }
 
     /// <summary>

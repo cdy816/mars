@@ -23,7 +23,7 @@ using Cdy.Tag;
 
 namespace DBInStudio.Desktop
 {
-    public class MainViewModel : ViewModelBase, ITagGroupAdd
+    public class MainViewModel : ViewModelBase, IProcessNotify
     {
 
         #region ... Variables  ...
@@ -58,6 +58,10 @@ namespace DBInStudio.Desktop
 
         private bool mIsCanOperate = true;
 
+        private double mProcessNotify;
+
+        private Visibility mNotifyVisiblity = Visibility.Hidden;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -70,12 +74,52 @@ namespace DBInStudio.Desktop
         /// </summary>
         public MainViewModel()
         {
-            ServiceLocator.Locator.Registor<ITagGroupAdd>(this);
+            ServiceLocator.Locator.Registor<IProcessNotify>(this);
         }
 
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public Visibility NotifyVisiblity
+        {
+            get
+            {
+                return mNotifyVisiblity;
+            }
+            set
+            {
+                if (mNotifyVisiblity != value)
+                {
+                    mNotifyVisiblity = value;
+                    OnPropertyChanged("NotifyVisiblity");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public double ProcessNotify
+        {
+            get
+            {
+                return mProcessNotify;
+            }
+            set
+            {
+                if (mProcessNotify != value)
+                {
+                    mProcessNotify = value;
+                    OnPropertyChanged("ProcessNotify");
+                }
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -217,7 +261,8 @@ namespace DBInStudio.Desktop
                 if (mAddGroupCommand == null)
                 {
                     mAddGroupCommand = new RelayCommand(() => {
-                        NewGroup();
+                        (CurrentSelectGroup).AddCommand.Execute(null);
+                        //  NewGroup();
                     },()=> { return mCurrentSelectTreeItem != null && mCurrentSelectTreeItem.CanAddChild(); });
                 }
                 return mAddGroupCommand;
@@ -303,10 +348,12 @@ namespace DBInStudio.Desktop
                 }
                 stream.Close();
             }
-
             Task.Run(() => {
-
+                BeginShowNotify();
                 int id;
+                int icount = 0;
+                int tcount = ltmp.Count;
+               
                 foreach (var vv in ltmp)
                 {
                     if (!DevelopServiceHelper.Helper.AddTag(this.mDatabase, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(vv.RealTagMode, vv.HisTagMode), out id))
@@ -314,10 +361,13 @@ namespace DBInStudio.Desktop
                         MessageBox.Show(string.Format(Res.Get("UpdateTagFail"), vv.RealTagMode.Name), Res.Get("erro"), MessageBoxButton.OK, MessageBoxImage.Error);
                         break;
                     }
+                    icount++;
+                    ShowNotifyValue((int)((icount * 1.0 / tcount) * 100));
                 }
                 Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                     IsCanOperate = true;
                     SelectContentModel();
+                    EndShowNotify();
                 }));
             });
 
@@ -380,51 +430,56 @@ namespace DBInStudio.Desktop
             }
         }
 
-        public bool AddGroup(string parent)
-        {
-            string chileName = GetNewGroupName();
-            chileName = DevelopServiceHelper.Helper.AddTagGroup(mDatabase, chileName, parent);
-            if (!string.IsNullOrEmpty(chileName))
-            {
-                if (mCurrentSelectTreeItem != null && mCurrentSelectTreeItem is TagGroupViewModel)
-                {
-                    (mCurrentSelectTreeItem as TagGroupViewModel).Children.Add(new TagGroupViewModel() { mName = chileName, Parent = (mCurrentSelectTreeItem as TagGroupViewModel), Database = this.mDatabase });
-                }
-                else
-                {
-                    this.TagGroup.Add(new TagGroupViewModel() { Name = chileName, Database = this.mDatabase });
-                }
-            }
-            return false;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="parent"></param>
+        ///// <returns></returns>
+        //public bool AddGroup(string parent)
+        //{
+        //    string chileName = GetNewGroupName();
+        //    chileName = DevelopServiceHelper.Helper.AddTagGroup(mDatabase, chileName, parent);
+        //    if (!string.IsNullOrEmpty(chileName))
+        //    {
+        //        if (mCurrentSelectTreeItem != null && mCurrentSelectTreeItem is TagGroupViewModel)
+        //        {
+        //            (mCurrentSelectTreeItem as TagGroupViewModel).Children.Add(new TagGroupViewModel() { mName = chileName, Parent = (mCurrentSelectTreeItem as TagGroupViewModel), Database = this.mDatabase });
+        //        }
+        //        else
+        //        {
+        //            this.TagGroup.Add(new TagGroupViewModel() { mName = chileName, Database = this.mDatabase });
+        //        }
+        //    }
+        //    return false;
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        private void NewGroup()
-        {
-            string sparent = mCurrentSelectTreeItem!=null && mCurrentSelectTreeItem is TagGroupViewModel? (mCurrentSelectTreeItem as TagGroupViewModel).FullName:string.Empty;
-            AddGroup(sparent);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //private void NewGroup()
+        //{
+        //    string sparent = mCurrentSelectTreeItem!=null && mCurrentSelectTreeItem is TagGroupViewModel? (mCurrentSelectTreeItem as TagGroupViewModel).FullName:string.Empty;
+        //    AddGroup(sparent);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        private string GetNewGroupName()
-        {
-            List<string> vtmps = mCurrentSelectTreeItem!=null && mCurrentSelectTreeItem is TagGroupViewModel? (mCurrentSelectTreeItem as TagGroupViewModel).Children.Select(e => e.Name).ToList():TagGroup.Select(e=>e.Name).ToList();
-            string tagName = "group";
-            for (int i = 1; i < int.MaxValue; i++)
-            {
-                tagName = "group" + i;
-                if (!vtmps.Contains(tagName))
-                {
-                    return tagName;
-                }
-            }
-            return tagName;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <returns></returns>
+        //private string GetNewGroupName()
+        //{
+        //    List<string> vtmps = mCurrentSelectTreeItem!=null && mCurrentSelectTreeItem is TagGroupViewModel? (mCurrentSelectTreeItem as TagGroupViewModel).Children.Select(e => e.Name).ToList():TagGroup.Select(e=>e.Name).ToList();
+        //    string tagName = "group";
+        //    for (int i = 1; i < int.MaxValue; i++)
+        //    {
+        //        tagName = "group" + i;
+        //        if (!vtmps.Contains(tagName))
+        //        {
+        //            return tagName;
+        //        }
+        //    }
+        //    return tagName;
+        //}
 
         ///// <summary>
         ///// 
@@ -501,13 +556,56 @@ namespace DBInStudio.Desktop
                 {
                     ContentViewModel = new PermissionDetailViewModel() { Database = this.mDatabase };
                 }
-                 (ContentViewModel as PermissionDetailViewModel).Query();
+                (ContentViewModel as PermissionDetailViewModel).Query();
             }
             else
             {
                 ContentViewModel = null;
             }
             
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void BeginShowNotify()
+        {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+
+                NotifyVisiblity = Visibility.Visible;
+            }));
+            
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="val"></param>
+        public void ShowNotifyValue(double val)
+        {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                if (val > 100)
+                {
+                    ProcessNotify = 100;
+                }
+                else
+                {
+                    ProcessNotify = val;
+                }
+            }));
+            
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void EndShowNotify()
+        {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                NotifyVisiblity = Visibility.Hidden;
+                ProcessNotify = 0;
+            }));
+           
         }
 
         ///// <summary>
@@ -518,7 +616,7 @@ namespace DBInStudio.Desktop
         //    Application.Current.Dispatcher.Invoke(() => {
         //        mSelectGroupTags.Clear();
         //    });
-            
+
         //    var vv = DevelopServiceHelper.Helper.QueryTagByGroup(mDatabase, SelectGroup);
         //    if (vv != null)
         //    {
@@ -528,7 +626,7 @@ namespace DBInStudio.Desktop
         //                TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2);
         //                mSelectGroupTags.Add(model);
         //            }));
-                    
+
         //        }
         //    }
         //}
@@ -540,9 +638,34 @@ namespace DBInStudio.Desktop
         #endregion ...Interfaces...
     }
 
-    public interface ITagGroupAdd
+    ///// <summary>
+    ///// 
+    ///// </summary>
+    //public interface ITagGroupAdd
+    //{
+    //    bool AddGroup(string parent);
+    //}
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public interface IProcessNotify
     {
-        bool AddGroup(string parent);
+        /// <summary>
+        /// 
+        /// </summary>
+        void BeginShowNotify();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="val"></param>
+        void ShowNotifyValue(double val);
+        /// <summary>
+        /// 
+        /// </summary>
+        void EndShowNotify();
     }
+
 
 }

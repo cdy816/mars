@@ -28,7 +28,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public string Group { get; set; }
+        public string Group { get; set; } = "";
 
         /// <summary>
         /// 超级用户

@@ -32,5 +32,27 @@ namespace DBInStudio.Desktop
         {
             (this.DataContext as MainViewModel).CurrentSelectGroup = tv.SelectedItem as TreeItemViewModel;
         }
+
+        private void TextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key == Key.Enter)
+            {
+                (sender as TextBox).GetBindingExpression(TextBox.TextProperty).UpdateSource();
+            }
+        }
+
+        private void TextBox_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+           if((sender as TextBox).IsVisible)
+            {
+                (sender as TextBox).Focus();
+                (sender as TextBox).SelectAll();
+            }
+        }
+
+        private void TextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            (sender as TextBox).GetBindingExpression(TextBox.TextProperty).UpdateSource();
+        }
     }
 }

@@ -95,6 +95,7 @@ namespace Cdy.Tag
 
                         string fullName = vv.Attribute("FullName").Value;
 
+
                         if(!groups.ContainsKey(fullName))
                         {
                             groups.Add(fullName, group);

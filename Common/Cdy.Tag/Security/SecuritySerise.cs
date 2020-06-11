@@ -69,14 +69,14 @@ namespace Cdy.Tag
                 db.Name = xe.Attribute("Name").Value;
                 db.Version = xe.Attribute("Version").Value;
                 
-                if (xe.Element("User") != null)
+                if (xe.Element("UserDocument") != null)
                 {
-                    db.User = LoadUsers(xe.Element("User"));
+                    db.User = LoadUsers(xe.Element("UserDocument"));
                 }
 
-                if (xe.Element("Permissions") != null)
+                if (xe.Element("Permission") != null)
                 {
-                    db.Permission = LoadPermission(xe.Element("Permissions"));
+                    db.Permission = LoadPermission(xe.Element("Permission"));
                 }
             }
             this.Document = db;
@@ -98,7 +98,7 @@ namespace Cdy.Tag
                 foreach(var vv in element.Element("Users").Elements())
                 {
                     var user = LoadUserItem(vv);
-                    if(re.Users.ContainsKey(user.Name))
+                    if(!re.Users.ContainsKey(user.Name))
                     {
                         re.Users.Add(user.Name, user);
                     }

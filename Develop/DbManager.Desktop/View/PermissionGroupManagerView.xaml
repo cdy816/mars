@@ -1,0 +1,23 @@
+﻿<UserControl x:Class="DBInStudio.Desktop.View.PermissionGroupManagerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:DBInStudio.Desktop"
+             mc:Ignorable="d" Height="436" Width="716"  >
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <ListBox Grid.Row="1" Margin="9,6,0,12" HorizontalAlignment="Left" Width="300"/>
+        <ListBox Grid.Row="1" Margin="408,6,0,12" HorizontalAlignment="Left" Width="300"/>
+        <Button Content="&lt;" Command="{Binding AddCommand}" HorizontalAlignment="Left" Margin="323,104,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top"/>
+        <Button Content="&lt;&lt;" Command="{Binding AddAllCommand}" HorizontalAlignment="Left" Margin="323,146,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top" />
+        <Button Content="&gt;" Command="{Binding RemoveCommand}" HorizontalAlignment="Left" Margin="323,186,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top"/>
+        <Button Content="&gt;&gt;" Command="{Binding RemoveAllCommand}" HorizontalAlignment="Left" Margin="323,221,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top"/>
+        <Label Content="{local:ResMarker SelectGroup}" HorizontalAlignment="Left" Margin="11,0,0,0" VerticalAlignment="Center"/>
+        <Label Content="{local:ResMarker AllGroup}" HorizontalAlignment="Left" Margin="410,0,0,0" VerticalAlignment="Center"/>
+
+    </Grid>
+</UserControl>

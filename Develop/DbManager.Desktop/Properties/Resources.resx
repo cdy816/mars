@@ -126,6 +126,9 @@
   <data name="AddTagFail" xml:space="preserve">
     <value>Add tag {0} failed!</value>
   </data>
+  <data name="AllGroup" xml:space="preserve">
+    <value>All group</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
@@ -275,6 +278,9 @@
   <data name="SelectDatabase" xml:space="preserve">
     <value>Select a database</value>
     <comment>List database View head</comment>
+  </data>
+  <data name="SelectGroup" xml:space="preserve">
+    <value>Selected group</value>
   </data>
   <data name="ServerIp" xml:space="preserve">
     <value>Server Ip</value>

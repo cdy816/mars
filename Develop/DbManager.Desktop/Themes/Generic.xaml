@@ -34,6 +34,9 @@
         <view:UserGroupDetailView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type viewmodel:PermissionGroupManagerViewModel}">
+        <view:PermissionDetailView />
+    </DataTemplate>
 
     <DataTemplate DataType="{x:Type viewmodel:PermissionDetailViewModel}">
         <view:PermissionDetailView />

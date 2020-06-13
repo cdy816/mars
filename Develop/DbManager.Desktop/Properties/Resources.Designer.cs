@@ -88,6 +88,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 All group 的本地化字符串。
+        /// </summary>
+        internal static string AllGroup {
+            get {
+                return ResourceManager.GetString("AllGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Cancel 的本地化字符串。
         /// </summary>
         internal static string Cancel {
@@ -525,6 +534,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string SelectDatabase {
             get {
                 return ResourceManager.GetString("SelectDatabase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Selected group 的本地化字符串。
+        /// </summary>
+        internal static string SelectGroup {
+            get {
+                return ResourceManager.GetString("SelectGroup", resourceCulture);
             }
         }
         

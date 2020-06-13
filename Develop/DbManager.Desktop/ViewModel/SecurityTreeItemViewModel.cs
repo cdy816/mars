@@ -131,7 +131,20 @@ namespace DBInStudio.Desktop
 
         #region ... Methods    ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public override bool CanRemove()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override bool CanAddChild()
         {
             return false;
         }

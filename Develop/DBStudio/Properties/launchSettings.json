@@ -1,8 +1,7 @@
 {
   "profiles": {
     "DBInStudioServer": {
-      "commandName": "Executable",
-      "executablePath": "D:\\Project\\Galaxy\\Output\\DBInStudioServer.exe"
+      "commandName": "Project"
     }
   }
 }

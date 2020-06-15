@@ -1,7 +1,8 @@
 {
   "profiles": {
     "DBInStudioServer": {
-      "commandName": "Project"
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\cdy81\\source\\repos\\mars\\Output\\DBInStudioServer.exe"
     }
   }
 }

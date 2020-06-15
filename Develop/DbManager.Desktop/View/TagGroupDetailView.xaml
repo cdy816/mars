@@ -295,5 +295,9 @@
             <Button Content="{local:ResMarker Import}" Command="{Binding ImportCommand}" Width="60" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" />
             <Button Content="{local:ResMarker Export}" Command="{Binding ExportCommand}" Width="60" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" />
         </StackPanel>
+        <StackPanel Orientation="Horizontal" Grid.Column="1" Height="32" HorizontalAlignment="Right" VerticalAlignment="Bottom" >
+            <Label Content="{local:ResMarker TagCount,:}" />
+            <Label Content="{Binding TagCount}" />
+        </StackPanel>
     </Grid>
 </UserControl>

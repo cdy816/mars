@@ -45,14 +45,26 @@ namespace DBInStudio.Desktop
         {
            if((sender as TextBox).IsVisible)
             {
-                (sender as TextBox).Focus();
                 (sender as TextBox).SelectAll();
+                (sender as TextBox).Focus();
+                
             }
         }
 
         private void TextBox_LostFocus(object sender, RoutedEventArgs e)
         {
             (sender as TextBox).GetBindingExpression(TextBox.TextProperty).UpdateSource();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TextBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            (sender as TextBox).SelectAll();
+            (sender as TextBox).Focus();
         }
     }
 }

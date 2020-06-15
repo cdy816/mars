@@ -239,6 +239,25 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="id"></param>
+        /// <param name="tag"></param>
+        public void UpdateById(int id,Tagbase tag)
+        {
+            if(Tags.ContainsKey(id))
+            {
+                string sname = Tags[id].FullName;
+                if (sname != tag.FullName)
+                {
+                    NamedTags.Remove(sname);
+                    NamedTags.Add(tag.FullName, tag);
+                }
+                Tags[id] = tag;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="sname"></param>
         /// <param name="tag"></param>
         public void Update(string sname,Tagbase tag)
@@ -316,6 +335,10 @@ namespace Cdy.Tag
             {
                 var tag = Tags[id];
                 Tags.Remove(id);
+                if(NamedTags.ContainsKey(tag.FullName))
+                {
+                    NamedTags.Remove(tag.FullName);
+                }
                 if(Groups.ContainsKey(tag.Group))
                 {
                     var tgs = Groups[tag.Group].Tags;
@@ -326,6 +349,18 @@ namespace Cdy.Tag
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool RemoveWithoutGroupProcess(Tagbase tag)
+        {
+            Tags.Remove(tag.Id);
+            NamedTags.Remove(tag.FullName);
+            return true;
         }
 
 
@@ -402,6 +437,16 @@ namespace Cdy.Tag
         public List<TagGroup> GetGroups(TagGroup parent)
         {
             return Groups.Values.Where(e => e.Parent == parent).ToList();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="groupName"></param>
+        /// <returns></returns>
+        public TagGroup GetGroup(string groupName)
+        {
+            return Groups.ContainsKey(groupName) ? Groups[groupName] : null;
         }
 
         /// <summary>

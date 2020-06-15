@@ -64,7 +64,7 @@ namespace Cdy.Tag
         /// <param name="timerVals"></param>
         /// <param name="usedIndex"></param>
         /// <returns></returns>
-        protected new byte[] CompressTimers(List<ushort> timerVals, Queue<int> usedIndex)
+        protected  byte[] CompressTimers(List<ushort> timerVals, Queue<int> usedIndex)
         {
             int preids = timerVals[0];
             int ig = -1;
@@ -122,7 +122,7 @@ namespace Cdy.Tag
         /// <param name="totalcount"></param>
         /// <param name="usedIndex"></param>
         /// <returns></returns>
-        protected new Memory<byte> CompressQulitys(MarshalMemoryBlock source, long offset, int totalcount, Queue<int> usedIndex)
+        protected  Memory<byte> CompressQulitys(MarshalMemoryBlock source, long offset, int totalcount, Queue<int> usedIndex)
         {
             int count = 1;
             byte qus = source.ReadByte(offset);

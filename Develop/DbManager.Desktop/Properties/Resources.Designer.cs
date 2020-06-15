@@ -97,6 +97,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Append 的本地化字符串。
+        /// </summary>
+        internal static string Append {
+            get {
+                return ResourceManager.GetString("Append", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Cancel 的本地化字符串。
         /// </summary>
         internal static string Cancel {
@@ -246,6 +255,24 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Import {
             get {
                 return ResourceManager.GetString("Import", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Some erro has happened,do you see erro.txt for detail? 的本地化字符串。
+        /// </summary>
+        internal static string ImportErroMsg {
+            get {
+                return ResourceManager.GetString("ImportErroMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Import mode 的本地化字符串。
+        /// </summary>
+        internal static string ImportMode {
+            get {
+                return ResourceManager.GetString("ImportMode", resourceCulture);
             }
         }
         
@@ -493,6 +520,24 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Replace 的本地化字符串。
+        /// </summary>
+        internal static string Replace {
+            get {
+                return ResourceManager.GetString("Replace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Replace all 的本地化字符串。
+        /// </summary>
+        internal static string ReplaceAll {
+            get {
+                return ResourceManager.GetString("ReplaceAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Save 的本地化字符串。
         /// </summary>
         internal static string Save {
@@ -579,6 +624,24 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Tag {
             get {
                 return ResourceManager.GetString("Tag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 TagCount 的本地化字符串。
+        /// </summary>
+        internal static string TagCount {
+            get {
+                return ResourceManager.GetString("TagCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Tag export complete! 的本地化字符串。
+        /// </summary>
+        internal static string TagExportComplete {
+            get {
+                return ResourceManager.GetString("TagExportComplete", resourceCulture);
             }
         }
         

@@ -129,6 +129,9 @@
   <data name="AllGroup" xml:space="preserve">
     <value>All group</value>
   </data>
+  <data name="Append" xml:space="preserve">
+    <value>Append</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
@@ -180,6 +183,12 @@
   </data>
   <data name="Import" xml:space="preserve">
     <value>Import</value>
+  </data>
+  <data name="ImportErroMsg" xml:space="preserve">
+    <value>Some erro has happened,do you see erro.txt for detail?</value>
+  </data>
+  <data name="ImportMode" xml:space="preserve">
+    <value>Import mode</value>
   </data>
   <data name="Link" xml:space="preserve">
     <value>Link</value>
@@ -263,6 +272,12 @@
   <data name="ReName" xml:space="preserve">
     <value>ReName</value>
   </data>
+  <data name="Replace" xml:space="preserve">
+    <value>Replace</value>
+  </data>
+  <data name="ReplaceAll" xml:space="preserve">
+    <value>Replace all</value>
+  </data>
   <data name="Save" xml:space="preserve">
     <value>Save</value>
   </data>
@@ -293,6 +308,12 @@
   </data>
   <data name="Tag" xml:space="preserve">
     <value>Tag</value>
+  </data>
+  <data name="TagCount" xml:space="preserve">
+    <value>TagCount</value>
+  </data>
+  <data name="TagExportComplete" xml:space="preserve">
+    <value>Tag export complete!</value>
   </data>
   <data name="TagGroup" xml:space="preserve">
     <value>TagGroup</value>

@@ -20,6 +20,7 @@ using DBDevelopClientApi;
 using Microsoft.Win32;
 using System.IO;
 using Cdy.Tag;
+using System.Diagnostics;
 
 namespace DBInStudio.Desktop
 {
@@ -62,6 +63,8 @@ namespace DBInStudio.Desktop
 
         private Visibility mNotifyVisiblity = Visibility.Hidden;
 
+        private string mUserName;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -84,6 +87,58 @@ namespace DBInStudio.Desktop
         /// <summary>
             /// 
             /// </summary>
+        public string MainwindowTitle
+        {
+            get
+            {
+                return string.IsNullOrEmpty(Database) ? Res.Get("MainwindowTitle"): Res.Get("MainwindowTitle")+"--"+this.Database;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Database
+        {
+            get
+            {
+                return mDatabase;
+            }
+            set
+            {
+                if (mDatabase != value)
+                {
+                    mDatabase = value;
+                    OnPropertyChanged("Database");
+                }
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public string UserName
+        {
+            get
+            {
+                return mUserName;
+            }
+            set
+            {
+                if (mUserName != value)
+                {
+                    mUserName = value;
+                    OnPropertyChanged("UserName");
+                }
+            }
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         public Visibility NotifyVisiblity
         {
             get
@@ -194,9 +249,6 @@ namespace DBInStudio.Desktop
             }
         }
 
-
-
-
         /// <summary>
         /// 
         /// </summary>
@@ -207,9 +259,6 @@ namespace DBInStudio.Desktop
                 return mTagGroup;
             }
         }
-
-
-
 
 
         /// <summary>
@@ -348,25 +397,71 @@ namespace DBInStudio.Desktop
                 }
                 stream.Close();
             }
+
+            int mode = 0;
+            var mm = new ImportModeSelectViewModel();
+            if (mm.ShowDialog().Value)
+            {
+                mode = mm.Mode;
+            }
+            else
+            {
+                return;
+            }
+
+            StringBuilder sb = new StringBuilder();
+
             Task.Run(() => {
                 BeginShowNotify();
                 int id;
                 int icount = 0;
                 int tcount = ltmp.Count;
-               
+
+                //删除所有，重新添加
+                if (mode == 1)
+                {
+                    DevelopServiceHelper.Helper.ClearTagAll(this.mDatabase);
+                }
+
+                bool haserro = false;
                 foreach (var vv in ltmp)
                 {
-                    if (!DevelopServiceHelper.Helper.AddTag(this.mDatabase, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(vv.RealTagMode, vv.HisTagMode), out id))
+                    //更新数据
+                    if (!DevelopServiceHelper.Helper.Import(this.mDatabase, new Tuple<Tagbase, HisTag>(vv.RealTagMode, vv.HisTagMode), mode, out id))
                     {
-                        MessageBox.Show(string.Format(Res.Get("UpdateTagFail"), vv.RealTagMode.Name), Res.Get("erro"), MessageBoxButton.OK, MessageBoxImage.Error);
-                        break;
+                        sb.AppendLine(string.Format(Res.Get("AddTagFail"), vv.RealTagMode.Name));
+                        haserro = true;
                     }
+                    else
+                    {
+                        vv.IsNew = false;
+                        vv.IsChanged = false;
+                    }
+
                     icount++;
-                    ShowNotifyValue((int)((icount * 1.0 / tcount) * 100));
+                    ServiceLocator.Locator.Resolve<IProcessNotify>().ShowNotifyValue(((icount * 1.0 / tcount) * 100));
                 }
+
+                if (haserro)
+                {
+                    string errofile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(ofd.FileName), "erro.txt");
+                    System.IO.File.WriteAllText(errofile, sb.ToString());
+                    if (MessageBox.Show(Res.Get("ImportErroMsg"), "", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+                    {
+                        try
+                        {
+                            Process.Start(Path.GetDirectoryName(errofile));
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                }
+
                 Application.Current.Dispatcher.BeginInvoke(new Action(() => {
                     IsCanOperate = true;
-                    SelectContentModel();
+                    QueryGroups();
                     EndShowNotify();
                 }));
             });
@@ -388,15 +483,28 @@ namespace DBInStudio.Desktop
             {
 
                 var stream = new StreamWriter(File.Open(ofd.FileName, FileMode.OpenOrCreate, FileAccess.ReadWrite));
-                var res = DevelopServiceHelper.Helper.QueryAllTag(mDatabase);
-                foreach (var vv in res.Select(e=>new TagViewModel(e.Value.Item1,e.Value.Item2)))
-                {
-                    stream.WriteLine(vv.SaveToCSVString());
-                }
-                stream.Close();
+
+                Task.Run(() => {
+                    BeginShowNotify();
+                    DevelopServiceHelper.Helper.QueryAllTag(mDatabase,new Action<int, int, Dictionary<int, Tuple<Tagbase, HisTag>>>((idx,total,res)=> {
+                        foreach (var vv in res.Select(e => new TagViewModel(e.Value.Item1, e.Value.Item2)))
+                        {
+                            stream.WriteLine(vv.SaveToCSVString());
+                           
+                            ServiceLocator.Locator.Resolve<IProcessNotify>().ShowNotifyValue(((idx * 1.0 / total) * 100));
+                        }
+
+                    }));
+                    stream.Close();
+                    EndShowNotify();
+                    IsCanOperate = true;
+                    MessageBox.Show(Res.Get("TagExportComplete"));
+                });
+
+                
             }
 
-            IsCanOperate = true;
+          
         }
 
         
@@ -413,8 +521,9 @@ namespace DBInStudio.Desktop
                 if (ldm.ShowDialog().Value)
                 {
                     this.TagGroup.Clear();
-
-                    mDatabase = ldm.SelectDatabase.Name;
+                    UserName = login.UserName;
+                    Database = ldm.SelectDatabase.Name;
+                    OnPropertyChanged("MainwindowTitle");
                     var dbitem = new DatabaseViewModel() { Name = mDatabase,IsSelected=true,IsExpanded=true };
                     this.TagGroup.Add(dbitem);
                     dbitem.Children.Add(mRootTagGroupModel);

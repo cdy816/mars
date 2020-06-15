@@ -35,11 +35,16 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type viewmodel:PermissionGroupManagerViewModel}">
-        <view:PermissionDetailView />
+        <view:PermissionGroupManagerView />
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type viewmodel:PermissionDetailViewModel}">
         <view:PermissionDetailView />
+    </DataTemplate>
+
+
+    <DataTemplate DataType="{x:Type viewmodel:ImportModeSelectViewModel}">
+        <view:ImportModeSelectView />
     </DataTemplate>
 
     <BooleanToVisibilityConverter x:Key="bvc" />

@@ -124,11 +124,16 @@ namespace DBInStudio.Desktop.ViewModel
             mPermissions.Clear();
             foreach(var vv in pps)
             {
-                var pp = new PermissionItemViewModel(vv);
+                var pp = new PermissionItemViewModel(vv) { Parent = this };
                 mPermissions.Add(pp);
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         private string GetAvaiabelName(string name)
         {
             var names = this.Permissions.Select(e => e.Name).ToArray();
@@ -156,7 +161,7 @@ namespace DBInStudio.Desktop.ViewModel
             Cdy.Tag.UserPermission pitem = new Cdy.Tag.UserPermission() { Name = sname };
             if (DBDevelopClientApi.DevelopServiceHelper.Helper.UpdateDatabasePermission(this.Database, pitem))
             {
-                this.Permissions.Add(new PermissionItemViewModel(pitem) { IsNew = true });
+                this.Permissions.Add(new PermissionItemViewModel(pitem) { IsNew = true,Parent=this });
             }
         }
 
@@ -167,6 +172,7 @@ namespace DBInStudio.Desktop.ViewModel
         {
             if(DBDevelopClientApi.DevelopServiceHelper.Helper.RemoveDatabasePermission(this.Database,CurrentSelected.Name))
             {
+                CurrentSelected.Parent = null;
                 mPermissions.Remove(CurrentSelected);
             }
         }
@@ -233,8 +239,13 @@ namespace DBInStudio.Desktop.ViewModel
         #region ... Properties ...
 
         /// <summary>
-            /// 
-            /// </summary>
+        /// 
+        /// </summary>
+        public PermissionDetailViewModel Parent { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsNew
         {
             get
@@ -252,7 +263,9 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsNameReadOnly
         {
             get
@@ -261,6 +274,9 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsEnableEdit
         {
             get
@@ -280,7 +296,16 @@ namespace DBInStudio.Desktop.ViewModel
             {
                 if(mGroupEditCommand == null)
                 {
+                    mGroupEditCommand = new RelayCommand(() => {
+                        PermissionGroupManagerViewModel mm = new PermissionGroupManagerViewModel() { Database = Parent.Database };
+                        mm.Groups = Group;
+                        if(mm.ShowDialog().Value)
+                        {
+                            Group = mm.Groups;
+                        }
 
+                    });
+                   
                 }
                 return mGroupEditCommand;
             }
@@ -406,6 +431,7 @@ namespace DBInStudio.Desktop.ViewModel
                     Model.Group = value;
                 }
                 MakeGroupString();
+                OnPropertyChanged("GroupString");
                 OnPropertyChanged("Group");
             }
         }

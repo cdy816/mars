@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Text;
+using System.Windows;
 using System.Windows.Input;
 
 namespace DBInStudio.Desktop.ViewModel
@@ -134,8 +135,9 @@ namespace DBInStudio.Desktop.ViewModel
                 CheckLocalServerRun();
                 LoginUserId = DevelopServiceHelper.Helper.Login(Server, UserName, Password);
             }
-            catch
+            catch(Exception ex)
             {
+                MessageBox.Show(ex.Message);
                 return false;
             }
             return !string.IsNullOrEmpty(LoginUserId);

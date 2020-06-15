@@ -84,8 +84,8 @@
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <TextBox Margin="0,0" Padding="4,0" IsEnabled="{Binding IsEnableEdit}" MinWidth="100"  BorderThickness="0" Text="{Binding GroupString,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
-                                <Button Margin="10,0,0,0" Content="..." IsEnabled="{Binding IsEnableEdit}"  VerticalContentAlignment="Top" Command="{Binding GroupEditCommand}" />
+                                <TextBox Margin="0,0" Padding="4,0" IsEnabled="{Binding IsEnableEdit}" MinWidth="200"  BorderThickness="0" Text="{Binding GroupString,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                                <Button Margin="10,0,0,0" Content="..." IsEnabled="{Binding IsEnableEdit}"  MinWidth="40" VerticalAlignment="Center" VerticalContentAlignment="Top" Command="{Binding GroupEditCommand}" />
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>

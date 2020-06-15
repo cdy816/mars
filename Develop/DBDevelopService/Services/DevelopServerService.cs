@@ -610,24 +610,27 @@ namespace DBDevelopService
             var db = DbManager.Instance.GetDatabase(request.Database);
             if(db!=null)
             {
-                var vtg = db.RealDatabase.Groups.ContainsKey(request.ParentName) ? db.RealDatabase.Groups[request.ParentName] : null;
-
-                int i = 1;
-                while (db.RealDatabase.HasChildGroup(vtg, name))
+                lock (db)
                 {
-                    name = request.Name + i;
-                    i++;
+                    var vtg = db.RealDatabase.Groups.ContainsKey(request.ParentName) ? db.RealDatabase.Groups[request.ParentName] : null;
+
+                    int i = 1;
+                    while (db.RealDatabase.HasChildGroup(vtg, name))
+                    {
+                        name = request.Name + i;
+                        i++;
+                    }
+
+                    string ntmp = name;
+
+                    if (!string.IsNullOrEmpty(parentName))
+                    {
+                        name = parentName + "." + name;
+                    }
+
+                    db.RealDatabase.CheckAndAddGroup(name);
+                    return Task.FromResult(new AddGroupReplay() { Result = true, Group = ntmp });
                 }
-
-                string ntmp = name;
-
-                if (!string.IsNullOrEmpty(parentName))
-                {
-                    name = parentName + "." + name;
-                }
-
-                db.RealDatabase.CheckAndAddGroup(name);
-                return Task.FromResult(new AddGroupReplay() { Result = true,Group= ntmp });
             }
             return Task.FromResult(new AddGroupReplay() { Result = false,ErroMessage="database not exist!" });
         }
@@ -649,48 +652,53 @@ namespace DBDevelopService
             var db = DbManager.Instance.GetDatabase(request.Database);
             if (db != null)
             {
-                var tags = db.RealDatabase.GetTagsByGroup(request.GroupFullName);
-                var vtg = db.RealDatabase.Groups.ContainsKey(request.TargetParentName) ? db.RealDatabase.Groups[request.TargetParentName] : null;
-                
-                var vsg = db.RealDatabase.Groups.ContainsKey(request.GroupFullName) ? db.RealDatabase.Groups[request.GroupFullName] : null;
-
-                if(vtg==vsg)
+                lock (db)
                 {
-                    return Task.FromResult(new PasteGroupReplay() { Result = false });
-                }
+                    var tags = db.RealDatabase.GetTagsByGroup(request.GroupFullName);
+                    var vtg = db.RealDatabase.Groups.ContainsKey(request.TargetParentName) ? db.RealDatabase.Groups[request.TargetParentName] : null;
 
-                string sname = vsg.Name;
-                int i = 1;
-                while(db.RealDatabase.HasChildGroup(vtg, sname))
-                {
-                    sname = vsg.Name + i;
-                    i++;
-                }
+                    var vsg = db.RealDatabase.Groups.ContainsKey(request.GroupFullName) ? db.RealDatabase.Groups[request.GroupFullName] : null;
 
-                Cdy.Tag.TagGroup tgg = vsg != null ? new Cdy.Tag.TagGroup() { Name = sname, Parent = vtg } : null;
-
-                if(tgg==null) return Task.FromResult(new PasteGroupReplay() { Result = false });
-
-                tgg = db.RealDatabase.CheckAndAddGroup(tgg.FullName);
-
-                foreach (var vv in tags)
-                {
-                    var tmp = vv.Clone();
-                    tmp.Group = tgg.FullName;
-                    db.RealDatabase.Append(tmp);
-
-                    var vid = vv.Id;
-                    if(db.HisDatabase.HisTags.ContainsKey(vid))
+                    if (vtg == vsg)
                     {
-                        var vhis = db.HisDatabase.HisTags[vid].Clone();
-                        vhis.Id = tmp.Id;
-                        db.HisDatabase.AddHisTags(vhis);
+                        return Task.FromResult(new PasteGroupReplay() { Result = false });
                     }
+
+                    string sname = vsg.Name;
+                    int i = 1;
+                    while (db.RealDatabase.HasChildGroup(vtg, sname))
+                    {
+                        sname = vsg.Name + i;
+                        i++;
+                    }
+
+                    Cdy.Tag.TagGroup tgg = vsg != null ? new Cdy.Tag.TagGroup() { Name = sname, Parent = vtg } : null;
+
+                    if (tgg == null) return Task.FromResult(new PasteGroupReplay() { Result = false });
+
+                    tgg = db.RealDatabase.CheckAndAddGroup(tgg.FullName);
+
+                    foreach (var vv in tags)
+                    {
+                        var tmp = vv.Clone();
+                        tmp.Group = tgg.FullName;
+                        db.RealDatabase.Append(tmp);
+
+                        var vid = vv.Id;
+                        if (db.HisDatabase.HisTags.ContainsKey(vid))
+                        {
+                            var vhis = db.HisDatabase.HisTags[vid].Clone();
+                            vhis.Id = tmp.Id;
+                            db.HisDatabase.AddHisTags(vhis);
+                        }
+                    }
+                    return Task.FromResult(new PasteGroupReplay() { Result = true, Group = sname });
                 }
-                return Task.FromResult(new PasteGroupReplay() { Result = true,Group = sname });
             }
             return Task.FromResult(new PasteGroupReplay() { Result = false, ErroMessage = "database not exist!" });
         }
+
+
 
         /// <summary>
         /// 
@@ -707,8 +715,11 @@ namespace DBDevelopService
             var db = DbManager.Instance.GetDatabase(request.Database);
             if (db != null)
             {
-                var re = db.RealDatabase.ChangeGroupName(request.OldFullName, request.NewName);
-                return Task.FromResult(new BoolResultReplay() { Result = re });
+                lock (db)
+                {
+                    var re = db.RealDatabase.ChangeGroupName(request.OldFullName, request.NewName);
+                    return Task.FromResult(new BoolResultReplay() { Result = re });
+                }
             }
             return Task.FromResult(new BoolResultReplay() { Result = false, ErroMessage = "database not exist!" });
         }
@@ -729,7 +740,8 @@ namespace DBDevelopService
             var db = DbManager.Instance.GetDatabase(request.Database);
             if (db != null)
             {
-                db.RealDatabase.RemoveGroup(request.Name);
+                lock (db)
+                    db.RealDatabase.RemoveGroup(request.Name);
                 return Task.FromResult(new BoolResultReplay() { Result = true });
             }
             return Task.FromResult(new BoolResultReplay() { Result = false, ErroMessage = "database not exist!" });
@@ -750,7 +762,8 @@ namespace DBDevelopService
             var db = DbManager.Instance.GetDatabase(request.Database);
             if (db != null)
             {
-                db.RealDatabase.ChangeGroupParent(request.Name,request.OldParentName, request.NewParentName);
+                lock (db)
+                    db.RealDatabase.ChangeGroupParent(request.Name,request.OldParentName, request.NewParentName);
                 return Task.FromResult(new BoolResultReplay() { Result = true });
             }
             return Task.FromResult(new BoolResultReplay() { Result = false, ErroMessage = "database not exist!" });
@@ -770,11 +783,15 @@ namespace DBDevelopService
             }
             var db = DbManager.Instance.GetDatabase(request.Database);
             GetTagGroupMessageReply re = new GetTagGroupMessageReply() { Result = true };
-            if (db!=null && db.RealDatabase!=null && db.RealDatabase.Groups!=null)
+
+            if (db != null && db.RealDatabase != null && db.RealDatabase.Groups != null)
             {
-                foreach(var vv in db.RealDatabase.Groups)
+                lock (db)
                 {
-                    re.Group.Add(new TagGroup() { Name = vv.Key, Parent = vv.Value.Parent!=null? vv.Value.Parent.FullName:"" });
+                    foreach (var vv in db.RealDatabase.Groups)
+                    {
+                        re.Group.Add(new TagGroup() { Name = vv.Key, Parent = vv.Value.Parent != null ? vv.Value.Parent.FullName : "" });
+                    }
                 }
             }
             return Task.FromResult(re);
@@ -797,40 +814,43 @@ namespace DBDevelopService
             List<RealTagMessage> rre = new List<RealTagMessage>();
             List<HisTagMessage> re = new List<HisTagMessage>();
             int totalpage = 0;
+            int total = 0;
             if (db != null)
             {
-                
-                int from = request.Index * PageCount;
-                var res = db.RealDatabase.ListAllTags().Where(e => e.Group == request.Group);
-                var total = res.Count();
-
-                totalpage = total / PageCount;
-                totalpage = total % PageCount > 0 ? totalpage + 1 : totalpage;
-                int cc = 0;
-                foreach (var vv in res)
+                lock (db)
                 {
-                    if (cc >= from && cc < (from + PageCount))
-                    {
-                        rre.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
+                    int from = request.Index * PageCount;
+                    var res = db.RealDatabase.ListAllTags().Where(e => e.Group == request.Group);
+                    total = res.Count();
 
-                        if (db.HisDatabase.HisTags.ContainsKey(vv.Id))
+                    totalpage = total / PageCount;
+                    totalpage = total % PageCount > 0 ? totalpage + 1 : totalpage;
+                    int cc = 0;
+                    foreach (var vv in res)
+                    {
+                        if (cc >= from && cc < (from + PageCount))
                         {
-                            var vvv = db.HisDatabase.HisTags[vv.Id];
-                            var vitem = new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vvv.Type, TagType = (uint)vvv.TagType, CompressType = (uint)vvv.CompressType, Circle = (ulong)vvv.Circle };
-                            if (vvv.Parameters != null && vvv.Parameters.Count > 0)
+                            rre.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
+
+                            if (db.HisDatabase.HisTags.ContainsKey(vv.Id))
                             {
-                                foreach (var vvp in vvv.Parameters)
+                                var vvv = db.HisDatabase.HisTags[vv.Id];
+                                var vitem = new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vvv.Type, TagType = (uint)vvv.TagType, CompressType = (uint)vvv.CompressType, Circle = (ulong)vvv.Circle };
+                                if (vvv.Parameters != null && vvv.Parameters.Count > 0)
                                 {
-                                    vitem.Parameter.Add(new hisTagParameterItem() { Name = vvp.Key, Value = vvp.Value });
+                                    foreach (var vvp in vvv.Parameters)
+                                    {
+                                        vitem.Parameter.Add(new hisTagParameterItem() { Name = vvp.Key, Value = vvp.Value });
+                                    }
                                 }
+                                re.Add(vitem);
                             }
-                            re.Add(vitem);
                         }
+                        cc++;
                     }
-                    cc++;
                 }
             }
-            var msg = new GetTagMessageReply() { Result = true,Count= totalpage, Index=request.Index };
+            var msg = new GetTagMessageReply() { Result = true,Count= totalpage, Index=request.Index,TagCount=total };
             msg.RealTag.AddRange(rre);
             msg.HisTag.AddRange(re);
             return Task.FromResult(msg);
@@ -853,40 +873,44 @@ namespace DBDevelopService
             List<RealTagMessage> rre = new List<RealTagMessage>();
             List<HisTagMessage> re = new List<HisTagMessage>();
             int totalpage = 0;
+            int total = 0;
             if (db != null)
             {
-                int from = request.Index * PageCount;
-                var res = db.RealDatabase.ListAllTags();
-                var  total = res.Count();
-
-                totalpage = total / PageCount;
-                totalpage = total % PageCount > 0 ? totalpage + 1 : totalpage;
-                int cc = 0;
-
-                foreach (var vv in res)
+                lock (db)
                 {
-                    if (cc >= from && cc < (from + PageCount))
-                    {
-                        rre.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
+                    int from = request.Index * PageCount;
+                    var res = db.RealDatabase.ListAllTags();
+                    total = res.Count();
 
-                        if (db.HisDatabase.HisTags.ContainsKey(vv.Id))
+                    totalpage = total / PageCount;
+                    totalpage = total % PageCount > 0 ? totalpage + 1 : totalpage;
+                    int cc = 0;
+
+                    foreach (var vv in res)
+                    {
+                        if (cc >= from && cc < (from + PageCount))
                         {
-                            var vvv = db.HisDatabase.HisTags[vv.Id];
-                            var vitem = new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vvv.TagType, CompressType = (uint)vvv.CompressType, Circle = (ulong)vvv.Circle };
-                            if (vvv.Parameters != null && vvv.Parameters.Count > 0)
+                            rre.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
+
+                            if (db.HisDatabase.HisTags.ContainsKey(vv.Id))
                             {
-                                foreach (var vvp in vvv.Parameters)
+                                var vvv = db.HisDatabase.HisTags[vv.Id];
+                                var vitem = new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vvv.TagType, CompressType = (uint)vvv.CompressType, Circle = (ulong)vvv.Circle };
+                                if (vvv.Parameters != null && vvv.Parameters.Count > 0)
                                 {
-                                    vitem.Parameter.Add(new hisTagParameterItem() { Name = vvp.Key, Value = vvp.Value });
+                                    foreach (var vvp in vvv.Parameters)
+                                    {
+                                        vitem.Parameter.Add(new hisTagParameterItem() { Name = vvp.Key, Value = vvp.Value });
+                                    }
                                 }
+                                re.Add(vitem);
                             }
-                            re.Add(vitem);
                         }
+                        cc++;
                     }
-                    cc++;
                 }
             }
-            var msg = new GetTagMessageReply() { Result = true, Count = totalpage, Index = request.Index };
+            var msg = new GetTagMessageReply() { Result = true, Count = totalpage, Index = request.Index,TagCount = total };
             msg.RealTag.AddRange(rre);
             msg.HisTag.AddRange(re);
             return Task.FromResult(msg);
@@ -908,18 +932,21 @@ namespace DBDevelopService
             List<HisTagMessage> re = new List<HisTagMessage>();
             if (db != null)
             {
-                foreach (var vv in db.HisDatabase.HisTags.Values)
+                lock (db)
                 {
-                    var vitem = new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType, Circle = (ulong)vv.Circle };
-                    if (vv.Parameters != null && vv.Parameters.Count > 0)
+                    foreach (var vv in db.HisDatabase.HisTags.Values)
                     {
-                        foreach (var vvv in vv.Parameters)
+                        var vitem = new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType, Circle = (ulong)vv.Circle };
+                        if (vv.Parameters != null && vv.Parameters.Count > 0)
                         {
-                            vitem.Parameter.Add(new hisTagParameterItem() { Name = vvv.Key, Value = vvv.Value });
+                            foreach (var vvv in vv.Parameters)
+                            {
+                                vitem.Parameter.Add(new hisTagParameterItem() { Name = vvv.Key, Value = vvv.Value });
+                            }
                         }
+                        re.Add(vitem);
+                        // re.Add(new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType});
                     }
-                    re.Add(vitem);
-                    // re.Add(new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType});
                 }
             }
             var msg = new GetHistTagMessageReply() { Result = true };
@@ -943,9 +970,12 @@ namespace DBDevelopService
             List<RealTagMessage> re = new List<RealTagMessage>();
             if (db != null)
             {
-                foreach (var vv in db.RealDatabase.ListAllTags())
+                lock (db)
                 {
-                    re.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name,  Desc = vv.Desc,Group = vv.Group,  LinkAddress = vv.LinkAddress,TagType=(uint)vv.Type,Convert=vv.Conveter!=null?vv.Conveter.SeriseToString():string.Empty,ReadWriteMode=(int)vv.ReadWriteType,MaxValue=(vv is Cdy.Tag.NumberTagBase)?(vv as Cdy.Tag.NumberTagBase).MaxValue:0,MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue:0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision:0 });
+                    foreach (var vv in db.RealDatabase.ListAllTags())
+                    {
+                        re.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
+                    }
                 }
             }
             var msg = new GetRealTagMessageReply() { Result = true };
@@ -959,7 +989,7 @@ namespace DBDevelopService
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public override Task<GetHistTagMessageReply> QueryHisTag(QueryMessage request, ServerCallContext context)
+        public override Task<GetHistTagMessageReply> QueryHisTag(QueryMessageRequest request, ServerCallContext context)
         {
             if (!CheckLoginId(request.LoginId))
             {
@@ -971,45 +1001,49 @@ namespace DBDevelopService
                 if(request.Conditions.Count==0)
                     return Task.FromResult(new GetHistTagMessageReply() { Result = true });
 
-                IEnumerable<Cdy.Tag.HisTag> htags= db.HisDatabase.HisTags.Values;
-                foreach(var vv in request.Conditions)
+                lock (db)
                 {
-                    switch (vv.Key.ToLower())
+                    IEnumerable<Cdy.Tag.HisTag> htags = db.HisDatabase.HisTags.Values;
+                    foreach (var vv in request.Conditions)
                     {
-                        case "id":
-                            htags = htags.Where(e => e.Id == int.Parse(vv.Value));
-                            break;
-                        case "tagtype":
-                            htags = htags.Where(e => e.TagType == (Cdy.Tag.TagType)int.Parse(vv.Value));
-                            break;
-                        case "type":
-                            htags = htags.Where(e => e.Type == (Cdy.Tag.RecordType)int.Parse(vv.Value));
-                            break;
-                        case "compresstype":
-                            htags = htags.Where(e => e.CompressType == int.Parse(vv.Value));
-                            break;
-                        case "circle":
-                            htags = htags.Where(e => e.Circle == long.Parse(vv.Value));
-                            break;
+                        switch (vv.Key.ToLower())
+                        {
+                            case "id":
+                                htags = htags.Where(e => e.Id == int.Parse(vv.Value));
+                                break;
+                            case "tagtype":
+                                htags = htags.Where(e => e.TagType == (Cdy.Tag.TagType)int.Parse(vv.Value));
+                                break;
+                            case "type":
+                                htags = htags.Where(e => e.Type == (Cdy.Tag.RecordType)int.Parse(vv.Value));
+                                break;
+                            case "compresstype":
+                                htags = htags.Where(e => e.CompressType == int.Parse(vv.Value));
+                                break;
+                            case "circle":
+                                htags = htags.Where(e => e.Circle == long.Parse(vv.Value));
+                                break;
+                        }
+
+                    }
+                    List<HisTagMessage> re = new List<HisTagMessage>();
+                    foreach (var vv in htags)
+                    {
+                        var vitem = new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType };
+                        if (vv.Parameters != null && vv.Parameters.Count > 0)
+                        {
+                            foreach (var vvv in vv.Parameters)
+                            {
+                                vitem.Parameter.Add(new hisTagParameterItem() { Name = vvv.Key, Value = vvv.Value });
+                            }
+                        }
+                        re.Add(vitem);
                     }
 
+                    var msg = new GetHistTagMessageReply() { Result = true };
+                    msg.Messages.AddRange(re);
+                    return Task.FromResult(msg);
                 }
-                List<HisTagMessage> re = new List<HisTagMessage>();
-                foreach (var vv in htags)
-                {
-                    var vitem = new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType };
-                    if(vv.Parameters!=null&&vv.Parameters.Count>0)
-                    {
-                        foreach(var vvv in vv.Parameters)
-                        {
-                            vitem.Parameter.Add(new hisTagParameterItem() { Name = vvv.Key, Value = vvv.Value });
-                        }
-                    }
-                    re.Add(vitem);
-                }
-                var msg = new GetHistTagMessageReply() { Result = true };
-                msg.Messages.AddRange(re);
-                return Task.FromResult(msg);
             }
             return Task.FromResult(new GetHistTagMessageReply() { Result = true });
         }
@@ -1020,7 +1054,7 @@ namespace DBDevelopService
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public override Task<GetRealTagMessageReply> QueryRealTag(QueryMessage request, ServerCallContext context)
+        public override Task<GetRealTagMessageReply> QueryRealTag(QueryMessageRequest request, ServerCallContext context)
         {
             if (!CheckLoginId(request.LoginId))
             {
@@ -1032,37 +1066,41 @@ namespace DBDevelopService
                 if (request.Conditions.Count == 0)
                     return Task.FromResult(new GetRealTagMessageReply() { Result = true });
 
-                IEnumerable<Cdy.Tag.Tagbase> htags = db.RealDatabase.Tags.Values;
-                foreach (var vv in request.Conditions)
+                lock (db)
                 {
-                    switch (vv.Key.ToLower())
+                    IEnumerable<Cdy.Tag.Tagbase> htags = db.RealDatabase.Tags.Values;
+                    foreach (var vv in request.Conditions)
                     {
-                        case "id":
-                            htags = htags.Where(e => e.Id == int.Parse(vv.Value));
-                            break;
-                        case "name":
-                            htags = htags.Where(e =>  e.Name.Contains(vv.Value));
-                            break;
-                        case "type":
-                            htags = htags.Where(e => e.Type == (Cdy.Tag.TagType)int.Parse(vv.Value));
-                            break;
-                        case "group":
-                            htags = htags.Where(e => e.Group.Contains(vv.Value));
-                            break;
-                        case "desc":
-                            htags = htags.Where(e => e.Desc.Contains(vv.Value));
-                            break;
+                        switch (vv.Key.ToLower())
+                        {
+                            case "id":
+                                htags = htags.Where(e => e.Id == int.Parse(vv.Value));
+                                break;
+                            case "name":
+                                htags = htags.Where(e => e.Name.Contains(vv.Value));
+                                break;
+                            case "type":
+                                htags = htags.Where(e => e.Type == (Cdy.Tag.TagType)int.Parse(vv.Value));
+                                break;
+                            case "group":
+                                htags = htags.Where(e => e.Group.Contains(vv.Value));
+                                break;
+                            case "desc":
+                                htags = htags.Where(e => e.Desc.Contains(vv.Value));
+                                break;
+                        }
                     }
-                }
 
-                List<RealTagMessage> re = new List<RealTagMessage>();
-                foreach (var vv in htags)
-                {
-                    re.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
+                    List<RealTagMessage> re = new List<RealTagMessage>();
+                    foreach (var vv in htags)
+                    {
+                        re.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
+                    }
+
+                    var msg = new GetRealTagMessageReply() { Result = true };
+                    msg.Messages.AddRange(re);
+                    return Task.FromResult(msg);
                 }
-                var msg = new GetRealTagMessageReply() { Result = true };
-                msg.Messages.AddRange(re);
-                return Task.FromResult(msg);
             }
             return Task.FromResult(new GetRealTagMessageReply() { Result = true });
         }
@@ -1074,19 +1112,86 @@ namespace DBDevelopService
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public override Task<BoolResultReplay> RemoveTag(RemoveTagMessage request, ServerCallContext context)
+        public override Task<BoolResultReplay> RemoveTag(RemoveTagMessageRequest request, ServerCallContext context)
         {
             if (!CheckLoginId(request.LoginId, PermissionDocument.DeletePermission))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
             var db = DbManager.Instance.GetDatabase(request.Database);
-            foreach(var vv in request.TagId)
+            if (db != null)
             {
-                db.HisDatabase.RemoveHisTag(vv);
-                db.RealDatabase.Remove(vv);
+
+                lock (db)
+                {
+                    foreach (var vv in request.TagId)
+                    {
+                        db.HisDatabase.RemoveHisTag(vv);
+                        db.RealDatabase.Remove(vv);
+                    }
+                }
+                return Task.FromResult(new BoolResultReplay() { Result = true });
             }
-            return Task.FromResult(new BoolResultReplay() { Result = true });
+            return Task.FromResult(new BoolResultReplay() { Result = false });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> ClearTag(ClearTagRequestMessage request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, PermissionDocument.DeletePermission))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                lock (db)
+                {
+                    foreach(var vv in db.RealDatabase.GetTagsByGroup(request.GroupFullName))
+                    {
+                        db.HisDatabase.RemoveHisTag(vv.Id);
+                        db.RealDatabase.RemoveWithoutGroupProcess(vv);
+                    }
+                    var grp = db.RealDatabase.GetGroup(request.GroupFullName);
+                    if (grp != null)
+                        grp.Tags.Clear();
+                }
+                return Task.FromResult(new BoolResultReplay() { Result = true });
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = false });
+        }
+
+        /// <summary>
+        /// 清空所有变量
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> ClearAllTag(GetRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, PermissionDocument.DeletePermission))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                lock (db)
+                {
+                    db.HisDatabase.HisTags.Clear();
+                    db.RealDatabase.Tags.Clear();
+                    db.RealDatabase.NamedTags.Clear();
+                    db.RealDatabase.Groups.Clear();
+                }
+                return Task.FromResult(new BoolResultReplay() { Result = true });
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = false });
         }
 
         /// <summary>
@@ -1095,16 +1200,22 @@ namespace DBDevelopService
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public override Task<BoolResultReplay> RemoveHisTag(RemoveTagMessage request, ServerCallContext context)
+        public override Task<BoolResultReplay> RemoveHisTag(RemoveTagMessageRequest request, ServerCallContext context)
         {
             if (!CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
             var db = DbManager.Instance.GetDatabase(request.Database);
-            foreach (var vv in request.TagId)
+            if (db != null)
             {
-                db.HisDatabase.RemoveHisTag(vv);
+                lock (db)
+                {
+                    foreach (var vv in request.TagId)
+                    {
+                        db.HisDatabase.RemoveHisTag(vv);
+                    }
+                }
             }
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
@@ -1126,22 +1237,27 @@ namespace DBDevelopService
                 }
                 var db = DbManager.Instance.GetDatabase(request.Database);
                 var vtag = request.Tag;
-                //if (db.HisDatabase.HisTags.ContainsKey(vtag.Id))
+                if (db != null)
                 {
-                    Cdy.Tag.HisTag hisTag = new Cdy.Tag.HisTag();
-                    hisTag.Id = (int)vtag.Id;
-                    hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
-                    hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
-                    hisTag.CompressType = (int)(vtag.CompressType);
-                    hisTag.Parameters = new Dictionary<string, double>();
-                    if (vtag.Parameter != null)
+                    lock (db)
                     {
-                        foreach (var vv in vtag.Parameter)
                         {
-                            hisTag.Parameters.Add(vv.Name, vv.Value);
+                            Cdy.Tag.HisTag hisTag = new Cdy.Tag.HisTag();
+                            hisTag.Id = (int)vtag.Id;
+                            hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
+                            hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
+                            hisTag.CompressType = (int)(vtag.CompressType);
+                            hisTag.Parameters = new Dictionary<string, double>();
+                            if (vtag.Parameter != null)
+                            {
+                                foreach (var vv in vtag.Parameter)
+                                {
+                                    hisTag.Parameters.Add(vv.Name, vv.Value);
+                                }
+                            }
+                            db.HisDatabase.AddOrUpdate(hisTag);
                         }
                     }
-                    db.HisDatabase.AddOrUpdate(hisTag);
                 }
                 return Task.FromResult(new BoolResultReplay() { Result = true });
             }
@@ -1168,16 +1284,28 @@ namespace DBDevelopService
                 }
                 var tag = GetRealTag(request.Tag);
                 var db = DbManager.Instance.GetDatabase(request.Database);
-                if (db.RealDatabase.NamedTags.ContainsKey(tag.FullName))
+
+                if (db != null)
                 {
-                    db.RealDatabase.Update(tag.FullName, tag);
-                    return Task.FromResult(new BoolResultReplay() { Result = true });
+                    lock (db)
+                    {
+                        if (db.RealDatabase.Tags.ContainsKey(tag.Id) && tag.Id > -1)
+                        {
+                            db.RealDatabase.UpdateById(tag.Id, tag);
+                            return Task.FromResult(new BoolResultReplay() { Result = true });
+                        }
+                        else if (db.RealDatabase.NamedTags.ContainsKey(tag.FullName))
+                        {
+                            db.RealDatabase.Update(tag.FullName, tag);
+                            return Task.FromResult(new BoolResultReplay() { Result = true });
+                        }
+                        else
+                        {
+                            return Task.FromResult(new BoolResultReplay() { Result = false, ErroMessage = "Tag not exist" });
+                        }
+                    }
                 }
-                else
-                {
-                    return Task.FromResult(new BoolResultReplay() { Result = false,ErroMessage="Tag not exist" });
-                }
-               
+                return Task.FromResult(new BoolResultReplay() { Result = false });
             }
             catch(Exception ex)
             {
@@ -1276,42 +1404,181 @@ namespace DBDevelopService
                 }
                 var db = DbManager.Instance.GetDatabase(request.Database);
 
-                Cdy.Tag.Tagbase tag = GetRealTag(request.RealTag);
-
-                if (tag.Id < 0)
+                if (db != null)
                 {
-                    db.RealDatabase.Append(tag);
-                }
-                else
-                {
-                    db.RealDatabase.AddOrUpdate(tag);
-                }
-
-                var vtag = request.HisTag;
-                if (vtag.Id != uint.MaxValue)
-                {
-                    Cdy.Tag.HisTag hisTag = new Cdy.Tag.HisTag();
-                    hisTag.Id = (int)vtag.Id;
-                    hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
-                    hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
-                    hisTag.CompressType = (int)(vtag.CompressType);
-
-                    hisTag.Parameters = new Dictionary<string, double>();
-                    if (vtag.Parameter != null)
+                    lock (db)
                     {
-                        foreach (var vv in vtag.Parameter)
-                        {
-                            hisTag.Parameters.Add(vv.Name, vv.Value);
-                        }
-                    }
+                        Cdy.Tag.Tagbase tag = GetRealTag(request.RealTag);
 
-                    db.HisDatabase.AddOrUpdate(hisTag);
+                        if (tag.Id < 0)
+                        {
+                            db.RealDatabase.Append(tag);
+                        }
+                        else
+                        {
+                            db.RealDatabase.AddOrUpdate(tag);
+                        }
+
+                        var vtag = request.HisTag;
+                        if (vtag.Id != uint.MaxValue)
+                        {
+                            Cdy.Tag.HisTag hisTag = new Cdy.Tag.HisTag();
+                            hisTag.Id = (int)vtag.Id;
+                            hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
+                            hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
+                            hisTag.CompressType = (int)(vtag.CompressType);
+
+                            hisTag.Parameters = new Dictionary<string, double>();
+                            if (vtag.Parameter != null)
+                            {
+                                foreach (var vv in vtag.Parameter)
+                                {
+                                    hisTag.Parameters.Add(vv.Name, vv.Value);
+                                }
+                            }
+
+                            db.HisDatabase.AddOrUpdate(hisTag);
+                        }
+                        return Task.FromResult(new AddTagReplyMessage() { Result = true, TagId = tag.Id });
+                    }
                 }
-                return Task.FromResult(new AddTagReplyMessage() { Result = true, TagId = tag.Id });
+                return Task.FromResult(new AddTagReplyMessage() { Result = false });
             }
             catch(Exception ex)
             {
                 return Task.FromResult(new AddTagReplyMessage() { Result = false, ErroMessage=ex.Message });
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<ImportTagRequestReplyMessage> Import(ImportTagRequestMessage request, ServerCallContext context)
+        {
+            try
+            {
+                if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+                {
+                    return Task.FromResult(new ImportTagRequestReplyMessage() { Result = false });
+                }
+                var db = DbManager.Instance.GetDatabase(request.Database);
+
+                if (db != null)
+                {
+                    lock (db)
+                    {
+                        Cdy.Tag.Tagbase tag = GetRealTag(request.RealTag);
+
+                        if(request.Mode ==0)
+                        {
+                            //修改模式
+                            if (db.RealDatabase.NamedTags.ContainsKey(tag.FullName))
+                            {
+                                var vid = db.RealDatabase.NamedTags[tag.FullName].Id;
+                                if(vid == tag.Id)
+                                {
+                                    db.RealDatabase.UpdateById(tag.Id, tag);
+                                }
+                                else
+                                {
+                                    tag.Id = vid;
+                                    db.RealDatabase.UpdateById(tag.Id, tag);
+                                }
+                            }
+                            else
+                            {
+                                db.RealDatabase.Append(tag);
+                            }
+                            
+                            var vtag = request.HisTag;
+                            if (vtag.Id != uint.MaxValue)
+                            {
+                                Cdy.Tag.HisTag hisTag = new Cdy.Tag.HisTag();
+                                hisTag.Id = (int)vtag.Id;
+                                hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
+                                hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
+                                hisTag.CompressType = (int)(vtag.CompressType);
+
+                                hisTag.Parameters = new Dictionary<string, double>();
+                                if (vtag.Parameter != null)
+                                {
+                                    foreach (var vv in vtag.Parameter)
+                                    {
+                                        hisTag.Parameters.Add(vv.Name, vv.Value);
+                                    }
+                                }
+
+                                db.HisDatabase.AddOrUpdate(hisTag);
+                            }
+                        }
+                        else if(request.Mode==1)
+                        {
+                            db.RealDatabase.Add(tag);
+
+                            var vtag = request.HisTag;
+                            Cdy.Tag.HisTag hisTag = new Cdy.Tag.HisTag();
+                            hisTag.Id = (int)vtag.Id;
+                            hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
+                            hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
+                            hisTag.CompressType = (int)(vtag.CompressType);
+
+                            hisTag.Parameters = new Dictionary<string, double>();
+                            if (vtag.Parameter != null)
+                            {
+                                foreach (var vv in vtag.Parameter)
+                                {
+                                    hisTag.Parameters.Add(vv.Name, vv.Value);
+                                }
+                            }
+
+                            db.HisDatabase.AddOrUpdate(hisTag);
+                        }
+                        else
+                        {
+                            //直接添加
+
+                            if(db.RealDatabase.NamedTags.ContainsKey(tag.FullName))
+                            {
+                                return Task.FromResult(new ImportTagRequestReplyMessage() { Result = false,ErroMessage="名称重复" });
+                            }
+
+                            db.RealDatabase.Append(tag);
+
+                            var vtag = request.HisTag;
+                            if (vtag.Id != uint.MaxValue)
+                            {
+                                Cdy.Tag.HisTag hisTag = new Cdy.Tag.HisTag();
+                                hisTag.Id = (int)vtag.Id;
+                                hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
+                                hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
+                                hisTag.CompressType = (int)(vtag.CompressType);
+
+                                hisTag.Parameters = new Dictionary<string, double>();
+                                if (vtag.Parameter != null)
+                                {
+                                    foreach (var vv in vtag.Parameter)
+                                    {
+                                        hisTag.Parameters.Add(vv.Name, vv.Value);
+                                    }
+                                }
+
+                                db.HisDatabase.AddOrUpdate(hisTag);
+                            }
+                        }
+
+                        
+                        return Task.FromResult(new ImportTagRequestReplyMessage() { Result = true, TagId = tag.Id });
+                    }
+                }
+                return Task.FromResult(new ImportTagRequestReplyMessage() { Result = false });
+            }
+            catch (Exception ex)
+            {
+                return Task.FromResult(new ImportTagRequestReplyMessage() { Result = false, ErroMessage = ex.Message });
             }
         }
 
@@ -1355,8 +1622,14 @@ namespace DBDevelopService
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
             var db = DbManager.Instance.GetDatabase(request.Database);
-            Cdy.Tag.DatabaseSerise serise = new Cdy.Tag.DatabaseSerise() { Dbase = db };
-            serise.Save();
+            if (db != null)
+            {
+                lock (db)
+                {
+                    Cdy.Tag.DatabaseSerise serise = new Cdy.Tag.DatabaseSerise() { Dbase = db };
+                    serise.Save();
+                }
+            }
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
 
@@ -1372,7 +1645,10 @@ namespace DBDevelopService
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
-            DbManager.Instance.Reload();
+            lock (DbManager.Instance)
+            {
+                DbManager.Instance.Reload();
+            }
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
 

@@ -12,6 +12,7 @@ using DBDevelopClientApi;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -50,6 +51,8 @@ namespace DBInStudio.Desktop.ViewModel
 
         private static List<TagViewModel> mCopyTags = new List<TagViewModel>();
 
+        private int mTagCount = 0;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -63,8 +66,8 @@ namespace DBInStudio.Desktop.ViewModel
         #region ... Properties ...
 
         /// <summary>
-            /// 
-            /// </summary>
+        /// 
+        /// </summary>
         public bool IsLoading
         {
             get
@@ -241,6 +244,26 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
+        /// <summary>
+            /// 
+            /// </summary>
+        public int TagCount
+        {
+            get
+            {
+                return mTagCount;
+            }
+            set
+            {
+                if (mTagCount != value)
+                {
+                    mTagCount = value;
+                    OnPropertyChanged("TagCount");
+                }
+            }
+        }
+
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -255,11 +278,23 @@ namespace DBInStudio.Desktop.ViewModel
             if(ofd.ShowDialog().Value)
             {
                 var stream = new StreamWriter(File.Open(ofd.FileName, FileMode.OpenOrCreate, FileAccess.ReadWrite));
-                foreach(var vv in mSelectGroupTags)
-                {
-                    stream.WriteLine(vv.SaveToCSVString());
-                }
-                stream.Close();
+
+                Task.Run(() => {
+                    ServiceLocator.Locator.Resolve<IProcessNotify>().BeginShowNotify();
+                    DevelopServiceHelper.Helper.QueryTagByGroup(GroupModel.Database, GroupModel.FullName,new Action<int, int, Dictionary<int, Tuple<Tagbase, HisTag>>>((idx, total, res) => {
+                        foreach (var vv in res.Select(e => new TagViewModel(e.Value.Item1, e.Value.Item2)))
+                        {
+                            stream.WriteLine(vv.SaveToCSVString());
+
+                            ServiceLocator.Locator.Resolve<IProcessNotify>().ShowNotifyValue(((idx * 1.0 / total) * 100));
+                        }
+
+                    }));
+                    stream.Close();
+                    ServiceLocator.Locator.Resolve<IProcessNotify>().EndShowNotify();
+
+                    MessageBox.Show(Res.Get("TagExportComplete"));
+                });
             }
         }
 
@@ -275,7 +310,7 @@ namespace DBInStudio.Desktop.ViewModel
             if (ofd.ShowDialog().Value)
             {
                 var stream = new StreamReader(File.Open(ofd.FileName, FileMode.OpenOrCreate, FileAccess.ReadWrite));
-                while(!stream.EndOfStream)
+                while (!stream.EndOfStream)
                 {
                     string sval = stream.ReadLine();
                     if (!string.IsNullOrEmpty(sval))
@@ -287,33 +322,75 @@ namespace DBInStudio.Desktop.ViewModel
                 stream.Close();
             }
 
-            Task.Run(() => {
+            int mode = 0;
+            var mm = new ImportModeSelectViewModel();
+            if (mm.ShowDialog().Value)
+            {
+                mode = mm.Mode;
+            }
+            else
+            {
+                return;
+            }
+
+
+
+            StringBuilder sb = new StringBuilder();
+
+            Task.Run(() =>
+            {
                 ServiceLocator.Locator.Resolve<IProcessNotify>().BeginShowNotify();
 
-                var tags = mSelectGroupTags.ToDictionary(e => e.RealTagMode.Name);
+                //删除所有，重新添加
+                if (mode == 1)
+                {
+                    DevelopServiceHelper.Helper.ClearTagByGroup(GroupModel.Database, GroupModel.FullName);
+                }
+
+                //var tags = mSelectGroupTags.ToDictionary(e => e.RealTagMode.Name);
                 int tcount = ltmp.Count;
                 int icount = 0;
+                bool haserro = false;
+                int id = 0;
                 foreach (var vv in ltmp)
                 {
-                    vv.Group = this.GroupModel.FullName;
-                    int id;
-                    if (!DevelopServiceHelper.Helper.AddTag(GroupModel.Database, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(vv.RealTagMode, vv.HisTagMode), out id))
+                    vv.RealTagMode.Group = this.GroupModel.FullName;
+
+                    //更新数据
+                    if (!DevelopServiceHelper.Helper.Import(GroupModel.Database, new Tuple<Tagbase, HisTag>(vv.RealTagMode, vv.HisTagMode), mode, out id))
                     {
-                        MessageBox.Show(string.Format(Res.Get("AddTagFail"), vv.RealTagMode.Name), Res.Get("erro"), MessageBoxButton.OK, MessageBoxImage.Error);
-                        break;
+                        sb.AppendLine(string.Format(Res.Get("AddTagFail"), vv.RealTagMode.Name));
+                        haserro = true;
                     }
                     else
                     {
-                        vv.RealTagMode.Id = id;
-                        if (vv.HisTagMode != null) vv.HisTagMode.Id = id;
-                        vv.IsChanged = false;
                         vv.IsNew = false;
+                        vv.IsChanged = false;
                     }
+
                     icount++;
                     ServiceLocator.Locator.Resolve<IProcessNotify>().ShowNotifyValue(((icount * 1.0 / tcount) * 100));
                 }
 
-                mCurrentPageIndex--;
+                if (haserro)
+                {
+                    string errofile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(ofd.FileName), "erro.txt");
+                    System.IO.File.WriteAllText(errofile, sb.ToString());
+                    if(MessageBox.Show(Res.Get("ImportErroMsg"),"",MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+                    {
+                        try
+                        {
+                            Process.Start(Path.GetDirectoryName(errofile));
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                }
+
+                mCurrentPageIndex = -1;
+                mTotalPageNumber = -1;
                 ContinueQueryTags();
                 Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                 {
@@ -321,14 +398,6 @@ namespace DBInStudio.Desktop.ViewModel
                 }));
 
             });
-
-            
-
-          
-
-            //System.Threading.Tasks.Task.Run(() => {
-               
-            //});
 
         }
 
@@ -346,31 +415,37 @@ namespace DBInStudio.Desktop.ViewModel
         /// </summary>
         private void ContinueQueryTags()
         {
-
-            if (mTotalPageNumber == -1)
+            int count = 0;
+            if (mTotalPageNumber <0)
             {
-                SelectGroupTags.Clear();
+                Application.Current.Dispatcher.Invoke(new Action(() => {
+                    SelectGroupTags.Clear();
+                }));
+                
               //  var vtags = new System.Collections.ObjectModel.ObservableCollection<TagViewModel>();
                 mCurrentPageIndex = 0;
-
-                var vv = DevelopServiceHelper.Helper.QueryTagByGroup(this.GroupModel.Database, this.GroupModel.FullName,mCurrentPageIndex, out mTotalPageNumber);
+                
+                var vv = DevelopServiceHelper.Helper.QueryTagByGroup(this.GroupModel.Database, this.GroupModel.FullName,mCurrentPageIndex, out mTotalPageNumber,out count);
                 if (vv != null)
                 {
                     foreach (var vvv in vv)
                     {
                         TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2);
-                        SelectGroupTags.Add(model);
+                        Application.Current.Dispatcher.Invoke(new Action(() => {
+                            SelectGroupTags.Add(model);
+                        }));
+                       
                     }
                 }
             }
             else
             {
-                if (mTotalPageNumber > mCurrentPageIndex)
+                if (mTotalPageNumber > mCurrentPageIndex+1)
                 {
                     mCurrentPageIndex++;
                     int totalcount = 0;
                     
-                    var vv = DevelopServiceHelper.Helper.QueryTagByGroup(this.GroupModel.Database, this.GroupModel.FullName, mCurrentPageIndex, out totalcount);
+                    var vv = DevelopServiceHelper.Helper.QueryTagByGroup(this.GroupModel.Database, this.GroupModel.FullName, mCurrentPageIndex, out totalcount,out count);
                     if (vv != null)
                     {
                         foreach (var vvv in vv)
@@ -384,7 +459,7 @@ namespace DBInStudio.Desktop.ViewModel
                     }
                 }
             }
-            
+            TagCount = count;
         }
 
         /// <summary>

@@ -272,7 +272,7 @@ namespace DBStudio
                 }
                 catch(Exception ex)
                 {
-                    OutByLine(name, Res.Get("ErroParameter"));
+                    OutByLine(name, Res.Get("ErroParameter")+" " +ex.Message);
                 }
             }
         }
@@ -298,7 +298,7 @@ namespace DBStudio
         private static void Sp(Database db,int ctp,int addressType, params string[] paras)
         {
             Cdy.Tag.RealDatabase test = db.RealDatabase;
-            db.RealDatabase = test;
+          
             Cdy.Tag.HisDatabase htest = db.HisDatabase;
 
             string address = "";

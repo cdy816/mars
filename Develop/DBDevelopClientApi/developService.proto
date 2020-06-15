@@ -10,6 +10,7 @@ service DevelopServer {
   //Login
   rpc Login(LoginRequest) returns (LoginReply);
 
+  //数据库开发服务权限操纵
   //新建用户
   rpc NewUser(NewUserRequest) returns (BoolResultReplay);
 
@@ -25,12 +26,14 @@ service DevelopServer {
   //获取开发者用户
   rpc GetUsers(GetRequest) returns (GetUsersReplay);
 
+  //数据库操作
   //枚举检索数据库
   rpc QueryDatabase(QueryDatabaseRequest) returns (QueryDatabaseReplay);
 
   //新建数据库
   rpc NewDatabase(NewDatabaseRequest) returns (BoolResultReplay);
 
+  //数据库权限操作
   //新建数据库用户
   rpc NewDatabaseUser(NewDatabaseUserRequest) returns (BoolResultReplay);
 
@@ -74,38 +77,34 @@ service DevelopServer {
   //删除数据库权限
   rpc RemoveDatabasePermission(RemoveDatabasePermissionRequest) returns (BoolResultReplay);
   
-
+  //变量操作
   //添加
   rpc AddTag(AddTagRequestMessage) returns (AddTagReplyMessage);
 
+    //导入变量
+  rpc Import(ImportTagRequestMessage) returns (ImportTagRequestReplyMessage);
+
   //删除
-  rpc RemoveTag(RemoveTagMessage) returns (BoolResultReplay);
+  rpc RemoveTag(RemoveTagMessageRequest) returns (BoolResultReplay);
 
-  //
-  rpc RemoveHisTag(RemoveTagMessage) returns (BoolResultReplay);
+    //删除变量历史配置
+  rpc RemoveHisTag(RemoveTagMessageRequest) returns (BoolResultReplay);
 
-  //获取所有实时变量
-  rpc GetRealAllTag(GetRequest) returns (GetRealTagMessageReply);
 
-  //获取变量组
-  rpc GetTagGroup(GetRequest) returns (GetTagGroupMessageReply);
+  //批量删除变量
+  rpc ClearTag(ClearTagRequestMessage) returns (BoolResultReplay);
 
-  //
-  rpc AddTagGroup(AddGroupRequest) returns (AddGroupReplay);
+  //清空整个数据库
+  rpc ClearAllTag(GetRequest) returns (BoolResultReplay);
 
-  //粘贴组
-  rpc PasteTagGroup(PasteGroupRequest) returns (PasteGroupReplay);
+    //修改实时变量
+  rpc UpdateRealTag(UpdateRealTagRequestMessage) returns (BoolResultReplay);
 
-  //
-  rpc RemoveTagGroup(RemoveGroupRequest) returns (BoolResultReplay);
+  //修改历史变量
+  rpc UpdateHisTag(UpdateHisTagRequestMessage) returns (BoolResultReplay);
 
-  //
-  rpc RenameTagGroup(RenameGroupRequest) returns (BoolResultReplay);
 
-  //
-  rpc MoveTagGroup(MoveGroupRequest) returns (BoolResultReplay);
-
-  //根据组获取变量
+    //根据组获取变量
   rpc GetTagByGroup(GetTagByGroupRequest) returns (GetTagMessageReply);
 
   //获取所有变量
@@ -116,16 +115,36 @@ service DevelopServer {
   rpc GetHisAllTag(GetRequest) returns (GetHistTagMessageReply);
 
   //查询指定条件的变量
-  rpc QueryRealTag(QueryMessage) returns (GetRealTagMessageReply);
+  rpc QueryRealTag(QueryMessageRequest) returns (GetRealTagMessageReply);
 
   //查询历史变量
-  rpc QueryHisTag(QueryMessage) returns (GetHistTagMessageReply);
+  rpc QueryHisTag(QueryMessageRequest) returns (GetHistTagMessageReply);
 
-  //修改实时变量
-  rpc UpdateRealTag(UpdateRealTagRequestMessage) returns (BoolResultReplay);
 
-  //修改历史变量
-  rpc UpdateHisTag(UpdateHisTagRequestMessage) returns (BoolResultReplay);
+  //获取所有实时变量
+  rpc GetRealAllTag(GetRequest) returns (GetRealTagMessageReply);
+
+
+  //变量组操作
+  //获取变量组
+  rpc GetTagGroup(GetRequest) returns (GetTagGroupMessageReply);
+
+  //添加变量组
+  rpc AddTagGroup(AddGroupRequest) returns (AddGroupReplay);
+
+  //粘贴组
+  rpc PasteTagGroup(PasteGroupRequest) returns (PasteGroupReplay);
+
+  //删除变量组
+  rpc RemoveTagGroup(RemoveGroupRequest) returns (BoolResultReplay);
+
+  //重命名变量组
+  rpc RenameTagGroup(RenameGroupRequest) returns (BoolResultReplay);
+
+  //移动变量组
+  rpc MoveTagGroup(MoveGroupRequest) returns (BoolResultReplay);
+
+
 
   //保存
   rpc Save(GetRequest) returns (BoolResultReplay);
@@ -345,6 +364,32 @@ message AddTagRequestMessage
     HisTagMessage hisTag = 4;
 }
 
+//
+message AddTagReplyMessage
+{
+    int32 TagId = 1;
+    bool Result =2;
+    string ErroMessage=3;
+}
+
+
+message ImportTagRequestMessage
+{
+    string loginId=1;
+    string Database=2;
+     RealTagMessage realTag = 3;
+    HisTagMessage hisTag = 4;
+    int32 Mode=5;
+}
+
+
+message ImportTagRequestReplyMessage
+{
+    int32 TagId = 1;
+    bool Result =2;
+    string ErroMessage=3;
+}
+
 message UpdateRealTagRequestMessage
 {
     string loginId=1;
@@ -426,16 +471,15 @@ message MoveGroupRequest
     string NewParentName=5;
 }
 
-
-//
-message AddTagReplyMessage
+message ClearTagRequestMessage
 {
-    int32 TagId = 1;
-    bool Result =2;
-    string ErroMessage=3;
+    string LoginId=1;
+    string Database=2;
+    string GroupFullName=3;
 }
 
-message RemoveTagMessage
+
+message RemoveTagMessageRequest
 {
     string LoginId=1;
      string Database=2;
@@ -443,7 +487,7 @@ message RemoveTagMessage
 }
 
 //
-message QueryMessage
+message QueryMessageRequest
 {
     string LoginId=1;
     string Database=2;
@@ -488,8 +532,9 @@ message GetTagMessageReply
     string ErroMessage=2;
     int32 Count=3;
     int32 Index=4;
-    repeated RealTagMessage realTag=5;
-    repeated HisTagMessage hisTag=6;
+    int32 TagCount=5;
+    repeated RealTagMessage realTag=6;
+    repeated HisTagMessage hisTag=7;
 }
 
 message GetRealTagMessageReply

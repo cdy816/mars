@@ -60,6 +60,7 @@ namespace DBInStudio.Desktop.ViewModel
         {
             DefaultWidth = 720;
             DefaultHeight = 450;
+            Title = Res.Get("Permission");
         }
 
         #endregion ...Constructor...
@@ -78,7 +79,7 @@ namespace DBInStudio.Desktop.ViewModel
                             mSelectGroups.Add(vv);
                         }
                         mAllGroups.Clear();
-                    });
+                    }, () => { return mAllGroups.Count > 0; });
                 }
                 return mAddAllCommand;
             }
@@ -99,7 +100,7 @@ namespace DBInStudio.Desktop.ViewModel
                             mAllGroups.Add(vv);
                         }
                         mSelectGroups.Clear();
-                    });
+                    }, () => { return mSelectGroups.Count > 0; });
                 }
                 return mRemoveAllCommand;
             }
@@ -122,7 +123,7 @@ namespace DBInStudio.Desktop.ViewModel
                             mSelectGroups.Add(vv);
                             mAllGroups.Remove(vv);
                         }
-                    });
+                    },()=> { return mAllGroups.Where(e => e.IsSelected).Count() > 0; });
                 }
                 return mAddCommand;
             }
@@ -143,7 +144,7 @@ namespace DBInStudio.Desktop.ViewModel
                             mAllGroups.Add(vv);
                             mSelectGroups.Remove(vv);
                         }
-                    });
+                    },()=> { return mSelectGroups.Where(e => e.IsSelected).Count() > 0; });
                 }
                 return mRemoveCommand;
             }

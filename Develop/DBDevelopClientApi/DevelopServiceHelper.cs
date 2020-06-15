@@ -63,8 +63,9 @@ namespace DBDevelopClientApi
                 Grpc.Net.Client.GrpcChannel grpcChannel = Grpc.Net.Client.GrpcChannel.ForAddress(@"https://" + ip + ":5001", new GrpcChannelOptions { HttpClient = httpClient });
                 return new DBDevelopService.DevelopServer.DevelopServerClient(grpcChannel);
             }
-            catch
+            catch(Exception ex)
             {
+                LoggerService.Service.Erro("DevelopService", ex.Message);
                 return null;
             }
         }
@@ -462,6 +463,82 @@ namespace DBDevelopClientApi
 
         #endregion
 
+        public void QueryAllTag(string database,Action<int,int,Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>>> callback)
+        {
+           
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                int idx = 0;
+                int count = 0;
+                do
+                {
+                    Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> re = new Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>>();
+                    var result = mCurrentClient.GetAllTag(new DBDevelopService.GetTagByGroupRequest() { Database = database, LoginId = mLoginId, Index = idx });
+
+                    idx = result.Index;
+                    count = result.Count;
+
+                    if (!result.Result) break;
+
+                    Dictionary<int, Cdy.Tag.Tagbase> mRealTag = new Dictionary<int, Cdy.Tag.Tagbase>();
+                    foreach (var vv in result.RealTag)
+                    {
+                        var tag = GetTag((int)vv.TagType);
+                        tag.Id = (int)vv.Id;
+                        tag.LinkAddress = vv.LinkAddress;
+                        tag.Name = vv.Name;
+                        tag.Desc = vv.Desc;
+                        tag.Group = vv.Group;
+                        tag.ReadWriteType = (Cdy.Tag.ReadWriteMode)vv.ReadWriteMode;
+                        tag.Conveter = !string.IsNullOrEmpty(vv.Convert) ? vv.Convert.DeSeriseToValueConvert() : null;
+                        if (tag is Cdy.Tag.NumberTagBase)
+                        {
+                            (tag as Cdy.Tag.NumberTagBase).MaxValue = vv.MaxValue;
+                            (tag as Cdy.Tag.NumberTagBase).MinValue = vv.MinValue;
+                        }
+
+                        if (tag is Cdy.Tag.FloatingTagBase)
+                        {
+                            (tag as Cdy.Tag.FloatingTagBase).Precision = (byte)vv.Precision;
+                        }
+                        mRealTag.Add(tag.Id, tag);
+                    }
+
+                    Dictionary<int, Cdy.Tag.HisTag> mHisTag = new Dictionary<int, Cdy.Tag.HisTag>();
+                    foreach (var vv in result.HisTag)
+                    {
+                        var tag = new Cdy.Tag.HisTag { Id = (int)vv.Id, TagType = (Cdy.Tag.TagType)vv.TagType, Type = (Cdy.Tag.RecordType)vv.Type, CompressType = (int)vv.CompressType };
+                        if (vv.Parameter.Count > 0)
+                        {
+                            tag.Parameters = new Dictionary<string, double>();
+                            foreach (var vvv in vv.Parameter)
+                            {
+                                tag.Parameters.Add(vvv.Name, vvv.Value);
+                            }
+
+                        }
+                        mHisTag.Add(tag.Id, tag);
+                    }
+
+                    foreach (var vv in mRealTag)
+                    {
+                        if (mHisTag.ContainsKey(vv.Key))
+                        {
+                            re.Add(vv.Key, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(mRealTag[vv.Key], mHisTag[vv.Key]));
+                        }
+                        else
+                        {
+                            re.Add(vv.Key, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(mRealTag[vv.Key], null));
+                        }
+                    }
+                    callback(idx, count, re);
+                    idx++;
+                }
+                while (idx < count);
+            }
+       
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -476,7 +553,7 @@ namespace DBDevelopClientApi
                 int count = 0;
                 do
                 {
-                    var result = mCurrentClient.GetAllTag(new DBDevelopService.GetTagByGroupRequest() { Database = database, LoginId = mLoginId });
+                    var result = mCurrentClient.GetAllTag(new DBDevelopService.GetTagByGroupRequest() { Database = database, LoginId = mLoginId,Index=idx });
 
                     idx = result.Index;
                     count = result.Count;
@@ -542,6 +619,27 @@ namespace DBDevelopClientApi
             return re;
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="group"></param>
+        /// <param name="callback"></param>
+        public void QueryTagByGroup(string database, string group, Action<int, int, Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>>> callback)
+        {
+            int idx = 0;
+            int totalcount=0;
+            int tagcount;
+            do
+            {
+                var re = QueryTagByGroup(database, group, idx, out totalcount, out tagcount);
+                callback(idx, totalcount, re);
+                idx++;
+            }
+            while (idx < totalcount);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -550,13 +648,14 @@ namespace DBDevelopClientApi
         /// <param name="totalCount"></param>
         /// <param name="index"></param>
         /// <returns></returns>
-        public Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> QueryTagByGroup(string database, string group, int index, out int totalCount)
+        public Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> QueryTagByGroup(string database, string group, int index, out int totalCount,out int tagCount)
         {
             Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> re = new Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>>();
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
                 int idx = index;
                 var result = mCurrentClient.GetTagByGroup(new DBDevelopService.GetTagByGroupRequest() { Database = database, LoginId = mLoginId, Group = group, Index = idx });
+                tagCount = result.TagCount;
 
                 totalCount = result.Count;
 
@@ -618,8 +717,9 @@ namespace DBDevelopClientApi
             else
             {
                 totalCount = -1;
+                tagCount = 0;
             }
-            
+          
             return re;
         }
         /// <summary>
@@ -721,7 +821,7 @@ namespace DBDevelopClientApi
                 }
                 else
                 {
-                    var msg = new DBDevelopService.RemoveTagMessage() { Database = database, LoginId = mLoginId };
+                    var msg = new DBDevelopService.RemoveTagMessageRequest() { Database = database, LoginId = mLoginId };
                     msg.TagId.Add(tag.Item1.Id);
                     re &= mCurrentClient.RemoveHisTag(msg).Result;
                 }
@@ -744,12 +844,70 @@ namespace DBDevelopClientApi
             bool re = false;
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
-                var res = mCurrentClient.AddTag(new DBDevelopService.AddTagRequestMessage() { Database = database, LoginId = mLoginId, RealTag = ConvertToRealTagMessage(tag.Item1),HisTag=ConvertToHisTagMessage(tag.Item2) });
+                var res = mCurrentClient.AddTag(new DBDevelopService.AddTagRequestMessage() { Database = database, LoginId = mLoginId, RealTag = ConvertToRealTagMessage(tag.Item1), HisTag = ConvertToHisTagMessage(tag.Item2) });
                 re = res.Result;
                 id = res.TagId;
             }
-            id = -1;
+            else
+            {
+                id = -1;
+            }
             return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="tag"></param>
+        /// <param name="mode"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool Import(string database,Tuple<Cdy.Tag.Tagbase,Cdy.Tag.HisTag> tag,int mode,out int id)
+        {
+            bool re = false;
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                var res = mCurrentClient.Import(new DBDevelopService.ImportTagRequestMessage() { Database = database, LoginId = mLoginId, RealTag = ConvertToRealTagMessage(tag.Item1), HisTag = ConvertToHisTagMessage(tag.Item2),Mode=mode });
+                re = res.Result;
+                id = res.TagId;
+            }
+            else
+            {
+                id = -1;
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public bool ClearTagByGroup(string database,string group)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                var res = mCurrentClient.ClearTag(new DBDevelopService.ClearTagRequestMessage() { Database = database, LoginId = mLoginId, GroupFullName = group});
+                return res.Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public bool ClearTagAll(string database)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                var res = mCurrentClient.ClearAllTag(new DBDevelopService.GetRequest() { Database = database, LoginId = mLoginId});
+                return res.Result;
+            }
+            return false;
         }
 
         /// <summary>
@@ -822,7 +980,7 @@ namespace DBDevelopClientApi
         /// <returns></returns>
         public bool Remove(string database, int id)
         {
-            var msg = new DBDevelopService.RemoveTagMessage() { Database = database, LoginId = mLoginId };
+            var msg = new DBDevelopService.RemoveTagMessageRequest() { Database = database, LoginId = mLoginId };
             msg.TagId.Add(id);
             return mCurrentClient.RemoveTag(msg).Result;
         }

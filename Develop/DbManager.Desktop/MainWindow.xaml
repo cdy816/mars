@@ -10,6 +10,7 @@
     <Window.Resources>
         <local:IndexConverter x:Key="ic" />
         <BooleanToVisibilityConverter x:Key="btv" />
+        
         <Style x:Key="FocusVisual">
             <Setter Property="Control.Template">
                 <Setter.Value>
@@ -56,7 +57,6 @@
                                 <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource Button.Pressed.Border}"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="false">
-                                <Setter Property="Background" TargetName="border" Value="{StaticResource Button.Disabled.Background}"/>
                                 <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource Button.Disabled.Border}"/>
                                 <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{StaticResource Button.Disabled.Foreground}"/>
                             </Trigger>
@@ -75,16 +75,54 @@
             <Grid>
                 <ProgressBar Maximum="100"  Minimum="0" Value="{Binding ProcessNotify}" Background="Transparent" VerticalAlignment="Top" Height="5" BorderThickness="0" BorderBrush="Transparent" />
                 <StackPanel Orientation="Horizontal">
-                    <Button Style="{DynamicResource MenuButton}"  Command="{Binding LoginCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80"  >
+                    <Grid Margin="10,0,0,0">
+                        <Button Style="{DynamicResource MenuButton}" Visibility="{Binding IsLoginOut,Converter={StaticResource btv}}"  Command="{Binding LoginCommand}" HorizontalAlignment="Left"   Height="32"  VerticalAlignment="Center" Width="80"  >
+                            <Button.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="/Image/登录.png" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                                        <TextBlock Text="{local:ResMarker Login}" VerticalAlignment="Center" Margin="5,0"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </Button.ContentTemplate>
+                        </Button>
+
+                        <Button Style="{DynamicResource MenuButton}"  Visibility="{Binding IsLogin,Converter={StaticResource btv}}"  Command="{Binding LogoutCommand}" HorizontalAlignment="Left"   Height="32"  VerticalAlignment="Center" Width="80"  >
+                            <Button.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal"  VerticalAlignment="Stretch" >
+                                        <Image Source="/Image/log-out.png" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                                        <TextBlock Text="{local:ResMarker Logout}" Foreground="DarkRed" VerticalAlignment="Center" Margin="5,0"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </Button.ContentTemplate>
+                        </Button>
+                    </Grid>
+
+                    <Button Style="{DynamicResource MenuButton}"  Command="{Binding NewDatabaseCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
                         <Button.ContentTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <Image Source="/Image/登录.png" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                                    <TextBlock Text="{local:ResMarker Login}" VerticalAlignment="Center" Margin="5,0"/>
+                                    <Image Source="/Image/database-add.png" Height="24" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                                    <TextBlock Text="{local:ResMarker Add}" VerticalAlignment="Center" Margin="5,0"/>
                                 </StackPanel>
                             </DataTemplate>
                         </Button.ContentTemplate>
                     </Button>
+
+                    <Button Style="{DynamicResource MenuButton}"  Command="{Binding DatabaseSelectCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                        <Button.ContentTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="/Image/switch.png" Height="24" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                                    <TextBlock Text="{local:ResMarker Switch}" VerticalAlignment="Center" Margin="5,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </Button.ContentTemplate>
+                    </Button>
+
+                    <Border BorderBrush="LightGray" BorderThickness="1,0,0,0" Width="2" VerticalAlignment="Stretch" Margin="2,4" />
+
                     <Button Style="{DynamicResource MenuButton}"  Command="{Binding SaveCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
                         <Button.ContentTemplate>
                             <DataTemplate>
@@ -95,6 +133,7 @@
                             </DataTemplate>
                         </Button.ContentTemplate>
                     </Button>
+
                     <Button Style="{DynamicResource MenuButton}"  Command="{Binding ExportCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
                         <Button.ContentTemplate>
                             <DataTemplate>
@@ -175,6 +214,28 @@
                         </StackPanel>
                     </HierarchicalDataTemplate>
 
+                    <HierarchicalDataTemplate  DataType="{x:Type local:ServerSecurityTreeViewModel}"  ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal" Height="24">
+                            <Image Focusable="False" Source="/Image/server-security.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                            <TextBlock Text="{local:ResMarker ServerSecurity}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+
+                    <DataTemplate  DataType="{x:Type local:ServerUserEditorTreeViewModel}" >
+                        <StackPanel Orientation="Horizontal" Height="24">
+                            <Image Focusable="False" Source="/Image/UserSettings.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+
+
+                    <DataTemplate  DataType="{x:Type local:ServerUserManagerTreeViewModel}" >
+                        <StackPanel Orientation="Horizontal" Height="24">
+                            <Image Focusable="False" Source="/Image/user.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                            <TextBlock Text="{local:ResMarker User}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+
                     <HierarchicalDataTemplate  DataType="{x:Type local:RootTagGroupViewModel}"  ItemsSource="{Binding Children}">
                         <StackPanel ContextMenu="{StaticResource rootgroupMenu}" Orientation="Horizontal" Height="24">
                             <Image Focusable="False" Source="/Image/文件夹.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="18" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
@@ -206,8 +267,28 @@
             </TreeView>
             <Border VerticalAlignment="Bottom" Background="#FFE7E8EC" Height="32" BorderBrush="Gray" BorderThickness="0,0,1,0">
                 <StackPanel Orientation="Horizontal"   >
-                    <Button Content="{local:ResMarker Add}" Command="{Binding AddGroupCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" />
-                    <Button Content="{local:ResMarker Remove}" Command="{Binding RemoveGroupCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" />
+                    <Button Content="{local:ResMarker Add}" Command="{Binding AddGroupCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
+                        <Button.ContentTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0">
+
+                                    <Image Source="/Image/Add.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
+                                    <TextBlock Text="{Binding}" Grid.Column="1" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </Button.ContentTemplate>
+                    </Button>
+                    <Button Content="{local:ResMarker Remove}" Command="{Binding RemoveGroupCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
+                        <Button.ContentTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0">
+
+                                    <Image Source="/Image/Remove.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
+                                    <TextBlock Text="{Binding}" Grid.Column="1" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </Button.ContentTemplate>
+                    </Button>
                 </StackPanel>
             </Border>
             

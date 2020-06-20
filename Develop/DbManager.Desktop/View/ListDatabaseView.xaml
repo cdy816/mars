@@ -91,6 +91,6 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Button Command="{Binding NewCommand}" Content="{res:ResMarker New}" Width="80" HorizontalAlignment="Right" Margin="5,0" Height="26" VerticalAlignment="Center" />
+        <Button Command="{Binding NewCommand}" Background="Transparent" BorderThickness="0,0,0,0" Content="{res:ResMarker New}" Width="80" HorizontalAlignment="Right" Margin="5,0" Height="26" VerticalAlignment="Center" />
     </Grid>
 </UserControl>

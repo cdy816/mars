@@ -10,21 +10,36 @@ service DevelopServer {
   //Login
   rpc Login(LoginRequest) returns (LoginReply);
 
+  //
+  rpc IsAdmin(GetRequest) returns (BoolResultReplay);
+
+    //
+  rpc CanNewDatabase(GetRequest) returns (BoolResultReplay);
+
+
   //数据库开发服务权限操纵
   //新建用户
   rpc NewUser(NewUserRequest) returns (BoolResultReplay);
 
-  //更新用户密码
+  //修改当前用户密码
   rpc ModifyPassword(ModifyPasswordRequest) returns (BoolResultReplay);
+
+   rpc ReNameUser(ReNameUserRequest) returns (BoolResultReplay);
 
   //修改用户信息
   rpc UpdateUser(UpdateUserRequest) returns (BoolResultReplay);
+
+    //更新用户密码
+  rpc UpdateUserPassword(UpdatePasswordRequest) returns (BoolResultReplay);
 
   //删除用户
   rpc RemoveUser(RemoveUserRequest) returns (BoolResultReplay);
 
   //获取开发者用户
   rpc GetUsers(GetRequest) returns (GetUsersReplay);
+
+  //枚举权限列表
+ // rpc GetPermissions(GetRequest) returns (GetPermissionsReplay);
 
   //数据库操作
   //枚举检索数据库
@@ -252,13 +267,22 @@ message UpdateDatabaseUserRequest
 
 }
 
+message ReNameUserRequest
+{
+   string loginId =1;
+   string OldName=2;
+   string NewName=3;
+}
+
 //新建用户
 message NewUserRequest
 {
    string loginId =1;
    string userName=2;
    string password=3;
-   repeated string permission=4;
+   bool IsAdmin=4;
+   bool NewDatabasePermission=5;
+   repeated string Database=6;
 }
 
 //更新用户密码
@@ -267,6 +291,7 @@ message ModifyPasswordRequest
     string loginId=1;
     string userName=2;
     string password=3;
+    string newpassword=4;
 }
 
 //修改用户信息
@@ -274,13 +299,29 @@ message UpdateUserRequest
 {
     string loginId=1;
     string userName=2;
-    repeated string permission=3;
+    bool IsAdmin=3;
+    bool NewDatabasePermission=4;
+    repeated string Database=5;
 }
 
 message RemoveUserRequest
 {
     string loginId=1;
     string userName=2;
+}
+
+//更新用户密码
+message UpdatePasswordRequest
+{
+    string loginId=1;
+    string userName=2;
+    string password=3;
+}
+
+message GetPermissionsReplay
+{
+    bool Result =1;
+    repeated string Permission=2;
 }
 
 ///
@@ -317,7 +358,9 @@ message GetUsersReplay
 message UserMessage
 {
     string userName=1;
-    repeated string permission=2;
+    bool IsAdmin=2;
+    bool NewDatabase=3;
+    repeated string Databases=4;
 }
 
 message NewDatabaseRequest

@@ -27,7 +27,7 @@ namespace DBInStudio.Desktop.ViewModel
     /// <summary>
     /// 
     /// </summary>
-    public class TagGroupDetailViewModel:ViewModelBase
+    public class TagGroupDetailViewModel:ViewModelBase, IModeSwitch
     {
 
         #region ... Variables  ...
@@ -220,10 +220,9 @@ namespace DBInStudio.Desktop.ViewModel
             {
                 if (mGroupModel != value)
                 {
-                    UpdateAll();
                     mGroupModel = value;
                     mTotalPageNumber = -1;
-                    ContinueQueryTags();
+                    
                 }
             }
         }
@@ -667,6 +666,23 @@ namespace DBInStudio.Desktop.ViewModel
             {
                 UpdateTag(vv);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Active()
+        {
+            mTotalPageNumber = -1;
+            ContinueQueryTags();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void DeActive()
+        {
+            UpdateAll();
         }
 
 

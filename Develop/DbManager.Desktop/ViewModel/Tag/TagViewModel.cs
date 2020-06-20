@@ -382,6 +382,7 @@ namespace DBInStudio.Desktop
                 if (mDriverName != value)
                 {
                     mDriverName = value;
+                    mRegistorName = string.Empty;
                     LinkAddress = DriverName + ":" + RegistorName;
                     if(Drivers!=null&&Drivers.ContainsKey(mDriverName))
                     {
@@ -392,6 +393,7 @@ namespace DBInStudio.Desktop
                         RegistorList = null;
                     }
                     OnPropertyChanged("DriverName");
+                    OnPropertyChanged("RegistorName");
                 }
             }
         }

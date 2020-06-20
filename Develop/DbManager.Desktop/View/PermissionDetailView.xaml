@@ -20,7 +20,7 @@
         <Border BorderBrush="Gray" BorderThickness="0,0,0,1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Label Content="{res:ResMarker PermissionList}" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Center"/>
         </Border>
-        <DataGrid ItemsSource="{Binding Permissions}" BorderThickness="0" Grid.Row="1" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" MinRowHeight="24">
+        <DataGrid ItemsSource="{Binding Permissions}" SelectedItem="{Binding CurrentSelected}" Background="Transparent" BorderThickness="0,0,0,1" Grid.Row="1" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" MinRowHeight="24">
             <DataGrid.Columns>
                 <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="30" Header="{res:ResMarker Id}">
                     <DataGridTemplateColumn.CellTemplate>
@@ -94,8 +94,28 @@
         </DataGrid>
         <Border Grid.Row="2" Height="32" BorderThickness="0,1,0,0">
             <StackPanel Orientation="Horizontal" Grid.Row="2" Height="32" VerticalAlignment="Bottom" Background="#FFE7E8EC">
-                <Button Content="{res:ResMarker Add}" Command="{Binding AddCommand}" Width="60" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" />
-                <Button Content="{res:ResMarker Remove}" Command="{Binding RemoveCommand}" Width="60" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" />
+                <Button Content="{res:ResMarker Add}" Command="{Binding AddCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
+                    <Button.ContentTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="0">
+
+                                <Image Source="/Image/Add.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
+                                <TextBlock Text="{Binding}" Grid.Column="1" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </Button.ContentTemplate>
+                </Button>
+                <Button Content="{res:ResMarker Remove}" Command="{Binding RemoveCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
+                    <Button.ContentTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="0">
+
+                                <Image Source="/Image/Remove.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
+                                <TextBlock Text="{Binding}" Grid.Column="1" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </Button.ContentTemplate>
+                </Button>
             </StackPanel>
         </Border>
         

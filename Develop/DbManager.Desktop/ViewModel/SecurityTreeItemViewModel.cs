@@ -8,6 +8,7 @@
 //==============================================================
 
 using DBDevelopClientApi;
+using DBInStudio.Desktop.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -181,6 +182,19 @@ namespace DBInStudio.Desktop
 
         #region ... Methods    ...
 
+        public override ViewModelBase GetModel(ViewModelBase model)
+        {
+            if (model is UserGroupDetailViewModel)
+            {
+                (model as UserGroupDetailViewModel).Model = this;
+                return model;
+            }
+            else
+            {
+                return new UserGroupDetailViewModel() { Model = this };
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -230,7 +244,18 @@ namespace DBInStudio.Desktop
 
         #region ... Methods    ...
 
-
+        public override ViewModelBase GetModel(ViewModelBase model)
+        {
+            if (model is PermissionDetailViewModel)
+            {
+                (model as PermissionDetailViewModel).Database = this.Database;
+                return model;
+            }
+            else
+            {
+                return new PermissionDetailViewModel() { Database = this.Database };
+            }
+        }
         public override bool CanAddChild()
         {
             return false;

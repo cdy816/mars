@@ -19,7 +19,7 @@ namespace DBInStudio.Desktop.ViewModel
     /// <summary>
     /// 
     /// </summary>
-    public class PermissionDetailViewModel : ViewModelBase
+    public class PermissionDetailViewModel : ViewModelBase, IModeSwitch
     {
 
         #region ... Variables  ...
@@ -182,11 +182,28 @@ namespace DBInStudio.Desktop.ViewModel
         /// </summary>
         public void Update()
         {
-            if (mCurrentSelected != null)
+            if (mCurrentSelected != null && (mCurrentSelected.IsChanged || mCurrentSelected.IsNew))
             {
                 mCurrentSelected.IsNew = false;
+                mCurrentSelected.IsChanged = false;
                 DBDevelopClientApi.DevelopServiceHelper.Helper.UpdateDatabasePermission(this.Database, mCurrentSelected.Model);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Active()
+        {
+            Query();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void DeActive()
+        {
+            Update();
         }
 
         #endregion ...Methods...
@@ -237,6 +254,11 @@ namespace DBInStudio.Desktop.ViewModel
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsChanged { get; set; }
 
         /// <summary>
         /// 
@@ -344,6 +366,7 @@ namespace DBInStudio.Desktop.ViewModel
             set
             {
                 mModel.Name = value;
+                IsChanged = true;
                 OnPropertyChanged("Name");
             }
         }
@@ -389,6 +412,7 @@ namespace DBInStudio.Desktop.ViewModel
                 if (mModel.EnableWrite != value)
                 {
                     mModel.EnableWrite = value;
+                    IsChanged = true;
                     OnPropertyChanged("EnableWrite");
                 }
             }
@@ -431,6 +455,7 @@ namespace DBInStudio.Desktop.ViewModel
                     Model.Group = value;
                 }
                 MakeGroupString();
+                IsChanged = true;
                 OnPropertyChanged("GroupString");
                 OnPropertyChanged("Group");
             }

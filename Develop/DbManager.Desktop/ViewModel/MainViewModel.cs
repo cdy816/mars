@@ -35,20 +35,23 @@ namespace DBInStudio.Desktop
 
         private ICommand mSaveCommand;
 
-
+        private ICommand mLogoutCommand;
 
         private ICommand mAddGroupCommand;
+        
         private ICommand mRemoveGroupCommand;
 
         private ICommand mExportCommand;
 
         private ICommand mImportCommand;
 
+        private ICommand mDatabaseSelectCommand;
+
+        private ICommand mNewDatabaseCommand;
+
         private TreeItemViewModel mCurrentSelectTreeItem;
 
-   
-
-        private System.Collections.ObjectModel.ObservableCollection<ITreeViewModel> mTagGroup = new System.Collections.ObjectModel.ObservableCollection<ITreeViewModel>();
+        private System.Collections.ObjectModel.ObservableCollection<TreeItemViewModel> mTagGroup = new System.Collections.ObjectModel.ObservableCollection<TreeItemViewModel>();
 
 
         private RootTagGroupViewModel mRootTagGroupModel = new RootTagGroupViewModel();
@@ -63,7 +66,7 @@ namespace DBInStudio.Desktop
 
         private Visibility mNotifyVisiblity = Visibility.Hidden;
 
-        private string mUserName;
+        private bool mIsLogin;
 
         #endregion ...Variables...
 
@@ -78,15 +81,18 @@ namespace DBInStudio.Desktop
         public MainViewModel()
         {
             ServiceLocator.Locator.Registor<IProcessNotify>(this);
+            CurrentUserManager.Manager.RefreshNameEvent += Manager_RefreshNameEvent;
         }
+
+
 
         #endregion ...Constructor...
 
         #region ... Properties ...
 
         /// <summary>
-            /// 
-            /// </summary>
+        /// 
+        /// </summary>
         public string MainwindowTitle
         {
             get
@@ -122,15 +128,7 @@ namespace DBInStudio.Desktop
         {
             get
             {
-                return mUserName;
-            }
-            set
-            {
-                if (mUserName != value)
-                {
-                    mUserName = value;
-                    OnPropertyChanged("UserName");
-                }
+                return CurrentUserManager.Manager.UserName;
             }
         }
 
@@ -206,7 +204,7 @@ namespace DBInStudio.Desktop
                 {
                     mImportCommand = new RelayCommand(() => {
                         ImportFromFile();
-                    });
+                    }, () => { return IsLogin && !string.IsNullOrEmpty(Database); });
                 }
                 return mImportCommand;
             }
@@ -223,7 +221,7 @@ namespace DBInStudio.Desktop
                 {
                     mExportCommand = new RelayCommand(() => {
                         ExportToFile();
-                    });
+                    }, () => { return IsLogin && !string.IsNullOrEmpty(Database); });
                 }
                 return mExportCommand;
             }
@@ -252,7 +250,7 @@ namespace DBInStudio.Desktop
         /// <summary>
         /// 
         /// </summary>
-        public System.Collections.ObjectModel.ObservableCollection<ITreeViewModel> TagGroup
+        public System.Collections.ObjectModel.ObservableCollection<TreeItemViewModel> TagGroup
         {
             get
             {
@@ -280,7 +278,27 @@ namespace DBInStudio.Desktop
                 }
             }
         }
-    
+
+        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand LogoutCommand
+        {
+            get
+            {
+                if(mLogoutCommand==null)
+                {
+                    mLogoutCommand = new RelayCommand(() => {
+                        Logout();
+                    }, () => { return IsLogin; });
+                }
+                return mLogoutCommand;
+            }
+        }
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -359,11 +377,74 @@ namespace DBInStudio.Desktop
                         {
                             MessageBox.Show(Res.Get("Savefailed"));
                         }
-                    });
+                    }, () => { return IsLogin && !string.IsNullOrEmpty(Database); });
                 }
                 return mSaveCommand;
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand DatabaseSelectCommand
+        {
+            get
+            {
+                if(mDatabaseSelectCommand==null)
+                {
+                    mDatabaseSelectCommand = new RelayCommand(() => {
+                        SwitchDatabase();
+                    },()=> { return IsLogin; });
+                }
+                return mDatabaseSelectCommand;
+            }
+
+        }
+       
+        public ICommand NewDatabaseCommand
+        {
+            get
+            {
+                if(mNewDatabaseCommand==null)
+                {
+                    mNewDatabaseCommand = new RelayCommand(() => {
+                        NewDatabase();
+                    }, () => { return IsLogin; });
+                }
+                return mNewDatabaseCommand;
+            }
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsLogin
+        {
+            get
+            {
+                return mIsLogin;
+            }
+            set
+            {
+                if (mIsLogin != value)
+                {
+                    mIsLogin = value;
+                    OnPropertyChanged("IsLogin");
+                    OnPropertyChanged("IsLoginOut");
+                }
+            }
+        }
+
+        public bool IsLoginOut
+        {
+            get
+            {
+                return !IsLogin;
+            }
+        }
+
 
 
 
@@ -371,6 +452,42 @@ namespace DBInStudio.Desktop
 
         #region ... Methods    ...
 
+        private void NewDatabase()
+        {
+            NewDatabaseViewModel ndm = new NewDatabaseViewModel();
+            if (ndm.ShowDialog().Value)
+            {
+                Database = ndm.Name;
+                OnPropertyChanged("MainwindowTitle");
+                OnPropertyChanged("UserName");
+                IsLogin = true;
+
+                foreach (var vv in TagGroup) vv.Dispose();
+                this.TagGroup.Clear();
+
+                var dbitem = new DatabaseViewModel() { Name = mDatabase, IsSelected = true, IsExpanded = true };
+                this.TagGroup.Add(dbitem);
+
+                var sec = new ServerSecurityTreeViewModel();
+                sec.Children.Add(new ServerUserEditorTreeViewModel());
+
+                if (DevelopServiceHelper.Helper.IsAdmin())
+                {
+                    sec.Children.Add(new ServerUserManagerTreeViewModel());
+                }
+
+                this.TagGroup.Add(sec);
+                dbitem.Children.Add(mRootTagGroupModel);
+                mRootTagGroupModel.Database = mDatabase;
+                dbitem.Children.Add(securityModel);
+                securityModel.Database = mDatabase;
+                securityModel.Init();
+                Task.Run(() => {
+                    TagViewModel.Drivers = DevelopServiceHelper.Helper.GetRegistorDrivers(mDatabase);
+                    QueryGroups();
+                });
+            }
+        }
 
         /// <summary>
         /// 
@@ -507,7 +624,76 @@ namespace DBInStudio.Desktop
           
         }
 
-        
+        /// <summary>
+        /// 
+        /// </summary>
+        private void SwitchDatabase()
+        {
+            ListDatabaseViewModel ldm = new ListDatabaseViewModel();
+            if (ldm.ShowDialog().Value)
+            {
+                if(Database!=ldm.SelectDatabase.Name)
+                {
+                    Database = ldm.SelectDatabase.Name;
+                    OnPropertyChanged("MainwindowTitle");
+
+                    foreach (var vv in this.TagGroup) vv.Dispose();
+                    this.TagGroup.Clear();
+
+                    var dbitem = new DatabaseViewModel() { Name = mDatabase, IsSelected = true, IsExpanded = true };
+                    this.TagGroup.Add(dbitem);
+
+                    var sec = new ServerSecurityTreeViewModel();
+                    sec.Children.Add(new ServerUserEditorTreeViewModel() { Name = UserName });
+
+                    if (DevelopServiceHelper.Helper.IsAdmin())
+                    {
+                        sec.Children.Add(new ServerUserManagerTreeViewModel());
+                    }
+
+                    this.TagGroup.Add(sec);
+                    dbitem.Children.Add(mRootTagGroupModel);
+                    mRootTagGroupModel.Database = mDatabase;
+                    dbitem.Children.Add(securityModel);
+                    securityModel.Database = mDatabase;
+                    securityModel.Init();
+                    Task.Run(() => {
+                        TagViewModel.Drivers = DevelopServiceHelper.Helper.GetRegistorDrivers(mDatabase);
+                        QueryGroups();
+                    });
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Manager_RefreshNameEvent(object sender, EventArgs e)
+        {
+            OnPropertyChanged("UserName");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void Logout()
+        {
+            IsLogin = false;
+            foreach(var vv in this.TagGroup)
+            {
+                vv.Dispose();
+            }
+            this.TagGroup.Clear();
+            CurrentUserManager.Manager.UserName = string.Empty;
+            OnPropertyChanged("UserName");
+            if (ContentViewModel != null)
+                ContentViewModel.Dispose();
+
+           ContentViewModel = null;
+             Database = string.Empty;
+        }
 
         /// <summary>
         /// 
@@ -521,11 +707,25 @@ namespace DBInStudio.Desktop
                 if (ldm.ShowDialog().Value)
                 {
                     this.TagGroup.Clear();
-                    UserName = login.UserName;
+                    
+                    CurrentUserManager.Manager.UserName = login.UserName;
                     Database = ldm.SelectDatabase.Name;
                     OnPropertyChanged("MainwindowTitle");
+                    OnPropertyChanged("UserName");
+                    IsLogin = true;
+
                     var dbitem = new DatabaseViewModel() { Name = mDatabase,IsSelected=true,IsExpanded=true };
                     this.TagGroup.Add(dbitem);
+
+                    var sec = new ServerSecurityTreeViewModel();
+                    sec.Children.Add(new ServerUserEditorTreeViewModel());
+
+                    if (DevelopServiceHelper.Helper.IsAdmin())
+                    {
+                        sec.Children.Add(new ServerUserManagerTreeViewModel());
+                    }
+
+                    this.TagGroup.Add(sec);
                     dbitem.Children.Add(mRootTagGroupModel);
                     mRootTagGroupModel.Database = mDatabase;
                     dbitem.Children.Add(securityModel);
@@ -634,42 +834,17 @@ namespace DBInStudio.Desktop
         /// </summary>
         private void SelectContentModel()
         {
-            if(ContentViewModel is TagGroupDetailViewModel)
+            if (ContentViewModel is IModeSwitch)
             {
-                (ContentViewModel as TagGroupDetailViewModel).UpdateAll();
-            }
-            else if(ContentViewModel is PermissionTreeItemViewModel)
-            {
-                (ContentViewModel as PermissionDetailViewModel).Update();
+                (ContentViewModel as IModeSwitch).DeActive();
             }
 
-            if((mCurrentSelectTreeItem is TagGroupViewModel)||(mCurrentSelectTreeItem is RootTagGroupViewModel))
+            if(mCurrentSelectTreeItem!=null)
+            ContentViewModel = mCurrentSelectTreeItem.GetModel(ContentViewModel);
+
+            if (ContentViewModel is IModeSwitch)
             {
-                if(ContentViewModel==null || !(ContentViewModel is TagGroupDetailViewModel))
-                {
-                    ContentViewModel = new TagGroupDetailViewModel();
-                }
-                (ContentViewModel as TagGroupDetailViewModel).GroupModel = mCurrentSelectTreeItem as TagGroupViewModel;
-            }
-            else if(mCurrentSelectTreeItem is UserTreeItemViewModel)
-            {
-                if(ContentViewModel == null || !(ContentViewModel is UserGroupDetailViewModel))
-                {
-                    ContentViewModel = new UserGroupDetailViewModel();
-                }
-                (ContentViewModel as UserGroupDetailViewModel).Model = mCurrentSelectTreeItem as UserTreeItemViewModel;
-            }
-            else if(mCurrentSelectTreeItem is PermissionTreeItemViewModel)
-            {
-                if (ContentViewModel == null || !(ContentViewModel is PermissionTreeItemViewModel))
-                {
-                    ContentViewModel = new PermissionDetailViewModel() { Database = this.mDatabase };
-                }
-                (ContentViewModel as PermissionDetailViewModel).Query();
-            }
-            else
-            {
-                ContentViewModel = null;
+                (ContentViewModel as IModeSwitch).Active();
             }
             
         }
@@ -716,29 +891,6 @@ namespace DBInStudio.Desktop
             }));
            
         }
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //private void QueryTags(string group)
-        //{
-        //    Application.Current.Dispatcher.Invoke(() => {
-        //        mSelectGroupTags.Clear();
-        //    });
-
-        //    var vv = DevelopServiceHelper.Helper.QueryTagByGroup(mDatabase, SelectGroup);
-        //    if (vv != null)
-        //    {
-        //        foreach (var vvv in vv)
-        //        {
-        //            Application.Current.Dispatcher.BeginInvoke(new Action(() => {
-        //                TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2);
-        //                mSelectGroupTags.Add(model);
-        //            }));
-
-        //        }
-        //    }
-        //}
 
         #endregion ...Methods...
 

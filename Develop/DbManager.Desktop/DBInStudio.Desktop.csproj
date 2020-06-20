@@ -16,17 +16,24 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Image\database.png" />
-    <None Remove="Image\Database2.png" />
+    <None Remove="Image\add.png" />
+    <None Remove="Image\database-add.png" />
     <None Remove="Image\export.png" />
+    <None Remove="Image\export2.png" />
     <None Remove="Image\hidden.png" />
     <None Remove="Image\import.png" />
+    <None Remove="Image\import2.png" />
+    <None Remove="Image\log-out.png" />
     <None Remove="Image\mrdbd.ico" />
     <None Remove="Image\permissions.png" />
+    <None Remove="Image\remove.png" />
     <None Remove="Image\save.png" />
     <None Remove="Image\Security.png" />
+    <None Remove="Image\server-security.png" />
     <None Remove="Image\show.png" />
+    <None Remove="Image\Switch.png" />
     <None Remove="Image\user.png" />
+    <None Remove="Image\UserSettings.png" />
     <None Remove="Image\wait.png" />
     <None Remove="Image\文件夹.png" />
     <None Remove="Image\登录.png" />
@@ -38,17 +45,24 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Image\database.png" />
-    <Resource Include="Image\Database2.png" />
+    <Resource Include="Image\add.png" />
+    <Resource Include="Image\database-add.png" />
     <Resource Include="Image\export.png" />
+    <Resource Include="Image\export2.png" />
     <Resource Include="Image\hidden.png" />
     <Resource Include="Image\import.png" />
+    <Resource Include="Image\import2.png" />
+    <Resource Include="Image\log-out.png" />
     <Resource Include="Image\mrdbd.ico" />
     <Resource Include="Image\permissions.png" />
+    <Resource Include="Image\remove.png" />
     <Resource Include="Image\save.png" />
     <Resource Include="Image\Security.png" />
+    <Resource Include="Image\server-security.png" />
     <Resource Include="Image\show.png" />
+    <Resource Include="Image\Switch.png" />
     <Resource Include="Image\user.png" />
+    <Resource Include="Image\UserSettings.png" />
     <Resource Include="Image\wait.png" />
     <Resource Include="Image\文件夹.png" />
     <Resource Include="Image\登录.png" />

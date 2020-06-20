@@ -37,7 +37,8 @@ namespace DBDevelopService.Controllers
         /// <returns></returns>
         private bool CheckLoginId(string id, string permission = "")
         {
-            return SecurityManager.Manager.CheckKeyAvaiable(id) && SecurityManager.Manager.CheckPermission(id, permission);
+            return false;
+            //return SecurityManager.Manager.CheckKeyAvaiable(id) && SecurityManager.Manager.CheckPermission(id, permission);
         }
 
         #region database

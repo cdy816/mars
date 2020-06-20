@@ -290,10 +290,47 @@
             </DataGrid.RowDetailsTemplate>
         </DataGrid>
         <StackPanel Orientation="Horizontal" Grid.Column="1" Height="32" VerticalAlignment="Bottom" Background="#FFE7E8EC">
-            <Button Content="{local:ResMarker Add}" Command="{Binding AddCommand}" Width="60" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" />
-            <Button Content="{local:ResMarker Remove}" Command="{Binding RemoveCommand}" Width="60" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" />
-            <Button Content="{local:ResMarker Import}" Command="{Binding ImportCommand}" Width="60" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" />
-            <Button Content="{local:ResMarker Export}" Command="{Binding ExportCommand}" Width="60" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" />
+            <Button Content="{local:ResMarker Add}" Command="{Binding AddCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" Padding="0">
+                <Button.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Margin="0">
+                           
+                            <Image Source="/Image/Add.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
+                            <TextBlock Text="{Binding}" Grid.Column="1" />
+                        </StackPanel>
+                    </DataTemplate>
+                </Button.ContentTemplate>
+            </Button>
+            <Button Content="{local:ResMarker Remove}" Command="{Binding RemoveCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" Padding="0" >
+                <Button.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Margin="0">
+                            <Image Source="/Image/Remove.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
+                            <TextBlock Text="{Binding}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </Button.ContentTemplate>
+            </Button>
+            <Button Content="{local:ResMarker Import}" Command="{Binding ImportCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
+                <Button.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Margin="0">
+                            <Image Source="/Image/Import2.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
+                            <TextBlock Text="{Binding}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </Button.ContentTemplate>
+            </Button>
+            <Button Content="{local:ResMarker Export}" Command="{Binding ExportCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
+                <Button.ContentTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Margin="0">
+                            <Image Source="/Image/Export2.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
+                            <TextBlock Text="{Binding}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </Button.ContentTemplate>
+            </Button>
         </StackPanel>
         <StackPanel Orientation="Horizontal" Grid.Column="1" Height="32" HorizontalAlignment="Right" VerticalAlignment="Bottom" >
             <Label Content="{local:ResMarker TagCount,:}" />

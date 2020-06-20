@@ -189,14 +189,75 @@ namespace DBDevelopClientApi
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="password"></param>
         /// <returns></returns>
-        public bool AddUser(string name, string password)
+        public Dictionary<string,Tuple<bool,bool, List<string>>> GetUsers()
         {
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
-                return mCurrentClient.NewUser(new DBDevelopService.NewUserRequest() {  LoginId = mLoginId, UserName = name, Password = password }).Result;
+                Dictionary<string, Tuple<bool, bool, List<string>>> dd = new Dictionary<string, Tuple<bool, bool, List<string>>>();
+                var re = mCurrentClient.GetUsers(new DBDevelopService.GetRequest() { LoginId = mLoginId}).Users;
+                foreach(var vv in re)
+                {
+                    
+                    dd.Add(vv.UserName,new Tuple<bool, bool, List<string>>(vv.IsAdmin,vv.NewDatabase,vv.Databases.ToList()));
+                }
+                return dd;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public bool AddUser(string name, string password,bool isadmin,bool cannewdatabase)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.NewUser(new DBDevelopService.NewUserRequest() {  LoginId = mLoginId, UserName = name, Password = password,IsAdmin=isadmin,NewDatabasePermission=cannewdatabase }).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="oldname"></param>
+        /// <param name="newname"></param>
+        /// <returns></returns>
+        public bool ReNameUser(string oldname,string newname)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.ReNameUser(new DBDevelopService.ReNameUserRequest() { LoginId = mLoginId, OldName=oldname,NewName=newname }).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool IsAdmin()
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.IsAdmin(new DBDevelopService.GetRequest() { LoginId = mLoginId }).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool CanNewDatabase()
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.CanNewDatabase(new DBDevelopService.GetRequest() { LoginId = mLoginId }).Result;
             }
             return false;
         }
@@ -215,32 +276,66 @@ namespace DBDevelopClientApi
             return false;
         }
 
-        public bool UpdateUser(string name,List<string> permissions)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="permissions"></param>
+        /// <returns></returns>
+        public bool UpdateUser(string name,bool isadmin,bool cannewdatabase,List<string> databases)
         {
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
-                var req = new DBDevelopService.UpdateUserRequest() { LoginId = mLoginId, UserName = name };
-                req.Permission.AddRange(permissions);
+                var req = new DBDevelopService.UpdateUserRequest() { LoginId = mLoginId, UserName = name,IsAdmin=isadmin, NewDatabasePermission= cannewdatabase };
+                req.Database.AddRange(databases);
                 return mCurrentClient.UpdateUser(req).Result;
             }
             return false;
         }
 
         /// <summary>
-        /// 
+        /// 更新用户密码
         /// </summary>
         /// <param name="name"></param>
         /// <param name="password"></param>
         /// <returns></returns>
-        public bool SetUserPassword(string name,string password)
+        public bool UpdateUserPassword(string name,string password)
         {
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
-                return mCurrentClient.ModifyPassword(new DBDevelopService.ModifyPasswordRequest() { LoginId = mLoginId, UserName = name,Password=password }).Result;
+                return mCurrentClient.UpdateUserPassword(new DBDevelopService.UpdatePasswordRequest() { LoginId = mLoginId, UserName = name, Password = password }).Result;
             }
             return false;
         }
 
+        /// <summary>
+        /// 设置服务器用户密码
+        /// </summary>
+        /// <param name="name">用户</param>
+        /// <param name="password">密码</param>
+        /// <returns></returns>
+        public bool ModifyUserPassword(string name,string password,string newpassword)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.ModifyPassword(new DBDevelopService.ModifyPasswordRequest() { LoginId = mLoginId, UserName = name,Password=password,Newpassword=newpassword }).Result;
+            }
+            return false;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public List<string> GetAllDatabase()
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.QueryDatabase(new DBDevelopService.QueryDatabaseRequest() { LoginId = mLoginId }).Database.ToList().Select(e=>e.Key).ToList();
+            }
+            return null;
+        }
         
         #endregion
 
@@ -264,7 +359,7 @@ namespace DBDevelopClientApi
             return re;
         }
 
-        public List<string> GetAllUserNames(string database)
+        public List<string> GetAllDatabaseUserNames(string database)
         {
             List<string> re = new List<string>();
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
@@ -984,6 +1079,7 @@ namespace DBDevelopClientApi
             msg.TagId.Add(id);
             return mCurrentClient.RemoveTag(msg).Result;
         }
+
 
         /// <summary>
         /// 

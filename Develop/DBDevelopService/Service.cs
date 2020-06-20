@@ -12,7 +12,7 @@ namespace DBDevelopService
         #region ... Variables  ...
         
         private GrpcDBService grpcDBService = new GrpcDBService();
-        private WebAPIDBService webDBService = new WebAPIDBService();
+        //private WebAPIDBService webDBService = new WebAPIDBService();
 
         /// <summary>
         /// 
@@ -51,7 +51,7 @@ namespace DBDevelopService
         {
             DbManager.Instance.Load();
             grpcDBService.Start(grpcPort);
-            webDBService.Start(webSocketPort);
+            //webDBService.Start(webSocketPort);
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace DBDevelopService
         public void Stop()
         {
             grpcDBService.StopAsync();
-            webDBService.StopAsync();
+            //webDBService.StopAsync();
         }
 
         #endregion ...Methods...

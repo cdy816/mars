@@ -26,6 +26,8 @@ namespace DBDevelopService
 
         #region ... Properties ...
 
+        public string Version { get; set; } = "0.1";
+
         /// <summary>
         /// 
         /// </summary>
@@ -47,7 +49,26 @@ namespace DBDevelopService
         /// </summary>
         public void AddDefaultUser()
         {
-            this.AddUser(new User() { Name = "Admin", Password = "Admin", Permissions = new List<string>() { "admin" } });
+            this.AddUser(new User() { Name = "Admin", Password = "Admin", IsAdmin=true,NewDatabase=true,DeleteDatabase=true });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="oldname"></param>
+        /// <param name="newname"></param>
+        /// <returns></returns>
+        public bool RenameUser(string oldname,string newname)
+        {
+            if(mUsers.ContainsKey(oldname)&&!mUsers.ContainsKey(newname))
+            {
+                var uu = mUsers[oldname];
+                mUsers.Remove(oldname);
+                uu.Name = newname;
+                mUsers.Add(uu.Name, uu);
+                return true;
+            }
+            return false;
         }
 
         /// <summary>

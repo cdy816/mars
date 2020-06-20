@@ -19,16 +19,16 @@ namespace DBInStudio.Desktop.ViewModel
     /// <summary>
     /// 
     /// </summary>
-    public class UserGroupDetailViewModel : ViewModelBase,IModeSwitch
+    public class ServerUserManagerViewModel : ViewModelBase,IModeSwitch
     {
 
         #region ... Variables  ...
         
         private UserTreeItemViewModel mModel;
 
-        private ObservableCollection<UserItemViewModel> mUsers = new ObservableCollection<UserItemViewModel>();
+        private ObservableCollection<ServerUserItemViewModel> mUsers = new ObservableCollection<ServerUserItemViewModel>();
 
-        private UserItemViewModel mCurrentSelectedUser;
+        private ServerUserItemViewModel mCurrentSelectedUser;
 
         private ICommand mAddCommand;
 
@@ -46,7 +46,7 @@ namespace DBInStudio.Desktop.ViewModel
         /// <summary>
         /// 
         /// </summary>
-        public UserGroupDetailViewModel()
+        public ServerUserManagerViewModel()
         {
 
         }
@@ -92,7 +92,7 @@ namespace DBInStudio.Desktop.ViewModel
         /// <summary>
         /// 
         /// </summary>
-        public UserItemViewModel CurrentSelectedUser
+        public ServerUserItemViewModel CurrentSelectedUser
         {
             get
             {
@@ -104,7 +104,7 @@ namespace DBInStudio.Desktop.ViewModel
                 {
                     if (mCurrentSelectedUser != null)
                     {
-                        mCurrentSelectedUser.CheckPermission();
+                        mCurrentSelectedUser.CheckDatabase();
                         mCurrentSelectedUser.Update();
                     }
                     mCurrentSelectedUser = value;
@@ -117,7 +117,7 @@ namespace DBInStudio.Desktop.ViewModel
         /// <summary>
         /// 
         /// </summary>
-        public ObservableCollection<UserItemViewModel> Users
+        public ObservableCollection<ServerUserItemViewModel> Users
         {
             get
             {
@@ -163,7 +163,7 @@ namespace DBInStudio.Desktop.ViewModel
         /// <returns></returns>
         public string GetAvailableName(string name)
         {
-            var users = DBDevelopClientApi.DevelopServiceHelper.Helper.GetAllDatabaseUserNames(this.Model.Database);
+            var users = DBDevelopClientApi.DevelopServiceHelper.Helper.GetUsers().Keys.ToList();
             string sname = name;
             for(int i=1;i<int.MaxValue;i++)
             {
@@ -183,7 +183,7 @@ namespace DBInStudio.Desktop.ViewModel
         /// <returns></returns>
         public bool CheckNameAvaiable(string name)
         {
-            var users = DBDevelopClientApi.DevelopServiceHelper.Helper.GetAllDatabaseUserNames(this.Model.Database);
+            var users = DBDevelopClientApi.DevelopServiceHelper.Helper.GetUsers().Keys.ToList();
             return !users.Contains(name);
         }
 
@@ -193,12 +193,9 @@ namespace DBInStudio.Desktop.ViewModel
         private void AddUser()
         {
             string newUserName = GetAvailableName("user");
-            Cdy.Tag.UserItem user = new Cdy.Tag.UserItem() { Name = newUserName, Group = this.Model.FullName };
-            var umode = new UserItemViewModel() { Model = user,IsNew=true,IsEdit=true,ParentModel=this };
-            
-            umode.IntPermission(mPermissionCach);
+            var umode = new ServerUserItemViewModel(newUserName) { IsNew = true, IsEdit = true,  ParentModel = this };
+            umode.IntDatabase(mPermissionCach);
             Users.Add(umode);
-
             CurrentSelectedUser = umode;
         }
 
@@ -237,21 +234,25 @@ namespace DBInStudio.Desktop.ViewModel
         /// </summary>
         public void QueryUsers()
         {
-            ObservableCollection<UserItemViewModel> utmp = new ObservableCollection<UserItemViewModel>();
-            var users = DBDevelopClientApi.DevelopServiceHelper.Helper.GetUsersByGroup(this.Model.Database, this.Model.FullName);
+            ObservableCollection<ServerUserItemViewModel> utmp = new ObservableCollection<ServerUserItemViewModel>();
+            var users = DBDevelopClientApi.DevelopServiceHelper.Helper.GetUsers();
             if (users != null)
             {
                 foreach (var vv in users)
-                    utmp.Add(new UserItemViewModel() { Model = vv,ParentModel=this });
+                {
+                    var uu = new ServerUserItemViewModel(vv.Key) { ParentModel = this, Database = vv.Value.Item3, IsAdmin = vv.Value.Item1, CanNewDatabase = vv.Value.Item2 };
+                    uu.IsChanged = false;
+                    utmp.Add(uu);
+                }
             }
             Users = utmp;
 
             if (mPermissionCach == null)
-                mPermissionCach = DBDevelopClientApi.DevelopServiceHelper.Helper.GetAllDatabasePermission(this.Model.Database).Select(e => e.Name).ToList();
+                mPermissionCach = DBDevelopClientApi.DevelopServiceHelper.Helper.GetAllDatabase();
 
             foreach (var vv in Users)
             {
-                vv.IntPermission(mPermissionCach);
+                vv.IntDatabase(mPermissionCach);
             }
 
             if (Users.Count > 0) CurrentSelectedUser = Users[0];
@@ -271,7 +272,7 @@ namespace DBInStudio.Desktop.ViewModel
         {
             if (mCurrentSelectedUser != null)
             {
-                mCurrentSelectedUser.CheckPermission();
+                mCurrentSelectedUser.CheckDatabase();
                 mCurrentSelectedUser.Update();
             }
         }
@@ -283,7 +284,7 @@ namespace DBInStudio.Desktop.ViewModel
         #endregion ...Interfaces...
     }
 
-    public class UserItemViewModel : ViewModelBase
+    public class ServerUserItemViewModel : ViewModelBase
     {
 
         #region ... Variables  ...
@@ -294,8 +295,15 @@ namespace DBInStudio.Desktop.ViewModel
 
         private bool mIsEdit = false;
 
-
         private bool mIsPasswordChanged = false;
+
+        private string mName;
+        private string mPassword="";
+
+        private bool mIsAdmin;
+
+
+        public bool mCanNewDatabase;
 
         #endregion ...Variables...
 
@@ -304,10 +312,18 @@ namespace DBInStudio.Desktop.ViewModel
         #endregion ...Events...
 
         #region ... Constructor...
-
+        /// <summary>
+        /// 
+        /// </summary>
+        public ServerUserItemViewModel(string name)
+        {
+            mName = name;
+        }
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        public bool IsChanged { get; set; } = false;
 
         /// <summary>
             /// 
@@ -363,14 +379,12 @@ namespace DBInStudio.Desktop.ViewModel
                 if (mPermissionModel != value)
                 {
                     mPermissionModel = value;
+                    IsChanged = true;
                     OnPropertyChanged("PermissionModel");
                 }
             }
         }
 
-
-
-        public Cdy.Tag.UserItem Model { get; set; }
 
         /// <summary>
         /// 
@@ -379,20 +393,27 @@ namespace DBInStudio.Desktop.ViewModel
         {
             get
             {
-                return Model.Name;
+                return mName;
             }
             set
             {
-                if (Model.Name!=value && ParentModel.CheckNameAvaiable(value))
+                if (mName != value && ParentModel.CheckNameAvaiable(value))
                 {
-                    Model.Name = value;
+                    string oldname = mName;
+                    mName = value;
+                    if(!IsNew)
+                    {
+                        if(! UpdateUserName(oldname, mName))
+                        {
+                            mName = oldname;
+                        }
+                    }
+                    if(IsEdit)
+                    {
+                        IsEdit = false;
+                        Update();
+                    }
                 }
-                if(IsEdit)
-                {
-                    IsEdit = false;
-                    Update();
-                }
-                
                 OnPropertyChanged("Name");
             }
         }
@@ -404,39 +425,103 @@ namespace DBInStudio.Desktop.ViewModel
         {
             get
             {
-                return Model.Password;
+                return mPassword;
             }
             set
             {
                 mIsPasswordChanged = true;
-                Model.Password = value;
+                mPassword = value;
+                IsChanged = true;
                 OnPropertyChanged("Password");
             }
         }
 
         /// <summary>
-        /// 
-        /// </summary>
-        public List<string> Permissions
+            /// 
+            /// </summary>
+        public bool IsAdmin
         {
             get
             {
-                return Model.Permissions;
+                return mIsAdmin;
             }
             set
             {
-                if(Model.Permissions!=value)
+                if (mIsAdmin != value)
                 {
-                    Model.Permissions = value;
+                    mIsAdmin = value;
+                    IsChanged = true;
+                    OnPropertyChanged("IsAdmin");
+                }
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool CanNewDatabase
+        {
+            get
+            {
+                return mCanNewDatabase;
+            }
+            set
+            {
+                if (mCanNewDatabase != value)
+                {
+                    mCanNewDatabase = value;
+                    IsChanged = true;
+                    OnPropertyChanged("CanNewDatabase");
+                }
+            }
+        }
+
+
+
+        private List<string> mDatabase=new List<string>();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<string> Database
+        {
+            get
+            {
+                return mDatabase;
+            }
+            set
+            {
+                if (!IsStringListEquals(mDatabase, value))
+                {
+                    mDatabase = value;
+                    IsChanged = true;
                 }
                 OnPropertyChanged("Permissions");
             }
         }
 
+        bool IsStringListEquals(List<string> ll,List<string>tt)
+        {
+            if ((ll == null && tt == null) || (ll.Count == 0 && tt.Count == 0)) return true;
+            if ((ll == null && tt != null) || (ll != null && tt == null)) return false;
+            StringBuilder sb1 = new StringBuilder();
+            StringBuilder sb2 = new StringBuilder();
+            foreach(var vv in ll)
+            {
+                sb1.Append(vv);
+            }
+
+            foreach (var vv in tt)
+            {
+                sb2.Append(vv);
+            }
+            return sb1.ToString().Equals(sb1.ToString());
+        }
+
         /// <summary>
         /// 
         /// </summary>
-        public UserGroupDetailViewModel ParentModel { get; set; }
+        public ServerUserManagerViewModel ParentModel { get; set; }
 
         #endregion ...Properties...
 
@@ -445,13 +530,13 @@ namespace DBInStudio.Desktop.ViewModel
         /// <summary>
         /// 
         /// </summary>
-        public void IntPermission(List<string> allpermission)
+        public void IntDatabase(List<string> allpermission)
         {
             List<PermissionItemModel> ptmp = new List<PermissionItemModel>();
             foreach (var vv in allpermission)
             {
                 PermissionItemModel pm = new PermissionItemModel() { Name = vv };
-                pm.IsSelected = this.Permissions.Contains(vv);
+                pm.IsSelected = this.Database.Contains(vv);
                 ptmp.Add(pm);
             }
             PermissionModel = ptmp;
@@ -460,10 +545,26 @@ namespace DBInStudio.Desktop.ViewModel
         /// <summary>
         /// 
         /// </summary>
-        public void CheckPermission()
+        public void CheckDatabase()
         {
            if(this.PermissionModel!=null)
-            this.Permissions = this.PermissionModel.Where(e => e.IsSelected).Select(e => e.Name).ToList();
+            this.Database = this.PermissionModel.Where(e => e.IsSelected).Select(e => e.Name).ToList();
+        }
+
+        /// <summary>
+        /// 更新用户名称
+        /// </summary>
+        /// <param name="oldName"></param>
+        /// <param name="newName"></param>
+        private bool UpdateUserName(string oldName,string newName)
+        {
+           var vv =  DBDevelopClientApi.DevelopServiceHelper.Helper.ReNameUser(oldName, newName);
+            if (vv && CurrentUserManager.Manager.UserName == oldName)
+            {
+                CurrentUserManager.Manager.UserName = newName;
+                CurrentUserManager.Manager.OnRefreshName();
+            }
+            return vv;
         }
 
         /// <summary>
@@ -473,84 +574,29 @@ namespace DBInStudio.Desktop.ViewModel
         {
             if (this.ParentModel == null) return;
 
-            DBDevelopClientApi.DevelopServiceHelper.Helper.UpdateDatabaseUser(this.ParentModel.Model.Database, this.Model);
-            IsNew = false;
-            if (mIsPasswordChanged)
+            if(IsNew)
             {
-                mIsPasswordChanged = false;
-                DBDevelopClientApi.DevelopServiceHelper.Helper.UpdateDatabaseUserPassword(this.ParentModel.Model.Database, this.Name, this.Model.Password);
-            }
-        }
-
-        #endregion ...Methods...
-
-        #region ... Interfaces ...
-
-        #endregion ...Interfaces...
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public class PermissionItemModel:ViewModelBase
-    {
-
-        #region ... Variables  ...
-        private bool mIsSelected = false;
-        private string mName = "";
-        #endregion ...Variables...
-
-        #region ... Events     ...
-
-        #endregion ...Events...
-
-        #region ... Constructor...
-
-        #endregion ...Constructor...
-
-        #region ... Properties ...
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool IsSelected
-        {
-            get
-            {
-                return mIsSelected;
-            }
-            set
-            {
-                if (mIsSelected != value)
+                if(DBDevelopClientApi.DevelopServiceHelper.Helper.AddUser(this.Name, this.Password,IsAdmin,CanNewDatabase))
                 {
-                    mIsSelected = value;
-                    OnPropertyChanged("IsSelected");
+                    IsNew = false;
+                }
+                DBDevelopClientApi.DevelopServiceHelper.Helper.UpdateUser(this.Name,IsAdmin,CanNewDatabase,this.Database);
+            }
+            else
+            {
+                if (IsChanged)
+                {
+                    DBDevelopClientApi.DevelopServiceHelper.Helper.UpdateUser(this.Name, IsAdmin, CanNewDatabase, this.Database);
+                    IsChanged = false;
+                }
+                if (mIsPasswordChanged)
+                {
+                    mIsPasswordChanged = false;
+                    DBDevelopClientApi.DevelopServiceHelper.Helper.UpdateUserPassword(this.Name, this.Password);
                 }
             }
+           
         }
-
-        /// <summary>
-            /// 
-            /// </summary>
-        public string Name
-        {
-            get
-            {
-                return mName;
-            }
-            set
-            {
-                if (mName != value)
-                {
-                    mName = value;
-                    OnPropertyChanged("Name");
-                }
-            }
-        }
-
-
-        #endregion ...Properties...
-
-        #region ... Methods    ...
 
         #endregion ...Methods...
 

@@ -8,6 +8,7 @@
 //==============================================================
 
 using DBDevelopClientApi;
+using DBInStudio.Desktop.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,6 +42,24 @@ namespace DBInStudio.Desktop
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override ViewModelBase GetModel(ViewModelBase mode)
+        {
+            if(mode is TagGroupDetailViewModel)
+            {
+                (mode as TagGroupDetailViewModel).GroupModel = this;
+                return mode;
+            }
+            else
+            {
+                return new TagGroupDetailViewModel() { GroupModel = this };
+            }
+            
+        }
 
         /// <summary>
         /// 

@@ -14,7 +14,7 @@ using System.Text;
 
 namespace DBInStudio.Desktop
 {
-    public class ViewModelBase : INotifyPropertyChanged
+    public class ViewModelBase : INotifyPropertyChanged,IDisposable
     {
 
         #region ... Variables  ...
@@ -42,6 +42,13 @@ namespace DBInStudio.Desktop
         protected void OnPropertyChanged(string name)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public virtual void Dispose()
+        {
         }
 
         #endregion ...Methods...

@@ -31,10 +31,31 @@ namespace DBDevelopService
         /// </summary>
         public string Password { get; set; }
 
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public List<string> Permissions { get; set; }
+
         /// <summary>
         /// 
         /// </summary>
-        public List<string> Permissions { get; set; }
+        public bool IsAdmin { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool NewDatabase { get; set; }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool DeleteDatabase { get; set; }
+
+        /// <summary>
+        /// 允许访问的数据库
+        /// </summary>
+        public List<string> Databases { get; set; } = new List<string>();
 
         #endregion ...Properties...
 

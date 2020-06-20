@@ -151,6 +151,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Database 的本地化字符串。
+        /// </summary>
+        internal static string Database {
+            get {
+                return ResourceManager.GetString("Database", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Database select 的本地化字符串。
         /// </summary>
         internal static string databaseSelect {
@@ -277,6 +286,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Admin 的本地化字符串。
+        /// </summary>
+        internal static string IsAdmin {
+            get {
+                return ResourceManager.GetString("IsAdmin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Link 的本地化字符串。
         /// </summary>
         internal static string Link {
@@ -300,6 +318,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string LoginFailed {
             get {
                 return ResourceManager.GetString("LoginFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Logout 的本地化字符串。
+        /// </summary>
+        internal static string Logout {
+            get {
+                return ResourceManager.GetString("Logout", resourceCulture);
             }
         }
         
@@ -336,6 +363,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string MinValue {
             get {
                 return ResourceManager.GetString("MinValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Modify 的本地化字符串。
+        /// </summary>
+        internal static string Modify {
+            get {
+                return ResourceManager.GetString("Modify", resourceCulture);
             }
         }
         
@@ -399,6 +435,24 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Password {
             get {
                 return ResourceManager.GetString("Password", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Password confirm 的本地化字符串。
+        /// </summary>
+        internal static string PasswordConfirm {
+            get {
+                return ResourceManager.GetString("PasswordConfirm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 New password  的本地化字符串。
+        /// </summary>
+        internal static string PasswordNew {
+            get {
+                return ResourceManager.GetString("PasswordNew", resourceCulture);
             }
         }
         
@@ -601,6 +655,33 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 ServerSecurity 的本地化字符串。
+        /// </summary>
+        internal static string ServerSecurity {
+            get {
+                return ResourceManager.GetString("ServerSecurity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 set password fail. 的本地化字符串。
+        /// </summary>
+        internal static string SetPasswordfail {
+            get {
+                return ResourceManager.GetString("SetPasswordfail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 set password seccussfull. 的本地化字符串。
+        /// </summary>
+        internal static string SetPasswordSeccussful {
+            get {
+                return ResourceManager.GetString("SetPasswordSeccussful", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Slope zone 的本地化字符串。
         /// </summary>
         internal static string SlopeAreaValue {
@@ -615,6 +696,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string SlopeCompress {
             get {
                 return ResourceManager.GetString("SlopeCompress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Switch 的本地化字符串。
+        /// </summary>
+        internal static string Switch {
+            get {
+                return ResourceManager.GetString("Switch", resourceCulture);
             }
         }
         

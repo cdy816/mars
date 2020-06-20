@@ -59,7 +59,7 @@ namespace DBDevelopService
         {
             mPermissions.Add(NewPermission, new Permission() { Name = NewPermission });
             mPermissions.Add(DeletePermission, new Permission() { Name = DeletePermission });
-            mPermissions.Add(ModifyPermission, new Permission() { Name = ModifyPermission });
+            //mPermissions.Add(ModifyPermission, new Permission() { Name = ModifyPermission });
             mPermissions.Add(AdminPermission, new Permission() { Name = AdminPermission, IsAdmin = true });
         }
 

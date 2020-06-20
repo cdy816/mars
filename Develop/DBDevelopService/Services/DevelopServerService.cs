@@ -29,6 +29,42 @@ namespace DBDevelopService
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
+        public override Task<BoolResultReplay> IsAdmin(GetRequest request, ServerCallContext context)
+        {
+            if (IsAdmin(request.LoginId))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = true });
+            }
+            else
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> CanNewDatabase(GetRequest request, ServerCallContext context)
+        {
+            if (HasNewDatabasePermission(request.LoginId))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = true });
+            }
+            else
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public override Task<BoolResultReplay> Logout(LogoutRequest request, ServerCallContext context)
         {
             SecurityManager.Manager.Logout(request.LoginId);
@@ -41,10 +77,42 @@ namespace DBDevelopService
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        private bool CheckLoginId(string id,string permission="")
+        private bool CheckLoginId(string id,string database="")
         {
-            return SecurityManager.Manager.CheckKeyAvaiable(id) && SecurityManager.Manager.CheckPermission(id,permission);
+            return SecurityManager.Manager.CheckKeyAvaiable(id) && (SecurityManager.Manager.CheckDatabase(id, database)|| SecurityManager.Manager.IsAdmin(id));
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        private bool IsAdmin(string id)
+        {
+            return SecurityManager.Manager.CheckKeyAvaiable(id) && SecurityManager.Manager.IsAdmin(id);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        private bool HasNewDatabasePermission(string id)
+        {
+            return SecurityManager.Manager.CheckKeyAvaiable(id) && SecurityManager.Manager.HasNewDatabasePermission(id);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        private bool HasDeleteDatabasePerssion(string id)
+        {
+            return SecurityManager.Manager.CheckKeyAvaiable(id) && SecurityManager.Manager.HasDeleteDatabasePermission(id);
+
+        }
+
 
         #region Database User
 
@@ -56,7 +124,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<GetAllDatabasePermissionReplay> GetAllDatabasePermission(GetAllDatabasePermissionRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId))
+            if (!CheckLoginId(request.LoginId,request.Database))
             {
                 return Task.FromResult(new GetAllDatabasePermissionReplay() { Result = false });
             }
@@ -88,7 +156,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> ModifyDatabaseUserPassword(ModifyDatabaseUserPasswordRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -112,7 +180,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> NewDatabasePermission(DatabasePermissionRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -134,7 +202,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> NewDatabaseUser(NewDatabaseUserRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -155,7 +223,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> UpdateDatabasePermission(DatabasePermissionRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -187,7 +255,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> RemoveDatabasePermission(RemoveDatabasePermissionRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -210,7 +278,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> UpdateDatabaseUser(UpdateDatabaseUserRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -242,7 +310,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> RemoveDatabaseUser(RemoveByNameRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.DeletePermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -266,7 +334,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> AddDatabaseUserGroup(AddGroupRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -289,7 +357,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<GetGroupMessageReply> GetDatabaseUserGroup(GetRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new GetGroupMessageReply() { Result = false });
             }
@@ -313,7 +381,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<GetDatabaseUsersReplay> GetDatabaseUserByGroup(GetDatabaseUserByGroupRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new GetDatabaseUsersReplay() { Result = false });
             }
@@ -341,7 +409,7 @@ namespace DBDevelopService
         public override Task<BoolResultReplay> MoveDatabaseUserGroup(MoveGroupRequest request, ServerCallContext context)
         {
 
-            if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -370,7 +438,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> RemoveDatabaseUserGroup(RemoveGroupRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -394,7 +462,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> RenameDatabaseUserGroup(RenameGroupRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -427,11 +495,11 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> NewUser(NewUserRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.AdminPermission))
+            if (!IsAdmin(request.LoginId))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
-            var user = new User() { Name = request.UserName,Password = request.Password,Permissions = request.Permission.ToList() };
+            var user = new User() { Name = request.UserName,Password = request.Password };
             SecurityManager.Manager.Securitys.User.AddUser(user);
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
@@ -442,17 +510,33 @@ namespace DBDevelopService
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
+        public override Task<BoolResultReplay> ReNameUser(ReNameUserRequest request, ServerCallContext context)
+        {
+            if (!IsAdmin(request.LoginId))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            bool re = SecurityManager.Manager.Securitys.User.RenameUser(request.OldName, request.NewName);
+            SecurityManager.Manager.RenameLoginUser(request.OldName, request.NewName);
+            return Task.FromResult(new BoolResultReplay() { Result = re });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public override Task<BoolResultReplay> ModifyPassword(ModifyPasswordRequest request, ServerCallContext context)
         {
-            
             var userName = SecurityManager.Manager.GetUserName(request.LoginId);
-            if (!CheckLoginId(request.LoginId, PermissionDocument.AdminPermission)&& userName != request.UserName)
+            if (!SecurityManager.Manager.CheckKeyAvaiable(request.LoginId)&& userName != request.UserName && SecurityManager.Manager.CheckPasswordIsCorrect(userName,request.Password))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
             var user = SecurityManager.Manager.Securitys.User.GetUser(request.UserName);
             if(user!=null)
-            user.Password = request.Password;
+            user.Password = request.Newpassword;
 
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
@@ -465,14 +549,30 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> UpdateUser(UpdateUserRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.AdminPermission))
+            if (!IsAdmin(request.LoginId))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
             var user = SecurityManager.Manager.Securitys.User.GetUser(request.UserName);
-            if(user!=null)
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> UpdateUserPassword(UpdatePasswordRequest request, ServerCallContext context)
+        {
+            if (!IsAdmin(request.LoginId))
             {
-                user.Permissions = request.Permission.ToList();
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var user = SecurityManager.Manager.Securitys.User.GetUser(request.UserName);
+            if (user != null)
+            {
+                user.Password = request.Password;
             }
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
@@ -485,7 +585,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<GetUsersReplay> GetUsers(GetRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.AdminPermission))
+            if (!IsAdmin(request.LoginId))
             {
                 return Task.FromResult(new GetUsersReplay() { Result = false });
             }
@@ -493,8 +593,9 @@ namespace DBDevelopService
             GetUsersReplay re = new GetUsersReplay() { Result = true };
             foreach (var vv in SecurityManager.Manager.Securitys.User.Users)
             {
-                var user = new UserMessage() { UserName = vv.Value.Name };
-                user.Permission.AddRange(vv.Value.Permissions);
+                var user = new UserMessage() { UserName = vv.Value.Name,IsAdmin=vv.Value.IsAdmin,NewDatabase=vv.Value.NewDatabase };
+                if(vv.Value.Databases!=null)
+                user.Databases.AddRange(vv.Value.Databases);
                 re.Users.Add(user);
             }
             return Task.FromResult(re);
@@ -508,7 +609,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> RemoveUser(RemoveUserRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.AdminPermission))
+            if (!IsAdmin(request.LoginId))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -519,6 +620,23 @@ namespace DBDevelopService
             }
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="request"></param>
+        ///// <param name="context"></param>
+        ///// <returns></returns>
+        //public override Task<GetPermissionsReplay> GetPermissions(GetRequest request, ServerCallContext context)
+        //{
+        //    if (!IsAdmin(request.LoginId))
+        //    {
+        //        return Task.FromResult(new GetPermissionsReplay() { Result = false });
+        //    }
+        //    GetPermissionsReplay replay = new GetPermissionsReplay() { Result = true };
+        //    replay.Permission.AddRange(SecurityManager.Manager.Securitys.Permission.Permissions.Keys.ToList());
+        //    return Task.FromResult(replay);
+        //}
 
         #endregion
 
@@ -532,7 +650,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> NewDatabase(NewDatabaseRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.AdminPermission))
+            if (!IsAdmin(request.LoginId) && !HasNewDatabasePermission(request.LoginId))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -544,6 +662,9 @@ namespace DBDevelopService
             else
             {
                 DbManager.Instance.NewDB(request.Database,request.Desc);
+                var user = SecurityManager.Manager.GetUser(request.LoginId);
+
+                user.Databases.Add(request.Database);
             }
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
@@ -556,14 +677,19 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<QueryDatabaseReplay> QueryDatabase(QueryDatabaseRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId))
+            if (!SecurityManager.Manager.CheckKeyAvaiable(request.LoginId))
             {
                 return Task.FromResult(new QueryDatabaseReplay() { Result = false });
             }
             QueryDatabaseReplay re = new QueryDatabaseReplay() { Result = true };
-            foreach(var vv in DbManager.Instance.ListDatabase())
+            var user = SecurityManager.Manager.GetUser(request.LoginId);
+            var dbs = user.Databases;
+            foreach (var vv in DbManager.Instance.ListDatabase())
             {
-                re.Database.Add(new KeyValueMessage() { Key = vv, Value = DbManager.Instance.GetDatabase(vv).Desc });
+                if (dbs.Contains(vv)||user.IsAdmin)
+                {
+                    re.Database.Add(new KeyValueMessage() { Key = vv, Value = DbManager.Instance.GetDatabase(vv).Desc });
+                }
             }
             return Task.FromResult(re);
         }
@@ -601,7 +727,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<AddGroupReplay> AddTagGroup(AddGroupRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new AddGroupReplay() { Result = false });
             }
@@ -645,7 +771,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<PasteGroupReplay> PasteTagGroup(PasteGroupRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new PasteGroupReplay() { Result = false });
             }
@@ -708,7 +834,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> RenameTagGroup(RenameGroupRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -733,7 +859,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> RemoveTagGroup(RemoveGroupRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -755,7 +881,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> MoveTagGroup(MoveGroupRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -777,7 +903,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<GetTagGroupMessageReply> GetTagGroup(GetRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new GetTagGroupMessageReply() { Result = false });
             }
@@ -805,7 +931,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<GetTagMessageReply> GetTagByGroup(GetTagByGroupRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new GetTagMessageReply() { Result = false, Index = request.Index });
             }
@@ -864,7 +990,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<GetTagMessageReply> GetAllTag(GetTagByGroupRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new GetTagMessageReply() { Result = false });
             }
@@ -924,7 +1050,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<GetHistTagMessageReply> GetHisAllTag(GetRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new GetHistTagMessageReply() { Result = false });
             }
@@ -962,7 +1088,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<GetRealTagMessageReply> GetRealAllTag(GetRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new GetRealTagMessageReply() { Result = false });
             }
@@ -991,7 +1117,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<GetHistTagMessageReply> QueryHisTag(QueryMessageRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new GetHistTagMessageReply() { Result = false });
             }
@@ -1056,7 +1182,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<GetRealTagMessageReply> QueryRealTag(QueryMessageRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new GetRealTagMessageReply() { Result = false });
             }
@@ -1114,7 +1240,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> RemoveTag(RemoveTagMessageRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.DeletePermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -1143,7 +1269,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> ClearTag(ClearTagRequestMessage request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.DeletePermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -1175,7 +1301,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> ClearAllTag(GetRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.DeletePermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -1202,7 +1328,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> RemoveHisTag(RemoveTagMessageRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -1231,7 +1357,7 @@ namespace DBDevelopService
         {
             try
             {
-                if (!CheckLoginId(request.LoginId, PermissionDocument.ModifyPermission))
+                if (!CheckLoginId(request.LoginId, request.Database))
                 {
                     return Task.FromResult(new BoolResultReplay() { Result = false });
                 }
@@ -1278,7 +1404,7 @@ namespace DBDevelopService
         {
             try
             {
-                if (!CheckLoginId(request.LoginId,PermissionDocument.ModifyPermission))
+                if (!CheckLoginId(request.LoginId, request.Database))
                 {
                     return Task.FromResult(new BoolResultReplay() { Result = false });
                 }
@@ -1398,7 +1524,7 @@ namespace DBDevelopService
         {
             try
             {
-                if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+                if (!CheckLoginId(request.LoginId, request.Database))
                 {
                     return Task.FromResult(new AddTagReplyMessage() { Result = false });
                 }
@@ -1461,7 +1587,7 @@ namespace DBDevelopService
         {
             try
             {
-                if (!CheckLoginId(request.LoginId, PermissionDocument.NewPermission))
+                if (!CheckLoginId(request.LoginId, request.Database))
                 {
                     return Task.FromResult(new ImportTagRequestReplyMessage() { Result = false });
                 }
@@ -1590,7 +1716,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<GetRegisteDriversReplay> GetRegisteDrivers(GetRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new GetRegisteDriversReplay() { Result = false });
             }
@@ -1617,7 +1743,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> Save(GetRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -1641,7 +1767,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> Cancel(GetRequest request, ServerCallContext context)
         {
-            if (!CheckLoginId(request.LoginId))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }

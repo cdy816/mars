@@ -42,14 +42,19 @@
         <view:PermissionDetailView />
     </DataTemplate>
 
-
     <DataTemplate DataType="{x:Type viewmodel:ImportModeSelectViewModel}">
         <view:ImportModeSelectView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type viewmodel:ServerUserEditorViewModel}">
+        <view:ServerUserEditorView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type viewmodel:ServerUserManagerViewModel}">
+        <view:ServerUserGroupDetailView />
+    </DataTemplate>
+
     <BooleanToVisibilityConverter x:Key="bvc" />
-    
-    
     
     <Style TargetType="{x:Type local:CustomWindowBase}">
         <Setter Property="IsOK" Value="{Binding IsOK}" />

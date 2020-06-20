@@ -15,7 +15,7 @@ using System.Windows.Input;
 
 namespace DBInStudio.Desktop
 {
-    public class TreeItemViewModel: ViewModelBase,ITreeViewModel
+    public class TreeItemViewModel: ViewModelBase, ITreeItemViewModel
     {
 
         #region ... Variables  ...
@@ -91,7 +91,7 @@ namespace DBInStudio.Desktop
         /// <summary>
         /// 
         /// </summary>
-        public string Name
+        public virtual string Name
         {
             get
             {
@@ -234,6 +234,15 @@ namespace DBInStudio.Desktop
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        public virtual ViewModelBase GetModel(ViewModelBase mode)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public virtual void Add()
         {
 
@@ -346,6 +355,15 @@ namespace DBInStudio.Desktop
 
         #region ... Methods    ...
 
+        public override void Dispose()
+        {
+            foreach(var vv in Children)
+            {
+                vv.Dispose();
+            }
+            base.Dispose();
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...
@@ -354,7 +372,7 @@ namespace DBInStudio.Desktop
     }
 
          
-    public interface ITreeViewModel
+    public interface ITreeItemViewModel
     {
 
         #region ... Variables  ...

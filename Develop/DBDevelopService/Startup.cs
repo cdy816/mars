@@ -30,7 +30,7 @@ namespace DBDevelopService
             }
 
             app.UseRouting();
-
+            
             app.UseEndpoints(endpoints =>
             {
 

@@ -13,6 +13,7 @@ namespace DBStudio
 {
     class Program
     {
+        static bool mIsExited = false;
         static void Main(string[] args)
         {
             int port = 5001;
@@ -27,49 +28,69 @@ namespace DBStudio
                 webPort = int.Parse(args[1]);
             }
             WindowConsolHelper.DisbleQuickEditMode();
+
+            Console.CancelKeyPress += Console_CancelKeyPress;
             LogoHelper.Print();
             DBDevelopService.Service.Instanse.Start(port, webPort);
             //OutByLine("", "输入exit退出服务");
             OutByLine("", Res.Get("HelpMsg"));
-            while (true)
+            while (!mIsExited)
             {
                 OutInLine("", "");
-                string[] cmd = Console.ReadLine().Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-                if (cmd.Length == 0) continue;
-
-                string cmsg = cmd[0].ToLower();
-
-                if (cmsg == "exit")
+                var vv = Console.ReadLine();
+                
+                if (vv != null)
                 {
-                    OutByLine("", "确定要退出?输入y确定,输入其他任意字符取消");
-                    cmd = Console.ReadLine().Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] cmd = vv.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
                     if (cmd.Length == 0) continue;
-                    if (cmd[0].ToLower() == "y")
-                        break;
-                }
-                else if (cmsg == "db")
-                {
-                    if (cmd.Length > 1)
-                        ProcessDatabaseCreate(cmd[1]);
-                }
-                else if (cmsg == "list")
-                {
-                    ListDatabase();
-                }
-                else if (cmsg == "h")
-                {
-                    OutByLine("", GetHelpString());
-                }
-                else if(cmsg=="**")
-                {
-                    LogoHelper.PrintAuthor();
+
+                    string cmsg = cmd[0].ToLower();
+
+                    if (cmsg == "exit")
+                    {
+                        OutByLine("", "确定要退出?输入y确定,输入其他任意字符取消");
+                        cmd = Console.ReadLine().Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                        if (cmd.Length == 0) continue;
+                        if (cmd[0].ToLower() == "y")
+                            break;
+                    }
+                    else if (cmsg == "db")
+                    {
+                        if (cmd.Length > 1)
+                            ProcessDatabaseCreate(cmd[1]);
+                    }
+                    else if (cmsg == "list")
+                    {
+                        ListDatabase();
+                    }
+                    else if (cmsg == "h")
+                    {
+                        OutByLine("", GetHelpString());
+                    }
+                    else if (cmsg == "**")
+                    {
+                        LogoHelper.PrintAuthor();
+                    }
                 }
             }
             DBDevelopService.Service.Instanse.Stop();
 
         }
 
- 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
+        {
+            mIsExited = true;
+            e.Cancel = true;
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(Res.Get("AnyKeyToExit"));
+            Console.ResetColor();
+        }
 
         /// <summary>
         /// 

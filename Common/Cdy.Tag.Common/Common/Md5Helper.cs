@@ -20,7 +20,7 @@ namespace Cdy.Tag.Common.Common
 
         public static string Encode(string data)
         {
-            return Encode(data, "mrdb", "20200619");
+            return Encode(data, "mrdbcdy0", "20200619");
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace Cdy.Tag.Common.Common
         /// <returns></returns>
         public static string Decode(string data)
         {
-            return Decode(data, "mrdb", "20200619");
+            return Decode(data, "mrdbcdy0", "20200619");
         }
 
         /// <summary>

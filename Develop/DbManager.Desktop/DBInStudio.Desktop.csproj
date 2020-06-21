@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <None Remove="Image\add.png" />
+    <None Remove="Image\cancel.png" />
     <None Remove="Image\database-add.png" />
     <None Remove="Image\export.png" />
     <None Remove="Image\export2.png" />
@@ -25,6 +26,7 @@
     <None Remove="Image\import2.png" />
     <None Remove="Image\log-out.png" />
     <None Remove="Image\mrdbd.ico" />
+    <None Remove="Image\ok.png" />
     <None Remove="Image\permissions.png" />
     <None Remove="Image\remove.png" />
     <None Remove="Image\save.png" />
@@ -46,6 +48,7 @@
 
   <ItemGroup>
     <Resource Include="Image\add.png" />
+    <Resource Include="Image\cancel.png" />
     <Resource Include="Image\database-add.png" />
     <Resource Include="Image\export.png" />
     <Resource Include="Image\export2.png" />
@@ -54,6 +57,7 @@
     <Resource Include="Image\import2.png" />
     <Resource Include="Image\log-out.png" />
     <Resource Include="Image\mrdbd.ico" />
+    <Resource Include="Image\ok.png" />
     <Resource Include="Image\permissions.png" />
     <Resource Include="Image\remove.png" />
     <Resource Include="Image\save.png" />

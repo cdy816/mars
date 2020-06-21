@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:DBInStudio.Desktop.View"
              xmlns:res="clr-namespace:DBInStudio.Desktop"
              mc:Ignorable="d" 
-             d:DesignHeight="180" d:DesignWidth="500">
+             d:DesignHeight="180" d:DesignWidth="500" UseLayoutRounding="True" SnapsToDevicePixels="True">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -20,7 +20,7 @@
         <Label Content="{res:ResMarker ServerIp,:}" HorizontalAlignment="Center" Margin="10,0" VerticalAlignment="Center"/>
         <Label Content="{res:ResMarker UserName,:}" HorizontalAlignment="Center" Margin="10,0" VerticalAlignment="Center" Grid.Row="1"/>
         <Label Content="{res:ResMarker Password,:}" HorizontalAlignment="Center" Margin="10,0" VerticalAlignment="Center" Grid.Row="2"/>
-        <ComboBox VerticalContentAlignment="Center" Grid.Column="1" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Text="{Binding Server}" Width="300" Height="32" IsEditable="True" />
+        <ComboBox UseLayoutRounding="True" VerticalContentAlignment="Center"  Grid.Column="1" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Text="{Binding Server}" Width="300" Height="32" IsEditable="True" />
         <TextBox VerticalContentAlignment="Center" Grid.Column="1" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="1" Text="{Binding UserName}" Height="32" TextWrapping="Wrap" VerticalAlignment="Center" Width="300"/>
         <PasswordBox VerticalContentAlignment="Center" x:Name="pb" PasswordChanged="PasswordBox_PasswordChanged" Grid.Column="1" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="2"  Height="32"   VerticalAlignment="Center" Width="300"/>
 

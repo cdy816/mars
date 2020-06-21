@@ -35,11 +35,6 @@ namespace DBDevelopService.Security
         /// </summary>
         public UserDocument User { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public PermissionDocument Permission { get; set; }
-
         #endregion ...Properties...
 
         #region ... Methods    ...

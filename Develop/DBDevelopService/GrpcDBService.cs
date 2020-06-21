@@ -70,6 +70,7 @@ namespace DBDevelopService
             }
             sip += ":" + port;
             mhost = CreateHostBuilder(sip).Build();
+           
             LoggerService.Service.Info("DBService", "启动服务:"+ sip);
             await mhost.StartAsync();
         }

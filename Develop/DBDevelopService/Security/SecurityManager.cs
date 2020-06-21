@@ -62,6 +62,15 @@ namespace DBDevelopService
         /// <summary>
         /// 
         /// </summary>
+        public void Save()
+        {
+            Security.SecuritySerise ss = new Security.SecuritySerise() { Document = this.Securitys };
+            ss.Save();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="userName"></param>
         /// <param name="pass"></param>
         /// <returns></returns>

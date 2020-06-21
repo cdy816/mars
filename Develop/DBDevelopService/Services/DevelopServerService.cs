@@ -501,6 +501,7 @@ namespace DBDevelopService
             }
             var user = new User() { Name = request.UserName,Password = request.Password };
             SecurityManager.Manager.Securitys.User.AddUser(user);
+            SecurityManager.Manager.Save();
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
 
@@ -518,6 +519,7 @@ namespace DBDevelopService
             }
             bool re = SecurityManager.Manager.Securitys.User.RenameUser(request.OldName, request.NewName);
             SecurityManager.Manager.RenameLoginUser(request.OldName, request.NewName);
+            SecurityManager.Manager.Save();
             return Task.FromResult(new BoolResultReplay() { Result = re });
         }
 
@@ -535,9 +537,11 @@ namespace DBDevelopService
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
             var user = SecurityManager.Manager.Securitys.User.GetUser(request.UserName);
-            if(user!=null)
-            user.Password = request.Newpassword;
-
+            if (user != null)
+            {
+                user.Password = request.Newpassword;
+                SecurityManager.Manager.Save();
+            }
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
 
@@ -554,6 +558,14 @@ namespace DBDevelopService
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
             var user = SecurityManager.Manager.Securitys.User.GetUser(request.UserName);
+            if (user != null)
+            {
+                user.IsAdmin = request.IsAdmin;
+                user.NewDatabase = request.NewDatabasePermission;
+                user.Databases = request.Database.ToList();
+                SecurityManager.Manager.Save();
+            }
+
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
 
@@ -573,7 +585,9 @@ namespace DBDevelopService
             if (user != null)
             {
                 user.Password = request.Password;
+                SecurityManager.Manager.Save();
             }
+           
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
 
@@ -617,26 +631,12 @@ namespace DBDevelopService
             if (user != null)
             {
                 SecurityManager.Manager.Securitys.User.RemoveUser(request.UserName);
+                SecurityManager.Manager.Save();
             }
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="request"></param>
-        ///// <param name="context"></param>
-        ///// <returns></returns>
-        //public override Task<GetPermissionsReplay> GetPermissions(GetRequest request, ServerCallContext context)
-        //{
-        //    if (!IsAdmin(request.LoginId))
-        //    {
-        //        return Task.FromResult(new GetPermissionsReplay() { Result = false });
-        //    }
-        //    GetPermissionsReplay replay = new GetPermissionsReplay() { Result = true };
-        //    replay.Permission.AddRange(SecurityManager.Manager.Securitys.Permission.Permissions.Keys.ToList());
-        //    return Task.FromResult(replay);
-        //}
+
 
         #endregion
 

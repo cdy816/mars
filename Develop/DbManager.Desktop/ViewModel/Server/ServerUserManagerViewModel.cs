@@ -241,7 +241,6 @@ namespace DBInStudio.Desktop.ViewModel
                 foreach (var vv in users)
                 {
                     var uu = new ServerUserItemViewModel(vv.Key) { ParentModel = this, Database = vv.Value.Item3, IsAdmin = vv.Value.Item1, CanNewDatabase = vv.Value.Item2 };
-                    uu.IsChanged = false;
                     utmp.Add(uu);
                 }
             }
@@ -253,6 +252,7 @@ namespace DBInStudio.Desktop.ViewModel
             foreach (var vv in Users)
             {
                 vv.IntDatabase(mPermissionCach);
+                vv.IsChanged = false;
             }
 
             if (Users.Count > 0) CurrentSelectedUser = Users[0];

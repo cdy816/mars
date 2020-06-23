@@ -247,7 +247,7 @@ namespace Cdy.Tag
             // var id = mSourceMemory.ReadInt(addr + 4);
 
             var histag = mHisTagService.GetHisTag(id);
-
+            
             if (histag == null) return 0;
 
             var qulityoffset = qulityOffset;
@@ -267,6 +267,7 @@ namespace Cdy.Tag
                 tp.RecordType = histag.Type;
                 tp.StartTime = mCurrentTime;
                 tp.Parameters = histag.Parameters;
+                tp.Precision = histag.Precision;
                 var size = tp.Compress(mSourceMemory, addr, this, targetPosition + 5, len) + 1;
                 this.WriteInt(targetPosition, (int)size);
                 //this.Dump();

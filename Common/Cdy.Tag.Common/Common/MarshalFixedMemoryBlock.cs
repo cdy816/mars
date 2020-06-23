@@ -1522,7 +1522,7 @@ namespace Cdy.Tag
         /// <param name="stream"></param>
         public static void RecordToLog(this MarshalFixedMemoryBlock memory, Stream stream)
         {
-            int ls = 1024 * 1024 * 4;
+            int ls = 1024 * 1024 * 128;
             byte[] bvals = new byte[ls];
             //long totalsize = memory.AllocSize;
             //long csize = 0;

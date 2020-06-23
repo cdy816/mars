@@ -54,7 +54,7 @@ namespace HisDataTools
             if (values != null)
             {
                 var item = values[0];
-                if (mCollectionView == null)
+                //if (mCollectionView == null)
                 {
                     mCollectionView = CollectionViewSource.GetDefaultView(values[1]) as ListCollectionView;
                 }

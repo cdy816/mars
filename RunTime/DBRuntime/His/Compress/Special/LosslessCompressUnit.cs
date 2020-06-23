@@ -6,6 +6,7 @@
 //  Version 1.0
 //  种道洋
 //==============================================================
+using DBRuntime.His.Compress;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,12 @@ namespace Cdy.Tag
         protected MemoryBlock mMarshalMemory;
 
         protected ProtoMemory mVarintMemory;
+
+        protected DoubleCompressBuffer mDCompress;
+
+        protected FloatCompressBuffer mFCompress;
+
+        private CustomQueue<int> emptys = new CustomQueue<int>(604);
 
         /// <summary>
         /// 
@@ -186,9 +193,7 @@ namespace Cdy.Tag
             mMarshalMemory.Position = 0;
             mVarintMemory.Reset();
             int ig = -1;
-            
             ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
-            // emptyIds.TryDequeue(out ig);
             bool isFirst = true;
             switch (type)
             {
@@ -358,20 +363,26 @@ namespace Cdy.Tag
                     }
                     break;
                 case TagType.Double:
+                    mDCompress.Reset();
+                    mDCompress.Precision = this.Precision;
                     for (int i = 0; i < count; i++)
                     {
                         if (i != ig)
                         {
                             var id = source.ReadDouble(offset + i * 8);
-                            mMarshalMemory.Write(id);
+                            mDCompress.Append(id);
+                           // mMarshalMemory.Write(id);
                         }
                         else
                         {
                             ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
+                    mDCompress.Compress();
                     return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
                 case TagType.Float:
+                    mFCompress.Reset();
+                    mFCompress.Precision = this.Precision;
                     for (int i = 0; i < count; i++)
                     {
                         if (i != ig)
@@ -808,7 +819,7 @@ namespace Cdy.Tag
             return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
         }
 
-        CustomQueue<int> emptys = new CustomQueue<int>(604);
+        
 
         /// <summary>
         /// 
@@ -969,6 +980,9 @@ namespace Cdy.Tag
                     rsize += cqus.Length;
                     break;
                 case TagType.Double:
+                    
+                    if (mDCompress == null) mDCompress = new DoubleCompressBuffer(310) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+
                     var ddres = CompressValues<double>(source, count * 2 + sourceAddr, count, emptys, TagType);
                     target.Write(ddres.Length);
                     target.Write(ddres);
@@ -982,6 +996,9 @@ namespace Cdy.Tag
                     rsize += cqus.Length;
                     break;
                 case TagType.Float:
+
+                    if (mFCompress == null) mFCompress = new FloatCompressBuffer(310) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+
                     var fres = CompressValues<float>(source, count * 2 + sourceAddr, count, emptys, TagType);
                     target.Write(fres.Length);
                     target.Write(fres);
@@ -1299,10 +1316,12 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(double))
             {
-                using (MemorySpan block = new MemorySpan(value))
-                {
-                    return block.ToDoubleList() as List<T>;
-                }
+                return  DoubleCompressBuffer.Decompress(value) as List<T>;
+
+                //using (MemorySpan block = new MemorySpan(value))
+                //{
+                //    return block.ToDoubleList() as List<T>;
+                //}
             }
             else if (typeof(T) == typeof(float))
             {

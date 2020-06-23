@@ -120,6 +120,11 @@ namespace Cdy.Tag
         /// </summary>
         public byte QulitySnape { get; set; }
 
+        /// <summary>
+        /// 数据精度
+        /// </summary>
+        public int Precision { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...

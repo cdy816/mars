@@ -219,7 +219,7 @@ namespace Cdy.Tag
                 {
                     if (i == 1)
                     {
-                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                        slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
                     }
                     else
                     {
@@ -267,7 +267,7 @@ namespace Cdy.Tag
                 {
                     if (i == 1)
                     {
-                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                        slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
                     }
                     else
                     {
@@ -315,7 +315,7 @@ namespace Cdy.Tag
                 {
                     if (i == 1)
                     {
-                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                        slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
                     }
                     else
                     {
@@ -362,7 +362,7 @@ namespace Cdy.Tag
                 {
                     if (i == 1)
                     {
-                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                        slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
                     }
                     else
                     {
@@ -409,7 +409,7 @@ namespace Cdy.Tag
                 {
                     if (i == 1)
                     {
-                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                        slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
                     }
                     else
                     {
@@ -456,7 +456,7 @@ namespace Cdy.Tag
                 {
                     if (i == 1)
                     {
-                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                        slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
                     }
                     else
                     {
@@ -503,7 +503,7 @@ namespace Cdy.Tag
                 {
                     if (i == 1)
                     {
-                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                        slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
                     }
                     else
                     {
@@ -550,7 +550,7 @@ namespace Cdy.Tag
                 {
                     if (i == 1)
                     {
-                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                        slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
                     }
                     else
                     {
@@ -603,7 +603,7 @@ namespace Cdy.Tag
                 {
                     if (i == 1)
                     {
-                        slope = CalSlope(pval, vals[i], vals[i].Key - ptim);
+                        slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
                     }
                     else
                     {

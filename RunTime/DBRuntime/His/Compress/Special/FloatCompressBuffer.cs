@@ -137,7 +137,7 @@ namespace DBRuntime.His.Compress
         /// </summary>
         public void Compress()
         {
-            if (mCanCompress)
+            if (mCanCompress && index>2)
             {
                 MemoryBlock.Write((byte)this.Precision);
                 MemoryBlock.Write(mBuffer[0]);

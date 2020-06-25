@@ -76,9 +76,9 @@ namespace Cdy.Tag
             bool isFirst = true;
 
             int ig = -1;
-            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
+            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
 
-            switch(type)
+            switch (type)
             {
                 case TagType.Byte:
                     byte sval = 0;
@@ -105,7 +105,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
@@ -134,7 +134,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -163,7 +163,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -191,8 +191,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-
-                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -221,7 +220,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -250,7 +249,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
@@ -279,12 +278,14 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     break;
                 case TagType.Double:
                     double dsval = 0;
+                    mDCompress.Reset();
+                    mDCompress.Precision = this.Precision;
                     for (int i = 0; i < count; i++)
                     {
                         if (i != ig)
@@ -292,7 +293,7 @@ namespace Cdy.Tag
                             var id = source.ReadDouble(offset + i * 8);
                             if (isFirst)
                             {
-                                mMarshalMemory.Write(id);
+                                mDCompress.Append(id);
                                 isFirst = false;
                                 dsval = id;
                             }
@@ -300,7 +301,8 @@ namespace Cdy.Tag
                             {
                                 if (CheckIsNeedRecord(dsval, id, deadArea, deadType))
                                 {
-                                    mMarshalMemory.Write(id);
+                                    mDCompress.Append(id);
+                                    // mMarshalMemory.Write(id);
                                     dsval = id;
                                 }
                             }
@@ -308,11 +310,14 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
+                    mDCompress.Compress();
                     return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
                 case TagType.Float:
+                    mFCompress.Reset();
+                    mFCompress.Precision = this.Precision;
                     float fsval = 0;
                     for (int i = 0; i < count; i++)
                     {
@@ -321,7 +326,7 @@ namespace Cdy.Tag
                             var id = source.ReadFloat(offset + i * 4);
                             if (isFirst)
                             {
-                                mMarshalMemory.Write(id);
+                                mFCompress.Append(id);
                                 isFirst = false;
                                 fsval = id;
                             }
@@ -329,7 +334,7 @@ namespace Cdy.Tag
                             {
                                 if (CheckIsNeedRecord(fsval, id, deadArea, deadType))
                                 {
-                                    mMarshalMemory.Write(id);
+                                    mFCompress.Append(id);
                                     fsval = id;
                                 }
                             }
@@ -337,9 +342,10 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.WriteIndex >= 0 ? emptys.Remove() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
+                    mFCompress.Compress();
                     return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
                 default:
                    return base.CompressValues<T>(source, offset, count, emptys, type);

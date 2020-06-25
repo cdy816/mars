@@ -388,13 +388,14 @@ namespace Cdy.Tag
                         if (i != ig)
                         {
                             var id = source.ReadFloat(offset + i * 4);
-                            mMarshalMemory.Write(id);
+                            mFCompress.Append(id);
                         }
                         else
                         {
                             ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
+                    mFCompress.Compress();
                     return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
                 case TagType.IntPoint:
                     int psval = 0;

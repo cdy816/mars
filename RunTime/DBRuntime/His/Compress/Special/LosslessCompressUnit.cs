@@ -28,7 +28,10 @@ namespace Cdy.Tag
 
         protected FloatCompressBuffer mFCompress;
 
-        private CustomQueue<int> emptys = new CustomQueue<int>(604);
+        /// <summary>
+        /// 
+        /// </summary>
+        protected CustomQueue<int> emptys = new CustomQueue<int>(604);
 
         /// <summary>
         /// 
@@ -117,8 +120,9 @@ namespace Cdy.Tag
         {
             int preids = 0;
             mVarintMemory.Reset();
-            emptys.WriteIndex = 0;
-            emptyIds.ReadIndex = 0;
+            emptys.Restet();
+            //emptys.WriteIndex = 0;
+            //emptyIds.ReadIndex = 0;
             bool isFirst = true;
             for (int i = 0; i < timerVals.Count; i++)
             {
@@ -144,12 +148,19 @@ namespace Cdy.Tag
             return mVarintMemory.DataBuffer.AsMemory(0, (int)mVarintMemory.WritePosition);
         }
 
-        protected Memory<byte> CompressTimers(MarshalMemoryBlock timerVals,long startaddr,int count, CustomQueue<int> emptyIds)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="timerVals"></param>
+        /// <param name="startaddr"></param>
+        /// <param name="count"></param>
+        /// <param name="emptyIds"></param>
+        /// <returns></returns>
+        protected virtual Memory<byte> CompressTimers(MarshalMemoryBlock timerVals,long startaddr,int count, CustomQueue<int> emptyIds)
         {
             int preids = 0;
             mVarintMemory.Reset();
-            emptyIds.WriteIndex = 0;
-            emptyIds.ReadIndex = 0;
+            emptys.Restet();
 
             bool isFirst = true;
             int id = 0;
@@ -699,7 +710,7 @@ namespace Cdy.Tag
             //using (ProtoMemory memory = new ProtoMemory(qulitys.Length * 2))
             mVarintMemory.Reset();
             int ig = -1;
-            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
+            ig = emptyIds.ReadIndex<emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
             //emptyIds.TryDequeue(out ig);
             mVarintMemory.WriteInt32(qus);
             for (int i = 1; i < totalcount; i++)
@@ -721,7 +732,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
+                    ig = emptyIds.ReadIndex<emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
                     //    emptyIds.TryDequeue(out ig);
                 }
             }
@@ -743,7 +754,7 @@ namespace Cdy.Tag
             //using (ProtoMemory memory = new ProtoMemory(qulitys.Length * 2))
             mVarintMemory.Reset();
             int ig = -1;
-            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
+            ig = emptyIds.ReadIndex<emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
             mVarintMemory.WriteInt32(qus);
             for (int i = 1; i < qulitys.Length; i++)
             {
@@ -763,7 +774,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
+                    ig = emptyIds.ReadIndex<emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
                 }
             }
             mVarintMemory.WriteInt32(count);
@@ -781,7 +792,7 @@ namespace Cdy.Tag
             byte bval = source.ReadByte(offset);
             short scount = 1;
             int ig = -1;
-            ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
+            ig = emptyIds.ReadIndex<emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
             //emptyIds.TryDequeue(out ig);
 
             short sval = (short)(bval << 15);
@@ -805,7 +816,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    ig = emptys.ReadIndex<emptyIds.WriteIndex ? emptys.IncRead() : -1;
+                    ig = emptyIds.ReadIndex<emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
                     //   emptyIds.TryDequeue(out ig);
                 }
             }
@@ -861,7 +872,7 @@ namespace Cdy.Tag
             rsize += 4;
             rsize += datas.Length;
             
-            switch (TagType)
+            switch (type)
             {
                 case TagType.Bool:
                     var cval = CompressBoolValues(source, count * 2 + sourceAddr, count, emptys);

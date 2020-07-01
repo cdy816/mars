@@ -30,6 +30,9 @@ namespace DBStudio
             WindowConsolHelper.DisbleQuickEditMode();
 
             Console.CancelKeyPress += Console_CancelKeyPress;
+
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
             LogoHelper.Print();
             DBDevelopService.Service.Instanse.Start(port, webPort);
             //OutByLine("", "输入exit退出服务");
@@ -75,6 +78,11 @@ namespace DBStudio
             }
             DBDevelopService.Service.Instanse.Stop();
 
+        }
+
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            LoggerService.Service.Erro("GrpcDBService", e.ExceptionObject.ToString());
         }
 
 
@@ -840,7 +848,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.DoubleTag() { Name = tag+j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.DoubleTag() { Name = tag+j, LinkAddress = link,Group="" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.Double, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }

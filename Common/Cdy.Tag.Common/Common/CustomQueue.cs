@@ -121,6 +121,12 @@ namespace Cdy.Tag
             return mColections[index];
         }
 
+        public void Restet()
+        {
+            WriteIndex = 0;
+            ReadIndex = 0;
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

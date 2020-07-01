@@ -1231,7 +1231,7 @@ namespace Cdy.Tag
         public virtual void Dispose()
         {
             Marshal.FreeHGlobal(mHandles);
-            LoggerService.Service.Erro("MarshalFixedMemoryBlock", Name +" Disposed " );
+            LoggerService.Service.Info("MarshalFixedMemoryBlock", Name +" Disposed ",ConsoleColor.Red );
             //GC.Collect();
         }
 

@@ -71,7 +71,7 @@ namespace Cdy.Tag
         /// <param name="emptyIds"></param>
         protected void FindEmpityIds(MarshalMemoryBlock timerVals, long startaddr, int count, CustomQueue<int> emptyIds)
         {
-            emptys.Restet();
+            emptys.Reset();
             int id = 0;
             for (int i = 0; i < count; i++)
             {
@@ -162,7 +162,7 @@ namespace Cdy.Tag
                 mVarintMemory2 = new ProtoMemory(count * 10);
             }
 
-            emptys2.Restet();
+            emptys2.Reset();
 
             long rsize = 0;
 

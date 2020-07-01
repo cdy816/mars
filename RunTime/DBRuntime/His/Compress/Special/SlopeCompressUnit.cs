@@ -5,6 +5,7 @@
 //  Create by 种道洋 at 2019/12/27 18:45:02.
 //  Version 1.0
 //  种道洋
+//  1. 2020/7/1 三沙永兴岛 优化斜率压缩算法  种道洋
 //==============================================================
 using Google.Protobuf.WellKnownTypes;
 using System;
@@ -22,6 +23,9 @@ namespace Cdy.Tag
 
         #region ... Variables  ...
         protected MemoryBlock mAvaiableDatabuffer;
+
+        protected CustomQueue<int> usedIndex = new CustomQueue<int>(604);
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -65,11 +69,11 @@ namespace Cdy.Tag
         /// <param name="timerVals"></param>
         /// <param name="usedIndex"></param>
         /// <returns></returns>
-        protected  byte[] CompressTimers(List<ushort> timerVals, Queue<int> usedIndex)
+        protected new byte[] CompressTimers(List<ushort> timerVals, CustomQueue<int> usedIndex)
         {
             int preids = timerVals[0];
             int ig = -1;
-            usedIndex.TryDequeue(out ig);
+            ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
             bool isFirst = true;
 
             mVarintMemory.Reset();
@@ -89,27 +93,28 @@ namespace Cdy.Tag
                         mVarintMemory.WriteInt32(id - preids);
                         preids = id;
                     }
-                    if (usedIndex.Count > 0)
-                        usedIndex.TryDequeue(out ig);
+                    ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
                 }
             }
             return mVarintMemory.DataBuffer.AsSpan(0, (int)mVarintMemory.WritePosition).ToArray();
         }
 
 
-        private Queue<int> GetEmpityTimers(List<ushort> timerVals)
+        private void GetEmpityTimers(List<ushort> timerVals)
         {
-            Queue<int> emptyIds = new Queue<int>();
+            emptys.Reset();
+           // Queue<int> emptyIds = new Queue<int>();
             int preids = timerVals[0];
             mVarintMemory.Reset();
             for (int i = 1; i < timerVals.Count; i++)
             {
                 if (timerVals[i] <= 0)
                 {
-                    emptyIds.Enqueue(i);
+                    emptys.Insert(i);
+                    //emptyIds.Enqueue(i);
                 }
             }
-            return emptyIds;
+            //return emptyIds;
         }
 
 
@@ -121,14 +126,16 @@ namespace Cdy.Tag
         /// <param name="totalcount"></param>
         /// <param name="usedIndex"></param>
         /// <returns></returns>
-        protected  Memory<byte> CompressQulitys(MarshalMemoryBlock source, long offset, int totalcount, Queue<int> usedIndex)
+        protected new  Memory<byte> CompressQulitys(MarshalMemoryBlock source, long offset, int totalcount, CustomQueue<int> usedIndex)
         {
+            usedIndex.ReadIndex = 0;
+
             int count = 1;
             byte qus = source.ReadByte(offset);
             //using (VarintCodeMemory memory = new VarintCodeMemory(qulitys.Length * 2))
             mVarintMemory.Reset();
             int ig = -1;
-            usedIndex.TryDequeue(out ig);
+            ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
             mVarintMemory.WriteInt32(qus);
             for (int i = 1; i < totalcount; i++)
             {
@@ -146,8 +153,7 @@ namespace Cdy.Tag
                         mVarintMemory.WriteInt32(qus);
                         count = 1;
                     }
-                    if (usedIndex.Count > 0)
-                        usedIndex.TryDequeue(out ig);
+                    ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
                 }
             }
             mVarintMemory.WriteInt32(count);
@@ -195,14 +201,14 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         /// <param name="mUsedTimerIndex"></param>
         /// <returns></returns>
-        private Memory<byte> SlopeCompressByte(MemoryBlock values,out Queue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressByte(MemoryBlock values,ref CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double slope = 0;
 
             mMarshalMemory.Position = 0;
-            Queue<int> mTimerIndex = new Queue<int>();
+            //Queue<int> mTimerIndex = new Queue<int>();
 
             int count = values.ReadInt(0);
 
@@ -217,7 +223,7 @@ namespace Cdy.Tag
                 mLastTime = mStartTime;
                 mLastValue = mStartValue;
 
-                mTimerIndex.Enqueue(0);
+                mUsedTimerIndex.Insert(0);
 
                 mMarshalMemory.Write(mStartValue);
 
@@ -233,7 +239,7 @@ namespace Cdy.Tag
                     {
                         if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
                         {
-                            mTimerIndex.Enqueue(i - 1);
+                            mUsedTimerIndex.Insert(i - 1);
                             mMarshalMemory.Write((mLastValue));
                             mStartTime = mLastTime;
                             mStartValue = mLastValue;
@@ -244,25 +250,25 @@ namespace Cdy.Tag
                     mLastValue = vval;
                 }
 
-                if (!mTimerIndex.Contains(count))
+              
+                if (!mUsedTimerIndex.Contains(count))
                 {
                     int i = count;
-                    mTimerIndex.Enqueue(i);
+                    mUsedTimerIndex.Insert(i);
                     mMarshalMemory.Write(mLastValue);
                 }
             }
-            mUsedTimerIndex = mTimerIndex;
             return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
         }
 
-        private Memory<byte> SlopeCompressShort(MemoryBlock values, out Queue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressShort(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double slope = 0;
 
             mMarshalMemory.Position = 0;
-            Queue<int> mTimerIndex = new Queue<int>();
+            //Queue<int> mTimerIndex = new Queue<int>();
 
             int count = values.ReadInt(0);
 
@@ -277,7 +283,7 @@ namespace Cdy.Tag
                 mLastTime = mStartTime;
                 mLastValue = mStartValue;
 
-                mTimerIndex.Enqueue(0);
+                mUsedTimerIndex.Insert(0);
 
                 mMarshalMemory.Write(mStartValue);
 
@@ -293,7 +299,7 @@ namespace Cdy.Tag
                     {
                         if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
                         {
-                            mTimerIndex.Enqueue(i - 1);
+                            mUsedTimerIndex.Insert(i - 1);
                             mMarshalMemory.Write((mLastValue));
                             mStartTime = mLastTime;
                             mStartValue = mLastValue;
@@ -304,14 +310,14 @@ namespace Cdy.Tag
                     mLastValue = vval;
                 }
 
-                if (!mTimerIndex.Contains(count))
+                if (!mUsedTimerIndex.Contains(count))
                 {
                     int i = count;
-                    mTimerIndex.Enqueue(i);
+                    mUsedTimerIndex.Insert(i);
                     mMarshalMemory.Write(mLastValue);
                 }
             }
-            mUsedTimerIndex = mTimerIndex;
+           
             return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
         }
 
@@ -410,14 +416,14 @@ namespace Cdy.Tag
         //    return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
         //}
 
-        private Memory<byte> SlopeCompressUShort(MemoryBlock values, out Queue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressUShort(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double slope = 0;
 
             mMarshalMemory.Position = 0;
-            Queue<int> mTimerIndex = new Queue<int>();
+            //Queue<int> mTimerIndex = new Queue<int>();
 
             int count = values.ReadInt(0);
 
@@ -432,7 +438,7 @@ namespace Cdy.Tag
                 mLastTime = mStartTime;
                 mLastValue = mStartValue;
 
-                mTimerIndex.Enqueue(0);
+                mUsedTimerIndex.Insert(0);
 
                 mMarshalMemory.Write(mStartValue);
 
@@ -448,7 +454,7 @@ namespace Cdy.Tag
                     {
                         if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
                         {
-                            mTimerIndex.Enqueue(i - 1);
+                            mUsedTimerIndex.Insert(i - 1);
                             mMarshalMemory.Write((mLastValue));
                             mStartTime = mLastTime;
                             mStartValue = mLastValue;
@@ -459,14 +465,14 @@ namespace Cdy.Tag
                     mLastValue = vval;
                 }
 
-                if (!mTimerIndex.Contains(count))
+                if (!mUsedTimerIndex.Contains(count))
                 {
                     int i = count;
-                    mTimerIndex.Enqueue(i);
+                    mUsedTimerIndex.Insert(i);
                     mMarshalMemory.Write(mLastValue);
                 }
             }
-            mUsedTimerIndex = mTimerIndex;
+            //mUsedTimerIndex = mTimerIndex;
             return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
         }
 
@@ -517,14 +523,14 @@ namespace Cdy.Tag
         //    return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
         //}
 
-        private Memory<byte> SlopeCompressInt(MemoryBlock values, out Queue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressInt(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double slope = 0;
 
             mMarshalMemory.Position = 0;
-            Queue<int> mTimerIndex = new Queue<int>();
+            //Queue<int> mTimerIndex = new Queue<int>();
 
             int count = values.ReadInt(0);
 
@@ -539,7 +545,7 @@ namespace Cdy.Tag
                 mLastTime = mStartTime;
                 mLastValue = mStartValue;
 
-                mTimerIndex.Enqueue(0);
+                mUsedTimerIndex.Insert(0);
 
                 mMarshalMemory.Write(mStartValue);
 
@@ -555,7 +561,7 @@ namespace Cdy.Tag
                     {
                         if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
                         {
-                            mTimerIndex.Enqueue(i - 1);
+                            mUsedTimerIndex.Insert(i - 1);
                             mMarshalMemory.Write((mLastValue));
                             mStartTime = mLastTime;
                             mStartValue = mLastValue;
@@ -566,14 +572,14 @@ namespace Cdy.Tag
                     mLastValue = vval;
                 }
 
-                if (!mTimerIndex.Contains(count))
+                if (!mUsedTimerIndex.Contains(count))
                 {
                     int i = count;
-                    mTimerIndex.Enqueue(i);
+                    mUsedTimerIndex.Insert(i);
                     mMarshalMemory.Write(mLastValue);
                 }
             }
-            mUsedTimerIndex = mTimerIndex;
+            //mUsedTimerIndex = mTimerIndex;
             return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
         }
 
@@ -624,14 +630,14 @@ namespace Cdy.Tag
         //    return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
         //}
 
-        private Memory<byte> SlopeCompressUInt(MemoryBlock values, out Queue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressUInt(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double slope = 0;
 
             mMarshalMemory.Position = 0;
-            Queue<int> mTimerIndex = new Queue<int>();
+            //Queue<int> mTimerIndex = new Queue<int>();
 
             int count = values.ReadInt(0);
 
@@ -646,7 +652,7 @@ namespace Cdy.Tag
                 mLastTime = mStartTime;
                 mLastValue = mStartValue;
 
-                mTimerIndex.Enqueue(0);
+                mUsedTimerIndex.Insert(0);
 
                 mMarshalMemory.Write(mStartValue);
 
@@ -662,7 +668,7 @@ namespace Cdy.Tag
                     {
                         if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
                         {
-                            mTimerIndex.Enqueue(i - 1);
+                            mUsedTimerIndex.Insert(i - 1);
                             mMarshalMemory.Write((mLastValue));
                             mStartTime = mLastTime;
                             mStartValue = mLastValue;
@@ -673,25 +679,25 @@ namespace Cdy.Tag
                     mLastValue = vval;
                 }
 
-                if (!mTimerIndex.Contains(count))
+                if (!mUsedTimerIndex.Contains(count))
                 {
                     int i = count;
-                    mTimerIndex.Enqueue(i);
+                    mUsedTimerIndex.Insert(i);
                     mMarshalMemory.Write(mLastValue);
                 }
             }
-            mUsedTimerIndex = mTimerIndex;
+            //mUsedTimerIndex = mTimerIndex;
             return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
         }
 
-        private Memory<byte> SlopeCompress(Dictionary<ushort, long> values, out Queue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompress(Dictionary<ushort, long> values, ref CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double slope = 0;
 
             mMarshalMemory.Position = 0;
-            Queue<int> mTimerIndex = new Queue<int>();
+            //Queue<int> mTimerIndex = new Queue<int>();
 
             if (values.Count > 0)
             {
@@ -699,7 +705,7 @@ namespace Cdy.Tag
                 var pval = vals[0].Value;
                 ushort ptim = vals[0].Key;
 
-                mTimerIndex.Enqueue(0);
+                mUsedTimerIndex.Insert(0);
 
                 mMarshalMemory.Write(pval);
 
@@ -713,32 +719,32 @@ namespace Cdy.Tag
                     {
                         if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
                         {
-                            mTimerIndex.Enqueue(i - 1);
+                            mUsedTimerIndex.Insert(i - 1);
                             mMarshalMemory.Write((vals[i - 1].Value));
                             slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
                         }
                     }
                 }
 
-                if (!mTimerIndex.Contains(vals.Length - 1))
+                if (!mUsedTimerIndex.Contains(vals.Length - 1))
                 {
                     int i = vals.Length - 1;
-                    mTimerIndex.Enqueue(i);
+                    mUsedTimerIndex.Insert(i);
                     mMarshalMemory.Write((vals[i].Value));
                 }
             }
-            mUsedTimerIndex = mTimerIndex;
+           // mUsedTimerIndex = mTimerIndex;
             return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
         }
 
-        private Memory<byte> SlopeCompress(Dictionary<ushort, ulong> values, out Queue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompress(Dictionary<ushort, ulong> values, ref CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double slope = 0;
 
             mMarshalMemory.Position = 0;
-            Queue<int> mTimerIndex = new Queue<int>();
+          //  Queue<int> mTimerIndex = new Queue<int>();
 
             if (values.Count > 0)
             {
@@ -746,7 +752,7 @@ namespace Cdy.Tag
                 var pval = vals[0].Value;
                 ushort ptim = vals[0].Key;
 
-                mTimerIndex.Enqueue(0);
+                mUsedTimerIndex.Insert(0);
 
                 mMarshalMemory.Write(pval);
 
@@ -760,33 +766,33 @@ namespace Cdy.Tag
                     {
                         if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
                         {
-                            mTimerIndex.Enqueue(i - 1);
+                            mUsedTimerIndex.Insert(i - 1);
                             mMarshalMemory.Write((vals[i - 1].Value));
                             slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
                         }
                     }
                 }
 
-                if (!mTimerIndex.Contains(vals.Length - 1))
+                if (!mUsedTimerIndex.Contains(vals.Length - 1))
                 {
                     int i = vals.Length - 1;
-                    mTimerIndex.Enqueue(i);
+                    mUsedTimerIndex.Insert(i);
                     mMarshalMemory.Write((vals[i].Value));
                 }
             }
-            mUsedTimerIndex = mTimerIndex;
+           // mUsedTimerIndex = mTimerIndex;
             return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
         }
 
 
-        private Memory<byte> SlopeCompressLong(MemoryBlock values, out Queue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressLong(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double slope = 0;
 
             mMarshalMemory.Position = 0;
-            Queue<int> mTimerIndex = new Queue<int>();
+           // Queue<int> mTimerIndex = new Queue<int>();
 
             int count = values.ReadInt(0);
 
@@ -801,7 +807,7 @@ namespace Cdy.Tag
                 mLastTime = mStartTime;
                 mLastValue = mStartValue;
 
-                mTimerIndex.Enqueue(0);
+                mUsedTimerIndex.Insert(0);
 
                 mMarshalMemory.Write(mStartValue);
 
@@ -817,7 +823,7 @@ namespace Cdy.Tag
                     {
                         if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
                         {
-                            mTimerIndex.Enqueue(i - 1);
+                            mUsedTimerIndex.Insert(i - 1);
                             mMarshalMemory.Write((mLastValue));
                             mStartTime = mLastTime;
                             mStartValue = mLastValue;
@@ -828,14 +834,14 @@ namespace Cdy.Tag
                     mLastValue = vval;
                 }
 
-                if (!mTimerIndex.Contains(count))
+                if (!mUsedTimerIndex.Contains(count))
                 {
                     int i = count;
-                    mTimerIndex.Enqueue(i);
+                    mUsedTimerIndex.Insert(i);
                     mMarshalMemory.Write(mLastValue);
                 }
             }
-            mUsedTimerIndex = mTimerIndex;
+           // mUsedTimerIndex = mTimerIndex;
             return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
         }
 
@@ -845,14 +851,14 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         /// <param name="mUsedTimerIndex"></param>
         /// <returns></returns>
-        private Memory<byte> SlopeCompressULong(MemoryBlock values, out Queue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressULong(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double slope = 0;
 
             mMarshalMemory.Position = 0;
-            Queue<int> mTimerIndex = new Queue<int>();
+            //Queue<int> mTimerIndex = new Queue<int>();
 
             int count = values.ReadInt(0);
 
@@ -867,7 +873,7 @@ namespace Cdy.Tag
                 mLastTime = mStartTime;
                 mLastValue = mStartValue;
 
-                mTimerIndex.Enqueue(0);
+                mUsedTimerIndex.Insert(0);
 
                 mMarshalMemory.Write(mStartValue);
 
@@ -883,7 +889,7 @@ namespace Cdy.Tag
                     {
                         if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
                         {
-                            mTimerIndex.Enqueue(i - 1);
+                            mUsedTimerIndex.Insert(i - 1);
                             mMarshalMemory.Write((mLastValue));
                             mStartTime = mLastTime;
                             mStartValue = mLastValue;
@@ -894,14 +900,14 @@ namespace Cdy.Tag
                     mLastValue = vval;
                 }
 
-                if (!mTimerIndex.Contains(count))
+                if (!mUsedTimerIndex.Contains(count))
                 {
                     int i = count;
-                    mTimerIndex.Enqueue(i);
+                    mUsedTimerIndex.Insert(i);
                     mMarshalMemory.Write(mLastValue);
                 }
             }
-            mUsedTimerIndex = mTimerIndex;
+           // mUsedTimerIndex = mTimerIndex;
             return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
         }
 
@@ -952,14 +958,14 @@ namespace Cdy.Tag
         //    return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
         //}
 
-        private Memory<byte> SlopeCompressDouble(MemoryBlock values, out Queue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressDouble(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double slope = 0;
 
             mMarshalMemory.Position = 0;
-            Queue<int> mTimerIndex = new Queue<int>();
+            //Queue<int> mTimerIndex = new Queue<int>();
 
             int count = values.ReadInt(0);
 
@@ -976,7 +982,7 @@ namespace Cdy.Tag
                 mLastTime = mStartTime;
                 mLastValue = mStartValue;
 
-                mTimerIndex.Enqueue(0);
+                mUsedTimerIndex.Insert(0);
 
                 mMarshalMemory.Write(mStartValue);
 
@@ -992,7 +998,7 @@ namespace Cdy.Tag
                     {
                         if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
                         {
-                            mTimerIndex.Enqueue(i - 1);
+                            mUsedTimerIndex.Insert(i - 1);
                             mMarshalMemory.Write((mLastValue));
                             mStartTime = mLastTime;
                             mStartValue = mLastValue;
@@ -1003,14 +1009,14 @@ namespace Cdy.Tag
                     mLastValue = vval;
                 }
 
-                if (!mTimerIndex.Contains(count))
+                if (!mUsedTimerIndex.Contains(count))
                 {
                     int i = count;
-                    mTimerIndex.Enqueue(i);
+                    mUsedTimerIndex.Insert(i);
                     mMarshalMemory.Write(mLastValue);
                 }
             }
-            mUsedTimerIndex = mTimerIndex;
+            //mUsedTimerIndex = mTimerIndex;
             return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
         }
 
@@ -1068,14 +1074,14 @@ namespace Cdy.Tag
         //}
 
 
-        private Memory<byte> SlopeCompressFloat(MemoryBlock values, out Queue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressFloat(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double slope = 0;
 
             mMarshalMemory.Position = 0;
-            Queue<int> mTimerIndex = new Queue<int>();
+            //Queue<int> mTimerIndex = new Queue<int>();
 
             int count = values.ReadInt(0);
 
@@ -1092,7 +1098,7 @@ namespace Cdy.Tag
                 mLastTime = mStartTime;
                 mLastValue = mStartValue;
 
-                mTimerIndex.Enqueue(0);
+                mUsedTimerIndex.Insert(0);
 
                 mMarshalMemory.Write(mStartValue);
 
@@ -1108,7 +1114,7 @@ namespace Cdy.Tag
                     {
                         if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
                         {
-                            mTimerIndex.Enqueue(i - 1);
+                            mUsedTimerIndex.Insert(i - 1);
                             mMarshalMemory.Write((mLastValue));
                             mStartTime = mLastTime;
                             mStartValue = mLastValue;
@@ -1119,14 +1125,13 @@ namespace Cdy.Tag
                     mLastValue = vval;
                 }
 
-                if (!mTimerIndex.Contains(count))
+                if (!mUsedTimerIndex.Contains(count))
                 {
                     int i = count;
-                    mTimerIndex.Enqueue(i);
+                    mUsedTimerIndex.Insert(i);
                     mMarshalMemory.Write(mLastValue);
                 }
             }
-            mUsedTimerIndex = mTimerIndex;
             return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
         }
         #endregion
@@ -1140,12 +1145,12 @@ namespace Cdy.Tag
         /// <param name="count"></param>
         /// <param name="emptyIds"></param>
         /// <param name="mTimers"></param>
-        /// <param name="usedTimerIndex"></param>
+        /// <param name="usedIndex"></param>
         /// <returns></returns>
-        protected  Memory<byte> CompressValues<T>(MarshalMemoryBlock source, long offset, int count, Queue<int> emptyIds,List<ushort> mTimers,TagType type,out Queue<int> usedTimerIndex)
+        protected  Memory<byte> CompressValues<T>(MarshalMemoryBlock source, long offset, int count, CustomQueue<int> emptyIds,List<ushort> mTimers,TagType type)
         {
             int ig = -1;
-            emptyIds.TryDequeue(out ig);
+            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
             int ac = 0;
             mAvaiableDatabuffer.Position = 0;
             mAvaiableDatabuffer.Write((int)0);
@@ -1165,12 +1170,11 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            if (emptyIds.Count > 0)
-                                emptyIds.TryDequeue(out ig);
+                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressByte(mAvaiableDatabuffer, out usedTimerIndex);
+                    return SlopeCompressByte(mAvaiableDatabuffer, ref usedIndex);
                 case TagType.Short:
                     for (int i = 0; i < count; i++)
                     {
@@ -1183,12 +1187,11 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            if (emptyIds.Count > 0)
-                                emptyIds.TryDequeue(out ig);
+                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressShort(mAvaiableDatabuffer, out usedTimerIndex);
+                    return SlopeCompressShort(mAvaiableDatabuffer, ref usedIndex);
                 case TagType.UShort:
                     Dictionary<ushort, ushort> mavaibleValues = new Dictionary<ushort, ushort>();
                     for (int i = 0; i < count; i++)
@@ -1202,12 +1205,11 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            if (emptyIds.Count > 0)
-                                emptyIds.TryDequeue(out ig);
+                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressUShort(mAvaiableDatabuffer, out usedTimerIndex);
+                    return SlopeCompressUShort(mAvaiableDatabuffer, ref usedIndex);
                 case TagType.Int:
                     for (int i = 0; i < count; i++)
                     {
@@ -1220,12 +1222,11 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            if (emptyIds.Count > 0)
-                                emptyIds.TryDequeue(out ig);
+                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressInt(mAvaiableDatabuffer, out usedTimerIndex);
+                    return SlopeCompressInt(mAvaiableDatabuffer, ref usedIndex);
                 case TagType.UInt:
                     for (int i = 0; i < count; i++)
                     {
@@ -1238,12 +1239,11 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            if (emptyIds.Count > 0)
-                                emptyIds.TryDequeue(out ig);
+                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressUInt(mAvaiableDatabuffer, out usedTimerIndex);
+                    return SlopeCompressUInt(mAvaiableDatabuffer, ref usedIndex);
                 case TagType.Long:
                     for (int i = 0; i < count; i++)
                     {
@@ -1256,12 +1256,11 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            if (emptyIds.Count > 0)
-                                emptyIds.TryDequeue(out ig);
+                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressLong(mAvaiableDatabuffer, out usedTimerIndex);
+                    return SlopeCompressLong(mAvaiableDatabuffer, ref usedIndex);
                 case TagType.ULong:
                     for (int i = 0; i < count; i++)
                     {
@@ -1274,12 +1273,11 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            if (emptyIds.Count > 0)
-                                emptyIds.TryDequeue(out ig);
+                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressULong(mAvaiableDatabuffer, out usedTimerIndex);
+                    return SlopeCompressULong(mAvaiableDatabuffer, ref usedIndex);
                 case TagType.Double:
                     for (int i = 0; i < count; i++)
                     {
@@ -1293,12 +1291,11 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            if (emptyIds.Count > 0)
-                                emptyIds.TryDequeue(out ig);
+                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressDouble(mAvaiableDatabuffer, out usedTimerIndex);
+                    return SlopeCompressDouble(mAvaiableDatabuffer, ref usedIndex);
                 case TagType.Float:
                     for (int i = 0; i < count; i++)
                     {
@@ -1311,14 +1308,13 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            if (emptyIds.Count > 0)
-                                emptyIds.TryDequeue(out ig);
+                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressFloat(mAvaiableDatabuffer, out usedTimerIndex);
+                    return SlopeCompressFloat(mAvaiableDatabuffer, ref usedIndex);
                 default:
-                    usedTimerIndex = null;
+                    usedIndex = null;
                     return null;
             }
         }
@@ -1353,22 +1349,22 @@ namespace Cdy.Tag
             {
                 mAvaiableDatabuffer = new MemoryBlock(count * 12);
             }
-          
 
-            Queue<int> emptys = GetEmpityTimers(tims);
-            Queue<int> usedIndex;
+            usedIndex.Reset();
+            GetEmpityTimers(tims);
+            //Queue<int> usedIndex;
 
             long rsize = 0;
 
             switch (type)
             {
                 case TagType.Byte:
-                    var cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, emptys, tims, type,out usedIndex);
+                    var cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, emptys, tims, type);
 
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
                     rsize += 2;
 
-                    var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, new Queue<int>(usedIndex));
+                    var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, usedIndex);
                     var timeData = CompressTimers(tims, usedIndex);
 
                     target.Write((int)timeData.Length);
@@ -1388,12 +1384,12 @@ namespace Cdy.Tag
                     rsize += cqus.Length;
                     break;
                 case TagType.Short:
-                    var res = CompressValues<short>(source, count * 2 + sourceAddr, count, emptys, tims, type, out usedIndex);
+                    var res = CompressValues<short>(source, count * 2 + sourceAddr, count, emptys, tims, type);
 
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
                     rsize += 2;
 
-                    cqus = CompressQulitys(source, count * 4 + sourceAddr, count, new Queue<int>(usedIndex));
+                    cqus = CompressQulitys(source, count * 4 + sourceAddr, count, usedIndex);
                     timeData = CompressTimers(tims, usedIndex);
 
                     target.Write((int)timeData.Length);
@@ -1413,12 +1409,12 @@ namespace Cdy.Tag
                     rsize += cqus.Length;
                     break;
                 case TagType.UShort:
-                    var ures = CompressValues<ushort>(source, count * 2 + sourceAddr, count, emptys, tims, type, out usedIndex);
+                    var ures = CompressValues<ushort>(source, count * 2 + sourceAddr, count, emptys, tims, type);
 
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
                     rsize += 2;
 
-                     cqus = CompressQulitys(source, count * 4 + sourceAddr, count, new Queue<int>(usedIndex));
+                     cqus = CompressQulitys(source, count * 4 + sourceAddr, count, usedIndex);
                      timeData = CompressTimers(tims, usedIndex);
 
                     target.Write((int)timeData.Length);
@@ -1438,12 +1434,12 @@ namespace Cdy.Tag
                     rsize += cqus.Length;
                     break;
                 case TagType.Int:
-                    var ires = CompressValues<int>(source, count * 2 + sourceAddr, count, emptys, tims, type, out usedIndex);
+                    var ires = CompressValues<int>(source, count * 2 + sourceAddr, count, emptys, tims, type);
 
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
                     rsize += 2;
 
-                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, new Queue<int>(usedIndex));
+                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
                     timeData = CompressTimers(tims, usedIndex);
 
                     target.Write((int)timeData.Length);
@@ -1463,11 +1459,11 @@ namespace Cdy.Tag
                     rsize += cqus.Length;
                     break;
                 case TagType.UInt:
-                    var uires = CompressValues<uint>(source, count * 2 + sourceAddr, count, emptys, tims, type, out usedIndex);
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    var uires = CompressValues<uint>(source, count * 2 + sourceAddr, count, emptys, tims, type);
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
                     rsize += 2;
 
-                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, new Queue<int>(usedIndex));
+                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
                     timeData = CompressTimers(tims, usedIndex);
 
                     target.Write((int)timeData.Length);
@@ -1488,11 +1484,11 @@ namespace Cdy.Tag
                     rsize += cqus.Length;
                     break;
                 case TagType.Long:
-                    var lres = CompressValues<long>(source, count * 2 + sourceAddr, count, emptys, tims, type, out usedIndex);
+                    var lres = CompressValues<long>(source, count * 2 + sourceAddr, count, emptys, tims, type);
 
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
                     rsize += 2;
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, new Queue<int>(usedIndex));
+                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
 
                     timeData = CompressTimers(tims, usedIndex);
 
@@ -1512,11 +1508,11 @@ namespace Cdy.Tag
                     rsize += cqus.Length;
                     break;
                 case TagType.ULong:
-                    var ulres = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys, tims, type, out usedIndex);
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    var ulres = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys, tims, type);
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
                     rsize += 2;
 
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, new Queue<int>(usedIndex));
+                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
 
                     timeData = CompressTimers(tims, usedIndex);
                     target.Write((int)timeData.Length);
@@ -1536,12 +1532,12 @@ namespace Cdy.Tag
                     rsize += cqus.Length;
                     break;
                 case TagType.Double:
-                    var dres = CompressValues<double>(source, count * 2 + sourceAddr, count, emptys, tims, type, out usedIndex);
+                    var dres = CompressValues<double>(source, count * 2 + sourceAddr, count, emptys, tims, type);
 
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
                     rsize += 2;
 
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, new Queue<int>(usedIndex));
+                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
 
                     timeData = CompressTimers(tims, usedIndex);
                     target.Write((int)timeData.Length);
@@ -1562,12 +1558,12 @@ namespace Cdy.Tag
                     rsize += cqus.Length;
                     break;
                 case TagType.Float:
-                    var fres = CompressValues<float>(source, count * 2 + sourceAddr, count, emptys, tims, type, out usedIndex);
+                    var fres = CompressValues<float>(source, count * 2 + sourceAddr, count, emptys, tims, type);
 
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.Count);
+                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
                     rsize += 2;
 
-                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, new Queue<int>(usedIndex));
+                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
 
                     timeData = CompressTimers(tims, usedIndex);
                     target.Write((int)timeData.Length);

@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Cdy.Tag
@@ -61,6 +62,17 @@ namespace Cdy.Tag
         public void Insert(T value)
         {
             mColections[WriteIndex++] = value;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool Contains(T value)
+        {
+            return mColections.Contains(value);
         }
 
         /// <summary>
@@ -121,7 +133,10 @@ namespace Cdy.Tag
             return mColections[index];
         }
 
-        public void Restet()
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Reset()
         {
             WriteIndex = 0;
             ReadIndex = 0;

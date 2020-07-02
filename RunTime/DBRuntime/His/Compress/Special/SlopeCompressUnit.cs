@@ -7,16 +7,20 @@
 //  种道洋
 //  1. 2020/7/1 三沙永兴岛 优化斜率压缩算法  种道洋
 //==============================================================
+using DBRuntime.His.Compress;
 using Google.Protobuf.WellKnownTypes;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Cdy.Tag
 {
     /// <summary>
-    /// 
+    /// 斜率压缩算法
+    /// 斜率压缩采用数据块有多个数据段组成，每个数据段以数据段的字节数。遇到无效数据后新启一个数据段
     /// </summary>
     public class SlopeCompressUnit : LosslessCompressUnit
     {
@@ -24,6 +28,9 @@ namespace Cdy.Tag
         #region ... Variables  ...
         protected MemoryBlock mAvaiableDatabuffer;
 
+        /// <summary>
+        /// 
+        /// </summary>
         protected CustomQueue<int> usedIndex = new CustomQueue<int>(604);
 
         #endregion ...Variables...
@@ -71,20 +78,22 @@ namespace Cdy.Tag
         /// <returns></returns>
         protected new byte[] CompressTimers(List<ushort> timerVals, CustomQueue<int> usedIndex)
         {
-            int preids = timerVals[0];
-            int ig = -1;
-            ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
+            usedIndex.ReadIndex = 0;
+            // int preids = timerVals[0];
+            int preids = 0;
+            int ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
             bool isFirst = true;
 
             mVarintMemory.Reset();
-            mVarintMemory.WriteInt32(preids);
-            for (int i = 1; i < timerVals.Count; i++)
+            //mVarintMemory.WriteInt32(preids);
+            for (int i = 0; i < timerVals.Count; i++)
             {
                 if (i == ig)
                 {
                     var id = timerVals[i];
                     if (isFirst)
                     {
+                        isFirst = false;
                         mVarintMemory.WriteInt32(id);
                         preids = id;
                     }
@@ -99,11 +108,13 @@ namespace Cdy.Tag
             return mVarintMemory.DataBuffer.AsSpan(0, (int)mVarintMemory.WritePosition).ToArray();
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="timerVals"></param>
         private void GetEmpityTimers(List<ushort> timerVals)
         {
             emptys.Reset();
-           // Queue<int> emptyIds = new Queue<int>();
             int preids = timerVals[0];
             mVarintMemory.Reset();
             for (int i = 1; i < timerVals.Count; i++)
@@ -111,10 +122,8 @@ namespace Cdy.Tag
                 if (timerVals[i] <= 0)
                 {
                     emptys.Insert(i);
-                    //emptyIds.Enqueue(i);
                 }
             }
-            //return emptyIds;
         }
 
 
@@ -130,28 +139,37 @@ namespace Cdy.Tag
         {
             usedIndex.ReadIndex = 0;
 
-            int count = 1;
-            byte qus = source.ReadByte(offset);
-            //using (VarintCodeMemory memory = new VarintCodeMemory(qulitys.Length * 2))
+            int count = 0;
+            byte qus = 0;
             mVarintMemory.Reset();
-            int ig = -1;
-            ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
-            mVarintMemory.WriteInt32(qus);
-            for (int i = 1; i < totalcount; i++)
+            int ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
+            bool isFirst = true;
+            
+            for (int i = 0; i < totalcount; i++)
             {
                 if (i == ig)
                 {
                     byte bval = source.ReadByte(offset + i);
-                    if (bval == qus)
+                    if (isFirst)
                     {
+                        isFirst = false;
+                        qus = bval;
+                        mVarintMemory.WriteInt32(qus);
                         count++;
                     }
                     else
                     {
-                        mVarintMemory.WriteInt32(count);
-                        qus = bval;
-                        mVarintMemory.WriteInt32(qus);
-                        count = 1;
+                        if (bval == qus)
+                        {
+                            count++;
+                        }
+                        else
+                        {
+                            mVarintMemory.WriteInt32(count);
+                            qus = bval;
+                            mVarintMemory.WriteInt32(qus);
+                            count = 1;
+                        }
                     }
                     ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
                 }
@@ -171,7 +189,10 @@ namespace Cdy.Tag
         /// <returns></returns>
         private double CalSlope(object fval, object lastVal,int timSpan)
         {
-            return (Convert.ToDouble(lastVal) - Convert.ToDouble(fval)) / timSpan;
+            //转换成以秒为时间单位的斜率计算
+            //timesSpan是以100ms为单位的时间间隔
+
+            return (Convert.ToDouble(lastVal) - Convert.ToDouble(fval)) / timSpan * 10;
         }
 
         /// <summary>
@@ -201,939 +222,1183 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         /// <param name="mUsedTimerIndex"></param>
         /// <returns></returns>
-        private Memory<byte> SlopeCompressByte(MemoryBlock values,ref CustomQueue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressByte(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-            double slope = 0;
+            double minslope = 0;
+            double maxslope = 0;
 
             mMarshalMemory.Position = 0;
-            //Queue<int> mTimerIndex = new Queue<int>();
+            bool isStarted = false;
 
             int count = values.ReadInt(0);
+
+            emptys.ReadIndex = 0;
+            int ig = -1;
+            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
 
             ushort mLastTime = 0;
             byte mLastValue = 0;
 
-            if(count > 0)
-            {
-                ushort mStartTime = values.ReadUShort();
-                var mStartValue = values.ReadByte();
-
-                mLastTime = mStartTime;
-                mLastValue = mStartValue;
-
-                mUsedTimerIndex.Insert(0);
-
-                mMarshalMemory.Write(mStartValue);
-
-                for (int i = 1; i < count; i++)
-                {
-                    var vkey = values.ReadUShort();
-                    var vval = values.ReadByte();
-                    if (i == 1)
-                    {
-                        slope = CalSlope(mStartValue, vval, vkey - mStartTime);
-                    }
-                    else
-                    {
-                        if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
-                        {
-                            mUsedTimerIndex.Insert(i - 1);
-                            mMarshalMemory.Write((mLastValue));
-                            mStartTime = mLastTime;
-                            mStartValue = mLastValue;
-                            slope = CalSlope(mStartValue, vval, vkey - mStartTime);
-                        }
-                    }
-                    mLastTime = vkey;
-                    mLastValue = vval;
-                }
-
-              
-                if (!mUsedTimerIndex.Contains(count))
-                {
-                    int i = count;
-                    mUsedTimerIndex.Insert(i);
-                    mMarshalMemory.Write(mLastValue);
-                }
-            }
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
-        }
-
-        private Memory<byte> SlopeCompressShort(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
-        {
-            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
-            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-            double slope = 0;
-
-            mMarshalMemory.Position = 0;
-            //Queue<int> mTimerIndex = new Queue<int>();
-
-            int count = values.ReadInt(0);
-
-            ushort mLastTime = 0;
-            short mLastValue = 0;
+            ushort mStartTime = 0;
+            byte mStartValue = 0;
 
             if (count > 0)
             {
-                ushort mStartTime = values.ReadUShort();
-                var mStartValue = values.ReadShort();
-
-                mLastTime = mStartTime;
-                mLastValue = mStartValue;
-
-                mUsedTimerIndex.Insert(0);
-
-                mMarshalMemory.Write(mStartValue);
-
                 for (int i = 1; i < count; i++)
                 {
-                    var vkey = values.ReadUShort();
-                    var vval = values.ReadShort();
-                    if (i == 1)
+                    if (ig != i)
                     {
-                        slope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                        if (!isStarted)
+                        {
+                            isStarted = true;
+                           
+                            mLastTime = mStartTime = values.ReadUShort();
+                            mLastValue = mStartValue = values.ReadByte();
+                            mMarshalMemory.Write(mStartValue);
+                            mUsedTimerIndex.Insert(i);
+                            minslope = double.MinValue;
+                        }
+                        else
+                        {
+                            var vkey = values.ReadUShort();
+                            var vval = values.ReadByte();
+                            if (minslope == double.MinValue)
+                            {
+                                maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                            }
+                            else
+                            {
+                                var ds = CalSlope(mStartValue, vval, vkey - mStartTime);
+
+                                minslope = Math.Min(ds, minslope);
+                                maxslope = Math.Max(ds, maxslope);
+
+                                if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
+                                {
+                                    mUsedTimerIndex.Insert(i - 1);
+                                    mMarshalMemory.Write((mLastValue));
+                                    mStartTime = mLastTime;
+                                    mStartValue = mLastValue;
+                                    maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                                }
+                                
+                            }
+                            mLastTime = vkey;
+                            mLastValue = vval;
+                        }
                     }
                     else
                     {
-                        if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
+                        if (isStarted)
                         {
-                            mUsedTimerIndex.Insert(i - 1);
-                            mMarshalMemory.Write((mLastValue));
-                            mStartTime = mLastTime;
-                            mStartValue = mLastValue;
-                            slope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                            isStarted = false;
+                            if(maxslope!=minslope)
+                            {
+                                mUsedTimerIndex.Insert(i - 1);
+                                mMarshalMemory.Write((mLastValue));
+                            }
                         }
                     }
-                    mLastTime = vkey;
-                    mLastValue = vval;
                 }
 
-                if (!mUsedTimerIndex.Contains(count))
+
+                if (!mUsedTimerIndex.Contains(count) && isStarted)
                 {
                     int i = count;
                     mUsedTimerIndex.Insert(i);
                     mMarshalMemory.Write(mLastValue);
                 }
             }
-           
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
-        }
-
-        //private Memory<byte> SlopeCompress(Dictionary<ushort, short> values, out Queue<int> mUsedTimerIndex)
-        //{
-        //    double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
-        //    int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-        //    double slope = 0;
-
-        //    mMarshalMemory.Position = 0;
-        //    Queue<int> mTimerIndex = new Queue<int>();
-
-        //    if (values.Count > 0)
-        //    {
-        //        var vals = values.ToArray();
-        //        var pval = vals[0].Value;
-        //        ushort ptim = vals[0].Key;
-
-        //        mTimerIndex.Enqueue(0);
-
-        //        mMarshalMemory.Write(pval);
-
-        //        for (int i = 1; i < vals.Length; i++)
-        //        {
-        //            if (i == 1)
-        //            {
-        //                slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
-        //            }
-        //            else
-        //            {
-        //                if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
-        //                {
-        //                    mTimerIndex.Enqueue(i - 1);
-        //                    mMarshalMemory.Write((vals[i - 1].Value));
-        //                    slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
-        //                }
-        //            }
-        //        }
-
-        //        if (!mTimerIndex.Contains(vals.Length - 1))
-        //        {
-        //            int i = vals.Length - 1;
-        //            mTimerIndex.Enqueue(i);
-        //            mMarshalMemory.Write((vals[i].Value));
-        //        }
-        //    }
-        //    mUsedTimerIndex = mTimerIndex;
-        //    return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
-        //}
-
-
-        //private Memory<byte> SlopeCompress(Dictionary<ushort, ushort> values, out Queue<int> mUsedTimerIndex)
-        //{
-        //    double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
-        //    int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-        //    double slope = 0;
-
-        //    mMarshalMemory.Position = 0;
-        //    Queue<int> mTimerIndex = new Queue<int>();
-
-        //    if (values.Count > 0)
-        //    {
-        //        var vals = values.ToArray();
-        //        var pval = vals[0].Value;
-        //        ushort ptim = vals[0].Key;
-
-        //        mTimerIndex.Enqueue(0);
-
-        //        mMarshalMemory.Write(pval);
-
-        //        for (int i = 1; i < vals.Length; i++)
-        //        {
-        //            if (i == 1)
-        //            {
-        //                slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
-        //            }
-        //            else
-        //            {
-        //                if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
-        //                {
-        //                    mTimerIndex.Enqueue(i - 1);
-        //                    mMarshalMemory.Write((vals[i - 1].Value));
-        //                    slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
-        //                }
-        //            }
-        //        }
-
-        //        if (!mTimerIndex.Contains(vals.Length - 1))
-        //        {
-        //            int i = vals.Length - 1;
-        //            mTimerIndex.Enqueue(i);
-        //            mMarshalMemory.Write((vals[i].Value));
-        //        }
-        //    }
-        //    mUsedTimerIndex = mTimerIndex;
-        //    return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
-        //}
-
-        private Memory<byte> SlopeCompressUShort(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
-        {
-            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
-            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-            double slope = 0;
-
-            mMarshalMemory.Position = 0;
-            //Queue<int> mTimerIndex = new Queue<int>();
-
-            int count = values.ReadInt(0);
-
-            ushort mLastTime = 0;
-            ushort mLastValue = 0;
-
-            if (count > 0)
-            {
-                ushort mStartTime = values.ReadUShort();
-                var mStartValue = values.ReadUShort();
-
-                mLastTime = mStartTime;
-                mLastValue = mStartValue;
-
-                mUsedTimerIndex.Insert(0);
-
-                mMarshalMemory.Write(mStartValue);
-
-                for (int i = 1; i < count; i++)
-                {
-                    var vkey = values.ReadUShort();
-                    var vval = values.ReadUShort();
-                    if (i == 1)
-                    {
-                        slope = CalSlope(mStartValue, vval, vkey - mStartTime);
-                    }
-                    else
-                    {
-                        if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
-                        {
-                            mUsedTimerIndex.Insert(i - 1);
-                            mMarshalMemory.Write((mLastValue));
-                            mStartTime = mLastTime;
-                            mStartValue = mLastValue;
-                            slope = CalSlope(mStartValue, vval, vkey - mStartTime);
-                        }
-                    }
-                    mLastTime = vkey;
-                    mLastValue = vval;
-                }
-
-                if (!mUsedTimerIndex.Contains(count))
-                {
-                    int i = count;
-                    mUsedTimerIndex.Insert(i);
-                    mMarshalMemory.Write(mLastValue);
-                }
-            }
-            //mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
-        }
-
-        //private Memory<byte> SlopeCompress(Dictionary<ushort, int> values, out Queue<int> mUsedTimerIndex)
-        //{
-        //    double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
-        //    int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-        //    double slope = 0;
-
-        //    mMarshalMemory.Position = 0;
-        //    Queue<int> mTimerIndex = new Queue<int>();
-
-        //    if (values.Count > 0)
-        //    {
-        //        var vals = values.ToArray();
-        //        var pval = vals[0].Value;
-        //        ushort ptim = vals[0].Key;
-
-        //        mTimerIndex.Enqueue(0);
-
-        //        mMarshalMemory.Write(pval);
-
-        //        for (int i = 1; i < vals.Length; i++)
-        //        {
-        //            if (i == 1)
-        //            {
-        //                slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
-        //            }
-        //            else
-        //            {
-        //                if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
-        //                {
-        //                    mTimerIndex.Enqueue(i - 1);
-        //                    mMarshalMemory.Write((vals[i - 1].Value));
-        //                    slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
-        //                }
-        //            }
-        //        }
-
-        //        if (!mTimerIndex.Contains(vals.Length - 1))
-        //        {
-        //            int i = vals.Length - 1;
-        //            mTimerIndex.Enqueue(i);
-        //            mMarshalMemory.Write((vals[i].Value));
-        //        }
-        //    }
-        //    mUsedTimerIndex = mTimerIndex;
-        //    return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
-        //}
-
-        private Memory<byte> SlopeCompressInt(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
-        {
-            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
-            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-            double slope = 0;
-
-            mMarshalMemory.Position = 0;
-            //Queue<int> mTimerIndex = new Queue<int>();
-
-            int count = values.ReadInt(0);
-
-            ushort mLastTime = 0;
-            int mLastValue = 0;
-
-            if (count > 0)
-            {
-                ushort mStartTime = values.ReadUShort();
-                var mStartValue = values.ReadInt();
-
-                mLastTime = mStartTime;
-                mLastValue = mStartValue;
-
-                mUsedTimerIndex.Insert(0);
-
-                mMarshalMemory.Write(mStartValue);
-
-                for (int i = 1; i < count; i++)
-                {
-                    var vkey = values.ReadUShort();
-                    var vval = values.ReadInt();
-                    if (i == 1)
-                    {
-                        slope = CalSlope(mStartValue, vval, vkey - mStartTime);
-                    }
-                    else
-                    {
-                        if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
-                        {
-                            mUsedTimerIndex.Insert(i - 1);
-                            mMarshalMemory.Write((mLastValue));
-                            mStartTime = mLastTime;
-                            mStartValue = mLastValue;
-                            slope = CalSlope(mStartValue, vval, vkey - mStartTime);
-                        }
-                    }
-                    mLastTime = vkey;
-                    mLastValue = vval;
-                }
-
-                if (!mUsedTimerIndex.Contains(count))
-                {
-                    int i = count;
-                    mUsedTimerIndex.Insert(i);
-                    mMarshalMemory.Write(mLastValue);
-                }
-            }
-            //mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
-        }
-
-        //private Memory<byte> SlopeCompress(Dictionary<ushort, uint> values, out Queue<int> mUsedTimerIndex)
-        //{
-        //    double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
-        //    int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-        //    double slope = 0;
-
-        //    mMarshalMemory.Position = 0;
-        //    Queue<int> mTimerIndex = new Queue<int>();
-
-        //    if (values.Count > 0)
-        //    {
-        //        var vals = values.ToArray();
-        //        var pval = vals[0].Value;
-        //        ushort ptim = vals[0].Key;
-
-        //        mTimerIndex.Enqueue(0);
-
-        //        mMarshalMemory.Write(pval);
-
-        //        for (int i = 1; i < vals.Length; i++)
-        //        {
-        //            if (i == 1)
-        //            {
-        //                slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
-        //            }
-        //            else
-        //            {
-        //                if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
-        //                {
-        //                    mTimerIndex.Enqueue(i - 1);
-        //                    mMarshalMemory.Write((vals[i - 1].Value));
-        //                    slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
-        //                }
-        //            }
-        //        }
-
-        //        if (!mTimerIndex.Contains(vals.Length - 1))
-        //        {
-        //            int i = vals.Length - 1;
-        //            mTimerIndex.Enqueue(i);
-        //            mMarshalMemory.Write((vals[i].Value));
-        //        }
-        //    }
-        //    mUsedTimerIndex = mTimerIndex;
-        //    return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
-        //}
-
-        private Memory<byte> SlopeCompressUInt(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
-        {
-            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
-            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-            double slope = 0;
-
-            mMarshalMemory.Position = 0;
-            //Queue<int> mTimerIndex = new Queue<int>();
-
-            int count = values.ReadInt(0);
-
-            ushort mLastTime = 0;
-            uint mLastValue = 0;
-
-            if (count > 0)
-            {
-                ushort mStartTime = values.ReadUShort();
-                var mStartValue = values.ReadUInt();
-
-                mLastTime = mStartTime;
-                mLastValue = mStartValue;
-
-                mUsedTimerIndex.Insert(0);
-
-                mMarshalMemory.Write(mStartValue);
-
-                for (int i = 1; i < count; i++)
-                {
-                    var vkey = values.ReadUShort();
-                    var vval = values.ReadUInt();
-                    if (i == 1)
-                    {
-                        slope = CalSlope(mStartValue, vval, vkey - mStartTime);
-                    }
-                    else
-                    {
-                        if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
-                        {
-                            mUsedTimerIndex.Insert(i - 1);
-                            mMarshalMemory.Write((mLastValue));
-                            mStartTime = mLastTime;
-                            mStartValue = mLastValue;
-                            slope = CalSlope(mStartValue, vval, vkey - mStartTime);
-                        }
-                    }
-                    mLastTime = vkey;
-                    mLastValue = vval;
-                }
-
-                if (!mUsedTimerIndex.Contains(count))
-                {
-                    int i = count;
-                    mUsedTimerIndex.Insert(i);
-                    mMarshalMemory.Write(mLastValue);
-                }
-            }
-            //mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
-        }
-
-        private Memory<byte> SlopeCompress(Dictionary<ushort, long> values, ref CustomQueue<int> mUsedTimerIndex)
-        {
-            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
-            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-            double slope = 0;
-
-            mMarshalMemory.Position = 0;
-            //Queue<int> mTimerIndex = new Queue<int>();
-
-            if (values.Count > 0)
-            {
-                var vals = values.ToArray();
-                var pval = vals[0].Value;
-                ushort ptim = vals[0].Key;
-
-                mUsedTimerIndex.Insert(0);
-
-                mMarshalMemory.Write(pval);
-
-                for (int i = 1; i < vals.Length; i++)
-                {
-                    if (i == 1)
-                    {
-                        slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
-                    }
-                    else
-                    {
-                        if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
-                        {
-                            mUsedTimerIndex.Insert(i - 1);
-                            mMarshalMemory.Write((vals[i - 1].Value));
-                            slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
-                        }
-                    }
-                }
-
-                if (!mUsedTimerIndex.Contains(vals.Length - 1))
-                {
-                    int i = vals.Length - 1;
-                    mUsedTimerIndex.Insert(i);
-                    mMarshalMemory.Write((vals[i].Value));
-                }
-            }
-           // mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
-        }
-
-        private Memory<byte> SlopeCompress(Dictionary<ushort, ulong> values, ref CustomQueue<int> mUsedTimerIndex)
-        {
-            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
-            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-            double slope = 0;
-
-            mMarshalMemory.Position = 0;
-          //  Queue<int> mTimerIndex = new Queue<int>();
-
-            if (values.Count > 0)
-            {
-                var vals = values.ToArray();
-                var pval = vals[0].Value;
-                ushort ptim = vals[0].Key;
-
-                mUsedTimerIndex.Insert(0);
-
-                mMarshalMemory.Write(pval);
-
-                for (int i = 1; i < vals.Length; i++)
-                {
-                    if (i == 1)
-                    {
-                        slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
-                    }
-                    else
-                    {
-                        if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
-                        {
-                            mUsedTimerIndex.Insert(i - 1);
-                            mMarshalMemory.Write((vals[i - 1].Value));
-                            slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
-                        }
-                    }
-                }
-
-                if (!mUsedTimerIndex.Contains(vals.Length - 1))
-                {
-                    int i = vals.Length - 1;
-                    mUsedTimerIndex.Insert(i);
-                    mMarshalMemory.Write((vals[i].Value));
-                }
-            }
-           // mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
-        }
-
-
-        private Memory<byte> SlopeCompressLong(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
-        {
-            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
-            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-            double slope = 0;
-
-            mMarshalMemory.Position = 0;
-           // Queue<int> mTimerIndex = new Queue<int>();
-
-            int count = values.ReadInt(0);
-
-            ushort mLastTime = 0;
-            long mLastValue = 0;
-
-            if (count > 0)
-            {
-                ushort mStartTime = values.ReadUShort();
-                var mStartValue = values.ReadLong();
-
-                mLastTime = mStartTime;
-                mLastValue = mStartValue;
-
-                mUsedTimerIndex.Insert(0);
-
-                mMarshalMemory.Write(mStartValue);
-
-                for (int i = 1; i < count; i++)
-                {
-                    var vkey = values.ReadUShort();
-                    var vval = values.ReadLong();
-                    if (i == 1)
-                    {
-                        slope = CalSlope(mStartValue, vval, vkey - mStartTime);
-                    }
-                    else
-                    {
-                        if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
-                        {
-                            mUsedTimerIndex.Insert(i - 1);
-                            mMarshalMemory.Write((mLastValue));
-                            mStartTime = mLastTime;
-                            mStartValue = mLastValue;
-                            slope = CalSlope(mStartValue, vval, vkey - mStartTime);
-                        }
-                    }
-                    mLastTime = vkey;
-                    mLastValue = vval;
-                }
-
-                if (!mUsedTimerIndex.Contains(count))
-                {
-                    int i = count;
-                    mUsedTimerIndex.Insert(i);
-                    mMarshalMemory.Write(mLastValue);
-                }
-            }
-           // mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position);
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="values"></param>
+        /// <param name="emptyIds"></param>
         /// <param name="mUsedTimerIndex"></param>
         /// <returns></returns>
-        private Memory<byte> SlopeCompressULong(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressShort(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-            double slope = 0;
+            double minslope = 0;
+            double maxslope = 0;
 
-            mMarshalMemory.Position = 0;
-            //Queue<int> mTimerIndex = new Queue<int>();
+            mVarintMemory.Reset();
+
+            bool isStarted = false;
 
             int count = values.ReadInt(0);
+
+            emptys.ReadIndex = 0;
+            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+
+            ushort mLastTime = 0;
+            short mLastValue = 0;
+
+            ushort mStartTime = 0;
+            short mStartValue = 0;
+
+            bool isFirst = true;
+
+            short mPrevalue = 0;
+
+            if (count > 0)
+            {
+                for (int i = 1; i < count; i++)
+                {
+                    if (ig != i)
+                    {
+                        if (!isStarted)
+                        {
+                            isStarted = true;
+
+                            mLastTime = mStartTime = values.ReadUShort();
+                            mLastValue = mStartValue = values.ReadShort();
+
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt32(mStartValue);
+                                mPrevalue = mStartValue;
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt32(mStartValue - mPrevalue);
+                                mPrevalue = mStartValue;
+                            }
+                            mUsedTimerIndex.Insert(i);
+                            minslope = double.MinValue;
+                        }
+                        else
+                        {
+                            var vkey = values.ReadUShort();
+                            var vval = values.ReadShort();
+                            if (minslope == double.MinValue)
+                            {
+                                maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                            }
+                            else
+                            {
+                                var ds = CalSlope(mStartValue, vval, vkey - mStartTime);
+
+                                minslope = Math.Min(ds, minslope);
+                                maxslope = Math.Max(ds, maxslope);
+
+                                if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
+                                {
+                                    mUsedTimerIndex.Insert(i - 1);
+
+                                    if (isFirst)
+                                    {
+                                        mVarintMemory.WriteInt32(mLastValue);
+                                        mPrevalue = mLastValue;
+                                        isFirst = false;
+                                    }
+                                    else
+                                    {
+                                        mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
+                                        mPrevalue = mLastValue;
+                                    }
+
+                                   // mMarshalMemory.Write((mLastValue));
+                                    mStartTime = mLastTime;
+                                    mStartValue = mLastValue;
+                                    maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                                }
+
+                            }
+                            mLastTime = vkey;
+                            mLastValue = vval;
+                        }
+                    }
+                    else
+                    {
+                        if (isStarted)
+                        {
+                            isStarted = false;
+                            if (maxslope != minslope)
+                            {
+                                mUsedTimerIndex.Insert(i - 1);
+                                if (isFirst)
+                                {
+                                    mVarintMemory.WriteInt32(mLastValue);
+                                    mPrevalue = mLastValue;
+                                    isFirst = false;
+                                }
+                                else
+                                {
+                                    mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
+                                    mPrevalue = mLastValue;
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+                if (!mUsedTimerIndex.Contains(count) && isStarted)
+                {
+                    int i = count;
+                    mUsedTimerIndex.Insert(i);
+                    if (isFirst)
+                    {
+                        mVarintMemory.WriteInt32(mLastValue);
+                        mPrevalue = mLastValue;
+                        isFirst = false;
+                    }
+                    else
+                    {
+                        mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
+                        mPrevalue = mLastValue;
+                    }
+                }
+            }
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="emptyIds"></param>
+        /// <param name="mUsedTimerIndex"></param>
+        /// <returns></returns>
+        private Memory<byte> SlopeCompressUShort(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
+        {
+            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
+            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
+            double minslope = 0;
+            double maxslope = 0;
+
+            mVarintMemory.Reset();
+
+            bool isStarted = false;
+
+            int count = values.ReadInt(0);
+
+            emptys.ReadIndex = 0;
+            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+
+            ushort mLastTime = 0;
+            ushort mLastValue = 0;
+
+            ushort mStartTime = 0;
+            ushort mStartValue = 0;
+
+            bool isFirst = true;
+
+            ushort mPrevalue = 0;
+
+            if (count > 0)
+            {
+                for (int i = 1; i < count; i++)
+                {
+                    if (ig != i)
+                    {
+                        if (!isStarted)
+                        {
+                            isStarted = true;
+
+                            mLastTime = mStartTime = values.ReadUShort();
+                            mLastValue = mStartValue = values.ReadUShort();
+
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt32(mStartValue);
+                                mPrevalue = mStartValue;
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt32(mStartValue - mPrevalue);
+                                mPrevalue = mStartValue;
+                            }
+                            mUsedTimerIndex.Insert(i);
+                            minslope = double.MinValue;
+                        }
+                        else
+                        {
+                            var vkey = values.ReadUShort();
+                            var vval = values.ReadUShort();
+                            if (minslope == double.MinValue)
+                            {
+                                maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                            }
+                            else
+                            {
+                                var ds = CalSlope(mStartValue, vval, vkey - mStartTime);
+
+                                minslope = Math.Min(ds, minslope);
+                                maxslope = Math.Max(ds, maxslope);
+
+                                if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
+                                {
+                                    mUsedTimerIndex.Insert(i - 1);
+
+                                    if (isFirst)
+                                    {
+                                        mVarintMemory.WriteInt32(mLastValue);
+                                        mPrevalue = mLastValue;
+                                        isFirst = false;
+                                    }
+                                    else
+                                    {
+                                        mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
+                                        mPrevalue = mLastValue;
+                                    }
+
+                                    // mMarshalMemory.Write((mLastValue));
+                                    mStartTime = mLastTime;
+                                    mStartValue = mLastValue;
+                                    maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                                }
+
+                            }
+                            mLastTime = vkey;
+                            mLastValue = vval;
+                        }
+                    }
+                    else
+                    {
+                        if (isStarted)
+                        {
+                            isStarted = false;
+                            if (maxslope != minslope)
+                            {
+                                mUsedTimerIndex.Insert(i - 1);
+                                if (isFirst)
+                                {
+                                    mVarintMemory.WriteInt32(mLastValue);
+                                    mPrevalue = mLastValue;
+                                    isFirst = false;
+                                }
+                                else
+                                {
+                                    mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
+                                    mPrevalue = mLastValue;
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+                if (!mUsedTimerIndex.Contains(count) && isStarted)
+                {
+                    int i = count;
+                    mUsedTimerIndex.Insert(i);
+                    if (isFirst)
+                    {
+                        mVarintMemory.WriteInt32(mLastValue);
+                        mPrevalue = mLastValue;
+                        isFirst = false;
+                    }
+                    else
+                    {
+                        mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
+                        mPrevalue = mLastValue;
+                    }
+                }
+            }
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="emptyIds"></param>
+        /// <param name="mUsedTimerIndex"></param>
+        /// <returns></returns>
+        private Memory<byte> SlopeCompressInt(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
+        {
+            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
+            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
+            double minslope = 0;
+            double maxslope = 0;
+
+            mVarintMemory.Reset();
+
+            bool isStarted = false;
+
+            int count = values.ReadInt(0);
+
+            emptys.ReadIndex = 0;
+            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+
+            ushort mLastTime = 0;
+            int mLastValue = 0;
+
+            ushort mStartTime = 0;
+            int mStartValue = 0;
+
+            bool isFirst = true;
+
+            int mPrevalue = 0;
+
+            if (count > 0)
+            {
+                for (int i = 1; i < count; i++)
+                {
+                    if (ig != i)
+                    {
+                        if (!isStarted)
+                        {
+                            isStarted = true;
+
+                            mLastTime = mStartTime = values.ReadUShort();
+                            mLastValue = mStartValue = values.ReadInt();
+
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt32(mStartValue);
+                                mPrevalue = mStartValue;
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt32(mStartValue - mPrevalue);
+                                mPrevalue = mStartValue;
+                            }
+                            mUsedTimerIndex.Insert(i);
+                            minslope = double.MinValue;
+                        }
+                        else
+                        {
+                            var vkey = values.ReadUShort();
+                            var vval = values.ReadInt();
+                            if (minslope == double.MinValue)
+                            {
+                                maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                            }
+                            else
+                            {
+                                var ds = CalSlope(mStartValue, vval, vkey - mStartTime);
+
+                                minslope = Math.Min(ds, minslope);
+                                maxslope = Math.Max(ds, maxslope);
+
+                                if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
+                                {
+                                    mUsedTimerIndex.Insert(i - 1);
+
+                                    if (isFirst)
+                                    {
+                                        mVarintMemory.WriteInt32(mLastValue);
+                                        mPrevalue = mLastValue;
+                                        isFirst = false;
+                                    }
+                                    else
+                                    {
+                                        mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
+                                        mPrevalue = mLastValue;
+                                    }
+
+                                    // mMarshalMemory.Write((mLastValue));
+                                    mStartTime = mLastTime;
+                                    mStartValue = mLastValue;
+                                    maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                                }
+
+                            }
+                            mLastTime = vkey;
+                            mLastValue = vval;
+                        }
+                    }
+                    else
+                    {
+                        if (isStarted)
+                        {
+                            isStarted = false;
+                            if (maxslope != minslope)
+                            {
+                                mUsedTimerIndex.Insert(i - 1);
+                                if (isFirst)
+                                {
+                                    mVarintMemory.WriteInt32(mLastValue);
+                                    mPrevalue = mLastValue;
+                                    isFirst = false;
+                                }
+                                else
+                                {
+                                    mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
+                                    mPrevalue = mLastValue;
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+                if (!mUsedTimerIndex.Contains(count) && isStarted)
+                {
+                    int i = count;
+                    mUsedTimerIndex.Insert(i);
+                    if (isFirst)
+                    {
+                        mVarintMemory.WriteInt32(mLastValue);
+                        mPrevalue = mLastValue;
+                        isFirst = false;
+                    }
+                    else
+                    {
+                        mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
+                        mPrevalue = mLastValue;
+                    }
+                }
+            }
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="emptyIds"></param>
+        /// <param name="mUsedTimerIndex"></param>
+        /// <returns></returns>
+        private Memory<byte> SlopeCompressUInt(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
+        {
+            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
+            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
+            double minslope = 0;
+            double maxslope = 0;
+
+            mVarintMemory.Reset();
+
+            bool isStarted = false;
+
+            int count = values.ReadInt(0);
+
+            emptys.ReadIndex = 0;
+            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+
+            ushort mLastTime = 0;
+            uint mLastValue = 0;
+
+            ushort mStartTime = 0;
+            uint mStartValue = 0;
+
+            bool isFirst = true;
+
+            uint mPrevalue = 0;
+
+            if (count > 0)
+            {
+                for (int i = 1; i < count; i++)
+                {
+                    if (ig != i)
+                    {
+                        if (!isStarted)
+                        {
+                            isStarted = true;
+
+                            mLastTime = mStartTime = values.ReadUShort();
+                            mLastValue = mStartValue = values.ReadUInt();
+
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt32(mStartValue);
+                                mPrevalue = mStartValue;
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt32((int)(mStartValue - mPrevalue));
+                                mPrevalue = mStartValue;
+                            }
+                            mUsedTimerIndex.Insert(i);
+                            minslope = double.MinValue;
+                        }
+                        else
+                        {
+                            var vkey = values.ReadUShort();
+                            var vval = values.ReadUInt();
+                            if (minslope == double.MinValue)
+                            {
+                                maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                            }
+                            else
+                            {
+                                var ds = CalSlope(mStartValue, vval, vkey - mStartTime);
+
+                                minslope = Math.Min(ds, minslope);
+                                maxslope = Math.Max(ds, maxslope);
+
+                                if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
+                                {
+                                    mUsedTimerIndex.Insert(i - 1);
+
+                                    if (isFirst)
+                                    {
+                                        mVarintMemory.WriteInt32(mLastValue);
+                                        mPrevalue = mLastValue;
+                                        isFirst = false;
+                                    }
+                                    else
+                                    {
+                                        mVarintMemory.WriteSInt32((int)(mLastValue - mPrevalue));
+                                        mPrevalue = mLastValue;
+                                    }
+
+                                    // mMarshalMemory.Write((mLastValue));
+                                    mStartTime = mLastTime;
+                                    mStartValue = mLastValue;
+                                    maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                                }
+
+                            }
+                            mLastTime = vkey;
+                            mLastValue = vval;
+                        }
+                    }
+                    else
+                    {
+                        if (isStarted)
+                        {
+                            isStarted = false;
+                            if (maxslope != minslope)
+                            {
+                                mUsedTimerIndex.Insert(i - 1);
+                                if (isFirst)
+                                {
+                                    mVarintMemory.WriteInt32(mLastValue);
+                                    mPrevalue = mLastValue;
+                                    isFirst = false;
+                                }
+                                else
+                                {
+                                    mVarintMemory.WriteSInt32((int)(mLastValue - mPrevalue));
+                                    mPrevalue = mLastValue;
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+                if (!mUsedTimerIndex.Contains(count) && isStarted)
+                {
+                    int i = count;
+                    mUsedTimerIndex.Insert(i);
+                    if (isFirst)
+                    {
+                        mVarintMemory.WriteInt32(mLastValue);
+                        mPrevalue = mLastValue;
+                        isFirst = false;
+                    }
+                    else
+                    {
+                        mVarintMemory.WriteSInt32((int)(mLastValue - mPrevalue));
+                        mPrevalue = mLastValue;
+                    }
+                }
+            }
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position);
+        }
+
+        private Memory<byte> SlopeCompressLong(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
+        {
+            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
+            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
+            double minslope = 0;
+            double maxslope = 0;
+
+            mVarintMemory.Reset();
+
+            bool isStarted = false;
+
+            int count = values.ReadInt(0);
+
+            emptys.ReadIndex = 0;
+            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+
+            ushort mLastTime = 0;
+            long mLastValue = 0;
+
+            ushort mStartTime = 0;
+            long mStartValue = 0;
+
+            bool isFirst = true;
+
+            long mPrevalue = 0;
+
+            if (count > 0)
+            {
+                for (int i = 1; i < count; i++)
+                {
+                    if (ig != i)
+                    {
+                        if (!isStarted)
+                        {
+                            isStarted = true;
+
+                            mLastTime = mStartTime = values.ReadUShort();
+                            mLastValue = mStartValue = values.ReadLong();
+
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt64(mStartValue);
+                                mPrevalue = mStartValue;
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt64((mStartValue - mPrevalue));
+                                mPrevalue = mStartValue;
+                            }
+                            mUsedTimerIndex.Insert(i);
+                            minslope = double.MinValue;
+                        }
+                        else
+                        {
+                            var vkey = values.ReadUShort();
+                            var vval = values.ReadLong();
+                            if (minslope == double.MinValue)
+                            {
+                                maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                            }
+                            else
+                            {
+                                var ds = CalSlope(mStartValue, vval, vkey - mStartTime);
+
+                                minslope = Math.Min(ds, minslope);
+                                maxslope = Math.Max(ds, maxslope);
+
+                                if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
+                                {
+                                    mUsedTimerIndex.Insert(i - 1);
+
+                                    if (isFirst)
+                                    {
+                                        mVarintMemory.WriteInt64(mLastValue);
+                                        mPrevalue = mLastValue;
+                                        isFirst = false;
+                                    }
+                                    else
+                                    {
+                                        mVarintMemory.WriteSInt64((mLastValue - mPrevalue));
+                                        mPrevalue = mLastValue;
+                                    }
+
+                                    // mMarshalMemory.Write((mLastValue));
+                                    mStartTime = mLastTime;
+                                    mStartValue = mLastValue;
+                                    maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                                }
+
+                            }
+                            mLastTime = vkey;
+                            mLastValue = vval;
+                        }
+                    }
+                    else
+                    {
+                        if (isStarted)
+                        {
+                            isStarted = false;
+                            if (maxslope != minslope)
+                            {
+                                mUsedTimerIndex.Insert(i - 1);
+                                if (isFirst)
+                                {
+                                    mVarintMemory.WriteInt64(mLastValue);
+                                    mPrevalue = mLastValue;
+                                    isFirst = false;
+                                }
+                                else
+                                {
+                                    mVarintMemory.WriteSInt64((mLastValue - mPrevalue));
+                                    mPrevalue = mLastValue;
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+                if (!mUsedTimerIndex.Contains(count) && isStarted)
+                {
+                    int i = count;
+                    mUsedTimerIndex.Insert(i);
+                    if (isFirst)
+                    {
+                        mVarintMemory.WriteInt64(mLastValue);
+                        mPrevalue = mLastValue;
+                        isFirst = false;
+                    }
+                    else
+                    {
+                        mVarintMemory.WriteSInt64((mLastValue - mPrevalue));
+                        mPrevalue = mLastValue;
+                    }
+                }
+            }
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position);
+        }
+
+
+        private Memory<byte> SlopeCompressULong(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
+        {
+            double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
+            int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
+            double minslope = 0;
+            double maxslope = 0;
+
+            mVarintMemory.Reset();
+
+            bool isStarted = false;
+
+            int count = values.ReadInt(0);
+
+            emptys.ReadIndex = 0;
+            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
 
             ushort mLastTime = 0;
             ulong mLastValue = 0;
 
+            ushort mStartTime = 0;
+            ulong mStartValue = 0;
+
+            bool isFirst = true;
+
+            ulong mPrevalue = 0;
+
             if (count > 0)
             {
-                ushort mStartTime = values.ReadUShort();
-                var mStartValue = values.ReadULong();
-
-                mLastTime = mStartTime;
-                mLastValue = mStartValue;
-
-                mUsedTimerIndex.Insert(0);
-
-                mMarshalMemory.Write(mStartValue);
-
                 for (int i = 1; i < count; i++)
                 {
-                    var vkey = values.ReadUShort();
-                    var vval = values.ReadULong();
-                    if (i == 1)
+                    if (ig != i)
                     {
-                        slope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                        if (!isStarted)
+                        {
+                            isStarted = true;
+
+                            mLastTime = mStartTime = values.ReadUShort();
+                            mLastValue = mStartValue = values.ReadULong();
+
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt64(mStartValue);
+                                mPrevalue = mStartValue;
+                                isFirst = false;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt64((long)(mStartValue - mPrevalue));
+                                mPrevalue = mStartValue;
+                            }
+                            mUsedTimerIndex.Insert(i);
+                            minslope = double.MinValue;
+                        }
+                        else
+                        {
+                            var vkey = values.ReadUShort();
+                            var vval = values.ReadULong();
+                            if (minslope == double.MinValue)
+                            {
+                                maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                            }
+                            else
+                            {
+                                var ds = CalSlope(mStartValue, vval, vkey - mStartTime);
+
+                                minslope = Math.Min(ds, minslope);
+                                maxslope = Math.Max(ds, maxslope);
+
+                                if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
+                                {
+                                    mUsedTimerIndex.Insert(i - 1);
+
+                                    if (isFirst)
+                                    {
+                                        mVarintMemory.WriteInt64(mLastValue);
+                                        mPrevalue = mLastValue;
+                                        isFirst = false;
+                                    }
+                                    else
+                                    {
+                                        mVarintMemory.WriteSInt64((long)(mLastValue - mPrevalue));
+                                        mPrevalue = mLastValue;
+                                    }
+
+                                    // mMarshalMemory.Write((mLastValue));
+                                    mStartTime = mLastTime;
+                                    mStartValue = mLastValue;
+                                    maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                                }
+
+                            }
+                            mLastTime = vkey;
+                            mLastValue = vval;
+                        }
                     }
                     else
                     {
-                        if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
+                        if (isStarted)
                         {
-                            mUsedTimerIndex.Insert(i - 1);
-                            mMarshalMemory.Write((mLastValue));
-                            mStartTime = mLastTime;
-                            mStartValue = mLastValue;
-                            slope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                            isStarted = false;
+                            if (maxslope != minslope)
+                            {
+                                mUsedTimerIndex.Insert(i - 1);
+                                if (isFirst)
+                                {
+                                    mVarintMemory.WriteInt64(mLastValue);
+                                    mPrevalue = mLastValue;
+                                    isFirst = false;
+                                }
+                                else
+                                {
+                                    mVarintMemory.WriteSInt64((long)(mLastValue - mPrevalue));
+                                    mPrevalue = mLastValue;
+                                }
+                            }
                         }
                     }
-                    mLastTime = vkey;
-                    mLastValue = vval;
                 }
 
-                if (!mUsedTimerIndex.Contains(count))
+
+                if (!mUsedTimerIndex.Contains(count) && isStarted)
                 {
                     int i = count;
                     mUsedTimerIndex.Insert(i);
-                    mMarshalMemory.Write(mLastValue);
+                    if (isFirst)
+                    {
+                        mVarintMemory.WriteInt64(mLastValue);
+                        mPrevalue = mLastValue;
+                        isFirst = false;
+                    }
+                    else
+                    {
+                        mVarintMemory.WriteSInt64((long)(mLastValue - mPrevalue));
+                        mPrevalue = mLastValue;
+                    }
                 }
             }
-           // mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
+            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position);
         }
 
-        //private Memory<byte> SlopeCompress(Dictionary<ushort, double> values, out Queue<int> mUsedTimerIndex)
-        //{
-        //    double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
-        //    int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-        //    double slope = 0;
 
-        //    mMarshalMemory.Position = 0;
-        //    Queue<int> mTimerIndex = new Queue<int>();
-
-        //    if (values.Count > 0)
-        //    {
-        //        var vals = values.ToArray();
-        //        var pval = vals[0].Value;
-        //        ushort ptim = vals[0].Key;
-
-        //        mTimerIndex.Enqueue(0);
-
-        //        mMarshalMemory.Write(pval);
-
-        //        for (int i = 1; i < vals.Length; i++)
-        //        {
-        //            if (i == 1)
-        //            {
-        //                slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
-        //            }
-        //            else
-        //            {
-        //                if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
-        //                {
-        //                    mTimerIndex.Enqueue(i - 1);
-        //                    mMarshalMemory.Write((vals[i - 1].Value));
-        //                    slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
-        //                }
-        //            }
-        //        }
-
-        //        if (!mTimerIndex.Contains(vals.Length - 1))
-        //        {
-        //            int i = vals.Length - 1;
-        //            mTimerIndex.Enqueue(i);
-        //            mMarshalMemory.Write((vals[i].Value));
-        //        }
-        //    }
-        //    mUsedTimerIndex = mTimerIndex;
-        //    return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
-        //}
-
-        private Memory<byte> SlopeCompressDouble(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="emptyIds"></param>
+        /// <param name="mUsedTimerIndex"></param>
+        /// <returns></returns>
+        private Memory<byte> SlopeCompressDouble(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
         {
+
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-            double slope = 0;
+            double minslope = 0;
+            double maxslope = 0;
 
-            mMarshalMemory.Position = 0;
-            //Queue<int> mTimerIndex = new Queue<int>();
+            bool isStarted = false;
 
             int count = values.ReadInt(0);
+
+            emptys.ReadIndex = 0;
+            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
 
             ushort mLastTime = 0;
             double mLastValue = 0;
 
+            ushort mStartTime = 0;
+            double mStartValue = 0;
+
+            mVarintMemory.Reset();
+            mMarshalMemory.Position = 0;
+            mDCompress.Reset();
+            mDCompress.Precision = this.Precision;
+
             if (count > 0)
             {
-                //var vals = values.ToArray();
-
-                ushort mStartTime = values.ReadUShort();
-                var mStartValue = values.ReadDouble();
-
-                mLastTime = mStartTime;
-                mLastValue = mStartValue;
-
-                mUsedTimerIndex.Insert(0);
-
-                mMarshalMemory.Write(mStartValue);
-
                 for (int i = 1; i < count; i++)
                 {
-                    var vkey = values.ReadUShort();
-                    var vval = values.ReadDouble();
-                    if (i == 1)
+                    if (ig != i)
                     {
-                        slope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                        if (!isStarted)
+                        {
+                            isStarted = true;
+
+                            mLastTime = mStartTime = values.ReadUShort();
+                            mLastValue = mStartValue = values.ReadDouble();
+
+                            mDCompress.Append(mLastValue);
+                            mUsedTimerIndex.Insert(i);
+                            minslope = double.MinValue;
+                        }
+                        else
+                        {
+                            var vkey = values.ReadUShort();
+                            var vval = values.ReadDouble();
+                            if (minslope == double.MinValue)
+                            {
+                                maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                            }
+                            else
+                            {
+                                var ds = CalSlope(mStartValue, vval, vkey - mStartTime);
+
+                                minslope = Math.Min(ds, minslope);
+                                maxslope = Math.Max(ds, maxslope);
+
+                                if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
+                                {
+                                    mUsedTimerIndex.Insert(i - 1);
+
+                                    mDCompress.Append(mLastValue);
+
+                                    // mMarshalMemory.Write((mLastValue));
+                                    mStartTime = mLastTime;
+                                    mStartValue = mLastValue;
+                                    maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                                }
+
+                            }
+                            mLastTime = vkey;
+                            mLastValue = vval;
+                        }
                     }
                     else
                     {
-                        if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
+                        if (isStarted)
                         {
-                            mUsedTimerIndex.Insert(i - 1);
-                            mMarshalMemory.Write((mLastValue));
-                            mStartTime = mLastTime;
-                            mStartValue = mLastValue;
-                            slope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                            isStarted = false;
+                            if (maxslope != minslope)
+                            {
+                                mUsedTimerIndex.Insert(i - 1);
+                                mDCompress.Append(mLastValue);
+                            }
                         }
                     }
-                    mLastTime = vkey;
-                    mLastValue = vval;
                 }
 
-                if (!mUsedTimerIndex.Contains(count))
+
+                if (!mUsedTimerIndex.Contains(count) && isStarted)
                 {
                     int i = count;
                     mUsedTimerIndex.Insert(i);
-                    mMarshalMemory.Write(mLastValue);
+                    mDCompress.Append(mLastValue);
                 }
             }
-            //mUsedTimerIndex = mTimerIndex;
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
+            mDCompress.Compress();
+            return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
         }
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="values"></param>
-        ///// <param name="mUsedTimerIndex"></param>
-        ///// <returns></returns>
-        //private Memory<byte> SlopeCompress(Dictionary<ushort, float> values, out Queue<int> mUsedTimerIndex)
-        //{
-        //    double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
-        //    int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-        //    double slope = 0;
-
-        //    mMarshalMemory.Position = 0;
-        //    Queue<int> mTimerIndex = new Queue<int>();
-
-        //    if (values.Count > 0)
-        //    {
-        //        var vals = values.ToArray();
-        //        var pval = vals[0].Value;
-        //        ushort ptim = vals[0].Key;
-
-        //        mTimerIndex.Enqueue(0);
-
-        //        mMarshalMemory.Write(pval);
-
-        //        for (int i = 1; i < vals.Length; i++)
-        //        {
-        //            if (i == 1)
-        //            {
-        //                slope = CalSlope(pval, vals[i].Value, vals[i].Key - ptim);
-        //            }
-        //            else
-        //            {
-        //                if (CheckIsNeedRecord(slope, CalSlope(pval, vals[i].Value, vals[i].Key - ptim), slopeArea, slopeType))
-        //                {
-        //                    mTimerIndex.Enqueue(i - 1);
-        //                    mMarshalMemory.Write((vals[i - 1].Value));
-        //                    slope = CalSlope(vals[i - 1].Value, vals[i].Value, vals[i].Key - ptim);
-        //                }
-        //            }
-        //        }
-
-        //        if (!mTimerIndex.Contains(vals.Length - 1))
-        //        {
-        //            int i = vals.Length - 1;
-        //            mTimerIndex.Enqueue(i);
-        //            mMarshalMemory.Write((vals[i].Value));
-        //        }
-        //    }
-        //    mUsedTimerIndex = mTimerIndex;
-        //    return mMarshalMemory.StartMemory.AsMemory(0, (int)mVarintMemory.WritePosition); ;
-        //}
-
-
-        private Memory<byte> SlopeCompressFloat(MemoryBlock values, ref CustomQueue<int> mUsedTimerIndex)
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="emptyIds"></param>
+        /// <param name="mUsedTimerIndex"></param>
+        /// <returns></returns>
+        private Memory<byte> SlopeCompressFloat(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
-            double slope = 0;
+            double minslope = 0;
+            double maxslope = 0;
 
-            mMarshalMemory.Position = 0;
-            //Queue<int> mTimerIndex = new Queue<int>();
+            bool isStarted = false;
 
             int count = values.ReadInt(0);
+
+            emptys.ReadIndex = 0;
+            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
 
             ushort mLastTime = 0;
             float mLastValue = 0;
 
+            ushort mStartTime = 0;
+            float mStartValue = 0;
+
+            mVarintMemory.Reset();
+            mMarshalMemory.Position = 0;
+            mFCompress.Reset();
+            mFCompress.Precision = this.Precision;
+
             if (count > 0)
             {
-                //var vals = values.ToArray();
-
-                ushort mStartTime = values.ReadUShort();
-                var mStartValue = values.ReadFloat();
-
-                mLastTime = mStartTime;
-                mLastValue = mStartValue;
-
-                mUsedTimerIndex.Insert(0);
-
-                mMarshalMemory.Write(mStartValue);
-
                 for (int i = 1; i < count; i++)
                 {
-                    var vkey = values.ReadUShort();
-                    var vval = values.ReadFloat();
-                    if (i == 1)
+                    if (ig != i)
                     {
-                        slope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                        if (!isStarted)
+                        {
+                            isStarted = true;
+
+                            mLastTime = mStartTime = values.ReadUShort();
+                            mLastValue = mStartValue = values.ReadFloat();
+
+                            mFCompress.Append(mLastValue);
+                            mUsedTimerIndex.Insert(i);
+                            minslope = double.MinValue;
+                        }
+                        else
+                        {
+                            var vkey = values.ReadUShort();
+                            var vval = values.ReadFloat();
+                            if (minslope == double.MinValue)
+                            {
+                                maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                            }
+                            else
+                            {
+                                var ds = CalSlope(mStartValue, vval, vkey - mStartTime);
+
+                                minslope = Math.Min(ds, minslope);
+                                maxslope = Math.Max(ds, maxslope);
+
+                                if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
+                                {
+                                    mUsedTimerIndex.Insert(i - 1);
+
+                                    mFCompress.Append(mLastValue);
+
+                                    // mMarshalMemory.Write((mLastValue));
+                                    mStartTime = mLastTime;
+                                    mStartValue = mLastValue;
+                                    maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                                }
+
+                            }
+                            mLastTime = vkey;
+                            mLastValue = vval;
+                        }
                     }
                     else
                     {
-                        if (CheckIsNeedRecord(slope, CalSlope(mStartValue, vval, vkey - mStartTime), slopeArea, slopeType))
+                        if (isStarted)
                         {
-                            mUsedTimerIndex.Insert(i - 1);
-                            mMarshalMemory.Write((mLastValue));
-                            mStartTime = mLastTime;
-                            mStartValue = mLastValue;
-                            slope = CalSlope(mStartValue, vval, vkey - mStartTime);
+                            isStarted = false;
+                            if (maxslope != minslope)
+                            {
+                                mUsedTimerIndex.Insert(i - 1);
+                                mFCompress.Append(mLastValue);
+                            }
                         }
                     }
-                    mLastTime = vkey;
-                    mLastValue = vval;
                 }
 
-                if (!mUsedTimerIndex.Contains(count))
+
+                if (!mUsedTimerIndex.Contains(count) && isStarted)
                 {
                     int i = count;
                     mUsedTimerIndex.Insert(i);
-                    mMarshalMemory.Write(mLastValue);
+                    mFCompress.Append(mLastValue);
                 }
             }
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position); ;
+            mFCompress.Compress();
+            return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
         }
+       
         #endregion
 
         /// <summary>
@@ -1147,10 +1412,12 @@ namespace Cdy.Tag
         /// <param name="mTimers"></param>
         /// <param name="usedIndex"></param>
         /// <returns></returns>
-        protected  Memory<byte> CompressValues<T>(MarshalMemoryBlock source, long offset, int count, CustomQueue<int> emptyIds,List<ushort> mTimers,TagType type)
+        protected Memory<byte> CompressValues<T>(MarshalMemoryBlock source, long offset, int count,List<ushort> mTimers,TagType type)
         {
             int ig = -1;
-            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+            emptys.ReadIndex = 0;
+
+            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
             int ac = 0;
             mAvaiableDatabuffer.Position = 0;
             mAvaiableDatabuffer.Write((int)0);
@@ -1170,11 +1437,12 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressByte(mAvaiableDatabuffer, ref usedIndex);
+                   // return null;
+                return SlopeCompressByte(mAvaiableDatabuffer, emptys, usedIndex);
                 case TagType.Short:
                     for (int i = 0; i < count; i++)
                     {
@@ -1187,11 +1455,11 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressShort(mAvaiableDatabuffer, ref usedIndex);
+                return SlopeCompressShort(mAvaiableDatabuffer, emptys, usedIndex);
                 case TagType.UShort:
                     Dictionary<ushort, ushort> mavaibleValues = new Dictionary<ushort, ushort>();
                     for (int i = 0; i < count; i++)
@@ -1205,11 +1473,12 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressUShort(mAvaiableDatabuffer, ref usedIndex);
+
+                    return SlopeCompressUShort(mAvaiableDatabuffer, emptys, usedIndex);
                 case TagType.Int:
                     for (int i = 0; i < count; i++)
                     {
@@ -1222,11 +1491,12 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressInt(mAvaiableDatabuffer, ref usedIndex);
+                //    return null;
+                return SlopeCompressInt(mAvaiableDatabuffer, emptys, usedIndex);
                 case TagType.UInt:
                     for (int i = 0; i < count; i++)
                     {
@@ -1239,11 +1509,11 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressUInt(mAvaiableDatabuffer, ref usedIndex);
+                return SlopeCompressUInt(mAvaiableDatabuffer, emptys, usedIndex);
                 case TagType.Long:
                     for (int i = 0; i < count; i++)
                     {
@@ -1256,11 +1526,11 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressLong(mAvaiableDatabuffer, ref usedIndex);
+                 return SlopeCompressLong(mAvaiableDatabuffer, emptys, usedIndex);
                 case TagType.ULong:
                     for (int i = 0; i < count; i++)
                     {
@@ -1273,11 +1543,12 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressULong(mAvaiableDatabuffer, ref usedIndex);
+                    //return null;
+                 return SlopeCompressULong(mAvaiableDatabuffer, emptys, usedIndex);
                 case TagType.Double:
                     for (int i = 0; i < count; i++)
                     {
@@ -1291,11 +1562,11 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressDouble(mAvaiableDatabuffer, ref usedIndex);
+                    return SlopeCompressDouble(mAvaiableDatabuffer, emptys, usedIndex);
                 case TagType.Float:
                     for (int i = 0; i < count; i++)
                     {
@@ -1308,15 +1579,49 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressFloat(mAvaiableDatabuffer, ref usedIndex);
+                    //return null;
+                return SlopeCompressFloat(mAvaiableDatabuffer, emptys, usedIndex);
                 default:
                     usedIndex = null;
                     return null;
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="valuedata"></param>
+        /// <param name="qualitydata"></param>
+        /// <param name="timedata"></param>
+        /// <param name="target"></param>
+        /// <param name="targetAddr"></param>
+        /// <returns></returns>
+        private long FillData(Memory<byte> valuedata,Memory<byte> qualitydata,byte[] timedata,MarshalMemoryBlock target, long targetAddr)
+        {
+            int rsize = 0;
+
+            target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
+            rsize += 2;
+            target.Write((int)timedata.Length);
+            target.Write(timedata);
+            rsize += 4;
+            rsize += timedata.Length;
+
+            target.WriteMemory(target.Position, valuedata, 0, valuedata.Length);
+
+            rsize += 4;
+            rsize += valuedata.Length;
+
+
+            target.Write(qualitydata.Length);
+            target.Write(qualitydata);
+            rsize += 4;
+            rsize += qualitydata.Length;
+            return rsize;
         }
 
         /// <summary>
@@ -1352,236 +1657,73 @@ namespace Cdy.Tag
 
             usedIndex.Reset();
             GetEmpityTimers(tims);
-            //Queue<int> usedIndex;
 
             long rsize = 0;
 
             switch (type)
             {
                 case TagType.Byte:
-                    var cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, emptys, tims, type);
-
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
-                    rsize += 2;
-
+                    var cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, tims, type);
                     var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, usedIndex);
                     var timeData = CompressTimers(tims, usedIndex);
-
-                    target.Write((int)timeData.Length);
-                    target.Write(timeData);
-                    rsize += 4;
-                    rsize += timeData.Length;
-
-                    target.Write(cval.Length);
-                    target.Write(cval);
-                    rsize += 4;
-                    rsize += cval.Length;
-
-
-                    target.Write(cqus.Length);
-                    target.Write(cqus);
-                    rsize += 4;
-                    rsize += cqus.Length;
+                    rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Short:
-                    var res = CompressValues<short>(source, count * 2 + sourceAddr, count, emptys, tims, type);
-
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
-                    rsize += 2;
+                    cval = CompressValues<short>(source, count * 2 + sourceAddr, count, tims, type);
 
                     cqus = CompressQulitys(source, count * 4 + sourceAddr, count, usedIndex);
                     timeData = CompressTimers(tims, usedIndex);
-
-                    target.Write((int)timeData.Length);
-                    target.Write(timeData);
-                    rsize += 4;
-                    rsize += timeData.Length;
-
-                    target.Write(res.Length);
-                    target.Write(res);
-                    rsize += 4;
-                    rsize += res.Length;
-
-
-                    target.Write(cqus.Length);
-                    target.Write(cqus);
-                    rsize += 4;
-                    rsize += cqus.Length;
+                    rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.UShort:
-                    var ures = CompressValues<ushort>(source, count * 2 + sourceAddr, count, emptys, tims, type);
-
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
-                    rsize += 2;
-
+                    cval = CompressValues<ushort>(source, count * 2 + sourceAddr, count,  tims, type);
                      cqus = CompressQulitys(source, count * 4 + sourceAddr, count, usedIndex);
                      timeData = CompressTimers(tims, usedIndex);
-
-                    target.Write((int)timeData.Length);
-                    target.Write(timeData);
-                    rsize += 4;
-                    rsize += timeData.Length;
-
-                    target.Write(ures.Length);
-                    target.Write(ures);
-                    rsize += 4;
-                    rsize += ures.Length;
-
-
-                    target.Write(cqus.Length);
-                    target.Write(cqus);
-                    rsize += 4;
-                    rsize += cqus.Length;
+                    rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Int:
-                    var ires = CompressValues<int>(source, count * 2 + sourceAddr, count, emptys, tims, type);
-
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
-                    rsize += 2;
-
+                    cval = CompressValues<int>(source, count * 2 + sourceAddr, count,  tims, type);
                     cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
                     timeData = CompressTimers(tims, usedIndex);
-
-                    target.Write((int)timeData.Length);
-                    target.Write(timeData);
-                    rsize += 4;
-                    rsize += timeData.Length;
-
-                    target.Write(ires.Length);
-                    target.Write(ires);
-                    rsize += 4;
-                    rsize += ires.Length;
-
-
-                    target.Write(cqus.Length);
-                    target.Write(cqus);
-                    rsize += 4;
-                    rsize += cqus.Length;
+                    rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.UInt:
-                    var uires = CompressValues<uint>(source, count * 2 + sourceAddr, count, emptys, tims, type);
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
-                    rsize += 2;
-
+                    cval = CompressValues<uint>(source, count * 2 + sourceAddr, count,  tims, type);
+                    
                     cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
                     timeData = CompressTimers(tims, usedIndex);
 
-                    target.Write((int)timeData.Length);
-                    target.Write(timeData);
-                    rsize += 4;
-                    rsize += timeData.Length;
-
-
-                    target.Write(uires.Length);
-                    target.Write(uires);
-                    rsize += 4;
-                    rsize += uires.Length;
-
-
-                    target.Write(cqus.Length);
-                    target.Write(cqus);
-                    rsize += 4;
-                    rsize += cqus.Length;
+                    rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Long:
-                    var lres = CompressValues<long>(source, count * 2 + sourceAddr, count, emptys, tims, type);
-
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
-                    rsize += 2;
+                    cval = CompressValues<long>(source, count * 2 + sourceAddr, count,  tims, type);
                     cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
-
                     timeData = CompressTimers(tims, usedIndex);
-
-                    target.Write((int)timeData.Length);
-                    target.Write(timeData);
-                    rsize += 4;
-                    rsize += timeData.Length;
-
-                    target.Write(lres.Length);
-                    target.Write(lres);
-                    rsize += 4;
-                    rsize += lres.Length;
-
-                    target.Write(cqus.Length);
-                    target.Write(cqus);
-                    rsize += 4;
-                    rsize += cqus.Length;
+                    rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.ULong:
-                    var ulres = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys, tims, type);
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
-                    rsize += 2;
-
+                    cval = CompressValues<ulong>(source, count * 2 + sourceAddr, count,  tims, type);
                     cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
 
                     timeData = CompressTimers(tims, usedIndex);
-                    target.Write((int)timeData.Length);
-                    target.Write(timeData);
-                    rsize += 4;
-                    rsize += timeData.Length;
-
-                    target.Write(ulres.Length);
-                    target.Write(ulres);
-                    rsize += 4;
-                    rsize += ulres.Length;
-
-
-                    target.Write(cqus.Length);
-                    target.Write(cqus);
-                    rsize += 4;
-                    rsize += cqus.Length;
+                    rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Double:
-                    var dres = CompressValues<double>(source, count * 2 + sourceAddr, count, emptys, tims, type);
 
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
-                    rsize += 2;
+                    if (mDCompress == null) mDCompress = new DoubleCompressBuffer(310) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
 
+                    cval = CompressValues<double>(source, count * 2 + sourceAddr, count,  tims, type);
                     cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
 
                     timeData = CompressTimers(tims, usedIndex);
-                    target.Write((int)timeData.Length);
-                    target.Write(timeData);
-                    rsize += 4;
-                    rsize += timeData.Length;
-
-
-                    target.Write(dres.Length);
-                    target.Write(dres);
-                    rsize += 4;
-                    rsize += dres.Length;
-
-
-                    target.Write(cqus.Length);
-                    target.Write(cqus);
-                    rsize += 4;
-                    rsize += cqus.Length;
+                    rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Float:
-                    var fres = CompressValues<float>(source, count * 2 + sourceAddr, count, emptys, tims, type);
-
-                    target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
-                    rsize += 2;
-
+                    if (mFCompress == null) mFCompress = new FloatCompressBuffer(310) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    cval = CompressValues<float>(source, count * 2 + sourceAddr, count,  tims, type);
                     cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
-
                     timeData = CompressTimers(tims, usedIndex);
-                    target.Write((int)timeData.Length);
-                    target.Write(timeData);
-                    rsize += 4;
-                    rsize += timeData.Length;
-
-
-                    target.Write(fres.Length);
-                    target.Write(fres);
-                    rsize += 4;
-                    rsize += fres.Length;
-
-
-                    target.Write(cqus.Length);
-                    target.Write(cqus);
-                    rsize += 4;
-                    rsize += cqus.Length;
+                    rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 default:
                     base.Compress<T>(source, sourceAddr, target, targetAddr, size, type);
@@ -1589,7 +1731,9 @@ namespace Cdy.Tag
             }
             return rsize;
         }
-                
+        
+        
+        
         #endregion ...Methods...
 
         #region ... Interfaces ...

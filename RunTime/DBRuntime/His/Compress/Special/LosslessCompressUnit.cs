@@ -1205,7 +1205,7 @@ namespace Cdy.Tag
         /// <param name="offset"></param>
         /// <param name="len"></param>
         /// <returns></returns>
-        private List<T> DeCompressValue<T>(byte[] value, int count)
+        protected virtual List<T> DeCompressValue<T>(byte[] value, int count)
         {
 
             if (typeof(T) == typeof(byte))
@@ -1337,10 +1337,11 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(float))
             {
-                using (MemorySpan block = new MemorySpan(value))
-                {
-                    return block.ToFloatList() as List<T>;
-                }
+                return FloatCompressBuffer.Decompress(value) as List<T>;
+                //using (MemorySpan block = new MemorySpan(value))
+                //{
+                //    return block.ToFloatList() as List<T>;
+                //}
             }
             else if (typeof(T) == typeof(string))
             {

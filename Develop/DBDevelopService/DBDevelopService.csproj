@@ -8,6 +8,7 @@
     <StartupObject />
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
     <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
+    <AssemblyName>DBDevelopService</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

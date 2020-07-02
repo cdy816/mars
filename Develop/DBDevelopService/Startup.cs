@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
+using Cdy.Tag;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace DBDevelopService
 {
@@ -28,6 +30,8 @@ namespace DBDevelopService
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            //LoggerFactory.Create((builder) => { builder.AddConsole(); });
 
             app.UseRouting();
             

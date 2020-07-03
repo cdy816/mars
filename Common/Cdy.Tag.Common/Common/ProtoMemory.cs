@@ -116,6 +116,7 @@ namespace Cdy.Tag
 
             outputStream = new Google.Protobuf.CodedOutputStream(mDataBuffer);
             inputStream = new Google.Protobuf.CodedInputStream(mDataBuffer);
+            mDataBuffer.AsSpan().Fill(0);
             
         }
 

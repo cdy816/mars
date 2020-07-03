@@ -33,6 +33,7 @@ namespace Cdy.Tag
         /// </summary>
         protected CustomQueue<int> usedIndex = new CustomQueue<int>(604);
 
+        protected ProtoMemory mVarintMemory2;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -76,7 +77,7 @@ namespace Cdy.Tag
         /// <param name="timerVals"></param>
         /// <param name="usedIndex"></param>
         /// <returns></returns>
-        protected new byte[] CompressTimers(List<ushort> timerVals, CustomQueue<int> usedIndex)
+        protected new Memory<byte> CompressTimers(List<ushort> timerVals, CustomQueue<int> usedIndex)
         {
             usedIndex.ReadIndex = 0;
             // int preids = timerVals[0];
@@ -84,7 +85,7 @@ namespace Cdy.Tag
             int ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
             bool isFirst = true;
 
-            mVarintMemory.Reset();
+            mVarintMemory2.Reset();
             //mVarintMemory.WriteInt32(preids);
             for (int i = 0; i < timerVals.Count; i++)
             {
@@ -94,18 +95,18 @@ namespace Cdy.Tag
                     if (isFirst)
                     {
                         isFirst = false;
-                        mVarintMemory.WriteInt32(id);
+                        mVarintMemory2.WriteInt32(id);
                         preids = id;
                     }
                     else
                     {
-                        mVarintMemory.WriteInt32(id - preids);
+                        mVarintMemory2.WriteInt32(id - preids);
                         preids = id;
                     }
                     ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
                 }
             }
-            return mVarintMemory.DataBuffer.AsSpan(0, (int)mVarintMemory.WritePosition).ToArray();
+            return mVarintMemory2.DataBuffer.AsSpan(0, (int)mVarintMemory2.WritePosition).ToArray();
         }
 
         /// <summary>
@@ -115,8 +116,8 @@ namespace Cdy.Tag
         private void GetEmpityTimers(List<ushort> timerVals)
         {
             emptys.Reset();
-            int preids = timerVals[0];
-            mVarintMemory.Reset();
+            //int preids = timerVals[0];
+            //mVarintMemory.Reset();
             for (int i = 1; i < timerVals.Count; i++)
             {
                 if (timerVals[i] <= 0)
@@ -222,21 +223,16 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         /// <param name="mUsedTimerIndex"></param>
         /// <returns></returns>
-        private Memory<byte> SlopeCompressByte(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressByte(MemoryBlock values, CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double minslope = 0;
             double maxslope = 0;
 
-            mMarshalMemory.Position = 0;
             bool isStarted = false;
 
             int count = values.ReadInt(0);
-
-            emptys.ReadIndex = 0;
-            int ig = -1;
-            ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
 
             ushort mLastTime = 0;
             byte mLastValue = 0;
@@ -244,26 +240,53 @@ namespace Cdy.Tag
             ushort mStartTime = 0;
             byte mStartValue = 0;
 
+            mMarshalMemory.Position = 0;
+           
+            int id = 0;
+            int mlastid = 0;
             if (count > 0)
             {
-                for (int i = 1; i < count; i++)
+                for (int i = 0; i < count; i++)
                 {
-                    if (ig != i)
+                    if (!isStarted)
                     {
-                        if (!isStarted)
+                        isStarted = true;
+
+                        mlastid = id = values.ReadInt();
+                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastValue = mStartValue = values.ReadByte();
+
+                        mMarshalMemory.Write(mLastValue);
+                        mUsedTimerIndex.Insert(id);
+                        minslope = double.MinValue;
+                    }
+                    else
+                    {
+                        id = values.ReadInt();
+                        var vkey = values.ReadUShort();
+                        var vval = values.ReadByte();
+                        if ((id - mlastid) > 1)
                         {
-                            isStarted = true;
-                           
-                            mLastTime = mStartTime = values.ReadUShort();
-                            mLastValue = mStartValue = values.ReadByte();
-                            mMarshalMemory.Write(mStartValue);
-                            mUsedTimerIndex.Insert(i);
+                            //说明之间有无效值，需要重新计算斜率
+
+                            if (mLastTime != mStartTime)
+                            {
+                                mUsedTimerIndex.Insert(mlastid);
+                                mMarshalMemory.Write(mLastValue);
+                            }
+
+                            mMarshalMemory.Write(vval);
+                            mUsedTimerIndex.Insert(id);
+
+                            mLastTime = mStartTime = vkey;
+                            mLastValue = mStartValue = vval;
+                            mlastid = id;
                             minslope = double.MinValue;
+
+                            continue;
                         }
                         else
                         {
-                            var vkey = values.ReadUShort();
-                            var vval = values.ReadByte();
                             if (minslope == double.MinValue)
                             {
                                 maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
@@ -277,29 +300,20 @@ namespace Cdy.Tag
 
                                 if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
                                 {
-                                    mUsedTimerIndex.Insert(i - 1);
-                                    mMarshalMemory.Write((mLastValue));
+                                    mUsedTimerIndex.Insert(mlastid);
+
+                                    mMarshalMemory.Write(mLastValue);
+
                                     mStartTime = mLastTime;
                                     mStartValue = mLastValue;
                                     maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
                                 }
-                                
-                            }
-                            mLastTime = vkey;
-                            mLastValue = vval;
-                        }
-                    }
-                    else
-                    {
-                        if (isStarted)
-                        {
-                            isStarted = false;
-                            if(maxslope!=minslope)
-                            {
-                                mUsedTimerIndex.Insert(i - 1);
-                                mMarshalMemory.Write((mLastValue));
+
                             }
                         }
+                        mLastTime = vkey;
+                        mLastValue = vval;
+                        mlastid = id;
                     }
                 }
 
@@ -307,11 +321,11 @@ namespace Cdy.Tag
                 if (!mUsedTimerIndex.Contains(count) && isStarted)
                 {
                     int i = count;
-                    mUsedTimerIndex.Insert(i);
+                    mUsedTimerIndex.Insert(mlastid);
                     mMarshalMemory.Write(mLastValue);
                 }
             }
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position);
+            return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
         }
 
         /// <summary>
@@ -321,21 +335,16 @@ namespace Cdy.Tag
         /// <param name="emptyIds"></param>
         /// <param name="mUsedTimerIndex"></param>
         /// <returns></returns>
-        private Memory<byte> SlopeCompressShort(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressShort(MemoryBlock values,  CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double minslope = 0;
             double maxslope = 0;
 
-            mVarintMemory.Reset();
-
             bool isStarted = false;
 
             int count = values.ReadInt(0);
-
-            emptys.ReadIndex = 0;
-            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
 
             ushort mLastTime = 0;
             short mLastValue = 0;
@@ -343,41 +352,94 @@ namespace Cdy.Tag
             ushort mStartTime = 0;
             short mStartValue = 0;
 
+
             bool isFirst = true;
 
             short mPrevalue = 0;
 
+            mMarshalMemory.Position = 0;
+
+            int id = 0;
+            int mlastid = 0;
             if (count > 0)
             {
-                for (int i = 1; i < count; i++)
+                for (int i = 0; i < count; i++)
                 {
-                    if (ig != i)
+                    if (!isStarted)
                     {
-                        if (!isStarted)
+                        isStarted = true;
+
+                        mlastid = id = values.ReadInt();
+                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastValue = mStartValue = values.ReadShort();
+
+                        //mMarshalMemory.Write(mLastValue);
+
+                        if (isFirst)
                         {
-                            isStarted = true;
+                            mVarintMemory.WriteInt32(mStartValue);
+                            mPrevalue = mStartValue;
+                            isFirst = false;
+                        }
+                        else
+                        {
+                            mVarintMemory.WriteSInt32(mStartValue - mPrevalue);
+                            mPrevalue = mStartValue;
+                        }
 
-                            mLastTime = mStartTime = values.ReadUShort();
-                            mLastValue = mStartValue = values.ReadShort();
+                        mUsedTimerIndex.Insert(id);
+                        minslope = double.MinValue;
+                    }
+                    else
+                    {
+                        id = values.ReadInt();
+                        var vkey = values.ReadUShort();
+                        var vval = values.ReadShort();
+                        if ((id - mlastid) > 1)
+                        {
+                            //说明之间有无效值，需要重新计算斜率
 
+                            if (mLastTime != mStartTime)
+                            {
+                                mUsedTimerIndex.Insert(mlastid);
+                                if (isFirst)
+                                {
+                                    mVarintMemory.WriteInt32(mLastValue);
+                                    mPrevalue = mLastValue;
+                                    isFirst = false;
+                                }
+                                else
+                                {
+                                    mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
+                                    mPrevalue = mLastValue;
+                                }
+                                //mMarshalMemory.Write(mLastValue);
+                            }
+
+                           // mMarshalMemory.Write(vval);
                             if (isFirst)
                             {
-                                mVarintMemory.WriteInt32(mStartValue);
-                                mPrevalue = mStartValue;
+                                mVarintMemory.WriteInt32(vval);
+                                mPrevalue = vval;
                                 isFirst = false;
                             }
                             else
                             {
-                                mVarintMemory.WriteSInt32(mStartValue - mPrevalue);
-                                mPrevalue = mStartValue;
+                                mVarintMemory.WriteSInt32(vval - mPrevalue);
+                                mPrevalue = vval;
                             }
-                            mUsedTimerIndex.Insert(i);
+
+                            mUsedTimerIndex.Insert(id);
+
+                            mLastTime = mStartTime = vkey;
+                            mLastValue = mStartValue = vval;
+                            mlastid = id;
                             minslope = double.MinValue;
+
+                            continue;
                         }
                         else
                         {
-                            var vkey = values.ReadUShort();
-                            var vval = values.ReadShort();
                             if (minslope == double.MinValue)
                             {
                                 maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
@@ -391,7 +453,7 @@ namespace Cdy.Tag
 
                                 if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
                                 {
-                                    mUsedTimerIndex.Insert(i - 1);
+                                    mUsedTimerIndex.Insert(mlastid);
 
                                     if (isFirst)
                                     {
@@ -405,38 +467,18 @@ namespace Cdy.Tag
                                         mPrevalue = mLastValue;
                                     }
 
-                                   // mMarshalMemory.Write((mLastValue));
+                                    // mMarshalMemory.Write(mLastValue);
+
                                     mStartTime = mLastTime;
                                     mStartValue = mLastValue;
                                     maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
                                 }
 
                             }
-                            mLastTime = vkey;
-                            mLastValue = vval;
                         }
-                    }
-                    else
-                    {
-                        if (isStarted)
-                        {
-                            isStarted = false;
-                            if (maxslope != minslope)
-                            {
-                                mUsedTimerIndex.Insert(i - 1);
-                                if (isFirst)
-                                {
-                                    mVarintMemory.WriteInt32(mLastValue);
-                                    mPrevalue = mLastValue;
-                                    isFirst = false;
-                                }
-                                else
-                                {
-                                    mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
-                                    mPrevalue = mLastValue;
-                                }
-                            }
-                        }
+                        mLastTime = vkey;
+                        mLastValue = vval;
+                        mlastid = id;
                     }
                 }
 
@@ -444,7 +486,7 @@ namespace Cdy.Tag
                 if (!mUsedTimerIndex.Contains(count) && isStarted)
                 {
                     int i = count;
-                    mUsedTimerIndex.Insert(i);
+                    mUsedTimerIndex.Insert(mlastid);
                     if (isFirst)
                     {
                         mVarintMemory.WriteInt32(mLastValue);
@@ -456,9 +498,10 @@ namespace Cdy.Tag
                         mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
                         mPrevalue = mLastValue;
                     }
+                    // mMarshalMemory.Write(mLastValue);
                 }
             }
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position);
+            return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
         }
 
         /// <summary>
@@ -468,21 +511,16 @@ namespace Cdy.Tag
         /// <param name="emptyIds"></param>
         /// <param name="mUsedTimerIndex"></param>
         /// <returns></returns>
-        private Memory<byte> SlopeCompressUShort(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressUShort(MemoryBlock values, CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double minslope = 0;
             double maxslope = 0;
 
-            mVarintMemory.Reset();
-
             bool isStarted = false;
 
             int count = values.ReadInt(0);
-
-            emptys.ReadIndex = 0;
-            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
 
             ushort mLastTime = 0;
             ushort mLastValue = 0;
@@ -490,41 +528,94 @@ namespace Cdy.Tag
             ushort mStartTime = 0;
             ushort mStartValue = 0;
 
+
             bool isFirst = true;
 
             ushort mPrevalue = 0;
 
+            mMarshalMemory.Position = 0;
+
+            int id = 0;
+            int mlastid = 0;
             if (count > 0)
             {
-                for (int i = 1; i < count; i++)
+                for (int i = 0; i < count; i++)
                 {
-                    if (ig != i)
+                    if (!isStarted)
                     {
-                        if (!isStarted)
+                        isStarted = true;
+
+                        mlastid = id = values.ReadInt();
+                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastValue = mStartValue = values.ReadUShort();
+
+                        //mMarshalMemory.Write(mLastValue);
+
+                        if (isFirst)
                         {
-                            isStarted = true;
+                            mVarintMemory.WriteInt32(mStartValue);
+                            mPrevalue = mStartValue;
+                            isFirst = false;
+                        }
+                        else
+                        {
+                            mVarintMemory.WriteSInt32(mStartValue - mPrevalue);
+                            mPrevalue = mStartValue;
+                        }
 
-                            mLastTime = mStartTime = values.ReadUShort();
-                            mLastValue = mStartValue = values.ReadUShort();
+                        mUsedTimerIndex.Insert(id);
+                        minslope = double.MinValue;
+                    }
+                    else
+                    {
+                        id = values.ReadInt();
+                        var vkey = values.ReadUShort();
+                        var vval = values.ReadUShort();
+                        if ((id - mlastid) > 1)
+                        {
+                            //说明之间有无效值，需要重新计算斜率
 
+                            if (mLastTime != mStartTime)
+                            {
+                                mUsedTimerIndex.Insert(mlastid);
+                                if (isFirst)
+                                {
+                                    mVarintMemory.WriteInt32(mLastValue);
+                                    mPrevalue = mLastValue;
+                                    isFirst = false;
+                                }
+                                else
+                                {
+                                    mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
+                                    mPrevalue = mLastValue;
+                                }
+                                //mMarshalMemory.Write(mLastValue);
+                            }
+
+                            // mMarshalMemory.Write(vval);
                             if (isFirst)
                             {
-                                mVarintMemory.WriteInt32(mStartValue);
-                                mPrevalue = mStartValue;
+                                mVarintMemory.WriteInt32(vval);
+                                mPrevalue = vval;
                                 isFirst = false;
                             }
                             else
                             {
-                                mVarintMemory.WriteSInt32(mStartValue - mPrevalue);
-                                mPrevalue = mStartValue;
+                                mVarintMemory.WriteSInt32(vval - mPrevalue);
+                                mPrevalue = vval;
                             }
-                            mUsedTimerIndex.Insert(i);
+
+                            mUsedTimerIndex.Insert(id);
+
+                            mLastTime = mStartTime = vkey;
+                            mLastValue = mStartValue = vval;
+                            mlastid = id;
                             minslope = double.MinValue;
+
+                            continue;
                         }
                         else
                         {
-                            var vkey = values.ReadUShort();
-                            var vval = values.ReadUShort();
                             if (minslope == double.MinValue)
                             {
                                 maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
@@ -538,7 +629,7 @@ namespace Cdy.Tag
 
                                 if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
                                 {
-                                    mUsedTimerIndex.Insert(i - 1);
+                                    mUsedTimerIndex.Insert(mlastid);
 
                                     if (isFirst)
                                     {
@@ -552,38 +643,18 @@ namespace Cdy.Tag
                                         mPrevalue = mLastValue;
                                     }
 
-                                    // mMarshalMemory.Write((mLastValue));
+                                    // mMarshalMemory.Write(mLastValue);
+
                                     mStartTime = mLastTime;
                                     mStartValue = mLastValue;
                                     maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
                                 }
 
                             }
-                            mLastTime = vkey;
-                            mLastValue = vval;
                         }
-                    }
-                    else
-                    {
-                        if (isStarted)
-                        {
-                            isStarted = false;
-                            if (maxslope != minslope)
-                            {
-                                mUsedTimerIndex.Insert(i - 1);
-                                if (isFirst)
-                                {
-                                    mVarintMemory.WriteInt32(mLastValue);
-                                    mPrevalue = mLastValue;
-                                    isFirst = false;
-                                }
-                                else
-                                {
-                                    mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
-                                    mPrevalue = mLastValue;
-                                }
-                            }
-                        }
+                        mLastTime = vkey;
+                        mLastValue = vval;
+                        mlastid = id;
                     }
                 }
 
@@ -591,7 +662,7 @@ namespace Cdy.Tag
                 if (!mUsedTimerIndex.Contains(count) && isStarted)
                 {
                     int i = count;
-                    mUsedTimerIndex.Insert(i);
+                    mUsedTimerIndex.Insert(mlastid);
                     if (isFirst)
                     {
                         mVarintMemory.WriteInt32(mLastValue);
@@ -603,9 +674,10 @@ namespace Cdy.Tag
                         mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
                         mPrevalue = mLastValue;
                     }
+                    // mMarshalMemory.Write(mLastValue);
                 }
             }
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position);
+            return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
         }
 
         /// <summary>
@@ -615,21 +687,16 @@ namespace Cdy.Tag
         /// <param name="emptyIds"></param>
         /// <param name="mUsedTimerIndex"></param>
         /// <returns></returns>
-        private Memory<byte> SlopeCompressInt(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressInt(MemoryBlock values, CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double minslope = 0;
             double maxslope = 0;
 
-            mVarintMemory.Reset();
-
             bool isStarted = false;
 
             int count = values.ReadInt(0);
-
-            emptys.ReadIndex = 0;
-            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
 
             ushort mLastTime = 0;
             int mLastValue = 0;
@@ -637,41 +704,94 @@ namespace Cdy.Tag
             ushort mStartTime = 0;
             int mStartValue = 0;
 
+
             bool isFirst = true;
 
             int mPrevalue = 0;
 
+            mMarshalMemory.Position = 0;
+
+            int id = 0;
+            int mlastid = 0;
             if (count > 0)
             {
-                for (int i = 1; i < count; i++)
+                for (int i = 0; i < count; i++)
                 {
-                    if (ig != i)
+                    if (!isStarted)
                     {
-                        if (!isStarted)
+                        isStarted = true;
+
+                        mlastid = id = values.ReadInt();
+                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastValue = mStartValue = values.ReadInt();
+
+                        //mMarshalMemory.Write(mLastValue);
+
+                        if (isFirst)
                         {
-                            isStarted = true;
+                            mVarintMemory.WriteInt32(mStartValue);
+                            mPrevalue = mStartValue;
+                            isFirst = false;
+                        }
+                        else
+                        {
+                            mVarintMemory.WriteSInt32(mStartValue - mPrevalue);
+                            mPrevalue = mStartValue;
+                        }
 
-                            mLastTime = mStartTime = values.ReadUShort();
-                            mLastValue = mStartValue = values.ReadInt();
+                        mUsedTimerIndex.Insert(id);
+                        minslope = double.MinValue;
+                    }
+                    else
+                    {
+                        id = values.ReadInt();
+                        var vkey = values.ReadUShort();
+                        var vval = values.ReadInt();
+                        if ((id - mlastid) > 1)
+                        {
+                            //说明之间有无效值，需要重新计算斜率
 
+                            if (mLastTime != mStartTime)
+                            {
+                                mUsedTimerIndex.Insert(mlastid);
+                                if (isFirst)
+                                {
+                                    mVarintMemory.WriteInt32(mLastValue);
+                                    mPrevalue = mLastValue;
+                                    isFirst = false;
+                                }
+                                else
+                                {
+                                    mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
+                                    mPrevalue = mLastValue;
+                                }
+                                //mMarshalMemory.Write(mLastValue);
+                            }
+
+                            // mMarshalMemory.Write(vval);
                             if (isFirst)
                             {
-                                mVarintMemory.WriteInt32(mStartValue);
-                                mPrevalue = mStartValue;
+                                mVarintMemory.WriteInt32(vval);
+                                mPrevalue = vval;
                                 isFirst = false;
                             }
                             else
                             {
-                                mVarintMemory.WriteSInt32(mStartValue - mPrevalue);
-                                mPrevalue = mStartValue;
+                                mVarintMemory.WriteSInt32(vval - mPrevalue);
+                                mPrevalue = vval;
                             }
-                            mUsedTimerIndex.Insert(i);
+
+                            mUsedTimerIndex.Insert(id);
+
+                            mLastTime = mStartTime = vkey;
+                            mLastValue = mStartValue = vval;
+                            mlastid = id;
                             minslope = double.MinValue;
+
+                            continue;
                         }
                         else
                         {
-                            var vkey = values.ReadUShort();
-                            var vval = values.ReadInt();
                             if (minslope == double.MinValue)
                             {
                                 maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
@@ -685,7 +805,7 @@ namespace Cdy.Tag
 
                                 if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
                                 {
-                                    mUsedTimerIndex.Insert(i - 1);
+                                    mUsedTimerIndex.Insert(mlastid);
 
                                     if (isFirst)
                                     {
@@ -699,38 +819,18 @@ namespace Cdy.Tag
                                         mPrevalue = mLastValue;
                                     }
 
-                                    // mMarshalMemory.Write((mLastValue));
+                                    // mMarshalMemory.Write(mLastValue);
+
                                     mStartTime = mLastTime;
                                     mStartValue = mLastValue;
                                     maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
                                 }
 
                             }
-                            mLastTime = vkey;
-                            mLastValue = vval;
                         }
-                    }
-                    else
-                    {
-                        if (isStarted)
-                        {
-                            isStarted = false;
-                            if (maxslope != minslope)
-                            {
-                                mUsedTimerIndex.Insert(i - 1);
-                                if (isFirst)
-                                {
-                                    mVarintMemory.WriteInt32(mLastValue);
-                                    mPrevalue = mLastValue;
-                                    isFirst = false;
-                                }
-                                else
-                                {
-                                    mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
-                                    mPrevalue = mLastValue;
-                                }
-                            }
-                        }
+                        mLastTime = vkey;
+                        mLastValue = vval;
+                        mlastid = id;
                     }
                 }
 
@@ -738,7 +838,7 @@ namespace Cdy.Tag
                 if (!mUsedTimerIndex.Contains(count) && isStarted)
                 {
                     int i = count;
-                    mUsedTimerIndex.Insert(i);
+                    mUsedTimerIndex.Insert(mlastid);
                     if (isFirst)
                     {
                         mVarintMemory.WriteInt32(mLastValue);
@@ -750,9 +850,10 @@ namespace Cdy.Tag
                         mVarintMemory.WriteSInt32(mLastValue - mPrevalue);
                         mPrevalue = mLastValue;
                     }
+                    // mMarshalMemory.Write(mLastValue);
                 }
             }
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position);
+            return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
         }
 
         /// <summary>
@@ -762,21 +863,16 @@ namespace Cdy.Tag
         /// <param name="emptyIds"></param>
         /// <param name="mUsedTimerIndex"></param>
         /// <returns></returns>
-        private Memory<byte> SlopeCompressUInt(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressUInt(MemoryBlock values,  CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double minslope = 0;
             double maxslope = 0;
 
-            mVarintMemory.Reset();
-
             bool isStarted = false;
 
             int count = values.ReadInt(0);
-
-            emptys.ReadIndex = 0;
-            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
 
             ushort mLastTime = 0;
             uint mLastValue = 0;
@@ -784,41 +880,94 @@ namespace Cdy.Tag
             ushort mStartTime = 0;
             uint mStartValue = 0;
 
+
             bool isFirst = true;
 
             uint mPrevalue = 0;
 
+            mMarshalMemory.Position = 0;
+
+            int id = 0;
+            int mlastid = 0;
             if (count > 0)
             {
-                for (int i = 1; i < count; i++)
+                for (int i = 0; i < count; i++)
                 {
-                    if (ig != i)
+                    if (!isStarted)
                     {
-                        if (!isStarted)
+                        isStarted = true;
+
+                        mlastid = id = values.ReadInt();
+                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastValue = mStartValue = values.ReadUInt();
+
+                        //mMarshalMemory.Write(mLastValue);
+
+                        if (isFirst)
                         {
-                            isStarted = true;
+                            mVarintMemory.WriteInt32(mStartValue);
+                            mPrevalue = mStartValue;
+                            isFirst = false;
+                        }
+                        else
+                        {
+                            mVarintMemory.WriteSInt32((int)(mStartValue - mPrevalue));
+                            mPrevalue = mStartValue;
+                        }
 
-                            mLastTime = mStartTime = values.ReadUShort();
-                            mLastValue = mStartValue = values.ReadUInt();
+                        mUsedTimerIndex.Insert(id);
+                        minslope = double.MinValue;
+                    }
+                    else
+                    {
+                        id = values.ReadInt();
+                        var vkey = values.ReadUShort();
+                        var vval = values.ReadUInt();
+                        if ((id - mlastid) > 1)
+                        {
+                            //说明之间有无效值，需要重新计算斜率
 
+                            if (mLastTime != mStartTime)
+                            {
+                                mUsedTimerIndex.Insert(mlastid);
+                                if (isFirst)
+                                {
+                                    mVarintMemory.WriteInt32(mLastValue);
+                                    mPrevalue = mLastValue;
+                                    isFirst = false;
+                                }
+                                else
+                                {
+                                    mVarintMemory.WriteSInt32((int)(mLastValue - mPrevalue));
+                                    mPrevalue = mLastValue;
+                                }
+                                //mMarshalMemory.Write(mLastValue);
+                            }
+
+                            // mMarshalMemory.Write(vval);
                             if (isFirst)
                             {
-                                mVarintMemory.WriteInt32(mStartValue);
-                                mPrevalue = mStartValue;
+                                mVarintMemory.WriteInt32(vval);
+                                mPrevalue = vval;
                                 isFirst = false;
                             }
                             else
                             {
-                                mVarintMemory.WriteSInt32((int)(mStartValue - mPrevalue));
-                                mPrevalue = mStartValue;
+                                mVarintMemory.WriteSInt32((int)(vval - mPrevalue));
+                                mPrevalue = vval;
                             }
-                            mUsedTimerIndex.Insert(i);
+
+                            mUsedTimerIndex.Insert(id);
+
+                            mLastTime = mStartTime = vkey;
+                            mLastValue = mStartValue = vval;
+                            mlastid = id;
                             minslope = double.MinValue;
+
+                            continue;
                         }
                         else
                         {
-                            var vkey = values.ReadUShort();
-                            var vval = values.ReadUInt();
                             if (minslope == double.MinValue)
                             {
                                 maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
@@ -832,7 +981,7 @@ namespace Cdy.Tag
 
                                 if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
                                 {
-                                    mUsedTimerIndex.Insert(i - 1);
+                                    mUsedTimerIndex.Insert(mlastid);
 
                                     if (isFirst)
                                     {
@@ -846,38 +995,18 @@ namespace Cdy.Tag
                                         mPrevalue = mLastValue;
                                     }
 
-                                    // mMarshalMemory.Write((mLastValue));
+                                    // mMarshalMemory.Write(mLastValue);
+
                                     mStartTime = mLastTime;
                                     mStartValue = mLastValue;
                                     maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
                                 }
 
                             }
-                            mLastTime = vkey;
-                            mLastValue = vval;
                         }
-                    }
-                    else
-                    {
-                        if (isStarted)
-                        {
-                            isStarted = false;
-                            if (maxslope != minslope)
-                            {
-                                mUsedTimerIndex.Insert(i - 1);
-                                if (isFirst)
-                                {
-                                    mVarintMemory.WriteInt32(mLastValue);
-                                    mPrevalue = mLastValue;
-                                    isFirst = false;
-                                }
-                                else
-                                {
-                                    mVarintMemory.WriteSInt32((int)(mLastValue - mPrevalue));
-                                    mPrevalue = mLastValue;
-                                }
-                            }
-                        }
+                        mLastTime = vkey;
+                        mLastValue = vval;
+                        mlastid = id;
                     }
                 }
 
@@ -885,7 +1014,7 @@ namespace Cdy.Tag
                 if (!mUsedTimerIndex.Contains(count) && isStarted)
                 {
                     int i = count;
-                    mUsedTimerIndex.Insert(i);
+                    mUsedTimerIndex.Insert(mlastid);
                     if (isFirst)
                     {
                         mVarintMemory.WriteInt32(mLastValue);
@@ -897,26 +1026,22 @@ namespace Cdy.Tag
                         mVarintMemory.WriteSInt32((int)(mLastValue - mPrevalue));
                         mPrevalue = mLastValue;
                     }
+                    // mMarshalMemory.Write(mLastValue);
                 }
             }
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position);
+            return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
         }
 
-        private Memory<byte> SlopeCompressLong(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressLong(MemoryBlock values, CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double minslope = 0;
             double maxslope = 0;
 
-            mVarintMemory.Reset();
-
             bool isStarted = false;
 
             int count = values.ReadInt(0);
-
-            emptys.ReadIndex = 0;
-            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
 
             ushort mLastTime = 0;
             long mLastValue = 0;
@@ -924,41 +1049,94 @@ namespace Cdy.Tag
             ushort mStartTime = 0;
             long mStartValue = 0;
 
+
             bool isFirst = true;
 
             long mPrevalue = 0;
 
+            mMarshalMemory.Position = 0;
+
+            int id = 0;
+            int mlastid = 0;
             if (count > 0)
             {
-                for (int i = 1; i < count; i++)
+                for (int i = 0; i < count; i++)
                 {
-                    if (ig != i)
+                    if (!isStarted)
                     {
-                        if (!isStarted)
+                        isStarted = true;
+
+                        mlastid = id = values.ReadInt();
+                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastValue = mStartValue = values.ReadLong();
+
+                        //mMarshalMemory.Write(mLastValue);
+
+                        if (isFirst)
                         {
-                            isStarted = true;
+                            mVarintMemory.WriteInt64(mStartValue);
+                            mPrevalue = mStartValue;
+                            isFirst = false;
+                        }
+                        else
+                        {
+                            mVarintMemory.WriteSInt64((mStartValue - mPrevalue));
+                            mPrevalue = mStartValue;
+                        }
 
-                            mLastTime = mStartTime = values.ReadUShort();
-                            mLastValue = mStartValue = values.ReadLong();
+                        mUsedTimerIndex.Insert(id);
+                        minslope = double.MinValue;
+                    }
+                    else
+                    {
+                        id = values.ReadInt();
+                        var vkey = values.ReadUShort();
+                        var vval = values.ReadLong();
+                        if ((id - mlastid) > 1)
+                        {
+                            //说明之间有无效值，需要重新计算斜率
 
+                            if (mLastTime != mStartTime)
+                            {
+                                mUsedTimerIndex.Insert(mlastid);
+                                if (isFirst)
+                                {
+                                    mVarintMemory.WriteInt64(mLastValue);
+                                    mPrevalue = mLastValue;
+                                    isFirst = false;
+                                }
+                                else
+                                {
+                                    mVarintMemory.WriteSInt64((mLastValue - mPrevalue));
+                                    mPrevalue = mLastValue;
+                                }
+                                //mMarshalMemory.Write(mLastValue);
+                            }
+
+                            // mMarshalMemory.Write(vval);
                             if (isFirst)
                             {
-                                mVarintMemory.WriteInt64(mStartValue);
-                                mPrevalue = mStartValue;
+                                mVarintMemory.WriteInt64(vval);
+                                mPrevalue = vval;
                                 isFirst = false;
                             }
                             else
                             {
-                                mVarintMemory.WriteSInt64((mStartValue - mPrevalue));
-                                mPrevalue = mStartValue;
+                                mVarintMemory.WriteSInt64((vval - mPrevalue));
+                                mPrevalue = vval;
                             }
-                            mUsedTimerIndex.Insert(i);
+
+                            mUsedTimerIndex.Insert(id);
+
+                            mLastTime = mStartTime = vkey;
+                            mLastValue = mStartValue = vval;
+                            mlastid = id;
                             minslope = double.MinValue;
+
+                            continue;
                         }
                         else
                         {
-                            var vkey = values.ReadUShort();
-                            var vval = values.ReadLong();
                             if (minslope == double.MinValue)
                             {
                                 maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
@@ -972,7 +1150,7 @@ namespace Cdy.Tag
 
                                 if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
                                 {
-                                    mUsedTimerIndex.Insert(i - 1);
+                                    mUsedTimerIndex.Insert(mlastid);
 
                                     if (isFirst)
                                     {
@@ -986,38 +1164,18 @@ namespace Cdy.Tag
                                         mPrevalue = mLastValue;
                                     }
 
-                                    // mMarshalMemory.Write((mLastValue));
+                                    // mMarshalMemory.Write(mLastValue);
+
                                     mStartTime = mLastTime;
                                     mStartValue = mLastValue;
                                     maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
                                 }
 
                             }
-                            mLastTime = vkey;
-                            mLastValue = vval;
                         }
-                    }
-                    else
-                    {
-                        if (isStarted)
-                        {
-                            isStarted = false;
-                            if (maxslope != minslope)
-                            {
-                                mUsedTimerIndex.Insert(i - 1);
-                                if (isFirst)
-                                {
-                                    mVarintMemory.WriteInt64(mLastValue);
-                                    mPrevalue = mLastValue;
-                                    isFirst = false;
-                                }
-                                else
-                                {
-                                    mVarintMemory.WriteSInt64((mLastValue - mPrevalue));
-                                    mPrevalue = mLastValue;
-                                }
-                            }
-                        }
+                        mLastTime = vkey;
+                        mLastValue = vval;
+                        mlastid = id;
                     }
                 }
 
@@ -1025,7 +1183,7 @@ namespace Cdy.Tag
                 if (!mUsedTimerIndex.Contains(count) && isStarted)
                 {
                     int i = count;
-                    mUsedTimerIndex.Insert(i);
+                    mUsedTimerIndex.Insert(mlastid);
                     if (isFirst)
                     {
                         mVarintMemory.WriteInt64(mLastValue);
@@ -1037,27 +1195,28 @@ namespace Cdy.Tag
                         mVarintMemory.WriteSInt64((mLastValue - mPrevalue));
                         mPrevalue = mLastValue;
                     }
+                    // mMarshalMemory.Write(mLastValue);
                 }
             }
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position);
+            return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
         }
 
-
-        private Memory<byte> SlopeCompressULong(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="mUsedTimerIndex"></param>
+        /// <returns></returns>
+        private Memory<byte> SlopeCompressULong(MemoryBlock values,CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double minslope = 0;
             double maxslope = 0;
 
-            mVarintMemory.Reset();
-
             bool isStarted = false;
 
             int count = values.ReadInt(0);
-
-            emptys.ReadIndex = 0;
-            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
 
             ushort mLastTime = 0;
             ulong mLastValue = 0;
@@ -1065,41 +1224,94 @@ namespace Cdy.Tag
             ushort mStartTime = 0;
             ulong mStartValue = 0;
 
+
             bool isFirst = true;
 
             ulong mPrevalue = 0;
 
+            mMarshalMemory.Position = 0;
+
+            int id = 0;
+            int mlastid = 0;
             if (count > 0)
             {
-                for (int i = 1; i < count; i++)
+                for (int i = 0; i < count; i++)
                 {
-                    if (ig != i)
+                    if (!isStarted)
                     {
-                        if (!isStarted)
+                        isStarted = true;
+
+                        mlastid = id = values.ReadInt();
+                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastValue = mStartValue = values.ReadULong();
+
+                        //mMarshalMemory.Write(mLastValue);
+
+                        if (isFirst)
                         {
-                            isStarted = true;
+                            mVarintMemory.WriteInt64(mStartValue);
+                            mPrevalue = mStartValue;
+                            isFirst = false;
+                        }
+                        else
+                        {
+                            mVarintMemory.WriteSInt64((long)(mStartValue - mPrevalue));
+                            mPrevalue = mStartValue;
+                        }
 
-                            mLastTime = mStartTime = values.ReadUShort();
-                            mLastValue = mStartValue = values.ReadULong();
+                        mUsedTimerIndex.Insert(id);
+                        minslope = double.MinValue;
+                    }
+                    else
+                    {
+                        id = values.ReadInt();
+                        var vkey = values.ReadUShort();
+                        var vval = values.ReadULong();
+                        if ((id - mlastid) > 1)
+                        {
+                            //说明之间有无效值，需要重新计算斜率
 
+                            if (mLastTime != mStartTime)
+                            {
+                                mUsedTimerIndex.Insert(mlastid);
+                                if (isFirst)
+                                {
+                                    mVarintMemory.WriteInt64(mLastValue);
+                                    mPrevalue = mLastValue;
+                                    isFirst = false;
+                                }
+                                else
+                                {
+                                    mVarintMemory.WriteSInt64((long)(mLastValue - mPrevalue));
+                                    mPrevalue = mLastValue;
+                                }
+                                //mMarshalMemory.Write(mLastValue);
+                            }
+
+                            // mMarshalMemory.Write(vval);
                             if (isFirst)
                             {
-                                mVarintMemory.WriteInt64(mStartValue);
-                                mPrevalue = mStartValue;
+                                mVarintMemory.WriteInt64(vval);
+                                mPrevalue = vval;
                                 isFirst = false;
                             }
                             else
                             {
-                                mVarintMemory.WriteSInt64((long)(mStartValue - mPrevalue));
-                                mPrevalue = mStartValue;
+                                mVarintMemory.WriteSInt64((long)(vval - mPrevalue));
+                                mPrevalue = vval;
                             }
-                            mUsedTimerIndex.Insert(i);
+
+                            mUsedTimerIndex.Insert(id);
+
+                            mLastTime = mStartTime = vkey;
+                            mLastValue = mStartValue = vval;
+                            mlastid = id;
                             minslope = double.MinValue;
+
+                            continue;
                         }
                         else
                         {
-                            var vkey = values.ReadUShort();
-                            var vval = values.ReadULong();
                             if (minslope == double.MinValue)
                             {
                                 maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
@@ -1113,7 +1325,7 @@ namespace Cdy.Tag
 
                                 if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
                                 {
-                                    mUsedTimerIndex.Insert(i - 1);
+                                    mUsedTimerIndex.Insert(mlastid);
 
                                     if (isFirst)
                                     {
@@ -1127,38 +1339,18 @@ namespace Cdy.Tag
                                         mPrevalue = mLastValue;
                                     }
 
-                                    // mMarshalMemory.Write((mLastValue));
+                                    // mMarshalMemory.Write(mLastValue);
+
                                     mStartTime = mLastTime;
                                     mStartValue = mLastValue;
                                     maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
                                 }
 
                             }
-                            mLastTime = vkey;
-                            mLastValue = vval;
                         }
-                    }
-                    else
-                    {
-                        if (isStarted)
-                        {
-                            isStarted = false;
-                            if (maxslope != minslope)
-                            {
-                                mUsedTimerIndex.Insert(i - 1);
-                                if (isFirst)
-                                {
-                                    mVarintMemory.WriteInt64(mLastValue);
-                                    mPrevalue = mLastValue;
-                                    isFirst = false;
-                                }
-                                else
-                                {
-                                    mVarintMemory.WriteSInt64((long)(mLastValue - mPrevalue));
-                                    mPrevalue = mLastValue;
-                                }
-                            }
-                        }
+                        mLastTime = vkey;
+                        mLastValue = vval;
+                        mlastid = id;
                     }
                 }
 
@@ -1166,7 +1358,7 @@ namespace Cdy.Tag
                 if (!mUsedTimerIndex.Contains(count) && isStarted)
                 {
                     int i = count;
-                    mUsedTimerIndex.Insert(i);
+                    mUsedTimerIndex.Insert(mlastid);
                     if (isFirst)
                     {
                         mVarintMemory.WriteInt64(mLastValue);
@@ -1178,9 +1370,10 @@ namespace Cdy.Tag
                         mVarintMemory.WriteSInt64((long)(mLastValue - mPrevalue));
                         mPrevalue = mLastValue;
                     }
+                    // mMarshalMemory.Write(mLastValue);
                 }
             }
-            return mMarshalMemory.StartMemory.AsMemory(0, (int)mMarshalMemory.Position);
+            return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
         }
 
 
@@ -1191,7 +1384,7 @@ namespace Cdy.Tag
         /// <param name="emptyIds"></param>
         /// <param name="mUsedTimerIndex"></param>
         /// <returns></returns>
-        private Memory<byte> SlopeCompressDouble(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressDouble(MemoryBlock values,CustomQueue<int> mUsedTimerIndex)
         {
 
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
@@ -1203,8 +1396,8 @@ namespace Cdy.Tag
 
             int count = values.ReadInt(0);
 
-            emptys.ReadIndex = 0;
-            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
+            //emptys.ReadIndex = 0;
+            //int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
 
             ushort mLastTime = 0;
             double mLastValue = 0;
@@ -1216,28 +1409,51 @@ namespace Cdy.Tag
             mMarshalMemory.Position = 0;
             mDCompress.Reset();
             mDCompress.Precision = this.Precision;
-
+            int id = 0;
+            int mlastid = 0;
             if (count > 0)
             {
-                for (int i = 1; i < count; i++)
+                for (int i = 0; i < count; i++)
                 {
-                    if (ig != i)
+                    if (!isStarted)
                     {
-                        if (!isStarted)
+                        isStarted = true;
+
+                        mlastid = id = values.ReadInt();
+                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastValue = mStartValue = values.ReadDouble();
+
+                        mDCompress.Append(mLastValue);
+                        mUsedTimerIndex.Insert(id);
+                        minslope = double.MinValue;
+                    }
+                    else
+                    {
+                        id = values.ReadInt();
+                        var vkey = values.ReadUShort();
+                        var vval = values.ReadDouble();
+                        if ((id-mlastid)>1)
                         {
-                            isStarted = true;
+                            //说明之间有无效值，需要重新计算斜率
 
-                            mLastTime = mStartTime = values.ReadUShort();
-                            mLastValue = mStartValue = values.ReadDouble();
+                            if(mLastTime!=mStartTime)
+                            {
+                                mUsedTimerIndex.Insert(mlastid);
+                                mDCompress.Append(mLastValue);
+                            }
 
-                            mDCompress.Append(mLastValue);
-                            mUsedTimerIndex.Insert(i);
+                            mDCompress.Append(vval);
+                            mUsedTimerIndex.Insert(id);
+
+                            mLastTime = mStartTime  = vkey;
+                            mLastValue = mStartValue = vval;
+                            mlastid = id;
                             minslope = double.MinValue;
+
+                            continue;
                         }
                         else
                         {
-                            var vkey = values.ReadUShort();
-                            var vval = values.ReadDouble();
                             if (minslope == double.MinValue)
                             {
                                 maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
@@ -1251,7 +1467,7 @@ namespace Cdy.Tag
 
                                 if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
                                 {
-                                    mUsedTimerIndex.Insert(i - 1);
+                                    mUsedTimerIndex.Insert(mlastid);
 
                                     mDCompress.Append(mLastValue);
 
@@ -1262,21 +1478,10 @@ namespace Cdy.Tag
                                 }
 
                             }
-                            mLastTime = vkey;
-                            mLastValue = vval;
                         }
-                    }
-                    else
-                    {
-                        if (isStarted)
-                        {
-                            isStarted = false;
-                            if (maxslope != minslope)
-                            {
-                                mUsedTimerIndex.Insert(i - 1);
-                                mDCompress.Append(mLastValue);
-                            }
-                        }
+                        mLastTime = vkey;
+                        mLastValue = vval;
+                        mlastid = id;
                     }
                 }
 
@@ -1284,7 +1489,7 @@ namespace Cdy.Tag
                 if (!mUsedTimerIndex.Contains(count) && isStarted)
                 {
                     int i = count;
-                    mUsedTimerIndex.Insert(i);
+                    mUsedTimerIndex.Insert(mlastid);
                     mDCompress.Append(mLastValue);
                 }
             }
@@ -1299,8 +1504,9 @@ namespace Cdy.Tag
         /// <param name="emptyIds"></param>
         /// <param name="mUsedTimerIndex"></param>
         /// <returns></returns>
-        private Memory<byte> SlopeCompressFloat(MemoryBlock values, CustomQueue<int> emptyIds, CustomQueue<int> mUsedTimerIndex)
+        private Memory<byte> SlopeCompressFloat(MemoryBlock values,  CustomQueue<int> mUsedTimerIndex)
         {
+
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
             int slopeType = (int)(this.Parameters.ContainsKey("SlopeType") ? this.Parameters["SlopeType"] : 0);
             double minslope = 0;
@@ -1309,9 +1515,6 @@ namespace Cdy.Tag
             bool isStarted = false;
 
             int count = values.ReadInt(0);
-
-            emptys.ReadIndex = 0;
-            int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
 
             ushort mLastTime = 0;
             float mLastValue = 0;
@@ -1323,28 +1526,51 @@ namespace Cdy.Tag
             mMarshalMemory.Position = 0;
             mFCompress.Reset();
             mFCompress.Precision = this.Precision;
-
+            int id = 0;
+            int mlastid = 0;
             if (count > 0)
             {
-                for (int i = 1; i < count; i++)
+                for (int i = 0; i < count; i++)
                 {
-                    if (ig != i)
+                    if (!isStarted)
                     {
-                        if (!isStarted)
+                        isStarted = true;
+
+                        mlastid = id = values.ReadInt();
+                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastValue = mStartValue = values.ReadFloat();
+
+                        mFCompress.Append(mLastValue);
+                        mUsedTimerIndex.Insert(id);
+                        minslope = double.MinValue;
+                    }
+                    else
+                    {
+                        id = values.ReadInt();
+                        var vkey = values.ReadUShort();
+                        var vval = values.ReadFloat();
+                        if ((id - mlastid) > 1)
                         {
-                            isStarted = true;
+                            //说明之间有无效值，需要重新计算斜率
 
-                            mLastTime = mStartTime = values.ReadUShort();
-                            mLastValue = mStartValue = values.ReadFloat();
+                            if (mLastTime != mStartTime)
+                            {
+                                mUsedTimerIndex.Insert(mlastid);
+                                mFCompress.Append(mLastValue);
+                            }
 
-                            mFCompress.Append(mLastValue);
-                            mUsedTimerIndex.Insert(i);
+                            mFCompress.Append(vval);
+                            mUsedTimerIndex.Insert(id);
+
+                            mLastTime = mStartTime = vkey;
+                            mLastValue = mStartValue = vval;
+                            mlastid = id;
                             minslope = double.MinValue;
+
+                            continue;
                         }
                         else
                         {
-                            var vkey = values.ReadUShort();
-                            var vval = values.ReadFloat();
                             if (minslope == double.MinValue)
                             {
                                 maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
@@ -1358,32 +1584,20 @@ namespace Cdy.Tag
 
                                 if (CheckIsNeedRecord(minslope, maxslope, slopeArea, slopeType))
                                 {
-                                    mUsedTimerIndex.Insert(i - 1);
+                                    mUsedTimerIndex.Insert(mlastid);
 
                                     mFCompress.Append(mLastValue);
 
-                                    // mMarshalMemory.Write((mLastValue));
                                     mStartTime = mLastTime;
                                     mStartValue = mLastValue;
                                     maxslope = minslope = CalSlope(mStartValue, vval, vkey - mStartTime);
                                 }
 
                             }
-                            mLastTime = vkey;
-                            mLastValue = vval;
                         }
-                    }
-                    else
-                    {
-                        if (isStarted)
-                        {
-                            isStarted = false;
-                            if (maxslope != minslope)
-                            {
-                                mUsedTimerIndex.Insert(i - 1);
-                                mFCompress.Append(mLastValue);
-                            }
-                        }
+                        mLastTime = vkey;
+                        mLastValue = vval;
+                        mlastid = id;
                     }
                 }
 
@@ -1391,7 +1605,7 @@ namespace Cdy.Tag
                 if (!mUsedTimerIndex.Contains(count) && isStarted)
                 {
                     int i = count;
-                    mUsedTimerIndex.Insert(i);
+                    mUsedTimerIndex.Insert(mlastid);
                     mFCompress.Append(mLastValue);
                 }
             }
@@ -1432,6 +1646,7 @@ namespace Cdy.Tag
                             var id = source.ReadByte(offset + i);
 
                             ac++;
+                            mAvaiableDatabuffer.Write(i);
                             mAvaiableDatabuffer.Write(mTimers[i]);
                             mAvaiableDatabuffer.Write(id);
                         }
@@ -1442,7 +1657,7 @@ namespace Cdy.Tag
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
                    // return null;
-                return SlopeCompressByte(mAvaiableDatabuffer, emptys, usedIndex);
+                return SlopeCompressByte(mAvaiableDatabuffer,  usedIndex);
                 case TagType.Short:
                     for (int i = 0; i < count; i++)
                     {
@@ -1450,6 +1665,7 @@ namespace Cdy.Tag
                         {
                             var id = source.ReadShort(offset + i);
                             ac++;
+                            mAvaiableDatabuffer.Write(i);
                             mAvaiableDatabuffer.Write(mTimers[i]);
                             mAvaiableDatabuffer.Write(id);
                         }
@@ -1459,7 +1675,7 @@ namespace Cdy.Tag
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                return SlopeCompressShort(mAvaiableDatabuffer, emptys, usedIndex);
+                return SlopeCompressShort(mAvaiableDatabuffer,  usedIndex);
                 case TagType.UShort:
                     Dictionary<ushort, ushort> mavaibleValues = new Dictionary<ushort, ushort>();
                     for (int i = 0; i < count; i++)
@@ -1468,6 +1684,7 @@ namespace Cdy.Tag
                         {
                             var id = source.ReadUShort(offset + i);
                             ac++;
+                            mAvaiableDatabuffer.Write(i);
                             mAvaiableDatabuffer.Write(mTimers[i]);
                             mAvaiableDatabuffer.Write(id);
                         }
@@ -1478,7 +1695,7 @@ namespace Cdy.Tag
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
 
-                    return SlopeCompressUShort(mAvaiableDatabuffer, emptys, usedIndex);
+                    return SlopeCompressUShort(mAvaiableDatabuffer,  usedIndex);
                 case TagType.Int:
                     for (int i = 0; i < count; i++)
                     {
@@ -1486,6 +1703,7 @@ namespace Cdy.Tag
                         {
                             var id = source.ReadInt(offset + i);
                             ac++;
+                            mAvaiableDatabuffer.Write(i);
                             mAvaiableDatabuffer.Write(mTimers[i]);
                             mAvaiableDatabuffer.Write(id);
                         }
@@ -1496,7 +1714,7 @@ namespace Cdy.Tag
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
                 //    return null;
-                return SlopeCompressInt(mAvaiableDatabuffer, emptys, usedIndex);
+                return SlopeCompressInt(mAvaiableDatabuffer,  usedIndex);
                 case TagType.UInt:
                     for (int i = 0; i < count; i++)
                     {
@@ -1504,6 +1722,7 @@ namespace Cdy.Tag
                         {
                             var id = source.ReadUInt(offset + i);
                             ac++;
+                            mAvaiableDatabuffer.Write(i);
                             mAvaiableDatabuffer.Write(mTimers[i]);
                             mAvaiableDatabuffer.Write(id);
                         }
@@ -1513,7 +1732,7 @@ namespace Cdy.Tag
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                return SlopeCompressUInt(mAvaiableDatabuffer, emptys, usedIndex);
+                return SlopeCompressUInt(mAvaiableDatabuffer,  usedIndex);
                 case TagType.Long:
                     for (int i = 0; i < count; i++)
                     {
@@ -1521,6 +1740,7 @@ namespace Cdy.Tag
                         {
                             var id = source.ReadLong(offset + i * 8);
                             ac++;
+                            mAvaiableDatabuffer.Write(i);
                             mAvaiableDatabuffer.Write(mTimers[i]);
                             mAvaiableDatabuffer.Write(id);
                         }
@@ -1530,7 +1750,7 @@ namespace Cdy.Tag
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                 return SlopeCompressLong(mAvaiableDatabuffer, emptys, usedIndex);
+                 return SlopeCompressLong(mAvaiableDatabuffer,  usedIndex);
                 case TagType.ULong:
                     for (int i = 0; i < count; i++)
                     {
@@ -1538,6 +1758,7 @@ namespace Cdy.Tag
                         {
                             var id = source.ReadULong(offset + i * 8);
                             ac++;
+                            mAvaiableDatabuffer.Write(i);
                             mAvaiableDatabuffer.Write(mTimers[i]);
                             mAvaiableDatabuffer.Write(id);
                         }
@@ -1548,7 +1769,7 @@ namespace Cdy.Tag
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
                     //return null;
-                 return SlopeCompressULong(mAvaiableDatabuffer, emptys, usedIndex);
+                 return SlopeCompressULong(mAvaiableDatabuffer,  usedIndex);
                 case TagType.Double:
                     for (int i = 0; i < count; i++)
                     {
@@ -1556,9 +1777,9 @@ namespace Cdy.Tag
                         {
                             ac++;
                             var id = source.ReadDouble(offset + i * 8);
+                            mAvaiableDatabuffer.Write(i);
                             mAvaiableDatabuffer.Write(mTimers[i]);
                             mAvaiableDatabuffer.Write(id);
-                            //mavaibleValues.Add(mTimers[i], id);
                         }
                         else
                         {
@@ -1566,7 +1787,7 @@ namespace Cdy.Tag
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
-                    return SlopeCompressDouble(mAvaiableDatabuffer, emptys, usedIndex);
+                    return SlopeCompressDouble(mAvaiableDatabuffer, usedIndex);
                 case TagType.Float:
                     for (int i = 0; i < count; i++)
                     {
@@ -1574,6 +1795,7 @@ namespace Cdy.Tag
                         {
                             var id = source.ReadFloat(offset + i * 4);
                             ac++;
+                            mAvaiableDatabuffer.Write(i);
                             mAvaiableDatabuffer.Write(mTimers[i]);
                             mAvaiableDatabuffer.Write(id);
                         }
@@ -1584,7 +1806,7 @@ namespace Cdy.Tag
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
                     //return null;
-                return SlopeCompressFloat(mAvaiableDatabuffer, emptys, usedIndex);
+                return SlopeCompressFloat(mAvaiableDatabuffer,  usedIndex);
                 default:
                     usedIndex = null;
                     return null;
@@ -1600,17 +1822,19 @@ namespace Cdy.Tag
         /// <param name="target"></param>
         /// <param name="targetAddr"></param>
         /// <returns></returns>
-        private long FillData(Memory<byte> valuedata,Memory<byte> qualitydata,byte[] timedata,MarshalMemoryBlock target, long targetAddr)
+        private long FillData(Memory<byte> valuedata,Memory<byte> qualitydata, Memory<byte> timedata,MarshalMemoryBlock target, long targetAddr)
         {
             int rsize = 0;
 
             target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
+
             rsize += 2;
             target.Write((int)timedata.Length);
             target.Write(timedata);
             rsize += 4;
             rsize += timedata.Length;
 
+            target.Write(valuedata.Length);
             target.WriteMemory(target.Position, valuedata, 0, valuedata.Length);
 
             rsize += 4;
@@ -1649,10 +1873,16 @@ namespace Cdy.Tag
                 mVarintMemory = new ProtoMemory(count * 10);
             }
 
+
+            if (mVarintMemory2 == null)
+            {
+                mVarintMemory2 = new ProtoMemory(count * 10);
+            }
+
             //
             if (mAvaiableDatabuffer == null)
             {
-                mAvaiableDatabuffer = new MemoryBlock(count * 12);
+                mAvaiableDatabuffer = new MemoryBlock(count * 18);
             }
 
             usedIndex.Reset();
@@ -1664,65 +1894,64 @@ namespace Cdy.Tag
             {
                 case TagType.Byte:
                     var cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, tims, type);
-                    var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, usedIndex);
                     var timeData = CompressTimers(tims, usedIndex);
+                    var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, usedIndex);
+                  
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Short:
                     cval = CompressValues<short>(source, count * 2 + sourceAddr, count, tims, type);
-
-                    cqus = CompressQulitys(source, count * 4 + sourceAddr, count, usedIndex);
                     timeData = CompressTimers(tims, usedIndex);
+                    cqus = CompressQulitys(source, count * 4 + sourceAddr, count, usedIndex);
+                    
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.UShort:
                     cval = CompressValues<ushort>(source, count * 2 + sourceAddr, count,  tims, type);
-                     cqus = CompressQulitys(source, count * 4 + sourceAddr, count, usedIndex);
-                     timeData = CompressTimers(tims, usedIndex);
+                    timeData = CompressTimers(tims, usedIndex);
+                    cqus = CompressQulitys(source, count * 4 + sourceAddr, count, usedIndex);
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Int:
                     cval = CompressValues<int>(source, count * 2 + sourceAddr, count,  tims, type);
-                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
                     timeData = CompressTimers(tims, usedIndex);
+                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
+                    
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.UInt:
                     cval = CompressValues<uint>(source, count * 2 + sourceAddr, count,  tims, type);
-                    
-                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
                     timeData = CompressTimers(tims, usedIndex);
-
+                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Long:
                     cval = CompressValues<long>(source, count * 2 + sourceAddr, count,  tims, type);
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
                     timeData = CompressTimers(tims, usedIndex);
+                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
+                  
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.ULong:
                     cval = CompressValues<ulong>(source, count * 2 + sourceAddr, count,  tims, type);
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
-
                     timeData = CompressTimers(tims, usedIndex);
+                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Double:
 
                     if (mDCompress == null) mDCompress = new DoubleCompressBuffer(310) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
-
                     cval = CompressValues<double>(source, count * 2 + sourceAddr, count,  tims, type);
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
-
                     timeData = CompressTimers(tims, usedIndex);
+                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Float:
                     if (mFCompress == null) mFCompress = new FloatCompressBuffer(310) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
                     cval = CompressValues<float>(source, count * 2 + sourceAddr, count,  tims, type);
-                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
                     timeData = CompressTimers(tims, usedIndex);
+                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
+                    
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 default:

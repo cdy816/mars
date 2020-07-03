@@ -11,11 +11,14 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Linq;
+using System.Collections.Concurrent;
 
 namespace Cdy.Tag
 {
     /// <summary>
-    /// 
+    /// 值改变记录，记录周期同定时记录的周期的一样1s
+    /// 每隔1s毫秒检查一次变量是否改变，如果改变则记录。
+    /// 变化周期超过1s的情况，则会被忽略
     /// </summary>
     public class ValueChangedMemoryCacheProcesser:IDisposable
     {
@@ -31,7 +34,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        private Dictionary<int, bool> mChangedTags = new Dictionary<int, bool>();
+        private ConcurrentDictionary<int, bool> mChangedTags = new ConcurrentDictionary<int, bool>();
 
         public const int MaxTagCount = 100000;
 
@@ -87,6 +90,8 @@ namespace Cdy.Tag
         /// </summary>
         private DateTime mLastUpdateTime;
 
+        private int mLastUpdateSecond = -1;
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -98,7 +103,11 @@ namespace Cdy.Tag
         public void Notify(DateTime time)
         {
             mLastUpdateTime = time;
-            resetEvent.Set();
+            if(mLastUpdateTime.Second!=mLastUpdateSecond)
+            {
+                mLastUpdateSecond = mLastUpdateTime.Second;
+                resetEvent.Set();
+            }
         }
 
         /// <summary>
@@ -110,12 +119,15 @@ namespace Cdy.Tag
             ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeValueChangedForConsumer(this.Name, new ValueChangedNotifyProcesser.ValueChangedDelegate((ids) => {
                 foreach(var vv in ids)
                 {
-                    if(mChangedTags.ContainsKey(vv))
-                    {
-                        mChangedTags[vv] = true;
-                    }
+                    mChangedTags[vv] = true;
                 }
             }),null,null, new Func<List<int>>(() => { return  mTags.Keys.ToList(); }));
+
+            foreach(var vv in mTags.Keys)
+            {
+                mChangedTags.TryAdd(vv, false);
+            }
+
 
             mRecordThread = new Thread(ThreadProcess);
             mRecordThread.IsBackground=true;
@@ -130,6 +142,9 @@ namespace Cdy.Tag
             mIsClosed = true;
             resetEvent.Set();
             closedEvent.WaitOne();
+            Clear();
+
+            ServiceLocator.Locator.Resolve<IRealDataNotify>().UnSubscribeValueChangedForConsumer(this.Name);
         }
 
         /// <summary>
@@ -157,75 +172,11 @@ namespace Cdy.Tag
         public void Clear()
         {
             mTags.Clear();
+            mChangedTags.Clear();
             mCurrentCount = 0;
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public void WriteHeader()
-        //{
-        //    foreach (var vv in mTags.Values)
-        //    {
-        //        vv.UpdateHeader();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="time"></param>
-        //public void RecordFirstValue(DateTime time)
-        //{
-        //    mLastUpdateTime = time;
-        //    int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
-        //    foreach (var vv in mTags)
-        //    {
-        //        vv.Value.UpdateFirstValue(tim);
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="time"></param>
-        //public void RecordLastValue(DateTime time)
-        //{
-        //    mLastUpdateTime = time;
-        //    int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
-        //    foreach (var vv in mTags)
-        //    {
-        //        vv.Value.UpdateLastValue(tim);
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 记录所有值
-        ///// </summary>
-        //public void RecordAllValue(DateTime time)
-        //{
-        //    try
-        //    {
-        //        mLastUpdateTime = time;
-        //        int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
-
-        //        foreach (var vv in mTags)
-        //        {
-        //            if (mChangedTags.ContainsKey(vv.Key) && mChangedTags[vv.Key])
-        //            {
-        //                mTags[vv.Key].UpdateValue(tim);
-        //            }
-        //            else
-        //            {
-        //                vv.Value.AppendValue(tim);
-        //            }
-        //        }
-        //    }
-        //    catch
-        //    {
-
-        //    }
-        //}
+        
 
         /// <summary>
         /// 
@@ -238,6 +189,8 @@ namespace Cdy.Tag
                 resetEvent.WaitOne();
                 resetEvent.Reset();
                 if (mIsClosed) break;
+
+                //LoggerService.Service.Info("ValueChangedMemoryCacheProcesser", Name + " 执行！");
                 try
                 {
                     int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
@@ -245,18 +198,14 @@ namespace Cdy.Tag
                     {
                         if (vv.Value)
                         {
-                            mTags[vv.Key].UpdateValue(tim/10,tim);
+                            mChangedTags[vv.Key] = false;
+                            mTags[vv.Key].UpdateValue(tim);
                         }
-                        else
-                        {
-                            mTags[vv.Key].UpdateNone();
-                        }
-                        mChangedTags[vv.Key] = false;
                     }
                 }
-                catch
+                catch(Exception ex)
                 {
-
+                    LoggerService.Service.Erro("ValueChangedMemoryCacheProcesser", ex.Message);
                 }
                 resetEvent.Reset();
             }
@@ -271,6 +220,8 @@ namespace Cdy.Tag
         {
             resetEvent.Close();
             closedEvent.Close();
+            mChangedTags.Clear();
+            mTags.Clear();
         }
 
         #endregion ...Methods...

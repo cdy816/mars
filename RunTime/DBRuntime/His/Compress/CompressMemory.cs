@@ -227,7 +227,7 @@ namespace Cdy.Tag
             }
             catch(Exception ex)
             {
-                LoggerService.Service.Erro("CompressEnginer", ex.Message);
+                LoggerService.Service.Erro("CompressEnginer", ex.StackTrace+"  "+ex.Message);
             }
             mIsRunning = false;
         }

@@ -339,11 +339,12 @@ namespace Cdy.Tag
             // int count = MemoryCachTime * 1000 / MemoryTimeTick;
             int count = MergeMemoryTime;
 
-            //对于值改变的记录方式,提高内存分配量,以提高值改变记录的数据个数
-            if(recordType == RecordType.ValueChanged)
-            {
-                count = MergeMemoryTime * 1000 / MemoryTimeTick;
-            }
+
+            ////对于值改变的记录方式,提高内存分配量,以提高值改变记录的数据个数
+            //if(recordType == RecordType.ValueChanged)
+            //{
+            //    count = MergeMemoryTime * 1000 / MemoryTimeTick;
+            //}
 
             //用于解码时在头尾分别记录前一个区域的值和后一个区域的值
             count += 2;
@@ -404,10 +405,10 @@ namespace Cdy.Tag
             int count = CachMemoryTime;
 
             //对于值改变的记录方式,提高内存分配量,以提高值改变记录的数据个数
-            if (recordType == RecordType.ValueChanged)
-            {
-                count = CachMemoryTime * 1000 / MemoryTimeTick;
-            }
+            //if (recordType == RecordType.ValueChanged)
+            //{
+            //    count = CachMemoryTime * 1000 / MemoryTimeTick;
+            //}
 
             //数据区偏移,时间戳占2个字节,质量戳占1个字节
             dataOffset = headSize + count * 2;

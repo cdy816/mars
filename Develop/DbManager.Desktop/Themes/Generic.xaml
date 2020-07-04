@@ -54,6 +54,15 @@
         <view:ServerUserGroupDetailView />
     </DataTemplate>
 
+
+    <DataTemplate DataType="{x:Type viewmodel:ConvertEditViewModel}">
+        <view:ConvertEditView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type viewmodel:LinearConvertViewModel}">
+        <view:LinearConvertView />
+    </DataTemplate>
+
     <BooleanToVisibilityConverter x:Key="bvc" />
     
     <Style TargetType="{x:Type local:CustomWindowBase}">

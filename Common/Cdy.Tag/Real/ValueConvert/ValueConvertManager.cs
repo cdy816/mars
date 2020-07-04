@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Cdy.Tag
@@ -46,6 +47,18 @@ namespace Cdy.Tag
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<IValueConvert> Converts
+        {
+            get
+            {
+                return mValueConverts.Values.ToList();
+            }
+        }
+
 
         /// <summary>
         /// 

@@ -494,7 +494,11 @@ namespace DBInStudio.Desktop
         {
             get
             {
-                return mRealTagMode.Conveter != null ? mRealTagMode.Conveter.ToString() : string.Empty;
+                return mRealTagMode.Conveter != null ? mRealTagMode.Conveter.SeriseToString() : string.Empty;
+            }
+            set
+            {
+                ;
             }
         }
 
@@ -512,9 +516,9 @@ namespace DBInStudio.Desktop
                 if (mRealTagMode.Conveter != value)
                 {
                     mRealTagMode.Conveter = value;
-                    OnPropertyChanged("Convert");
-                    OnPropertyChanged("ConvertString");
                 }
+                OnPropertyChanged("Convert");
+                OnPropertyChanged("ConvertString");
             }
         }
 
@@ -527,8 +531,15 @@ namespace DBInStudio.Desktop
             {
                 if(mConvertEditCommand==null)
                 {
-                    mConvertEditCommand = new RelayCommand(() => { 
-                        // to do here
+                    mConvertEditCommand = new RelayCommand(() => {
+
+                        ConvertEditViewModel cmm = new ConvertEditViewModel();
+                        if (mRealTagMode.Conveter != null)
+                            cmm.SetSelectConvert(mRealTagMode.Conveter.SeriseToString());
+                        if(cmm.ShowDialog().Value)
+                        {
+                            Convert = cmm.CurrentSelectModel.Model;
+                        }
                     });
                 }
                 return mConvertEditCommand;

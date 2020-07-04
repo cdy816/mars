@@ -241,6 +241,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Conversion formula 的本地化字符串。
+        /// </summary>
+        internal static string funTitle {
+            get {
+                return ResourceManager.GetString("funTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Group 的本地化字符串。
         /// </summary>
         internal static string Group {

@@ -75,6 +75,12 @@ namespace Cdy.Tag
         /// <returns></returns>
         public IValueConvert LoadFromString(string value);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public IValueConvert Clone();
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

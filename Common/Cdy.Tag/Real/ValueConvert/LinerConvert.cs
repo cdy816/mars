@@ -13,9 +13,12 @@ using System.Text;
 
 namespace Cdy.Tag
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class LinerConvert : IValueConvert
     {
-        public string Name { get => "Liner";  }
+        public string Name { get => "Linear";  }
 
         /// <summary>
         /// 
@@ -83,6 +86,15 @@ namespace Cdy.Tag
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public IValueConvert Clone()
+        {
+            return new LinerConvert() { K = this.K, T = this.T };
         }
     }
 }

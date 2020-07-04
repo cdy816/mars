@@ -178,6 +178,9 @@
   <data name="Export" xml:space="preserve">
     <value>Export</value>
   </data>
+  <data name="funTitle" xml:space="preserve">
+    <value>Conversion formula</value>
+  </data>
   <data name="Group" xml:space="preserve">
     <value>Group</value>
   </data>

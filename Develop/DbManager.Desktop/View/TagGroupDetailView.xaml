@@ -165,7 +165,7 @@
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Margin="5,0" Text="{Binding ConvertString}" VerticalAlignment="Center" />
+                                <TextBlock Margin="5,0" Text="{Binding ConvertString}" VerticalAlignment="Center" MinWidth="60" />
                                 <Button Content="..." VerticalAlignment="Center" VerticalContentAlignment="Top" Command="{Binding ConvertEditCommand}" Width="30" />
                             </StackPanel>
                         </DataTemplate>

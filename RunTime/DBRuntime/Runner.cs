@@ -75,6 +75,9 @@ namespace Cdy.Tag
         {
             //注册日志
             ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
+
+            //注册线性转换器
+            ValueConvertManager.manager.Registor(new LinerConvert());
         }
 
         #endregion ...Constructor...

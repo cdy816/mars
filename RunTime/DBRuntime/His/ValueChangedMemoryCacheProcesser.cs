@@ -48,7 +48,9 @@ namespace Cdy.Tag
 
         private Thread mRecordThread;
 
-        
+
+        public static List<int> UsedCPUs = new List<int>();
+
 
         #endregion ...Variables...
 

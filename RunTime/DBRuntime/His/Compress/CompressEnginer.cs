@@ -47,6 +47,8 @@ namespace Cdy.Tag
 
         private long mTotalSize = 0;
 
+        public static List<int> UsedCPUs = new List<int>();
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -201,6 +203,8 @@ namespace Cdy.Tag
                 resetEvent.Reset();
                 if (mIsClosed)
                     break;
+
+                ThreadHelper.AssignToCPU(UsedCPUs.ToArray());
 //#if DEBUG 
                 Stopwatch sw = new Stopwatch();
                 sw.Start();

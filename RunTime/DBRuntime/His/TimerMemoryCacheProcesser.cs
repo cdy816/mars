@@ -52,6 +52,11 @@ namespace Cdy.Tag
 
         private int mBusyCount = 0;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public static List<int> UsedCPUs = new List<int>();
+
         #endregion ...Variables...
 
         #region ... Events     ...

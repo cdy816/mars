@@ -33,6 +33,8 @@ namespace Cdy.Tag
         private Dictionary<int, long> dtmp = new Dictionary<int, long>();
         private bool mIsDisposed=false;
         private bool mIsRunning=false;
+
+       
         #endregion ...Variables...
 
         #region ... Events     ...

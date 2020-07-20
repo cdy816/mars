@@ -31,7 +31,7 @@ namespace Cdy.Tag
         private IHisEngine mHisTagService;
         private Dictionary<int, CompressUnitbase> mCompressCach = new Dictionary<int, CompressUnitbase>();
         private Dictionary<int, long> dtmp = new Dictionary<int, long>();
-        private bool mIsDisposed=false;
+        //private bool mIsDisposed=false;
         private bool mIsRunning=false;
 
        
@@ -289,7 +289,7 @@ namespace Cdy.Tag
             mHisTagService = null;
             mTagAddress.Clear();
             mTagAddress = null;
-            mIsDisposed = true;
+            //mIsDisposed = true;
             base.Dispose();
         }
 

@@ -270,6 +270,7 @@ namespace Cdy.Tag
 
         private void ThreadPro()
         {
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
             while (!mIsClosed)
             {
                 resetEvent.WaitOne();

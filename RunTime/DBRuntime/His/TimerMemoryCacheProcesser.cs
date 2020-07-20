@@ -52,11 +52,6 @@ namespace Cdy.Tag
 
         private int mBusyCount = 0;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static List<int> UsedCPUs = new List<int>();
-
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -181,6 +176,9 @@ namespace Cdy.Tag
         /// </summary>
         private void ThreadProcess()
         {
+
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray1);
+
             closedEvent.Reset();
             var vkeys = mCount.Keys.ToArray();
             while (!mIsClosed)
@@ -188,6 +186,8 @@ namespace Cdy.Tag
                 resetEvent.WaitOne();
                 resetEvent.Reset();
                 if (mIsClosed) break;
+
+               // LoggerService.Service.Info("TimerMemoryCacheProcesser", ThreadHelper.GetCurrentProcessorNumber() + " CPU in running!");
                 try
                 {
                     mIsBusy = true;

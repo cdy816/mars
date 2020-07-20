@@ -44,13 +44,13 @@ namespace Cdy.Tag
         /// CPU 个数
         /// </summary>
         /// <returns></returns>
-        public static int CPUNumbers()
+        public static int GetProcessNumbers()
         {
             return Environment.ProcessorCount;
         }
 
         /// <summary>
-        /// 
+        /// 将当前线程绑定到指定CPU
         /// </summary>
         /// <param name="cpus"></param>
         public static void AssignToCPU(params int[] cpus)
@@ -67,6 +67,27 @@ namespace Cdy.Tag
             {
                 //to do none;
             }
+        }
+
+        /// <summary>
+        /// 获取当前线程所在CPU ID
+        /// </summary>
+        /// <returns></returns>
+        public static uint GetCurrentProcessorNumber()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return Win32Native.NtGetCurrentProcessorNumber();
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+
+            }
+            else
+            {
+                //to do none;
+            }
+            return uint.MaxValue;
         }
 
         /// <summary>

@@ -48,10 +48,6 @@ namespace Cdy.Tag
 
         private Thread mRecordThread;
 
-
-        public static List<int> UsedCPUs = new List<int>();
-
-
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -185,6 +181,8 @@ namespace Cdy.Tag
         /// </summary>
         private void ThreadProcess()
         {
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray1);
+
             closedEvent.Reset();
             while (!mIsClosed)
             {

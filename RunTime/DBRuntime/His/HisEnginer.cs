@@ -624,6 +624,7 @@ namespace Cdy.Tag
         {
             int number = MergeMemoryTime / CachMemoryTime;
             int count = mStartMergeCount;
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray1);
 
             while (!mIsClosed)
             {

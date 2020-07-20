@@ -2,7 +2,7 @@
   "profiles": {
     "DBInRun": {
       "commandName": "Executable",
-      "executablePath": "C:\\Users\\Lenovo\\source\\repos\\mars\\Output\\DBInRun.exe"
+      "executablePath": "C:\\Users\\cdy81\\source\\repos\\mars\\Output\\DBInRun.exe"
     }
   }
 }

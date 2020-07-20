@@ -47,7 +47,6 @@ namespace Cdy.Tag
 
         private long mTotalSize = 0;
 
-        public static List<int> UsedCPUs = new List<int>();
 
         #endregion ...Variables...
 
@@ -197,14 +196,14 @@ namespace Cdy.Tag
 
         private void ThreadPro()
         {
-            while(!mIsClosed)
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+            while (!mIsClosed)
             {
                 resetEvent.WaitOne();
                 resetEvent.Reset();
                 if (mIsClosed)
                     break;
 
-                ThreadHelper.AssignToCPU(UsedCPUs.ToArray());
 //#if DEBUG 
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
@@ -218,13 +217,9 @@ namespace Cdy.Tag
                     Thread.Sleep(500);
                 }
 
-                //foreach (var mm in mTargetMemorys)
-                //{
-                //    mm.Value.Compress(sm);
-                //}
-
                 System.Threading.Tasks.Parallel.ForEach(mTargetMemorys, (mm) =>
                 {
+                    ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
                     mm.Value.Compress(sm);
                 });
 

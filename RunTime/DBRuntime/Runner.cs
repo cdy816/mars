@@ -158,6 +158,8 @@ namespace Cdy.Tag
             }
             InitPath();
 
+            CPUAssignHelper.Helper.Init();
+
             if (CheckDatabaseExist(mDatabaseName))
             {
                 LoadDatabase();

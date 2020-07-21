@@ -7,6 +7,7 @@
 //  种道洋
 //==============================================================
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
@@ -1505,12 +1506,13 @@ namespace Cdy.Tag
         {
             using (var stream = System.IO.File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
             {
-                byte[] bvals = new byte[1024];
+                byte[] bvals = ArrayPool<byte>.Shared.Rent(1024);
                 for (long i = 0; i < memory.Length / 1024; i++)
                 {
                     Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * 1024), bvals, 0, 1024);
                     stream.Write(bvals, 0, 1024);
                 }
+                ArrayPool<byte>.Shared.Return(bvals);
                 stream.Flush();
             }
         }
@@ -1523,13 +1525,15 @@ namespace Cdy.Tag
         public static void RecordToLog(this MarshalFixedMemoryBlock memory, Stream stream)
         {
             int ls = 1024 * 1024 * 128;
-            byte[] bvals = new byte[ls];
+            //byte[] bvals = new byte[ls];
             //long totalsize = memory.AllocSize;
             //long csize = 0;
 
             int stmp = 0;
             int ltmp = (int)memory.AllocSize;
             var source = memory.Handles;
+
+             var bvals = ArrayPool<byte>.Shared.Rent(ls);
 
             while (ltmp > 0)
             {
@@ -1539,7 +1543,7 @@ namespace Cdy.Tag
                 stmp += ctmp;
                 ltmp -= ctmp;
             }
-
+            ArrayPool<byte>.Shared.Return(bvals);
             //for (long i = 0; i < memory.Length / ls; i++)
             //{
             //    Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * ls), bvals, 0, ls);

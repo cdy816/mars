@@ -201,6 +201,7 @@ namespace Cdy.Tag
                 foreach (var vv in mTagAddress)
                 {
                     var size = CompressBlockMemory(source, vv.Value.Item1, Offset, vv.Value.Item3, vv.Value.Item4, vv.Key);
+                    if(dtmp.ContainsKey(vv.Key))
                     dtmp[vv.Key] = Offset;
                     Offset += size;
                     datasize += size;
@@ -224,7 +225,7 @@ namespace Cdy.Tag
 
                 ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSeriseFile(this, mCurrentTime);
                 sw.Stop();
-                LoggerService.Service.Info("CompressEnginer", Id + "压缩完成 耗时:" + sw.ElapsedMilliseconds + " ltmp1:" + ltmp1 + " ltmp2:" + (ltmp2 - ltmp1) + " ltmp3:" + (ltmp3 - ltmp2), ConsoleColor.Blue);
+                LoggerService.Service.Info("CompressEnginer", Id + "压缩完成 耗时:" + sw.ElapsedMilliseconds + " ltmp1:" + ltmp1 + " ltmp2:" + (ltmp2 - ltmp1) + " ltmp3:" + (ltmp3 - ltmp2) +" CPU Id:"+ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Blue);
                 
             }
             catch(Exception ex)

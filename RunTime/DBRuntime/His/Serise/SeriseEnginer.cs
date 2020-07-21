@@ -13,6 +13,7 @@ using System.Threading;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Buffers;
 
 /*
  * ****文件结构****
@@ -460,10 +461,12 @@ namespace Cdy.Tag
         {
             DateTime date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
             mFileWriter.Write(date, 0);
-            byte[] nameBytes = new byte[64];
+            //byte[] nameBytes = new byte[64];
+            byte[] nameBytes = ArrayPool<byte>.Shared.Rent(64);
             var ntmp = Encoding.UTF8.GetBytes(databaseName);
             Buffer.BlockCopy(ntmp, 0, nameBytes, 0, Math.Min(64, ntmp.Length));
             mFileWriter.Write(nameBytes, 8);
+            ArrayPool<byte>.Shared.Return(nameBytes);
         }
 
         /// <summary>
@@ -473,28 +476,29 @@ namespace Cdy.Tag
         {
             byte[] bval;
             int totalLen;
-
+            int datalen;
             //更新上个DataRegion 的Next DataRegion Pointer 指针
             if (mPreDataRegion >= 0)
             {
                 mFileWriter.Write(mCurrentDataRegion, mPreDataRegion + 8);
             }
             
-            bval = GeneratorDataRegionHeader(out totalLen);
-            mFileWriter.Append(bval, 0, bval.Length);
-            mFileWriter.AppendZore(totalLen - bval.Length);
+            bval = GeneratorDataRegionHeader(out totalLen,out datalen);
+            mFileWriter.Append(bval, 0, datalen);
+            mFileWriter.AppendZore(totalLen - datalen);
 
             mPreDataRegion = mCurrentDataRegion;
 
             mBlockPointOffset = mCurrentDataRegion + mBlockPointOffset;
 
+            ArrayPool<byte>.Shared.Return(bval);
         }
 
         /// <summary>
         /// 生成区域头部
         /// <paramref name="offset">偏移位置</paramref>
         /// </summary>
-        private byte[]  GeneratorDataRegionHeader(out int totallenght)
+        private byte[]  GeneratorDataRegionHeader(out int totallenght,out int datalen)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -504,7 +508,9 @@ namespace Cdy.Tag
             
             totallenght = len;
 
-            using (System.IO.MemoryStream mHeadMemory = new System.IO.MemoryStream())
+            byte[] bvals = ArrayPool<byte>.Shared.Rent(52 + mTagIdMemoryCach.Position);
+
+            using (System.IO.MemoryStream mHeadMemory = new System.IO.MemoryStream(bvals))
             {              
 
                 mHeadMemory.Position = 0;
@@ -524,12 +530,13 @@ namespace Cdy.Tag
                 mHeadMemory.Write(mTagIdMemoryCach.Buffer, 0, mTagIdMemoryCach.Position);//写入压缩数据
 
                 mBlockPointOffset = mHeadMemory.Position;
-
+                datalen = (int)mHeadMemory.Position;
                 sw.Stop();
 
                 LoggerService.Service.Info("SeriseFileItem" + Id, "GeneratorDataRegionHeader " + sw.ElapsedMilliseconds);
 
-                return mHeadMemory.ToArray();
+                return bvals;
+                //return mHeadMemory.ToArray();
             }
         }
 
@@ -639,6 +646,9 @@ namespace Cdy.Tag
             //int blockcount = FileDuration * 60 / BlockDuration;
             var vv = ServiceLocator.Locator.Resolve<IHisEngine>();
             var tags = vv.ListAllTags().Where(e => e.Id >= Id * TagCountOneFile && e.Id < (Id + 1) * TagCountOneFile).OrderBy(e => e.Id);
+
+            if (mBlockPointMemory != null) mBlockPointMemory.Dispose();
+
             mBlockPointMemory = new MemoryBlock(tags.Count() * 8,1024*1024);
             mBlockPointMemory.Clear();
 

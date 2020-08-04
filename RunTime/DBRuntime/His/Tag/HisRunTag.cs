@@ -6,6 +6,7 @@
 //  Version 1.0
 //  种道洋
 //==============================================================
+using DBRuntime.His;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -36,6 +37,7 @@ namespace Cdy.Tag
         {
             ValueSnape = new byte[SizeOfValue];
         }
+
         #endregion ...Constructor...
 
         #region ... Properties ...
@@ -46,7 +48,7 @@ namespace Cdy.Tag
         public byte[] RealMemoryAddr { get; set; }
 
         /// <summary>
-        /// 
+        /// 实时值地址指针
         /// </summary>
         public IntPtr RealMemoryPtr { get; set; }
 
@@ -58,12 +60,28 @@ namespace Cdy.Tag
         /// <summary>
         /// 历史缓存数据偏移地址
         /// </summary>
+        [Obsolete]
         public static MarshalFixedMemoryBlock HisAddr { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
         public static DateTime StartTime { get; set; }
+
+        /// <summary>
+        /// 历史值起始地址
+        /// </summary>
+        public HisDataMemoryBlock HisValueMemoryStartAddr { get; set; }
+
+        /// <summary>
+        /// 历史值缓存1
+        /// </summary>
+        public HisDataMemoryBlock HisValueMemory1 { get; set; }
+
+        /// <summary>
+        /// 历史值缓存2
+        /// </summary>
+        public HisDataMemoryBlock HisValueMemory2 { get; set; }
 
         ///// <summary>
         ///// 
@@ -138,15 +156,6 @@ namespace Cdy.Tag
             Count = 0;
         }
 
-        /// <summary>
-        /// 内部计数更新
-        /// 不做实际的数据更新
-        /// </summary>
-        public void UpdateNone()
-        {
-            Count = ++Count > MaxCount ? MaxCount : Count;
-            HisAddr[HisQulityStartAddr + Count] = (byte)QualityConst.Tick;
-        }
 
         /// <summary>
         /// 清空数值区
@@ -170,6 +179,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="tim"></param>
+        [Obsolete]
         public void UpdateValue(int count,int tim)
         {
             //lock (mLockTest)
@@ -194,11 +204,47 @@ namespace Cdy.Tag
         /// <summary>
         /// 更新历史数据到缓存中
         /// </summary>
+        [Obsolete]
         public void UpdateValue(int tim)
         {
             UpdateValue(Count, tim);
             Count = ++Count > MaxCount ? MaxCount : Count;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="count"></param>
+        /// <param name="tim"></param>
+        public void UpdateValue2(int count, int tim)
+        {
+            var vcount = count > MaxCount ? MaxCount : count;
+            Count = vcount;
+
+            //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
+            //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
+            HisValueMemoryStartAddr.WriteUShortDirect((int)(HisValueMemoryStartAddr.TimerAddress + vcount * 2), (ushort)(tim));
+
+            //写入数值
+           // Array.Copy(RealMemoryAddr, RealValueAddr, HisValueMemoryStartAddr.Buffers, (int)(HisValueMemoryStartAddr.ValueAddress + vcount * SizeOfValue), SizeOfValue);
+
+            HisValueMemoryStartAddr.WriteBytesDirect((int)(HisValueMemoryStartAddr.ValueAddress + vcount * SizeOfValue), RealMemoryPtr, RealValueAddr, SizeOfValue);
+
+            //更新质量戳
+            HisValueMemoryStartAddr.WriteByteDirect((int)(HisValueMemoryStartAddr.QualityAddress + vcount), RealMemoryAddr[RealValueAddr + SizeOfValue + 8]);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tim"></param>
+        public void UpdateValue2(int tim)
+        {
+            UpdateValue2(Count, tim);
+            Count = ++Count > MaxCount ? MaxCount : Count;
+        }
+
+        
 
         #endregion ...Methods...
 

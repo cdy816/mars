@@ -17,24 +17,24 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class CompressUnitManager
+    public class CompressUnitManager2
     {
 
         #region ... Variables  ...
         /// <summary>
         /// 
         /// </summary>
-        private Dictionary<int, CompressUnitbase> mCompressUnit = new Dictionary<int, CompressUnitbase>();
+        private Dictionary<int, CompressUnitbase2> mCompressUnit = new Dictionary<int, CompressUnitbase2>();
 
         /// <summary>
         /// 
         /// </summary>
-        private Dictionary<int, Queue<CompressUnitbase>> mPoolCompressUnits = new Dictionary<int, Queue<CompressUnitbase>>();
+        private Dictionary<int, Queue<CompressUnitbase2>> mPoolCompressUnits = new Dictionary<int, Queue<CompressUnitbase2>>();
 
         /// <summary>
         /// 
         /// </summary>
-        public static CompressUnitManager Manager = new CompressUnitManager();
+        public static CompressUnitManager2 Manager = new CompressUnitManager2();
 
 
 
@@ -59,7 +59,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public CompressUnitbase GetCompress(int type)
+        public CompressUnitbase2 GetCompress(int type)
         {
             lock (mPoolCompressUnits)
             {
@@ -83,7 +83,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public CompressUnitbase GetCompressQuick(int type)
+        public CompressUnitbase2 GetCompressQuick(int type)
         {
             return mCompressUnit.ContainsKey(type)?mCompressUnit[type]:null;
         }
@@ -92,7 +92,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="compress"></param>
-        public void ReleaseCompress(CompressUnitbase compress)
+        public void ReleaseCompress(CompressUnitbase2 compress)
         {
             lock (mPoolCompressUnits)
             {
@@ -102,7 +102,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    var dd = new Queue<CompressUnitbase>();
+                    var dd = new Queue<CompressUnitbase2>();
                     dd.Enqueue(compress);
                     mPoolCompressUnits.Add(compress.TypeCode, dd);
                 }
@@ -113,7 +113,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="item"></param>
-        private void Registor(CompressUnitbase item)
+        private void Registor(CompressUnitbase2 item)
         {
             if(!mCompressUnit.ContainsKey(item.TypeCode))
             {
@@ -138,14 +138,13 @@ namespace Cdy.Tag
                         string main = vv.Attribute("MainClass").Value;
                         if (System.IO.File.Exists(dll))
                         {
-                            var driver = Assembly.LoadFrom(dll).CreateInstance(main) as CompressUnitbase;
+                            var driver = Assembly.LoadFrom(dll).CreateInstance(main) as CompressUnitbase2;
                             if(driver!=null)
                             Registor(driver);
                         }
                         else
                         {
                             LoggerService.Service.Warn("CompressUnitManager", dll + " is not exist.");
-
                         }
                     }
                     catch (Exception ex)
@@ -155,14 +154,6 @@ namespace Cdy.Tag
                 }
             }
         }
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //private void LoadDefaultUnit()
-        //{
-        //    Registor(new NoneCompressUnit());
-        //}
 
         #endregion ...Methods...
 

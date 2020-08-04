@@ -46,11 +46,11 @@ namespace Cdy.Tag
 
         private RealEnginer realEnginer;
 
-        private HisEnginer hisEnginer;
+        private HisEnginer2 hisEnginer;
 
-        private CompressEnginer compressEnginer;
+        private CompressEnginer2 compressEnginer;
 
-        private SeriseEnginer seriseEnginer;
+        private SeriseEnginer2 seriseEnginer;
 
         private DataFileManager mHisFileManager;
 
@@ -171,15 +171,15 @@ namespace Cdy.Tag
                 realEnginer = new RealEnginer(mRealDatabase);
                 realEnginer.Init();
 
-                hisEnginer = new HisEnginer(mHisDatabase, realEnginer);
+                hisEnginer = new HisEnginer2(mHisDatabase, realEnginer);
                 hisEnginer.MergeMemoryTime = mHisDatabase.Setting.DataBlockDuration * 60;
-                hisEnginer.LogManager = new LogManager() { Database = mDatabaseName };
+                hisEnginer.LogManager = new LogManager2() { Database = mDatabaseName };
                 hisEnginer.Init();
 
-                compressEnginer = new CompressEnginer(hisEnginer.MegerMemorySize);
+                compressEnginer = new CompressEnginer2();
                 compressEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
 
-                seriseEnginer = new SeriseEnginer() { DatabaseName = database };
+                seriseEnginer = new SeriseEnginer2() { DatabaseName = database };
                 seriseEnginer.FileDuration = mHisDatabase.Setting.FileDataDuration;
                 seriseEnginer.BlockDuration = mHisDatabase.Setting.DataBlockDuration;
                 seriseEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
@@ -188,7 +188,6 @@ namespace Cdy.Tag
                 querySerivce = new QuerySerivce(this.mDatabaseName);
 
                 mSecurityRunner = new SecurityRunner() { Document = mDatabase.Security };
-
 
                 RegistorInterface();
 
@@ -220,10 +219,9 @@ namespace Cdy.Tag
             ServiceLocator.Locator.Registor<IRealTagConsumer>(realEnginer);
             ServiceLocator.Locator.Registor<IRealTagProduct>(realEnginer);
 
-            ServiceLocator.Locator.Registor<IHisEngine>(hisEnginer);
-
-            ServiceLocator.Locator.Registor<IDataCompress>(compressEnginer);
-            ServiceLocator.Locator.Registor<IDataSerialize>(seriseEnginer);
+            ServiceLocator.Locator.Registor<IHisEngine2>(hisEnginer);
+            ServiceLocator.Locator.Registor<IDataCompress2>(compressEnginer);
+            ServiceLocator.Locator.Registor<IDataSerialize2>(seriseEnginer);
 
             ServiceLocator.Locator.Registor<IHisQuery>(querySerivce);
 
@@ -247,7 +245,6 @@ namespace Cdy.Tag
         public void Start(int port = 14330)
         {
             StartAsync("local");
-            
         }
 
         /// <summary>

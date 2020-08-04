@@ -20,7 +20,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 划分内存
     /// </summary>
-    public unsafe class MarshalFixedMemoryBlock : IDisposable
+    public unsafe class MarshalFixedMemoryBlock : IDisposable,IMemoryBlock
     {
 
         #region ... Variables  ...
@@ -212,9 +212,6 @@ namespace Cdy.Tag
                 Buffer.MemoryCopy((void*)moldptr, (void*)mHandles, size, oldlen);
 
                 Marshal.FreeHGlobal(moldptr);
-
-                GC.Collect();
-
                 LoggerService.Service.Info("CheckAndResize", "CheckAndResize " + this.Name + " " + size, ConsoleColor.Red);
 
             }
@@ -254,9 +251,9 @@ namespace Cdy.Tag
         /// <param name="size"></param>
         private void Init(long size)
         {
-            long stmp = size % BufferItemSize > 0 ? ((size / BufferItemSize) + 1) * BufferItemSize : (size / BufferItemSize) * BufferItemSize;
-            mSize = stmp;
-            mHandles = Marshal.AllocHGlobal(new IntPtr(stmp));
+            //long stmp = size % BufferItemSize > 0 ? ((size / BufferItemSize) + 1) * BufferItemSize : (size / BufferItemSize) * BufferItemSize;
+            mSize = size;
+            mHandles = Marshal.AllocHGlobal(new IntPtr(size));
             mHandleValue = mHandles.ToInt64();
             mAllocSize = size;
         }
@@ -272,7 +269,7 @@ namespace Cdy.Tag
             //GC.Collect();
         }
 
-       
+
 
 
 
@@ -281,11 +278,16 @@ namespace Cdy.Tag
         /// </summary>
         public void Clear()
         {
-            for (long i = 0; i < mSize / zoreData.Length; i++)
+            long i = 0;
+            for (i = 0; i < mSize / zoreData.Length; i++)
             {
-                Marshal.Copy(zoreData, 0,new IntPtr( mHandleValue+ (i * zoreData.Length)), zoreData.Length);
+                Marshal.Copy(zoreData, 0, new IntPtr(mHandleValue + (i * zoreData.Length)), zoreData.Length);
             }
-            
+
+            int cc = (int)(mSize % zoreData.Length);
+            if (cc > 0)
+                Marshal.Copy(zoreData, 0, new IntPtr(mHandleValue + (i * zoreData.Length)), cc);
+
             //mUsedSize = 0;
             mPosition = 0;
         }
@@ -1261,11 +1263,11 @@ namespace Cdy.Tag
         /// <param name="sourceStart"></param>
         /// <param name="targetStart"></param>
         /// <param name="len"></param>
-        public void CopyTo(MarshalFixedMemoryBlock target,long sourceStart, long targetStart, long len)
+        public void CopyTo(IMemoryBlock target,long sourceStart, long targetStart, long len)
         {
-            if (target == null) return;
+            if (target == null || !(target is MarshalFixedMemoryBlock)) return;
 
-            Buffer.MemoryCopy((void*)(new IntPtr(this.mHandleValue + sourceStart)), (void*)((target.mHandleValue + targetStart)), target.Length-targetStart, len);
+            Buffer.MemoryCopy((void*)(new IntPtr(this.mHandleValue + sourceStart)), (void*)(((target as MarshalFixedMemoryBlock).mHandleValue + targetStart)), target.Length-targetStart, len);
         }
 
         /// <summary>
@@ -1285,11 +1287,53 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="target"></param>
+        /// <param name="sourceStart"></param>
+        /// <param name="targetStart"></param>
+        /// <param name="len"></param>
+        public void CopyTo(MarshalMemoryBlock target, long sourceStart, long targetStart, long len)
+        {
+            if (target == null) return;
+
+            long ostt;
+
+            //计算从源数据需要读取数据块索引
+            long targetAddr = targetStart;
+
+            //拷贝数据到目标数据块中
+            var hdt = target.RelocationAddressToArrayIndex(targetAddr, out ostt);
+            if (ostt + len < target.BufferItemSize)
+            {
+                Buffer.MemoryCopy((void*)(sourceStart), (void*)(target.Handles[hdt] + (int)ostt), target.BufferItemSize - ostt, len);
+            }
+            else
+            {
+                Buffer.MemoryCopy((void*)(sourceStart), (void*)(target.Handles[hdt] + (int)ostt), target.BufferItemSize - ostt, (target.BufferItemSize - ostt));
+                var vcount = target.BufferItemSize - ostt;
+                var count = len - vcount;
+                while (count > target.BufferItemSize)
+                {
+                    hdt++;
+                    Buffer.MemoryCopy((void*)(sourceStart+ vcount), (void*)(target.Handles[hdt]), target.BufferItemSize, target.BufferItemSize);
+                    count = len - vcount;
+                    vcount += target.BufferItemSize;
+                }
+                if (count > 0)
+                {
+                    hdt++;
+                    Buffer.MemoryCopy((void*)(sourceStart+ vcount), (void*)(target.Handles[hdt]), target.BufferItemSize, (count));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="stream"></param>
         /// <param name="offset"></param>
         /// <param name="len"></param>
         /// <returns></returns>
-        public MarshalFixedMemoryBlock WriteToStream(Stream stream,long offset,long len)
+        public IMemoryBlock WriteToStream(Stream stream,long offset,long len)
         {
             byte[] bvals = new byte[1024 * 1024 * 4];
             long ltmp = len;
@@ -1522,13 +1566,32 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="memory"></param>
         /// <param name="stream"></param>
+        public static void Dump(this MarshalFixedMemoryBlock memory, Stream stream)
+        {
+            byte[] bvals = ArrayPool<byte>.Shared.Rent(1024);
+            long i = 0;
+            for (i = 0; i < memory.Length / 1024; i++)
+            {
+                Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * 1024), bvals, 0, 1024);
+                stream.Write(bvals, 0, 1024);
+            }
+
+            long cc = memory.Length % 1024;
+
+            Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * 1024), bvals, 0, (int)cc);
+            stream.Write(bvals, 0, 1024);
+            ArrayPool<byte>.Shared.Return(bvals);
+            stream.Flush();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <param name="stream"></param>
         public static void RecordToLog(this MarshalFixedMemoryBlock memory, Stream stream)
         {
             int ls = 1024 * 1024 * 128;
-            //byte[] bvals = new byte[ls];
-            //long totalsize = memory.AllocSize;
-            //long csize = 0;
-
             int stmp = 0;
             int ltmp = (int)memory.AllocSize;
             var source = memory.Handles;
@@ -1544,17 +1607,7 @@ namespace Cdy.Tag
                 ltmp -= ctmp;
             }
             ArrayPool<byte>.Shared.Return(bvals);
-            //for (long i = 0; i < memory.Length / ls; i++)
-            //{
-            //    Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * ls), bvals, 0, ls);
-            //    int isize = (int)Math.Min(totalsize - csize, ls);
-            //    csize += isize;
-            //    stream.Write(bvals, 0, isize);
-            //    if (csize >= totalsize)
-            //        break;
-                
-            //}
-            stream.Flush();
+           // stream.Flush();
         }
 
         /// <summary>

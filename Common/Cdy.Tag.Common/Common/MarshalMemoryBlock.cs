@@ -142,6 +142,9 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public IntPtr EndMemory
         {
             get
@@ -273,21 +276,7 @@ namespace Cdy.Tag
                 mHandles.Add(Marshal.AllocHGlobal(BufferItemSize));
             }
             mAllocSize = size;
-            //mDataBuffer = mBuffers[0];
         }
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <returns></returns>
-        //public  IEnumerable<MemoryStream> GetStream()
-        //{
-        //    foreach(var vv in mHandles)
-        //    {
-        //        yield return null;
-        //      //  yield return new MemoryStream(vv);
-        //    }
-        //}
 
         /// <summary>
         /// 重新分配对象
@@ -296,7 +285,6 @@ namespace Cdy.Tag
         public void ReAlloc(long size)
         {
             Init(size);
-            GC.Collect();
         }
 
         /// <summary>
@@ -329,7 +317,7 @@ namespace Cdy.Tag
             }
 
             mHandles = nBuffers;
-            GC.Collect();
+            //GC.Collect();
         }
 
         /// <summary>
@@ -363,10 +351,10 @@ namespace Cdy.Tag
 
                         mHandles = nBuffers;
                         mHandles = new List<IntPtr>();
-                        GC.Collect();
+                        //GC.Collect();
                     }
                     mAllocSize = size;
-                    GC.Collect();
+                    //GC.Collect();
 
                     LoggerService.Service.Info("CheckAndResize", "CheckAndResize " + this.Name + " " + size, ConsoleColor.Red);
                 }
@@ -454,7 +442,7 @@ namespace Cdy.Tag
         /// <param name="position"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
-        private int RelocationAddressToArrayIndex(long position,out long offset)
+        public int RelocationAddressToArrayIndex(long position,out long offset)
         {
             offset = position % BufferItemSize;
             return (int)(position / BufferItemSize);

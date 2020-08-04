@@ -85,7 +85,7 @@ namespace HisDataTools
         public void Init()
         {
             DataFileSeriserManager.manager.Init();
-            CompressUnitManager.Manager.Init();
+            CompressUnitManager2.Manager.Init();
             ScanDatabase();
         }
 

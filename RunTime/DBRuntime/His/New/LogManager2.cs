@@ -22,7 +22,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 日志管理系统
     /// </summary>
-    public class LogManager
+    public class LogManager2
     {
 
         #region ... Variables  ...
@@ -36,13 +36,17 @@ namespace Cdy.Tag
 
         private ManualResetEvent closedEvent = new ManualResetEvent(false);
 
-        private CachMemoryBlock mNeedSaveMemory1;
+        private HisDataMemoryBlockCollection mNeedSaveMemory1;
 
         private string mLogDirector = string.Empty;
 
         private string mDatabase = string.Empty;
 
         private VarintCodeMemory memory;
+
+        private bool mIsChanged = false;
+
+        private object mLocker = new object();
 
         #endregion ...Variables...
 
@@ -54,7 +58,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public LogManager()
+        public LogManager2()
         {
 
         }
@@ -73,6 +77,18 @@ namespace Cdy.Tag
         /// </summary>
         public string Database { get { return mDatabase; } set { mDatabase = value; CheckLogDirector(); } }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsChanged 
+        {
+            get { return mIsChanged; }
+            set
+            {
+                lock (mLocker)
+                    mIsChanged = value;
+            }
+        }
 
 
         #endregion ...Properties...
@@ -82,15 +98,22 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public void InitHeadData(Dictionary<long,HisRunTag> mtags)
+        public void InitHeadData()
         {
-            memory = new VarintCodeMemory(mtags.Count * 16);
-            memory.WriteInt64(mtags.Count);
-            var vtags = mtags.ToArray();
-            // long prev = mtags.First().Key;
-            long prev = 0;
+            HisDataMemoryBlockCollection mtags = ServiceLocator.Locator.Resolve<IHisEngine2>().CurrentMemory;
+
+            if (memory != null)
+            {
+                memory.Dispose();
+                memory = null;
+            }
+
+            memory = new VarintCodeMemory(mtags.TagAddress.Count * 16);
+            memory.WriteInt64(mtags.TagAddress.Count);
+            
+            long prev =0;
             int i = 0;
-            foreach(var vv in mtags)
+            foreach(var vv in mtags.TagAddress)
             {
                 if (i == 0)
                 {
@@ -105,21 +128,21 @@ namespace Cdy.Tag
                 i++;
             }
 
-            //  prev = mtags.First().Value.TimerValueStartAddr;
             prev = 0;
             i = 0;
-            foreach (var vv in mtags)
+            long ltmp = 0;
+            foreach (var vv in mtags.TagAddress)
             {
                 if (i == 0)
                 {
-                    prev = vv.Value.TimerValueStartAddr;
                     memory.WriteInt64(prev);
                 }
                 else
                 {
-                    memory.WriteInt64(vv.Value.TimerValueStartAddr - prev);
-                    prev = vv.Value.TimerValueStartAddr;
+                    memory.WriteInt64(ltmp - prev);
+                    prev = ltmp;
                 }
+                ltmp += vv.Value.Length;
                 i++;
             }
         }
@@ -151,7 +174,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="startTime"></param>
         /// <param name="memory"></param>
-        public void RequestToSave(DateTime startTime,DateTime endTime,CachMemoryBlock memory)
+        public void RequestToSave(DateTime startTime,DateTime endTime, HisDataMemoryBlockCollection memory)
         {
             mNeedSaveMemory1 = memory;
             mStartTime = startTime;
@@ -212,7 +235,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="memory"></param>
-        public void ClearMemoryHisData(MarshalFixedMemoryBlock memory)
+        public void ClearMemoryHisData(HisDataMemoryBlockCollection memory)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -228,12 +251,21 @@ namespace Cdy.Tag
         private void RecordToFile()
         {
             //TimeSpan +  HeadLength+HeadData+Data
+
+            lock (mLocker)
+            {
+                if (IsChanged)
+                {
+                    IsChanged = false;
+                    InitHeadData();
+                }
+            }
+
             Stopwatch sw = new Stopwatch();
             sw.Start();
             string fileName = GetLogFilePath(mStartTime,mEndTime);
             using (var stream = System.IO.File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
             {
-                //stream.SetLength(mNeedSaveMemory1.AllocSize + memory.Position + 6);
                 stream.Write(BitConverter.GetBytes(TimeLen));
                 stream.Write(BitConverter.GetBytes(memory.Position));
                 stream.Write(memory.Buffer, 0, memory.Position);
@@ -243,37 +275,6 @@ namespace Cdy.Tag
             LoggerService.Service.Info("LogManager", "日志文件："+ fileName + " 记录完成! 耗时:"+sw.ElapsedMilliseconds );
 
         }
-
-
-        private unsafe void RecordToFileForMemoryMap()
-        {
-            //TimeSpan +  HeadLength+HeadData+Data
-
-            string fileName = GetLogFilePath(mStartTime, mEndTime);
-            //using (var stream = System.IO.File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
-            {
-                Stopwatch ssw = new Stopwatch();
-                ssw.Start();
-
-                var cfile = MemoryMappedFile.CreateFromFile(fileName, FileMode.Create,"logmanager", mNeedSaveMemory1.AllocSize + memory.Position + 6, MemoryMappedFileAccess.ReadWrite);
-                var acc = cfile.CreateViewStream();
-                long ltmp = ssw.ElapsedMilliseconds;
-                acc.Write(BitConverter.GetBytes(TimeLen));
-                acc.Write(BitConverter.GetBytes(memory.Position));
-                acc.Write(memory.Buffer, 0, memory.Position);
-                mNeedSaveMemory1.RecordToLog(acc);
-                acc.Flush();
-                acc.Close();
-                cfile.Dispose();
-
-                ssw.Stop();
-                LoggerService.Service.Info("LogManager", "日志文件：" + fileName + " 记录完成! "+ssw.ElapsedMilliseconds +"  "+ ltmp, ConsoleColor.Cyan);
-            }
-            
-
-        }
-
-
 
         /// <summary>
         /// 

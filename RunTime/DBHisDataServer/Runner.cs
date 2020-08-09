@@ -87,7 +87,7 @@ namespace DBHisDataServer
 
 
                 DataFileSeriserManager.manager.Init();
-                CompressUnitManager.Manager.Init();
+                CompressUnitManager2.Manager.Init();
                 HisQueryManager.Instance.Registor(mDatabaseName);
 
                 RegistorInterface();

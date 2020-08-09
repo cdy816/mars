@@ -172,7 +172,9 @@ namespace Cdy.Tag
         public void IncRef()
         {
             lock (mUserSizeLock)
-                Interlocked.Increment(ref mRefCount);
+            {
+                mRefCount++;
+            }
         }
 
         /// <summary>
@@ -221,7 +223,8 @@ namespace Cdy.Tag
         private void Init(long size)
         {
             mBuffers = new byte[size];
-            mHandles = System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mBuffers, 0);
+            mHandles = (IntPtr)mBuffers.AsMemory().Pin().Pointer;
+            //mHandles = System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mBuffers, 0);
             mAllocSize = size;
         }
 
@@ -244,7 +247,6 @@ namespace Cdy.Tag
         public void ReAlloc(long size)
         {
             Init(size);
-            GC.Collect();
         }
 
         /// <summary>
@@ -252,9 +254,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Clear()
         {
-            mBuffers.AsSpan().Fill(0);
-            
-            LoggerService.Service.Info("FixedMemoryBlock", Name + " is clear !");
+            Array.Clear(this.Buffers, 0, Buffers.Length);
         }
 
 
@@ -1002,7 +1002,7 @@ namespace Cdy.Tag
         {
             //mDataBuffer = null;
             mBuffers = null;
-            LoggerService.Service.Erro("FixedMemoryBlock", Name + " Disposed ");
+            //LoggerService.Service.Erro("FixedMemoryBlock", Name + " Disposed ");
             //GC.Collect();
         }
 
@@ -1383,6 +1383,63 @@ namespace Cdy.Tag
             }
             ArrayPool<byte>.Shared.Return(bvals);
             // stream.Flush();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <param name="stream"></param>
+        public static void RecordToLog2(this FixedMemoryBlock memory, Stream stream)
+        {
+            stream.Write(memory.Buffers, 0, memory.Buffers.Length);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <param name="fileName"></param>
+        public static void Dump(this FixedMemoryBlock memory, string fileName)
+        {
+            using (var stream = System.IO.File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+            {
+                stream.Write(memory.Buffers, 0, memory.Buffers.Length);
+                stream.Flush();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <param name="stream"></param>
+        public static void Dump(this FixedMemoryBlock memory, Stream stream)
+        {
+            stream.Write(memory.Buffers,0, memory.Buffers.Length);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <param name="time"></param>
+        public static void Dump(this FixedMemoryBlock memory, DateTime time)
+        {
+            string fileName = memory.Name + "_" + time.ToString("yyyy_MM_dd_HH_mm_ss") + ".dmp";
+            fileName = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(MarshalFixedMemoryBlock).Assembly.Location), fileName);
+            Dump(memory, fileName);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        public static void Dump(this FixedMemoryBlock memory)
+        {
+            string fileName = memory.Name + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss") + ".dmp";
+            fileName = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(MarshalFixedMemoryBlock).Assembly.Location), fileName);
+            Dump(memory, fileName);
         }
 
         /// <summary>

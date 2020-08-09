@@ -88,6 +88,11 @@ namespace DBInRun
                     case "stop":
                         Cdy.Tag.Runner.RunInstance.Stop();
                         break;
+                    case "restart":
+                        Task.Run(() => {
+                            Cdy.Tag.Runner.RunInstance.ReStartDatabase();
+                        });
+                        break;
                     case "h":
                         Console.WriteLine(GetHelpString());
                         break;

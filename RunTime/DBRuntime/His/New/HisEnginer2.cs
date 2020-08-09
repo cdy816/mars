@@ -221,8 +221,8 @@ namespace Cdy.Tag
             
             if (mRealEnginer != null)
             {
-                if (mManager == null)
-                    mManager = new Cdy.Tag.HisDatabaseSerise().Load();
+                //if (mManager == null)
+                //    mManager = new Cdy.Tag.HisDatabaseSerise().Load();
 
                 mLastProcesser = new TimerMemoryCacheProcesser2() { Id = 0 };
                 mRecordTimerProcesser.Clear();
@@ -313,6 +313,154 @@ namespace Cdy.Tag
                 }
             }
             AllocMemory();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Pause()
+        {
+            mRecordTimer.Stop();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Resume()
+        {
+            mRecordTimer.Start();
+        }
+
+        /// <summary>
+        /// 加载使能新的变量
+        /// </summary>
+        /// <param name="tags"></param>
+        /// <param name="mHisDatabase"></param>
+        public void ReLoadTags(IEnumerable<Tag.HisTag> tags,HisDatabase mHisDatabase)
+        {
+            mRecordTimer.Stop();
+            var realbaseaddr = this.mRealEnginer.Memory;
+            IntPtr realHandle = mRealEnginer.MemoryHandle;
+            HisRunTag mHisTag = null;
+
+            Tagbase mRealTag;
+
+            var histags = new List<HisRunTag>();
+
+            foreach (var vv in tags)
+            {
+                var realaddr = (int)mRealEnginer.GetDataAddr((int)vv.Id);
+                mRealTag = mRealEnginer.GetTagById(vv.Id);
+                switch (vv.TagType)
+                {
+                    case Cdy.Tag.TagType.Bool:
+                    case Cdy.Tag.TagType.Byte:
+                        mHisTag = new ByteHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                        break;
+                    case Cdy.Tag.TagType.Short:
+                    case Cdy.Tag.TagType.UShort:
+                        mHisTag = new ShortHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                        break;
+                    case Cdy.Tag.TagType.Int:
+                    case Cdy.Tag.TagType.UInt:
+                        mHisTag = new IntHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                        break;
+                    case Cdy.Tag.TagType.Long:
+                    case Cdy.Tag.TagType.ULong:
+                        mHisTag = new LongHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                        break;
+                    case Cdy.Tag.TagType.Float:
+                        mHisTag = new FloatHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters, Precision = (mRealTag as FloatTag).Precision };
+                        break;
+                    case Cdy.Tag.TagType.Double:
+                        mHisTag = new DoubleHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters, Precision = (mRealTag as DoubleTag).Precision };
+                        break;
+                    case Cdy.Tag.TagType.DateTime:
+                        mHisTag = new DateTimeHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                        break;
+                    case Cdy.Tag.TagType.String:
+                        mHisTag = new StirngHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                        break;
+                    case Cdy.Tag.TagType.UIntPoint:
+                    case Cdy.Tag.TagType.IntPoint:
+                        mHisTag = new IntPointHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                        break;
+                    case Cdy.Tag.TagType.UIntPoint3:
+                    case Cdy.Tag.TagType.IntPoint3:
+                        mHisTag = new IntPoint3HisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                        break;
+                    case Cdy.Tag.TagType.ULongPoint:
+                    case Cdy.Tag.TagType.LongPoint:
+                        mHisTag = new LongPointHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                        break;
+                    case Cdy.Tag.TagType.ULongPoint3:
+                    case Cdy.Tag.TagType.LongPoint3:
+                        mHisTag = new LongPoint3HisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                        break;
+                }
+                mHisTags.Add(vv.Id, mHisTag);
+                histags.Add(mHisTag);
+
+                if (mHisTag.Type == Cdy.Tag.RecordType.Timer)
+                {
+                    if (!mLastProcesser.AddTag(mHisTag))
+                    {
+                        mLastProcesser = new TimerMemoryCacheProcesser2() { Id = mLastProcesser.Id + 1 };
+                        mLastProcesser.AddTag(mHisTag);
+                        mRecordTimerProcesser.Add(mLastProcesser);
+                    }
+                }
+                else
+                {
+                    if (!mLastValueChangedProcesser.AddTag(mHisTag))
+                    {
+                        mLastValueChangedProcesser = new ValueChangedMemoryCacheProcesser2() { Name = "ValueChanged" + mTagCount };
+                        mValueChangedProcesser.Add(mLastValueChangedProcesser);
+                    }
+                }
+                mTagCount++;
+            }
+
+            int qulityOffset = 0;
+            int valueOffset = 0;
+            int blockheadsize = 0;
+
+            foreach (var vv in mHisTags)
+            {
+
+                var ss = CalMergeBlockSize(vv.Value.TagType, vv.Value.Type, blockheadsize, out valueOffset, out qulityOffset);
+
+                var abuffer = new HisDataMemoryBlock(ss) { TimerAddress = 0, ValueAddress = valueOffset, QualityAddress = qulityOffset, Id = 1 };
+                var bbuffer = new HisDataMemoryBlock(ss) { TimerAddress = 0, ValueAddress = valueOffset, QualityAddress = qulityOffset, Id = 2 };
+                mMergeMemory1.AddTagAddress(vv.Value.Id, abuffer);
+                mMergeMemory2.AddTagAddress(vv.Value.Id, bbuffer);
+
+                var css = CalCachDatablockSize(vv.Value.TagType, vv.Value.Type, blockheadsize, out valueOffset, out qulityOffset);
+                var cbuffer = new HisDataMemoryBlock(css) { TimerAddress = 0, ValueAddress = valueOffset, QualityAddress = qulityOffset, Id = 1 };
+                var dbuffer = new HisDataMemoryBlock(css) { TimerAddress = 0, ValueAddress = valueOffset, QualityAddress = qulityOffset, Id = 2 };
+
+                vv.Value.HisValueMemory1 = cbuffer;
+                vv.Value.HisValueMemory2 = dbuffer;
+                mCachMemory1.AddTagAddress(vv.Value.Id, cbuffer);
+                mCachMemory2.AddTagAddress(vv.Value.Id, dbuffer);
+
+                abuffer.Clear();
+                bbuffer.Clear();
+                cbuffer.Clear();
+                dbuffer.Clear();
+
+                vv.Value.DataSize = css;
+            }
+
+            this.mManager = mHisDatabase;
+
+            foreach (var vv in mRecordTimerProcesser) { if (!vv.IsStarted) vv.Start(); }
+
+            foreach (var vv in mValueChangedProcesser) { if (!vv.IsStarted) vv.Start(); }
+
+
+
+            mRecordTimer.Start();
         }
 
         /// <summary>
@@ -451,16 +599,6 @@ namespace Cdy.Tag
             int blockheadsize = 0;
             int qulityOffset = 0;
             int valueOffset = 0;
-
-
-            //Dictionary<int, HisDataMemoryBlock> addressoffset = new Dictionary<int, HisDataMemoryBlock>();
-
-            //Dictionary<int, HisDataMemoryBlock> addressoffset2 = new Dictionary<int, HisDataMemoryBlock>();
-
-
-            //Dictionary<int, HisDataMemoryBlock> addressoffset3 = new Dictionary<int, HisDataMemoryBlock>();
-
-            //Dictionary<int, HisDataMemoryBlock> addressoffset4 = new Dictionary<int, HisDataMemoryBlock>();
 
             mMergeMemory1 = new HisDataMemoryBlockCollection() { Name = "StoreMemory1", Id = 1 };
 
@@ -836,7 +974,6 @@ namespace Cdy.Tag
         /// <param name="dt"></param>
         private void RecordAllFirstValue()
         {
-            
             foreach(var vv in mCurrentMergeMemory.TagAddress)
             {
                 //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)

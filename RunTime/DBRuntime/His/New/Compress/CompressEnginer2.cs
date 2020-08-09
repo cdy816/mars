@@ -10,6 +10,7 @@ using DBRuntime.His;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -47,6 +48,7 @@ namespace Cdy.Tag
 
         //private long mTotalSize = 0;
 
+        private int mLastDataRegionId;
 
         #endregion ...Variables...
 
@@ -91,7 +93,7 @@ namespace Cdy.Tag
 
             var histag = mHisTagService.ListAllTags();
             //计算数据区域个数
-            var mLastDataRegionId = -1;
+            mLastDataRegionId = -1;
             foreach (var vv in histag)
             {
                 var id = vv.Id;
@@ -107,6 +109,34 @@ namespace Cdy.Tag
             {
                 vv.Value.Init(ServiceLocator.Locator.Resolve<IHisEngine2>().CurrentMemory);
                 LoggerService.Service.Info("CompressEnginer", "Cal CompressMemory memory size:" + vv.Value.Length / 1024.0 / 1024 + "M", ConsoleColor.Cyan);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tags"></param>
+        public void ReSizeTagCompress(List<HisTag> tags)
+        {
+            List<CompressMemory2> ctmp = new List<CompressMemory2>();
+            ctmp.Add(mTargetMemorys.Last().Value);
+
+            foreach (var vv in tags)
+            {
+                var id = vv.Id;
+                var did = id / TagCountOneFile;
+                if (mLastDataRegionId != did)
+                {
+                    var vvv = new CompressMemory2() { Id = did, Name = "CompressTarget" + did };
+                    mTargetMemorys.Add(did, vvv);
+                    mLastDataRegionId = did;
+                    ctmp.Add(vvv);
+                }
+            }
+
+            foreach (var vv in ctmp)
+            {
+                vv.ReInit(ServiceLocator.Locator.Resolve<IHisEngine2>().CurrentMemory);
             }
         }
 
@@ -165,6 +195,8 @@ namespace Cdy.Tag
             resetEvent.Set();
         }
 
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -180,6 +212,19 @@ namespace Cdy.Tag
             }
             return false;
         }
+
+        /// <summary>
+        /// 等待空闲
+        /// </summary>
+        public void WaitForReady()
+        {
+            while (CheckIsBusy())
+            {
+                Thread.Sleep(10);
+            }
+        }
+
+
 
         /// <summary>
         /// 
@@ -216,7 +261,8 @@ namespace Cdy.Tag
                         mm.Value.Compress(sm);
                     });
 
-                    ServiceLocator.Locator.Resolve<IHisEngine2>().ClearMemoryHisData(sm);
+                    sm.Clear();
+                  //  ServiceLocator.Locator.Resolve<IHisEngine2>().ClearMemoryHisData(sm);
                     sm.MakeMemoryNoBusy();
 
                     ServiceLocator.Locator.Resolve<IDataSerialize2>().RequestToSave();

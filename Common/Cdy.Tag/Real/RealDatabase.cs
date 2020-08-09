@@ -68,9 +68,9 @@ namespace Cdy.Tag
             NamedTags.Clear();
             foreach(var vv in Tags)
             {
-                if(!NamedTags.ContainsKey(vv.Value.Name))
+                if(!NamedTags.ContainsKey(vv.Value.FullName))
                 {
-                    NamedTags.Add(vv.Value.Name, vv.Value);
+                    NamedTags.Add(vv.Value.FullName, vv.Value);
                 }
             }
         }

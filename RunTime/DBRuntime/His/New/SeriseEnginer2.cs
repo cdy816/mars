@@ -649,7 +649,7 @@ namespace Cdy.Tag
 
             if (mBlockPointMemory != null) mBlockPointMemory.Dispose();
 
-            mBlockPointMemory = new MemoryBlock(tags.Count() * 8,1024*1024);
+            mBlockPointMemory = new MemoryBlock(tags.Count() * 8, 4 * 1024 * 1024);
             mBlockPointMemory.Clear();
 
             LoggerService.Service.Info("SeriseEnginer", "Cal BlockPointMemory memory size:" + (mBlockPointMemory.AllocSize) / 1024.0 / 1024 + "M", ConsoleColor.Cyan);

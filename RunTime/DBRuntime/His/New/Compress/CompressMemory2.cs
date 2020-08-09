@@ -226,7 +226,7 @@ namespace Cdy.Tag
 
                 //更新指针区域
                 this.WriteInt(0, (int)datasize);
-                this.Write((int)source.TagAddress.Count);
+                this.Write((int)mTagIds.Count);
 
                 long ltmp2 = sw.ElapsedMilliseconds;
 

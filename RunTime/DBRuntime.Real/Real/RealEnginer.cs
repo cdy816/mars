@@ -12,6 +12,7 @@ using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
 using Cdy.Tag.Driver;
+using System.Threading;
 
 namespace Cdy.Tag
 {
@@ -33,8 +34,6 @@ namespace Cdy.Tag
         /// </summary>
         private RealDatabase mConfigDatabase =null;
 
-
-
         /// <summary>
         /// 
         /// </summary>
@@ -45,11 +44,13 @@ namespace Cdy.Tag
         /// </summary>
         private long mUsedSize = 0;
 
+
         /// <summary>
         /// 
         /// </summary>
         private void* mMHandle;
 
+        private ManualResetEvent mLockEvent;
 
         #endregion ...Variables...
 
@@ -64,14 +65,14 @@ namespace Cdy.Tag
         /// </summary>
         public RealEnginer()
         {
-
+            mLockEvent = new ManualResetEvent(true);
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="database"></param>
-        public RealEnginer(RealDatabase database)
+        public RealEnginer(RealDatabase database):this()
         {
             this.mConfigDatabase = database;
         }
@@ -107,15 +108,6 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="database"></param>
-        public void UpdateDatabase(RealDatabase database)
-        {
-            this.mConfigDatabase = database;
-            Init();
-        }
 
         /// <summary>
         /// 
@@ -171,12 +163,13 @@ namespace Cdy.Tag
                 }
             }
             //留20%的余量
-            mUsedSize = (msize);
-            mMemory = new byte[mUsedSize];
+            mUsedSize = msize;
+            var fsize = ((long)(msize * 1.5 / 1024) + 1) * 1024;
+            mMemory = new byte[fsize];
             mMHandle = mMemory.AsMemory().Pin().Pointer;
             mMemory.AsSpan().Clear();
 
-            LoggerService.Service.Info("RealEnginer","Cal memory size:"+ mUsedSize/1024.0/1024+"M",ConsoleColor.Cyan);
+            LoggerService.Service.Info("RealEnginer","Cal memory size:"+ fsize / 1024.0/1024+"M",ConsoleColor.Cyan);
 
             foreach (var vv in mConfigDatabase.Tags)
             {
@@ -222,7 +215,98 @@ namespace Cdy.Tag
 
         }
 
-        
+        /// <summary>
+        /// 加载使能新的变量
+        /// </summary>
+        /// <param name="tags"></param>
+        /// <param name="mNewDb"></param>
+        public void ReLoadTags(IEnumerable<Tag.Tagbase> tags,RealDatabase mNewDb)
+        {
+            long msize = 0;
+            foreach (var vv in tags)
+            {
+                vv.ValueAddress = mUsedSize + msize;
+                mIdAndAddr.Add(vv.Id, vv.ValueAddress);
+                switch (vv.Type)
+                {
+                    case TagType.Bool:
+                    case TagType.Byte:
+                        msize += 10;
+                        break;
+                    case TagType.Short:
+                    case TagType.UShort:
+                        msize += 11;
+                        break;
+                    case TagType.Int:
+                    case TagType.UInt:
+                    case TagType.Float:
+                        msize += 13;
+                        break;
+                    case TagType.Long:
+                    case TagType.ULong:
+                    case TagType.Double:
+                        msize += 17;
+                        break;
+                    case TagType.IntPoint:
+                    case TagType.UIntPoint:
+                        msize += 17;
+                        break;
+                    case TagType.IntPoint3:
+                    case TagType.UIntPoint3:
+                        msize += 21;
+                        break;
+                    case TagType.LongPoint:
+                    case TagType.ULongPoint:
+                        msize += 25;
+                        break;
+                    case TagType.LongPoint3:
+                    case TagType.ULongPoint3:
+                        msize += 33;
+                        break;
+                    case TagType.String:
+                        msize += (Const.StringSize + 9);
+                        break;
+                }
+            }
+            var fsize = mUsedSize + msize;
+            if ((mUsedSize + msize) > mMemory.Length)
+            {
+                var men = new byte[fsize];
+                var hmen = mMemory.AsMemory().Pin().Pointer;
+                men.AsSpan().Clear();
+                Array.Copy(mMemory, men,mMemory.Length);
+
+                mMemory = men;
+                mMHandle = hmen;
+            }
+            mUsedSize = fsize;
+
+            mConfigDatabase = mNewDb;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Lock()
+        {
+            mLockEvent.Reset();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void UnLock()
+        {
+            mLockEvent.Set();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void Take()
+        {
+            mLockEvent.WaitOne();
+        }
 
         /// <summary>
         /// 
@@ -2755,6 +2839,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public void SetBoolTagValue(Tagbase tag,object value,byte qulity,DateTime time)
         {
+            Take();
             bool btmp = false;
             if(tag.Conveter!=null)
             {
@@ -2777,6 +2862,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public void SetByteTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             var vtag = tag as NumberTagBase;
             
             byte btmp = 0;
@@ -2805,6 +2891,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public void SetShortTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             var vtag = tag as NumberTagBase;
 
             short btmp = 0;
@@ -2833,6 +2920,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public void SetUShortTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             var vtag = tag as NumberTagBase;
 
             ushort btmp = 0;
@@ -2855,6 +2943,7 @@ namespace Cdy.Tag
 
         public void SetIntTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             var vtag = tag as NumberTagBase;
 
             int btmp = 0;
@@ -2876,6 +2965,7 @@ namespace Cdy.Tag
 
         public void SetUIntTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             var vtag = tag as NumberTagBase;
 
             uint btmp = 0;
@@ -2898,6 +2988,7 @@ namespace Cdy.Tag
 
         public void SetLongTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             var vtag = tag as NumberTagBase;
 
             long btmp = 0;
@@ -2920,6 +3011,7 @@ namespace Cdy.Tag
 
         public void SetULongTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             var vtag = tag as NumberTagBase;
 
             ulong btmp = 0;
@@ -2942,6 +3034,7 @@ namespace Cdy.Tag
 
         public void SetDoubleTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             var vtag = tag as FloatingTagBase;
 
             double btmp = 0;
@@ -2964,6 +3057,7 @@ namespace Cdy.Tag
 
         public void SetFloatTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             var vtag = tag as FloatingTagBase;
 
             float btmp = 0;
@@ -2986,6 +3080,7 @@ namespace Cdy.Tag
 
         public void SetSrtingTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             string btmp = "";
             if (tag.Conveter != null)
             {
@@ -3008,6 +3103,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public void SetDateTimeTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             DateTime btmp;
             if (tag.Conveter != null)
             {
@@ -3030,6 +3126,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public void SetIntPointTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             IntPointData btmp;
             if (tag.Conveter != null)
             {
@@ -3053,6 +3150,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetTagByGroup(string group, params object[] values)
         {
+            Take();
             var vatg = mConfigDatabase.GetTagsByGroup(group);
             DateTime time = DateTime.Now;
             for(int i=0;i<values.Length;i++)
@@ -3111,6 +3209,7 @@ namespace Cdy.Tag
         {
             try
             {
+                Take();
                 var tag = mConfigDatabase.Tags[id];
                
                 SetTagValue(tag,value);
@@ -3135,6 +3234,7 @@ namespace Cdy.Tag
         {
             try
             {
+                Take();
                 var tag = mConfigDatabase.Tags[id];
 
                 SetTagValue(tag, value,  time,  quality);
@@ -3150,7 +3250,7 @@ namespace Cdy.Tag
         {
             try
             {
-               
+                Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
 
                 switch (tag.Type)
@@ -3210,6 +3310,7 @@ namespace Cdy.Tag
         {
             try
             {
+                Take();
                 var tag = mConfigDatabase.Tags[id];
                 DateTime time = DateTime.Now;
                 switch (mConfigDatabase.Tags[id].Type)
@@ -3269,7 +3370,8 @@ namespace Cdy.Tag
         public bool SetTagValue(Tagbase tag, object value)
         {
             try
-            {                
+            {
+                Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
                 DateTime time = DateTime.Now;
                 switch (tag.Type)
@@ -3327,6 +3429,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetTagValue(List<Tagbase> ids, object value)
         {
+            Take();
             bool re = true;
             foreach (var vv in ids)
             {
@@ -3343,6 +3446,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetTagValue(List<int> ids, object value)
         {
+            Take();
             bool re = true;
             //Parallel.ForEach(ids, (vv) =>
             foreach (var vv in ids)
@@ -3362,6 +3466,7 @@ namespace Cdy.Tag
         public bool SetPointValue(List<int> ids, params object[] values)
         {
             bool re = true;
+            Take();
             //Parallel.ForEach(ids, (vv) =>
             foreach (var vv in ids)
             {
@@ -3391,6 +3496,7 @@ namespace Cdy.Tag
         public bool SetPointValue(List<Tagbase> tags, params object[] values)
         {
             bool re = true;
+            Take();
             //Parallel.ForEach(ids, (vv) =>
             foreach (var vv in tags)
             {
@@ -3448,6 +3554,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public object GetTagValueForProductor(int id)
         {
+            Take();
             var tag = mConfigDatabase.Tags[id];
             object re=null;
             switch (tag.Type)
@@ -3598,7 +3705,7 @@ namespace Cdy.Tag
         {
             try
             {
-                
+                Take();
                 switch (tag.Type)
                 {
                     case TagType.Bool:
@@ -3656,7 +3763,7 @@ namespace Cdy.Tag
         {
             try
             {
-
+                Take();
                 switch (tag.Type)
                 {
                     case TagType.Bool:
@@ -3710,6 +3817,7 @@ namespace Cdy.Tag
 
         public object GetTagValue(int id)
         {
+            Take();
             var tag = mConfigDatabase.GetTagById(id);
             object re = null;
             if (tag == null) return re;
@@ -3767,6 +3875,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public object GetTagValue(int id, out byte quality, out DateTime time, out byte valueType)
         {
+            Take();
             var tag = mConfigDatabase.GetTagById(id);
             if (tag == null)
             {
@@ -3790,6 +3899,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public object GetTagValue(string name, out byte quality, out DateTime time, out byte valueType)
         {
+            Take();
             var tag = mConfigDatabase.GetTagByName(name);
             if (tag != null)
             {
@@ -3813,6 +3923,7 @@ namespace Cdy.Tag
         {
             try
             {
+                Take();
                 var tag = mConfigDatabase.Tags[id];
                 DateTime time = DateTime.Now;
                 switch (tag.Type)
@@ -3894,6 +4005,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetTagValueForConsumer(string name, object value)
         {
+            Take();
             var tag = mConfigDatabase.GetTagIdByName(name);
             if (tag != null)
             {
@@ -3914,6 +4026,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetBoolTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             bool btmp = Convert.ToBoolean(value);
             SetValueByAddr(tag.ValueAddress, btmp ? (byte)1 : (byte)0, qulity, time);
@@ -3934,6 +4047,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetByteTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as NumberTagBase;
 
@@ -3958,6 +4072,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetShortTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as NumberTagBase;
 
@@ -3981,6 +4096,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetUShortTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as NumberTagBase;
 
@@ -4004,6 +4120,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetIntTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as NumberTagBase;
 
@@ -4021,6 +4138,7 @@ namespace Cdy.Tag
 
         public bool SetUIntTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as NumberTagBase;
 
@@ -4038,6 +4156,7 @@ namespace Cdy.Tag
 
         public bool SetLongTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as NumberTagBase;
 
@@ -4057,6 +4176,7 @@ namespace Cdy.Tag
 
         public bool SetULongTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as NumberTagBase;
             if (vtag == null) return false;
@@ -4084,6 +4204,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetDoubleTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as FloatingTagBase;
             if (vtag == null) return false;
@@ -4111,6 +4232,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetFloatTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             var vtag = tag as FloatingTagBase;
             if (vtag == null) return false;
@@ -4130,6 +4252,7 @@ namespace Cdy.Tag
 
         public bool SetSrtingTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             string btmp = Convert.ToString(value);
             SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
@@ -4150,6 +4273,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetDateTimeTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             DateTime btmp = Convert.ToDateTime(value);
             SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
@@ -4171,6 +4295,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public bool SetIntPointTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             IntPointData btmp = (IntPointData)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
@@ -4192,6 +4317,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetUIntPointTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             UIntPointData btmp = (UIntPointData)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
@@ -4205,6 +4331,7 @@ namespace Cdy.Tag
 
         public bool SetUIntPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             UIntPoint3Data btmp = (UIntPoint3Data)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
@@ -4219,6 +4346,7 @@ namespace Cdy.Tag
 
         public bool SetIntPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             IntPoint3Data btmp = (IntPoint3Data)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
@@ -4233,6 +4361,7 @@ namespace Cdy.Tag
 
         public bool SetLongPointTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             LongPointData btmp = (LongPointData)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
@@ -4246,6 +4375,7 @@ namespace Cdy.Tag
 
         public bool SetULongPointTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             ULongPointData btmp = (ULongPointData)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
@@ -4260,6 +4390,7 @@ namespace Cdy.Tag
 
         public bool SetLongPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             LongPoint3Data btmp = (LongPoint3Data)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
@@ -4273,6 +4404,7 @@ namespace Cdy.Tag
 
         public bool SetULongPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
+            Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             ULongPoint3Data btmp = (ULongPoint3Data)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);

@@ -350,7 +350,7 @@ namespace Cdy.Tag
                     mAllocSize = size;
                     //GC.Collect();
 
-                    LoggerService.Service.Info("CheckAndResize", "CheckAndResize " + this.Name + " " + size, ConsoleColor.Red);
+                    LoggerService.Service.Info("MemoryBlock", "CheckAndResize " + this.Name + " " + size, ConsoleColor.Red);
                 }
                 else
                 {

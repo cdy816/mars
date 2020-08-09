@@ -264,6 +264,7 @@ namespace Cdy.Tag
             Stopwatch sw = new Stopwatch();
             sw.Start();
             string fileName = GetLogFilePath(mStartTime,mEndTime);
+            LoggerService.Service.Info("LogManager", "开始记日志录文件：" + fileName);
             using (var stream = System.IO.File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
             {
                 stream.Write(BitConverter.GetBytes(TimeLen));

@@ -9,6 +9,8 @@
 using Cdy.Tag.Driver;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -132,12 +134,73 @@ namespace Cdy.Tag
         /// </summary>
         private void LoadDatabase()
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             this.mDatabase = new DatabaseSerise().Load(mDatabaseName);
             this.mRealDatabase = this.mDatabase.RealDatabase;
             this.mHisDatabase = this.mDatabase.HisDatabase;
             CurrentDatabaseVersion = this.mRealDatabase.Version;
             CurrentDatabase = mRealDatabase.Name;
             CurrentDatabaseLastUpdateTime = mRealDatabase.UpdateTime;
+            sw.Stop();
+            LoggerService.Service.Info("LoadDatabase", "load " +mDatabaseName +" take " + sw.ElapsedMilliseconds.ToString() +" ms");
+        }
+
+        /// <summary>
+        /// 重新加载数据库
+        /// </summary>
+        public void ReStartDatabase()
+        {
+
+            LoggerService.Service.Info("ReStartDatabase", "start to restart database.",ConsoleColor.DarkYellow);
+
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
+            var db = new DatabaseSerise().Load(mDatabaseName);
+            List<Tagbase> ltmp = new List<Tagbase>();
+            List<HisTag> htmp = new List<HisTag>();
+            foreach(var vv in db.RealDatabase.Tags.Where(e=>this.mRealDatabase.Tags.ContainsKey(e.Key)))
+            {
+                ltmp.Add(vv.Value);
+            }
+
+            foreach(var vv in ltmp)
+            {
+                if(db.HisDatabase.HisTags.ContainsKey(vv.Id))
+                {
+                    htmp.Add(db.HisDatabase.HisTags[vv.Id]);
+                }
+            }
+
+            LoggerService.Service.Info("ReStartDatabase", "reload " + mDatabaseName + " take " + sw.ElapsedMilliseconds.ToString() + " ms");
+            compressEnginer.WaitForReady();
+
+            sw.Reset();
+            sw.Start();
+            hisEnginer.Pause();
+            
+            realEnginer.Lock();
+            realEnginer.ReLoadTags(ltmp,db.RealDatabase);
+            realEnginer.UnLock();
+
+            hisEnginer.ReLoadTags(htmp, db.HisDatabase);
+            compressEnginer.ReSizeTagCompress(htmp);
+
+            hisEnginer.Resume();
+
+            this.mDatabase = db;
+            this.mRealDatabase = db.RealDatabase;
+            this.mHisDatabase = db.HisDatabase;
+
+            CurrentDatabaseVersion = db.Version;
+            CurrentDatabase = db.Name;
+            CurrentDatabaseLastUpdateTime = mRealDatabase.UpdateTime;
+            sw.Stop();
+            LoggerService.Service.Info("ReStartDatabase", "ReInit" + mDatabaseName + " take " + sw.ElapsedMilliseconds.ToString() + " ms");
+
+
+            LoggerService.Service.Info("ReStartDatabase", "start to restart database finish.", ConsoleColor.DarkYellow);
         }
 
         /// <summary>

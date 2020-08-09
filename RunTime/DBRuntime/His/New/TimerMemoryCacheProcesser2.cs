@@ -52,6 +52,8 @@ namespace Cdy.Tag
 
         private int mBusyCount = 0;
 
+        private bool mIsStarted = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -87,6 +89,8 @@ namespace Cdy.Tag
         /// </summary>
         public int Id { get; set; }
 
+        public bool IsStarted { get { return mIsStarted; } }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -120,6 +124,7 @@ namespace Cdy.Tag
             mRecordThread = new Thread(ThreadProcess);
             mRecordThread.IsBackground=true;
             mRecordThread.Start();
+            mIsStarted = true;
         }
 
         /// <summary>
@@ -130,6 +135,7 @@ namespace Cdy.Tag
             mIsClosed = true;
             resetEvent.Set();
             closedEvent.WaitOne();
+            mIsStarted = false;
         }
 
         /// <summary>

@@ -81,8 +81,6 @@ namespace Cdy.Tag
                 db.Name = xe.Attribute("Name").Value;
                 db.Version = xe.Attribute("Version").Value;
 
-               
-
                 Dictionary<string, TagGroup> groups = new Dictionary<string, TagGroup>();
                 Dictionary<TagGroup, string> parents = new Dictionary<TagGroup, string>(); 
                 if(xe.Element("Groups")!=null)

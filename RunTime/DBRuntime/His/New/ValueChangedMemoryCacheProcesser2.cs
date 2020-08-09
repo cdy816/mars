@@ -48,6 +48,8 @@ namespace Cdy.Tag
 
         private Thread mRecordThread;
 
+        private bool mIsStarted = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -90,6 +92,11 @@ namespace Cdy.Tag
 
         private int mLastUpdateSecond = -1;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsStarted { get { return mIsStarted; } }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -130,6 +137,8 @@ namespace Cdy.Tag
             mRecordThread = new Thread(ThreadProcess);
             mRecordThread.IsBackground=true;
             mRecordThread.Start();
+
+            mIsStarted = true;
         }
 
         /// <summary>
@@ -141,7 +150,7 @@ namespace Cdy.Tag
             resetEvent.Set();
             closedEvent.WaitOne();
             Clear();
-
+            mIsStarted = false;
             ServiceLocator.Locator.Resolve<IRealDataNotify>().UnSubscribeValueChangedForConsumer(this.Name);
         }
 

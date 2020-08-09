@@ -1610,6 +1610,21 @@ namespace Cdy.Tag
            // stream.Flush();
         }
 
+        public static void RecordToLog2(this MarshalFixedMemoryBlock memory, Stream stream)
+        {
+            int ltmp = (int)memory.AllocSize;
+            var source = memory.Handles;
+
+            var bvals = ArrayPool<byte>.Shared.Rent(ltmp);
+            while (ltmp > 0)
+            {
+                int ctmp = Math.Min(bvals.Length, ltmp);
+                Marshal.Copy(source, bvals, 0, ctmp);
+                stream.Write(bvals, 0, ctmp);
+            }
+            ArrayPool<byte>.Shared.Return(bvals);
+        }
+
         /// <summary>
         /// 
         /// </summary>

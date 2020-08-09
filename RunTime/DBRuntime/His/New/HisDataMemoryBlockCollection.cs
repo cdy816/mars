@@ -26,7 +26,7 @@ namespace DBRuntime.His
 
         #region ... Variables  ...
 
-        private SortedDictionary<int, HisDataMemoryBlock> mTagAddress = new SortedDictionary<int, HisDataMemoryBlock>();
+        private Dictionary<int, HisDataMemoryBlock> mTagAddress = new Dictionary<int, HisDataMemoryBlock>();
 
         private int mRefCount = 0;
 
@@ -58,7 +58,7 @@ namespace DBRuntime.His
         /// 变量内存地址缓存
         /// Tuple 每项的含义：起始地址,值地址偏移,质量地址偏移,数据大小
         /// </summary>
-        public SortedDictionary<int, HisDataMemoryBlock> TagAddress
+        public Dictionary<int, HisDataMemoryBlock> TagAddress
         {
             get
             {
@@ -88,7 +88,8 @@ namespace DBRuntime.His
         /// </summary>
         public void IncRef()
         {
-            Interlocked.Increment(ref mRefCount);
+            lock (mUserSizeLock)
+                mRefCount++;
         }
 
         /// <summary>
@@ -116,9 +117,9 @@ namespace DBRuntime.His
         /// <param name=""></param>
         public void AddTagAddress(int id,HisDataMemoryBlock block)
         {
-            if(!TagAddress.ContainsKey(id))
+            if(!mTagAddress.ContainsKey(id))
             {
-                TagAddress.Add(id, block);
+                mTagAddress.Add(id, block);
             }
         }
 
@@ -128,9 +129,9 @@ namespace DBRuntime.His
         /// <param name="id"></param>
         public void RemoveTagAdress(int id)
         {
-            if(TagAddress.ContainsKey(id))
+            if(mTagAddress.ContainsKey(id))
             {
-                TagAddress.Remove(id);
+                mTagAddress.Remove(id);
             }
         }
 
@@ -139,6 +140,7 @@ namespace DBRuntime.His
         /// </summary>
         public void Clear()
         {
+            if (TagAddress == null) return;
             foreach(var vv in TagAddress)
             {
                 vv.Value.Clear();
@@ -150,6 +152,7 @@ namespace DBRuntime.His
         /// </summary>
         public void Dispose()
         {
+            while (this.IsBusy()) Thread.Sleep(1);
             foreach (var vv in mTagAddress)
                 vv.Value.Dispose();
             mTagAddress.Clear();
@@ -176,7 +179,7 @@ namespace DBRuntime.His
         {
             foreach(var vv in memory.TagAddress)
             {
-                vv.Value.RecordToLog(stream);
+                vv.Value.RecordToLog2(stream);
             }
         }
 

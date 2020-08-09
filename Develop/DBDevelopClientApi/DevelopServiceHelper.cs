@@ -85,6 +85,62 @@ namespace DBDevelopClientApi
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public bool StartDatabase(string database)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.Start(new DBDevelopService.DatabasesRequest() { Database = database, LoginId = mLoginId }).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public bool StopDatabase(string database)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.Stop(new DBDevelopService.DatabasesRequest() { Database = database, LoginId = mLoginId }).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public bool ReRunDatabase(string database)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.ReRun(new DBDevelopService.DatabasesRequest() { Database = database, LoginId = mLoginId }).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public bool IsDatabaseRunning(string database)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.IsDatabaseRunning(new DBDevelopService.DatabasesRequest() { Database = database, LoginId = mLoginId }).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// 放弃更改
         /// </summary>
         /// <param name="database"></param>

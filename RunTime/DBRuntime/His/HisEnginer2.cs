@@ -458,6 +458,7 @@ namespace Cdy.Tag
 
             foreach (var vv in mValueChangedProcesser) { if (!vv.IsStarted) vv.Start(); }
 
+            mLogManager.InitHeadData();
 
 
             mRecordTimer.Start();

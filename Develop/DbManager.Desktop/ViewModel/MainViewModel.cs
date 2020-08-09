@@ -21,6 +21,7 @@ using Microsoft.Win32;
 using System.IO;
 using Cdy.Tag;
 using System.Diagnostics;
+using System.Timers;
 
 namespace DBInStudio.Desktop
 {
@@ -34,6 +35,12 @@ namespace DBInStudio.Desktop
         private string mDatabase = string.Empty;
 
         private ICommand mSaveCommand;
+
+        private ICommand mStartCommand;
+
+        private ICommand mStopCommand;
+
+        private ICommand mReRunCommand;
 
         private ICommand mLogoutCommand;
 
@@ -68,6 +75,10 @@ namespace DBInStudio.Desktop
 
         private bool mIsLogin;
 
+        private bool mIsDatabaseRunning;
+
+        private System.Timers.Timer mCheckRunningTimer;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -75,6 +86,7 @@ namespace DBInStudio.Desktop
         #endregion ...Events...
 
         #region ... Constructor...
+
         /// <summary>
         /// 
         /// </summary>
@@ -82,13 +94,86 @@ namespace DBInStudio.Desktop
         {
             ServiceLocator.Locator.Registor<IProcessNotify>(this);
             CurrentUserManager.Manager.RefreshNameEvent += Manager_RefreshNameEvent;
+            mCheckRunningTimer = new System.Timers.Timer(1000);
+            mCheckRunningTimer.Elapsed += MCheckRunningTimer_Elapsed;
         }
 
-
-
+        
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsDatabaseRunning
+        {
+            get
+            {
+                return mIsDatabaseRunning;
+            }
+            set
+            {
+                if (mIsDatabaseRunning != value)
+                {
+                    mIsDatabaseRunning = value;
+                    OnPropertyChanged("IsDatabaseRunning");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand ReRunCommand
+        {
+            get
+            {
+                if(mReRunCommand==null)
+                {
+                    mReRunCommand = new RelayCommand(() => {
+                        DevelopServiceHelper.Helper.ReRunDatabase(mDatabase);
+                    },()=> { return !string.IsNullOrEmpty(mDatabase); });
+                }
+                return mReRunCommand;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand StartCommand
+        {
+            get
+            {
+                if (mStartCommand == null)
+                {
+                    mStartCommand = new RelayCommand(() => {
+                      IsDatabaseRunning =  DevelopServiceHelper.Helper.StartDatabase(mDatabase);
+                    }, () => { return !mIsDatabaseRunning&& !string.IsNullOrEmpty(mDatabase); });
+                }
+                return mStartCommand;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand StopCommand
+        {
+            get
+            {
+                if(mStopCommand==null)
+                {
+                    mStopCommand = new RelayCommand(() => {
+                        IsDatabaseRunning = !DevelopServiceHelper.Helper.StopDatabase(mDatabase);
+                    },()=> { return mIsDatabaseRunning&& !string.IsNullOrEmpty(mDatabase); });
+                }
+                return mStopCommand;
+            }
+        }
+
+
 
         /// <summary>
         /// 
@@ -452,6 +537,22 @@ namespace DBInStudio.Desktop
 
         #region ... Methods    ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MCheckRunningTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(mDatabase))
+            {
+                var isrunning = DevelopServiceHelper.Helper.IsDatabaseRunning(mDatabase);
+                Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                    IsDatabaseRunning = isrunning;
+                }), null);
+            }
+        }
+
         private void NewDatabase()
         {
             NewDatabaseViewModel ndm = new NewDatabaseViewModel();
@@ -661,6 +762,8 @@ namespace DBInStudio.Desktop
                         TagViewModel.Drivers = DevelopServiceHelper.Helper.GetRegistorDrivers(mDatabase);
                         QueryGroups();
                     });
+
+                    IsDatabaseRunning = DevelopServiceHelper.Helper.IsDatabaseRunning(mDatabase);
                 }
             }
         }
@@ -678,10 +781,26 @@ namespace DBInStudio.Desktop
         /// <summary>
         /// 
         /// </summary>
+        private void StartCheckDatabaseRunning()
+        {
+            mCheckRunningTimer.Start();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void StopCheckDatabaseRunning()
+        {
+            mCheckRunningTimer.Stop();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private void Logout()
         {
             IsLogin = false;
-            foreach(var vv in this.TagGroup)
+            foreach (var vv in this.TagGroup)
             {
                 vv.Dispose();
             }
@@ -691,8 +810,9 @@ namespace DBInStudio.Desktop
             if (ContentViewModel != null)
                 ContentViewModel.Dispose();
 
-           ContentViewModel = null;
-             Database = string.Empty;
+            ContentViewModel = null;
+            Database = string.Empty;
+            StopCheckDatabaseRunning();
         }
 
         /// <summary>
@@ -735,76 +855,11 @@ namespace DBInStudio.Desktop
                         TagViewModel.Drivers = DevelopServiceHelper.Helper.GetRegistorDrivers(mDatabase);
                         QueryGroups();
                     });
+
+                    StartCheckDatabaseRunning();
                 }
             }
         }
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="parent"></param>
-        ///// <returns></returns>
-        //public bool AddGroup(string parent)
-        //{
-        //    string chileName = GetNewGroupName();
-        //    chileName = DevelopServiceHelper.Helper.AddTagGroup(mDatabase, chileName, parent);
-        //    if (!string.IsNullOrEmpty(chileName))
-        //    {
-        //        if (mCurrentSelectTreeItem != null && mCurrentSelectTreeItem is TagGroupViewModel)
-        //        {
-        //            (mCurrentSelectTreeItem as TagGroupViewModel).Children.Add(new TagGroupViewModel() { mName = chileName, Parent = (mCurrentSelectTreeItem as TagGroupViewModel), Database = this.mDatabase });
-        //        }
-        //        else
-        //        {
-        //            this.TagGroup.Add(new TagGroupViewModel() { mName = chileName, Database = this.mDatabase });
-        //        }
-        //    }
-        //    return false;
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //private void NewGroup()
-        //{
-        //    string sparent = mCurrentSelectTreeItem!=null && mCurrentSelectTreeItem is TagGroupViewModel? (mCurrentSelectTreeItem as TagGroupViewModel).FullName:string.Empty;
-        //    AddGroup(sparent);
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <returns></returns>
-        //private string GetNewGroupName()
-        //{
-        //    List<string> vtmps = mCurrentSelectTreeItem!=null && mCurrentSelectTreeItem is TagGroupViewModel? (mCurrentSelectTreeItem as TagGroupViewModel).Children.Select(e => e.Name).ToList():TagGroup.Select(e=>e.Name).ToList();
-        //    string tagName = "group";
-        //    for (int i = 1; i < int.MaxValue; i++)
-        //    {
-        //        tagName = "group" + i;
-        //        if (!vtmps.Contains(tagName))
-        //        {
-        //            return tagName;
-        //        }
-        //    }
-        //    return tagName;
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //private void RemoveGroup()
-        //{
-        //    string sname = (mCurrentSelectTreeItem as TagGroupViewModel).FullName;
-        //    if(DevelopServiceHelper.Helper.RemoveGroup(mDatabase,sname))
-        //    {
-        //        if((mCurrentSelectTreeItem as TagGroupViewModel).Parent!=null)
-        //        {
-        //            (mCurrentSelectTreeItem as TagGroupViewModel).Parent.Children.Remove((mCurrentSelectTreeItem as TagGroupViewModel));
-        //            (mCurrentSelectTreeItem as TagGroupViewModel).Parent = null;
-        //        }
-        //    }
-        //}
 
         /// <summary>
         /// 

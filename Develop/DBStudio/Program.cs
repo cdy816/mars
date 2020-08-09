@@ -8,14 +8,20 @@ using System.Diagnostics;
 using System.IO.Pipes;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using System.Net.Http.Headers;
 
 namespace DBStudio
 {
-    class Program
+    class Program:DBDevelopService.IDatabaseManager
     {
         static bool mIsExited = false;
         static void Main(string[] args)
         {
+
+            Program pg = new Program();
+
+            ServiceLocator.Locator.Registor(typeof(DBDevelopService.IDatabaseManager), pg);
+
             int port = 5001;
             int webPort = 9000;
             if (args.Length > 0)
@@ -235,13 +241,24 @@ namespace DBStudio
                             Console.WriteLine("database " + db.Name + " is in running.");
                         }
                     }
+                    else if (cmsg == "rerun")
+                    {
+                        if (!CheckStart(db.Name))
+                        {
+                            StartDb(db.Name);
+                        }
+                        else
+                        {
+                            ReLoadDabtabase(db.Name);
+                        }
+                    }
                     else if (cmsg == "restart")
                     {
                         StopDatabase(db.Name);
                         while (CheckStart(db.Name)) Thread.Sleep(100);
                         StartDb(db.Name);
                     }
-                    else if (cmsg == "isstart")
+                    else if (cmsg == "isstarted")
                     {
                         if(CheckStart(db.Name))
                         {
@@ -310,13 +327,21 @@ namespace DBStudio
         /// 
         /// </summary>
         /// <param name="name"></param>
-        private static void StartDb(string name)
+        private static bool StartDb(string name)
         {
-            var info = new ProcessStartInfo() { FileName = "DbInRun.exe" };
-            info.UseShellExecute = true;
-            info.Arguments = "start "+name;
-            info.WorkingDirectory = System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location);
-            Process.Start(info);
+            try
+            {
+                var info = new ProcessStartInfo() { FileName = "DbInRun.exe" };
+                info.UseShellExecute = true;
+                info.Arguments = "start " + name;
+                info.WorkingDirectory = System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location);
+                Process.Start(info).WaitForExit(1000);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return false;
         }
 
         /// <summary>
@@ -1195,7 +1220,11 @@ namespace DBStudio
             return re.ToString();
         }
 
-        public static void StopDatabase(string name)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        public static bool StopDatabase(string name)
         {
             using (var client = new NamedPipeClientStream(".", name, PipeDirection.InOut))
             {
@@ -1207,16 +1236,52 @@ namespace DBStudio
                     var res = client.ReadByte();
                     if (res == 1)
                     {
-                        Console.WriteLine("Stop database" + name + " sucessfull.");
+                        Console.WriteLine("Stop database " + name + " sucessfull.");
                     }
+                    return true;
                 }
                 catch
                 {
                     Console.WriteLine("Stop database " + name + "  failed.");
                 }
+                return false;
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        public static bool ReLoadDabtabase(string name)
+        {
+            using (var client = new NamedPipeClientStream(".", name, PipeDirection.InOut))
+            {
+                try
+                {
+                    client.Connect(2000);
+                    client.WriteByte(1);
+                    client.WaitForPipeDrain();
+                    var res = client.ReadByte();
+                    if (res == 1)
+                    {
+                        Console.WriteLine("Rerun database" + name + " sucessfull.");
+                    }
+                    return true;
+
+                }
+                catch
+                {
+                    Console.WriteLine("Rerun database " + name + "  failed.");
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public static bool CheckStart(string name)
         {
             using (var client = new NamedPipeClientStream(".", name, PipeDirection.InOut))
@@ -1233,8 +1298,60 @@ namespace DBStudio
                 }
             }
         }
-    
-       
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        public bool Start(string name)
+        {
+            if (!CheckStart(name))
+            {
+              return  StartDb(name);
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool Stop(string name)
+        {
+            //if (CheckStart(name))
+            {
+               return StopDatabase(name);
+            }
+            //return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool Rerun(string name)
+        {
+            if (!CheckStart(name))
+            {
+              return  StartDb(name);
+            }
+            else
+            {
+               return ReLoadDabtabase(name);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool IsRunning(string name)
+        {
+            return CheckStart(name);
+        }
     }
 }
 

@@ -10,6 +10,7 @@ using System.Net.WebSockets;
 using Microsoft.AspNetCore.Http;
 using System.Threading;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 
 namespace DBDevelopService
 {
@@ -99,6 +100,11 @@ namespace DBDevelopService
         /// <returns></returns>
         public static IHostBuilder CreateHostBuilder(string serverUrl) =>
            Host.CreateDefaultBuilder()
+                .ConfigureLogging(logging =>
+                {
+                    logging.AddFilter("Grpc", LogLevel.Warning);
+                    logging.SetMinimumLevel(LogLevel.Warning);
+                })
                .ConfigureWebHostDefaults(webBuilder =>
                {
                    webBuilder.UseStartup<Startup>();

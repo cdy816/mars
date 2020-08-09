@@ -299,6 +299,9 @@
   <data name="ReplaceAll" xml:space="preserve">
     <value>Replace all</value>
   </data>
+  <data name="ReRun" xml:space="preserve">
+    <value>ReRun</value>
+  </data>
   <data name="Save" xml:space="preserve">
     <value>Save</value>
   </data>
@@ -335,6 +338,12 @@
   </data>
   <data name="SlopeCompress" xml:space="preserve">
     <value>Slope</value>
+  </data>
+  <data name="Start" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="Stop" xml:space="preserve">
+    <value>Stop</value>
   </data>
   <data name="Switch" xml:space="preserve">
     <value>Switch</value>

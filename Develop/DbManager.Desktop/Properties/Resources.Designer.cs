@@ -601,6 +601,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 ReRun 的本地化字符串。
+        /// </summary>
+        internal static string ReRun {
+            get {
+                return ResourceManager.GetString("ReRun", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Save 的本地化字符串。
         /// </summary>
         internal static string Save {
@@ -705,6 +714,24 @@ namespace DBInStudio.Desktop.Properties {
         internal static string SlopeCompress {
             get {
                 return ResourceManager.GetString("SlopeCompress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Start 的本地化字符串。
+        /// </summary>
+        internal static string Start {
+            get {
+                return ResourceManager.GetString("Start", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Stop 的本地化字符串。
+        /// </summary>
+        internal static string Stop {
+            get {
+                return ResourceManager.GetString("Stop", resourceCulture);
             }
         }
         

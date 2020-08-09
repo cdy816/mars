@@ -1,8 +1,10 @@
 ﻿using Cdy.Tag;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DBInRun
@@ -10,6 +12,9 @@ namespace DBInRun
     class Program
     {
         static bool mIsClosed = false;
+
+        static Thread mainThread;
+
         //static MarshalMemoryBlock block;
         static void Main(string[] args)
         {
@@ -22,6 +27,10 @@ namespace DBInRun
             PrintLogo();
             if (args.Length>0 && args[0]== "start")
             {
+                Task.Run(() => {
+                    StartMonitor(args.Length > 1 ? args[1] : "local");
+                });
+
                 if (args.Length > 1)
                 {
                     int port = 14330;
@@ -35,11 +44,9 @@ namespace DBInRun
                 {
                     Cdy.Tag.Runner.RunInstance.Start();
                 }
-                Task.Run(() => {
-                    StartMonitor(args.Length > 1 ? args[1] : "local");
-                });
-                
             }
+
+            mainThread = Thread.CurrentThread;
 
             Console.WriteLine(Res.Get("HelpMsg"));
             while (!mIsClosed)
@@ -160,9 +167,22 @@ namespace DBInRun
                                     mIsClosed = true;
                                     server.WriteByte(1);
                                     server.WaitForPipeDrain();
-                                    Console.WriteLine(Res.Get("AnyKeyToExit"));
+                                    Console.WriteLine(Res.Get("AnyKeyToExit")+".....");
+
+                                    //Task.Run(() => {
+                                    //    Thread.Sleep(5000);
+
+                                    //    System.Diagnostics.Process.GetCurrentProcess().Kill();
+                                    //});
+
                                     break;
                                     //退出系统
+                                }
+                                else if(cmd==1)
+                                {
+                                    Cdy.Tag.Runner.RunInstance.ReStartDatabase();
+                                    server.WriteByte(1);
+                                    server.WaitForPipeDrain();
                                 }
                                 else
                                 {

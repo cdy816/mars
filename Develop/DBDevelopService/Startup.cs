@@ -31,8 +31,15 @@ namespace DBDevelopService
                 app.UseDeveloperExceptionPage();
             }
 
-            //LoggerFactory.Create((builder) => { builder.AddConsole(); });
 
+            //var loggerFactory = LoggerFactory.Create(logging =>
+            //{
+            //    logging.ClearProviders();
+            //    logging.AddConsole();
+            //    logging.SetMinimumLevel(LogLevel.Warning);
+            //    logging.AddFilter("Grpc", LogLevel.Warning);
+            //});
+           
             app.UseRouting();
             
             app.UseEndpoints(endpoints =>

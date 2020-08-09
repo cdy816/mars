@@ -24,7 +24,7 @@ service DevelopServer {
   //修改当前用户密码
   rpc ModifyPassword(ModifyPasswordRequest) returns (BoolResultReplay);
 
-   rpc ReNameUser(ReNameUserRequest) returns (BoolResultReplay);
+  rpc ReNameUser(ReNameUserRequest) returns (BoolResultReplay);
 
   //修改用户信息
   rpc UpdateUser(UpdateUserRequest) returns (BoolResultReplay);
@@ -174,10 +174,15 @@ service DevelopServer {
    rpc Logout(LogoutRequest) returns (BoolResultReplay);
 
    //启动数据库
-   rpc Start(GetRequest) returns (BoolResultReplay);
+   rpc Start(DatabasesRequest) returns (BoolResultReplay);
 
    //停止数据库
-   rpc Stop(GetRequest) returns (BoolResultReplay);
+   rpc Stop(DatabasesRequest) returns (BoolResultReplay);
+
+   //在运行不中断的情况下加载数据库
+   rpc ReRun(DatabasesRequest) returns (BoolResultReplay);
+
+   rpc IsDatabaseRunning(DatabasesRequest) returns (BoolResultReplay);
 
 }
 
@@ -368,6 +373,13 @@ message NewDatabaseRequest
     string loginId =1;
     string Database=2;
     string Desc=3;
+}
+
+
+message DatabasesRequest
+{
+    string loginId=1;
+    string Database=2;
 }
 
 message QueryDatabaseRequest

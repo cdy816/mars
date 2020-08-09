@@ -681,6 +681,8 @@ namespace DBDevelopService
             {
                 return Task.FromResult(new QueryDatabaseReplay() { Result = false });
             }
+            
+
             QueryDatabaseReplay re = new QueryDatabaseReplay() { Result = true };
             var user = SecurityManager.Manager.GetUser(request.LoginId);
             var dbs = user.Databases;
@@ -700,10 +702,13 @@ namespace DBDevelopService
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public override Task<BoolResultReplay> Start(GetRequest request, ServerCallContext context)
+        public override Task<BoolResultReplay> Start(DatabasesRequest request, ServerCallContext context)
         {
-            // to do start
-            return base.Start(request, context);
+            if (!IsAdmin(request.LoginId))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = ServiceLocator.Locator.Resolve<IDatabaseManager>().Start(request.Database) });
         }
 
         /// <summary>
@@ -712,11 +717,33 @@ namespace DBDevelopService
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public override Task<BoolResultReplay> Stop(GetRequest request, ServerCallContext context)
+        public override Task<BoolResultReplay> Stop(DatabasesRequest request, ServerCallContext context)
         {
-            //to do stop
-            return base.Stop(request, context);
+            if (!IsAdmin(request.LoginId))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = ServiceLocator.Locator.Resolve<IDatabaseManager>().Stop(request.Database) });
         }
+
+        public override Task<BoolResultReplay> ReRun(DatabasesRequest request, ServerCallContext context)
+        {
+            if (!IsAdmin(request.LoginId))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = ServiceLocator.Locator.Resolve<IDatabaseManager>().Rerun(request.Database) });
+        }
+
+        public override Task<BoolResultReplay> IsDatabaseRunning(DatabasesRequest request, ServerCallContext context)
+        {
+            if (!SecurityManager.Manager.CheckKeyAvaiable(request.LoginId))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = ServiceLocator.Locator.Resolve<IDatabaseManager>().IsRunning(request.Database) });
+        }
+
         #endregion
 
         /// <summary>

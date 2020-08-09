@@ -150,7 +150,7 @@ namespace DBInStudio.Desktop.ViewModel
                var pps = Process.GetProcessesByName("DBInStudioServer");
                 if(pps==null||pps.Length==0)
                 {
-                    Process.Start("DBInStudioServer.exe").WaitForExit(20000);
+                    Process.Start("DBInStudioServer.exe").WaitForExit(5000);
                 }
             }
         }

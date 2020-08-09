@@ -39,7 +39,7 @@ High performance realtime database.Our goal is to store the second level data of
 QQ 群:950906131
 
 ## 帮助文档、接口开发文档
-暂无。
+[文档](https://github.com/cdy816/mars/wiki)([Gitee地址](https://gitee.com/chongdaoyang/mars/wikis/Home))
 
 ## 版本
 尚未发布。

@@ -18,6 +18,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Linq;
 using Cdy.Tag;
+using System.Text.RegularExpressions;
 
 namespace HisDataTools.ViewModel
 {
@@ -448,9 +449,26 @@ namespace HisDataTools.ViewModel
 
         private void FilterData()
         {
+          //  string exp = @"^\S*[^0-9]";
+
             var query = mTags.Keys.AsQueryable();
 
-            TagList = query.Where(e => e.StartsWith(mSelectTag)).Take(10);
+            string skey = mSelectTag;
+
+            if(skey.Length>1)
+            {
+                skey = skey.Substring(0, skey.Length - 1);
+            }
+
+            //Regex rg = new Regex(exp);
+
+            //if(rg.IsMatch(exp))
+            //{
+                
+            //    skey = rg.Match(skey).Value;
+            //}
+
+            TagList = query.Where(e => e.StartsWith(skey)).Take(10);
         }
 
         /// <summary>

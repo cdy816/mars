@@ -52,12 +52,23 @@ namespace DBInRun
             while (!mIsClosed)
             {
                 Console.Write(">");
-
-                string smd = Console.ReadLine();
+                
+                while (!Console.KeyAvailable)
+                {
+                    if(mIsClosed)
+                    {
+                        break;
+                    }
+                    Thread.Sleep(100);
+                }
+                
                 if (mIsClosed)
                 {
                     break;
                 }
+
+                string smd = Console.ReadLine();
+
                 if (string.IsNullOrEmpty(smd)) continue;
 
                 string[] cmd = smd.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
@@ -139,7 +150,6 @@ namespace DBInRun
             }
             mIsClosed = true;
             e.Cancel = true;
-            Console.WriteLine(Res.Get("AnyKeyToExit"));
 
         }
 

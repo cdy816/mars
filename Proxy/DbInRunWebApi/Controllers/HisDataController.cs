@@ -262,6 +262,11 @@ namespace DbInRunWebApi.Controllers
             return TimeSpan.FromSeconds(int.Parse(time));
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpGet("GetAllValue")]
         public HisValue GetAllValue([FromBody] AllHisDataRequest request)
         {

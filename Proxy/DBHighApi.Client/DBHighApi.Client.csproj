@@ -2,6 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <PackageId>Mars.DBHighApi.Client</PackageId>
+    <Product>Mars</Product>
+    <Authors>chongdaoyang</Authors>
+    <PackageProjectUrl>https://github.com/cdy816/mars</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>

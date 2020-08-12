@@ -25,7 +25,7 @@ namespace DbInRunWebApi.Controllers
             {
                 RealValueQueryResponse response = new RealValueQueryResponse() { Result = true, Datas = new List<RealValue>(request.TagNames.Count) };
                 var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
-                var ids = service.GetTagIdByName(request.TagNames);
+                var ids = service.GetTagIdByName(request.TagNames.Select(e=>string.IsNullOrEmpty(request.Group)?e:request.Group+"."+e).ToList());
                 for (int i = 0; i < request.TagNames.Count; i++)
                 {
                     if (ids[i].HasValue)
@@ -50,7 +50,7 @@ namespace DbInRunWebApi.Controllers
             {
                 RealValueOnlyQueryResponse response = new RealValueOnlyQueryResponse() { Result = true, Datas = new List<object>() };
                 var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
-                var ids = service.GetTagIdByName(request.TagNames);
+                var ids = service.GetTagIdByName(request.TagNames.Select(e => string.IsNullOrEmpty(request.Group) ? e : request.Group + "." + e).ToList());
                 for (int i = 0; i < request.TagNames.Count; i++)
                 {
                     if (ids[i].HasValue)
@@ -76,7 +76,7 @@ namespace DbInRunWebApi.Controllers
             {
                 RealValueAndQualityQueryResponse response = new RealValueAndQualityQueryResponse() { Result = true, Datas = new List<RealValueAndQuality>() };
                 var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
-                var ids = service.GetTagIdByName(request.TagNames);
+                var ids = service.GetTagIdByName(request.TagNames.Select(e => string.IsNullOrEmpty(request.Group) ? e : request.Group + "." + e).ToList());
                 for (int i = 0; i < request.TagNames.Count; i++)
                 {
                     if (ids[i].HasValue)
@@ -131,7 +131,7 @@ namespace DbInRunWebApi.Controllers
                 bool re = true;
                 foreach(var vv in grps)
                 {
-                    re &= DbInRunWebApi.SecurityManager.Manager.CheckReaderPermission(request.Token, vv);
+                    re &= DbInRunWebApi.SecurityManager.Manager.CheckWritePermission(request.Token, vv);
                 }
                 if(!re) return new RealDataSetResponse() { Result = false };
 

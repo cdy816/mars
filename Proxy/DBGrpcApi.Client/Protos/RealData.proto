@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+option csharp_namespace = "DBGrpcApi";
+
+package GrpcService;
+
+// The greeting service definition.
+service RealData {
+  rpc GetRealValue (GetRealValueRequest) returns (GetRealValueReply);
+  rpc GetRealValueAndQuality (GetRealValueRequest) returns (GetRealValueAndQualityReply);
+  rpc GetRealValueOnly (GetRealValueRequest) returns (GetRealValueOnlyReply);
+  rpc SetRealValue (SetRealValueRequest) returns (BoolResultReply);
+}
+
+
+// The request message containing the user's name.
+message GetRealValueRequest {
+  string Token = 1;
+  string Group=2;
+  repeated string TagNames=3;
+}
+
+// The response message containing the greetings.
+message GetRealValueReply {
+  bool Result=1;
+  repeated ValueQualityTime Values = 2;
+  
+}
+
+message GetRealValueAndQualityReply {
+  bool Result=1;
+  repeated ValueAndQuality Values = 2;
+  
+}
+
+//
+message GetRealValueOnlyReply {
+	bool Result=1;
+  repeated ValueOnly Values = 2;
+}
+
+//
+message ValueAndQuality{
+	int32 Id=1;
+	int32 ValueType=2;
+	string Value=3;
+	int32 Quality=4;
+}
+
+
+message ValueQualityTime{
+	int32 Id=1;
+	int32 ValueType=2;
+	string Value=3;
+	int32 Quality=4;
+	int64 time=5;
+}
+
+//
+message ValueOnly{
+	int32 Id=1;
+	int32 ValueType=2;
+	string Value=3;
+}
+
+//
+message SetRealValueRequest{
+	string Token=1;
+	repeated SetRealValueItem Values=2;
+}
+
+//
+message SetRealValueItem{
+	string TagName=1;
+	int32 ValueType=2;
+	string Value=3;
+}
+
+message BoolResultReply{
+	bool result=1;
+}
+

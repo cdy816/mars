@@ -114,11 +114,11 @@ namespace DbInRunWebApi.Controllers
                     revals = ProcessResult<ushort>(request.TagName, res);
                     break;
                 case Cdy.Tag.TagType.IntPoint:
-                    res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<int>(tag.Id,ConvertToTimes(request.Times),request.MatchType);
+                    res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<IntPointData>(tag.Id,ConvertToTimes(request.Times),request.MatchType);
                     revals = ProcessResult<IntPointData>(request.TagName, res);
                     break;
                 case Cdy.Tag.TagType.UIntPoint:
-                    res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<uint>(tag.Id,ConvertToTimes(request.Times),request.MatchType);
+                    res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<UIntPointData>(tag.Id,ConvertToTimes(request.Times),request.MatchType);
                     revals = ProcessResult<UIntPointData>(request.TagName, res);
                     break;
                 case Cdy.Tag.TagType.IntPoint3:
@@ -214,11 +214,11 @@ namespace DbInRunWebApi.Controllers
                     revals = ProcessResult<ushort>(request.TagName, res);
                     break;
                 case Cdy.Tag.TagType.IntPoint:
-                    res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<int>(tag.Id,  ConvertToDateTime(request.StartTime),ConvertToDateTime(request.EndTime),ConvertToTimeSpan(request.Duration), request.MatchType);
+                    res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<IntPointData>(tag.Id,  ConvertToDateTime(request.StartTime),ConvertToDateTime(request.EndTime),ConvertToTimeSpan(request.Duration), request.MatchType);
                     revals = ProcessResult<IntPointData>(request.TagName, res);
                     break;
                 case Cdy.Tag.TagType.UIntPoint:
-                    res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<uint>(tag.Id,  ConvertToDateTime(request.StartTime),ConvertToDateTime(request.EndTime),ConvertToTimeSpan(request.Duration), request.MatchType);
+                    res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<UIntPointData>(tag.Id,  ConvertToDateTime(request.StartTime),ConvertToDateTime(request.EndTime),ConvertToTimeSpan(request.Duration), request.MatchType);
                     revals = ProcessResult<UIntPointData>(request.TagName, res);
                     break;
                 case Cdy.Tag.TagType.IntPoint3:

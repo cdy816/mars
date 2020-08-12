@@ -5,7 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="developService.proto" />
+    <None Remove="Protos\HisData.proto" />
+    <None Remove="Protos\RealData.proto" />
+    <None Remove="Protos\Security.proto" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,11 +25,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="developService.proto" GrpcServices="Client" />
+    <Protobuf Include="Protos\HisData.proto" GrpcServices="Client" />
+    <Protobuf Include="Protos\RealData.proto" GrpcServices="Client" />
+    <Protobuf Include="Protos\Security.proto" GrpcServices="Client" />
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).XML&quot; copy &quot;$(TargetDir)$(TargetName).XML&quot; &quot;$(SolutionDir)\Output\Xml&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).pdb&quot;  copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)\Output&quot; /y" />
-  </Target>
 
 </Project>

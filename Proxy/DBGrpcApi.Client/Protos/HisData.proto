@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+option csharp_namespace = "DBGrpcApi";
+
+package GrpcService;
+
+// The greeting service definition.
+service HislData {
+  // 读取指定间隔的时间点的值
+  rpc GetHisValue (HisDataRequest) returns (HisDataCollectionReplay);
+
+  //读取所有值
+  rpc GetAllHisValue (AllHisDataRequest) returns (HisDataCollectionReplay);
+}
+
+message HisDataRequest{
+	string Token=1;
+	repeated string Tags=2;
+	int64 StartTime=3;
+	int64 EndTime=4;
+	int32 Duration=5;
+	int32 QueryType=6;
+}
+
+
+message AllHisDataRequest{
+	string Token=1;
+	repeated string Tags=2;
+	int64 StartTime=3;
+	int64 EndTime=4;
+}
+
+message HisDataCollectionReplay{
+	bool result=1;
+	repeated HisDataPointCollection Values=2;
+}
+
+message HisDataPointCollection{
+	string Tag=1;
+	int32 ValueType=2;
+	repeated HisDataPoint Values=3;
+}
+
+message HisDataPoint{
+	string Value=1;
+	int64 Time=2;
+}
+

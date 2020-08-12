@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+option csharp_namespace = "DBGrpcApi";
+
+package GrpcService;
+
+// The greeting service definition.
+service Security {
+  // Sends a greeting
+  rpc Login (LoginRequest) returns (LoginReply);
+  rpc Hart (HartRequest) returns (HartReply);
+  rpc Logout (LogoutRequest) returns (LogoutReply);
+}
+
+
+
+// The request message containing the user's name.
+message LoginRequest {
+  string name = 1;
+  string password=2;
+}
+
+// The response message containing the greetings.
+message LoginReply {
+  string Token = 1;
+}
+
+message HartRequest {
+  string Token = 1;
+}
+
+
+message LogoutRequest {
+  string Token = 1;
+}
+
+
+message HartReply {
+  bool Result = 1;
+}
+
+
+message LogoutReply {
+  bool Result = 1;
+}

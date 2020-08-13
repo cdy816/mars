@@ -2,12 +2,33 @@
 using DBHighApi.Api;
 using DBRuntime.Proxy;
 using System;
+using System.Xml.Linq;
 
 namespace DBHighApi
 {
     class Program
     {
         private static bool mIsClosed = false;
+
+
+        private static int ReadServerPort()
+        {
+            try
+            {
+                string spath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location), "Config", "DBHighApi.cfg");
+                if (System.IO.File.Exists(spath))
+                {
+                    XElement xx = XElement.Load(spath);
+                    return int.Parse(xx.Attribute("ServerPort")?.Value);
+                }
+            }
+            catch
+            {
+
+            }
+            return 14332;
+        }
+
         static void Main(string[] args)
         {
             Console.CancelKeyPress += Console_CancelKeyPress;
@@ -39,7 +60,6 @@ namespace DBHighApi
             DatabaseRunner.Manager.Load();
             DatabaseRunner.Manager.Start();
             DatabaseRunner.Manager.IsReadyEvent += Manager_IsReadyEvent;
-        
         }
 
 
@@ -52,8 +72,11 @@ namespace DBHighApi
         {
             if (value)
             {
-                Cdy.Tag.LoggerService.Service.Info("DBHighAPI", string.Format(Res.Get("serverstartmsg"), 14332));
-                DataService.Service.Start("127.0.0.1", 14332);
+
+                int port = ReadServerPort();
+
+                Cdy.Tag.LoggerService.Service.Info("DBHighAPI", string.Format(Res.Get("serverstartmsg"), port));
+                DataService.Service.Start("127.0.0.1", port);
             }
             else
             {

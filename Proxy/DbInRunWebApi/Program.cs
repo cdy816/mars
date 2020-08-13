@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Cdy.Tag;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -12,8 +13,29 @@ namespace DbInRunWebApi
 {
     public class Program
     {
+        static int Port = 14331;
+
+        private static int ReadServerPort()
+        {
+            try
+            {
+                string spath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location), "Config", "DbWebApi.cfg");
+                if (System.IO.File.Exists(spath))
+                {
+                    XElement xx = XElement.Load(spath);
+                    return int.Parse(xx.Attribute("ServerPort")?.Value);
+                }
+            }
+            catch
+            {
+
+            }
+            return 14331;
+        }
+
         public static void Main(string[] args)
         {
+            Port = ReadServerPort();
             WindowConsolHelper.DisbleQuickEditMode();
             CreateHostBuilder(args).Build().Run();
         }
@@ -22,6 +44,7 @@ namespace DbInRunWebApi
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    webBuilder.UseUrls("https://0.0.0.0:"+Port);
                     webBuilder.UseStartup<WebAPIStartup>();
                 });
     }

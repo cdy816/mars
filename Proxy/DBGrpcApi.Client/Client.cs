@@ -10,7 +10,7 @@ namespace DBGrpcApi
     /// <summary>
     /// 
     /// </summary>
-    public class Client
+    public class Client:IDisposable
     {
 
         #region ... Variables  ...
@@ -23,6 +23,8 @@ namespace DBGrpcApi
         private HislData.HislDataClient mHisDataClient;
 
         private Security.SecurityClient mSecurityClient;
+
+        private Grpc.Net.Client.GrpcChannel grpcChannel;
 
         #endregion ...Variables...
 
@@ -57,6 +59,18 @@ namespace DBGrpcApi
         /// </summary>
         public int Port { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsLogined
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(mLoginId);
+            }
+        }
+
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -73,13 +87,15 @@ namespace DBGrpcApi
                     HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
                 var httpClient = new HttpClient(httpClientHandler);
 
-                Grpc.Net.Client.GrpcChannel grpcChannel = Grpc.Net.Client.GrpcChannel.ForAddress(@"https://" + Ip + ":"+ Port, new GrpcChannelOptions { HttpClient = httpClient });
+                grpcChannel = Grpc.Net.Client.GrpcChannel.ForAddress(@"https://" + Ip + ":"+ Port, new GrpcChannelOptions { HttpClient = httpClient });
 
                 mRealDataClient = new RealData.RealDataClient(grpcChannel);
 
                 mHisDataClient = new HislData.HislDataClient(grpcChannel);
 
                 mSecurityClient = new Security.SecurityClient(grpcChannel);
+
+                
 
             }
             catch (Exception ex)
@@ -122,6 +138,7 @@ namespace DBGrpcApi
                 try
                 {
                     mSecurityClient.Logout(new LogoutRequest() { Token = mLoginId });
+                    mLoginId = string.Empty;
                 }
                 catch
                 {
@@ -155,7 +172,7 @@ namespace DBGrpcApi
         {
             if (tag.LastIndexOf(".") > 0)
             {
-                return tag.Substring(0, tag.LastIndexOf(".") - 1);
+                return tag.Substring(0, tag.LastIndexOf("."));
             }
             return string.Empty;
         }
@@ -171,7 +188,7 @@ namespace DBGrpcApi
             foreach (var vv in tags)
             {
                 string grp = GetGroupName(vv);
-                string tag = string.IsNullOrEmpty(grp) ? vv : vv.Substring(grp.Length);
+                string tag = string.IsNullOrEmpty(grp) ? vv : vv.Substring(grp.Length+1);
                 if (groupedtags.ContainsKey(grp))
                 {
                     groupedtags[grp].Add(tag);
@@ -268,8 +285,43 @@ namespace DBGrpcApi
                         foreach(var val in res.Values)
                         {
                             string sname = vv.Value[val.Id];
+                            if(!string.IsNullOrEmpty(vv.Key))
+                            {
+                                sname = vv.Key + "." + sname;
+                            }
                             re.Add(sname, ConvertToValue(val.Value, val.ValueType));
                         }
+                    }
+                }
+                return re;
+            }
+            catch
+            {
+
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagIds"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public Dictionary<int, object> ReadRealValueById(List<int> tagIds,string group)
+        {
+            try
+            {
+                Dictionary<int, object> re = new Dictionary<int, object>();
+                var gtags = group;
+                var vvv = new GetRealValueByIdRequest() { Group = group, Token = mLoginId };
+                vvv.Ids.AddRange(tagIds);
+                var res = mRealDataClient.GetRealValueOnlyById(vvv);
+                if (res.Result)
+                {
+                    foreach (var val in res.Values)
+                    {
+                        re.Add(val.Id, ConvertToValue(val.Value, val.ValueType));
                     }
                 }
                 return re;
@@ -302,8 +354,43 @@ namespace DBGrpcApi
                         foreach (var val in res.Values)
                         {
                             string sname = vv.Value[val.Id];
+                            if (!string.IsNullOrEmpty(vv.Key))
+                            {
+                                sname = vv.Key + "." + sname;
+                            }
                             re.Add(sname, new Tuple<int, object>(val.Quality, ConvertToValue(val.Value, val.ValueType)));
                         }
+                    }
+                }
+                return re;
+            }
+            catch
+            {
+
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagIds"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public Dictionary<int, Tuple<int, object>> ReadRealValueAndQualityById(List<int> tagIds, string group)
+        {
+            try
+            {
+                Dictionary<int, Tuple<int, object>> re = new Dictionary<int, Tuple<int, object>>();
+                var gtags = group;
+                var vvv = new GetRealValueByIdRequest() { Group = group, Token = mLoginId };
+                vvv.Ids.AddRange(tagIds);
+                var res = mRealDataClient.GetRealValueAndQualityById(vvv);
+                if (res.Result)
+                {
+                    foreach (var val in res.Values)
+                    {
+                        re.Add(val.Id, new Tuple<int, object>(val.Quality, ConvertToValue(val.Value, val.ValueType)));
                     }
                 }
                 return re;
@@ -337,6 +424,10 @@ namespace DBGrpcApi
                         foreach (var val in res.Values)
                         {
                             string sname = vv.Value[val.Id];
+                            if (!string.IsNullOrEmpty(vv.Key))
+                            {
+                                sname = vv.Key + "." + sname;
+                            }
                             re.Add(sname, new Tuple<int, DateTime, object>(val.Quality,DateTime.FromBinary(val.Time), ConvertToValue(val.Value, val.ValueType)));
                         }
                     }
@@ -350,6 +441,37 @@ namespace DBGrpcApi
             return null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagIds"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public Dictionary<int, Tuple<int, DateTime, object>> ReadRealValueAndQualityTimeById(List<int> tagIds, string group)
+        {
+            try
+            {
+                Dictionary<int, Tuple<int, DateTime, object>> re = new Dictionary<int, Tuple<int, DateTime, object>>();
+                var gtags = group;
+                var vvv = new GetRealValueByIdRequest() { Group = group, Token = mLoginId };
+                vvv.Ids.AddRange(tagIds);
+                var res = mRealDataClient.GetRealValueById(vvv);
+                if (res.Result)
+                {
+                    foreach (var val in res.Values)
+                    {
+                        re.Add(val.Id, new Tuple<int, DateTime,object>(val.Quality, DateTime.FromBinary(val.Time), ConvertToValue(val.Value, val.ValueType)));
+                    }
+                }
+                return re;
+            }
+            catch
+            {
+
+            }
+            return null;
+        }
+        
         /// <summary>
         /// 读取历史记录
         /// </summary>
@@ -415,6 +537,18 @@ namespace DBGrpcApi
                 return re;
             }
             return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Dispose()
+        {
+            mLoginId = string.Empty;
+            mHisDataClient = null;
+            mRealDataClient = null;
+            mSecurityClient = null;
+            grpcChannel.Dispose();
         }
 
         #endregion ...Methods...

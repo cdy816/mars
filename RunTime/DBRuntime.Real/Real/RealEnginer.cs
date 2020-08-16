@@ -4458,9 +4458,16 @@ namespace Cdy.Tag
             mConfigDatabase = null;
         }
 
-
-
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <returns></returns>
+        public List<string> GetTagGroups(List<int> ids)
+        {
+            List<string> ltmp = new List<string>();
+            return mConfigDatabase.Tags.Where(e => ids.Contains(e.Key)).Select(e => e.Value.Group).ToList();
+        }
 
         #endregion ...Interfaces...
     }

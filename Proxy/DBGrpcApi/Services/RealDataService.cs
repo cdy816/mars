@@ -10,10 +10,47 @@ namespace DBGrpcApi
 {
     public class RealDataService : RealData.RealDataBase
     {
+
         private readonly ILogger<RealDataService> _logger;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="logger"></param>
         public RealDataService(ILogger<RealDataService> logger)
         {
             _logger = logger;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<GetTagIdByNameReplay> GetTagIdByName(GetTagIdByNameRequest request, ServerCallContext context)
+        {
+            if (SecurityManager.Manager.IsLogin(request.Token) && SecurityManager.Manager.CheckReaderPermission(request.Token, request.Group))
+            {
+                GetTagIdByNameReplay response = new GetTagIdByNameReplay() { Result = true };
+                var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+                var ids = service.GetTagIdByName(request.TagNames.Select(e => string.IsNullOrEmpty(request.Group) ? e : request.Group + "." + e).ToList());
+                for (int i = 0; i < request.TagNames.Count; i++)
+                {
+                    if(ids[i].HasValue)
+                    {
+                        response.Ids.Add(ids[i].Value);
+                    }
+                    else
+                    {
+                        response.Ids.Add(-1);
+                    }
+                }
+                return Task.FromResult(response);
+            }
+            else
+            {
+                return Task.FromResult(new GetTagIdByNameReplay() { Result = false });
+            }
         }
 
         /// <summary>
@@ -39,6 +76,28 @@ namespace DBGrpcApi
                         var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
                         response.Values.Add(new ValueQualityTime() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype,Time=time.ToBinary()});
                     }
+                }
+                return Task.FromResult(response);
+            }
+            else
+            {
+                return Task.FromResult(new GetRealValueReply() { Result = false });
+            }
+        }
+
+        public override Task<GetRealValueReply> GetRealValueById(GetRealValueByIdRequest request, ServerCallContext context)
+        {
+            if (SecurityManager.Manager.IsLogin(request.Token) && SecurityManager.Manager.CheckReaderPermission(request.Token, request.Group))
+            {
+                var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+                GetRealValueReply response = new GetRealValueReply() { Result = true };
+                for (int i = 0; i < request.Ids.Count; i++)
+                {
+                    byte quality;
+                    DateTime time;
+                    byte tagtype = 0;
+                    var val = service.GetTagValue(request.Ids[i], out quality, out time, out tagtype);
+                    response.Values.Add(new ValueQualityTime() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype, Time = time.ToBinary() });
                 }
                 return Task.FromResult(response);
             }
@@ -86,6 +145,34 @@ namespace DBGrpcApi
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
+        public override Task<GetRealValueAndQualityReply> GetRealValueAndQualityById(GetRealValueByIdRequest request, ServerCallContext context)
+        {
+            if (SecurityManager.Manager.IsLogin(request.Token) && SecurityManager.Manager.CheckReaderPermission(request.Token, request.Group))
+            {
+                GetRealValueAndQualityReply response = new GetRealValueAndQualityReply() { Result = true };
+                var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+                for (int i = 0; i < request.Ids.Count; i++)
+                {
+                    byte quality;
+                    DateTime time;
+                    byte tagtype = 0;
+                    var val = service.GetTagValue(request.Ids[i], out quality, out time, out tagtype);
+                    response.Values.Add(new ValueAndQuality() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype });
+                }
+                return Task.FromResult(response);
+            }
+            else
+            {
+                return Task.FromResult(new GetRealValueAndQualityReply() { Result = false });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public override Task<GetRealValueOnlyReply> GetRealValueOnly(GetRealValueRequest request, ServerCallContext context)
         {
             if (SecurityManager.Manager.IsLogin(request.Token) && SecurityManager.Manager.CheckReaderPermission(request.Token, request.Group))
@@ -103,6 +190,35 @@ namespace DBGrpcApi
                         var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
                         response.Values.Add(new ValueOnly() { Id = i, Value = val.ToString(), ValueType = tagtype });
                     }
+                }
+                return Task.FromResult(response);
+            }
+            else
+            {
+                return Task.FromResult(new GetRealValueOnlyReply() { Result = false });
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<GetRealValueOnlyReply> GetRealValueOnlyById(GetRealValueByIdRequest request, ServerCallContext context)
+        {
+            if (SecurityManager.Manager.IsLogin(request.Token) && SecurityManager.Manager.CheckReaderPermission(request.Token, request.Group))
+            {
+                GetRealValueOnlyReply response = new GetRealValueOnlyReply() { Result = true };
+                var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+                for (int i = 0; i < request.Ids.Count; i++)
+                {
+                    byte quality;
+                    DateTime time;
+                    byte tagtype = 0;
+                    var val = service.GetTagValue(request.Ids[i], out quality, out time, out tagtype);
+                    response.Values.Add(new ValueOnly() { Id = i, Value = val.ToString(), ValueType = tagtype });
                 }
                 return Task.FromResult(response);
             }

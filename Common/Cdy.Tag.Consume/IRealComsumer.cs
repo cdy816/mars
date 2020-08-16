@@ -89,6 +89,13 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="ids"></param>
+        /// <returns></returns>
+        List<string> GetTagGroups(List<int> ids);
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
         unsafe void* GetDataRawAddr(int id);

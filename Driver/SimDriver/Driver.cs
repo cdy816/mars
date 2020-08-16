@@ -203,7 +203,8 @@ namespace SimDriver
                 {
                     delay = 1;
                 }
-                LoggerService.Service.Info("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds,ConsoleColor.Yellow);
+                if(mNumber%10 == 0)
+                LoggerService.Service.Info("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds);
                 Thread.Sleep(delay);
             }
         }

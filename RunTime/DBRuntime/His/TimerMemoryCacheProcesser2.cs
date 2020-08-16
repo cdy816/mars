@@ -185,14 +185,14 @@ namespace Cdy.Tag
             ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray1);
             closedEvent.Reset();
             var vkeys = mCount.Keys.ToArray();
-            int ctmp = 0;
+            //int ctmp = 0;
             while (!mIsClosed)
             {
                 resetEvent.WaitOne();
                 resetEvent.Reset();
                 if (mIsClosed) break;
-                Stopwatch sw = new Stopwatch();
-                sw.Start();
+                //Stopwatch sw = new Stopwatch();
+                //sw.Start();
                
                 try
                 {
@@ -214,13 +214,13 @@ namespace Cdy.Tag
                 {
 
                 }
-                sw.Stop();
-                ctmp++;
-                if (ctmp >10 && Id==0 &&sw.ElapsedMilliseconds>0)
-                {
-                    ctmp = 0;
-                    LoggerService.Service.Info("TimerMemoryCacheProcesser", this.Id + " CPU Id" + ThreadHelper.GetCurrentProcessorNumber() + "  record tag value:" + sw.ElapsedMilliseconds + " tag count:" + mCurrentCount);
-                }
+                //sw.Stop();
+                //ctmp++;
+                //if (ctmp >10 && Id==0 &&sw.ElapsedMilliseconds>0)
+                //{
+                //    ctmp = 0;
+                //    LoggerService.Service.Info("TimerMemoryCacheProcesser", this.Id + " CPU Id" + ThreadHelper.GetCurrentProcessorNumber() + "  record tag value:" + sw.ElapsedMilliseconds + " tag count:" + mCurrentCount);
+                //}
                 resetEvent.Reset();
             }
             closedEvent.Set();

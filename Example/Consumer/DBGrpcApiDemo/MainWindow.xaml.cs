@@ -23,6 +23,7 @@ namespace DBGrpcApiDemo
         public MainWindow()
         {
             InitializeComponent();
+            this.DataContext = new MainViewModel();
         }
     }
 }

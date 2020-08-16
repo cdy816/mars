@@ -32,7 +32,9 @@ namespace DBGrpcApi
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapGrpcService<SecurityService>();
                 endpoints.MapGrpcService<RealDataService>();
+                endpoints.MapGrpcService<HisDataService>();
 
                 endpoints.MapGet("/", async context =>
                 {

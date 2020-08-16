@@ -25,7 +25,7 @@ namespace DBGrpcApi
         {
             if (tag.LastIndexOf(".") > 0)
             {
-                return tag.Substring(0, tag.LastIndexOf(".") - 1);
+                return tag.Substring(0, tag.LastIndexOf("."));
             }
             return string.Empty;
         }

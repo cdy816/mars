@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace DBGrpcApi
 {
@@ -42,6 +43,11 @@ namespace DBGrpcApi
         public static IHostBuilder CreateHostBuilder(string[] args) =>
              
             Host.CreateDefaultBuilder(args)
+                .ConfigureLogging(logging =>
+                {
+                    logging.AddFilter("Grpc", LogLevel.Warning);
+                    logging.SetMinimumLevel(LogLevel.Warning);
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseUrls("https://0.0.0.0:"+ Port);

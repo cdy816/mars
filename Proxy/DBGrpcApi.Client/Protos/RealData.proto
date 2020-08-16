@@ -7,11 +7,37 @@ package GrpcService;
 // The greeting service definition.
 service RealData {
   rpc GetRealValue (GetRealValueRequest) returns (GetRealValueReply);
+  rpc GetRealValueById (GetRealValueByIdRequest) returns (GetRealValueReply);
+
   rpc GetRealValueAndQuality (GetRealValueRequest) returns (GetRealValueAndQualityReply);
+  rpc GetRealValueAndQualityById (GetRealValueByIdRequest) returns (GetRealValueAndQualityReply);
+
   rpc GetRealValueOnly (GetRealValueRequest) returns (GetRealValueOnlyReply);
+  rpc GetRealValueOnlyById (GetRealValueByIdRequest) returns (GetRealValueOnlyReply);
+
   rpc SetRealValue (SetRealValueRequest) returns (BoolResultReply);
+  rpc GetTagIdByName (GetTagIdByNameRequest) returns (GetTagIdByNameReplay);
 }
 
+message GetTagIdByNameRequest{
+	string Token = 1;
+	string Group=2;
+	repeated string TagNames=3;
+}
+
+//
+message GetTagIdByNameReplay{
+	bool Result=1;
+	repeated int32 Ids=2;
+}
+
+
+//通过Id获取实时值
+message GetRealValueByIdRequest{
+	string Token = 1;
+	string Group=2;
+	repeated int32 Ids=3;
+}
 
 // The request message containing the user's name.
 message GetRealValueRequest {

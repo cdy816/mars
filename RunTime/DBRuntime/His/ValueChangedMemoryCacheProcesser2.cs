@@ -36,7 +36,7 @@ namespace Cdy.Tag
         /// </summary>
         private ConcurrentDictionary<int, bool> mChangedTags = new ConcurrentDictionary<int, bool>();
 
-        public const int MaxTagCount = 100000;
+        public static  int MaxTagCount = 100000;
 
         private int mCurrentCount = 0;
 

@@ -137,7 +137,9 @@ namespace SimDriver
                 //    mTickCount = 0;
                 //}
 
-                if((mLastProcessTime-time).TotalSeconds>1000)
+                //LoggerService.Service.Info("Sim Driver", "Sart: " + time,ConsoleColor.DarkMagenta);
+
+                if ((mLastProcessTime-time).TotalSeconds>1000)
                 {
                     LoggerService.Service.Warn("Sim Driver", "出现阻塞");
                 }
@@ -161,12 +163,13 @@ namespace SimDriver
                 double sval = Math.Sin(mNumber / 180.0 * Math.PI);
 
 //#if DEBUG
+           
+            //if(mNumber%10==0)
+            //Log("Sim:Sin " + fval + " " + "Sim:Cos " + sval + " " + "Sim:step " + mNumber + "  " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+
             Stopwatch sw = new Stopwatch();
             sw.Start();
-                //if(mNumber%10==0)
-            Log("Sim:Sin " + fval + " " + "Sim:Cos " + sval + " " + "Sim:step " + mNumber + "  " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-
-//#endif
+                //#endif
 
 
                 System.Threading.Tasks.Parallel.ForEach(mTagIdCach, (vv) =>
@@ -193,17 +196,14 @@ namespace SimDriver
                     }
                 });
                 mTagService.SubmiteNotifyChanged();
-//#if DEBUG
             sw.Stop();
-                if (mNumber % 5 == 0 && mIsSecond)
-                    LoggerService.Service.Info("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds);
-                //#endif
 
                 int delay = (int)(500 - (DateTime.Now - mLastProcessTime).TotalMilliseconds);
                 if(delay < 0)
                 {
                     delay = 1;
                 }
+                LoggerService.Service.Info("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds,ConsoleColor.Yellow);
                 Thread.Sleep(delay);
             }
         }

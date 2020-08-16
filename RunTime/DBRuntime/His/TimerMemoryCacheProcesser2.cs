@@ -34,7 +34,7 @@ namespace Cdy.Tag
         /// </summary>
         private Dictionary<long, long> mCount = new Dictionary<long, long>();
 
-        public const int MaxTagCount = 100000;
+        public static int MaxTagCount = 100000;
 
         private int mCurrentCount = 0;
 
@@ -182,18 +182,18 @@ namespace Cdy.Tag
         /// </summary>
         private void ThreadProcess()
         {
-
             ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray1);
-
             closedEvent.Reset();
             var vkeys = mCount.Keys.ToArray();
+            int ctmp = 0;
             while (!mIsClosed)
             {
                 resetEvent.WaitOne();
                 resetEvent.Reset();
                 if (mIsClosed) break;
-
-               // LoggerService.Service.Info("TimerMemoryCacheProcesser", ThreadHelper.GetCurrentProcessorNumber() + " CPU in running!");
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+               
                 try
                 {
                     mIsBusy = true;
@@ -214,6 +214,13 @@ namespace Cdy.Tag
                 {
 
                 }
+                sw.Stop();
+                ctmp++;
+                if (ctmp >10 && Id==0 &&sw.ElapsedMilliseconds>0)
+                {
+                    ctmp = 0;
+                    LoggerService.Service.Info("TimerMemoryCacheProcesser", this.Id + " CPU Id" + ThreadHelper.GetCurrentProcessorNumber() + "  record tag value:" + sw.ElapsedMilliseconds + " tag count:" + mCurrentCount);
+                }
                 resetEvent.Reset();
             }
             closedEvent.Set();
@@ -223,11 +230,12 @@ namespace Cdy.Tag
 
 
         /// <summary>
-        /// 记录一组
+        /// 记录一组变量
         /// </summary>
         /// <param name="tags"></param>
         private void ProcessTags(List<HisRunTag> tags)
-        {            int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
+        {            
+            int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
             foreach (var vv in tags)
             {
                 vv.UpdateValue2(tim);

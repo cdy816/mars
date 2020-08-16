@@ -103,6 +103,8 @@ namespace SpiderDriver
                     case APIConst.SetTagValueFun:
                         ProcessSetRealData(client, data);
                         break;
+                    case APIConst.SetTagValueAndQualityFun:
+                        break;
                     case APIConst.RegistorTag:
                         ProcessValueChangeNotify(client, data);
                         break;
@@ -208,7 +210,91 @@ namespace SpiderDriver
             Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
         }
 
-        
+
+        private void ProcessSetRealDataAndQuality(string clientid, IByteBuffer block)
+        {
+            var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
+            int count = block.ReadInt();
+            for (int i = 0; i < count; i++)
+            {
+                var id = block.ReadInt();
+
+                byte typ = block.ReadByte();
+                object value = null;
+                switch (typ)
+                {
+                    case (byte)TagType.Bool:
+                        value = block.ReadByte();
+                        break;
+                    case (byte)TagType.Byte:
+                        value = block.ReadByte();
+                        break;
+                    case (byte)TagType.Short:
+                        value = block.ReadShort();
+                        break;
+                    case (byte)TagType.UShort:
+                        value = (ushort)block.ReadShort();
+                        break;
+                    case (byte)TagType.Int:
+                        value = block.ReadInt();
+                        break;
+                    case (byte)TagType.UInt:
+                        value = (uint)block.ReadInt();
+                        break;
+                    case (byte)TagType.Long:
+                        value = block.ReadLong();
+                        break;
+                    case (byte)TagType.ULong:
+                        value = (ulong)block.ReadLong();
+                        break;
+                    case (byte)TagType.Float:
+                        value = block.ReadFloat();
+                        break;
+                    case (byte)TagType.Double:
+                        value = block.ReadDouble();
+                        break;
+                    case (byte)TagType.String:
+                        value = block.ReadString();
+                        break;
+                    case (byte)TagType.DateTime:
+                        var tick = block.ReadLong();
+                        value = new DateTime(tick);
+                        break;
+                    case (byte)TagType.IntPoint:
+                        value = new IntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint:
+                        value = new UIntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.IntPoint3:
+                        value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint3:
+                        value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.LongPoint:
+                        value = new LongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint:
+                        value = new ULongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.LongPoint3:
+                        value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint3:
+                        value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                }
+                var qua = block.ReadByte();
+
+                if (AllowTagIds.Contains(id))
+                    service.SetTagValue(id, value,qua);
+            }
+            service.SubmiteNotifyChanged();
+            Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
+        }
+
+
 
         private void ProcessRemoveValueChangeNotify(string clientId, IByteBuffer block)
         {

@@ -34,6 +34,9 @@ namespace Cdy.Tag
         /// </summary>
         private Cdy.Tag.RealEnginer mRealEnginer;
 
+        /// <summary>
+        /// 
+        /// </summary>
         private LogManager2 mLogManager;
 
         /// <summary>
@@ -87,7 +90,9 @@ namespace Cdy.Tag
         /// </summary>
         private HisDataMemoryBlockCollection mCurrentMergeMemory;
 
-
+        /// <summary>
+        /// 
+        /// </summary>
         private HisDataMemoryBlockCollection mWaitForMergeMemory;
 
         /// <summary>
@@ -214,11 +219,23 @@ namespace Cdy.Tag
         #region ... Methods    ...
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="totalTagCount"></param>
+        private void UpdatePerProcesserMaxTagCount(int totalTagCount)
+        {
+            int count = Environment.ProcessorCount / 2;
+            int pcount = totalTagCount / count + count;
+            TimerMemoryCacheProcesser2.MaxTagCount = ValueChangedMemoryCacheProcesser2.MaxTagCount = pcount;
+        }
+
+        /// <summary>
         /// 初始化
         /// </summary>
         public void Init()
         {
-            
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             if (mRealEnginer != null)
             {
                 //if (mManager == null)
@@ -230,6 +247,8 @@ namespace Cdy.Tag
 
                 mValueChangedProcesser.Clear();
                 mValueChangedProcesser.Add(mLastValueChangedProcesser);
+
+                UpdatePerProcesserMaxTagCount(mManager.HisTags.Count);
 
                 var count = CachMemoryTime;
                 var realbaseaddr = mRealEnginer.Memory;
@@ -312,7 +331,10 @@ namespace Cdy.Tag
                     mTagCount++;
                 }
             }
+            long ltmp = sw.ElapsedMilliseconds;
             AllocMemory();
+            sw.Stop();
+            LoggerService.Service.Info("HisEnginer", "生成对象耗时:"+ltmp+" 内存分配耗时:"+(sw.ElapsedMilliseconds-ltmp));
         }
 
         /// <summary>
@@ -338,6 +360,8 @@ namespace Cdy.Tag
         /// <param name="mHisDatabase"></param>
         public void ReLoadTags(IEnumerable<Tag.HisTag> tags,HisDatabase mHisDatabase)
         {
+            UpdatePerProcesserMaxTagCount(mManager.HisTags.Count+tags.Count());
+
             mRecordTimer.Stop();
             var realbaseaddr = this.mRealEnginer.Memory;
             IntPtr realHandle = mRealEnginer.MemoryHandle;
@@ -346,6 +370,9 @@ namespace Cdy.Tag
             Tagbase mRealTag;
 
             var histags = new List<HisRunTag>();
+
+            int tcount = 0;
+            int vcount = 0;
 
             foreach (var vv in tags)
             {
@@ -403,20 +430,13 @@ namespace Cdy.Tag
 
                 if (mHisTag.Type == Cdy.Tag.RecordType.Timer)
                 {
-                    if (!mLastProcesser.AddTag(mHisTag))
-                    {
-                        mLastProcesser = new TimerMemoryCacheProcesser2() { Id = mLastProcesser.Id + 1 };
-                        mLastProcesser.AddTag(mHisTag);
-                        mRecordTimerProcesser.Add(mLastProcesser);
-                    }
+                    mRecordTimerProcesser[tcount++].AddTag(mHisTag);
+                    tcount = tcount >= mRecordTimerProcesser.Count ? 0 : tcount;
                 }
                 else
                 {
-                    if (!mLastValueChangedProcesser.AddTag(mHisTag))
-                    {
-                        mLastValueChangedProcesser = new ValueChangedMemoryCacheProcesser2() { Name = "ValueChanged" + mTagCount };
-                        mValueChangedProcesser.Add(mLastValueChangedProcesser);
-                    }
+                    mValueChangedProcesser[vcount++].AddTag(mHisTag);
+                    vcount = vcount >= mRecordTimerProcesser.Count ? 0 : vcount;
                 }
                 mTagCount++;
             }
@@ -454,9 +474,9 @@ namespace Cdy.Tag
 
             this.mManager = mHisDatabase;
 
-            foreach (var vv in mRecordTimerProcesser) { if (!vv.IsStarted) vv.Start(); }
+            //foreach (var vv in mRecordTimerProcesser) { if (!vv.IsStarted) vv.Start(); }
 
-            foreach (var vv in mValueChangedProcesser) { if (!vv.IsStarted) vv.Start(); }
+            //foreach (var vv in mValueChangedProcesser) { if (!vv.IsStarted) vv.Start(); }
 
             mLogManager.InitHeadData();
 
@@ -1052,17 +1072,14 @@ namespace Cdy.Tag
             var mm = dt.Minute;
             if (mm!=mLastProcessTick )
             {
-                ///处理第一次运行的情况，轻质到一秒的开始部分
+                ///处理第一次运行的情况，停止到一秒的开始部分
                 if (mLastProcessTick == -1 && dt.Millisecond > 400)
                 {
                     mIsBusy = false;
                     return;
                 }
 
-                LoggerService.Service.Info("Record", mm+"!="+mLastProcessTick+ "-------------------------------------------------------------------------", ConsoleColor.Green);
-                LoggerService.Service.Info("Record", "准备新的内存，提交内存 "+ CurrentMemory.Name+ " 到压缩");
-                //Stopwatch sw = new Stopwatch();
-                //sw.Start();
+                LoggerService.Service.Info("Record", "准备新的内存，提交内存 "+ CurrentMemory.Name+ " 到压缩 线程ID:"+ Thread.CurrentThread.ManagedThreadId+" CPU ID:"+ ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Green);
                 if (mLastProcessTick != -1)
                 {
                     mLastProcessTime = dt;
@@ -1071,9 +1088,6 @@ namespace Cdy.Tag
                     SubmiteMemory(dt);
                 }
                 mLastProcessTick = mm;
-                //sw.Stop();
-                // LoggerService.Service.Info("Record", (CurrentMemory!=null? CurrentMemory.Name:"")+" 内存初始化:" + sw.ElapsedMilliseconds);
-                LoggerService.Service.Info("Record", "*************************************************************************", ConsoleColor.Green);
 
             }
             foreach (var vv in mRecordTimerProcesser)

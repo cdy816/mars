@@ -33,6 +33,11 @@ namespace SpiderDriver
         /// <summary>
         /// 
         /// </summary>
+        public const byte SetTagValueAndQualityFun = 12;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public const byte PushDataChangedFun = 3;
 
         /// <summary>

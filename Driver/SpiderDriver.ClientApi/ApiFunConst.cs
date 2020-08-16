@@ -25,10 +25,16 @@ namespace SpiderDriver.ClientApi
         /// </summary>
         public const byte RealValueFun = 1;
 
+
         /// <summary>
         /// 
         /// </summary>
         public const byte SetTagValueFun = 11;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte SetTagValueAndQualityFun = 12;
 
         /// <summary>
         /// 

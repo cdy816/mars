@@ -182,23 +182,18 @@ namespace Cdy.Tag
         [Obsolete]
         public void UpdateValue(int count,int tim)
         {
-            //lock (mLockTest)
-            //{
-                var vcount = count > MaxCount ? MaxCount : count;
-                Count = vcount;
+            var vcount = count > MaxCount ? MaxCount : count;
+            Count = vcount;
 
-                //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
-                //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
-                HisAddr.WriteUShortDirect(TimerValueStartAddr + vcount * 2, (ushort)(tim));
+            //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
+            //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
+            HisAddr.WriteUShortDirect(TimerValueStartAddr + vcount * 2, (ushort)(tim));
 
             //写入数值
-            //HisAddr.WriteBytesDirect(HisValueStartAddr + vcount * SizeOfValue, RealMemoryAddr, RealValueAddr, SizeOfValue);
-            //LoggerService.Service.Erro("HisTag","read from realmemory:"+ MemoryHelper.ReadDouble((void*)RealMemoryPtr, RealValueAddr));
-                HisAddr.WriteBytesDirect(HisValueStartAddr + vcount * SizeOfValue, RealMemoryPtr, RealValueAddr, SizeOfValue);
+            HisAddr.WriteBytesDirect(HisValueStartAddr + vcount * SizeOfValue, RealMemoryPtr, RealValueAddr, SizeOfValue);
 
-                //更新质量戳
-                HisAddr.WriteByteDirect(HisQulityStartAddr + vcount, RealMemoryAddr[RealValueAddr + SizeOfValue + 8]);
-            //}
+            //更新质量戳
+            HisAddr.WriteByteDirect(HisQulityStartAddr + vcount, RealMemoryAddr[RealValueAddr + SizeOfValue + 8]);
         }
 
         /// <summary>
@@ -216,7 +211,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="count"></param>
         /// <param name="tim"></param>
-        public void UpdateValue2(int count, int tim)
+        public virtual void UpdateValue2(int count, int tim)
         {
             var vcount = count > MaxCount ? MaxCount : count;
             Count = vcount;
@@ -226,8 +221,6 @@ namespace Cdy.Tag
             HisValueMemoryStartAddr.WriteUShortDirect((int)(HisValueMemoryStartAddr.TimerAddress + vcount * 2), (ushort)(tim));
 
             //写入数值
-           // Array.Copy(RealMemoryAddr, RealValueAddr, HisValueMemoryStartAddr.Buffers, (int)(HisValueMemoryStartAddr.ValueAddress + vcount * SizeOfValue), SizeOfValue);
-
             HisValueMemoryStartAddr.WriteBytesDirect((int)(HisValueMemoryStartAddr.ValueAddress + vcount * SizeOfValue), RealMemoryPtr, RealValueAddr, SizeOfValue);
 
             //更新质量戳

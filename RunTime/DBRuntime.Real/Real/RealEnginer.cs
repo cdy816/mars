@@ -3211,7 +3211,7 @@ namespace Cdy.Tag
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
-               
+
                 SetTagValue(tag,value);
             }
             catch
@@ -3244,6 +3244,30 @@ namespace Cdy.Tag
                 return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(int id, object value, byte quality)
+        {
+            return SetTagValue(id, value, DateTime.Now, quality);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, object value, byte quality)
+        {
+            return SetTagValue(tag, value, DateTime.Now, quality);
         }
 
         public bool SetTagValue(Tagbase tag, object value, DateTime time, byte quality)
@@ -3371,6 +3395,8 @@ namespace Cdy.Tag
         {
             try
             {
+                //if (tag.Id == 1) LoggerService.Service.Info("RealEnginer", "set tag" + tag.Id + " value: " + value,ConsoleColor.Cyan);
+
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
                 DateTime time = DateTime.Now;

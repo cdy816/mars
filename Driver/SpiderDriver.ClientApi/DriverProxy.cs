@@ -299,6 +299,88 @@ namespace SpiderDriver.ClientApi
         }
 
 
+        private void SetTagValueToBuffer(TagType type, object value,byte quality, IByteBuffer re)
+        {
+            re.WriteByte((byte)type);
+            switch (type)
+            {
+                case TagType.Bool:
+                    re.WriteByte((byte)value);
+                    break;
+                case TagType.Byte:
+                    re.WriteByte((byte)value);
+                    break;
+                case TagType.Short:
+                    re.WriteShort((short)value);
+                    break;
+                case TagType.UShort:
+                    re.WriteUnsignedShort((ushort)value);
+                    break;
+                case TagType.Int:
+                    re.WriteInt((int)value);
+                    break;
+                case TagType.UInt:
+                    re.WriteInt((int)value);
+                    break;
+                case TagType.Long:
+                case TagType.ULong:
+                    re.WriteLong((long)value);
+                    break;
+                case TagType.Float:
+                    re.WriteFloat((float)value);
+                    break;
+                case TagType.Double:
+                    re.WriteDouble((double)value);
+                    break;
+                case TagType.String:
+                    string sval = value.ToString();
+                    re.WriteInt(sval.Length);
+                    re.WriteString(sval, Encoding.Unicode);
+                    break;
+                case TagType.DateTime:
+                    re.WriteLong(((DateTime)value).Ticks);
+                    break;
+                case TagType.IntPoint:
+                    re.WriteInt(((IntPointData)value).X);
+                    re.WriteInt(((IntPointData)value).Y);
+                    break;
+                case TagType.UIntPoint:
+                    re.WriteInt((int)((UIntPointData)value).X);
+                    re.WriteInt((int)((UIntPointData)value).Y);
+                    break;
+                case TagType.IntPoint3:
+                    re.WriteInt(((IntPoint3Data)value).X);
+                    re.WriteInt(((IntPoint3Data)value).Y);
+                    re.WriteInt(((IntPoint3Data)value).Z);
+                    break;
+                case TagType.UIntPoint3:
+                    re.WriteInt((int)((UIntPoint3Data)value).X);
+                    re.WriteInt((int)((UIntPoint3Data)value).Y);
+                    re.WriteInt((int)((UIntPoint3Data)value).Z);
+                    break;
+                case TagType.LongPoint:
+                    re.WriteLong(((LongPointData)value).X);
+                    re.WriteLong(((LongPointData)value).Y);
+                    break;
+                case TagType.ULongPoint:
+                    re.WriteLong((long)((ULongPointData)value).X);
+                    re.WriteLong((long)((ULongPointData)value).Y);
+                    break;
+                case TagType.LongPoint3:
+                    re.WriteLong(((LongPoint3Data)value).X);
+                    re.WriteLong(((LongPoint3Data)value).Y);
+                    re.WriteLong(((LongPoint3Data)value).Z);
+                    break;
+                case TagType.ULongPoint3:
+                    re.WriteLong((long)((ULongPoint3Data)value).X);
+                    re.WriteLong((long)((ULongPoint3Data)value).Y);
+                    re.WriteLong((long)((ULongPoint3Data)value).Z);
+                    break;
+            }
+            re.WriteByte(quality);
+        }
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -325,6 +407,43 @@ namespace SpiderDriver.ClientApi
                 if (realRequreEvent.WaitOne(timeout))
                 {
                     return mRealRequreData != null && mRealRequreData.ReadableBytes>1;
+                }
+            }
+            catch
+            {
+
+            }
+
+            return false;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Dictionary<int, Tuple<TagType, object,byte>> values, int timeout = 5000)
+        {
+            CheckLogin();
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + values.Count * 32);
+            mb.WriteByte(ApiFunConst.SetTagValueAndQualityFun);
+            mb.WriteLong(this.mLoginId);
+            mb.WriteInt(values.Count);
+            foreach (var vv in values)
+            {
+                mb.WriteInt(vv.Key);
+                SetTagValueToBuffer(vv.Value.Item1, vv.Value.Item2,vv.Value.Item3, mb);
+            }
+            realRequreEvent.Reset();
+            Send(mb);
+
+            try
+            {
+                if (realRequreEvent.WaitOne(timeout))
+                {
+                    return mRealRequreData != null && mRealRequreData.ReadableBytes > 1;
                 }
             }
             catch

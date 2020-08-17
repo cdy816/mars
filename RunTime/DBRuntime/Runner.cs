@@ -85,6 +85,25 @@ namespace Cdy.Tag
             ValueConvertManager.manager.Registor(new LinerConvert());
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public Runner()
+        {
+            RDDCManager.Manager.SwitchWorkStateAction = new Func<WorkState, bool>((state) => 
+            {
+                if(state == WorkState.Primary)
+                {
+
+                    return SwitchToPrimary();
+                }
+                else
+                {
+                    return SwitchToStandby();
+                }
+            });
+        }
+
         #endregion ...Constructor...
 
         #region ... Properties ...
@@ -157,7 +176,10 @@ namespace Cdy.Tag
             CurrentDatabaseVersion = this.mRealDatabase.Version;
             CurrentDatabase = mRealDatabase.Name;
             CurrentDatabaseLastUpdateTime = mRealDatabase.UpdateTime;
-            sw.Stop();
+
+            RDDCManager.Manager.Load(mDatabaseName);
+
+           sw.Stop();
             LoggerService.Service.Info("LoadDatabase", "load " +mDatabaseName +" take " + sw.ElapsedMilliseconds.ToString() +" ms");
         }
 
@@ -256,12 +278,14 @@ namespace Cdy.Tag
 
                 compressEnginer = new CompressEnginer2();
                 compressEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
+                compressEnginer.Init();
 
                 seriseEnginer = new SeriseEnginer2() { DatabaseName = database };
                 seriseEnginer.FileDuration = mHisDatabase.Setting.FileDataDuration;
                 seriseEnginer.BlockDuration = mHisDatabase.Setting.DataBlockDuration;
                 seriseEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
                 seriseEnginer.DataSeriser = mHisDatabase.Setting.DataSeriser;
+                seriseEnginer.Init();
 
                 querySerivce = new QuerySerivce(this.mDatabaseName);
 
@@ -332,6 +356,7 @@ namespace Cdy.Tag
         public async void StartAsync(string database,int port = 14330)
         {
             LoggerService.Service.Info("Runner", " 数据库 " + database+" 开始启动");
+
             RDDCManager.Manager.Start();
 
             var re = await InitAsync(database);
@@ -353,6 +378,44 @@ namespace Cdy.Tag
             LoggerService.Service.Info("Runner", " 数据库 " + database + " 启动完成");
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private bool SwitchToStandby()
+        {
+            try
+            {
+                hisEnginer.Stop();
+                compressEnginer.Stop();
+                seriseEnginer.Stop();
+                DriverManager.Manager.Stop();
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private bool SwitchToPrimary()
+        {
+            try
+            {
+                DriverManager.Manager.Start();
+                seriseEnginer.Start();
+                compressEnginer.Start();
+                hisEnginer.Start();
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
 
         /// <summary>
         /// 停止
@@ -364,7 +427,11 @@ namespace Cdy.Tag
             DriverManager.Manager.Stop();
             compressEnginer.Stop();
             seriseEnginer.Stop();
-           // mSecurityRunner.Stop();
+
+            hisEnginer.Dispose();
+            compressEnginer.Dispose();
+            seriseEnginer.Dispose();
+
             mIsStarted = false;
         }
 

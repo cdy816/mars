@@ -19,7 +19,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class CompressEnginer2 : IDataCompress2
+    public class CompressEnginer2 : IDataCompress2,IDisposable
     {
 
         #region ... Variables  ...
@@ -84,7 +84,9 @@ namespace Cdy.Tag
         /// </summary>
         public void Init()
         {
+            mHisTagService = ServiceLocator.Locator.Resolve<IHisEngine2>();
             CompressMemory2.TagCountPerMemory = TagCountOneFile;
+
             foreach (var vm in mTargetMemorys)
             {
                 vm.Value.Dispose();
@@ -146,15 +148,12 @@ namespace Cdy.Tag
         public void Start()
         {
             mIsClosed = false;
-            mHisTagService = ServiceLocator.Locator.Resolve<IHisEngine2>();
-
-            Init();
+            //Init();
             resetEvent = new ManualResetEvent(false);
             closedEvent = new ManualResetEvent(false);
             mCompressThread = new Thread(ThreadPro);
             mCompressThread.IsBackground = true;
             mCompressThread.Start();
-           
         }
 
         /// <summary>
@@ -166,18 +165,8 @@ namespace Cdy.Tag
             resetEvent.Set();
             closedEvent.WaitOne();
 
-            mSourceMemory = null;
-            mHisTagService = null;
-
             resetEvent.Dispose();
             closedEvent.Dispose();
-
-            foreach(var vv in mTargetMemorys)
-            {
-                while (vv.Value.IsBusy()) Thread.Sleep(1);
-                vv.Value.Dispose();
-            }
-            mTargetMemorys.Clear();
         }
 
         /// <summary>
@@ -282,6 +271,22 @@ namespace Cdy.Tag
 
             LoggerService.Service.Info("Compress", "压缩线程退出!");
 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Dispose()
+        {
+
+            foreach (var vv in mTargetMemorys)
+            {
+                while (vv.Value.IsBusy()) Thread.Sleep(1);
+                vv.Value.Dispose();
+            }
+            mTargetMemorys.Clear();
+            mSourceMemory = null;
+            mHisTagService = null;
         }
 
         #endregion ...Methods...

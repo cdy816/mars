@@ -157,6 +157,24 @@ namespace Cdy.Tag
             new RealDatabaseSerise() { Database = Dbase.RealDatabase }.Save();
             new HisDatabaseSerise() { Database = Dbase.HisDatabase }.Save();
             new SecuritySerise() { Document = Dbase.Security }.Save();
+            SaveRDDCSecurity(Dbase.Name);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="databaseName"></param>
+        private void SaveRDDCSecurity(string databaseName)
+        {
+            string sfile = PathHelper.helper.GetDataPath(databaseName, "RDDC.cfg");
+            if(!System.IO.File.Exists(sfile))
+            {
+                XElement xx = new XElement("RDDC");
+                xx.SetAttributeValue("Enable", false);
+                xx.SetAttributeValue("Port", 7000);
+                xx.SetAttributeValue("RemoteIp", "127.0.0.1");
+                xx.Save(sfile);
+            }
         }
 
         #endregion ...Methods...

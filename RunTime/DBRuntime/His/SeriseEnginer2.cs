@@ -38,7 +38,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 序列话引擎
     /// </summary>
-    public class SeriseEnginer2 : IDataSerialize2
+    public class SeriseEnginer2 : IDataSerialize2, IDisposable
     {
 
         #region ... Variables  ...
@@ -128,7 +128,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 当前工作的历史记录路径
         /// </summary>
-        public static string HisDataPath{ get; set; }
+        public static string HisDataPath { get; set; }
 
         #endregion ...Properties...
 
@@ -143,7 +143,7 @@ namespace Cdy.Tag
         {
             if (string.IsNullOrEmpty(HisDataPathPrimary) && string.IsNullOrEmpty(HisDataPathBack))
             {
-                return PathHelper.helper.GetDataPath(this.DatabaseName,"HisData");
+                return PathHelper.helper.GetDataPath(this.DatabaseName, "HisData");
             }
             else
             {
@@ -161,7 +161,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        private void Init()
+        public void Init()
         {
             DataFileSeriserManager.manager.Init();
             CompressUnitManager2.Manager.Init();
@@ -182,23 +182,11 @@ namespace Cdy.Tag
                 }
             }
 
-            foreach(var vv in mSeriserFiles)
+            foreach (var vv in mSeriserFiles)
             {
                 vv.Value.FileWriter = DataFileSeriserManager.manager.GetSeriser(DataSeriser).New();
                 vv.Value.Init();
             }
-
-            //var scount = tagCont / TagCountOneFile;
-            //scount = tagCont % TagCountOneFile > 0 ? scount + 1 : scount;
-
-            //mSeriseFile = new SeriseFileItem[scount];
-
-            //for(int i=0;i<mSeriseFile.Length;i++)
-            //{
-            //    mSeriseFile[i] = new SeriseFileItem() { FileDuration = FileDuration, BlockDuration = BlockDuration, TagCountOneFile = TagCountOneFile, DatabaseName = DatabaseName, Id = i };
-            //    mSeriseFile[i].FileWriter = DataFileSeriserManager.manager.GetSeriser(DataSeriser).New();
-            //    mSeriseFile[i].Init();
-            //}
         }
 
         /// <summary>
@@ -207,7 +195,7 @@ namespace Cdy.Tag
         public void Start()
         {
             mIsClosed = false;
-            Init();
+            //Init();
             resetEvent = new ManualResetEvent(false);
             closedEvent = new ManualResetEvent(false);
             mCompressThread = new Thread(ThreadPro);
@@ -223,14 +211,7 @@ namespace Cdy.Tag
             mIsClosed = true;
             resetEvent.Set();
             closedEvent.WaitOne();
-            if (mSeriserFiles != null)
-            {
-                foreach (var vv in mSeriserFiles)
-                {
-                    vv.Value.Dispose();
-                }
-                mSeriserFiles.Clear();
-            }
+
 
             resetEvent.Dispose();
             closedEvent.Dispose();
@@ -293,37 +274,52 @@ namespace Cdy.Tag
              2. 拷贝数据块
              3. 更新数据块指针
              */
-//#if DEBUG 
+            //#if DEBUG 
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            LoggerService.Service.Info("SeriseEnginer", "********开始执行存储********",ConsoleColor.Cyan);
-//#endif
+            LoggerService.Service.Info("SeriseEnginer", "********开始执行存储********", ConsoleColor.Cyan);
+            //#endif
             HisDataPath = SelectHisDataPath();
             List<CompressMemory2> mtmp;
-            lock(mWaitForProcessMemory)
+            lock (mWaitForProcessMemory)
             {
                 mtmp = mWaitForProcessMemory.Values.ToList();
                 mWaitForProcessMemory.Clear();
             }
 
-            foreach(var vv in mtmp)
+            foreach (var vv in mtmp)
             {
                 mSeriserFiles[vv.Id].SaveToFile(vv, vv.CurrentTime);
                 vv.Clear();
                 vv.MakeMemoryNoBusy();
             }
 
-//#if DEBUG
+            //#if DEBUG
             sw.Stop();
-            LoggerService.Service.Info("SeriseEnginer", ">>>>>>>>>完成执行存储>>>>>>> Count:"+ mtmp.Count + " ElapsedMilliseconds:" + sw.ElapsedMilliseconds, ConsoleColor.Cyan);
-//#endif
+            LoggerService.Service.Info("SeriseEnginer", ">>>>>>>>>完成执行存储>>>>>>> Count:" + mtmp.Count + " ElapsedMilliseconds:" + sw.ElapsedMilliseconds, ConsoleColor.Cyan);
+            //#endif
         }
 
-#endregion ...Methods...
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Dispose()
+        {
+            if (mSeriserFiles != null)
+            {
+                foreach (var vv in mSeriserFiles)
+                {
+                    vv.Value.Dispose();
+                }
+                mSeriserFiles.Clear();
+            }
+        }
 
-#region ... Interfaces ...
+        #endregion ...Methods...
 
-#endregion ...Interfaces...
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
 
     }
 

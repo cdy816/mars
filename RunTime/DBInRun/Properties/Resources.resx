@@ -129,6 +129,12 @@
   <data name="HMsg" xml:space="preserve">
     <value>display command list</value>
   </data>
+  <data name="ListMsg" xml:space="preserve">
+    <value>List all databse</value>
+  </data>
+  <data name="RestartMsg" xml:space="preserve">
+    <value>Qucik restarted a a database without pause it.</value>
+  </data>
   <data name="StartMsg" xml:space="preserve">
     <value>start to run a databse,ignor database name to run default 'local' database</value>
   </data>

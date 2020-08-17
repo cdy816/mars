@@ -7,6 +7,7 @@
 //  种道洋
 //==============================================================
 using Cdy.Tag.Driver;
+using DBRuntime;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -75,6 +76,8 @@ namespace Cdy.Tag
         /// </summary>
         static Runner()
         {
+            RDDCManager.Manager.StartTime = DateTime.Now;
+
             //注册日志
             ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
 
@@ -85,6 +88,18 @@ namespace Cdy.Tag
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public WorkState State
+        {
+            get
+            {
+                return RDDCManager.Manager.CurrentState;
+            }
+        }
+
 
         /// <summary>
         /// 数据库存访路径
@@ -317,17 +332,22 @@ namespace Cdy.Tag
         public async void StartAsync(string database,int port = 14330)
         {
             LoggerService.Service.Info("Runner", " 数据库 " + database+" 开始启动");
+            RDDCManager.Manager.Start();
+
             var re = await InitAsync(database);
             if (!re)
             {
                 return;
             }
             DBRuntime.Api.DataService.Service.Start(port);
-            seriseEnginer.Start();
-            compressEnginer.Start();
-            hisEnginer.Start();
-            //mSecurityRunner.Start();
-            DriverManager.Manager.Start();
+
+            if (RDDCManager.Manager.CurrentState == WorkState.Primary)
+            {
+                seriseEnginer.Start();
+                compressEnginer.Start();
+                hisEnginer.Start();
+                DriverManager.Manager.Start();
+            }
 
             mIsStarted = true;
             LoggerService.Service.Info("Runner", " 数据库 " + database + " 启动完成");

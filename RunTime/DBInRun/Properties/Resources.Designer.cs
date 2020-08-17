@@ -97,6 +97,24 @@ namespace DBInRun.Properties {
         }
         
         /// <summary>
+        ///   查找类似 List all databse 的本地化字符串。
+        /// </summary>
+        internal static string ListMsg {
+            get {
+                return ResourceManager.GetString("ListMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Qucik restarted a a database without pause it. 的本地化字符串。
+        /// </summary>
+        internal static string RestartMsg {
+            get {
+                return ResourceManager.GetString("RestartMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 start to run a databse,ignor database name to run default &apos;local&apos; database 的本地化字符串。
         /// </summary>
         internal static string StartMsg {

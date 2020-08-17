@@ -13,9 +13,6 @@ namespace DBInRun
     {
         static bool mIsClosed = false;
 
-        static Thread mainThread;
-
-        //static MarshalMemoryBlock block;
         static void Main(string[] args)
         {
             Console.CancelKeyPress += Console_CancelKeyPress;
@@ -25,6 +22,9 @@ namespace DBInRun
 
             Console.WriteLine(Res.Get("WelcomeMsg"));
             PrintLogo();
+
+            Console.WriteLine(Res.Get("HelpMsg"));
+
             if (args.Length>0 && args[0]== "start")
             {
                 Task.Run(() => {
@@ -45,10 +45,7 @@ namespace DBInRun
                     Cdy.Tag.Runner.RunInstance.Start();
                 }
             }
-
-            mainThread = Thread.CurrentThread;
-
-            Console.WriteLine(Res.Get("HelpMsg"));
+         
             while (!mIsClosed)
             {
                 Console.Write(">");
@@ -111,6 +108,9 @@ namespace DBInRun
                             Cdy.Tag.Runner.RunInstance.ReStartDatabase();
                         });
                         break;
+                    case "list":
+                        ListDatabase();
+                        break;
                     case "h":
                         Console.WriteLine(GetHelpString());
                         break;
@@ -119,6 +119,24 @@ namespace DBInRun
                         break;
                 }
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private static void ListDatabase()
+        {
+            string spath = System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location);
+            spath = System.IO.Path.Combine(spath, "Data");
+            StringBuilder sb = new StringBuilder();
+            string stemp = "{0} {1}";
+            foreach(var vv in System.IO.Directory.EnumerateDirectories(spath))
+            {
+                var vvn = new System.IO.DirectoryInfo(vv).Name;
+                string sdb = System.IO.Path.Combine(vv, vvn+".db");
+                sb.AppendLine(string.Format(stemp, vvn, System.IO.File.GetLastWriteTime(sdb)));
+            }
+            Console.WriteLine(sb.ToString());
         }
 
         /// <summary>
@@ -225,6 +243,8 @@ namespace DBInRun
             re.AppendLine();
             re.AppendLine("start [database] // "+Res.Get("StartMsg"));
             re.AppendLine("stop             // " + Res.Get("StopMsg"));
+            re.AppendLine("restart             // " + Res.Get("RestartMsg"));
+            re.AppendLine("List             // " + Res.Get("ListMsg"));
             re.AppendLine("h                // " + Res.Get("HMsg"));
             return re.ToString();
         }

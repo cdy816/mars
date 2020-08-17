@@ -66,6 +66,8 @@ namespace Cdy.Tag
 
         #region ... Properties ...
 
+        public IHisEngine2 Parent { get; set; }
+
         /// <summary>
         /// 文件时长
         /// </summary>
@@ -100,7 +102,7 @@ namespace Cdy.Tag
         /// </summary>
         public void InitHeadData()
         {
-            HisDataMemoryBlockCollection mtags = ServiceLocator.Locator.Resolve<IHisEngine2>().CurrentMemory;
+            HisDataMemoryBlockCollection mtags = Parent.CurrentMemory;
 
             if (memory != null)
             {

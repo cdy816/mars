@@ -71,6 +71,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Init()
         {
+            mDataFiles.Clear();
             string cfgpath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Config", "DataFileSerise.cfg");
             if (System.IO.File.Exists(cfgpath))
             {

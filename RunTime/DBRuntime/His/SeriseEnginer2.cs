@@ -164,7 +164,7 @@ namespace Cdy.Tag
         public void Init()
         {
             DataFileSeriserManager.manager.Init();
-            CompressUnitManager2.Manager.Init();
+          
 
             var his = ServiceLocator.Locator.Resolve<IHisEngine2>();
             var histag = his.ListAllTags().OrderBy(e => e.Id);

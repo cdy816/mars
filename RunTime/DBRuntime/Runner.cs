@@ -270,15 +270,22 @@ namespace Cdy.Tag
                 var task = mHisFileManager.Int();
                 realEnginer = new RealEnginer(mRealDatabase);
                 realEnginer.Init();
+                ServiceLocator.Locator.Registor<IRealData>(realEnginer);
+                ServiceLocator.Locator.Registor<IRealDataNotify>(realEnginer);
+                ServiceLocator.Locator.Registor<IRealDataNotifyForProducter>(realEnginer);
+                ServiceLocator.Locator.Registor<IRealTagConsumer>(realEnginer);
+                ServiceLocator.Locator.Registor<IRealTagProduct>(realEnginer);
 
                 hisEnginer = new HisEnginer2(mHisDatabase, realEnginer);
                 hisEnginer.MergeMemoryTime = mHisDatabase.Setting.DataBlockDuration * 60;
-                hisEnginer.LogManager = new LogManager2() { Database = mDatabaseName };
+                hisEnginer.LogManager = new LogManager2() { Database = mDatabaseName,Parent=hisEnginer };
                 hisEnginer.Init();
+                ServiceLocator.Locator.Registor<IHisEngine2>(hisEnginer);
 
                 compressEnginer = new CompressEnginer2();
                 compressEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
                 compressEnginer.Init();
+                ServiceLocator.Locator.Registor<IDataCompress2>(compressEnginer);
 
                 seriseEnginer = new SeriseEnginer2() { DatabaseName = database };
                 seriseEnginer.FileDuration = mHisDatabase.Setting.FileDataDuration;
@@ -286,6 +293,7 @@ namespace Cdy.Tag
                 seriseEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
                 seriseEnginer.DataSeriser = mHisDatabase.Setting.DataSeriser;
                 seriseEnginer.Init();
+                ServiceLocator.Locator.Registor<IDataSerialize2>(seriseEnginer);
 
                 querySerivce = new QuerySerivce(this.mDatabaseName);
 
@@ -315,16 +323,7 @@ namespace Cdy.Tag
         /// </summary>
         private void RegistorInterface()
         {
-            ServiceLocator.Locator.Registor<IRealData>(realEnginer);
-            ServiceLocator.Locator.Registor<IRealDataNotify>(realEnginer);
-            ServiceLocator.Locator.Registor<IRealDataNotifyForProducter>(realEnginer);
-            ServiceLocator.Locator.Registor<IRealTagConsumer>(realEnginer);
-            ServiceLocator.Locator.Registor<IRealTagProduct>(realEnginer);
-
-            ServiceLocator.Locator.Registor<IHisEngine2>(hisEnginer);
-            ServiceLocator.Locator.Registor<IDataCompress2>(compressEnginer);
-            ServiceLocator.Locator.Registor<IDataSerialize2>(seriseEnginer);
-
+           
             ServiceLocator.Locator.Registor<IHisQuery>(querySerivce);
 
             ServiceLocator.Locator.Registor<ITagManager>(mRealDatabase);

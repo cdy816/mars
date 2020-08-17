@@ -84,6 +84,8 @@ namespace Cdy.Tag
         /// </summary>
         public void Init()
         {
+            CompressUnitManager2.Manager.Init();
+
             mHisTagService = ServiceLocator.Locator.Resolve<IHisEngine2>();
             CompressMemory2.TagCountPerMemory = TagCountOneFile;
 

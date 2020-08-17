@@ -126,6 +126,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Init()
         {
+            mCompressUnit.Clear();
             string cfgpath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Config", "Compress.cfg");
             if (System.IO.File.Exists(cfgpath))
             {

@@ -28,6 +28,65 @@ namespace DBInStudio.Desktop
             this.DataContext = new MainViewModel();
         }
 
+        private void closeB_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void minB_Click(object sender, RoutedEventArgs e)
+        {
+            this.WindowState = WindowState.Minimized;
+        }
+
+        private void Grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            //(sender as Grid).CaptureMouse();
+            if (e.ClickCount > 1)
+            {
+                if (WindowState == WindowState.Maximized)
+                {
+                    WindowState = WindowState.Normal;
+                }
+                else
+                {
+                    WindowState = WindowState.Maximized;
+                }
+            }
+            else
+            {
+                this.DragMove();
+            }
+        }
+
+        private void Grid_MouseMove(object sender, MouseEventArgs e)
+        {
+            if(e.LeftButton == MouseButtonState.Pressed)
+            {
+                if(WindowState == WindowState.Maximized)
+                {
+                    WindowState = WindowState.Normal;
+                }
+            }
+        }
+
+        private void Grid_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+           
+        }
+
+        private void maxB_Click(object sender, RoutedEventArgs e)
+        {
+            if (WindowState == WindowState.Maximized)
+            {
+                WindowState = WindowState.Normal;
+            }
+            else
+            {
+                WindowState = WindowState.Maximized;
+            }
+        }
+
+
         private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             (this.DataContext as MainViewModel).CurrentSelectGroup = tv.SelectedItem as TreeItemViewModel;
@@ -66,5 +125,7 @@ namespace DBInStudio.Desktop
             (sender as TextBox).SelectAll();
             (sender as TextBox).Focus();
         }
+
+
     }
 }

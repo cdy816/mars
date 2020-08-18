@@ -80,14 +80,14 @@
             <RowDefinition Height="32"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <ListBox SelectionMode="Extended" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" Grid.Row="1" Margin="9,6,0,12" HorizontalAlignment="Left" Width="300" ItemsSource="{Binding SelectGroups}">
+        <ListBox Background="Transparent" SelectionMode="Extended" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" Grid.Row="1" Margin="9,6,0,12" HorizontalAlignment="Left" Width="300" ItemsSource="{Binding SelectGroups}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Label Content="{Binding Name}" />
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <ListBox SelectionMode="Extended"  ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}"  Grid.Row="1" Margin="408,6,0,12" HorizontalAlignment="Left" Width="300" ItemsSource="{Binding AllGroups}">
+        <ListBox  Background="Transparent" SelectionMode="Extended"  ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}"  Grid.Row="1" Margin="408,6,0,12" HorizontalAlignment="Left" Width="300" ItemsSource="{Binding AllGroups}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Label Content="{Binding Name}" />

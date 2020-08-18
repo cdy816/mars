@@ -1,0 +1,17 @@
+﻿<UserControl x:Class="DBInStudio.Desktop.View.MarInfoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:DBInStudio.Desktop.View"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <TextBlock Opacity="0.1" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,20" Text="{Binding MarsTitle}" FontSize="56" TextWrapping="Wrap" VerticalAlignment="Bottom"  FontFamily="Microsoft YaHei" FontWeight="Bold" />
+        <TextBlock Opacity="0.1" Foreground="White" HorizontalAlignment="Center" Margin="0,20,0,0" Text="{Binding TimeString}"  FontSize="56" TextWrapping="Wrap" VerticalAlignment="Top" Grid.Row="1" FontFamily="Microsoft YaHei"  FontWeight="Bold"/>
+    </Grid>
+</UserControl>

@@ -79,6 +79,8 @@ namespace DBInStudio.Desktop
 
         private System.Timers.Timer mCheckRunningTimer;
 
+        private MarInfoViewModel infoModel;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -96,6 +98,10 @@ namespace DBInStudio.Desktop
             CurrentUserManager.Manager.RefreshNameEvent += Manager_RefreshNameEvent;
             mCheckRunningTimer = new System.Timers.Timer(1000);
             mCheckRunningTimer.Elapsed += MCheckRunningTimer_Elapsed;
+            infoModel = new MarInfoViewModel();
+
+            mContentViewModel = infoModel;
+
         }
 
         
@@ -810,7 +816,7 @@ namespace DBInStudio.Desktop
             if (ContentViewModel != null)
                 ContentViewModel.Dispose();
 
-            ContentViewModel = null;
+            ContentViewModel = infoModel;
             Database = string.Empty;
             StopCheckDatabaseRunning();
         }
@@ -896,6 +902,8 @@ namespace DBInStudio.Desktop
 
             if(mCurrentSelectTreeItem!=null)
             ContentViewModel = mCurrentSelectTreeItem.GetModel(ContentViewModel);
+
+            if (ContentViewModel == null) ContentViewModel = infoModel;
 
             if (ContentViewModel is IModeSwitch)
             {

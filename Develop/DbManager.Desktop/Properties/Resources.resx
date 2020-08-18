@@ -218,6 +218,9 @@
   <data name="MainwindowTitle" xml:space="preserve">
     <value>Mars database developer</value>
   </data>
+  <data name="MarsTitle" xml:space="preserve">
+    <value>Welcome to Mars realtime iot database</value>
+  </data>
   <data name="MaxValue" xml:space="preserve">
     <value>MaxValue</value>
   </data>

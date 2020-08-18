@@ -63,6 +63,10 @@
         <view:LinearConvertView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type viewmodel:MarInfoViewModel}">
+        <view:MarInfoView />
+    </DataTemplate>
+
     <BooleanToVisibilityConverter x:Key="bvc" />
     
     <Style TargetType="{x:Type local:CustomWindowBase}">
@@ -151,7 +155,7 @@
                     <Border x:Name="border" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" SnapsToDevicePixels="true">
                         <Grid>
                             <!--<ContentPresenter  x:Name="contentPresenter" Focusable="False" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>-->
-                            <Image  x:Name="contentPresenter" Source="/DBInStudio;component/Image/hidden.png" Stretch="None" HorizontalAlignment="Center" VerticalAlignment="Center"   RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                            <Image  x:Name="contentPresenter" Source="/DBInStudio;component/Image/hidden.png" Width="16" Height="8" Stretch="Fill" HorizontalAlignment="Center" VerticalAlignment="Center"   RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -159,15 +163,17 @@
                             <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="true">
-                            <Setter Property="Background" TargetName="border" Value="{StaticResource Button.MouseOver.Background}"/>
+                            <Setter Property="Background" TargetName="border" Value="#1FFFFFFF"/>
                             <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource Button.MouseOver.Border}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="true">
-                            <Setter Property="Background" TargetName="border" Value="{StaticResource Button.Pressed.Background}"/>
+                            <Setter Property="Background" TargetName="border" Value="#1FFFFFFF"/>
                             <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource Button.Pressed.Border}"/>
                         </Trigger>
                         <Trigger Property="IsChecked" Value="true">
                             <Setter Property="Source" TargetName="contentPresenter" Value="/DBInStudio;component/Image/show.png"/>
+                            <Setter Property="Height" TargetName="contentPresenter" Value="16"/>
+                            <Setter Property="Width" TargetName="contentPresenter" Value="24"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -184,9 +190,9 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <PasswordBox x:Name="pb"  VerticalContentAlignment="Center" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"  />
-                        <TextBox x:Name="tb" VerticalContentAlignment="Center"  Text="{Binding Password,Mode=TwoWay,RelativeSource={RelativeSource Mode=TemplatedParent}}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" />
-                        <ToggleButton Background="Transparent" BorderThickness="0" Margin="10,0,0,0"  Grid.Column="1"   IsChecked="{Binding IsShowPassword,Mode=TwoWay,RelativeSource={RelativeSource Mode=TemplatedParent},UpdateSourceTrigger=PropertyChanged}" Width="30" Height="24" >
+                        <PasswordBox x:Name="pb" Foreground="{TemplateBinding Foreground}"  Background="{TemplateBinding Background}" VerticalContentAlignment="Center" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"  />
+                        <TextBox Foreground="{TemplateBinding Foreground}"  Background="{TemplateBinding Background}" x:Name="tb" VerticalContentAlignment="Center"  Text="{Binding Password,Mode=TwoWay,RelativeSource={RelativeSource Mode=TemplatedParent}}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" />
+                        <ToggleButton Style="{StaticResource ToggleButtonStyle1}"  Background="Transparent" BorderThickness="0" Margin="10,0,0,0"  Grid.Column="1"   IsChecked="{Binding IsShowPassword,Mode=TwoWay,RelativeSource={RelativeSource Mode=TemplatedParent},UpdateSourceTrigger=PropertyChanged}" Width="30" Height="24" >
                             <Image Source="/Image/show.png" />
                         </ToggleButton>
                     </Grid>

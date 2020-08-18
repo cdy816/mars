@@ -5,8 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DBInStudio.Desktop.View"
              xmlns:res="clr-namespace:DBInStudio.Desktop"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800" Background="White">
+             mc:Ignorable="d" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}"
+             d:DesignHeight="450" d:DesignWidth="800" >
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="btv" />
         <res:BoolInvertConvert x:Key="bic" />
@@ -29,6 +29,42 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <SolidColorBrush x:Key="ListBox.Static.Background" Color="#FFFFFFFF"/>
+        <SolidColorBrush x:Key="ListBox.Static.Border" Color="#FFABADB3"/>
+        <SolidColorBrush x:Key="ListBox.Disabled.Background" Color="#FFFFFFFF"/>
+        <SolidColorBrush x:Key="ListBox.Disabled.Border" Color="#FFD9D9D9"/>
+        <Style x:Key="ListBoxStyle1" TargetType="{x:Type ListBox}">
+            <Setter Property="Background" Value="{StaticResource ListBox.Static.Background}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource ListBox.Static.Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.CanContentScroll" Value="true"/>
+            <Setter Property="ScrollViewer.PanningMode" Value="Both"/>
+            <Setter Property="Stylus.IsFlicksEnabled" Value="False"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBox}">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" Padding="1" SnapsToDevicePixels="true">
+                            <ScrollViewer Focusable="false" Padding="{TemplateBinding Padding}">
+                                <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                            </ScrollViewer>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsGrouping" Value="true"/>
+                                    <Condition Property="VirtualizingPanel.IsVirtualizingWhenGrouping" Value="false"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="ScrollViewer.CanContentScroll" Value="false"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
     </UserControl.Resources>
     <Grid>
@@ -38,29 +74,29 @@
             <RowDefinition Height="32"/>
         </Grid.RowDefinitions>
         <Border BorderBrush="Gray" BorderThickness="0,0,0,1"/>
-        <Label Content="{res:ResMarker UserList}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-        <ListBox ItemsSource="{Binding Users}" HorizontalContentAlignment="Stretch" SelectedItem="{Binding CurrentSelectedUser}" Grid.Row="1" HorizontalAlignment="Left" Width="300" Margin="5,5,0,1">
+        <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{res:ResMarker UserList}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+        <ListBox Background="#1FFFFFFF" ItemsSource="{Binding Users}" HorizontalContentAlignment="Stretch" SelectedItem="{Binding CurrentSelectedUser}" Grid.Row="1" HorizontalAlignment="Left" Width="300" Margin="5,5,0,1">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid HorizontalAlignment="Stretch" Height="26">
-                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                        <TextBox Margin="-5,-1" Loaded="TextBox_Loaded" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalContentAlignment="Center" Visibility="{Binding IsEdit,Converter={StaticResource btv}}" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" Keyboard.KeyDown="TextBox_KeyDown" />
+                        <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding Name}" VerticalAlignment="Center" />
+                        <TextBox Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="-5,-1" Loaded="TextBox_Loaded" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalContentAlignment="Center" Visibility="{Binding IsEdit,Converter={StaticResource btv}}" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" Keyboard.KeyDown="TextBox_KeyDown" />
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Button Command="{Binding AddCommand}" Content="{res:ResMarker Add}" HorizontalAlignment="Left" Margin="5,0,0,0" Grid.Row="2" VerticalAlignment="Center" Width="94" Height="26">
+        <Button  BorderBrush="Gray"  Command="{Binding AddCommand}" Content="{res:ResMarker Add}" HorizontalAlignment="Left" Margin="5,0,0,0" Grid.Row="2" VerticalAlignment="Center" Width="94" Height="26">
             <Button.ContentTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal" Margin="0">
 
                         <Image Source="/Image/Add.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
-                        <TextBlock Text="{Binding}" Grid.Column="1" />
+                        <TextBlock  Text="{Binding}" Grid.Column="1" />
                     </StackPanel>
                 </DataTemplate>
             </Button.ContentTemplate>
         </Button>
-        <Button Command="{Binding RemoveCommand}" Content="{res:ResMarker Remove}" HorizontalAlignment="Left" Margin="110,0,0,0" Grid.Row="2" VerticalAlignment="Center" Width="94" Height="26">
+        <Button  BorderBrush="Gray"  Command="{Binding RemoveCommand}" Content="{res:ResMarker Remove}" HorizontalAlignment="Left" Margin="110,0,0,0" Grid.Row="2" VerticalAlignment="Center" Width="94" Height="26">
             <Button.ContentTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal" Margin="0">
@@ -83,25 +119,25 @@
                 <RowDefinition Height="32"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <Label Content="{res:ResMarker UserName,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center"/>
-            <Label Content="{res:ResMarker Password,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Grid.Row="1"/>
-            <Label Content="{res:ResMarker IsAdmin,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Grid.Row="2"/>
-            <Label Content="{res:ResMarker NewDatabase,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Grid.Row="3"/>
+            <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{res:ResMarker UserName,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center"/>
+            <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{res:ResMarker Password,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Grid.Row="1"/>
+            <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{res:ResMarker IsAdmin,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Grid.Row="2"/>
+            <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{res:ResMarker NewDatabase,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Grid.Row="3"/>
 
-            <Label Content="{res:ResMarker Database,:}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Grid.Row="4"/>
-            <TextBox  VerticalContentAlignment="Center" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" Margin="10,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Height="26" Grid.Column="1" KeyDown="TextBox_KeyDown" />
+            <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{res:ResMarker Database,:}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Grid.Row="4"/>
+            <TextBox Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" Margin="10,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Height="26" Grid.Column="1" KeyDown="TextBox_KeyDown" />
             <!--<PasswordBox HorizontalAlignment="Left" VerticalContentAlignment="Center" Margin="10,0,0,0" VerticalAlignment="Center" Width="300" Height="26" Grid.Column="1" Password="123456"  Grid.Row="1" PasswordChanged="PasswordBox_PasswordChanged"/>-->
-            <res:PasswordControl BorderBrush="Gray" BorderThickness="1" Password="{Binding Password,Mode=TwoWay}" Grid.Column="1" Grid.Row="1" Margin="10,0,0,0" Width="300" VerticalAlignment="Center" Height="26" HorizontalAlignment="Left"/>
-            <ListBox ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" IsEnabled="{Binding IsAdmin,Converter={StaticResource bic}}"  ItemsSource="{Binding PermissionModel}" Grid.Column="1" Grid.Row="4" Margin="10,10,0,0" Width="300" HorizontalAlignment="Left" >
+            <res:PasswordControl BorderBrush="Gray" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"  BorderThickness="1" Password="{Binding Password,Mode=TwoWay}" Grid.Column="1" Grid.Row="1" Margin="10,0,0,0" Width="300" VerticalAlignment="Center" Height="26" HorizontalAlignment="Left"/>
+            <ListBox Style="{DynamicResource ListBoxStyle1}" Background="#1FFFFFFF" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" IsEnabled="{Binding IsAdmin,Converter={StaticResource bic}}"  ItemsSource="{Binding PermissionModel}" Grid.Column="1" Grid.Row="4" Margin="10,10,0,0" Width="300" HorizontalAlignment="Left" >
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <CheckBox IsChecked="{Binding IsSelected,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Content="{Binding Name}" />
+                        <CheckBox BorderBrush="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" IsChecked="{Binding IsSelected,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Content="{Binding Name}" />
                     </DataTemplate>
                 </ListBox.ItemTemplate>
 
             </ListBox>
-            <CheckBox  Grid.Column="1" IsChecked="{Binding IsAdmin,Mode=TwoWay}" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="2" VerticalAlignment="Center"/>
-            <CheckBox  Grid.Column="1" IsChecked="{Binding CanNewDatabase,Mode=TwoWay}" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="3" VerticalAlignment="Center"/>
+            <CheckBox BorderBrush="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Background="#1FFFFFFF" Grid.Column="1" IsChecked="{Binding IsAdmin,Mode=TwoWay}" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="2" VerticalAlignment="Center"/>
+            <CheckBox BorderBrush="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"  Background="#1FFFFFFF" Grid.Column="1" IsChecked="{Binding CanNewDatabase,Mode=TwoWay}" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="3" VerticalAlignment="Center"/>
         </Grid>
 
 

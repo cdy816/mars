@@ -5,11 +5,112 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DBInStudio.Desktop.View"
              xmlns:res="clr-namespace:DBInStudio.Desktop"
-             mc:Ignorable="d" 
+             mc:Ignorable="d"  Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}"
+             xmlns:theme="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <res:IndexConverter x:Key="ic" />
         <BooleanToVisibilityConverter x:Key="btv" />
+        <Style x:Key="DataGridRowStyle1" TargetType="{x:Type DataGridRow}">
+            <Setter Property="Background" Value="#1FFFFFFF"/>
+            <Setter Property="SnapsToDevicePixels" Value="true"/>
+            <Setter Property="Validation.ErrorTemplate" Value="{x:Null}"/>
+            <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+            <Setter Property="ValidationErrorTemplate">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <TextBlock Foreground="Red" Margin="2,0,0,0" Text="!" VerticalAlignment="Center"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DataGridRow}">
+                        <Border x:Name="DGR_Border" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" SnapsToDevicePixels="True">
+                            <SelectiveScrollingGrid>
+                                <SelectiveScrollingGrid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </SelectiveScrollingGrid.ColumnDefinitions>
+                                <SelectiveScrollingGrid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </SelectiveScrollingGrid.RowDefinitions>
+                                <DataGridCellsPresenter Grid.Column="1" ItemsPanel="{TemplateBinding ItemsPanel}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                <DataGridDetailsPresenter Grid.Column="1" Grid.Row="1" SelectiveScrollingGrid.SelectiveScrollingOrientation="{Binding AreRowDetailsFrozen, Converter={x:Static DataGrid.RowDetailsScrollingConverter}, ConverterParameter={x:Static SelectiveScrollingOrientation.Vertical}, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}" Visibility="{TemplateBinding DetailsVisibility}"/>
+                                <DataGridRowHeader Grid.RowSpan="2" SelectiveScrollingGrid.SelectiveScrollingOrientation="Vertical" Visibility="{Binding HeadersVisibility, Converter={x:Static DataGrid.HeadersVisibilityConverter}, ConverterParameter={x:Static DataGridHeadersVisibility.Row}, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"/>
+                            </SelectiveScrollingGrid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsNewItem" Value="True">
+                    <Setter Property="Margin" Value="{Binding NewItemMargin, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <SolidColorBrush x:Key="{x:Static DataGrid.FocusBorderBrushKey}" Color="#FF000000"/>
+        <Style x:Key="DataGridCellStyle1" TargetType="{x:Type DataGridCell}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DataGridCell}">
+                        <Border Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" SnapsToDevicePixels="True">
+                            <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+                </Trigger>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource {x:Static DataGrid.FocusBorderBrushKey}}"/>
+                </Trigger>
+
+                <Trigger Property="IsEnabled" Value="false">
+                    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="ColumnHeaderGripperStyle" TargetType="{x:Type Thumb}">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Cursor" Value="SizeWE"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Thumb}">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="DataGridColumnHeaderStyle1" TargetType="{x:Type DataGridColumnHeader}">
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="2"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DataGridColumnHeader}">
+                        <Grid>
+                            <theme:DataGridHeaderBorder Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" IsClickable="{TemplateBinding CanUserSort}" IsPressed="{TemplateBinding IsPressed}" IsHovered="{TemplateBinding IsMouseOver}" Padding="{TemplateBinding Padding}" SeparatorBrush="{TemplateBinding SeparatorBrush}" SortDirection="{TemplateBinding SortDirection}" SeparatorVisibility="{TemplateBinding SeparatorVisibility}">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                            </theme:DataGridHeaderBorder>
+                            <Thumb x:Name="PART_LeftHeaderGripper" HorizontalAlignment="Left" Style="{StaticResource ColumnHeaderGripperStyle}"/>
+                            <Thumb x:Name="PART_RightHeaderGripper" HorizontalAlignment="Right" Style="{StaticResource ColumnHeaderGripperStyle}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -18,14 +119,14 @@
             <RowDefinition Height="32"/>
         </Grid.RowDefinitions>
         <Border BorderBrush="Gray" BorderThickness="0,0,0,1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <Label Content="{res:ResMarker PermissionList}" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Center"/>
+            <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{res:ResMarker PermissionList}" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Center"/>
         </Border>
-        <DataGrid ItemsSource="{Binding Permissions}" SelectedItem="{Binding CurrentSelected}" Background="Transparent" BorderThickness="0,0,0,1" Grid.Row="1" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" MinRowHeight="24">
+        <DataGrid RowHeaderWidth="0" ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}" CellStyle="{DynamicResource DataGridCellStyle1}" RowStyle="{DynamicResource DataGridRowStyle1}" ItemsSource="{Binding Permissions}" SelectedItem="{Binding CurrentSelected}" Background="Transparent" BorderThickness="0,0,0,1" Grid.Row="1" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" MinRowHeight="24">
             <DataGrid.Columns>
                 <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="30" Header="{res:ResMarker Id}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" >
+                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" HorizontalAlignment="Center" VerticalAlignment="Center" >
                                 <TextBlock.Text>
                                     <MultiBinding Converter="{StaticResource ic}">
                                         <Binding />
@@ -41,12 +142,12 @@
                 <DataGridTemplateColumn Header="{res:ResMarker Name}"  Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Text="{Binding Name}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="5,0" Text="{Binding Name}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox Margin="0,0" IsReadOnly="{Binding IsNameReadOnly}" IsEnabled="{Binding IsEnableEdit}"  Padding="4,0" BorderThickness="0" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                            <TextBox  Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="0,0" IsReadOnly="{Binding IsNameReadOnly}" IsEnabled="{Binding IsEnableEdit}"  Padding="4,0" BorderThickness="0" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -55,12 +156,12 @@
                 <DataGridTemplateColumn Header="{res:ResMarker Desc}"  Width="200">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Text="{Binding Desc}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="5,0" Text="{Binding Desc}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox Margin="0,0" Padding="4,0" IsEnabled="{Binding IsEnableEdit}"  BorderThickness="0" Text="{Binding Desc,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                            <TextBox Background="#1FFFFFFF" Margin="0,0" Padding="4,0" IsEnabled="{Binding IsEnableEdit}"  BorderThickness="0" Text="{Binding Desc,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -69,7 +170,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <CheckBox VerticalAlignment="Center" IsEnabled="{Binding IsEnableEdit}" IsChecked="{Binding EnableWrite,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="5,0" />
+                                <CheckBox BorderBrush="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalAlignment="Center" IsEnabled="{Binding IsEnableEdit}" IsChecked="{Binding EnableWrite,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="5,0" />
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -78,14 +179,14 @@
                 <DataGridTemplateColumn Header="{res:ResMarker Group}"  Width="*" MinWidth="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Text="{Binding GroupString}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="5,0" Text="{Binding GroupString}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <TextBox Margin="0,0" Padding="4,0" IsEnabled="{Binding IsEnableEdit}" MinWidth="200"  BorderThickness="0" Text="{Binding GroupString,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
-                                <Button Margin="10,0,0,0" Content="..." IsEnabled="{Binding IsEnableEdit}"  MinWidth="40" VerticalAlignment="Center" VerticalContentAlignment="Top" Command="{Binding GroupEditCommand}" />
+                                <TextBox Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="0,0" Padding="4,0" IsEnabled="{Binding IsEnableEdit}" MinWidth="200"  BorderThickness="0" Text="{Binding GroupString,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                                <Button Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="10,0,0,0" Content="..." IsEnabled="{Binding IsEnableEdit}"  MinWidth="40" VerticalAlignment="Center" VerticalContentAlignment="Top" Command="{Binding GroupEditCommand}" />
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
@@ -100,7 +201,7 @@
                             <StackPanel Orientation="Horizontal" Margin="0">
 
                                 <Image Source="/Image/Add.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
-                                <TextBlock Text="{Binding}" Grid.Column="1" />
+                                <TextBlock  Text="{Binding}" Grid.Column="1" />
                             </StackPanel>
                         </DataTemplate>
                     </Button.ContentTemplate>

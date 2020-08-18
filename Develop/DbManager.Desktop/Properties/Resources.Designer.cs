@@ -358,6 +358,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Welcome to Mars realtime iot database 的本地化字符串。
+        /// </summary>
+        internal static string MarsTitle {
+            get {
+                return ResourceManager.GetString("MarsTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 MaxValue 的本地化字符串。
         /// </summary>
         internal static string MaxValue {

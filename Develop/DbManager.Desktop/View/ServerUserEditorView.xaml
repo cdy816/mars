@@ -19,13 +19,13 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="333*"/>
         </Grid.ColumnDefinitions>
-        <Label Content="{res:ResMarker UserName,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center"/>
-        <TextBox Text="{Binding UserName}" Grid.Column="1" HorizontalAlignment="Left" Margin="10,0,0,0" Height=" 26"  TextWrapping="Wrap" VerticalAlignment="Center" Width="260" IsReadOnly="True"/>
-        <Label Content="{res:ResMarker Password,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Grid.Row="1"/>
+        <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{res:ResMarker UserName,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center"/>
+        <TextBox Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Background="#1FFFFFFF" VerticalContentAlignment="Center" Text="{Binding UserName}" Grid.Column="1" HorizontalAlignment="Left" Margin="10,0,0,0" Height=" 26"  TextWrapping="Wrap" VerticalAlignment="Center" Width="260" IsReadOnly="True"/>
+        <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{res:ResMarker Password,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Grid.Row="1"/>
         <res:PasswordControl BorderBrush="Gray" BorderThickness="1" Password="{Binding Password,Mode=TwoWay}" Grid.Column="1" Grid.Row="1" Margin="10,0,0,0" Width="300" VerticalAlignment="Center" Height="26" HorizontalAlignment="Left"/>
-        <Label Content="{res:ResMarker PasswordNew,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Grid.Row="2"/>
+        <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{res:ResMarker PasswordNew,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Grid.Row="2"/>
         <res:PasswordControl BorderBrush="Gray" BorderThickness="1" Password="{Binding NewPassword, Mode=TwoWay}" Grid.Column="1" Grid.Row="2" Margin="10,0,0,0" Width="300" VerticalAlignment="Center" Height="26" HorizontalAlignment="Left"/>
-        <Label Content="{res:ResMarker PasswordConfirm, :}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Grid.Row="3"/>
+        <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{res:ResMarker PasswordConfirm, :}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Grid.Row="3"/>
         <res:PasswordControl BorderBrush="Gray" BorderThickness="1" Password="{Binding ConfirmPassword, Mode=TwoWay}" Grid.Column="1" Grid.Row="3" Margin="10,0,0,0" Width="300" VerticalAlignment="Center" Height="26" HorizontalAlignment="Left"/>
         <Button Content="{res:ResMarker Modify}" Command="{Binding ModifyCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="9,16,0,0" Grid.Row="4" VerticalAlignment="Top" Width="124" Height="31"/>
     </Grid>

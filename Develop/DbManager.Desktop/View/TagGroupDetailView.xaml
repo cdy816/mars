@@ -4,8 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DBInStudio.Desktop"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             mc:Ignorable="d"  Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}"
+             d:DesignHeight="450" d:DesignWidth="800"
+    xmlns:theme="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2">
     <UserControl.Resources>
         <local:IndexConverter x:Key="ic" />
         <BooleanToVisibilityConverter x:Key="btv" />
@@ -22,7 +23,7 @@
             <MenuItem Header="{local:ResMarker Paste}" Command="{Binding PasteCommand}" />
         </ContextMenu>
         <Style x:Key="DataGridRowStyle1" TargetType="{x:Type DataGridRow}">
-            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"/>
+            <Setter Property="Background" Value="#1FFFFFFF"/>
             <Setter Property="SnapsToDevicePixels" Value="true"/>
             <Setter Property="Validation.ErrorTemplate" Value="{x:Null}"/>
             <Setter Property="IsSelected" Value="{Binding IsSelected}" />
@@ -89,9 +90,41 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+        <Style x:Key="ColumnHeaderGripperStyle" TargetType="{x:Type Thumb}">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Cursor" Value="SizeWE"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Thumb}">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="DataGridColumnHeaderStyle1" TargetType="{x:Type DataGridColumnHeader}">
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="2"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type DataGridColumnHeader}">
+                        <Grid>
+                            <theme:DataGridHeaderBorder Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" IsClickable="{TemplateBinding CanUserSort}" IsPressed="{TemplateBinding IsPressed}" IsHovered="{TemplateBinding IsMouseOver}" Padding="{TemplateBinding Padding}" SeparatorBrush="{TemplateBinding SeparatorBrush}" SortDirection="{TemplateBinding SortDirection}" SeparatorVisibility="{TemplateBinding SeparatorVisibility}">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                            </theme:DataGridHeaderBorder>
+                            <Thumb x:Name="PART_LeftHeaderGripper" HorizontalAlignment="Left" Style="{StaticResource ColumnHeaderGripperStyle}"/>
+                            <Thumb x:Name="PART_RightHeaderGripper" HorizontalAlignment="Right" Style="{StaticResource ColumnHeaderGripperStyle}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
     <Grid>
-        <DataGrid CellStyle="{DynamicResource DataGridCellStyle1}" RowStyle="{DynamicResource DataGridRowStyle1}" ScrollViewer.CanContentScroll="True" ContextMenu="{StaticResource ctxmenu}" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,32" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"   BorderThickness="0,0,0,1" Background="{x:Null}" >
+        <DataGrid RowHeaderWidth="0" ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}" CellStyle="{DynamicResource DataGridCellStyle1}" RowStyle="{DynamicResource DataGridRowStyle1}" ScrollViewer.CanContentScroll="True" ContextMenu="{StaticResource ctxmenu}" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,32" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"   BorderThickness="0,0,0,1" Background="#1FFFFFFF" >
             <DataGrid.InputBindings>
                 <KeyBinding Command="{Binding CopyCommand}" Key="C" Modifiers="Ctrl" />
                 <KeyBinding Command="{Binding PasteCommand}" Key="V" Modifiers="Ctrl" />
@@ -104,7 +137,7 @@
                 <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="30" Header="{local:ResMarker Id}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" >
+                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" HorizontalAlignment="Center" VerticalAlignment="Center" >
                                 <TextBlock.Text>
                                     <MultiBinding Converter="{StaticResource ic}">
                                         <Binding />
@@ -119,12 +152,12 @@
                 <DataGridTemplateColumn Header="{local:ResMarker Name}" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Text="{Binding Name}" VerticalAlignment="Center" />
+                            <TextBlock Margin="5,0" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding Name}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox Margin="0,0" Padding="4,0" BorderThickness="0" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                            <TextBox Margin="0,0" Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Padding="4,0" BorderThickness="0" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -133,12 +166,12 @@
                 <DataGridTemplateColumn Header="{local:ResMarker Type}" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Text="{Binding TypeString}" VerticalAlignment="Center" />
+                            <TextBlock Margin="5,0" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding TypeString}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <ComboBox Margin="0" BorderThickness="0" ItemsSource="{Binding TagTypeList}" SelectedIndex="{Binding Type}" />
+                            <ComboBox Margin="0" Background="#1FFFFFFF"  BorderThickness="0" ItemsSource="{Binding TagTypeList}" SelectedIndex="{Binding Type}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -146,27 +179,27 @@
                 <DataGridTemplateColumn Header="{local:ResMarker ReadWriteMode}" MinWidth="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Text="{Binding ReadWriteModeString}" VerticalAlignment="Center" />
+                            <TextBlock Margin="5,0" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding ReadWriteModeString}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <ComboBox Margin="0" BorderThickness="0" ItemsSource="{Binding ReadWriteModeList}" SelectedIndex="{Binding ReadWriteMode}" />
+                            <ComboBox Margin="0" Background="#1FFFFFFF"  BorderThickness="0" ItemsSource="{Binding ReadWriteModeList}" SelectedIndex="{Binding ReadWriteMode}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="{local:ResMarker Convert}" MinWidth="100">
+                <DataGridTemplateColumn Header="{local:ResMarker Convert}" MinWidth="100" >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Text="{Binding ConvertString}" VerticalAlignment="Center" />
+                            <TextBlock  Margin="5,0" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding ConvertString}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Margin="5,0" Text="{Binding ConvertString}" VerticalAlignment="Center" MinWidth="60" />
-                                <Button Content="..." VerticalAlignment="Center" VerticalContentAlignment="Top" Command="{Binding ConvertEditCommand}" Width="30" />
+                                <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="5,0" Text="{Binding ConvertString}" VerticalAlignment="Center" MinWidth="60" />
+                                <Button Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="..." VerticalAlignment="Center" VerticalContentAlignment="Top" Command="{Binding ConvertEditCommand}" Width="30" />
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
@@ -175,12 +208,12 @@
                 <DataGridTemplateColumn Header="{local:ResMarker MaxValue}" MinWidth="100"  IsReadOnly="{Binding IsNumberTag,Converter={StaticResource biv}}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Text="{Binding MaxValue,Converter={StaticResource dvc}}" IsEnabled="{Binding IsNumberTag}" VerticalAlignment="Center" />
+                            <TextBlock Margin="5,0" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding MaxValue,Converter={StaticResource dvc}}" IsEnabled="{Binding IsNumberTag}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox Margin="5,0" Text="{Binding MaxValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}"  IsEnabled="{Binding IsNumberTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            <TextBox Background="#1FFFFFFF" Margin="5,0" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding MaxValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}"  IsEnabled="{Binding IsNumberTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -188,12 +221,12 @@
                 <DataGridTemplateColumn Header="{local:ResMarker MinValue}" MinWidth="100" IsReadOnly="{Binding IsNumberTag,Converter={StaticResource biv}}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0"  IsEnabled="{Binding IsNumberTag}" Text="{Binding MinValue,Converter={StaticResource dvc}}" VerticalAlignment="Center" />
+                            <TextBlock Margin="5,0" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"  IsEnabled="{Binding IsNumberTag}" Text="{Binding MinValue,Converter={StaticResource dvc}}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox Margin="5,0"  IsEnabled="{Binding IsNumberTag}" Text="{Binding MinValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            <TextBox Background="#1FFFFFFF" Margin="5,0" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"  IsEnabled="{Binding IsNumberTag}" Text="{Binding MinValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -201,12 +234,12 @@
                 <DataGridTemplateColumn Header="{local:ResMarker Precision}" MinWidth="100" IsReadOnly="{Binding IsFloatingTag,Converter={StaticResource biv}}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Text="{Binding Precision}" IsEnabled="{Binding IsFloatingTag}" VerticalAlignment="Center" />
+                            <TextBlock Margin="5,0" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding Precision}" IsEnabled="{Binding IsFloatingTag}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox Margin="5,0" Text="{Binding Precision,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsFloatingTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            <TextBox Background="#1FFFFFFF" Margin="5,0" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding Precision,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsFloatingTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -215,8 +248,8 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <CheckBox VerticalAlignment="Center" IsChecked="{Binding HasHisTag,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="5,0" />
-                                <TextBlock Text="{Binding RecordTypeString}" VerticalAlignment="Center" />
+                                <CheckBox Background="#1FFFFFFF" BorderBrush="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"  VerticalAlignment="Center" IsChecked="{Binding HasHisTag,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="5,0" />
+                                <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding RecordTypeString}" VerticalAlignment="Center" />
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -224,24 +257,24 @@
                 <DataGridTemplateColumn Header="{local:ResMarker Driver}" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Text="{Binding DriverName}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="5,0" Text="{Binding DriverName}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <ComboBox Margin="0" VerticalContentAlignment="Center" BorderThickness="0" ItemsSource="{Binding DriverList}" IsEditable="True" Text="{Binding DriverName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
+                            <ComboBox Background="#1FFFFFFF"   Margin="0" VerticalContentAlignment="Center" BorderThickness="0" ItemsSource="{Binding DriverList}" IsEditable="True" Text="{Binding DriverName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="{local:ResMarker Registor}" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Text="{Binding RegistorName}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="5,0" Text="{Binding RegistorName}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <ComboBox Margin="0" VerticalContentAlignment="Center" BorderThickness="0" ItemsSource="{Binding RegistorList}"  IsEditable="True" Text="{Binding RegistorName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
+                            <ComboBox Background="#1FFFFFFF"  Margin="0" VerticalContentAlignment="Center" BorderThickness="0" ItemsSource="{Binding RegistorList}"  IsEditable="True" Text="{Binding RegistorName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -251,12 +284,12 @@
                 <DataGridTemplateColumn Header="{local:ResMarker Desc}" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Text="{Binding Desc}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="5,0" Text="{Binding Desc}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox Margin="0,0" Padding="4,0" BorderThickness="0" Text="{Binding Desc,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                            <TextBox Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="0,0" Padding="4,0" BorderThickness="0" Text="{Binding Desc,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -277,11 +310,11 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="{local:ResMarker Circle,:}" VerticalAlignment="Center" />
-                                <TextBox Margin="8,0" Grid.Column="1" Width="60" Text="{Binding CompressCircle,Mode=TwoWay}" VerticalAlignment="Center" />
+                                <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{local:ResMarker Circle,:}" VerticalAlignment="Center" />
+                                <TextBox  Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="8,0" Grid.Column="1" Width="60" Text="{Binding CompressCircle,Mode=TwoWay}" VerticalAlignment="Center" />
                             </Grid>
-                            <TextBlock Text="{local:ResMarker CompressType,:}"  VerticalAlignment="Center"/>
-                            <ComboBox Margin="8,0" Width="160" VerticalAlignment="Center" ItemsSource="{Binding CompressTypeList}" SelectedIndex="{Binding CompressType,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{local:ResMarker CompressType,:}"  VerticalAlignment="Center"/>
+                            <ComboBox  Background="#1FFFFFFF"  Margin="8,0" Width="160" VerticalAlignment="Center" ItemsSource="{Binding CompressTypeList}" SelectedIndex="{Binding CompressType,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
                             <ContentControl  VerticalAlignment="Center" Content="{Binding CompressParameterModel}" HorizontalAlignment="Stretch" />
                         </StackPanel>
                         
@@ -289,52 +322,52 @@
                 </DataTemplate>
             </DataGrid.RowDetailsTemplate>
         </DataGrid>
-        <StackPanel Orientation="Horizontal" Grid.Column="1" Height="32" VerticalAlignment="Bottom" Background="#FFE7E8EC">
-            <Button Content="{local:ResMarker Add}" Command="{Binding AddCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" Padding="0">
+        <StackPanel Orientation="Horizontal" Grid.Column="1" Height="32" VerticalAlignment="Bottom"  Background="#1FFFFFFF">
+            <Button  BorderBrush="Gray"  BorderThickness="1" Background="#1FFFFFFF" Content="{local:ResMarker Add}" Command="{Binding AddCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" Padding="0">
                 <Button.ContentTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" Margin="0">
                            
                             <Image Source="/Image/Add.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
-                            <TextBlock Text="{Binding}" Grid.Column="1" />
+                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding}" Grid.Column="1" />
                         </StackPanel>
                     </DataTemplate>
                 </Button.ContentTemplate>
             </Button>
-            <Button Content="{local:ResMarker Remove}" Command="{Binding RemoveCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" Padding="0" >
+            <Button  BorderBrush="Gray"  BorderThickness="1" Background="#1FFFFFFF" Content="{local:ResMarker Remove}" Command="{Binding RemoveCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" Padding="0" >
                 <Button.ContentTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" Margin="0">
                             <Image Source="/Image/Remove.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
-                            <TextBlock Text="{Binding}" />
+                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding}" />
                         </StackPanel>
                     </DataTemplate>
                 </Button.ContentTemplate>
             </Button>
-            <Button Content="{local:ResMarker Import}" Command="{Binding ImportCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
+            <Button  BorderBrush="Gray"  BorderThickness="1" Background="#1FFFFFFF" Content="{local:ResMarker Import}" Command="{Binding ImportCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
                 <Button.ContentTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" Margin="0">
                             <Image Source="/Image/Import2.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
-                            <TextBlock Text="{Binding}" />
+                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding}" />
                         </StackPanel>
                     </DataTemplate>
                 </Button.ContentTemplate>
             </Button>
-            <Button Content="{local:ResMarker Export}" Command="{Binding ExportCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
+            <Button  BorderBrush="Gray"  BorderThickness="1" Background="#1FFFFFFF" Content="{local:ResMarker Export}" Command="{Binding ExportCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
                 <Button.ContentTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" Margin="0">
                             <Image Source="/Image/Export2.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
-                            <TextBlock Text="{Binding}" />
+                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding}" />
                         </StackPanel>
                     </DataTemplate>
                 </Button.ContentTemplate>
             </Button>
         </StackPanel>
         <StackPanel Orientation="Horizontal" Grid.Column="1" Height="32" HorizontalAlignment="Right" VerticalAlignment="Bottom" >
-            <Label Content="{local:ResMarker TagCount,:}" />
-            <Label Content="{Binding TagCount}" />
+            <Label Content="{local:ResMarker TagCount,:}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+            <Label Content="{Binding TagCount}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"/>
         </StackPanel>
     </Grid>
 </UserControl>

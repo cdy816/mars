@@ -1127,10 +1127,11 @@ namespace DBInStudio.Desktop
         #endregion ...Constructor...
 
         #region ... Properties ...
-        
+
         #endregion ...Properties...
 
         #region ... Methods    ...
+
         /// <summary>
         /// 
         /// </summary>
@@ -1149,6 +1150,11 @@ namespace DBInStudio.Desktop
         public override bool CanAddChild()
         {
             return false;
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
         }
         #endregion ...Methods...
 

@@ -20,7 +20,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 历史数据引擎2
     /// </summary>
-    public class HisEnginer2 : IHisEngine2
+    public class HisEnginer2 : IHisEngine2,IDisposable
     {
 
         #region ... Variables  ...
@@ -238,9 +238,7 @@ namespace Cdy.Tag
             sw.Start();
             if (mRealEnginer != null)
             {
-                //if (mManager == null)
-                //    mManager = new Cdy.Tag.HisDatabaseSerise().Load();
-
+               
                 mLastProcesser = new TimerMemoryCacheProcesser2() { Id = 0 };
                 mRecordTimerProcesser.Clear();
                 mRecordTimerProcesser.Add(mLastProcesser);
@@ -333,6 +331,12 @@ namespace Cdy.Tag
             }
             long ltmp = sw.ElapsedMilliseconds;
             AllocMemory();
+
+            if (LogManager != null)
+            {
+                LogManager.InitHeadData();
+            }
+
             sw.Stop();
             LoggerService.Service.Info("HisEnginer", "生成对象耗时:"+ltmp+" 内存分配耗时:"+(sw.ElapsedMilliseconds-ltmp));
         }
@@ -635,12 +639,9 @@ namespace Cdy.Tag
 
                 var abuffer = new HisDataMemoryBlock(ss) { TimerAddress=0, ValueAddress = valueOffset, QualityAddress = qulityOffset,Id=1 };
                 var bbuffer = new HisDataMemoryBlock(ss) { TimerAddress = 0, ValueAddress = valueOffset, QualityAddress = qulityOffset,Id=2 };
-                //abuffer.Clear();
-                //bbuffer.Clear();
                 mMergeMemory1.AddTagAddress(vv.Value.Id, abuffer);
                 mMergeMemory2.AddTagAddress(vv.Value.Id, bbuffer);
 
-                // addressoffset.Add(vv.Value.Id, new Tuple<long, int, int,int>(storeHeadSize,valueOffset, qulityOffset,ss));
                 storeHeadSize += ss;
 
                 var css = CalCachDatablockSize(vv.Value.TagType, vv.Value.Type, blockheadsize, out valueOffset,out qulityOffset);
@@ -650,23 +651,12 @@ namespace Cdy.Tag
 
                 vv.Value.HisValueMemory1 = cbuffer;
                 vv.Value.HisValueMemory2 = dbuffer;
-                //cbuffer.Clear();
-                //dbuffer.Clear();
                 mCachMemory1.AddTagAddress(vv.Value.Id, cbuffer);
                 mCachMemory2.AddTagAddress(vv.Value.Id, dbuffer);
-
-                //vv.Value.BlockHeadStartAddr = cachHeadSize;
-
-                //vv.Value.TimerValueStartAddr = vv.Value.BlockHeadStartAddr;
-
-                //vv.Value.HisValueStartAddr = vv.Value.BlockHeadStartAddr + valueOffset;
-               
-                //vv.Value.HisQulityStartAddr = vv.Value.BlockHeadStartAddr + qulityOffset;
 
                 vv.Value.DataSize = css;
 
                 cachHeadSize += css;
-                //vv.Value.Init();
             }
 
             
@@ -676,24 +666,9 @@ namespace Cdy.Tag
 
             CurrentMemory = mCachMemory1;
 
-            ClearMemoryHisData(mCachMemory1);
-            ClearMemoryHisData(mCachMemory2);
-            ClearMemoryHisData(mMergeMemory1);
-            ClearMemoryHisData(mMergeMemory2);
-            //mCachMemory1.Clear();
-            //mCachMemory2.Clear();
-            //mMergeMemory.Clear();
+            
 
         }
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //private void PrepareForReadyMemory()
-        //{
-        //    //写入时间
-        //    HisRunTag.StartTime = mLastProcessTime;
-        //}
 
         private string FormateDatetime(DateTime datetime)
         {
@@ -729,7 +704,17 @@ namespace Cdy.Tag
         {
             mIsClosed = false;
             mMegerProcessIsClosed = false;
-            
+            LoggerService.Service.Info("Record", "历史变量个数: " + this.mHisTags.Count);
+
+            ClearMemoryHisData(mCachMemory1);
+            ClearMemoryHisData(mCachMemory2);
+            ClearMemoryHisData(mMergeMemory1);
+            ClearMemoryHisData(mMergeMemory2);
+
+            mCachMemory1.MakeMemoryNoBusy();
+            mCachMemory2.MakeMemoryNoBusy();
+            mMergeMemory1.MakeMemoryNoBusy();
+            mMergeMemory2.MakeMemoryNoBusy();
 
             foreach (var vv in mRecordTimerProcesser)
             {
@@ -741,13 +726,6 @@ namespace Cdy.Tag
                 vv.Start();
             }
 
-            LoggerService.Service.Info("Record", "历史变量个数: " + this.mHisTags.Count);
-
-            mCachMemory1.MakeMemoryNoBusy();
-            mCachMemory2.MakeMemoryNoBusy();
-            mMergeMemory1.MakeMemoryNoBusy();
-            mMergeMemory2.MakeMemoryNoBusy();
-
             mLastProcessTime = DateTime.Now;
             HisRunTag.StartTime = mLastProcessTime;
             CurrentMemory = mCachMemory1;
@@ -758,7 +736,6 @@ namespace Cdy.Tag
 
             if (LogManager != null)
             {
-                LogManager.InitHeadData();
                 LogManager.Start();
             }
 
@@ -819,8 +796,7 @@ namespace Cdy.Tag
             {
                 resetEvent.WaitOne();
                 resetEvent.Reset();
-                //if (mIsClosed) return;
-
+                
                 if(mNeedSnapAllTag)
                 {
                     SnapeAllTag();
@@ -1133,32 +1109,13 @@ namespace Cdy.Tag
             foreach (var vv in mRecordTimerProcesser)
             {
                 vv.Stop();
-                vv.Dispose();
             }
-            mRecordTimerProcesser.Clear();
-
-            foreach(var vv in mValueChangedProcesser)
+            foreach (var vv in mValueChangedProcesser)
             {
                 vv.Stop();
-                vv.Dispose();
             }
-            mValueChangedProcesser.Clear();
-
-            if (LogManager != null) LogManager.Stop();
-
             SubmitLastDataToSave();
-
-            mIsClosed = true;
-
-            mLastValueChangedProcesser = null;
-            mLastProcesser = null;
-
-            mHisTags.Clear();
-
-            mCachMemory1?.Dispose();
-            mCachMemory2?.Dispose();
-            mMergeMemory1?.Dispose();
-            mMergeMemory2?.Dispose();
+            if (LogManager != null) LogManager.Stop();
         }
 
         /// <summary>
@@ -1211,7 +1168,36 @@ namespace Cdy.Tag
             return mHisTags.Values.ToList();
         }
 
-        
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Dispose()
+        {
+            foreach (var vv in mRecordTimerProcesser)
+            {
+                vv.Dispose();
+            }
+            mRecordTimerProcesser.Clear();
+
+            foreach (var vv in mValueChangedProcesser)
+            {
+                vv.Stop();
+                vv.Dispose();
+            }
+            mValueChangedProcesser.Clear();
+
+            mLastValueChangedProcesser = null;
+            mLastProcesser = null;
+
+            mHisTags.Clear();
+
+            mCachMemory1?.Dispose();
+            mCachMemory2?.Dispose();
+            mMergeMemory1?.Dispose();
+            mMergeMemory2?.Dispose();
+        }
+
+
 
         #endregion ...Methods...
 

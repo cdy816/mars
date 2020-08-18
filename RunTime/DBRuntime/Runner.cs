@@ -85,6 +85,25 @@ namespace Cdy.Tag
             ValueConvertManager.manager.Registor(new LinerConvert());
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public Runner()
+        {
+            RDDCManager.Manager.SwitchWorkStateAction = new Func<WorkState, bool>((state) => 
+            {
+                if(state == WorkState.Primary)
+                {
+
+                    return SwitchToPrimary();
+                }
+                else
+                {
+                    return SwitchToStandby();
+                }
+            });
+        }
+
         #endregion ...Constructor...
 
         #region ... Properties ...
@@ -157,7 +176,10 @@ namespace Cdy.Tag
             CurrentDatabaseVersion = this.mRealDatabase.Version;
             CurrentDatabase = mRealDatabase.Name;
             CurrentDatabaseLastUpdateTime = mRealDatabase.UpdateTime;
-            sw.Stop();
+
+            RDDCManager.Manager.Load(mDatabaseName);
+
+           sw.Stop();
             LoggerService.Service.Info("LoadDatabase", "load " +mDatabaseName +" take " + sw.ElapsedMilliseconds.ToString() +" ms");
         }
 
@@ -248,20 +270,30 @@ namespace Cdy.Tag
                 var task = mHisFileManager.Int();
                 realEnginer = new RealEnginer(mRealDatabase);
                 realEnginer.Init();
+                ServiceLocator.Locator.Registor<IRealData>(realEnginer);
+                ServiceLocator.Locator.Registor<IRealDataNotify>(realEnginer);
+                ServiceLocator.Locator.Registor<IRealDataNotifyForProducter>(realEnginer);
+                ServiceLocator.Locator.Registor<IRealTagConsumer>(realEnginer);
+                ServiceLocator.Locator.Registor<IRealTagProduct>(realEnginer);
 
                 hisEnginer = new HisEnginer2(mHisDatabase, realEnginer);
                 hisEnginer.MergeMemoryTime = mHisDatabase.Setting.DataBlockDuration * 60;
-                hisEnginer.LogManager = new LogManager2() { Database = mDatabaseName };
+                hisEnginer.LogManager = new LogManager2() { Database = mDatabaseName,Parent=hisEnginer };
                 hisEnginer.Init();
+                ServiceLocator.Locator.Registor<IHisEngine2>(hisEnginer);
 
                 compressEnginer = new CompressEnginer2();
                 compressEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
+                compressEnginer.Init();
+                ServiceLocator.Locator.Registor<IDataCompress2>(compressEnginer);
 
                 seriseEnginer = new SeriseEnginer2() { DatabaseName = database };
                 seriseEnginer.FileDuration = mHisDatabase.Setting.FileDataDuration;
                 seriseEnginer.BlockDuration = mHisDatabase.Setting.DataBlockDuration;
                 seriseEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
                 seriseEnginer.DataSeriser = mHisDatabase.Setting.DataSeriser;
+                seriseEnginer.Init();
+                ServiceLocator.Locator.Registor<IDataSerialize2>(seriseEnginer);
 
                 querySerivce = new QuerySerivce(this.mDatabaseName);
 
@@ -291,16 +323,7 @@ namespace Cdy.Tag
         /// </summary>
         private void RegistorInterface()
         {
-            ServiceLocator.Locator.Registor<IRealData>(realEnginer);
-            ServiceLocator.Locator.Registor<IRealDataNotify>(realEnginer);
-            ServiceLocator.Locator.Registor<IRealDataNotifyForProducter>(realEnginer);
-            ServiceLocator.Locator.Registor<IRealTagConsumer>(realEnginer);
-            ServiceLocator.Locator.Registor<IRealTagProduct>(realEnginer);
-
-            ServiceLocator.Locator.Registor<IHisEngine2>(hisEnginer);
-            ServiceLocator.Locator.Registor<IDataCompress2>(compressEnginer);
-            ServiceLocator.Locator.Registor<IDataSerialize2>(seriseEnginer);
-
+           
             ServiceLocator.Locator.Registor<IHisQuery>(querySerivce);
 
             ServiceLocator.Locator.Registor<ITagManager>(mRealDatabase);
@@ -332,6 +355,7 @@ namespace Cdy.Tag
         public async void StartAsync(string database,int port = 14330)
         {
             LoggerService.Service.Info("Runner", " 数据库 " + database+" 开始启动");
+
             RDDCManager.Manager.Start();
 
             var re = await InitAsync(database);
@@ -353,6 +377,44 @@ namespace Cdy.Tag
             LoggerService.Service.Info("Runner", " 数据库 " + database + " 启动完成");
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private bool SwitchToStandby()
+        {
+            try
+            {
+                hisEnginer.Stop();
+                compressEnginer.Stop();
+                seriseEnginer.Stop();
+                DriverManager.Manager.Stop();
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private bool SwitchToPrimary()
+        {
+            try
+            {
+                DriverManager.Manager.Start();
+                seriseEnginer.Start();
+                compressEnginer.Start();
+                hisEnginer.Start();
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
 
         /// <summary>
         /// 停止
@@ -364,7 +426,11 @@ namespace Cdy.Tag
             DriverManager.Manager.Stop();
             compressEnginer.Stop();
             seriseEnginer.Stop();
-           // mSecurityRunner.Stop();
+
+            hisEnginer.Dispose();
+            compressEnginer.Dispose();
+            seriseEnginer.Dispose();
+
             mIsStarted = false;
         }
 

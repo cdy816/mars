@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace DBRuntime
 {
@@ -30,6 +31,7 @@ namespace DBRuntime
 
         private RDDCClient mClient;
 
+        private DataSync mSync;
 
         private bool mIsInited = false;
 
@@ -53,6 +55,11 @@ namespace DBRuntime
         #region ... Properties ...
 
         /// <summary>
+        /// 
+        /// </summary>
+        public bool EnableRDDC { get; set; }
+
+        /// <summary>
         /// 当前状态
         /// </summary>
         public WorkState CurrentState { get; set; } = WorkState.Unknow;
@@ -68,7 +75,7 @@ namespace DBRuntime
         public int Port { get; set; }
 
         /// <summary>
-        /// 
+        /// 备机IP
         /// </summary>
         public string RemoteIp { get; set; }
 
@@ -84,16 +91,43 @@ namespace DBRuntime
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="databaseName"></param>
+        public void Load(string databaseName)
+        {
+            string spath = PathHelper.helper.GetDataPath(databaseName, "RDDC.cfg");
+            if(System.IO.File.Exists(spath))
+            {
+                XElement xx = XElement.Load(spath);
+                EnableRDDC = bool.Parse(xx.Attribute("Enable")?.Value);
+                this.Port = int.Parse(xx.Attribute("Port")?.Value);
+                this.RemoteIp = xx.Attribute("RemoteIp")?.Value;
+            }
+           
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public void Start()
         {
             mIsInited = false;
-            mServer = new RDDCDataService();
-            mServer.Start(Port);
+            if (EnableRDDC)
+            {
+                mServer = new RDDCDataService();
+                mServer.Start(Port);
 
-            mClient = new RDDCClient();
-            mClient.Connect(RemoteIp, Port);
-            mClient.PropertyChanged += MClient_PropertyChanged;
-            CheckWorkState();
+                mClient = new RDDCClient();
+                mClient.Connect(RemoteIp, Port);
+                mClient.PropertyChanged += MClient_PropertyChanged;
+
+                mSync = new DataSync() { Client = mClient };
+                mSync.Start();
+                CheckWorkState();
+            }
+            else
+            {
+                CurrentState = WorkState.Primary;
+            }
             mIsInited = true;
         }
 
@@ -116,10 +150,15 @@ namespace DBRuntime
         /// </summary>
         public void Stop()
         {
+            mSync.Stop();
             mServer.Stop();
+            mClient.PropertyChanged -= MClient_PropertyChanged;
             mClient.Close();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void ProcessClientConnectChanged()
         {
             if (!mClient.IsConnected)
@@ -169,9 +208,6 @@ namespace DBRuntime
                 }
             }
         }
-
-
-
 
         /// <summary>
         /// 

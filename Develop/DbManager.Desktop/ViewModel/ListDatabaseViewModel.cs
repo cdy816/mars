@@ -38,7 +38,7 @@ namespace DBInStudio.Desktop.ViewModel
         {
             Init();
             DefaultHeight = 300;
-            DefaultWidth = 500;
+            DefaultWidth = 600;
             Title = Res.Get("databaseSelect");
         }
         #endregion ...Constructor...

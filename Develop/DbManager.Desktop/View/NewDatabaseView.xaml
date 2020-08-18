@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DBInStudio.Desktop.View"
              xmlns:res="clr-namespace:DBInStudio.Desktop"
-             mc:Ignorable="d" 
+             mc:Ignorable="d" Name="uc"
              d:DesignHeight="100" d:DesignWidth="400">
     <Grid>
         <Grid.RowDefinitions>
@@ -18,7 +18,7 @@
         </Grid.ColumnDefinitions>
         <TextBlock Text="{res:ResMarker Name,:}" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0" />
         <TextBlock Text="{res:ResMarker Desc,:}" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0" />
-        <TextBox Height="28" Grid.Column="1" VerticalContentAlignment="Center" HorizontalAlignment="Stretch" Margin="10,0,10,0" Text="{Binding Name}" TextWrapping="Wrap" VerticalAlignment="Center" />
-        <TextBox Height="28" Grid.Column="1" VerticalContentAlignment="Center"  Margin="10,0,10,0" Text="{Binding Desc}" TextWrapping="Wrap" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Row="1"/>
+        <TextBox Background="#1FFFFFFF" Foreground="{Binding Foreground,ElementName=uc}" Height="28" Grid.Column="1" VerticalContentAlignment="Center" HorizontalAlignment="Stretch" Margin="10,0,10,0" Text="{Binding Name}" TextWrapping="Wrap" VerticalAlignment="Center" />
+        <TextBox Background="#1FFFFFFF" Foreground="{Binding Foreground,ElementName=uc}" Height="28" Grid.Column="1" VerticalContentAlignment="Center"  Margin="10,0,10,0" Text="{Binding Desc}" TextWrapping="Wrap" VerticalAlignment="Center" HorizontalAlignment="Stretch" Grid.Row="1"/>
     </Grid>
 </UserControl>

@@ -532,9 +532,12 @@ namespace DBDevelopService
         public override Task<BoolResultReplay> ModifyPassword(ModifyPasswordRequest request, ServerCallContext context)
         {
             var userName = SecurityManager.Manager.GetUserName(request.LoginId);
-            if (!SecurityManager.Manager.CheckKeyAvaiable(request.LoginId)&& userName != request.UserName && SecurityManager.Manager.CheckPasswordIsCorrect(userName,request.Password))
+            if (!SecurityManager.Manager.CheckKeyAvaiable(request.LoginId))
             {
-                return Task.FromResult(new BoolResultReplay() { Result = false });
+                if(!(userName == request.UserName && SecurityManager.Manager.CheckPasswordIsCorrect(userName, request.Password)))
+                {
+                    return Task.FromResult(new BoolResultReplay() { Result = false });
+                }
             }
             var user = SecurityManager.Manager.Securitys.User.GetUser(request.UserName);
             if (user != null)

@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DBInStudio.Desktop.View"
               xmlns:res="clr-namespace:DBInStudio.Desktop"
-             mc:Ignorable="d" 
+             mc:Ignorable="d" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}"
              d:DesignHeight="200" d:DesignWidth="500">
     <UserControl.Resources>
         <Style x:Key="FocusVisual">
@@ -43,7 +43,7 @@
                                 <MultiTrigger.Conditions>
                                     <Condition Property="IsMouseOver" Value="True"/>
                                 </MultiTrigger.Conditions>
-                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource Item.MouseOver.Background}"/>
+                                <Setter Property="Background" TargetName="Bd" Value="#1FFFFFFF"/>
                                 <Setter Property="BorderBrush" TargetName="Bd" Value="{StaticResource Item.MouseOver.Border}"/>
                             </MultiTrigger>
                             <MultiTrigger>
@@ -51,7 +51,7 @@
                                     <Condition Property="Selector.IsSelectionActive" Value="False"/>
                                     <Condition Property="IsSelected" Value="True"/>
                                 </MultiTrigger.Conditions>
-                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource Item.SelectedInactive.Background}"/>
+                                <Setter Property="Background" TargetName="Bd" Value="#5FFFFFFF"/>
                                 <Setter Property="BorderBrush" TargetName="Bd" Value="{StaticResource Item.SelectedInactive.Border}"/>
                             </MultiTrigger>
                             <MultiTrigger>
@@ -59,7 +59,7 @@
                                     <Condition Property="Selector.IsSelectionActive" Value="True"/>
                                     <Condition Property="IsSelected" Value="True"/>
                                 </MultiTrigger.Conditions>
-                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource Item.SelectedActive.Background}"/>
+                                <Setter Property="Background" TargetName="Bd" Value="#5FFFFFFF"/>
                                 <Setter Property="BorderBrush" TargetName="Bd" Value="{StaticResource Item.SelectedActive.Border}"/>
                             </MultiTrigger>
                             <Trigger Property="IsEnabled" Value="False">
@@ -77,7 +77,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <TextBlock Margin="10,0" Text="{res:ResMarker SelectDatabase}" HorizontalAlignment="Left" VerticalAlignment="Center" />
-        <ListBox ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" Margin="-1" Grid.Row="1"  BorderThickness="0" ItemsSource="{Binding DatabaseItems}" SelectedItem="{Binding SelectDatabase,Mode=TwoWay}">
+        <ListBox Background="#1FFFFFFF" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" Margin="-1" Grid.Row="1"  BorderThickness="0" ItemsSource="{Binding DatabaseItems}" SelectedItem="{Binding SelectDatabase,Mode=TwoWay}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid MinHeight="28">
@@ -85,12 +85,12 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="gg" />
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="{Binding Name}" MinWidth="50" VerticalAlignment="Center"  />
-                        <TextBlock Margin="10,0" Text="{Binding Desc}" Grid.Column="1" VerticalAlignment="Center" />
+                        <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding Name}" MinWidth="50" VerticalAlignment="Center"  />
+                        <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="10,0" Text="{Binding Desc}" Grid.Column="1" VerticalAlignment="Center" />
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Button Command="{Binding NewCommand}" Background="Transparent" BorderThickness="0,0,0,0" Content="{res:ResMarker New}" Width="80" HorizontalAlignment="Right" Margin="5,0" Height="26" VerticalAlignment="Center" />
+        <Button Command="{Binding NewCommand}" Style="{DynamicResource ButtonStyle1}" Background="Transparent" BorderThickness="0,0,0,0" Content="{res:ResMarker New}" Width="80" HorizontalAlignment="Right" Margin="5,0" Height="26" VerticalAlignment="Center" />
     </Grid>
 </UserControl>

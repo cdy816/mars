@@ -47,7 +47,7 @@
                                 <MultiTrigger.Conditions>
                                     <Condition Property="IsMouseOver" Value="True"/>
                                 </MultiTrigger.Conditions>
-                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource Item.MouseOver.Background}"/>
+                                <Setter Property="Background" TargetName="Bd" Value="#1FFFFFFF"/>
                                 <Setter Property="BorderBrush" TargetName="Bd" Value="{StaticResource Item.MouseOver.Border}"/>
                             </MultiTrigger>
                             <MultiTrigger>
@@ -55,7 +55,7 @@
                                     <Condition Property="Selector.IsSelectionActive" Value="False"/>
                                     <Condition Property="IsSelected" Value="True"/>
                                 </MultiTrigger.Conditions>
-                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource Item.SelectedInactive.Background}"/>
+                                <Setter Property="Background" TargetName="Bd" Value="#5FFFFFFF"/>
                                 <Setter Property="BorderBrush" TargetName="Bd" Value="{StaticResource Item.SelectedInactive.Border}"/>
                             </MultiTrigger>
                             <MultiTrigger>
@@ -63,7 +63,7 @@
                                     <Condition Property="Selector.IsSelectionActive" Value="True"/>
                                     <Condition Property="IsSelected" Value="True"/>
                                 </MultiTrigger.Conditions>
-                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource Item.SelectedActive.Background}"/>
+                                <Setter Property="Background" TargetName="Bd" Value="#5FFFFFFF"/>
                                 <Setter Property="BorderBrush" TargetName="Bd" Value="{StaticResource Item.SelectedActive.Border}"/>
                             </MultiTrigger>
                             <Trigger Property="IsEnabled" Value="False">
@@ -83,23 +83,23 @@
         <ListBox Background="Transparent" SelectionMode="Extended" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" Grid.Row="1" Margin="9,6,0,12" HorizontalAlignment="Left" Width="300" ItemsSource="{Binding SelectGroups}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Label Content="{Binding Name}" />
+                    <Label Content="{Binding Name}"  Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
         <ListBox  Background="Transparent" SelectionMode="Extended"  ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}"  Grid.Row="1" Margin="408,6,0,12" HorizontalAlignment="Left" Width="300" ItemsSource="{Binding AllGroups}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Label Content="{Binding Name}" />
+                    <Label Content="{Binding Name}"  Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Button Content="&lt;" Command="{Binding AddCommand}" HorizontalAlignment="Left" Margin="323,104,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top"/>
-        <Button Content="&lt;&lt;" Command="{Binding AddAllCommand}" HorizontalAlignment="Left" Margin="323,146,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top" />
-        <Button Content="&gt;" Command="{Binding RemoveCommand}" HorizontalAlignment="Left" Margin="323,186,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top"/>
-        <Button Content="&gt;&gt;" Command="{Binding RemoveAllCommand}" HorizontalAlignment="Left" Margin="323,221,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top"/>
-        <Label Content="{local:ResMarker SelectGroup}" HorizontalAlignment="Left" Margin="11,0,0,0" VerticalAlignment="Center"/>
-        <Label Content="{local:ResMarker AllGroup}" HorizontalAlignment="Left" Margin="410,0,0,0" VerticalAlignment="Center"/>
+        <Button Style="{DynamicResource ButtonStyle1}" Content="&lt;" Command="{Binding AddCommand}" HorizontalAlignment="Left" Margin="323,104,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top"/>
+        <Button Style="{DynamicResource ButtonStyle1}" Content="&lt;&lt;" Command="{Binding AddAllCommand}" HorizontalAlignment="Left" Margin="323,146,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top" />
+        <Button Style="{DynamicResource ButtonStyle1}" Content="&gt;" Command="{Binding RemoveCommand}" HorizontalAlignment="Left" Margin="323,186,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top"/>
+        <Button Style="{DynamicResource ButtonStyle1}" Content="&gt;&gt;" Command="{Binding RemoveAllCommand}" HorizontalAlignment="Left" Margin="323,221,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top"/>
+        <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{local:ResMarker SelectGroup}" HorizontalAlignment="Left" Margin="11,0,0,0" VerticalAlignment="Center"/>
+        <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{local:ResMarker AllGroup}" HorizontalAlignment="Left" Margin="410,0,0,0" VerticalAlignment="Center"/>
 
     </Grid>
 </UserControl>

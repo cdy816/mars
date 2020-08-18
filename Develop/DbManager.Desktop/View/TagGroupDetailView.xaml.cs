@@ -27,7 +27,7 @@ namespace DBInStudio.Desktop.View
 
         private void DataGrid_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            if((e.ExtentHeight - e.VerticalOffset)<50 && e.ExtentHeight>0 && e.VerticalOffset>0)
+            if((e.ExtentHeight - e.VerticalOffset)<100 && e.ExtentHeight>0 && e.VerticalOffset>0)
             {
                 (this.DataContext as TagGroupDetailViewModel).ContinueLoadData();
             }

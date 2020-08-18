@@ -22,5 +22,16 @@ namespace DBInStudio.Desktop.View
         {
             InitializeComponent();
         }
+
+
+        private void TextBlock_MouseEnter(object sender, MouseEventArgs e)
+        {
+            (sender as FrameworkElement).Opacity = 0.8;
+        }
+
+        private void TextBlock_MouseLeave(object sender, MouseEventArgs e)
+        {
+            (sender as FrameworkElement).Opacity = 0.1;
+        }
     }
 }

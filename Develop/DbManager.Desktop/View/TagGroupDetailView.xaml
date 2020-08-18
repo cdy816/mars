@@ -124,7 +124,7 @@
         </Style>
     </UserControl.Resources>
     <Grid>
-        <DataGrid RowHeaderWidth="0" ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}" CellStyle="{DynamicResource DataGridCellStyle1}" RowStyle="{DynamicResource DataGridRowStyle1}" ScrollViewer.CanContentScroll="True" ContextMenu="{StaticResource ctxmenu}" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,32" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"   BorderThickness="0,0,0,1" Background="#1FFFFFFF" >
+        <DataGrid RowHeaderWidth="0" ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}" CellStyle="{DynamicResource DataGridCellStyle1}" RowStyle="{DynamicResource DataGridRowStyle1}" ScrollViewer.CanContentScroll="True" ContextMenu="{StaticResource ctxmenu}" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,32" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"   BorderThickness="0,0,0,1" Background="Transparent" >
             <DataGrid.InputBindings>
                 <KeyBinding Command="{Binding CopyCommand}" Key="C" Modifiers="Ctrl" />
                 <KeyBinding Command="{Binding PasteCommand}" Key="V" Modifiers="Ctrl" />

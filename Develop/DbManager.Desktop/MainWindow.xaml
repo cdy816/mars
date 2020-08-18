@@ -147,7 +147,7 @@
                                 <Setter Property="Visibility" TargetName="Expander" Value="Hidden"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="true">
-                                <Setter Property="Background" TargetName="Bd" Value="#3F000000"/>
+                                <Setter Property="Background" TargetName="Bd" Value="#3FFFFFFF"/>
                                 <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="false">
@@ -170,13 +170,14 @@
             </Style.Triggers>
         </Style>
     </Window.Resources>
-    <Grid x:Name="bg" Margin="5" Background="#F2404040">
+    <Border BorderThickness="1" BorderBrush="Gray" Margin="5">
+        <Grid x:Name="bg"  Background="#CF000000">
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
             <RowDefinition Height="48"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid Background="#7F000000"  MouseMove="Grid_MouseMove" MouseLeftButtonUp="Grid_MouseLeftButtonUp" MouseLeftButtonDown="Grid_MouseLeftButtonDown">
+        <Grid Background="#9F000000"  MouseMove="Grid_MouseMove" MouseLeftButtonUp="Grid_MouseLeftButtonUp" MouseLeftButtonDown="Grid_MouseLeftButtonDown">
             <ProgressBar Maximum="100"  Minimum="0" Value="{Binding ProcessNotify}" Background="Transparent" VerticalAlignment="Top" Height="32" BorderThickness="0" BorderBrush="Transparent" />
             <Image Margin="5,0"  Source="{Binding Icon,RelativeSource={RelativeSource AncestorType=Window}}" Height="16" HorizontalAlignment="Left" Width="24" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" Stretch="Fill" />
             <Label Margin="30,0,115,0" VerticalContentAlignment="Center" Content="{Binding Title,RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}"/>
@@ -232,7 +233,7 @@
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal"  VerticalAlignment="Stretch" >
                                         <Image Source="/Image/log-out.png" Height="22" RenderOptions.BitmapScalingMode="HighQuality"/>
-                                        <TextBlock Text="{local:ResMarker Logout}" Foreground="DarkRed" VerticalAlignment="Center" Margin="5,0"/>
+                                        <TextBlock Text="{local:ResMarker Logout}" FontWeight="Bold"  Foreground="DarkRed" VerticalAlignment="Center" Margin="5,0"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </Button.ContentTemplate>
@@ -339,7 +340,7 @@
                 <ColumnDefinition Width="180" MinWidth="30" MaxWidth="1000"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <TreeView x:Name="tv" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" ItemContainerStyle="{DynamicResource TreeViewItemStyle1}" ItemsSource="{Binding TagGroup}"  SelectedItemChanged="TreeView_SelectedItemChanged" BorderThickness="0,0,1,1" Margin="0,0,0,32" Background="#1FFFFFFF">
+            <TreeView x:Name="tv" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" ItemContainerStyle="{DynamicResource TreeViewItemStyle1}" ItemsSource="{Binding TagGroup}"  SelectedItemChanged="TreeView_SelectedItemChanged" BorderThickness="0,0,1,1" Margin="0,0,0,32" Background="#7F000000">
                 <TreeView.InputBindings>
                     <KeyBinding Key="F2" Command="{Binding ReNameCommand}" />
                     <KeyBinding Key="Delete" Command="{Binding RemoveCommand}" />
@@ -476,4 +477,5 @@
         </Grid>
 
     </Grid>
+    </Border>
 </Window>

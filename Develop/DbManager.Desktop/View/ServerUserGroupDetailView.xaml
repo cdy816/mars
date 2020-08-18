@@ -75,7 +75,7 @@
         </Grid.RowDefinitions>
         <Border BorderBrush="Gray" BorderThickness="0,0,0,1"/>
         <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{res:ResMarker UserList}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-        <ListBox Background="#1FFFFFFF" ItemsSource="{Binding Users}" HorizontalContentAlignment="Stretch" SelectedItem="{Binding CurrentSelectedUser}" Grid.Row="1" HorizontalAlignment="Left" Width="300" Margin="5,5,0,1">
+        <ListBox Background="Transparent" ItemsSource="{Binding Users}" HorizontalContentAlignment="Stretch" SelectedItem="{Binding CurrentSelectedUser}" Grid.Row="1" HorizontalAlignment="Left" Width="300" Margin="5,5,0,1">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid HorizontalAlignment="Stretch" Height="26">
@@ -128,7 +128,7 @@
             <TextBox Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalContentAlignment="Center" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" Margin="10,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Height="26" Grid.Column="1" KeyDown="TextBox_KeyDown" />
             <!--<PasswordBox HorizontalAlignment="Left" VerticalContentAlignment="Center" Margin="10,0,0,0" VerticalAlignment="Center" Width="300" Height="26" Grid.Column="1" Password="123456"  Grid.Row="1" PasswordChanged="PasswordBox_PasswordChanged"/>-->
             <res:PasswordControl BorderBrush="Gray" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"  BorderThickness="1" Password="{Binding Password,Mode=TwoWay}" Grid.Column="1" Grid.Row="1" Margin="10,0,0,0" Width="300" VerticalAlignment="Center" Height="26" HorizontalAlignment="Left"/>
-            <ListBox Style="{DynamicResource ListBoxStyle1}" Background="#1FFFFFFF" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" IsEnabled="{Binding IsAdmin,Converter={StaticResource bic}}"  ItemsSource="{Binding PermissionModel}" Grid.Column="1" Grid.Row="4" Margin="10,10,0,0" Width="300" HorizontalAlignment="Left" >
+            <ListBox Style="{DynamicResource ListBoxStyle1}" Background="Transparent" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" IsEnabled="{Binding IsAdmin,Converter={StaticResource bic}}"  ItemsSource="{Binding PermissionModel}" Grid.Column="1" Grid.Row="4" Margin="10,10,0,0" Width="300" HorizontalAlignment="Left" >
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <CheckBox BorderBrush="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" IsChecked="{Binding IsSelected,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Content="{Binding Name}" />

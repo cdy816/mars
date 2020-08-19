@@ -569,6 +569,13 @@ message GetTagByGroupRequest
     string Database=2;
     string Group=3;
     int32 Index=4;
+    repeated FilterMessageItem Filters=5;
+}
+
+message FilterMessageItem
+{
+    string key=1;
+    string value=2;
 }
 
 //

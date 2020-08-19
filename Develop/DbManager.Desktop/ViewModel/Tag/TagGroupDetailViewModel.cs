@@ -9,6 +9,7 @@
 
 using Cdy.Tag;
 using DBDevelopClientApi;
+using DBDevelopService;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -53,6 +54,37 @@ namespace DBInStudio.Desktop.ViewModel
 
         private int mTagCount = 0;
 
+        private string mFilterKeyName = string.Empty;
+
+        private bool mTagTypeFilterEnable;
+
+        private int mFilterType = -1;
+
+        private bool mReadWriteModeFilterEnable;
+
+        private int mFilterReadWriteMode = -1;
+
+        private bool mRecordFilterEnable;
+
+        private bool mTimerRecordFilterEnable=true;
+
+        private bool mValueChangedRecordFilterEnable;
+
+        private bool mCompressFilterEnable;
+
+        private int mFilterCompressType;
+
+        private bool mDriverFilterEnable;
+
+        private string mFilterDriver;
+
+        private bool mRegistorFilterEnable;
+
+        private string mFilterRegistorName = string.Empty;
+
+        private Dictionary<string, string> mFilters = new Dictionary<string, string>();
+
+        private bool mEnableFilter = true;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -64,6 +96,319 @@ namespace DBInStudio.Desktop.ViewModel
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string FilterRegistorName
+        {
+            get
+            {
+                return mFilterRegistorName;
+            }
+            set
+            {
+                if (mFilterRegistorName != value)
+                {
+                    mFilterRegistorName = value;
+                    NewQueryTags();
+                    OnPropertyChanged("FilterRegistorName");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool RegistorFilterEnable
+        {
+            get
+            {
+                return mRegistorFilterEnable;
+            }
+            set
+            {
+                if (mRegistorFilterEnable != value)
+                {
+                    mRegistorFilterEnable = value;
+                    NewQueryTags();
+                    if (!value) mFilterRegistorName = string.Empty;
+                    OnPropertyChanged("RegistorFilterEnable");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string FilterDriver
+        {
+            get
+            {
+                return mFilterDriver;
+            }
+            set
+            {
+                if (mFilterDriver != value)
+                {
+                    mFilterDriver = value;
+                    NewQueryTags();
+                    if (DriverList != null && TagViewModel.Drivers.ContainsKey(value))
+                    {
+                        RegistorList = TagViewModel.Drivers[value];
+                    }
+                    else
+                    {
+                        RegistorList = null;
+                    }
+                    OnPropertyChanged("RegistorList");
+                    OnPropertyChanged("FilterDriver");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool DriverFilterEnable
+        {
+            get
+            {
+                return mDriverFilterEnable;
+            }
+            set
+            {
+                if (mDriverFilterEnable != value)
+                {
+                    mDriverFilterEnable = value;
+                    NewQueryTags();
+                    if (!value) mFilterDriver = string.Empty;
+                    OnPropertyChanged("DriverFilterEnable");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int FilterCompressType
+        {
+            get
+            {
+                return mFilterCompressType;
+            }
+            set
+            {
+                if (mFilterCompressType != value)
+                {
+                    mFilterCompressType = value;
+                    NewQueryTags();
+                    OnPropertyChanged("FilterCompressType");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool CompressFilterEnable
+        {
+            get
+            {
+                return mCompressFilterEnable;
+            }
+            set
+            {
+                if (mCompressFilterEnable != value)
+                {
+                    mCompressFilterEnable = value;
+                    NewQueryTags();
+                    OnPropertyChanged("CompressFilterEnable");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool ValueChangedRecordFilterEnable
+        {
+            get
+            {
+                return mValueChangedRecordFilterEnable;
+            }
+            set
+            {
+                if (mValueChangedRecordFilterEnable != value)
+                {
+                    mValueChangedRecordFilterEnable = value;
+                    if (value) NewQueryTags();
+                    OnPropertyChanged("ValueChangedRecordFilterEnable");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool TimerRecordFilterEnable
+        {
+            get
+            {
+                return mTimerRecordFilterEnable;
+            }
+            set
+            {
+                if (mTimerRecordFilterEnable != value)
+                {
+                    mTimerRecordFilterEnable = value;
+                    if(value) NewQueryTags();
+                    OnPropertyChanged("TimerRecordFilterEnable");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool RecordFilterEnable
+        {
+            get
+            {
+                return mRecordFilterEnable;
+            }
+            set
+            {
+                if (mRecordFilterEnable != value)
+                {
+                    mRecordFilterEnable = value;
+                    NewQueryTags();
+                    OnPropertyChanged("RecordFilterEnable");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int FilterReadWriteMode
+        {
+            get
+            {
+                return mFilterReadWriteMode;
+            }
+            set
+            {
+                if (mFilterReadWriteMode != value)
+                {
+                    mFilterReadWriteMode = value;
+                    NewQueryTags();
+                }
+                OnPropertyChanged("FilterReadWriteMode");
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool ReadWriteModeFilterEnable
+        {
+            get
+            {
+                return mReadWriteModeFilterEnable;
+            }
+            set
+            {
+                if (mReadWriteModeFilterEnable != value)
+                {
+                    mReadWriteModeFilterEnable = value;
+                    if (!value)
+                    {
+                        mFilterReadWriteMode = -1;
+                        NewQueryTags();
+                    }
+                    OnPropertyChanged("ReadWriteModeFilterEnable");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int FilterType
+        {
+            get
+            {
+                return mFilterType;
+            }
+            set
+            {
+                if (mFilterType != value)
+                {
+                    mFilterType = value;
+                    NewQueryTags();
+                }
+                OnPropertyChanged("FilterType");
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string FilterKeyName
+        {
+            get
+            {
+                return mFilterKeyName;
+            }
+            set
+            {
+                if (mFilterKeyName != value)
+                {
+                    mFilterKeyName = value;
+                    NewQueryTags();
+                }
+                OnPropertyChanged("FilterKeyName");
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool TagTypeFilterEnable
+        {
+            get
+            {
+                return mTagTypeFilterEnable;
+            }
+            set
+            {
+                if (mTagTypeFilterEnable != value)
+                {
+                    mTagTypeFilterEnable = value;
+                    if (!value)
+                    {
+                        mFilterType = -1;
+                        NewQueryTags();
+                    }
+                }
+                OnPropertyChanged("TagTypeFilterEnable");
+            }
+        }
+
+
 
         /// <summary>
         /// 
@@ -262,10 +607,121 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool EnableFilter
+        {
+            get
+            {
+                return mEnableFilter;
+            }
+            set
+            {
+                if (mEnableFilter != value)
+                {
+                    mEnableFilter = value;
+                    OnPropertyChanged("EnableFilter");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string[] TagTypeList { get { return TagViewModel.mTagTypeList; } }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string[] ReadWriteModeList { get { return TagViewModel.mReadWriteModeList; } }
+
+        public string[] CompressTypeList { get { return TagViewModel.mCompressTypeList; } }
+
+        public string[] DriverList { get { return TagViewModel.Drivers.Keys.ToArray(); } }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string[] RegistorList { get; set; }
 
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void NewQueryTags()
+        {
+            EnableFilter = false;
+            Task.Run(() => {
+                BuildFilters();
+                mTotalPageNumber = -1;
+                ContinueQueryTags();
+                Application.Current.Dispatcher.Invoke(new Action(() => {
+                    EnableFilter = true;
+                }));
+            });
+        }
+
+        private void BuildFilters()
+        {
+            mFilters.Clear();
+            if(!string.IsNullOrEmpty(this.FilterKeyName))
+            {
+                mFilters.Add("keyword", FilterKeyName);
+            }
+            if(this.TagTypeFilterEnable)
+            {
+                mFilters.Add("type", this.FilterType.ToString());
+            }
+            if(this.ReadWriteModeFilterEnable)
+            {
+                mFilters.Add("readwritetype", FilterReadWriteMode.ToString());
+            }
+
+            if (this.RecordFilterEnable)
+            {
+                if (this.TimerRecordFilterEnable && this.ValueChangedRecordFilterEnable)
+                {
+                    mFilters.Add("recordtype", "3");
+                }
+                else if (this.TimerRecordFilterEnable)
+                {
+                    mFilters.Add("recordtype", "0");
+                }
+                else if (this.ValueChangedRecordFilterEnable)
+                {
+                    mFilters.Add("recordtype", "1");
+                }
+                else
+                {
+                    mFilters.Add("recordtype", "3");
+                }
+            }
+
+            if(this.CompressFilterEnable)
+            {
+                mFilters.Add("compresstype", FilterCompressType.ToString());
+            }
+
+            string stmp = "";
+            if(this.DriverFilterEnable)
+            {
+                stmp = this.FilterDriver;
+            }
+            if(this.RegistorFilterEnable)
+            {
+                stmp += "." + this.FilterRegistorName;
+            }
+            if(!string.IsNullOrEmpty(stmp))
+            {
+                mFilters.Add("linkaddress", stmp);
+            }
+
+        }
 
         /// <summary>
         /// 
@@ -424,7 +880,7 @@ namespace DBInStudio.Desktop.ViewModel
               //  var vtags = new System.Collections.ObjectModel.ObservableCollection<TagViewModel>();
                 mCurrentPageIndex = 0;
                 
-                var vv = DevelopServiceHelper.Helper.QueryTagByGroup(this.GroupModel.Database, this.GroupModel.FullName,mCurrentPageIndex, out mTotalPageNumber,out count);
+                var vv = DevelopServiceHelper.Helper.QueryTagByGroup(this.GroupModel.Database, this.GroupModel.FullName,mCurrentPageIndex, out mTotalPageNumber,out count,mFilters);
                 if (vv != null)
                 {
                     foreach (var vvv in vv)
@@ -444,7 +900,7 @@ namespace DBInStudio.Desktop.ViewModel
                     mCurrentPageIndex++;
                     int totalcount = 0;
                     
-                    var vv = DevelopServiceHelper.Helper.QueryTagByGroup(this.GroupModel.Database, this.GroupModel.FullName, mCurrentPageIndex, out totalcount,out count);
+                    var vv = DevelopServiceHelper.Helper.QueryTagByGroup(this.GroupModel.Database, this.GroupModel.FullName, mCurrentPageIndex, out totalcount,out count, mFilters);
                     if (vv != null)
                     {
                         foreach (var vvv in vv)
@@ -467,8 +923,6 @@ namespace DBInStudio.Desktop.ViewModel
         private void QueryTags()
         {
             var vtags = new System.Collections.ObjectModel.ObservableCollection<TagViewModel>();
-            
-            
             var vv = DevelopServiceHelper.Helper.QueryTagByGroup(this.GroupModel.Database, this.GroupModel.FullName);
             if (vv != null)
             {
@@ -480,9 +934,7 @@ namespace DBInStudio.Desktop.ViewModel
                     }));
                 }
             }
-
             SelectGroupTags = vtags;
-
         }
 
 

@@ -61,7 +61,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <returns></returns>
-        ICollection<Tagbase> ListAllTags();
+        IEnumerable<Tagbase> ListAllTags();
 
     }
 }

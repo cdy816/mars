@@ -777,14 +777,14 @@ namespace DBDevelopClientApi
         /// <param name="database"></param>
         /// <param name="group"></param>
         /// <param name="callback"></param>
-        public void QueryTagByGroup(string database, string group, Action<int, int, Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>>> callback)
+        public void QueryTagByGroup(string database, string group, Action<int, int, Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>>> callback, Dictionary<string, string> mFilters = null)
         {
             int idx = 0;
             int totalcount=0;
             int tagcount;
             do
             {
-                var re = QueryTagByGroup(database, group, idx, out totalcount, out tagcount);
+                var re = QueryTagByGroup(database, group, idx, out totalcount, out tagcount,mFilters);
                 callback(idx, totalcount, re);
                 idx++;
             }
@@ -799,13 +799,22 @@ namespace DBDevelopClientApi
         /// <param name="totalCount"></param>
         /// <param name="index"></param>
         /// <returns></returns>
-        public Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> QueryTagByGroup(string database, string group, int index, out int totalCount,out int tagCount)
+        public Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> QueryTagByGroup(string database, string group, int index, out int totalCount,out int tagCount,Dictionary<string,string> mFilters=null)
         {
             Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> re = new Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>>();
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
                 int idx = index;
-                var result = mCurrentClient.GetTagByGroup(new DBDevelopService.GetTagByGroupRequest() { Database = database, LoginId = mLoginId, Group = group, Index = idx });
+                var req = new DBDevelopService.GetTagByGroupRequest() { Database = database, LoginId = mLoginId, Group = group, Index = idx };
+                if (mFilters != null)
+                {
+                    foreach (var vv in mFilters)
+                    {
+                        req.Filters.Add(new DBDevelopService.FilterMessageItem() { Key = vv.Key, Value = vv.Value });
+                    }
+                }
+
+                var result = mCurrentClient.GetTagByGroup(req);
                 tagCount = result.TagCount;
 
                 totalCount = result.Count;
@@ -879,7 +888,7 @@ namespace DBDevelopClientApi
         /// <param name="database"></param>
         /// <param name="group"></param>
         /// <returns></returns>
-        public Dictionary<int,Tuple<Cdy.Tag.Tagbase,Cdy.Tag.HisTag>> QueryTagByGroup(string database,string group)
+        public Dictionary<int,Tuple<Cdy.Tag.Tagbase,Cdy.Tag.HisTag>> QueryTagByGroup(string database,string group, Dictionary<string, string> mFilters = null)
         {
             Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> re = new Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>>();
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
@@ -888,7 +897,16 @@ namespace DBDevelopClientApi
                 int count = 0;
                 do
                 {
-                    var result = mCurrentClient.GetTagByGroup(new DBDevelopService.GetTagByGroupRequest() { Database = database, LoginId = mLoginId, Group = group,Index=idx });
+                    var req = new DBDevelopService.GetTagByGroupRequest() { Database = database, LoginId = mLoginId, Group = group, Index = idx };
+                    if (mFilters != null)
+                    {
+                        foreach (var vv in mFilters)
+                        {
+                            req.Filters.Add(new DBDevelopService.FilterMessageItem() { Key = vv.Key, Value = vv.Value });
+                        }
+                    }
+
+                    var result = mCurrentClient.GetTagByGroup(req);
 
                     idx = result.Index;
                     count = result.Count;

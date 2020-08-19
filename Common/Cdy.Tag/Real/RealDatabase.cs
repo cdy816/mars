@@ -676,7 +676,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <returns></returns>
-        public ICollection<Tagbase> ListAllTags()
+        public IEnumerable<Tagbase> ListAllTags()
         {
             return Tags.Values;
         }

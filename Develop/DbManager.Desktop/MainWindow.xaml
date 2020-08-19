@@ -78,6 +78,9 @@
 
     </Window.Resources>
     <Border  Margin="5" BorderThickness="1" BorderBrush="DarkGray">
+        <Border.Background>
+            <ImageBrush ImageSource="/Image/huoxing.jpg" Opacity="0.6" Stretch="Fill" TileMode="None"/>
+        </Border.Background>
         <Grid x:Name="bg" Background="#CF26282C">
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>

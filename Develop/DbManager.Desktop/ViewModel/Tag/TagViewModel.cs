@@ -28,10 +28,10 @@ namespace DBInStudio.Desktop
         private Cdy.Tag.Tagbase mRealTagMode;
         private Cdy.Tag.HisTag mHisTagMode;
 
-        private static string[] mTagTypeList;
-        private static string[] mRecordTypeList;
-        private static string[] mCompressTypeList;
-        private static string[] mReadWriteModeList;
+        public static string[] mTagTypeList;
+        public static string[] mRecordTypeList;
+        public static string[] mCompressTypeList;
+        public static string[] mReadWriteModeList;
 
         /// <summary>
         /// 

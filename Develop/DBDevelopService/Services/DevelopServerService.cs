@@ -956,6 +956,80 @@ namespace DBDevelopService
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="db"></param>
+        /// <param name="res"></param>
+        /// <param name="vfilters"></param>
+        /// <returns></returns>
+        private IEnumerable<Tagbase> FilterTags(Database db,IEnumerable<Tagbase> res,List<FilterMessageItem> vfilters)
+        {
+            return res.Where((tag) => {
+                var re = true;
+                foreach (var vv in vfilters)
+                {
+                    switch (vv.Key)
+                    {
+                        case "keyword":
+                            re = re && (tag.Name.Contains(vv.Value) || tag.Desc.Contains(vv.Value));
+                            break;
+                        case "type":
+                            re = re && ((int)tag.Type == int.Parse(vv.Value));
+                            break;
+                        case "readwritetype":
+                            re = re && ((int)tag.ReadWriteType == int.Parse(vv.Value));
+                            break;
+                        case "recordtype":
+                            int ival = int.Parse(vv.Value);
+                            if(ival==3)
+                            {
+                                re = true;
+                            }
+                            else
+                            {
+                                if (db.HisDatabase.HisTags.ContainsKey(tag.Id))
+                                {
+                                    re = re && ((int)db.HisDatabase.HisTags[tag.Id].Type == ival);
+                                }
+                                else
+                                {
+                                    re = false;
+                                }
+                            }
+                            break;
+                        case "compresstype":
+                            ival = int.Parse(vv.Value);
+                            if (ival == -1)
+                            {
+                                re = re && (db.HisDatabase.HisTags.ContainsKey(tag.Id));
+                            }
+                            else
+                            {
+                                if (db.HisDatabase.HisTags.ContainsKey(tag.Id))
+                                {
+                                    re = re && ((int)db.HisDatabase.HisTags[tag.Id].CompressType == ival);
+                                }
+                                else
+                                {
+                                    re = false;
+                                }
+                            }
+                            break;
+                        case "linkaddress":
+                            re = re && (tag.LinkAddress.Contains(vv.Value));
+                            break;
+
+
+                    }
+
+                }
+
+                return re;
+
+            });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
@@ -977,6 +1051,12 @@ namespace DBDevelopService
                 {
                     int from = request.Index * PageCount;
                     var res = db.RealDatabase.ListAllTags().Where(e => e.Group == request.Group);
+
+                    if(request.Filters.Count>0)
+                    {
+                        res = FilterTags(db, res, request.Filters.ToList());
+                    }
+
                     total = res.Count();
 
                     totalpage = total / PageCount;
@@ -1036,11 +1116,17 @@ namespace DBDevelopService
                 {
                     int from = request.Index * PageCount;
                     var res = db.RealDatabase.ListAllTags();
+                    if (request.Filters.Count > 0)
+                    {
+                        res = FilterTags(db, res, request.Filters.ToList());
+                    }
+
                     total = res.Count();
 
                     totalpage = total / PageCount;
                     totalpage = total % PageCount > 0 ? totalpage + 1 : totalpage;
                     int cc = 0;
+
 
                     foreach (var vv in res)
                     {

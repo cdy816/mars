@@ -89,18 +89,18 @@ namespace SpiderDriver
                     {
                         int psize = 100000;
                         var vtags = mm.ListAllTags();
-                        int tcount = vtags.Count / psize;
-                        tcount += (vtags.Count % psize > 0 ? 1 : 0);
+                        int tcount = vtags.Count() / psize;
+                        tcount += (vtags.Count() % psize > 0 ? 1 : 0);
                         for(int i=0;i<tcount;i++)
                         {
-                            if((i+1)*psize>vtags.Count)
+                            if((i+1)*psize>vtags.Count())
                             {
                                 var vv = vtags.Skip(i * psize).Take(psize);
                                 Parent.AsyncCallback(client, GetTagBuffer(vv, (short)i, (short)tcount));
                             }
                             else
                             {
-                                var vv = vtags.Skip(i * psize).Take(vtags.Count % psize);
+                                var vv = vtags.Skip(i * psize).Take(vtags.Count() % psize);
                                 Parent.AsyncCallback(client, GetTagBuffer(vv, (short)i, (short)tcount));
                             }
                         }

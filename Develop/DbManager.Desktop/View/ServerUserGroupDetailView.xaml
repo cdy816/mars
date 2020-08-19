@@ -131,13 +131,13 @@
             <ListBox Style="{DynamicResource ListBoxStyle1}" Background="Transparent" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" IsEnabled="{Binding IsAdmin,Converter={StaticResource bic}}"  ItemsSource="{Binding PermissionModel}" Grid.Column="1" Grid.Row="4" Margin="10,10,0,0" Width="300" HorizontalAlignment="Left" >
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <CheckBox BorderBrush="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" IsChecked="{Binding IsSelected,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Content="{Binding Name}" />
+                        <CheckBox Background="Transparent" BorderBrush="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" IsChecked="{Binding IsSelected,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Content="{Binding Name}" />
                     </DataTemplate>
                 </ListBox.ItemTemplate>
 
             </ListBox>
-            <CheckBox BorderBrush="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Background="#1FFFFFFF" Grid.Column="1" IsChecked="{Binding IsAdmin,Mode=TwoWay}" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="2" VerticalAlignment="Center"/>
-            <CheckBox BorderBrush="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"  Background="#1FFFFFFF" Grid.Column="1" IsChecked="{Binding CanNewDatabase,Mode=TwoWay}" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="3" VerticalAlignment="Center"/>
+            <CheckBox BorderBrush="{DynamicResource Window.Forground}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Background="Transparent" Grid.Column="1" IsChecked="{Binding IsAdmin,Mode=TwoWay}" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="2" VerticalAlignment="Center"/>
+            <CheckBox BorderBrush="{DynamicResource Window.Forground}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"  Background="Transparent" Grid.Column="1" IsChecked="{Binding CanNewDatabase,Mode=TwoWay}" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="3" VerticalAlignment="Center"/>
         </Grid>
 
 

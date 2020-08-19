@@ -553,7 +553,7 @@ namespace DBInStudio.Desktop
             if (!string.IsNullOrEmpty(mDatabase))
             {
                 var isrunning = DevelopServiceHelper.Helper.IsDatabaseRunning(mDatabase);
-                Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                Application.Current?.Dispatcher.BeginInvoke(new Action(() => {
                     IsDatabaseRunning = isrunning;
                 }), null);
             }

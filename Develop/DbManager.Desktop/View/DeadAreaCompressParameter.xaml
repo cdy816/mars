@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DBInStudio.Desktop.View"
              xmlns:res="clr-namespace:DBInStudio.Desktop"
-             mc:Ignorable="d" 
+             mc:Ignorable="d" Name="cfg"  Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"
              d:DesignHeight="60" d:DesignWidth="800">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -14,9 +14,9 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <TextBlock Text="{res:ResMarker DeadAreaValue,:}" Margin="5,0,5,0" VerticalAlignment="Center" />
-        <TextBox Width="100" HorizontalAlignment="Left" Margin="5,0,0,0" Text="{Binding DeadValue,Mode=TwoWay}" Grid.Column="1" VerticalAlignment="Center" />
-        <TextBlock Grid.Column="2" Text="{res:ResMarker DeadAreaType,:}" Margin="5,0,5,0" VerticalAlignment="Center" />
+        <TextBlock  Foreground="{Binding Foreground,ElementName=cfg}" Text="{res:ResMarker DeadAreaValue,:}" Margin="5,0,5,0" VerticalAlignment="Center" />
+        <TextBox  CaretBrush="White" Background="#1FFFFFFF"  Foreground="{Binding Foreground,ElementName=cfg}" Width="100" HorizontalAlignment="Left" Margin="5,0,0,0" Text="{Binding DeadValue,Mode=TwoWay}" Grid.Column="1" VerticalAlignment="Center" />
+        <TextBlock  Foreground="{Binding Foreground,ElementName=cfg}" Grid.Column="2" Text="{res:ResMarker DeadAreaType,:}" Margin="5,0,5,0" VerticalAlignment="Center" />
         <ComboBox SelectedIndex="{Binding Type,UpdateSourceTrigger=PropertyChanged}" Grid.Column="3" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0" Width="80" >
             <ComboBoxItem Content="{res:ResMarker AbsoluteValue}" />
             <ComboBoxItem Content="{res:ResMarker PercentValue}" />

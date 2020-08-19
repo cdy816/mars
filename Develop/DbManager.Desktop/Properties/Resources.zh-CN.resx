@@ -118,279 +118,279 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AbsoluteValue" xml:space="preserve">
-    <value>Value</value>
+    <value>绝对值</value>
   </data>
   <data name="Add" xml:space="preserve">
-    <value>Add</value>
+    <value>添加</value>
   </data>
   <data name="AddTagFail" xml:space="preserve">
-    <value>Add tag {0} failed!</value>
+    <value>添加变量 {0} 失败!</value>
   </data>
   <data name="AllGroup" xml:space="preserve">
-    <value>All group</value>
+    <value>所有组</value>
   </data>
   <data name="Append" xml:space="preserve">
-    <value>Append</value>
+    <value>增加</value>
   </data>
   <data name="Cancel" xml:space="preserve">
-    <value>Cancel</value>
+    <value>取消</value>
   </data>
   <data name="Circle" xml:space="preserve">
-    <value>Circle</value>
+    <value>周期</value>
   </data>
   <data name="CompressType" xml:space="preserve">
-    <value>CompressType</value>
+    <value>压缩类型</value>
   </data>
   <data name="Convert" xml:space="preserve">
-    <value>Convert</value>
+    <value>转换</value>
   </data>
   <data name="Copy" xml:space="preserve">
-    <value>Copy</value>
+    <value>拷贝</value>
   </data>
   <data name="Database" xml:space="preserve">
-    <value>Database</value>
+    <value>数据库</value>
   </data>
   <data name="databaseSelect" xml:space="preserve">
-    <value>Database select</value>
+    <value>数据库选择</value>
     <comment>List database View Title</comment>
   </data>
   <data name="DeadAreaCompress" xml:space="preserve">
-    <value>Dead zone</value>
+    <value>死区压缩</value>
   </data>
   <data name="DeadAreaType" xml:space="preserve">
-    <value>Type</value>
+    <value>类型</value>
   </data>
   <data name="DeadAreaValue" xml:space="preserve">
-    <value>Dead zone</value>
+    <value>死区区间</value>
   </data>
   <data name="Desc" xml:space="preserve">
-    <value>Description</value>
+    <value>描述</value>
   </data>
   <data name="Driver" xml:space="preserve">
-    <value>Driver</value>
+    <value>驱动</value>
   </data>
   <data name="EnableWrite" xml:space="preserve">
-    <value>EnableWrite</value>
+    <value>写可用</value>
   </data>
   <data name="erro" xml:space="preserve">
-    <value>erro</value>
+    <value>错误</value>
   </data>
   <data name="Export" xml:space="preserve">
-    <value>Export</value>
+    <value>导出</value>
   </data>
   <data name="funTitle" xml:space="preserve">
-    <value>Conversion formula</value>
+    <value>转换公式</value>
   </data>
   <data name="Group" xml:space="preserve">
-    <value>Group</value>
+    <value>组</value>
   </data>
   <data name="Id" xml:space="preserve">
-    <value>Id</value>
+    <value>编号</value>
   </data>
   <data name="Import" xml:space="preserve">
-    <value>Import</value>
+    <value>导入</value>
   </data>
   <data name="ImportErroMsg" xml:space="preserve">
     <value>Some erro has happened,do you see erro.txt for detail?</value>
   </data>
   <data name="ImportMode" xml:space="preserve">
-    <value>Import mode</value>
+    <value>导入模式</value>
   </data>
   <data name="IsAdmin" xml:space="preserve">
-    <value>Admin</value>
+    <value>管理员</value>
   </data>
   <data name="Keyword" xml:space="preserve">
-    <value>Keyword</value>
+    <value>关键字</value>
   </data>
   <data name="Link" xml:space="preserve">
-    <value>Link</value>
+    <value>链接</value>
   </data>
   <data name="Login" xml:space="preserve">
-    <value>Login</value>
+    <value>登录</value>
     <comment>登录</comment>
   </data>
   <data name="LoginFailed" xml:space="preserve">
-    <value>Login Failed!</value>
+    <value>登录失败!</value>
   </data>
   <data name="Logout" xml:space="preserve">
-    <value>Logout</value>
+    <value>注销</value>
   </data>
   <data name="LosslessCompress" xml:space="preserve">
-    <value>Lossless</value>
+    <value>无损压缩</value>
   </data>
   <data name="MainwindowTitle" xml:space="preserve">
-    <value>Mars database developer</value>
+    <value>Mars数据库开发平台</value>
   </data>
   <data name="MarsTitle" xml:space="preserve">
-    <value>Welcome to Mars realtime iot database</value>
+    <value>欢迎来到Mars实时物联数据库</value>
   </data>
   <data name="MaxValue" xml:space="preserve">
-    <value>MaxValue</value>
+    <value>最大值</value>
   </data>
   <data name="MinValue" xml:space="preserve">
-    <value>MinValue</value>
+    <value>最小值</value>
   </data>
   <data name="Modify" xml:space="preserve">
-    <value>Modify</value>
+    <value>修改</value>
   </data>
   <data name="Name" xml:space="preserve">
-    <value>Name</value>
+    <value>名称</value>
   </data>
   <data name="New" xml:space="preserve">
-    <value>New</value>
+    <value>新建</value>
   </data>
   <data name="NewDatabase" xml:space="preserve">
-    <value>New database</value>
+    <value>新建数据库</value>
   </data>
   <data name="NewDatabaseFailed" xml:space="preserve">
-    <value>New database failed!</value>
+    <value>新建数据库失败!</value>
   </data>
   <data name="NoneCompress" xml:space="preserve">
-    <value>None</value>
+    <value>无</value>
   </data>
   <data name="OK" xml:space="preserve">
-    <value>OK</value>
+    <value>确定</value>
   </data>
   <data name="Password" xml:space="preserve">
-    <value>Password</value>
+    <value>密码</value>
   </data>
   <data name="PasswordConfirm" xml:space="preserve">
-    <value>Password confirm</value>
+    <value>密码确认</value>
   </data>
   <data name="PasswordNew" xml:space="preserve">
-    <value>New password </value>
+    <value>新密码</value>
   </data>
   <data name="Paste" xml:space="preserve">
-    <value>Paste</value>
+    <value>粘贴</value>
   </data>
   <data name="PercentValue" xml:space="preserve">
-    <value>Percent</value>
+    <value>百分比</value>
   </data>
   <data name="Permission" xml:space="preserve">
-    <value>Permission</value>
+    <value>权限</value>
   </data>
   <data name="PermissionList" xml:space="preserve">
-    <value>Permission list</value>
+    <value>权限列表</value>
   </data>
   <data name="Precision" xml:space="preserve">
-    <value>Precision</value>
+    <value>精度</value>
   </data>
   <data name="Read" xml:space="preserve">
-    <value>Read</value>
+    <value>读</value>
   </data>
   <data name="ReadWrite" xml:space="preserve">
-    <value>ReadWrite</value>
+    <value>读写</value>
   </data>
   <data name="ReadWriteMode" xml:space="preserve">
-    <value>ReadWriteMode</value>
+    <value>读写模式</value>
   </data>
   <data name="Record" xml:space="preserve">
-    <value>Record</value>
+    <value>记录</value>
   </data>
   <data name="RecordType" xml:space="preserve">
-    <value>RecordType</value>
+    <value>记录类型</value>
   </data>
   <data name="Registor" xml:space="preserve">
-    <value>Registor</value>
+    <value>寄存器</value>
   </data>
   <data name="Remove" xml:space="preserve">
-    <value>Remove</value>
+    <value>删除</value>
   </data>
   <data name="ReName" xml:space="preserve">
-    <value>Rename</value>
+    <value>重命名</value>
   </data>
   <data name="Replace" xml:space="preserve">
-    <value>Replace</value>
+    <value>替换</value>
   </data>
   <data name="ReplaceAll" xml:space="preserve">
-    <value>Replace all</value>
+    <value>替换全部</value>
   </data>
   <data name="ReRun" xml:space="preserve">
-    <value>ReRun</value>
+    <value>热重启</value>
   </data>
   <data name="Save" xml:space="preserve">
-    <value>Save</value>
+    <value>保存</value>
   </data>
   <data name="Savefailed" xml:space="preserve">
-    <value>save failed!</value>
+    <value>保存失败!</value>
   </data>
   <data name="SaveSucessful" xml:space="preserve">
-    <value>save sucessfull!</value>
+    <value>保存成功!</value>
   </data>
   <data name="Security" xml:space="preserve">
-    <value>Security</value>
+    <value>安全</value>
   </data>
   <data name="SelectDatabase" xml:space="preserve">
-    <value>Select a database</value>
+    <value>选择一个数据库</value>
     <comment>List database View head</comment>
   </data>
   <data name="SelectGroup" xml:space="preserve">
-    <value>Selected group</value>
+    <value>选择组</value>
   </data>
   <data name="ServerIp" xml:space="preserve">
-    <value>Server Ip</value>
+    <value>服务器IP</value>
   </data>
   <data name="ServerSecurity" xml:space="preserve">
-    <value>ServerSecurity</value>
+    <value>服务器安全</value>
   </data>
   <data name="SetPasswordfail" xml:space="preserve">
-    <value>set password fail.</value>
+    <value>设置密码失败!</value>
   </data>
   <data name="SetPasswordSeccussful" xml:space="preserve">
-    <value>set password seccussfull.</value>
+    <value>设置密码成功.</value>
   </data>
   <data name="SlopeAreaValue" xml:space="preserve">
-    <value>Slope zone</value>
+    <value>斜率区间</value>
   </data>
   <data name="SlopeCompress" xml:space="preserve">
-    <value>Slope</value>
+    <value>斜率</value>
   </data>
   <data name="Start" xml:space="preserve">
-    <value>Start</value>
+    <value>启动</value>
   </data>
   <data name="Stop" xml:space="preserve">
-    <value>Stop</value>
+    <value>停止</value>
   </data>
   <data name="Switch" xml:space="preserve">
-    <value>Switch</value>
+    <value>切换</value>
   </data>
   <data name="Tag" xml:space="preserve">
-    <value>Tag</value>
+    <value>变量</value>
   </data>
   <data name="TagCount" xml:space="preserve">
-    <value>Tag count</value>
+    <value>变量个数</value>
   </data>
   <data name="TagExportComplete" xml:space="preserve">
-    <value>Tag export complete!</value>
+    <value>变量导出完成!</value>
   </data>
   <data name="TagFilter" xml:space="preserve">
-    <value>Query filter</value>
+    <value>过滤条件</value>
   </data>
   <data name="TagGroup" xml:space="preserve">
-    <value>Tag group</value>
+    <value>变量组</value>
   </data>
   <data name="Timer" xml:space="preserve">
-    <value>Timer</value>
+    <value>定时</value>
   </data>
   <data name="Type" xml:space="preserve">
-    <value>Type</value>
+    <value>类型</value>
   </data>
   <data name="UpdateTagFail" xml:space="preserve">
-    <value>Update tag {0} failed!</value>
+    <value>更新变量 {0} 失败!</value>
   </data>
   <data name="User" xml:space="preserve">
-    <value>User</value>
+    <value>用户</value>
   </data>
   <data name="UserList" xml:space="preserve">
-    <value>User list</value>
+    <value>用户列表</value>
   </data>
   <data name="UserName" xml:space="preserve">
-    <value>User name</value>
+    <value>用户名</value>
   </data>
   <data name="ValueChanged" xml:space="preserve">
-    <value>ValueChanged</value>
+    <value>值改变</value>
   </data>
   <data name="Write" xml:space="preserve">
-    <value>Write</value>
+    <value>写</value>
   </data>
 </root>

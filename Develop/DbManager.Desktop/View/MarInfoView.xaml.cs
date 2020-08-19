@@ -26,7 +26,7 @@ namespace DBInStudio.Desktop.View
 
         private void TextBlock_MouseEnter(object sender, MouseEventArgs e)
         {
-            (sender as FrameworkElement).Opacity = 0.8;
+            (sender as FrameworkElement).Opacity = 0.7;
         }
 
         private void TextBlock_MouseLeave(object sender, MouseEventArgs e)

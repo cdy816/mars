@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DBInStudio.Desktop.View"
-             xmlns:res="clr-namespace:DBInStudio.Desktop"
+             xmlns:res="clr-namespace:DBInStudio.Desktop" Background="#7F000000"
              mc:Ignorable="d"  Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}"
              d:DesignHeight="450" d:DesignWidth="800" >
     <UserControl.Resources>
@@ -49,18 +49,18 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Button  BorderBrush="Gray"  Command="{Binding AddCommand}" Content="{res:ResMarker Add}" HorizontalAlignment="Left" Margin="5,0,0,0" Grid.Row="2" VerticalAlignment="Center" Width="94" Height="26">
+
+        <Button  BorderThickness="0,0,0,2" BorderBrush="Green"  Command="{Binding AddCommand}" Content="{res:ResMarker Add}" HorizontalAlignment="Left" Margin="5,0,0,0" Grid.Row="2" VerticalAlignment="Center" Width="94" Height="26">
             <Button.ContentTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal" Margin="0">
-
                         <Image Source="/Image/Add.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
                         <TextBlock Text="{Binding}" Grid.Column="1" />
                     </StackPanel>
                 </DataTemplate>
             </Button.ContentTemplate>
         </Button>
-        <Button  BorderBrush="Gray"  Command="{Binding RemoveCommand}" Content="{res:ResMarker Remove}" HorizontalAlignment="Left" Margin="110,0,0,0" Grid.Row="2" VerticalAlignment="Center" Width="94" Height="26">
+        <Button   BorderThickness="0,0,0,2"  BorderBrush="IndianRed"  Command="{Binding RemoveCommand}" Content="{res:ResMarker Remove}" HorizontalAlignment="Left" Margin="110,0,0,0" Grid.Row="2" VerticalAlignment="Center" Width="94" Height="26">
             <Button.ContentTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal" Margin="0">
@@ -84,9 +84,9 @@
             <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{res:ResMarker UserName,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center"/>
             <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{res:ResMarker Password,:}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Grid.Row="1"/>
             <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{res:ResMarker Permission,:}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Grid.Row="2"/>
-            <TextBox Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Background="#1FFFFFFF" IsEnabled="{Binding IsNew}" VerticalContentAlignment="Center" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Margin="10,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Height="26" Grid.Column="1" />
+            <TextBox  CaretBrush="White" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Background="#1FFFFFFF" IsEnabled="{Binding IsNew}" VerticalContentAlignment="Center" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Margin="10,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left" Width="300" Height="26" Grid.Column="1" />
             <!--<PasswordBox HorizontalAlignment="Left" VerticalContentAlignment="Center" Margin="10,0,0,0" VerticalAlignment="Center" Width="300" Height="26" Grid.Column="1" Password="123456"  Grid.Row="1" PasswordChanged="PasswordBox_PasswordChanged"/>-->
-            <res:PasswordControl Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"  BorderBrush="Gray" BorderThickness="1" Password="{Binding Password,Mode=TwoWay}" Grid.Column="1" Grid.Row="1" Margin="10,0,0,0" Width="300" VerticalAlignment="Center" Height="26" HorizontalAlignment="Left"/>
+            <res:PasswordControl Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"  BorderBrush="Gray" BorderThickness="1" Password="{Binding Password,Mode=TwoWay}" Grid.Column="1" Grid.Row="1" Margin="10,0,0,0" Width="300" VerticalAlignment="Center" Height="26" HorizontalAlignment="Left"/>
             <ListBox Background="Transparent" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}"  ItemsSource="{Binding PermissionModel}" Grid.Column="1" Grid.Row="2" Margin="10,10,0,0" Width="300" HorizontalAlignment="Left" >
                 <ListBox.ItemTemplate>
                     <DataTemplate>

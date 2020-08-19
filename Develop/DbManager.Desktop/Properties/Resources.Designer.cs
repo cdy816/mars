@@ -304,6 +304,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Keyword 的本地化字符串。
+        /// </summary>
+        internal static string Keyword {
+            get {
+                return ResourceManager.GetString("Keyword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Link 的本地化字符串。
         /// </summary>
         internal static string Link {
@@ -583,7 +592,7 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
-        ///   查找类似 ReName 的本地化字符串。
+        ///   查找类似 Rename 的本地化字符串。
         /// </summary>
         internal static string ReName {
             get {
@@ -763,7 +772,7 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
-        ///   查找类似 TagCount 的本地化字符串。
+        ///   查找类似 Tag count 的本地化字符串。
         /// </summary>
         internal static string TagCount {
             get {
@@ -781,11 +790,29 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
-        ///   查找类似 TagGroup 的本地化字符串。
+        ///   查找类似 Query filter 的本地化字符串。
+        /// </summary>
+        internal static string TagFilter {
+            get {
+                return ResourceManager.GetString("TagFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Tag group 的本地化字符串。
         /// </summary>
         internal static string TagGroup {
             get {
                 return ResourceManager.GetString("TagGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Timer 的本地化字符串。
+        /// </summary>
+        internal static string Timer {
+            get {
+                return ResourceManager.GetString("Timer", resourceCulture);
             }
         }
         
@@ -826,11 +853,20 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
-        ///   查找类似 UserName 的本地化字符串。
+        ///   查找类似 User name 的本地化字符串。
         /// </summary>
         internal static string UserName {
             get {
                 return ResourceManager.GetString("UserName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 ValueChanged 的本地化字符串。
+        /// </summary>
+        internal static string ValueChanged {
+            get {
+                return ResourceManager.GetString("ValueChanged", resourceCulture);
             }
         }
         

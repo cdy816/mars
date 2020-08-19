@@ -77,7 +77,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <TextBlock Margin="10,0" Text="{res:ResMarker SelectDatabase}" HorizontalAlignment="Left" VerticalAlignment="Center" />
-        <ListBox Background="#1FFFFFFF" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" Margin="-1" Grid.Row="1"  BorderThickness="0" ItemsSource="{Binding DatabaseItems}" SelectedItem="{Binding SelectDatabase,Mode=TwoWay}">
+        <ListBox Background="#0FFFFFFF" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" Margin="-1" Grid.Row="1"  BorderThickness="0" ItemsSource="{Binding DatabaseItems}" SelectedItem="{Binding SelectDatabase,Mode=TwoWay}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid MinHeight="28">
@@ -91,6 +91,6 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Button Command="{Binding NewCommand}" Style="{DynamicResource ButtonStyle1}" Background="Transparent" BorderThickness="0,0,0,0" Content="{res:ResMarker New}" Width="80" HorizontalAlignment="Right" Margin="5,0" Height="26" VerticalAlignment="Center" />
+        <Button Command="{Binding NewCommand}" Style="{DynamicResource ButtonStyle1}" BorderBrush="Green"  BorderThickness="0,0,0,2" Content="{res:ResMarker New}" Width="80" HorizontalAlignment="Right" Margin="5,0" Height="26" VerticalAlignment="Center" />
     </Grid>
 </UserControl>

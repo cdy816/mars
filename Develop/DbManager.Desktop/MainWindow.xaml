@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DBInStudio.Desktop"
        ResizeMode="CanResizeWithGrip"
-        mc:Ignorable="d"  Foreground="#FFFAFAFA" Background="Transparent" AllowsTransparency="True" WindowStyle="None" 
+        mc:Ignorable="d"  Foreground="{DynamicResource Window.Forground}" Background="Transparent" AllowsTransparency="True" WindowStyle="None" 
         Title="{Binding MainwindowTitle}" Height="768" Width="1024" WindowState="Maximized" WindowStartupLocation="CenterScreen" Icon="/Image/mrdbd.ico">
     <Window.Resources>
         <local:IndexConverter x:Key="ic" />
@@ -29,11 +29,11 @@
         <SolidColorBrush x:Key="Button.Disabled.Background" Color="#FFF4F4F4"/>
         <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FFADB2B5"/>
         <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383"/>
-        <Style  TargetType="{x:Type Button}">
+        <Style TargetType="{x:Type Button}">
             <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="{StaticResource Button.Static.Border}"/>
-            <Setter Property="Foreground" Value="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Setter Property="Foreground" Value="{DynamicResource Window.Forground}" />
             
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -45,7 +45,7 @@
                             <Border x:Name="border" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" SnapsToDevicePixels="true">
                                 <ContentPresenter x:Name="contentPresenter" Focusable="False" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                             </Border>
-                            <Rectangle Visibility="Hidden" x:Name="vb" Fill="#2FFFFFFF" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                            <Rectangle Visibility="Hidden" x:Name="vb" Fill="#2F000000" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
                         </Grid>
                         
                         <ControlTemplate.Triggers>
@@ -61,7 +61,8 @@
                                 <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource Button.Pressed.Border}"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="false">
-                                <Setter Property="Visibility" TargetName="vb" Value="Visible" />
+                                <!--<Setter Property="Visibility" TargetName="vb" Value="Visible" />-->
+                                <Setter Property="Opacity" Value="0.5" />
                                 <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource Button.Disabled.Border}"/>
                                 <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{StaticResource Button.Disabled.Foreground}"/>
                             </Trigger>
@@ -74,112 +75,19 @@
             </Setter>
         </Style>
 
-        <Style x:Key="TreeViewItemFocusVisual">
-            <Setter Property="Control.Template">
-                <Setter.Value>
-                    <ControlTemplate>
-                        <Rectangle/>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
 
-        <PathGeometry x:Key="TreeArrow" Figures="M0,0 L0,6 L6,0 z"/>
-        <Style x:Key="ExpandCollapseToggleStyle" TargetType="{x:Type ToggleButton}">
-            <Setter Property="Focusable" Value="False"/>
-            <Setter Property="Width" Value="16"/>
-            <Setter Property="Height" Value="16"/>
-            <Setter Property="Foreground" Value="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type ToggleButton}">
-                        <Border Background="Transparent" Height="16" Padding="5,5,5,5" Width="16">
-                            <Path x:Name="ExpandPath" Data="{StaticResource TreeArrow}" Fill="{TemplateBinding Foreground}" Stroke="{TemplateBinding Foreground}">
-                                <Path.RenderTransform>
-                                    <RotateTransform Angle="135" CenterY="3" CenterX="3"/>
-                                </Path.RenderTransform>
-                            </Path>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter Property="RenderTransform" TargetName="ExpandPath">
-                                    <Setter.Value>
-                                        <RotateTransform Angle="180" CenterY="3" CenterX="3"/>
-                                    </Setter.Value>
-                                </Setter>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style x:Key="TreeViewItemStyle1" TargetType="{x:Type TreeViewItem}">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
-            <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
-            <Setter Property="Padding" Value="1,0,0,0"/>
-            <Setter Property="Foreground" Value="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}"/>
-            <Setter Property="FocusVisualStyle" Value="{StaticResource TreeViewItemFocusVisual}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type TreeViewItem}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition MinWidth="19" Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition/>
-                            </Grid.RowDefinitions>
-                            <ToggleButton x:Name="Expander" ClickMode="Press" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}" Style="{StaticResource ExpandCollapseToggleStyle}"/>
-                            <Border x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Grid.Column="1" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="true">
-                                <ContentPresenter x:Name="PART_Header" ContentSource="Header" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
-                            </Border>
-                            <ItemsPresenter x:Name="ItemsHost" Grid.ColumnSpan="2" Grid.Column="1" Grid.Row="1"/>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsExpanded" Value="false">
-                                <Setter Property="Visibility" TargetName="ItemsHost" Value="Collapsed"/>
-                            </Trigger>
-                            <Trigger Property="HasItems" Value="false">
-                                <Setter Property="Visibility" TargetName="Expander" Value="Hidden"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="true">
-                                <Setter Property="Background" TargetName="Bd" Value="#3F000000"/>
-                                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="false">
-                                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="VirtualizingPanel.IsVirtualizing" Value="true">
-                    <Setter Property="ItemsPanel">
-                        <Setter.Value>
-                            <ItemsPanelTemplate>
-                                <VirtualizingStackPanel/>
-                            </ItemsPanelTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
     </Window.Resources>
-    <Grid x:Name="bg" Margin="5" Background="#F2404040">
+    <Border  Margin="5" BorderThickness="1" BorderBrush="DarkGray">
+        <Grid x:Name="bg" Background="#CF26282C">
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
             <RowDefinition Height="48"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid Background="#7F000000"  MouseMove="Grid_MouseMove" MouseLeftButtonUp="Grid_MouseLeftButtonUp" MouseLeftButtonDown="Grid_MouseLeftButtonDown">
+        <Grid Background="#9F000000"  MouseMove="Grid_MouseMove" MouseLeftButtonUp="Grid_MouseLeftButtonUp" MouseLeftButtonDown="Grid_MouseLeftButtonDown">
             <ProgressBar Maximum="100"  Minimum="0" Value="{Binding ProcessNotify}" Background="Transparent" VerticalAlignment="Top" Height="32" BorderThickness="0" BorderBrush="Transparent" />
             <Image Margin="5,0"  Source="{Binding Icon,RelativeSource={RelativeSource AncestorType=Window}}" Height="16" HorizontalAlignment="Left" Width="24" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" Stretch="Fill" />
-            <Label Margin="30,0,115,0" VerticalContentAlignment="Center" Content="{Binding Title,RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}"/>
+            <Label Margin="30,0,115,0" VerticalContentAlignment="Center" Content="{Binding Title,RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{DynamicResource Window.Forground}"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button x:Name="minB" BorderThickness="0"  Click="minB_Click"  Command="{Binding ReloadCommand}" HorizontalAlignment="Left"  Margin="1,0,0,0"   VerticalAlignment="Stretch" Width="32"  >
                     <Button.ContentTemplate>
@@ -212,7 +120,7 @@
                 </Button>
             </StackPanel>
         </Grid>
-        <Border Grid.Row="1" BorderThickness="0,0,0,1" BorderBrush="LightGray" Background="#1FFFFFFF">
+        <Border Grid.Row="1" BorderThickness="0,0,0,1" BorderBrush="LightGray" Background="#4F000000">
             <Grid>
                 <StackPanel Orientation="Horizontal">
                     <Grid Margin="10,0,0,0">
@@ -221,7 +129,7 @@
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
                                         <Image Source="/Image/登录.png" Height="22" RenderOptions.BitmapScalingMode="HighQuality"/>
-                                        <TextBlock Text="{local:ResMarker Login}" VerticalAlignment="Center" Margin="5,0"/>
+                                            <TextBlock Text="{local:ResMarker Login}" FontWeight="Bold" VerticalAlignment="Center" Margin="5,0"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </Button.ContentTemplate>
@@ -232,7 +140,7 @@
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal"  VerticalAlignment="Stretch" >
                                         <Image Source="/Image/log-out.png" Height="22" RenderOptions.BitmapScalingMode="HighQuality"/>
-                                        <TextBlock Text="{local:ResMarker Logout}" Foreground="DarkRed" VerticalAlignment="Center" Margin="5,0"/>
+                                            <TextBlock Text="{local:ResMarker Logout}"  FontWeight="Bold" Foreground="Red" VerticalAlignment="Center" Margin="5,0"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </Button.ContentTemplate>
@@ -244,7 +152,7 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <Image Source="/Image/database-add.png" Height="22" RenderOptions.BitmapScalingMode="HighQuality" />
-                                    <TextBlock Text="{local:ResMarker Add}" VerticalAlignment="Center" Margin="5,0"/>
+                                        <TextBlock Text="{local:ResMarker Add}"  FontWeight="Bold" VerticalAlignment="Center" Margin="5,0"/>
                                 </StackPanel>
                             </DataTemplate>
                         </Button.ContentTemplate>
@@ -255,7 +163,7 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <Image Source="/Image/switch.png" Height="24" RenderOptions.BitmapScalingMode="HighQuality" />
-                                    <TextBlock Text="{local:ResMarker Switch}" VerticalAlignment="Center" Margin="5,0"/>
+                                        <TextBlock Text="{local:ResMarker Switch}"  FontWeight="Bold" VerticalAlignment="Center" Margin="5,0"/>
                                 </StackPanel>
                             </DataTemplate>
                         </Button.ContentTemplate>
@@ -268,7 +176,7 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <Image Source="/Image/Save.png" Height="16" RenderOptions.BitmapScalingMode="HighQuality" />
-                                    <TextBlock Text="{local:ResMarker Save}" VerticalAlignment="Center" Margin="5,0"/>
+                                        <TextBlock Text="{local:ResMarker Save}"  FontWeight="Bold" VerticalAlignment="Center" Margin="5,0"/>
                                 </StackPanel>
                             </DataTemplate>
                         </Button.ContentTemplate>
@@ -279,7 +187,7 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <Image Source="/Image/start.png" Height="20" RenderOptions.BitmapScalingMode="HighQuality" />
-                                    <TextBlock Text="{local:ResMarker Start}" VerticalAlignment="Center" Margin="5,0"/>
+                                        <TextBlock Text="{local:ResMarker Start}"  FontWeight="Bold" VerticalAlignment="Center" Margin="5,0"/>
                                 </StackPanel>
                             </DataTemplate>
                         </Button.ContentTemplate>
@@ -290,7 +198,7 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <Image Source="/Image/stop.png" Height="20" RenderOptions.BitmapScalingMode="HighQuality" />
-                                    <TextBlock Text="{local:ResMarker Stop}" VerticalAlignment="Center" Margin="5,0"/>
+                                        <TextBlock Text="{local:ResMarker Stop}"  FontWeight="Bold" VerticalAlignment="Center" Margin="5,0"/>
                                 </StackPanel>
                             </DataTemplate>
                         </Button.ContentTemplate>
@@ -301,7 +209,7 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <Image Source="/Image/rerun.png" Height="20" RenderOptions.BitmapScalingMode="HighQuality" />
-                                    <TextBlock Text="{local:ResMarker ReRun}" VerticalAlignment="Center" Margin="5,0"/>
+                                        <TextBlock Text="{local:ResMarker ReRun}"  FontWeight="Bold" VerticalAlignment="Center" Margin="5,0"/>
                                 </StackPanel>
                             </DataTemplate>
                         </Button.ContentTemplate>
@@ -312,7 +220,7 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <Image Source="/Image/export.png" Height="17" RenderOptions.BitmapScalingMode="HighQuality" />
-                                    <TextBlock Text="{local:ResMarker Export}" VerticalAlignment="Center" Margin="5,0"/>
+                                        <TextBlock Text="{local:ResMarker Export}"  FontWeight="Bold" VerticalAlignment="Center" Margin="5,0"/>
                                 </StackPanel>
                             </DataTemplate>
                         </Button.ContentTemplate>
@@ -322,24 +230,23 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <Image Source="/Image/import.png" Height="24" RenderOptions.BitmapScalingMode="HighQuality" />
-                                    <TextBlock Text="{local:ResMarker Import}" VerticalAlignment="Center" Margin="5,0"/>
+                                        <TextBlock Text="{local:ResMarker Import}"  FontWeight="Bold" VerticalAlignment="Center" Margin="5,0"/>
                                 </StackPanel>
                             </DataTemplate>
                         </Button.ContentTemplate>
                     </Button>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
-                    <Label Content="{Binding UserName}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" />
+                    <Label Content="{Binding UserName}" Foreground="{DynamicResource Window.Forground}" />
                 </StackPanel>
             </Grid>
         </Border>
-        <Grid Grid.Row="2">
-            
+        <Grid Grid.Row="2" Background="#0FFFFFFF">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="180" MinWidth="30" MaxWidth="1000"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <TreeView x:Name="tv" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" ItemContainerStyle="{DynamicResource TreeViewItemStyle1}" ItemsSource="{Binding TagGroup}"  SelectedItemChanged="TreeView_SelectedItemChanged" BorderThickness="0,0,1,1" Margin="0,0,0,32" Background="#1FFFFFFF">
+            <TreeView x:Name="tv" Foreground="{DynamicResource Window.Forground}" ItemContainerStyle="{DynamicResource TreeViewItemStyle1}" ItemsSource="{Binding TagGroup}"  SelectedItemChanged="TreeView_SelectedItemChanged" BorderThickness="0,0,1,1" Margin="0,0,0,32" Background="#7F000000">
                 <TreeView.InputBindings>
                     <KeyBinding Key="F2" Command="{Binding ReNameCommand}" />
                     <KeyBinding Key="Delete" Command="{Binding RemoveCommand}" />
@@ -373,8 +280,8 @@
                         <StackPanel Orientation="Horizontal" Height="24">
                             <Image Focusable="False" Source="/Image/文件夹.png"  Margin="0,0,4,0" Height="18" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                             <Grid ContextMenu="{StaticResource groupMenu}"  Background="{Binding Background}" VerticalAlignment="Center" Focusable="False"  Name="spanel"    >
-                                <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" Text="{Binding Name}" VerticalAlignment="Center" />
-                                <TextBox Background="#FF000000" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" LostFocus="TextBox_LostFocus" KeyDown="TextBox_KeyDown" IsVisibleChanged="TextBox_IsVisibleChanged" Loaded="TextBox_Loaded" Text="{Binding Name,Mode=TwoWay,NotifyOnTargetUpdated=True,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Center" Visibility="{Binding IsEdit,Converter={StaticResource btv}}"  />
+                                <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{Binding Name}" VerticalAlignment="Center" />
+                                <TextBox Background="#FF000000" Foreground="{DynamicResource Window.Forground}" LostFocus="TextBox_LostFocus" KeyDown="TextBox_KeyDown" IsVisibleChanged="TextBox_IsVisibleChanged" Loaded="TextBox_Loaded" Text="{Binding Name,Mode=TwoWay,NotifyOnTargetUpdated=True,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Center" Visibility="{Binding IsEdit,Converter={StaticResource btv}}"  />
                             </Grid>
                         </StackPanel>
                     </HierarchicalDataTemplate>
@@ -382,21 +289,21 @@
                     <HierarchicalDataTemplate  DataType="{x:Type local:DatabaseViewModel}"  ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal" Height="24">
                             <Image Focusable="False" Source="/Image/database.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" Text="{Binding Name}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{Binding Name}" VerticalAlignment="Center" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
 
                     <HierarchicalDataTemplate  DataType="{x:Type local:ServerSecurityTreeViewModel}"  ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal" Height="24">
                             <Image Focusable="False" Source="/Image/server-security.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" Text="{local:ResMarker ServerSecurity}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker ServerSecurity}" VerticalAlignment="Center" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
 
                     <DataTemplate  DataType="{x:Type local:ServerUserEditorTreeViewModel}" >
                         <StackPanel Orientation="Horizontal" Height="24">
                             <Image Focusable="False" Source="/Image/UserSettings.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" Text="{Binding Name}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{Binding Name}" VerticalAlignment="Center" />
                         </StackPanel>
                     </DataTemplate>
 
@@ -404,42 +311,42 @@
                     <DataTemplate  DataType="{x:Type local:ServerUserManagerTreeViewModel}" >
                         <StackPanel Orientation="Horizontal" Height="24">
                             <Image Focusable="False" Source="/Image/user.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" Text="{local:ResMarker User}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker User}" VerticalAlignment="Center" />
                         </StackPanel>
                     </DataTemplate>
 
                     <HierarchicalDataTemplate  DataType="{x:Type local:RootTagGroupViewModel}"  ItemsSource="{Binding Children}">
                         <StackPanel ContextMenu="{StaticResource rootgroupMenu}" Orientation="Horizontal" Height="24">
                             <Image Focusable="False" Source="/Image/文件夹.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="18" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" Text="{Binding Name}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{Binding Name}" VerticalAlignment="Center" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
 
                     <HierarchicalDataTemplate  DataType="{x:Type local:SecurityTreeItemViewModel}"  ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal" Height="24">
                             <Image Focusable="False" Source="/Image/Security.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="18" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" Text="{Binding Name}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{Binding Name}" VerticalAlignment="Center" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
 
                     <HierarchicalDataTemplate  DataType="{x:Type local:UserGroupRootViewModel}"  ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal" Height="24">
                             <Image Focusable="False" Source="/Image/user.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="18" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" Text="{local:ResMarker User}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker User}" VerticalAlignment="Center" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
 
                     <HierarchicalDataTemplate  DataType="{x:Type local:PermissionTreeItemViewModel}"  ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal" Height="24">
                             <Image Focusable="False" Source="/Image/permissions.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="18" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                            <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" Text="{local:ResMarker Permission}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker Permission}" VerticalAlignment="Center" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
                 </TreeView.Resources>
             </TreeView>
-            <Border VerticalAlignment="Bottom" Background="#1FFFFFFF" Height="32" BorderBrush="Gray" BorderThickness="0,0,1,0">
+            <Border VerticalAlignment="Bottom" Background="#4F000000" Height="32" BorderBrush="Gray" BorderThickness="0,0,1,0">
                 <StackPanel Orientation="Horizontal"   >
-                    <Button BorderThickness="1" BorderBrush="Gray"  Content="{local:ResMarker Add}"  Background="#1FFFFFFF"  Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" Command="{Binding AddGroupCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
+                    <Button BorderThickness="0,0,0,2" BorderBrush="Green"  Content="{local:ResMarker Add}"    Foreground="{DynamicResource Window.Forground}" Command="{Binding AddGroupCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
                         <Button.ContentTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" Margin="0">
@@ -450,7 +357,7 @@
                             </DataTemplate>
                         </Button.ContentTemplate>
                     </Button>
-                    <Button BorderThickness="1"  BorderBrush="Gray"   Content="{local:ResMarker Remove}" Background="#1FFFFFFF"  Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}" Command="{Binding RemoveGroupCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
+                        <Button BorderThickness="0,0,0,2"  BorderBrush="IndianRed"   Content="{local:ResMarker Remove}" Foreground="{DynamicResource Window.Forground}" Command="{Binding RemoveGroupCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
                         <Button.ContentTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" Margin="0">
@@ -469,11 +376,9 @@
             
         </Grid>
         <Grid Visibility="{Binding NotifyVisiblity}" Grid.Row="1" HorizontalAlignment="Stretch" Grid.ColumnSpan="2" Grid.RowSpan="2" VerticalAlignment="Stretch" Background="#2F000000">
-
-            <Image Width="64" Height="64" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center" Source="/Image/wait.png" >
-
-            </Image>
-        </Grid>
+                <Image Width="64" Height="64" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center" Source="/Image/wait.png" />
+            </Grid>
 
     </Grid>
+    </Border>
 </Window>

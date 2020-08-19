@@ -5,18 +5,18 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DBInStudio.Desktop.View"
              xmlns:res="clr-namespace:DBInStudio.Desktop"
-             mc:Ignorable="d" 
+             mc:Ignorable="d" Name="cfg"  Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"
              d:DesignHeight="120.626" d:DesignWidth="303.05">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
-            <RowDefinition Height="67*"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Label Content="y =" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Grid.Row="1"/>
-        <TextBox HorizontalAlignment="Left" Margin="41,14,0,0" Text="{Binding K}" TextWrapping="Wrap" VerticalAlignment="Top" Width="61" Grid.Row="1"/>
-        <Label Content="x   + " HorizontalAlignment="Left" Margin="107,10,0,0" VerticalAlignment="Top" Grid.Row="1"/>
-        <TextBox HorizontalAlignment="Left" Margin="149,14,0,0" Text="{Binding T}" TextWrapping="Wrap" VerticalAlignment="Top" Width="61" Grid.Row="1"/>
-        <Label Content="{res:ResMarker funTitle,:}" HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Center"/>
-        <Label Content="(y=kx+b)" HorizontalAlignment="Left" Margin="169,0,0,0" VerticalAlignment="Center"/>
+        <Label Foreground="{Binding Foreground,ElementName=cfg}" Content="y =" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Grid.Row="1"/>
+        <TextBox  CaretBrush="White" Background="#1FFFFFFF"  Foreground="{Binding Foreground,ElementName=cfg}" HorizontalAlignment="Left" Margin="41,14,0,0" Text="{Binding K}" TextWrapping="Wrap" VerticalAlignment="Top" Width="61" Grid.Row="1"/>
+        <Label Foreground="{Binding Foreground,ElementName=cfg}" Content="x   + " HorizontalAlignment="Left" Margin="107,10,0,0" VerticalAlignment="Top" Grid.Row="1"/>
+        <TextBox  CaretBrush="White" Background="#1FFFFFFF"  Foreground="{Binding Foreground,ElementName=cfg}" HorizontalAlignment="Left" Margin="149,14,0,0" Text="{Binding T}" TextWrapping="Wrap" VerticalAlignment="Top" Width="61" Grid.Row="1"/>
+        <Label Foreground="{Binding Foreground,ElementName=cfg}" Content="{res:ResMarker funTitle,:}" HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Center"/>
+        <Label Foreground="{Binding Foreground,ElementName=cfg}" Content="(y=kx+b)" HorizontalAlignment="Left" Margin="169,0,0,0" VerticalAlignment="Center"/>
     </Grid>
 </UserControl>

@@ -63,9 +63,16 @@ namespace DBInStudio.Desktop.ViewModel
                 if (mIsReplace != value)
                 {
                     mIsReplace = value;
-                    if (value) Mode = 0;
-                    OnPropertyChanged("IsReplace");
+                    if (value)
+                    {
+                        mIsReplaceMode = mIsAddMode = false;
+                        Mode = 0;
+                    }
+                  
                 }
+                OnPropertyChanged("IsReplaceMode");
+                OnPropertyChanged("IsAddMode");
+                OnPropertyChanged("IsReplace");
             }
         }
 
@@ -84,9 +91,17 @@ namespace DBInStudio.Desktop.ViewModel
                 if (mIsReplaceMode != value)
                 {
                     mIsReplaceMode = value;
-                    if (value) Mode = 1;
-                    OnPropertyChanged("IsReplaceMode");
+
+                    if (value)
+                    {
+                        Mode = 1;
+                        mIsAddMode = mIsReplace =false;
+                    }
+                   
                 }
+                OnPropertyChanged("IsReplaceMode");
+                OnPropertyChanged("IsAddMode");
+                OnPropertyChanged("IsReplace");
             }
         }
 
@@ -105,9 +120,16 @@ namespace DBInStudio.Desktop.ViewModel
                 if (mIsAddMode != value)
                 {
                     mIsAddMode = value;
-                    if (value) Mode = 2;
-                    OnPropertyChanged("IsAddMode");
+                    if (value)
+                    {
+                        mIsReplace = mIsReplaceMode = false;
+                        Mode = 2;
+                    }
+                  
                 }
+                OnPropertyChanged("IsReplaceMode");
+                OnPropertyChanged("IsAddMode");
+                OnPropertyChanged("IsReplace");
             }
         }
 

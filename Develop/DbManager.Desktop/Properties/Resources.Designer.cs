@@ -529,6 +529,24 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 PropertyCopy 的本地化字符串。
+        /// </summary>
+        internal static string PropertyCopy {
+            get {
+                return ResourceManager.GetString("PropertyCopy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 PropertyPaste 的本地化字符串。
+        /// </summary>
+        internal static string PropertyPaste {
+            get {
+                return ResourceManager.GetString("PropertyPaste", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Read 的本地化字符串。
         /// </summary>
         internal static string Read {
@@ -660,6 +678,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Security {
             get {
                 return ResourceManager.GetString("Security", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 All 的本地化字符串。
+        /// </summary>
+        internal static string SelectAll {
+            get {
+                return ResourceManager.GetString("SelectAll", resourceCulture);
             }
         }
         

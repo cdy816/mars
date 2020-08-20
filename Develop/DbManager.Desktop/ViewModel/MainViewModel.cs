@@ -139,7 +139,7 @@ namespace DBInStudio.Desktop
                 {
                     mReRunCommand = new RelayCommand(() => {
                         DevelopServiceHelper.Helper.ReRunDatabase(mDatabase);
-                    },()=> { return !string.IsNullOrEmpty(mDatabase); });
+                    },()=> { return !string.IsNullOrEmpty(mDatabase)&& mIsDatabaseRunning; });
                 }
                 return mReRunCommand;
             }

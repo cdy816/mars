@@ -1,6 +1,7 @@
 ﻿using DBInStudio.Desktop.ViewModel;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using System.Windows;
@@ -20,18 +21,53 @@ namespace DBInStudio.Desktop.View
     /// </summary>
     public partial class TagGroupDetailView : UserControl
     {
+        private TagGroupDetailViewModel mModel;
         public TagGroupDetailView()
         {
             InitializeComponent();
+            this.Loaded += TagGroupDetailView_Loaded;
+        }
+
+        private void TagGroupDetailView_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.Loaded -= TagGroupDetailView_Loaded;
+            mModel = this.DataContext as TagGroupDetailViewModel;
         }
 
         private void DataGrid_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             if((e.ExtentHeight - e.VerticalOffset)<100 && e.ExtentHeight>0 && e.VerticalOffset>0)
             {
-                (this.DataContext as TagGroupDetailViewModel).ContinueLoadData();
+                mModel.ContinueLoadData();
             }
         }
+
+        private void kwinput_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key == Key.Enter)
+            {
+                (sender as FrameworkElement).MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DataGrid_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
+        {
+            mModel.SelectedCells = (sender as DataGrid).SelectedCells;
+        }
+
+        private void Type_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if((sender as FrameworkElement).IsLoaded)
+            {
+                dg.CommitEdit();
+            }
+        }
+
     }
 
     

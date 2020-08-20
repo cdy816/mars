@@ -275,6 +275,12 @@
   <data name="Precision" xml:space="preserve">
     <value>精度</value>
   </data>
+  <data name="PropertyCopy" xml:space="preserve">
+    <value>拷贝属性</value>
+  </data>
+  <data name="PropertyPaste" xml:space="preserve">
+    <value>粘贴属性</value>
+  </data>
   <data name="Read" xml:space="preserve">
     <value>读</value>
   </data>
@@ -319,6 +325,9 @@
   </data>
   <data name="Security" xml:space="preserve">
     <value>安全</value>
+  </data>
+  <data name="SelectAll" xml:space="preserve">
+    <value>全选</value>
   </data>
   <data name="SelectDatabase" xml:space="preserve">
     <value>选择一个数据库</value>

@@ -21,6 +21,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace DBInStudio.Desktop.ViewModel
@@ -41,7 +42,9 @@ namespace DBInStudio.Desktop.ViewModel
         private ICommand mExportCommand;
 
         private ICommand mCopyCommand;
+        private ICommand mCellCopyCommand;
         private ICommand mPasteCommand;
+        private ICommand mCellPasteCommand;
 
         private TagViewModel mCurrentSelectTag;
 
@@ -85,6 +88,11 @@ namespace DBInStudio.Desktop.ViewModel
         private Dictionary<string, string> mFilters = new Dictionary<string, string>();
 
         private bool mEnableFilter = true;
+
+        private Tuple<TagViewModel, int> mPropertyCopy;
+
+        private DataGridSelectionUnit mSelectMode = DataGridSelectionUnit.FullRow;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -96,6 +104,62 @@ namespace DBInStudio.Desktop.ViewModel
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        public bool RowSelectMode
+        {
+            get
+            {
+                return mSelectMode == DataGridSelectionUnit.FullRow;
+            }
+            set
+            {
+                mSelectMode = DataGridSelectionUnit.FullRow;
+                OnPropertyChanged("RowSelectMode");
+                OnPropertyChanged("CellSelectMode");
+                OnPropertyChanged("SelectMode");
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool CellSelectMode
+        {
+            get
+            {
+                return mSelectMode == DataGridSelectionUnit.CellOrRowHeader;
+            }
+            set
+            {
+                mSelectMode = DataGridSelectionUnit.CellOrRowHeader;
+                OnPropertyChanged("CellSelectMode");
+                OnPropertyChanged("RowSelectMode");
+                OnPropertyChanged("SelectMode");
+            }
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DataGridSelectionUnit SelectMode
+        {
+            get
+            {
+                return mSelectMode;
+            }
+            set
+            {
+                if (mSelectMode != value)
+                {
+                    mSelectMode = value;
+                    OnPropertyChanged("SelectMode");
+                }
+            }
+        }
+
+
 
         /// <summary>
         /// 
@@ -437,11 +501,29 @@ namespace DBInStudio.Desktop.ViewModel
                 {
                     mCopyCommand = new RelayCommand(() => {
                         CopyTag();
-                    });
+                    },()=> { return RowSelectMode; });
                 }
                 return mCopyCommand;
             }
          }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand CellCopyCommand
+        {
+            get
+            {
+                if(mCellCopyCommand==null)
+                {
+                    mCellCopyCommand = new RelayCommand(() => {
+                        CopyTagProperty();
+                    },()=> { return SelectedCells != null && SelectedCells.Count() > 0; });
+                }
+                return mCellCopyCommand;
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -459,6 +541,24 @@ namespace DBInStudio.Desktop.ViewModel
                 return mPasteCommand;
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand CellPasteCommand
+        {
+            get
+            {
+                if(mCellPasteCommand==null)
+                {
+                    mCellPasteCommand = new RelayCommand(() => {
+                        PasteTagProperty();
+                    },()=> { return CanPasteTagProperty(); });
+                }
+                return mCellPasteCommand;
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -488,7 +588,7 @@ namespace DBInStudio.Desktop.ViewModel
                 {
                     mRemoveCommand = new RelayCommand(() => {
                         RemoveTag();
-                    }, () => { return CurrentSelectTag != null; });
+                    }, () => { return CurrentSelectTag != null || (SelectedCells!=null && SelectedCells.Count>0); });
                 }
                 return mRemoveCommand;
             }
@@ -649,6 +749,11 @@ namespace DBInStudio.Desktop.ViewModel
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public IList<DataGridCellInfo> SelectedCells { get; set; }       
 
         /// <summary>
         /// 
@@ -856,6 +961,9 @@ namespace DBInStudio.Desktop.ViewModel
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void ContinueLoadData()
         {
             if (!IsLoading)
@@ -917,25 +1025,25 @@ namespace DBInStudio.Desktop.ViewModel
             TagCount = count;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        private void QueryTags()
-        {
-            var vtags = new System.Collections.ObjectModel.ObservableCollection<TagViewModel>();
-            var vv = DevelopServiceHelper.Helper.QueryTagByGroup(this.GroupModel.Database, this.GroupModel.FullName);
-            if (vv != null)
-            {
-                foreach (var vvv in vv)
-                {
-                    Application.Current.Dispatcher.BeginInvoke(new Action(() => {
-                        TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2);
-                        vtags.Add(model);
-                    }));
-                }
-            }
-            SelectGroupTags = vtags;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //private void QueryTags()
+        //{
+        //    var vtags = new System.Collections.ObjectModel.ObservableCollection<TagViewModel>();
+        //    var vv = DevelopServiceHelper.Helper.QueryTagByGroup(this.GroupModel.Database, this.GroupModel.FullName);
+        //    if (vv != null)
+        //    {
+        //        foreach (var vvv in vv)
+        //        {
+        //            Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+        //                TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2);
+        //                vtags.Add(model);
+        //            }));
+        //        }
+        //    }
+        //    SelectGroupTags = vtags;
+        //}
 
 
         /// <summary>
@@ -945,9 +1053,28 @@ namespace DBInStudio.Desktop.ViewModel
         {
             if (CurrentSelectTag != null)
             {
-                if (DevelopServiceHelper.Helper.Remove(GroupModel.Database, CurrentSelectTag.RealTagMode.Id))
+                foreach(var vv in SelectGroupTags.Where(e=>e.IsSelected).ToArray())
                 {
-                    SelectGroupTags.Remove(CurrentSelectTag);
+                    if (DevelopServiceHelper.Helper.Remove(GroupModel.Database, vv.RealTagMode.Id))
+                    {
+                        SelectGroupTags.Remove(CurrentSelectTag);
+                    }
+                }
+
+                //if (DevelopServiceHelper.Helper.Remove(GroupModel.Database, CurrentSelectTag.RealTagMode.Id))
+                //{
+                //    SelectGroupTags.Remove(CurrentSelectTag);
+                //}
+            }
+            else
+            {
+                foreach(var vv in SelectedCells.Select(e=>e.Item).Distinct().ToArray())
+                {
+                    var vvt = vv as TagViewModel;
+                    if (DevelopServiceHelper.Helper.Remove(GroupModel.Database, vvt.RealTagMode.Id))
+                    {
+                        SelectGroupTags.Remove(vvt);
+                    }
                 }
             }
         }
@@ -961,6 +1088,23 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private void CopyTagProperty()
+        {
+            if(this.SelectedCells.Count()>0)
+            {
+                var vt = SelectedCells.First();
+                var tagproperty = (vt.Item as TagViewModel).Clone();
+                
+                mPropertyCopy = new Tuple<TagViewModel, int>(tagproperty, vt.Column.DisplayIndex);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private void PasteTag()
         {
             if(mCopyTags.Count>0)
@@ -981,6 +1125,76 @@ namespace DBInStudio.Desktop.ViewModel
                 if (tm != null)
                     CurrentSelectTag = tm;
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void PasteTagProperty()
+        {
+            if(mPropertyCopy!=null)
+            {
+                foreach(var vv in SelectedCells)
+                {
+                    if(vv.Item == mPropertyCopy.Item1)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        TagViewModel tm = vv.Item as TagViewModel;
+                        switch (mPropertyCopy.Item2)
+                        {
+                            case 1:
+                                tm.Type = mPropertyCopy.Item1.Type;
+                                break;
+                            case 2:
+                                tm.ReadWriteMode = mPropertyCopy.Item1.ReadWriteMode;
+                                break;
+                            case 3:
+                                tm.Convert = mPropertyCopy.Item1.Convert.Clone();
+                                break;
+                            case 4:
+                                tm.MaxValue = mPropertyCopy.Item1.MaxValue;
+                                break;
+                            case 5:
+                                tm.MinValue = mPropertyCopy.Item1.MinValue;
+                                break;
+                            case 6:
+                                tm.Precision = mPropertyCopy.Item1.Precision;
+                                break;
+                            case 7:
+                                tm.HisTagMode = mPropertyCopy.Item1.HisTagMode.Clone();
+                                tm.RefreshHisTag();
+                                break;
+                            case 8:
+                                tm.DriverName = mPropertyCopy.Item1.DriverName;
+                                break;
+                            case 9:
+                                tm.RegistorName = mPropertyCopy.Item1.RegistorName;
+                                break;
+                            case 10:
+                                tm.Desc = mPropertyCopy.Item1.Desc;
+                                break;
+
+                        }
+
+                    }
+                }
+            }
+        }
+
+        private bool CanPasteTagProperty()
+        {
+            if (mPropertyCopy == null || SelectedCells.Count == 0 || mPropertyCopy.Item2==0) return false;
+            foreach(var vv in SelectedCells)
+            {
+                if(vv.Column.DisplayIndex!=mPropertyCopy.Item2)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         /// <summary>

@@ -17,13 +17,16 @@
 
   <ItemGroup>
     <None Remove="Image\add.png" />
+    <None Remove="Image\AllSelect.png" />
     <None Remove="Image\cancel.png" />
+    <None Remove="Image\cellselect.png" />
     <None Remove="Image\close.png" />
     <None Remove="Image\database-add.png" />
     <None Remove="Image\export.png" />
     <None Remove="Image\export2.png" />
     <None Remove="Image\hidden.png" />
     <None Remove="Image\huoxing.jpg" />
+    <None Remove="Image\huoxing2.jpg" />
     <None Remove="Image\import.png" />
     <None Remove="Image\import2.png" />
     <None Remove="Image\log-out.png" />
@@ -34,6 +37,7 @@
     <None Remove="Image\permissions.png" />
     <None Remove="Image\remove.png" />
     <None Remove="Image\rerun.png" />
+    <None Remove="Image\rowselect.png" />
     <None Remove="Image\save.png" />
     <None Remove="Image\Security.png" />
     <None Remove="Image\server-security.png" />
@@ -58,7 +62,9 @@
 
   <ItemGroup>
     <Resource Include="Image\add.png" />
+    <Resource Include="Image\AllSelect.png" />
     <Resource Include="Image\cancel.png" />
+    <Resource Include="Image\cellselect.png" />
     <Resource Include="Image\close.png" />
     <Resource Include="Image\database-add.png" />
     <Resource Include="Image\export.png" />
@@ -75,6 +81,7 @@
     <Resource Include="Image\permissions.png" />
     <Resource Include="Image\remove.png" />
     <Resource Include="Image\rerun.png" />
+    <Resource Include="Image\rowselect.png" />
     <Resource Include="Image\save.png" />
     <Resource Include="Image\Security.png" />
     <Resource Include="Image\server-security.png" />

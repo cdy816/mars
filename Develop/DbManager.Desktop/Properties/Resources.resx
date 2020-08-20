@@ -275,6 +275,12 @@
   <data name="Precision" xml:space="preserve">
     <value>Precision</value>
   </data>
+  <data name="PropertyCopy" xml:space="preserve">
+    <value>PropertyCopy</value>
+  </data>
+  <data name="PropertyPaste" xml:space="preserve">
+    <value>PropertyPaste</value>
+  </data>
   <data name="Read" xml:space="preserve">
     <value>Read</value>
   </data>
@@ -319,6 +325,9 @@
   </data>
   <data name="Security" xml:space="preserve">
     <value>Security</value>
+  </data>
+  <data name="SelectAll" xml:space="preserve">
+    <value>All</value>
   </data>
   <data name="SelectDatabase" xml:space="preserve">
     <value>Select a database</value>

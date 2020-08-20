@@ -49,6 +49,8 @@ namespace DBInStudio.Desktop
 
         private ICommand mConvertEditCommand;
 
+        private ICommand mConvertRemoveCommand;
+
         private bool mIsSelected;
 
         #endregion ...Variables...
@@ -262,6 +264,7 @@ namespace DBInStudio.Desktop
         {
             get
             {
+                
                 return mRegistorList;
             }
             set
@@ -313,6 +316,9 @@ namespace DBInStudio.Desktop
                     OnPropertyChanged("Type");
                     OnPropertyChanged("TypeString");
                     OnPropertyChanged("IsNumberTag");
+                    OnPropertyChanged("Precision");
+                    OnPropertyChanged("MaxValue");
+                    OnPropertyChanged("MinValue");
                 }
             }
         }
@@ -383,6 +389,7 @@ namespace DBInStudio.Desktop
                 {
                     mDriverName = value;
                     mRegistorName = string.Empty;
+                    IsChanged = true;
                     LinkAddress = DriverName + ":" + RegistorName;
                     if(Drivers!=null&&Drivers.ContainsKey(mDriverName))
                     {
@@ -413,6 +420,7 @@ namespace DBInStudio.Desktop
                 {
                     mRegistorName = value;
                     LinkAddress = DriverName + ":" + RegistorName;
+                    IsChanged = true;
                     OnPropertyChanged("RegistorName");
                 }
             }
@@ -471,6 +479,7 @@ namespace DBInStudio.Desktop
                     OnPropertyChanged("RecordType");
                     OnPropertyChanged("RecordTypeString");
                     OnPropertyChanged("IsTimerRecord");
+
                     
                 }
             }
@@ -516,6 +525,7 @@ namespace DBInStudio.Desktop
                 if (mRealTagMode.Conveter != value)
                 {
                     mRealTagMode.Conveter = value;
+                    IsChanged = true;
                 }
                 OnPropertyChanged("Convert");
                 OnPropertyChanged("ConvertString");
@@ -546,6 +556,24 @@ namespace DBInStudio.Desktop
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand ConvertRemoveCommand
+        {
+            get
+            {
+                if(mConvertRemoveCommand==null)
+                {
+                    mConvertRemoveCommand = new RelayCommand(() => {
+                        Convert = null;
+                    },()=> { return Convert != null; });
+                }
+                return mConvertRemoveCommand;
+            }
+        }
+
+
 
 
 
@@ -563,9 +591,10 @@ namespace DBInStudio.Desktop
                 if ((int)mRealTagMode.ReadWriteType != value)
                 {
                     mRealTagMode.ReadWriteType = (Cdy.Tag.ReadWriteMode)value;
-                    OnPropertyChanged("ReadWriteMode");
-                    OnPropertyChanged("ReadWriteModeString");
+                    IsChanged = true;
                 }
+                OnPropertyChanged("ReadWriteMode");
+                OnPropertyChanged("ReadWriteModeString");
             }
         }
 
@@ -609,6 +638,7 @@ namespace DBInStudio.Desktop
                     {
                         (mRealTagMode as Cdy.Tag.NumberTagBase).MaxValue = value;
                     }
+                    IsChanged = true;
                     OnPropertyChanged("MaxValue");
                 }
             }
@@ -630,6 +660,7 @@ namespace DBInStudio.Desktop
                 {
                     if(value>=AllowMinValue)
                     (mRealTagMode as Cdy.Tag.NumberTagBase).MinValue = value;
+                    IsChanged = true;
                     OnPropertyChanged("MinValue");
                 }
             }
@@ -658,6 +689,7 @@ namespace DBInStudio.Desktop
                 if (mRealTagMode is Cdy.Tag.FloatingTagBase)
                 {
                     (mRealTagMode as Cdy.Tag.FloatingTagBase).Precision = value;
+                    IsChanged = true;
                     OnPropertyChanged("Precision");
                 }
             }
@@ -679,7 +711,7 @@ namespace DBInStudio.Desktop
         {
             get
             {
-                return mHisTagMode!=null?mHisTagMode.Type.ToString():string.Empty;
+                return mHisTagMode!=null? Res.Get(mHisTagMode.Type.ToString()):string.Empty;
             }
         }
 
@@ -743,6 +775,16 @@ namespace DBInStudio.Desktop
 
         #region ... Methods    ...
 
+        public void RefreshHisTag()
+        {
+            OnPropertyChanged("CompressType");
+            OnPropertyChanged("CompressCircle");
+            OnPropertyChanged("RecordType");
+            OnPropertyChanged("RecordTypeString");
+            OnPropertyChanged("IsTimerRecord");
+
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -760,6 +802,16 @@ namespace DBInStudio.Desktop
                 {
                     mRegistorName = LinkAddress.Substring(mDriverName.Length+1);
                 }
+
+                if (Drivers != null && Drivers.ContainsKey(mDriverName))
+                {
+                    RegistorList = Drivers[mDriverName];
+                }
+                else
+                {
+                    RegistorList = null;
+                }
+
             }
         }
 
@@ -769,8 +821,8 @@ namespace DBInStudio.Desktop
         private static void InitEnumType()
         {
             mTagTypeList = Enum.GetNames(typeof(Cdy.Tag.TagType));
-            mRecordTypeList = Enum.GetNames(typeof(Cdy.Tag.RecordType));
-            mReadWriteModeList = Enum.GetNames(typeof(Cdy.Tag.ReadWriteMode));
+            mRecordTypeList = Enum.GetNames(typeof(Cdy.Tag.RecordType)).Select(e => Res.Get(e)).ToArray();
+            mReadWriteModeList = Enum.GetNames(typeof(Cdy.Tag.ReadWriteMode)).Select(e=>Res.Get(e)).ToArray();
         }
 
         /// <summary>
@@ -928,55 +980,67 @@ namespace DBInStudio.Desktop
             switch (this.mRealTagMode.Type)
             {
                 case Cdy.Tag.TagType.Bool:
-                    ntag = new Cdy.Tag.BoolTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    ntag = new Cdy.Tag.BoolTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group,Conveter = mRealTagMode.Conveter!=null?mRealTagMode.Conveter.Clone():null };
                     break;
                 case Cdy.Tag.TagType.Byte:
-                    ntag = new Cdy.Tag.ByteTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    ntag = new Cdy.Tag.ByteTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group, Conveter = mRealTagMode.Conveter != null ? mRealTagMode.Conveter.Clone() : null };
 
                     break;
                 case Cdy.Tag.TagType.DateTime:
-                    ntag = new Cdy.Tag.DateTimeTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    ntag = new Cdy.Tag.DateTimeTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group, Conveter = mRealTagMode.Conveter != null ? mRealTagMode.Conveter.Clone() : null };
 
                     break;
                 case Cdy.Tag.TagType.Double:
-                    ntag = new Cdy.Tag.DoubleTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    ntag = new Cdy.Tag.DoubleTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group, Conveter = mRealTagMode.Conveter != null ? mRealTagMode.Conveter.Clone() : null };
 
                     break;
                 case Cdy.Tag.TagType.Float:
-                    ntag = new Cdy.Tag.FloatTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    ntag = new Cdy.Tag.FloatTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group, Conveter = mRealTagMode.Conveter != null ? mRealTagMode.Conveter.Clone() : null };
 
                     break;
                 case Cdy.Tag.TagType.Int:
-                    ntag = new Cdy.Tag.IntTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    ntag = new Cdy.Tag.IntTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group, Conveter = mRealTagMode.Conveter != null ? mRealTagMode.Conveter.Clone() : null };
 
                     break;
                 case Cdy.Tag.TagType.Long:
-                    ntag = new Cdy.Tag.LongTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    ntag = new Cdy.Tag.LongTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group, Conveter = mRealTagMode.Conveter != null ? mRealTagMode.Conveter.Clone() : null };
 
                     break;
                 case Cdy.Tag.TagType.Short:
-                    ntag = new Cdy.Tag.ShortTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    ntag = new Cdy.Tag.ShortTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group, Conveter = mRealTagMode.Conveter != null ? mRealTagMode.Conveter.Clone() : null };
 
                     break;
                 case Cdy.Tag.TagType.String:
-                    ntag = new Cdy.Tag.StringTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    ntag = new Cdy.Tag.StringTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group, Conveter = mRealTagMode.Conveter != null ? mRealTagMode.Conveter.Clone() : null };
 
                     break;
                 case Cdy.Tag.TagType.UInt:
-                    ntag = new Cdy.Tag.UIntTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    ntag = new Cdy.Tag.UIntTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group, Conveter = mRealTagMode.Conveter != null ? mRealTagMode.Conveter.Clone() : null };
 
                     break;
                 case Cdy.Tag.TagType.ULong:
-                    ntag = new Cdy.Tag.ULongTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    ntag = new Cdy.Tag.ULongTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group, Conveter = mRealTagMode.Conveter != null ? mRealTagMode.Conveter.Clone() : null };
 
                     break;
                 case Cdy.Tag.TagType.UShort:
-                    ntag = new Cdy.Tag.UShortTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    ntag = new Cdy.Tag.UShortTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group, Conveter = mRealTagMode.Conveter != null ? mRealTagMode.Conveter.Clone() : null };
 
                     break;
                 default:
                     break;
             }
+
+            if(IsNumberTag)
+            {
+                (ntag as NumberTagBase).MaxValue = (mRealTagMode as NumberTagBase).MaxValue;
+                (ntag as NumberTagBase).MinValue = (mRealTagMode as NumberTagBase).MinValue;
+            }
+
+            if(IsFloatingTag)
+            {
+                (ntag as FloatingTagBase).Precision = (mRealTagMode as FloatingTagBase).Precision;
+            }
+
             return new TagViewModel(ntag,htag);
         }
 

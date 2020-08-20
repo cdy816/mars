@@ -51,6 +51,7 @@ namespace DBInStudio.Desktop.ViewModel
                 if (mName != value)
                 {
                     mName = value;
+                    if (string.IsNullOrEmpty(mDesc)) Desc = value;
                 }
             }
         }

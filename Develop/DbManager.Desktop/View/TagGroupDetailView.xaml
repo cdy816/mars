@@ -22,7 +22,8 @@
             <MenuItem Header="{local:ResMarker PropertyPaste}" Command="{Binding CellPasteCommand}" />
         </ContextMenu>
     </UserControl.Resources>
-    <Grid>
+    <Grid Background="Transparent">
+        
         <Grid.RowDefinitions>
             <RowDefinition Height="89" MaxHeight="89" />
             <RowDefinition Height="*" />
@@ -87,7 +88,7 @@
             </Grid>
         </Grid>
         <GridSplitter HorizontalAlignment="Stretch" Height="5" VerticalAlignment="Bottom" Background="Transparent" />
-        <DataGrid x:Name="dg" Grid.Row="1" SelectedCellsChanged="DataGrid_SelectedCellsChanged"  RowHeaderWidth="36" SelectionUnit="{Binding SelectMode}" Style="{DynamicResource DataGridStyle1}" ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}" CellStyle="{DynamicResource DataGridCellStyle1}" RowHeaderStyle="{DynamicResource DataGridRowHeaderStyle1}" RowStyle="{DynamicResource DataGridRowStyle1}" ScrollViewer.CanContentScroll="True" ContextMenu="{StaticResource ctxmenu}" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,0" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"   BorderThickness="0,1,0,1" Background="Transparent" >
+        <DataGrid x:Name="dg" Grid.Row="1"  SelectedCellsChanged="DataGrid_SelectedCellsChanged"  RowHeaderWidth="36" SelectionUnit="{Binding SelectMode}" Style="{DynamicResource DataGridStyle1}" ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}" CellStyle="{DynamicResource DataGridCellStyle1}" RowHeaderStyle="{DynamicResource DataGridRowHeaderStyle1}" RowStyle="{DynamicResource DataGridRowStyle1}" ScrollViewer.CanContentScroll="True" ContextMenu="{StaticResource ctxmenu}" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,0" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"   BorderThickness="0,1,0,1" Background="Transparent" >
             <DataGrid.InputBindings>
                 <KeyBinding Command="{Binding CopyCommand}" Key="C" Modifiers="Ctrl" />
                 <KeyBinding Command="{Binding CellCopyCommand}" Key="C" Modifiers="Alt" />
@@ -98,7 +99,6 @@
                 <KeyBinding Command="{Binding ImportCommand}" Key="I"  Modifiers="Alt" />
                 <KeyBinding Command="{Binding ExportCommand}" Key="O" Modifiers="Alt" />
             </DataGrid.InputBindings>
-
             <DataGrid.RowHeaderTemplate>
                 <DataTemplate>
                     <TextBlock  DataContext="{Binding DataContext,RelativeSource={RelativeSource AncestorType=DataGridRow}}" Foreground="{DynamicResource Window.Forground}" HorizontalAlignment="Center" VerticalAlignment="Center" >
@@ -177,10 +177,15 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
+                            <Grid Margin="0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
                                 <TextBlock Foreground="{DynamicResource Window.Forground}" Margin="5,0" Text="{Binding ConvertString}" VerticalAlignment="Center" MinWidth="60" />
-                                <Button Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" Content="..." VerticalAlignment="Center" VerticalContentAlignment="Top" Command="{Binding ConvertEditCommand}" Width="24" />
-                                <Button Margin="5,0" Command="{Binding ConvertRemoveCommand}" BorderThickness="0"  Background="Transparent" >
+                                <Button Grid.Column="1" Margin="4,0" Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" Content="..." VerticalAlignment="Center" VerticalContentAlignment="Top" Command="{Binding ConvertEditCommand}" Width="24" />
+                                <Button Grid.Column="2" Margin="4,0" Command="{Binding ConvertRemoveCommand}" BorderThickness="0"  Background="Transparent" >
                                     <Button.ContentTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" Margin="0">
@@ -189,7 +194,7 @@
                                         </DataTemplate>
                                     </Button.ContentTemplate>
                                 </Button>
-                            </StackPanel>
+                            </Grid>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -202,7 +207,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox  CaretBrush="White" Background="#1FFFFFFF" Margin="5,0" Foreground="{DynamicResource Window.Forground}" Text="{Binding MaxValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}"  IsEnabled="{Binding IsNumberTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            <TextBox  CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding MaxValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}"  IsEnabled="{Binding IsNumberTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -215,7 +220,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox  CaretBrush="White" Background="#1FFFFFFF" Margin="5,0" Foreground="{DynamicResource Window.Forground}"  IsEnabled="{Binding IsNumberTag}" Text="{Binding MinValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            <TextBox  CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}"  IsEnabled="{Binding IsNumberTag}" Text="{Binding MinValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -228,7 +233,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox  CaretBrush="White" Background="#1FFFFFFF" Margin="5,0" Foreground="{DynamicResource Window.Forground}" Text="{Binding Precision,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsFloatingTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            <TextBox  CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding Precision,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsFloatingTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>

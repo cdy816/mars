@@ -75,6 +75,23 @@ namespace DBDevelopService
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="database"></param>
+        public void Reload(string database)
+        {
+            if(mDatabase.ContainsKey(database))
+            {
+                mDatabase.Remove(database);
+            }
+
+            Cdy.Tag.Database db = new Cdy.Tag.DatabaseSerise().Load(database);
+            if (!mDatabase.ContainsKey(db.Name))
+                mDatabase.Add(db.Name, db);
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="name"></param>
         public void NewDB(string name,string desc)
         {

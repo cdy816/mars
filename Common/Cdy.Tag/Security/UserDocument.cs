@@ -9,14 +9,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 
 namespace Cdy.Tag
 {
-    public class UserDocument
+    public class UserDocument:INotifyPropertyChanged
     {
 
         #region ... Variables  ...
+
+        private bool mIsDirty = false;
 
         #endregion ...Variables...
 
@@ -47,10 +50,28 @@ namespace Cdy.Tag
         /// </summary>
         public Dictionary<string,UserGroup> Groups { get; set; } = new Dictionary<string, UserGroup>();
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsDirty { get { return mIsDirty; } set { mIsDirty = value; OnPropertyChanged("IsDirty"); } }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        protected void OnPropertyChanged(string name)
+        {
+            if(PropertyChanged!=null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(name));
+            }
+        }
 
         /// <summary>
         /// 
@@ -75,6 +96,7 @@ namespace Cdy.Tag
             if (!Users.ContainsKey(user.Name))
             {
                 Users.Add(user.Name, user);
+                IsDirty = true;
             }
 
         }
@@ -88,6 +110,7 @@ namespace Cdy.Tag
             if (Users.ContainsKey(name))
             {
                 Users.Remove(name);
+                IsDirty = true;
             }
         }
 
@@ -100,6 +123,7 @@ namespace Cdy.Tag
             if (Users.ContainsKey(user.Name))
             {
                 Users[user.Name] = user;
+                IsDirty = true;
             }
         }
 
@@ -127,6 +151,7 @@ namespace Cdy.Tag
             if (!Groups.ContainsKey(user.FullName))
             {
                 Groups.Add(user.FullName, user);
+                IsDirty = true;
             }
 
         }
@@ -140,6 +165,7 @@ namespace Cdy.Tag
             if (Groups.ContainsKey(name))
             {
                 Groups.Remove(name);
+                IsDirty = true;
             }
         }
 
@@ -152,6 +178,7 @@ namespace Cdy.Tag
             if (Groups.ContainsKey(user.FullName))
             {
                 Groups[user.FullName] = user;
+                IsDirty = true;
             }
         }
 

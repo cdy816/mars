@@ -193,7 +193,7 @@ namespace Cdy.Tag
                     re.SetAttributeValue("Permissions", sb.ToString());
                 }
             }
-
+            user.IsDirty = false;
             return xe;
         }
 
@@ -257,6 +257,7 @@ namespace Cdy.Tag
             {
                 xe.Add(Save(vv.Value));
             }
+            permission.IsDirty = false;
             return xe;
         }
 

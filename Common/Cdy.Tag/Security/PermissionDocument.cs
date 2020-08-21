@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 using System.Xml.Linq;
 
@@ -17,11 +18,11 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class PermissionDocument
+    public class PermissionDocument:INotifyPropertyChanged
     {
 
         #region ... Variables  ...
-
+        private bool mIsDirty = false;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -46,11 +47,26 @@ namespace Cdy.Tag
         /// </summary>
         public Dictionary<string, UserPermission> Permissions { get; set; } = new Dictionary<string, UserPermission>();
 
+        public bool IsDirty { get { return mIsDirty; } set { mIsDirty = value; OnPropertyChanged("IsDirty"); } }
 
+        public event PropertyChangedEventHandler PropertyChanged;
 
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+
+        protected void OnPropertyChanged(string name)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(name));
+            }
+        }
 
         /// <summary>
         /// 

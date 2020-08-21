@@ -131,11 +131,39 @@ namespace DBDevelopClientApi
         /// </summary>
         /// <param name="database"></param>
         /// <returns></returns>
+        public bool CancelToSaveDatabase(string database)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.Cancel(new DBDevelopService.GetRequest() { Database = database, LoginId = mLoginId }).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
         public bool IsDatabaseRunning(string database)
         {
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
                 return mCurrentClient.IsDatabaseRunning(new DBDevelopService.DatabasesRequest() { Database = database, LoginId = mLoginId }).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public bool IsDatabaseDirty(string database)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.IsDatabaseDirty(new DBDevelopService.DatabasesRequest() { Database = database, LoginId = mLoginId }).Result;
             }
             return false;
         }

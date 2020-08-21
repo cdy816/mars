@@ -729,6 +729,12 @@ namespace DBDevelopService
             return Task.FromResult(new BoolResultReplay() { Result = ServiceLocator.Locator.Resolve<IDatabaseManager>().Stop(request.Database) });
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public override Task<BoolResultReplay> ReRun(DatabasesRequest request, ServerCallContext context)
         {
             if (!IsAdmin(request.LoginId))
@@ -738,6 +744,12 @@ namespace DBDevelopService
             return Task.FromResult(new BoolResultReplay() { Result = ServiceLocator.Locator.Resolve<IDatabaseManager>().Rerun(request.Database) });
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public override Task<BoolResultReplay> IsDatabaseRunning(DatabasesRequest request, ServerCallContext context)
         {
             if (!SecurityManager.Manager.CheckKeyAvaiable(request.LoginId))
@@ -745,6 +757,22 @@ namespace DBDevelopService
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
             return Task.FromResult(new BoolResultReplay() { Result = ServiceLocator.Locator.Resolve<IDatabaseManager>().IsRunning(request.Database) });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> IsDatabaseDirty(DatabasesRequest request, ServerCallContext context)
+        {
+            if (!SecurityManager.Manager.CheckKeyAvaiable(request.LoginId))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            return Task.FromResult(new BoolResultReplay() { Result = db.IsDirty });
         }
 
         #endregion
@@ -969,7 +997,14 @@ namespace DBDevelopService
                     switch (vv.Key)
                     {
                         case "keyword":
-                            re = re && (tag.Name.Contains(vv.Value) || tag.Desc.Contains(vv.Value));
+                            bool btmp = false;
+                            string[] ss = vv.Value.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                            foreach(var vvv in ss)
+                            {
+                                btmp |= (tag.Name.Contains(vvv) || tag.Desc.Contains(vvv));
+                            }
+                            re = re && btmp;
+                            //re = re && (tag.Name.Contains(vv.Value) || tag.Desc.Contains(vv.Value));
                             break;
                         case "type":
                             re = re && ((int)tag.Type == int.Parse(vv.Value));
@@ -1889,7 +1924,7 @@ namespace DBDevelopService
             }
             lock (DbManager.Instance)
             {
-                DbManager.Instance.Reload();
+                DbManager.Instance.Reload(request.Database);
             }
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }

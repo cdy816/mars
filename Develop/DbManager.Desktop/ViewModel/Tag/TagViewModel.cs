@@ -457,6 +457,7 @@ namespace DBInStudio.Desktop
                 OnPropertyChanged("CompressType");
                 OnPropertyChanged("HasHisTag");
                 OnPropertyChanged("IsTimerRecord");
+                OnPropertyChanged("RecordTypeString");
             }
         }
 

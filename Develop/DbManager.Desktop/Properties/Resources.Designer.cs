@@ -115,6 +115,24 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Cancel 的本地化字符串。
+        /// </summary>
+        internal static string CancelSave {
+            get {
+                return ResourceManager.GetString("CancelSave", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 you will be lost all data you have modify. To continue? 的本地化字符串。
+        /// </summary>
+        internal static string canceltosavemsg {
+            get {
+                return ResourceManager.GetString("canceltosavemsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Circle 的本地化字符串。
         /// </summary>
         internal static string Circle {
@@ -660,6 +678,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Savefailed {
             get {
                 return ResourceManager.GetString("Savefailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Database is changed,do you want to save? 的本地化字符串。
+        /// </summary>
+        internal static string saveprompt {
+            get {
+                return ResourceManager.GetString("saveprompt", resourceCulture);
             }
         }
         

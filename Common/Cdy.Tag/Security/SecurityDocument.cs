@@ -50,6 +50,11 @@ namespace Cdy.Tag
         /// </summary>
         public PermissionDocument Permission { get; set; } = new PermissionDocument();
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsDirty { get { return User.IsDirty && Permission.IsDirty; } }
+
         #endregion ...Properties...
 
         #region ... Methods    ...

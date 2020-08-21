@@ -19,6 +19,7 @@
     <None Remove="Image\add.png" />
     <None Remove="Image\AllSelect.png" />
     <None Remove="Image\cancel.png" />
+    <None Remove="Image\cancelSave.png" />
     <None Remove="Image\cellselect.png" />
     <None Remove="Image\close.png" />
     <None Remove="Image\database-add.png" />
@@ -64,6 +65,7 @@
     <Resource Include="Image\add.png" />
     <Resource Include="Image\AllSelect.png" />
     <Resource Include="Image\cancel.png" />
+    <Resource Include="Image\cancelSave.png" />
     <Resource Include="Image\cellselect.png" />
     <Resource Include="Image\close.png" />
     <Resource Include="Image\database-add.png" />

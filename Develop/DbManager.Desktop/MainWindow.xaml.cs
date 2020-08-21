@@ -30,6 +30,9 @@ namespace DBInStudio.Desktop
 
         private void closeB_Click(object sender, RoutedEventArgs e)
         {
+            var mm = (this.DataContext as MainViewModel);
+            if (mm.LogoutCommand.CanExecute(null))
+                mm.LogoutCommand.Execute(null);
             this.Close();
         }
 

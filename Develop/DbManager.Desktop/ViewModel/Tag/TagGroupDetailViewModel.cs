@@ -312,9 +312,10 @@ namespace DBInStudio.Desktop.ViewModel
                 if (mValueChangedRecordFilterEnable != value)
                 {
                     mValueChangedRecordFilterEnable = value;
+                    mTimerRecordFilterEnable = !value;
                     if (value) NewQueryTags();
-                    OnPropertyChanged("ValueChangedRecordFilterEnable");
                 }
+                OnPropertyChanged("ValueChangedRecordFilterEnable");
             }
         }
 
@@ -333,9 +334,10 @@ namespace DBInStudio.Desktop.ViewModel
                 if (mTimerRecordFilterEnable != value)
                 {
                     mTimerRecordFilterEnable = value;
-                    if(value) NewQueryTags();
-                    OnPropertyChanged("TimerRecordFilterEnable");
+                    mValueChangedRecordFilterEnable = !value;
+                    if (value) NewQueryTags();
                 }
+                OnPropertyChanged("TimerRecordFilterEnable");
             }
         }
 
@@ -518,7 +520,7 @@ namespace DBInStudio.Desktop.ViewModel
                 {
                     mCellCopyCommand = new RelayCommand(() => {
                         CopyTagProperty();
-                    },()=> { return SelectedCells != null && SelectedCells.Count() > 0; });
+                    },()=> { return CellSelectMode && SelectedCells != null && SelectedCells.Count() >0; });
                 }
                 return mCellCopyCommand;
             }
@@ -753,7 +755,12 @@ namespace DBInStudio.Desktop.ViewModel
         /// <summary>
         /// 
         /// </summary>
-        public IList<DataGridCellInfo> SelectedCells { get; set; }       
+        public IList<DataGridCellInfo> SelectedCells { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DataGrid grid { get; set; }
 
         /// <summary>
         /// 
@@ -761,6 +768,7 @@ namespace DBInStudio.Desktop.ViewModel
         private void NewQueryTags()
         {
             EnableFilter = false;
+            UpdateAll();
             Task.Run(() => {
                 BuildFilters();
                 mTotalPageNumber = -1;
@@ -973,11 +981,16 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
+        private bool mIsBusy = false;
+
         /// <summary>
         /// 
         /// </summary>
         private void ContinueQueryTags()
         {
+            if (mIsBusy) return;
+
+            mIsBusy = true;
             int count = 0;
             if (mTotalPageNumber <0)
             {
@@ -1023,6 +1036,7 @@ namespace DBInStudio.Desktop.ViewModel
                 }
             }
             TagCount = count;
+            mIsBusy = false;
         }
 
         ///// <summary>
@@ -1051,14 +1065,44 @@ namespace DBInStudio.Desktop.ViewModel
         /// </summary>
         private void RemoveTag()
         {
+            int icount = 0;
             if (CurrentSelectTag != null)
             {
-                foreach(var vv in SelectGroupTags.Where(e=>e.IsSelected).ToArray())
+                int ind = mSelectGroupTags.IndexOf(CurrentSelectTag);
+
+                List<TagViewModel> ll = new List<TagViewModel>();
+
+                foreach(var vv in grid.SelectedItems)
                 {
-                    if (DevelopServiceHelper.Helper.Remove(GroupModel.Database, vv.RealTagMode.Id))
+                    ll.Add(vv as TagViewModel);
+                }
+
+                foreach(var vvv in ll)
+                {
+                    if (DevelopServiceHelper.Helper.Remove(GroupModel.Database, vvv.RealTagMode.Id))
                     {
                         SelectGroupTags.Remove(CurrentSelectTag);
+                        icount++;
                     }
+                }
+
+
+                if(icount==0)
+                {
+                    if (DevelopServiceHelper.Helper.Remove(GroupModel.Database, CurrentSelectTag.RealTagMode.Id))
+                    {
+                        SelectGroupTags.Remove(CurrentSelectTag);
+                        icount++;
+                    }
+                }
+
+                if(ind<mSelectGroupTags.Count)
+                {
+                    CurrentSelectTag = mSelectGroupTags[ind];
+                }
+                else
+                {
+                    CurrentSelectTag = mSelectGroupTags.Last();
                 }
 
                 //if (DevelopServiceHelper.Helper.Remove(GroupModel.Database, CurrentSelectTag.RealTagMode.Id))
@@ -1074,9 +1118,13 @@ namespace DBInStudio.Desktop.ViewModel
                     if (DevelopServiceHelper.Helper.Remove(GroupModel.Database, vvt.RealTagMode.Id))
                     {
                         SelectGroupTags.Remove(vvt);
+                        icount++;
                     }
                 }
             }
+
+            TagCount -= icount;
+
         }
 
         private void CopyTag()
@@ -1125,6 +1173,7 @@ namespace DBInStudio.Desktop.ViewModel
                 if (tm != null)
                     CurrentSelectTag = tm;
             }
+            TagCount += mCopyTags.Count;
         }
 
         /// <summary>
@@ -1227,6 +1276,7 @@ namespace DBInStudio.Desktop.ViewModel
                     CurrentSelectTag = vtag;
                 }
             }
+            TagCount++;
         }
 
         /// <summary>

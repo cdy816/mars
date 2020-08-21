@@ -56,6 +56,8 @@ namespace DBInStudio.Desktop
 
         private ICommand mNewDatabaseCommand;
 
+        private ICommand mCancelCommand;
+
         private TreeItemViewModel mCurrentSelectTreeItem;
 
         private System.Collections.ObjectModel.ObservableCollection<TreeItemViewModel> mTagGroup = new System.Collections.ObjectModel.ObservableCollection<TreeItemViewModel>();
@@ -138,6 +140,7 @@ namespace DBInStudio.Desktop
                 if(mReRunCommand==null)
                 {
                     mReRunCommand = new RelayCommand(() => {
+                        CheckSaveDatabase();
                         DevelopServiceHelper.Helper.ReRunDatabase(mDatabase);
                     },()=> { return !string.IsNullOrEmpty(mDatabase)&& mIsDatabaseRunning; });
                 }
@@ -155,6 +158,7 @@ namespace DBInStudio.Desktop
                 if (mStartCommand == null)
                 {
                     mStartCommand = new RelayCommand(() => {
+                        CheckSaveDatabase();
                       IsDatabaseRunning =  DevelopServiceHelper.Helper.StartDatabase(mDatabase);
                     }, () => { return !mIsDatabaseRunning&& !string.IsNullOrEmpty(mDatabase); });
                 }
@@ -176,6 +180,31 @@ namespace DBInStudio.Desktop
                     },()=> { return mIsDatabaseRunning&& !string.IsNullOrEmpty(mDatabase); });
                 }
                 return mStopCommand;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand CancelCommand
+        {
+            get
+            {
+                if(mCancelCommand==null)
+                {
+                    mCancelCommand = new RelayCommand(() => { 
+                        if(MessageBox.Show(Res.Get("canceltosavemsg"),"",MessageBoxButton.YesNo)== MessageBoxResult.Yes)
+                        {
+                            DevelopServiceHelper.Helper.CancelToSaveDatabase(mDatabase);
+
+                            if (ContentViewModel is IModeSwitch)
+                            {
+                                (ContentViewModel as IModeSwitch).Active();
+                            }
+                        }
+                    },()=> { return !string.IsNullOrEmpty(mDatabase); });
+                }
+                return mCancelCommand;
             }
         }
 
@@ -382,6 +411,7 @@ namespace DBInStudio.Desktop
                 if(mLogoutCommand==null)
                 {
                     mLogoutCommand = new RelayCommand(() => {
+                        CheckSaveDatabase();
                         Logout();
                     }, () => { return IsLogin; });
                 }
@@ -484,6 +514,7 @@ namespace DBInStudio.Desktop
                 if(mDatabaseSelectCommand==null)
                 {
                     mDatabaseSelectCommand = new RelayCommand(() => {
+                        CheckSaveDatabase();
                         SwitchDatabase();
                     },()=> { return IsLogin; });
                 }
@@ -499,6 +530,7 @@ namespace DBInStudio.Desktop
                 if(mNewDatabaseCommand==null)
                 {
                     mNewDatabaseCommand = new RelayCommand(() => {
+                        CheckSaveDatabase();
                         NewDatabase();
                     }, () => { return IsLogin; });
                 }
@@ -546,6 +578,20 @@ namespace DBInStudio.Desktop
         /// <summary>
         /// 
         /// </summary>
+        private void CheckSaveDatabase()
+        {
+            if (DevelopServiceHelper.Helper.IsDatabaseDirty(mDatabase))
+            {
+                if (MessageBox.Show(Res.Get("saveprompt"), "", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                {
+                    DevelopServiceHelper.Helper.Save(mDatabase);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void MCheckRunningTimer_Elapsed(object sender, ElapsedEventArgs e)
@@ -562,6 +608,13 @@ namespace DBInStudio.Desktop
         private void NewDatabase()
         {
             NewDatabaseViewModel ndm = new NewDatabaseViewModel();
+
+            var vdd = DevelopServiceHelper.Helper.ListDatabase();
+            if(vdd.Count>0)
+            {
+                ndm.ExistDatabase = vdd.Keys.ToList();
+            }
+
             if (ndm.ShowDialog().Value)
             {
                 Database = ndm.Name;

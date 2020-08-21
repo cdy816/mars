@@ -167,6 +167,9 @@ service DevelopServer {
   //撤销
   rpc Cancel(GetRequest) returns (BoolResultReplay);
 
+  //数据库是否变脏
+  rpc IsDatabaseDirty(DatabasesRequest) returns (BoolResultReplay);
+
   //获取驱动列表
   rpc GetRegisteDrivers(GetRequest) returns (GetRegisteDriversReplay);
 

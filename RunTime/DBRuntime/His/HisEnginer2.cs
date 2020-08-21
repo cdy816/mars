@@ -322,7 +322,8 @@ namespace Cdy.Tag
                     {
                         if(!mLastValueChangedProcesser.AddTag(mHisTag))
                         {
-                            mLastValueChangedProcesser = new ValueChangedMemoryCacheProcesser2() { Name = "ValueChanged"+mTagCount };
+                            mLastValueChangedProcesser = new ValueChangedMemoryCacheProcesser2() { Name = "ValueChanged"+ mValueChangedProcesser.Count+1 };
+                            mLastValueChangedProcesser.AddTag(mHisTag);
                             mValueChangedProcesser.Add(mLastValueChangedProcesser);
                         }
                     }
@@ -375,8 +376,8 @@ namespace Cdy.Tag
 
             var histags = new List<HisRunTag>();
 
-            int tcount = 0;
-            int vcount = 0;
+            //int tcount = 0;
+            //int vcount = 0;
 
             foreach (var vv in tags)
             {
@@ -432,18 +433,31 @@ namespace Cdy.Tag
                 mHisTags.Add(vv.Id, mHisTag);
                 histags.Add(mHisTag);
 
-                if (mHisTag.Type == Cdy.Tag.RecordType.Timer)
-                {
-                    mRecordTimerProcesser[tcount++].AddTag(mHisTag);
-                    tcount = tcount >= mRecordTimerProcesser.Count ? 0 : tcount;
-                }
-                else
-                {
-                    mValueChangedProcesser[vcount++].AddTag(mHisTag);
-                    vcount = vcount >= mRecordTimerProcesser.Count ? 0 : vcount;
-                }
+               
                 mTagCount++;
             }
+
+            foreach(var vv in mRecordTimerProcesser)
+            {
+                vv.Stop();
+                vv.Dispose();
+            }
+            mRecordTimerProcesser.Clear();
+
+            foreach(var vv in mValueChangedProcesser)
+            {
+                vv.Stop();
+                vv.Dispose();
+            }
+            mValueChangedProcesser.Clear();
+
+            mLastProcesser = new TimerMemoryCacheProcesser2() { Id = 0 };
+            mRecordTimerProcesser.Clear();
+            mRecordTimerProcesser.Add(mLastProcesser);
+
+            mLastValueChangedProcesser = new ValueChangedMemoryCacheProcesser2() { Name = "ValueChanged0" };
+            mValueChangedProcesser.Clear();
+            mValueChangedProcesser.Add(mLastValueChangedProcesser);
 
             int qulityOffset = 0;
             int valueOffset = 0;
@@ -474,16 +488,36 @@ namespace Cdy.Tag
                 dbuffer.Clear();
 
                 vv.Value.DataSize = css;
+
+                if (vv.Value.Type == Cdy.Tag.RecordType.Timer)
+                {
+                    if (!mLastProcesser.AddTag(vv.Value))
+                    {
+                        mLastProcesser = new TimerMemoryCacheProcesser2() { Id = mLastProcesser.Id + 1 };
+                        mLastProcesser.AddTag(vv.Value);
+                        mRecordTimerProcesser.Add(mLastProcesser);
+                    }
+                }
+                else
+                {
+                    if (!mLastValueChangedProcesser.AddTag(vv.Value))
+                    {
+                        mLastValueChangedProcesser = new ValueChangedMemoryCacheProcesser2() { Name = "ValueChanged" + mValueChangedProcesser.Count + 1 };
+                        mLastValueChangedProcesser.AddTag(vv.Value);
+                        mValueChangedProcesser.Add(mLastValueChangedProcesser);
+                    }
+                }
             }
 
             this.mManager = mHisDatabase;
 
-            //foreach (var vv in mRecordTimerProcesser) { if (!vv.IsStarted) vv.Start(); }
+            foreach (var vv in mRecordTimerProcesser) { if (!vv.IsStarted) vv.Start(); }
 
-            //foreach (var vv in mValueChangedProcesser) { if (!vv.IsStarted) vv.Start(); }
+            foreach (var vv in mValueChangedProcesser) { if (!vv.IsStarted) vv.Start(); }
 
             mLogManager.InitHeadData();
 
+            SwitchMemoryCach(mCurrentMemory.Id);
 
             mRecordTimer.Start();
         }

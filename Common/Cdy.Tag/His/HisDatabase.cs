@@ -49,12 +49,18 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        public bool IsDirty { get; set; } = false;
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="tag"></param>
         public void AddHisTags(HisTag tag)
         {
             if(!HisTags.ContainsKey(tag.Id))
             {
                 HisTags.Add(tag.Id, tag);
+                IsDirty = true;
             }
         }
 
@@ -67,6 +73,7 @@ namespace Cdy.Tag
             if (HisTags.ContainsKey(id))
             {
                 HisTags.Remove(id);
+                IsDirty = true;
             }
         }
 
@@ -84,6 +91,7 @@ namespace Cdy.Tag
             {
                 HisTags[tag.Id] = tag;
             }
+            IsDirty = true;
         }
     }
 }

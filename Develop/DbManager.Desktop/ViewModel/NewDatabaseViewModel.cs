@@ -50,9 +50,11 @@ namespace DBInStudio.Desktop.ViewModel
             {
                 if (mName != value)
                 {
+                    string oldvalue = mName;
                     mName = value;
-                    if (string.IsNullOrEmpty(mDesc)) Desc = value;
+                    if (oldvalue == mDesc) Desc = value;
                 }
+                OnPropertyChanged("Name");
             }
         }
 
@@ -71,9 +73,12 @@ namespace DBInStudio.Desktop.ViewModel
                 {
                     mDesc = value;
                 }
+                OnPropertyChanged("Desc");
             }
         }
 
+
+        public List<string> ExistDatabase { get; set; } = new List<string>();
 
         #endregion ...Properties...
 
@@ -85,7 +90,7 @@ namespace DBInStudio.Desktop.ViewModel
         /// <returns></returns>
         protected override bool CanOKCommandProcess()
         {
-            return !string.IsNullOrEmpty(Name);
+            return !string.IsNullOrEmpty(Name) && !ExistDatabase.Contains(Name);
         }
 
         /// <summary>

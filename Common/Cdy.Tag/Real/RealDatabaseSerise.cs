@@ -137,6 +137,7 @@ namespace Cdy.Tag
                     db.MaxId = db.Tags.Keys.Max();
                 }
             }
+            db.IsDirty = false;
             this.Database = db;
             return db;
         }
@@ -191,6 +192,7 @@ namespace Cdy.Tag
                 System.IO.Directory.CreateDirectory(sd);
             }
             doc.Save(sfile);
+            Database.IsDirty = false;
         }
 
         #endregion ...Methods...

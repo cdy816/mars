@@ -147,10 +147,16 @@ namespace Cdy.Tag
         public void Stop()
         {
             mIsClosed = true;
-            resetEvent.Set();
-            closedEvent.WaitOne();
-            Clear();
-            mIsStarted = false;
+            try{
+                resetEvent.Set();
+                closedEvent.WaitOne();
+                Clear();
+                mIsStarted = false;
+            }
+            catch
+            {
+
+            }
             ServiceLocator.Locator.Resolve<IRealDataNotify>().UnSubscribeValueChangedForConsumer(this.Name);
         }
 

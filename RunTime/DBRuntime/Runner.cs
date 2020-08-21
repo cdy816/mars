@@ -189,7 +189,7 @@ namespace Cdy.Tag
         public void ReStartDatabase()
         {
 
-            LoggerService.Service.Info("ReStartDatabase", "start to restart database.",ConsoleColor.DarkYellow);
+            LoggerService.Service.Info("ReStartDatabase", "start to hot restart database.",ConsoleColor.DarkYellow);
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -197,17 +197,14 @@ namespace Cdy.Tag
             var db = new DatabaseSerise().Load(mDatabaseName);
             List<Tagbase> ltmp = new List<Tagbase>();
             List<HisTag> htmp = new List<HisTag>();
-            foreach(var vv in db.RealDatabase.Tags.Where(e=>this.mRealDatabase.Tags.ContainsKey(e.Key)))
+            foreach(var vv in db.RealDatabase.Tags.Where(e=>!this.mRealDatabase.Tags.ContainsKey(e.Key)))
             {
                 ltmp.Add(vv.Value);
             }
 
-            foreach(var vv in ltmp)
+            foreach (var vv in db.HisDatabase.HisTags.Where(e => !this.mHisDatabase.HisTags.ContainsKey(e.Key)))
             {
-                if(db.HisDatabase.HisTags.ContainsKey(vv.Id))
-                {
-                    htmp.Add(db.HisDatabase.HisTags[vv.Id]);
-                }
+                htmp.Add(vv.Value);
             }
 
             LoggerService.Service.Info("ReStartDatabase", "reload " + mDatabaseName + " take " + sw.ElapsedMilliseconds.ToString() + " ms");
@@ -237,7 +234,7 @@ namespace Cdy.Tag
             LoggerService.Service.Info("ReStartDatabase", "ReInit" + mDatabaseName + " take " + sw.ElapsedMilliseconds.ToString() + " ms");
 
 
-            LoggerService.Service.Info("ReStartDatabase", "start to restart database finish.", ConsoleColor.DarkYellow);
+            LoggerService.Service.Info("ReStartDatabase", "hot restart database finish.", ConsoleColor.DarkYellow);
         }
 
         /// <summary>

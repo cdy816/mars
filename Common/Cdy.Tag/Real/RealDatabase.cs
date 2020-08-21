@@ -63,6 +63,11 @@ namespace Cdy.Tag
         /// </summary>
         public Dictionary<string,TagGroup> Groups { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsDirty { get; set; } = false;
+
         public void BuildNameMap()
         {
             NamedTags.Clear();
@@ -217,7 +222,7 @@ namespace Cdy.Tag
                 {
                     NamedTags[tag.FullName] = tag;
                 }
-
+                IsDirty = true;
                 return true;
             }
             else
@@ -233,6 +238,7 @@ namespace Cdy.Tag
                     NamedTags[tag.FullName] = tag;
                 }
             }
+            IsDirty = true;
             return false;
         }
 
@@ -252,6 +258,7 @@ namespace Cdy.Tag
                     NamedTags.Add(tag.FullName, tag);
                 }
                 Tags[id] = tag;
+                IsDirty = true;
             }
         }
 
@@ -269,6 +276,7 @@ namespace Cdy.Tag
                 tag.Id = vid;
                 NamedTags[sname] = tag;
                 Tags[vid] = tag;
+                IsDirty = true;
             }
         }
 
@@ -311,6 +319,7 @@ namespace Cdy.Tag
                     }
                 }
             }
+            IsDirty = true;
         }
 
         /// <summary>
@@ -347,6 +356,7 @@ namespace Cdy.Tag
                         tgs.Remove(tag);
                     }
                 }
+                IsDirty = true;
             }
             return false;
         }
@@ -360,6 +370,7 @@ namespace Cdy.Tag
         {
             Tags.Remove(tag.Id);
             NamedTags.Remove(tag.FullName);
+            IsDirty = true;
             return true;
         }
 
@@ -392,6 +403,7 @@ namespace Cdy.Tag
                     Tags.Remove(vvv.Id);
                 }                
                 vv.Clear();
+                IsDirty = true;
             }
         }
 
@@ -426,6 +438,7 @@ namespace Cdy.Tag
                     this.Groups.Remove(vvn);
 
                 vv.Clear();
+                IsDirty = true;
             }
         }
 
@@ -539,6 +552,7 @@ namespace Cdy.Tag
                 {
                     Groups.Add(vv.FullName, vv);
                 }
+                IsDirty = true;
             }
         }
 
@@ -605,6 +619,7 @@ namespace Cdy.Tag
                     Groups.Add(vv.FullName, vv);
                 }
 
+                IsDirty = true;
                 return true;
             }
             return false;
@@ -637,6 +652,7 @@ namespace Cdy.Tag
                 {
                     Groups.Add(vv.FullName, vv);
                 }
+                IsDirty = true;
             }
         }
 
@@ -664,6 +680,7 @@ namespace Cdy.Tag
 
                 TagGroup tg = new TagGroup() { Parent = parent,Name = sname };
                 Groups.Add(tg.FullName, tg);
+                IsDirty = true;
                 return tg;
             }
             else

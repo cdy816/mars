@@ -32,6 +32,7 @@ namespace DBInStudio.Desktop.View
         {
             this.Loaded -= TagGroupDetailView_Loaded;
             mModel = this.DataContext as TagGroupDetailViewModel;
+            mModel.grid = this.dg;
         }
 
         private void DataGrid_ScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -58,6 +59,7 @@ namespace DBInStudio.Desktop.View
         private void DataGrid_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
         {
             mModel.SelectedCells = (sender as DataGrid).SelectedCells;
+          
         }
 
         private void Type_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -67,7 +69,6 @@ namespace DBInStudio.Desktop.View
                 dg.CommitEdit();
             }
         }
-
     }
 
     

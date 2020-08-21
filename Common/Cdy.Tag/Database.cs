@@ -82,6 +82,16 @@ namespace Cdy.Tag
         /// </summary>
         public SecurityDocument Security { get; set; } = new SecurityDocument();
 
+
+        public bool IsDirty
+        {
+            get
+            {
+                return RealDatabase.IsDirty || HisDatabase.IsDirty;
+            }
+        }
+
+
         /// <summary>
         /// 
         /// </summary>

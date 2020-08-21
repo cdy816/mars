@@ -142,6 +142,7 @@ namespace Cdy.Tag
             xe.Add(Database.Setting.SaveToXML());
 
             xe.Save(file);
+            Database.IsDirty = false;
         }
         #endregion ...Methods...
 

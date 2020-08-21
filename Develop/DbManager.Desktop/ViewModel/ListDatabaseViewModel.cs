@@ -10,6 +10,7 @@
 using DBDevelopClientApi;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Windows.Input;
 
@@ -108,6 +109,9 @@ namespace DBInStudio.Desktop.ViewModel
         private void NewDatabase()
         {
             NewDatabaseViewModel ndm = new NewDatabaseViewModel();
+            if (this.DatabaseItems != null && this.DatabaseItems.Count > 0)
+                ndm.ExistDatabase = this.DatabaseItems.Select(e => e.Name).ToList();
+
             if (ndm.ShowDialog().Value)
             {
                 this.mSelectDatabase = new DatabaseItem() { Name = ndm.Name, Desc = ndm.Desc };

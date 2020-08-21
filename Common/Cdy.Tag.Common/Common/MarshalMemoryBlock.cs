@@ -294,29 +294,31 @@ namespace Cdy.Tag
         public void Resize(long size)
         {
             int count = (int)(size / BufferItemSize) + 1;
-            List<IntPtr> nBuffers = new List<IntPtr>(count);
+            //List<IntPtr> nBuffers = new List<IntPtr>(count);
 
             if (count > mHandles.Count)
             {
-                int i = 0;
-                for (i = 0; i < mHandles.Count; i++)
-                {
-                    nBuffers.Add(mHandles[i]);
-                }
-                for(int j=i;j<count;j++)
+                //int i = 0;
+                //for (i = 0; i < mHandles.Count; i++)
+                //{
+                //   // nBuffers.Add(mHandles[i]);
+                //}
+                for(int j= mHandles.Count; j<count;j++)
                 {
                     mHandles.Add(Marshal.AllocHGlobal(BufferItemSize));
                 }
+               // mHandles = nBuffers;
             }
-            else if (count < mHandles.Count)
-            {
-                for(int i=0;i<count;i++)
-                {
-                    nBuffers.Add(mHandles[i]);
-                }
-            }
+            //else if (count < mHandles.Count)
+            //{
+            //    for(int i=0;i<count;i++)
+            //    {
+            //        nBuffers.Add(mHandles[i]);
+            //    }
+            //    mHandles = nBuffers;
+            //}
 
-            mHandles = nBuffers;
+          
             //GC.Collect();
         }
 
@@ -350,7 +352,6 @@ namespace Cdy.Tag
                         }
 
                         mHandles = nBuffers;
-                        mHandles = new List<IntPtr>();
                         //GC.Collect();
                     }
                     mAllocSize = size;

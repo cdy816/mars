@@ -76,7 +76,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public Action<HisRunTag>    PreProcess { get; set; }
+        public Action<HisRunTag>  PreProcess { get; set; }
 
 
         /// <summary>
@@ -190,10 +190,7 @@ namespace Cdy.Tag
             {
                 resetEvent.WaitOne();
                 resetEvent.Reset();
-                if (mIsClosed) break;
-                //Stopwatch sw = new Stopwatch();
-                //sw.Start();
-               
+                if (mIsClosed) break;               
                 try
                 {
                     mIsBusy = true;
@@ -214,13 +211,6 @@ namespace Cdy.Tag
                 {
 
                 }
-                //sw.Stop();
-                //ctmp++;
-                //if (ctmp >10 && Id==0 &&sw.ElapsedMilliseconds>0)
-                //{
-                //    ctmp = 0;
-                //    LoggerService.Service.Info("TimerMemoryCacheProcesser", this.Id + " CPU Id" + ThreadHelper.GetCurrentProcessorNumber() + "  record tag value:" + sw.ElapsedMilliseconds + " tag count:" + mCurrentCount);
-                //}
                 resetEvent.Reset();
             }
             closedEvent.Set();

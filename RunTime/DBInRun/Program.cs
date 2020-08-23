@@ -66,7 +66,19 @@ namespace DBInRun
 
                 string smd = Console.ReadLine();
 
-                if (string.IsNullOrEmpty(smd)) continue;
+                if (string.IsNullOrEmpty(smd))
+                {
+                    LoggerService.Service.EnableLogger =! LoggerService.Service.EnableLogger;
+                    if(LoggerService.Service.EnableLogger)
+                    {
+                        Console.WriteLine("Log is enabled.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Log is disabled.");
+                    }
+                    continue;
+                }
 
                 string[] cmd = smd.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -76,6 +88,7 @@ namespace DBInRun
                 switch (scmd)
                 {
                     case "exit":
+                        LoggerService.Service.EnableLogger = true;
                         if (Cdy.Tag.Runner.RunInstance.IsStarted)
                         {
                             Cdy.Tag.Runner.RunInstance.Stop();
@@ -84,6 +97,7 @@ namespace DBInRun
                         break;
                     case "start":
                         string dbname = "local";
+                        LoggerService.Service.EnableLogger = true;
                         if (cmd.Length > 1)
                         {
                             Cdy.Tag.Runner.RunInstance.StartAsync(cmd[1]);
@@ -103,7 +117,29 @@ namespace DBInRun
                     case "stop":
                         Cdy.Tag.Runner.RunInstance.Stop();
                         break;
+                    case "switch":
+                        LoggerService.Service.EnableLogger = true;
+                        if (cmd.Length > 1)
+                        {
+                            var cd = cmd[1].ToLower();
+                            if(cd == "primary")
+                            {
+                               if(!Cdy.Tag.Runner.RunInstance.Switch(WorkState.Primary))
+                                {
+                                    LoggerService.Service.Erro("RDDCManager","Failed to switch to primary!");
+                                }
+                            }
+                            else if(cd == "standby")
+                            {
+                                if(!Cdy.Tag.Runner.RunInstance.Switch(WorkState.Standby))
+                                {
+                                    LoggerService.Service.Erro("RDDCManager", "Failed to switch to standby!");
+                                }
+                            }
+                        }
+                        break;
                     case "restart":
+                        LoggerService.Service.EnableLogger = true;
                         Task.Run(() => {
                             Cdy.Tag.Runner.RunInstance.ReStartDatabase();
                         });
@@ -194,23 +230,21 @@ namespace DBInRun
                                     }
                                     mIsClosed = true;
                                     server.WriteByte(1);
-                                    server.WaitForPipeDrain();
+                                    server.FlushAsync();
+                                    //server.WaitForPipeDrain();
                                     Console.WriteLine(Res.Get("AnyKeyToExit")+".....");
-
-                                    //Task.Run(() => {
-                                    //    Thread.Sleep(5000);
-
-                                    //    System.Diagnostics.Process.GetCurrentProcess().Kill();
-                                    //});
-
                                     break;
                                     //退出系统
                                 }
                                 else if(cmd==1)
                                 {
-                                    Cdy.Tag.Runner.RunInstance.ReStartDatabase();
+                                    Console.WriteLine("Start to restart database.......");
+                                    Task.Run(() => {
+                                        Cdy.Tag.Runner.RunInstance.ReStartDatabase();
+                                    });
                                     server.WriteByte(1);
-                                    server.WaitForPipeDrain();
+                                    server.FlushAsync();
+                                   // server.WaitForPipeDrain();
                                 }
                                 else
                                 {
@@ -241,11 +275,12 @@ namespace DBInRun
         {
             StringBuilder re = new StringBuilder();
             re.AppendLine();
-            re.AppendLine("start [database] // "+Res.Get("StartMsg"));
-            re.AppendLine("stop             // " + Res.Get("StopMsg"));
-            re.AppendLine("restart             // " + Res.Get("RestartMsg"));
-            re.AppendLine("List             // " + Res.Get("ListMsg"));
-            re.AppendLine("h                // " + Res.Get("HMsg"));
+            re.AppendLine("start [database]        // "+Res.Get("StartMsg"));
+            re.AppendLine("stop                    // " + Res.Get("StopMsg"));
+            re.AppendLine("restart                 // " + Res.Get("RestartMsg"));
+            re.AppendLine("list                    // " + Res.Get("ListMsg"));
+            re.AppendLine("switch primary/standby  // " + Res.Get("RddcSwitch"));
+            re.AppendLine("h                       // " + Res.Get("HMsg"));
             return re.ToString();
         }
     }

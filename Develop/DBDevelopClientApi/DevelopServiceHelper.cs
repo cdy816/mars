@@ -1191,7 +1191,7 @@ namespace DBDevelopClientApi
         private DBDevelopService.RealTagMessage ConvertToRealTagMessage(Cdy.Tag.Tagbase tag)
         {
             DBDevelopService.RealTagMessage re = new DBDevelopService.RealTagMessage();
-            re.Id = (uint)tag.Id;
+            re.Id = tag.Id;
             re.LinkAddress = tag.LinkAddress;
             re.Name = tag.Name;
             re.TagType = (uint)tag.Type;
@@ -1222,7 +1222,7 @@ namespace DBDevelopClientApi
             DBDevelopService.HisTagMessage re = new DBDevelopService.HisTagMessage();
             if (tag != null)
             {
-                re.Id = (uint)tag.Id;
+                re.Id = tag.Id;
                 re.TagType = (uint)tag.TagType;
                 re.Type = (uint)tag.Type;
                 re.CompressType = (uint)tag.CompressType;
@@ -1237,7 +1237,7 @@ namespace DBDevelopClientApi
             }
             else
             {
-                re.Id = uint.MaxValue;
+                re.Id = int.MaxValue;
             }
             return re;
         }

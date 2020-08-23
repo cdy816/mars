@@ -515,7 +515,7 @@ namespace DBInStudio.Desktop.ViewModel
             {
                 sb2.Append(vv);
             }
-            return sb1.ToString().Equals(sb1.ToString());
+            return sb1.ToString().Equals(sb2.ToString());
         }
 
         /// <summary>

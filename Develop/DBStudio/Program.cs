@@ -9,12 +9,19 @@ using System.IO.Pipes;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 
 namespace DBStudio
 {
     class Program:DBDevelopService.IDatabaseManager
     {
+        /// <summary>
+        /// 
+        /// </summary>
         static bool mIsExited = false;
+
+        static object mLockObj = new object();
+
         static void Main(string[] args)
         {
 
@@ -249,7 +256,7 @@ namespace DBStudio
                         }
                         else
                         {
-                            ReLoadDabtabase(db.Name);
+                            ReLoadDatabase(db.Name);
                         }
                     }
                     else if (cmsg == "restart")
@@ -331,11 +338,23 @@ namespace DBStudio
         {
             try
             {
-                var info = new ProcessStartInfo() { FileName = "DbInRun.exe" };
-                info.UseShellExecute = true;
-                info.Arguments = "start " + name;
-                info.WorkingDirectory = System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location);
-                Process.Start(info).WaitForExit(1000);
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    var info = new ProcessStartInfo() { FileName = "DBInRun.exe" };
+                    info.UseShellExecute = true;
+                    info.Arguments = "start " + name;
+                    info.WorkingDirectory = System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location);
+                    Process.Start(info).WaitForExit(1000);
+                }
+                else
+                {
+                    var info = new ProcessStartInfo() { FileName = "dotnet" };
+                    info.UseShellExecute = true;
+                    info.CreateNoWindow = false;
+                    info.Arguments = "./DBInRun.dll start " + name;
+                    info.WorkingDirectory = System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location);
+                    Process.Start(info).WaitForExit(1000);
+                }
             }
             catch(Exception ex)
             {
@@ -1240,9 +1259,9 @@ namespace DBStudio
                     }
                     return true;
                 }
-                catch
+                catch(Exception ex)
                 {
-                    Console.WriteLine("Stop database " + name + "  failed.");
+                    Console.WriteLine("Stop database " + name + "  failed."+ex.Message);
                 }
                 return false;
             }
@@ -1252,28 +1271,40 @@ namespace DBStudio
         /// 
         /// </summary>
         /// <param name="name"></param>
-        public static bool ReLoadDabtabase(string name)
+        public static bool ReLoadDatabase(string name)
         {
-            using (var client = new NamedPipeClientStream(".", name, PipeDirection.InOut))
+            lock (mLockObj)
             {
-                try
+                using (var client = new NamedPipeClientStream(".", name, PipeDirection.InOut))
                 {
-                    client.Connect(2000);
-                    client.WriteByte(1);
-                    client.WaitForPipeDrain();
-                    var res = client.ReadByte();
-                    if (res == 1)
+                    try
                     {
-                        Console.WriteLine("Rerun database" + name + " sucessfull.");
-                    }
-                    return true;
+                        client.Connect(2000);
+                        client.WriteByte(1);
+                        client.FlushAsync();
 
+                        int count = 0;
+                        while (client.InBufferSize < 1)
+                        {
+                            Thread.Sleep(100);
+                            count++;
+                            if (count > 20) break;
+                        }
+
+                        var res = client.ReadByte();
+                        if (res == 1)
+                        {
+                            Console.WriteLine("Rerun database" + name + " sucessfull.");
+                        }
+                        return true;
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("ReRun database " + name + "  failed. " + ex.Message + "  " + ex.StackTrace);
+                    }
+                    return false;
                 }
-                catch
-                {
-                    Console.WriteLine("Rerun database " + name + "  failed.");
-                }
-                return false;
             }
         }
 
@@ -1284,17 +1315,21 @@ namespace DBStudio
         /// <returns></returns>
         public static bool CheckStart(string name)
         {
-            using (var client = new NamedPipeClientStream(".", name, PipeDirection.InOut))
+            lock (mLockObj)
             {
-                try
+                using (var client = new NamedPipeClientStream(".", name, PipeDirection.InOut))
                 {
-                    client.Connect(1000);
-                    client.Close();
-                    return true;
-                }
-                catch
-                {
-                    return false;
+                    try
+                    {
+                        client.Connect(1000);
+                        client.Close();
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("CheckStart " + name + "  failed." + ex.Message + "  " + ex.StackTrace);
+                        return false;
+                    }
                 }
             }
         }
@@ -1339,7 +1374,7 @@ namespace DBStudio
             }
             else
             {
-               return ReLoadDabtabase(name);
+               return ReLoadDatabase(name);
             }
         }
 

@@ -1101,12 +1101,12 @@ namespace DBDevelopService
                     {
                         if (cc >= from && cc < (from + PageCount))
                         {
-                            rre.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
+                            rre.Add(new RealTagMessage() { Id = vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
 
                             if (db.HisDatabase.HisTags.ContainsKey(vv.Id))
                             {
                                 var vvv = db.HisDatabase.HisTags[vv.Id];
-                                var vitem = new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vvv.Type, TagType = (uint)vvv.TagType, CompressType = (uint)vvv.CompressType, Circle = (ulong)vvv.Circle };
+                                var vitem = new HisTagMessage() { Id = vv.Id, Type = (uint)vvv.Type, TagType = (uint)vvv.TagType, CompressType = (uint)vvv.CompressType, Circle = (ulong)vvv.Circle };
                                 if (vvv.Parameters != null && vvv.Parameters.Count > 0)
                                 {
                                     foreach (var vvp in vvv.Parameters)
@@ -1167,12 +1167,12 @@ namespace DBDevelopService
                     {
                         if (cc >= from && cc < (from + PageCount))
                         {
-                            rre.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
+                            rre.Add(new RealTagMessage() { Id = vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
 
                             if (db.HisDatabase.HisTags.ContainsKey(vv.Id))
                             {
                                 var vvv = db.HisDatabase.HisTags[vv.Id];
-                                var vitem = new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vvv.TagType, CompressType = (uint)vvv.CompressType, Circle = (ulong)vvv.Circle };
+                                var vitem = new HisTagMessage() { Id = vv.Id, Type = (uint)vv.Type, TagType = (uint)vvv.TagType, CompressType = (uint)vvv.CompressType, Circle = (ulong)vvv.Circle };
                                 if (vvv.Parameters != null && vvv.Parameters.Count > 0)
                                 {
                                     foreach (var vvp in vvv.Parameters)
@@ -1213,7 +1213,7 @@ namespace DBDevelopService
                 {
                     foreach (var vv in db.HisDatabase.HisTags.Values)
                     {
-                        var vitem = new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType, Circle = (ulong)vv.Circle };
+                        var vitem = new HisTagMessage() { Id = vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType, Circle = (ulong)vv.Circle };
                         if (vv.Parameters != null && vv.Parameters.Count > 0)
                         {
                             foreach (var vvv in vv.Parameters)
@@ -1251,7 +1251,7 @@ namespace DBDevelopService
                 {
                     foreach (var vv in db.RealDatabase.ListAllTags())
                     {
-                        re.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
+                        re.Add(new RealTagMessage() { Id = vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
                     }
                 }
             }
@@ -1306,7 +1306,7 @@ namespace DBDevelopService
                     List<HisTagMessage> re = new List<HisTagMessage>();
                     foreach (var vv in htags)
                     {
-                        var vitem = new HisTagMessage() { Id = (uint)vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType };
+                        var vitem = new HisTagMessage() { Id = vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType };
                         if (vv.Parameters != null && vv.Parameters.Count > 0)
                         {
                             foreach (var vvv in vv.Parameters)
@@ -1371,7 +1371,7 @@ namespace DBDevelopService
                     List<RealTagMessage> re = new List<RealTagMessage>();
                     foreach (var vv in htags)
                     {
-                        re.Add(new RealTagMessage() { Id = (uint)vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
+                        re.Add(new RealTagMessage() { Id =vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
                     }
 
                     var msg = new GetRealTagMessageReply() { Result = true };
@@ -1697,10 +1697,10 @@ namespace DBDevelopService
                         }
 
                         var vtag = request.HisTag;
-                        if (vtag.Id != uint.MaxValue)
+                        if (vtag.Id != int.MaxValue)
                         {
                             Cdy.Tag.HisTag hisTag = new Cdy.Tag.HisTag();
-                            hisTag.Id = (int)vtag.Id;
+                            hisTag.Id = (int)tag.Id;
                             hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
                             hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
                             hisTag.CompressType = (int)(vtag.CompressType);
@@ -1772,10 +1772,10 @@ namespace DBDevelopService
                             }
                             
                             var vtag = request.HisTag;
-                            if (vtag.Id != uint.MaxValue)
+                            if (vtag.Id != int.MaxValue)
                             {
                                 Cdy.Tag.HisTag hisTag = new Cdy.Tag.HisTag();
-                                hisTag.Id = (int)vtag.Id;
+                                hisTag.Id = (int)tag.Id;
                                 hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
                                 hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
                                 hisTag.CompressType = (int)(vtag.CompressType);
@@ -1798,7 +1798,7 @@ namespace DBDevelopService
 
                             var vtag = request.HisTag;
                             Cdy.Tag.HisTag hisTag = new Cdy.Tag.HisTag();
-                            hisTag.Id = (int)vtag.Id;
+                            hisTag.Id = (int)tag.Id;
                             hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
                             hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
                             hisTag.CompressType = (int)(vtag.CompressType);
@@ -1826,10 +1826,10 @@ namespace DBDevelopService
                             db.RealDatabase.Append(tag);
 
                             var vtag = request.HisTag;
-                            if (vtag.Id != uint.MaxValue)
+                            if (vtag.Id != int.MaxValue)
                             {
                                 Cdy.Tag.HisTag hisTag = new Cdy.Tag.HisTag();
-                                hisTag.Id = (int)vtag.Id;
+                                hisTag.Id = (int)tag.Id;
                                 hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
                                 hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
                                 hisTag.CompressType = (int)(vtag.CompressType);

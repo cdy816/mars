@@ -80,7 +80,14 @@ namespace DBDevelopService
             mhost = CreateHostBuilder(sip).Build();
            
             LoggerService.Service.Info("DBService", "启动服务:"+ sip);
-            await mhost.StartAsync();
+            try
+            {
+                await mhost.StartAsync();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Erro("DBService", ex.Message);
+            }
         }
 
         /// <summary>

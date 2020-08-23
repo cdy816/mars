@@ -377,6 +377,26 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="mode"></param>
+        public bool Switch(WorkState mode)
+        {
+            if (RDDCManager.Manager.EnableRDDC)
+            {
+                if (RDDCManager.Manager.CurrentState != mode)
+                {
+                    return RDDCManager.Manager.ManualSwitchTo(mode);
+                }
+            }
+            else
+            {
+                LoggerService.Service.Info("Runner", " Rddc is not enable.");
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private bool SwitchToStandby()
         {
             try

@@ -12,6 +12,7 @@ using Grpc.Net.Client;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Windows;
@@ -26,6 +27,7 @@ namespace DBInStudio.Desktop.ViewModel
         private string mServer="127.0.0.1"; 
         private string mUserName;
         private string mPassword="";
+        private List<string> mIPList;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -39,14 +41,29 @@ namespace DBInStudio.Desktop.ViewModel
             DefaultWidth = 500;
             DefaultHeight = 180;
             IsEnableMax = false;
+            mIPList = new List<string>() { mServer };
+            LoadCachIPs();
         }
+
         #endregion ...Constructor...
 
         #region ... Properties ...
 
         /// <summary>
-            /// 
-            /// </summary>
+        /// 
+        /// </summary>
+        public List<string> IPList
+        {
+            get
+            {
+                return mIPList;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         public string Server
         {
             get
@@ -121,6 +138,10 @@ namespace DBInStudio.Desktop.ViewModel
                 System.Windows.MessageBox.Show(Res.Get("LoginFailed"));
                 return false;
             }
+            else
+            {
+                SaveIpCach();
+            }
             return base.OKCommandProcess();
         }
 
@@ -132,6 +153,10 @@ namespace DBInStudio.Desktop.ViewModel
         {
             try
             {
+                if(!mIPList.Contains(mServer))
+                {
+                    mIPList.Add(mServer);
+                }
                 CheckLocalServerRun();
                 LoginUserId = DevelopServiceHelper.Helper.Login(Server, UserName, Password);
             }
@@ -143,6 +168,9 @@ namespace DBInStudio.Desktop.ViewModel
             return !string.IsNullOrEmpty(LoginUserId);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void CheckLocalServerRun()
         {
             if(mServer=="127.0.0.1"||mServer=="localhost")
@@ -155,6 +183,33 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private void SaveIpCach()
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach(var vv in mIPList)
+            {
+                sb.AppendLine(vv);
+            }
+            string sfile = System.IO.Path.Combine( System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "login.cach");
+            System.IO.File.WriteAllText(sfile, sb.ToString());
+        }
+
+
+        private void LoadCachIPs()
+        {
+            string sfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "login.cach");
+            if(System.IO.File.Exists(sfile))
+            {
+                string[] sfiles = System.IO.File.ReadAllLines(sfile);
+                mIPList.AddRange(sfiles);
+                mIPList = mIPList.Distinct().ToList();
+            }
+        }
+
+      
 
         #endregion ...Methods...
 

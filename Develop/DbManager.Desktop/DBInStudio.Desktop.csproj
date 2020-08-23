@@ -30,6 +30,8 @@
     <None Remove="Image\huoxing2.jpg" />
     <None Remove="Image\import.png" />
     <None Remove="Image\import2.png" />
+    <None Remove="Image\Load.gif" />
+    <None Remove="Image\Load2.gif" />
     <None Remove="Image\log-out.png" />
     <None Remove="Image\max.png" />
     <None Remove="Image\minus.png" />
@@ -75,6 +77,8 @@
     <Resource Include="Image\huoxing.jpg" />
     <Resource Include="Image\import.png" />
     <Resource Include="Image\import2.png" />
+    <Resource Include="Image\Load.gif" />
+    <Resource Include="Image\Load2.gif" />
     <Resource Include="Image\log-out.png" />
     <Resource Include="Image\max.png" />
     <Resource Include="Image\minus.png" />

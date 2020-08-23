@@ -773,7 +773,7 @@ namespace DBInStudio.Desktop.ViewModel
                 BuildFilters();
                 mTotalPageNumber = -1;
                 ContinueQueryTags();
-                Application.Current.Dispatcher.Invoke(new Action(() => {
+                Application.Current?.Dispatcher.Invoke(new Action(() => {
                     EnableFilter = true;
                 }));
             });
@@ -960,7 +960,7 @@ namespace DBInStudio.Desktop.ViewModel
                 mCurrentPageIndex = -1;
                 mTotalPageNumber = -1;
                 ContinueQueryTags();
-                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
                 {
                     ServiceLocator.Locator.Resolve<IProcessNotify>().EndShowNotify();
                 }));
@@ -1007,7 +1007,7 @@ namespace DBInStudio.Desktop.ViewModel
                     foreach (var vvv in vv)
                     {
                         TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2);
-                        Application.Current.Dispatcher.Invoke(new Action(() => {
+                        Application.Current?.Dispatcher.Invoke(new Action(() => {
                             SelectGroupTags.Add(model);
                         }));
                        
@@ -1026,7 +1026,7 @@ namespace DBInStudio.Desktop.ViewModel
                     {
                         foreach (var vvv in vv)
                         {
-                            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
                             {
                                 TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2);
                                 SelectGroupTags.Add(model);
@@ -1130,10 +1130,16 @@ namespace DBInStudio.Desktop.ViewModel
         private void CopyTag()
         {
             mCopyTags.Clear();
-            foreach(var vv in mSelectGroupTags.Where(e=>e.IsSelected))
+
+            foreach (var vv in grid.SelectedItems)
             {
-                mCopyTags.Add(vv);
+                mCopyTags.Add(vv as TagViewModel);
             }
+
+            //foreach (var vv in mSelectGroupTags.Where(e=>e.IsSelected))
+            //{
+            //    mCopyTags.Add(vv);
+            //}
         }
 
         /// <summary>
@@ -1254,6 +1260,10 @@ namespace DBInStudio.Desktop.ViewModel
             if (CurrentSelectTag != null)
             {
                 var vtag = CurrentSelectTag.Clone();
+                vtag.RealTagMode.Id = -1;
+                if (vtag.HisTagMode != null)
+                    vtag.HisTagMode.Id = vtag.RealTagMode.Id;
+
                 vtag.Name = GetNewName();
                 vtag.IsNew = true;
                 if (UpdateTag(vtag))

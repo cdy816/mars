@@ -289,9 +289,19 @@ namespace DBInStudio.Desktop
                 {
                     mProcessNotify = value;
                     OnPropertyChanged("ProcessNotify");
+                    OnPropertyChanged("ProcessNotifyPercent");
                 }
             }
         }
+
+        public double ProcessNotifyPercent
+        {
+            get
+            {
+                return mProcessNotify / 100;
+            }
+        }
+
 
 
         /// <summary>
@@ -580,6 +590,10 @@ namespace DBInStudio.Desktop
         /// </summary>
         private void CheckSaveDatabase()
         {
+            if (ContentViewModel is IModeSwitch)
+            {
+                (ContentViewModel as IModeSwitch).DeActive();
+            }
             if (DevelopServiceHelper.Helper.IsDatabaseDirty(mDatabase))
             {
                 if (MessageBox.Show(Res.Get("saveprompt"), "", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
@@ -794,6 +808,12 @@ namespace DBInStudio.Desktop
             {
                 if(Database!=ldm.SelectDatabase.Name)
                 {
+
+                    if (ContentViewModel is IModeSwitch)
+                    {
+                        (ContentViewModel as IModeSwitch).DeActive();
+                    }
+
                     Database = ldm.SelectDatabase.Name;
                     OnPropertyChanged("MainwindowTitle");
 
@@ -867,7 +887,10 @@ namespace DBInStudio.Desktop
             CurrentUserManager.Manager.UserName = string.Empty;
             OnPropertyChanged("UserName");
             if (ContentViewModel != null)
+            {
+                
                 ContentViewModel.Dispose();
+            }
 
             ContentViewModel = infoModel;
             Database = string.Empty;
@@ -925,7 +948,7 @@ namespace DBInStudio.Desktop
         /// </summary>
         private void QueryGroups()
         {
-            Application.Current.Dispatcher.Invoke(() => {
+            Application.Current?.Dispatcher.Invoke(() => {
                 this.mRootTagGroupModel.Children.Clear();
             });
             
@@ -934,7 +957,7 @@ namespace DBInStudio.Desktop
             {
                 foreach(var vvv in vv.Where(e=>string.IsNullOrEmpty(e.Value)))
                 {
-                    Application.Current.Dispatcher.Invoke(() => {
+                    Application.Current?.Dispatcher.Invoke(() => {
                         TagGroupViewModel groupViewModel = new TagGroupViewModel() { mName = vvv.Key,Database=mDatabase };
                         mRootTagGroupModel.Children.Add(groupViewModel);
                         groupViewModel.InitData(vv);
@@ -970,7 +993,7 @@ namespace DBInStudio.Desktop
         /// </summary>
         public void BeginShowNotify()
         {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() => {
 
                 NotifyVisiblity = Visibility.Visible;
             }));
@@ -983,7 +1006,7 @@ namespace DBInStudio.Desktop
         /// <param name="val"></param>
         public void ShowNotifyValue(double val)
         {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() => {
                 if (val > 100)
                 {
                     ProcessNotify = 100;
@@ -1001,7 +1024,7 @@ namespace DBInStudio.Desktop
         /// </summary>
         public void EndShowNotify()
         {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() => {
                 NotifyVisiblity = Visibility.Hidden;
                 ProcessNotify = 0;
             }));

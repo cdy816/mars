@@ -132,6 +132,9 @@
   <data name="ListMsg" xml:space="preserve">
     <value>列出所有的数据库</value>
   </data>
+  <data name="RddcSwitch" xml:space="preserve">
+    <value>切换数据库的工作状态为主机或备机模式</value>
+  </data>
   <data name="RestartMsg" xml:space="preserve">
     <value>在不中断的情况下快速启动数据库</value>
   </data>

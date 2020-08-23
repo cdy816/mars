@@ -1,6 +1,8 @@
 ﻿using Grpc.Net.Client;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -11,9 +13,11 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Xml.Linq;
 
 namespace DBInStudio.Desktop
 {
@@ -129,6 +133,43 @@ namespace DBInStudio.Desktop
             (sender as TextBox).Focus();
         }
 
+        private void Image_MouseEnter(object sender, MouseEventArgs e)
+        {
+            (sender as Image).Opacity = 0.8;
+        }
 
+        private void Image_MouseLeave(object sender, MouseEventArgs e)
+        {
+            (sender as Image).Opacity = 0.1;
+        }
+
+        private void Grid_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if ((sender as FrameworkElement).IsVisible)
+            {
+                (this.FindResource("WaitAnimate") as Storyboard).Begin();
+            }
+            else
+            {
+                (this.FindResource("WaitAnimate") as Storyboard).Stop();
+            }
+        }
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class DoubleFormateConvert : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return ((double)value).ToString("f1") + " %";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 }

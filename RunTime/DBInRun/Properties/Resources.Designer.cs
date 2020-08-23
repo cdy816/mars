@@ -106,6 +106,15 @@ namespace DBInRun.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Switch workstate to primary or standby 的本地化字符串。
+        /// </summary>
+        internal static string RddcSwitch {
+            get {
+                return ResourceManager.GetString("RddcSwitch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Qucik restarted a a database without pause it. 的本地化字符串。
         /// </summary>
         internal static string RestartMsg {

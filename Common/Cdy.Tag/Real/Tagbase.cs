@@ -31,7 +31,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 编号
         /// </summary>
-        public int Id { get; set; }
+        public int Id { get; set; } = -1;
 
         /// <summary>
         /// 类型

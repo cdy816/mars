@@ -47,7 +47,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox  CaretBrush="White"  Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="0,0" IsReadOnly="{Binding IsNameReadOnly}" IsEnabled="{Binding IsEnableEdit}"  Padding="4,0" BorderThickness="0" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                            <TextBox  CaretBrush="White"  Background="#0FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="0,0" IsReadOnly="{Binding IsNameReadOnly}" IsEnabled="{Binding IsEnableEdit}"  Padding="4,0" BorderThickness="0" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -61,7 +61,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox  CaretBrush="White" Background="#1FFFFFFF" Margin="0,0" Padding="4,0" IsEnabled="{Binding IsEnableEdit}"  BorderThickness="0" Text="{Binding Desc,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                            <TextBox Style="{DynamicResource ComboBoxEditableTextBox}" CaretBrush="White" Background="#0FFFFFFF" Margin="-1" Padding="4,0" IsEnabled="{Binding IsEnableEdit}"  BorderThickness="0" Text="{Binding Desc,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -85,8 +85,8 @@
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <TextBox  CaretBrush="White" Background="#7FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="0,0" Padding="4,0" IsEnabled="{Binding IsEnableEdit}" MinWidth="200"  BorderThickness="0" Text="{Binding GroupString,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
-                                <Button Background="#7FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="10,0,0,0" Content="..." IsEnabled="{Binding IsEnableEdit}"  MinWidth="40" VerticalAlignment="Center" VerticalContentAlignment="Top" Command="{Binding GroupEditCommand}" />
+                                <TextBox  CaretBrush="White" Background="#0FFFFFFF" BorderBrush="{DynamicResource Window.Forground}" Foreground="{DynamicResource Window.Forground}" Margin="-1,-1" Padding="4,0" IsEnabled="{Binding IsEnableEdit}" MinWidth="200"  BorderThickness="1" Text="{Binding GroupString,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                                <Button Background="#0FFFFFFF" BorderBrush="{DynamicResource Window.Forground}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="10,0,0,0" Content="..." IsEnabled="{Binding IsEnableEdit}"  MinWidth="40" VerticalAlignment="Center" VerticalContentAlignment="Top" Command="{Binding GroupEditCommand}" />
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>

@@ -635,7 +635,7 @@ message GetHistTagMessageReply
 //实时变量配置
 message RealTagMessage
 {
-  uint32 Id=1;
+  int32 Id=1;
   uint32 TagType=2;
   string Name = 3;
   string Group = 4;
@@ -651,7 +651,7 @@ message RealTagMessage
 //历史变量定义
 message HisTagMessage
 {
- uint32 Id=1;
+ int32 Id=1;
  uint32 Type=2;
  uint32 TagType=3;
  uint32 CompressType=4;

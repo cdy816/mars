@@ -132,6 +132,9 @@
   <data name="ListMsg" xml:space="preserve">
     <value>List all databse</value>
   </data>
+  <data name="RddcSwitch" xml:space="preserve">
+    <value>Switch workstate to primary or standby</value>
+  </data>
   <data name="RestartMsg" xml:space="preserve">
     <value>Qucik restarted a a database without pause it.</value>
   </data>

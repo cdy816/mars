@@ -210,6 +210,51 @@ namespace DBRuntime
         }
 
         /// <summary>
+        /// 手动切换工作状态
+        /// </summary>
+        /// <param name="state"></param>
+        public bool ManualSwitchTo(WorkState state)
+        {
+            if(mClient.IsConnected)
+            {
+                if (state == WorkState.Standby)
+                {
+                    if(mClient.SwitchToPrimary().Value)
+                    {
+                       return SwitchTo(WorkState.Standby);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    if(mClient.SwitchToStandby().Value)
+                    {
+                        return SwitchTo(WorkState.Primary);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                if(state == WorkState.Standby)
+                {
+                    LoggerService.Service.Warn("RDDCManager", "remote is offline,local machine must be primary!");
+                    return false;
+                }
+                else
+                {
+                    return SwitchTo(state);
+                }
+            }
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="state"></param>

@@ -218,7 +218,7 @@ namespace DBRuntime.RDDC
             {
 
             }
-            return null;
+            return false;
         }
 
 
@@ -244,7 +244,7 @@ namespace DBRuntime.RDDC
             {
 
             }
-            return null;
+            return false;
         }
 
         #endregion ...Methods...

@@ -8,8 +8,10 @@
 //==============================================================
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Cdy.Tag
@@ -53,6 +55,18 @@ namespace Cdy.Tag
         private System.IO.FileSystemWatcher logDataWatcher;
 
         private object mLocker = new object();
+
+        private ManualResetEvent mResetEvent = new ManualResetEvent(false);
+        private bool mIsClosed = false;
+
+        private Dictionary<string, WatcherChangeTypes> mFileCach = new Dictionary<string, WatcherChangeTypes>();
+
+        private Dictionary<string, WatcherChangeTypes> mHisFileCach = new Dictionary<string, WatcherChangeTypes>();
+
+        private int mResetCount = 0;
+
+        private Thread mFileProcessThread;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -83,7 +97,9 @@ namespace Cdy.Tag
         /// </summary>
         public string PrimaryHisDataPath { get; set; }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
         public string PrimaryLogDataPath { get; set; }
 
         /// <summary>
@@ -142,11 +158,104 @@ namespace Cdy.Tag
             {
                 logDataWatcher = new System.IO.FileSystemWatcher(logpath);
                 logDataWatcher.Changed += LogDataWatcher_Changed;
-
                 logDataWatcher.EnableRaisingEvents = true;
             }
 
            //await Scan(GetBackHisDataPath());
+        }
+
+        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Start()
+        {
+            mIsClosed= false;
+            mFileProcessThread = new Thread(FileProcess);
+            mFileProcessThread.IsBackground = true;
+            mFileProcessThread.Start();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Stop()
+        {
+            mIsClosed = true;
+            mResetEvent.Close();
+            while (mFileProcessThread.IsAlive) Thread.Sleep(1);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void FileProcess()
+        {
+            List<KeyValuePair<string, WatcherChangeTypes>> ltmp = null;
+            while (!mIsClosed)
+            {
+                mResetEvent.WaitOne();
+                mResetEvent.Reset();
+                if (mIsClosed) break;
+                mResetCount = 0;
+
+                while (mResetCount<10)
+                {
+                    Thread.Sleep(100);
+                    mResetCount++;
+                }
+
+                if(mFileCach.Count>0)
+                {
+                   
+                    lock(mLocker)
+                    {
+                        ltmp = mFileCach.ToList();
+                        mFileCach.Clear();
+                    }
+
+                    foreach(var vv in ltmp)
+                    {
+                        LoggerService.Service.Info("DataFileMananger", "LogFile " + vv.Value + " add to FileCach！");
+                        ParseLogFile(vv.Key);
+                    }
+                }
+
+
+                if(mHisFileCach.Count>0)
+                {
+                    lock (mLocker)
+                    {
+                        ltmp = this.mHisFileCach.ToList();
+                        mHisFileCach.Clear();
+                    }
+
+                    foreach (var vv in ltmp)
+                    {
+                        var vifno = new System.IO.FileInfo(vv.Key);
+                        if (vv.Value == System.IO.WatcherChangeTypes.Created)
+                        {
+                            LoggerService.Service.Info("DataFileMananger", "HisDataFile " + vv.Key + " is Created & will be add to dataFileCach！");
+                            ParseFileName(vifno);
+                        }
+                        else
+                        {
+                            LoggerService.Service.Info("DataFileMananger", "HisDataFile " + vv.Key + " is changed & will be processed！");
+
+                            var vfile = CheckAndGetDataFile(vv.Key);
+                            if (vfile != null)
+                            {
+                                vfile.UpdateLastDatetime();
+                            }
+                            else
+                            {
+                                ParseFileName(vifno);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -156,6 +265,8 @@ namespace Cdy.Tag
         /// <param name="e"></param>
         private void LogDataWatcher_Changed(object sender, System.IO.FileSystemEventArgs e)
         {
+            mResetEvent.Set();
+            mResetCount = 0;
             if (e.ChangeType == System.IO.WatcherChangeTypes.Deleted)
             {
                 if(mLogFileMaps.ContainsKey(e.FullPath))
@@ -165,44 +276,67 @@ namespace Cdy.Tag
             }
             else 
             {
-                LoggerService.Service.Info("DataFileMananger", "LogFile "+ e.Name + " add to FileCach！");
-                ParseLogFile(e.FullPath);
+                lock (mLocker)
+                {
+                    if (!mFileCach.ContainsKey(e.FullPath))
+                    {
+                        mFileCach.Add(e.FullPath, e.ChangeType);
+                    }
+                }
+                //LoggerService.Service.Info("DataFileMananger", "LogFile "+ e.Name + " add to FileCach！");
+                //ParseLogFile(e.FullPath);
             }
         }
 
         private void HisDataWatcher_Changed(object sender, System.IO.FileSystemEventArgs e)
         {
-            if(e.ChangeType == System.IO.WatcherChangeTypes.Created)
+            mResetEvent.Set();
+            mResetCount = 0;
+            if (e.ChangeType == System.IO.WatcherChangeTypes.Created)
             {
                 lock (mLocker)
                 {
-                    LoggerService.Service.Info("DataFileMananger", "HisDataFile " + e.Name + " is Created & will be add to dataFileCach！");
-                    var vifno = new System.IO.FileInfo(e.FullPath);
-                    if (vifno.Extension == DataFileExtends)
+                    if(!mHisFileCach.ContainsKey(e.FullPath))
                     {
-                        ParseFileName(vifno);
+                        var vifno = new System.IO.FileInfo(e.FullPath);
+                        if (vifno.Extension == DataFileExtends)
+                        {
+                            mHisFileCach.Add(e.FullPath, e.ChangeType);
+                            //ParseFileName(vifno);
+                        }
                     }
+                    //LoggerService.Service.Info("DataFileMananger", "HisDataFile " + e.Name + " is Created & will be add to dataFileCach！");
+                    
                 }
             }
             else if(e.ChangeType == System.IO.WatcherChangeTypes.Changed)
             {
-                LoggerService.Service.Info("DataFileMananger", "HisDataFile " + e.Name + " is changed & will be processed！");
-                var vtmp = new System.IO.FileInfo(e.FullPath);
+               // LoggerService.Service.Info("DataFileMananger", "HisDataFile " + e.Name + " is changed & will be processed！");
+               
                 lock (mLocker)
                 {
-                   
-                    if (vtmp.Extension == DataFileExtends)
+                    if (!mHisFileCach.ContainsKey(e.FullPath))
                     {
-                        var vfile = CheckAndGetDataFile(e.Name);
-                        if (vfile != null)
+                        var vifno = new System.IO.FileInfo(e.FullPath);
+                        if (vifno.Extension == DataFileExtends)
                         {
-                            vfile.UpdateLastDatetime();
-                        }
-                        else
-                        {
-                            ParseFileName(vtmp);
+                            mHisFileCach.Add(e.FullPath, e.ChangeType);
+                            //ParseFileName(vifno);
                         }
                     }
+
+                    //if (vtmp.Extension == DataFileExtends)
+                    //{
+                    //    var vfile = CheckAndGetDataFile(e.Name);
+                    //    if (vfile != null)
+                    //    {
+                    //        vfile.UpdateLastDatetime();
+                    //    }
+                    //    else
+                    //    {
+                    //        ParseFileName(vtmp);
+                    //    }
+                    //}
                 }
             }
         }

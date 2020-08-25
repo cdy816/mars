@@ -317,6 +317,8 @@ namespace Cdy.Tag
                     {
                         vv.Remove(tag);
                     }
+                    tag.Group = group;
+                    CheckAndAddGroup(tag.Group)?.Tags.Add(tag);
                 }
             }
             IsDirty = true;
@@ -508,12 +510,14 @@ namespace Cdy.Tag
             {
                 var grp = Groups[oldgroupFullName];
                 //获取改组的所有子组
+
                 var gg = GetAllChildGroups(grp);
 
                 //从Groups删除目标组以及所有子组
+                var vnames = gg.Select(e => e.FullName).ToList();
                 Groups.Remove(oldgroupFullName);
 
-                foreach (var vv in gg.Select(e => e.FullName))
+                foreach (var vv in vnames)
                 {
                     if (Groups.ContainsKey(vv))
                     {
@@ -577,12 +581,13 @@ namespace Cdy.Tag
                 //获取改组的所有子组
                 var gg = GetAllChildGroups(grp);
 
-                
-
                 //从Groups删除目标组以及所有子组
+
+                var vnames = gg.Select(e => e.FullName).ToList();
+
                 Groups.Remove(oldgroupFullName);
 
-                foreach(var vv  in gg.Select(e=>e.FullName))
+                foreach(var vv  in vnames)
                 {
                     if(Groups.ContainsKey(vv))
                     {
@@ -625,36 +630,36 @@ namespace Cdy.Tag
             return false;
         }
 
-        /// <summary>
-        /// 将变量组移动另一个变量组下
-        /// </summary>
-        /// <param name="groupFullName"></param>
-        /// <param name="newParentFullName"></param>
-        public void ChangeTagGroupParent(string groupFullName, string newParentFullName)
-        {
-            if (Groups.ContainsKey(groupFullName))
-            {
-                var grp = Groups[groupFullName];
-                var gg = GetAllChildGroups(grp);
+        ///// <summary>
+        ///// 将变量组移动另一个变量组下
+        ///// </summary>
+        ///// <param name="groupFullName"></param>
+        ///// <param name="newParentFullName"></param>
+        //public void ChangeTagGroupParent(string groupFullName, string newParentFullName)
+        //{
+        //    if (Groups.ContainsKey(groupFullName))
+        //    {
+        //        var grp = Groups[groupFullName];
+        //        var gg = GetAllChildGroups(grp);
 
-                var parent = Groups.ContainsKey(newParentFullName) ? Groups[newParentFullName] : null;
+        //        var parent = Groups.ContainsKey(newParentFullName) ? Groups[newParentFullName] : null;
 
-                Groups.Remove(grp.FullName);
-                foreach(var vv in gg)
-                {
-                    Groups.Remove(vv.FullName);
-                }
+        //        Groups.Remove(grp.FullName);
+        //        foreach(var vv in gg)
+        //        {
+        //            Groups.Remove(vv.FullName);
+        //        }
 
-                grp.Parent = parent;
+        //        grp.Parent = parent;
 
-                Groups.Add(grp.FullName,grp);
-                foreach(var vv in gg)
-                {
-                    Groups.Add(vv.FullName, vv);
-                }
-                IsDirty = true;
-            }
-        }
+        //        Groups.Add(grp.FullName,grp);
+        //        foreach(var vv in gg)
+        //        {
+        //            Groups.Add(vv.FullName, vv);
+        //        }
+        //        IsDirty = true;
+        //    }
+        //}
 
         /// <summary>
         /// 检查并添加组

@@ -17,8 +17,9 @@ namespace DBInRun
         {
             Console.CancelKeyPress += Console_CancelKeyPress;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
-
             WindowConsolHelper.DisbleQuickEditMode();
+
+            Runner.RunInstance.Init();
 
             Console.WriteLine(Res.Get("WelcomeMsg"));
             PrintLogo();
@@ -88,7 +89,6 @@ namespace DBInRun
                 switch (scmd)
                 {
                     case "exit":
-                        LoggerService.Service.EnableLogger = true;
                         if (Cdy.Tag.Runner.RunInstance.IsStarted)
                         {
                             Cdy.Tag.Runner.RunInstance.Stop();
@@ -97,7 +97,6 @@ namespace DBInRun
                         break;
                     case "start":
                         string dbname = "local";
-                        LoggerService.Service.EnableLogger = true;
                         if (cmd.Length > 1)
                         {
                             Cdy.Tag.Runner.RunInstance.StartAsync(cmd[1]);

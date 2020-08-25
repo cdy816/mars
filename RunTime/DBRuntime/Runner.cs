@@ -77,12 +77,6 @@ namespace Cdy.Tag
         static Runner()
         {
             RDDCManager.Manager.StartTime = DateTime.Now;
-
-            //注册日志
-            ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
-
-            //注册线性转换器
-            ValueConvertManager.manager.Registor(new LinerConvert());
         }
 
         /// <summary>
@@ -144,6 +138,19 @@ namespace Cdy.Tag
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Init()
+        {
+           
+            //注册日志
+            ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
+
+            //注册线性转换器
+            ValueConvertManager.manager.Registor(new LinerConvert());
+        }
 
         /// <summary>
         /// 
@@ -301,6 +308,7 @@ namespace Cdy.Tag
                 DriverManager.Manager.Init(realEnginer);
 
                 HisQueryManager.Instance.Registor(mDatabaseName);
+                HisQueryManager.Instance.StartMonitor();
 
                 await task;
 
@@ -351,6 +359,7 @@ namespace Cdy.Tag
         /// <param name="database"></param>
         public async void StartAsync(string database,int port = 14330)
         {
+            LoggerService.Service.EnableLogger = true;
             LoggerService.Service.Info("Runner", " 数据库 " + database+" 开始启动");
 
             RDDCManager.Manager.Start();
@@ -438,6 +447,8 @@ namespace Cdy.Tag
         /// </summary>
         public  void Stop()
         {
+            LoggerService.Service.EnableLogger = true;
+
             DBRuntime.Api.DataService.Service.Stop();
             hisEnginer.Stop();
             DriverManager.Manager.Stop();

@@ -72,6 +72,28 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public void StartMonitor()
+        {
+            foreach(var vv in mManagers)
+            {
+                vv.Value.Start();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void StopMonitor()
+        {
+            foreach(var vv in mManagers)
+            {
+                vv.Value.Stop();
+            }
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

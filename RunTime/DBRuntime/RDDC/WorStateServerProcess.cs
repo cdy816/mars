@@ -75,11 +75,13 @@ namespace DBRuntime.RDDC
                     break;
                 case ChangeToPrimary:
                     var re = ProcessSwichToPrimary();
-                    Parent.AsyncCallback(client, ToByteBuffer(FunId, re ? (byte)1 : (byte)0));
+                    byte bval = re ? (byte)1 : (byte)0;
+                    Parent.AsyncCallback(client, ToByteBuffer(FunId, bval));
                     break;
                 case ChangeToStandby:
                     re = ProcessSwichToStandby();
-                    Parent.AsyncCallback(client, ToByteBuffer(FunId, re ? (byte)1 : (byte)0));
+                    bval = re ? (byte)1 : (byte)0;
+                    Parent.AsyncCallback(client, ToByteBuffer(FunId, bval));
                     break;
                 case GetState:
                     var state = (byte)RDDCManager.Manager.CurrentState;
@@ -87,7 +89,7 @@ namespace DBRuntime.RDDC
                     break;
             }
 
-            base.ProcessSingleData(client, data);
+            //base.ProcessSingleData(client, data);
         }
 
         /// <summary>

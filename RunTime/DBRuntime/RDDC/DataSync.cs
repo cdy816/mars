@@ -57,6 +57,11 @@ namespace DBRuntime.RDDC
         }
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool Enable { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -78,7 +83,7 @@ namespace DBRuntime.RDDC
         {
             while(!mIsStoped)
             {
-                if (mClient.IsConnected)
+                if (mClient.IsConnected && Enable)
                 {
                     SyncData();
                     Thread.Sleep(100);
@@ -98,9 +103,15 @@ namespace DBRuntime.RDDC
             try
             {
                 var realenginer = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
-                var block = mClient.SyncRealData();
-                var size = block.ReadInt();
-                Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, (realenginer as RealEnginer).Memory, 0, size);
+                if (realenginer != null)
+                {
+                    var block = mClient.SyncRealData();
+                    if (block != null)
+                    {
+                        var size = block.ReadInt();
+                        Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, (realenginer as RealEnginer).Memory, 0, size);
+                    }
+                }
             }
             catch(Exception ex)
             {

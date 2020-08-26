@@ -67,10 +67,13 @@ namespace Cdy.Tag
             get { return mIsConnected; }
             set
             {
-                mIsConnected = value;
-                if (PropertyChanged != null)
+                if (mIsConnected != value)
                 {
-                    Task.Run(() => { PropertyChanged(this, new PropertyChangedEventArgs("IsConnected")); });
+                    mIsConnected = value;
+                    if (PropertyChanged != null)
+                    {
+                        Task.Run(() => { PropertyChanged(this, new PropertyChangedEventArgs("IsConnected")); });
+                    }
                 }
             }
         }

@@ -86,14 +86,30 @@ namespace Cdy.Tag
         {
             RDDCManager.Manager.SwitchWorkStateAction = new Func<WorkState, bool>((state) => 
             {
-                if(state == WorkState.Primary)
+                if (mIsStarted)
                 {
+                    if (state == WorkState.Primary)
+                    {
 
-                    return SwitchToPrimary();
+                        return SwitchToPrimary();
+                    }
+                    else
+                    {
+                        return SwitchToStandby();
+                    }
                 }
                 else
                 {
-                    return SwitchToStandby();
+                    while (!mIsStarted) System.Threading.Thread.Sleep(100);
+                    if (state == WorkState.Primary)
+                    {
+
+                        return SwitchToPrimary();
+                    }
+                    else
+                    {
+                        return SwitchToStandby();
+                    }
                 }
             });
         }
@@ -183,8 +199,6 @@ namespace Cdy.Tag
             CurrentDatabaseVersion = this.mRealDatabase.Version;
             CurrentDatabase = mRealDatabase.Name;
             CurrentDatabaseLastUpdateTime = mRealDatabase.UpdateTime;
-
-            RDDCManager.Manager.Load(mDatabaseName);
 
            sw.Stop();
             LoggerService.Service.Info("LoadDatabase", "load " +mDatabaseName +" take " + sw.ElapsedMilliseconds.ToString() +" ms");
@@ -362,6 +376,8 @@ namespace Cdy.Tag
             LoggerService.Service.EnableLogger = true;
             LoggerService.Service.Info("Runner", " 数据库 " + database+" 开始启动");
 
+
+            RDDCManager.Manager.Load(database);
             RDDCManager.Manager.Start();
 
             var re = await InitAsync(database);

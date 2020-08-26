@@ -736,6 +736,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Start()
         {
+            LoggerService.Service.Info("HisEnginer", "start to Start");
             mIsClosed = false;
             mMegerProcessIsClosed = false;
             LoggerService.Service.Info("Record", "历史变量个数: " + this.mHisTags.Count);
@@ -1133,9 +1134,10 @@ namespace Cdy.Tag
         /// </summary>
         public void Stop()
         {
-            mRecordTimer.Stop();
+            LoggerService.Service.Info("HisEnginer", "start to stop");
             if(mRecordTimer!=null)
             {
+                mRecordTimer.Stop();
                 mRecordTimer.Elapsed -= MRecordTimer_Elapsed;
                 mRecordTimer.Dispose();
                 mRecordTimer = null;

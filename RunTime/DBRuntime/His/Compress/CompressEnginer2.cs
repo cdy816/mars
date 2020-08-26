@@ -149,6 +149,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Start()
         {
+            LoggerService.Service.Info("CompressEnginer", "start to Start");
             mIsClosed = false;
             //Init();
             resetEvent = new ManualResetEvent(false);
@@ -163,6 +164,8 @@ namespace Cdy.Tag
         /// </summary>
         public void Stop()
         {
+            LoggerService.Service.Info("CompressEnginer", "start to stop");
+
             mIsClosed = true;
             resetEvent.Set();
             closedEvent.WaitOne();

@@ -150,9 +150,9 @@ namespace DBRuntime
                 mSync = new DataSync() { Client = mClient };
                 mSync.Start();
 
-                mScanThread = new Thread(ThreadPro);
-                mScanThread.IsBackground = true;
-                mScanThread.Start();
+                //mScanThread = new Thread(ThreadPro);
+                //mScanThread.IsBackground = true;
+                //mScanThread.Start();
 
                 CheckWorkState();
             }

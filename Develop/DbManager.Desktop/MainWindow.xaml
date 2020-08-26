@@ -296,7 +296,7 @@
                     </TreeView.InputBindings>
                     <TreeView.Resources>
 
-                        <Style TargetType="{x:Type TreeViewItem}" >
+                        <!--<Style TargetType="{x:Type TreeViewItem}" >
                             <Setter Property="TreeViewItem.IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
                             <Setter Property="TreeViewItem.IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
                             <Setter Property="Control.FontWeight" Value="Normal" />
@@ -304,7 +304,7 @@
                             <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
                             <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
                             <Setter Property="Padding" Value="1,0,0,0"/>
-                        </Style>
+                        </Style>-->
 
                         <ContextMenu x:Key="groupMenu">
                             <MenuItem Header="{local:ResMarker Add}"  Command="{Binding AddCommand}" />

@@ -37,6 +37,12 @@ namespace DBRuntime
 
         private object mLockObj = new object();
 
+        private WorkState mCurrentState = WorkState.Unknow;
+
+        private bool mIsClosed = false;
+
+        private Thread mScanThread;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -45,6 +51,9 @@ namespace DBRuntime
 
         #region ... Constructor...
 
+        /// <summary>
+        /// 
+        /// </summary>
         public RDDCManager()
         {
 
@@ -62,7 +71,25 @@ namespace DBRuntime
         /// <summary>
         /// 当前状态
         /// </summary>
-        public WorkState CurrentState { get; set; } = WorkState.Unknow;
+        public WorkState CurrentState 
+        {
+            get { return mCurrentState; }
+            set
+            {
+                mCurrentState = value;
+                if (mSync != null)
+                {
+                    if (value == WorkState.Standby)
+                    {
+                        mSync.Enable = true;
+                    }
+                    else
+                    {
+                        mSync.Enable = false;
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// 
@@ -122,6 +149,11 @@ namespace DBRuntime
 
                 mSync = new DataSync() { Client = mClient };
                 mSync.Start();
+
+                //mScanThread = new Thread(ThreadPro);
+                //mScanThread.IsBackground = true;
+                //mScanThread.Start();
+
                 CheckWorkState();
             }
             else
@@ -150,11 +182,29 @@ namespace DBRuntime
         /// </summary>
         public void Stop()
         {
+            mIsClosed = true;
             mSync.Stop();
             mServer.Stop();
             mClient.PropertyChanged -= MClient_PropertyChanged;
             mClient.Close();
         }
+
+        private void ThreadPro()
+        {
+            while (!mIsClosed)
+            {
+                if (mClient.NeedReConnected)
+                {
+                    mClient.Connect(RemoteIp,Port);
+                    Thread.Sleep(500);
+                }
+                else
+                {
+                    Thread.Sleep(1000);
+                }
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -164,7 +214,9 @@ namespace DBRuntime
             if (!mClient.IsConnected)
             {
                 if(CurrentState != WorkState.Primary)
-                SwitchTo(WorkState.Primary);
+                {
+                    SwitchTo(WorkState.Primary);
+                }
             }
             else
             {
@@ -207,6 +259,9 @@ namespace DBRuntime
                     CurrentState = WorkState.Standby;
                 }
             }
+
+            LoggerService.Service.Info("RDDCManager", "running in " + CurrentState.ToString(), ConsoleColor.Cyan);
+
         }
 
         /// <summary>
@@ -219,7 +274,7 @@ namespace DBRuntime
             {
                 if (state == WorkState.Standby)
                 {
-                    if(mClient.SwitchToPrimary().Value)
+                    if(mClient.SwitchToPrimary(60000).Value)
                     {
                        return SwitchTo(WorkState.Standby);
                     }
@@ -230,7 +285,7 @@ namespace DBRuntime
                 }
                 else
                 {
-                    if(mClient.SwitchToStandby().Value)
+                    if(mClient.SwitchToStandby(60000).Value)
                     {
                         return SwitchTo(WorkState.Primary);
                     }
@@ -261,6 +316,7 @@ namespace DBRuntime
         /// <returns></returns>
         public bool SwitchTo(WorkState state)
         {
+            if (CurrentState == WorkState.Switching) return true;
             lock (mLockObj)
             {
                 var olds = CurrentState;

@@ -330,15 +330,17 @@ namespace Cdy.Tag
         internal void Registor(IChannelHandlerContext channel)
         {
             string sname = GetClientId(channel);
-            
 
-            if (!mClients.ContainsKey(sname))
+            lock (mClients)
             {
-                mClients[sname] = channel;
-            }
-            else
-            {
-                mClients.Add(sname, channel);
+                if (!mClients.ContainsKey(sname))
+                {
+                    mClients[sname] = channel;
+                }
+                else
+                {
+                    mClients.Add(sname, channel);
+                }
             }
             OnClientConnected(sname);
         }

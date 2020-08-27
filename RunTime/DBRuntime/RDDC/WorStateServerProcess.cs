@@ -7,6 +7,7 @@
 //  种道洋
 //==============================================================
 
+using Cdy.Tag;
 using DBRuntime.Api;
 using DotNetty.Buffers;
 using System;
@@ -74,19 +75,21 @@ namespace DBRuntime.RDDC
                     break;
                 case ChangeToPrimary:
                     var re = ProcessSwichToPrimary();
-                    Parent.AsyncCallback(client, ToByteBuffer(GetStartTime, re ? 1 : 0));
+                    byte bval = re ? (byte)1 : (byte)0;
+                    Parent.AsyncCallback(client, ToByteBuffer(FunId, bval));
                     break;
                 case ChangeToStandby:
                     re = ProcessSwichToStandby();
-                    Parent.AsyncCallback(client, ToByteBuffer(GetStartTime, re ? 1 : 0));
+                    bval = re ? (byte)1 : (byte)0;
+                    Parent.AsyncCallback(client, ToByteBuffer(FunId, bval));
                     break;
                 case GetState:
                     var state = (byte)RDDCManager.Manager.CurrentState;
-                    Parent.AsyncCallback(client, ToByteBuffer(GetStartTime, state));
+                    Parent.AsyncCallback(client, ToByteBuffer(FunId, state));
                     break;
             }
 
-            base.ProcessSingleData(client, data);
+            //base.ProcessSingleData(client, data);
         }
 
         /// <summary>
@@ -103,7 +106,15 @@ namespace DBRuntime.RDDC
         /// <returns></returns>
         private bool ProcessSwichToPrimary()
         {
-            return RDDCManager.Manager.SwitchTo(Cdy.Tag.WorkState.Primary);
+            try
+            {
+                LoggerService.Service.Info("WorkStateServer", "Receive remote call to switch to primary,Start to switch!", ConsoleColor.Yellow);
+                return RDDCManager.Manager.SwitchTo(Cdy.Tag.WorkState.Primary);
+            }
+            finally
+            {
+                LoggerService.Service.Info("WorkStateServer", "Completely to switch", ConsoleColor.Yellow);
+            }
         }
 
         /// <summary>
@@ -112,7 +123,15 @@ namespace DBRuntime.RDDC
         /// <returns></returns>
         private bool ProcessSwichToStandby()
         {
-            return RDDCManager.Manager.SwitchTo(Cdy.Tag.WorkState.Standby);
+            try
+            {
+                LoggerService.Service.Info("WorkStateServer", "Receive remote call to switch to standby!", ConsoleColor.Yellow);
+                return RDDCManager.Manager.SwitchTo(Cdy.Tag.WorkState.Standby);
+            }
+            finally
+            {
+                LoggerService.Service.Info("WorkStateServer", "Completely to switch", ConsoleColor.Yellow);
+            }
         }
 
         #endregion ...Methods...

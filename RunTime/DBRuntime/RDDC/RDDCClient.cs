@@ -9,6 +9,7 @@
 
 using Cdy.Tag;
 using DotNetty.Buffers;
+using DotNetty.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -68,6 +69,8 @@ namespace DBRuntime.RDDC
         private ManualResetEvent mRealDataSyncEvent = new ManualResetEvent(false);
 
         private IByteBuffer mRealDataSyncData;
+
+        private object mWorkStateLockObj = new object();
 
         #endregion ...Variables...
 
@@ -153,21 +156,25 @@ namespace DBRuntime.RDDC
         /// <returns></returns>
         public DateTime? GetStartTime(int timeout = 5000)
         {
-            var mb = GetBuffer(WorkStateFun,1);
-            mb.WriteByte(GetStartTimeFun);
-            mWorkStateEvent.Reset();
-            Send(mb);
-            try
+            lock (mWorkStateLockObj)
             {
-                if (mWorkStateEvent.WaitOne(timeout))
+                var mb = GetBuffer(WorkStateFun, 1);
+                mb.WriteByte(GetStartTimeFun);
+                mWorkStateEvent.Reset();
+                Send(mb);
+                try
                 {
-                    return DateTime.FromBinary(mWorkStateData.ReadLong());
+                    if (mWorkStateEvent.WaitOne(timeout))
+                    {
+                        return DateTime.FromBinary(mWorkStateData.ReadLong());
+                    }
+                }
+                finally
+                {
+
                 }
             }
-            finally
-            {
 
-            }
             return null;
         }
 
@@ -178,20 +185,23 @@ namespace DBRuntime.RDDC
         /// <returns></returns>
         public WorkState? GetWorkState(int timeout = 5000)
         {
-            var mb = GetBuffer(WorkStateFun, 1);
-            mb.WriteByte(GetStateFun);
-            mWorkStateEvent.Reset();
-            Send(mb);
-            try
+            lock (mWorkStateLockObj)
             {
-                if (mWorkStateEvent.WaitOne(timeout))
+                var mb = GetBuffer(WorkStateFun, 1);
+                mb.WriteByte(GetStateFun);
+                mWorkStateEvent.Reset();
+                Send(mb);
+                try
                 {
-                    return (WorkState)mWorkStateData.ReadByte();
+                    if (mWorkStateEvent.WaitOne(timeout))
+                    {
+                        return (WorkState)mWorkStateData.ReadByte();
+                    }
                 }
-            }
-            finally
-            {
+                finally
+                {
 
+                }
             }
             return null;
         }
@@ -203,20 +213,23 @@ namespace DBRuntime.RDDC
         /// <returns></returns>
         public bool? SwitchToPrimary(int timeout = 5000)
         {
-            var mb = GetBuffer(WorkStateFun, 1);
-            mb.WriteByte(ChangeToPrimaryFun);
-            mWorkStateEvent.Reset();
-            Send(mb);
-            try
+            lock (mWorkStateLockObj)
             {
-                if (mWorkStateEvent.WaitOne(timeout))
+                var mb = GetBuffer(WorkStateFun, 1);
+                mb.WriteByte(ChangeToPrimaryFun);
+                mWorkStateEvent.Reset();
+                Send(mb);
+                try
                 {
-                    return mWorkStateData.ReadByte()>0;
+                    if (mWorkStateEvent.WaitOne(timeout))
+                    {
+                        return mWorkStateData.ReadByte() > 0;
+                    }
                 }
-            }
-            finally
-            {
+                finally
+                {
 
+                }
             }
             return false;
         }
@@ -229,20 +242,23 @@ namespace DBRuntime.RDDC
         /// <returns></returns>
         public bool? SwitchToStandby(int timeout = 5000)
         {
-            var mb = GetBuffer(WorkStateFun, 1);
-            mb.WriteByte(ChangeToStandbyFun);
-            mWorkStateEvent.Reset();
-            Send(mb);
-            try
+            lock (mWorkStateLockObj)
             {
-                if (mWorkStateEvent.WaitOne(timeout))
+                var mb = GetBuffer(WorkStateFun, 1);
+                mb.WriteByte(ChangeToStandbyFun);
+                mWorkStateEvent.Reset();
+                Send(mb);
+                try
                 {
-                    return mWorkStateData.ReadByte() > 0;
+                    if (mWorkStateEvent.WaitOne(timeout))
+                    {
+                        return mWorkStateData.ReadByte() > 0;
+                    }
                 }
-            }
-            finally
-            {
+                finally
+                {
 
+                }
             }
             return false;
         }

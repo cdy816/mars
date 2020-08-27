@@ -805,18 +805,18 @@ namespace Cdy.Tag
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="memory"></param>
-        private void CheckMemoryIsReady(MarshalMemoryBlock memory)
-        {
-            while (memory.IsBusy())
-            {
-                LoggerService.Service.Info("Record", "记录出现阻塞 " + memory.Name);
-                System.Threading.Thread.Sleep(1);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        //private void CheckMemoryIsReady(MarshalMemoryBlock memory)
+        //{
+        //    while (memory.IsBusy())
+        //    {
+        //        LoggerService.Service.Info("Record", "记录出现阻塞 " + memory.Name);
+        //        System.Threading.Thread.Sleep(1);
+        //    }
+        //}
 
         /// <summary>
         /// 
@@ -1152,6 +1152,10 @@ namespace Cdy.Tag
             }
             SubmitLastDataToSave();
             if (LogManager != null) LogManager.Stop();
+            
+            mLastProcessTick = -1;
+            mForceSubmiteToCompress = false;
+            mNeedSnapAllTag = false;
         }
 
         /// <summary>

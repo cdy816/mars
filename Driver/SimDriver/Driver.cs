@@ -109,6 +109,7 @@ namespace SimDriver
         /// <returns></returns>
         public bool Start(IRealTagProduct tagQuery)
         {
+            mIsClosed = false;
             mTagService = tagQuery;
             InitTagCach(tagQuery);
             mScanThread = new Thread(ScanThreadPro);

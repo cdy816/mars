@@ -172,6 +172,12 @@ namespace Cdy.Tag
 
             resetEvent.Dispose();
             closedEvent.Dispose();
+
+            foreach(var vv in mTargetMemorys)
+            {
+                while (vv.Value.IsBusy())
+                    vv.Value.DecRef();
+            }
         }
 
         /// <summary>

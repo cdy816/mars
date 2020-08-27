@@ -43,6 +43,8 @@ namespace DBRuntime
 
         private Thread mScanThread;
 
+        private int mNoValueCount = 0;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -195,8 +197,8 @@ namespace DBRuntime
             {
                 if (mClient.NeedReConnected)
                 {
-                    //mClient.Connect(RemoteIp,Port);
-                    //Thread.Sleep(1000);
+                    mClient.Connect(RemoteIp, Port);
+                    Thread.Sleep(1000);
                 }
                 else if(mClient.IsConnected)
                 {
@@ -213,6 +215,7 @@ namespace DBRuntime
                 var state = mClient.GetWorkState();
                 if (state.HasValue)
                 {
+                    mNoValueCount = 0;
                     if (state.Value == WorkState.Primary && this.CurrentState == WorkState.Primary)
                     {
                         var time = mClient.GetStartTime();
@@ -231,6 +234,10 @@ namespace DBRuntime
                             SwitchTo(cc);
                         }
                     }
+                }
+                else
+                {
+                    mNoValueCount++;
                 }
             }
             catch

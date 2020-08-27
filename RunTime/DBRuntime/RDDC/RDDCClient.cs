@@ -97,29 +97,18 @@ namespace DBRuntime.RDDC
         {
             datas.Retain();
             //收到异步请求回调数据
-            if (datas.ReadableBytes == 1)
+            switch (fun)
             {
-                if (datas.ReadByte() == byte.MaxValue)
-                    return;
-                else
-                {
-                    Debug.Print("DbClient ProcessData Invailed data");
-                }
-            }
-            else
-            {
-                switch (fun)
-                {
-                    case WorkStateFun:
-                        mWorkStateData = datas;
-                        mWorkStateEvent.Set();
-                        break;
-                    case RealDataSyncFun:
-                        mRealDataSyncData = datas;
-                        this.mRealDataSyncEvent.Set();
-                        break;
-                }
-
+                case WorkStateFun:
+                    mWorkStateData = datas;
+                    mWorkStateEvent.Set();
+                    break;
+                case RealDataSyncFun:
+                    mRealDataSyncData = datas;
+                    this.mRealDataSyncEvent.Set();
+                    break;
+                case byte.MaxValue:
+                    break;
             }
 
             base.ProcessData(fun, datas);

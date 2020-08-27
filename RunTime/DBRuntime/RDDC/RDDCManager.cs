@@ -150,9 +150,9 @@ namespace DBRuntime
                 mSync = new DataSync() { Client = mClient };
                 mSync.Start();
 
-                //mScanThread = new Thread(ThreadPro);
-                //mScanThread.IsBackground = true;
-                //mScanThread.Start();
+                mScanThread = new Thread(ThreadPro);
+                mScanThread.IsBackground = true;
+                mScanThread.Start();
 
                 CheckWorkState();
             }
@@ -195,16 +195,49 @@ namespace DBRuntime
             {
                 if (mClient.NeedReConnected)
                 {
-                    mClient.Connect(RemoteIp,Port);
-                    Thread.Sleep(500);
+                    //mClient.Connect(RemoteIp,Port);
+                    //Thread.Sleep(1000);
                 }
-                else
+                else if(mClient.IsConnected)
                 {
+                    CheckRunWorkState();
                     Thread.Sleep(1000);
                 }
             }
         }
 
+        private void CheckRunWorkState()
+        {
+            try
+            {
+                var state = mClient.GetWorkState();
+                if (state.HasValue)
+                {
+                    if (state.Value == WorkState.Primary && this.CurrentState == WorkState.Primary)
+                    {
+                        var time = mClient.GetStartTime();
+                        var cc = time > this.StartTime ? WorkState.Primary : WorkState.Standby;
+                        if (cc == WorkState.Standby)
+                        {
+                            SwitchTo(cc);
+                        }
+                    }
+                    else if (state.Value == WorkState.Standby && this.CurrentState == WorkState.Standby)
+                    {
+                        var time = mClient.GetStartTime();
+                        var cc = time > this.StartTime ? WorkState.Primary : WorkState.Standby;
+                        if (cc == WorkState.Primary)
+                        {
+                            SwitchTo(cc);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+        }
 
         /// <summary>
         /// 
@@ -317,6 +350,9 @@ namespace DBRuntime
         public bool SwitchTo(WorkState state)
         {
             if (CurrentState == WorkState.Switching) return true;
+
+            LoggerService.Service.Warn("RDDCManager", "will switch to "+ state);
+
             lock (mLockObj)
             {
                 var olds = CurrentState;

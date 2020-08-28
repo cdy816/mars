@@ -61,7 +61,7 @@ namespace Cdy.Tag
             }
             else if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-
+                SetThreadAffinityMaskLinux(MaskFromIds(cpus));
             }
             else
             {
@@ -81,7 +81,9 @@ namespace Cdy.Tag
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-
+                //ulong re = 0;
+                //LinuxNative.pthread_getaffinity_np(LinuxNative.pthread_self(), ref re);
+                //return (uint)re;
             }
             else
             {
@@ -113,6 +115,16 @@ namespace Cdy.Tag
             return threadAffinityMask;
 
             //return SetThreadAffinityMask(Win32Native.GetCurrentThread(), mask);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mask"></param>
+        public static void SetThreadAffinityMaskLinux(ulong mask)
+        {
+            LinuxNative.pthread_setaffinity_np(LinuxNative.pthread_self(),8,ref mask);
         }
 
         /// <summary>
@@ -165,6 +177,38 @@ namespace Cdy.Tag
 
         #endregion ...Interfaces...
     }
+
+    public static class LinuxNative
+    {
+        private const string pthread = "libpthread.so.0";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="threadHandel"></param>
+        /// <param name="cpusize"></param>
+        /// <param name="cpuset"></param>
+        /// <returns></returns>
+        [DllImport(pthread, CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern int pthread_setaffinity_np(IntPtr threadHandel, int cpusize,ref UInt64 cpuset);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="threadHandel"></param>
+        /// <param name="cpuset"></param>
+        /// <returns></returns>
+        [DllImport(pthread, CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern int pthread_getaffinity_np(IntPtr threadHandel,ref UInt64 cpuset);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [DllImport(pthread, CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern IntPtr pthread_self();
+    }
+
 
     /// <summary>
     ///     Win32Native Class

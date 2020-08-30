@@ -920,6 +920,64 @@ namespace DBInStudio.Desktop
                         mHisTagMode.TagType = Cdy.Tag.TagType.UShort;
                     }
                     break;
+
+                case Cdy.Tag.TagType.IntPoint:
+                    ntag = new Cdy.Tag.IntPointTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    if (mHisTagMode != null)
+                    {
+                        mHisTagMode.TagType = Cdy.Tag.TagType.IntPoint;
+                    }
+                    break;
+                case Cdy.Tag.TagType.IntPoint3:
+                    ntag = new Cdy.Tag.IntPoint3Tag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    if (mHisTagMode != null)
+                    {
+                        mHisTagMode.TagType = Cdy.Tag.TagType.IntPoint3;
+                    }
+                    break;
+                case Cdy.Tag.TagType.UIntPoint:
+                    ntag = new Cdy.Tag.UIntPointTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    if (mHisTagMode != null)
+                    {
+                        mHisTagMode.TagType = Cdy.Tag.TagType.UIntPoint;
+                    }
+                    break;
+                case Cdy.Tag.TagType.UIntPoint3:
+                    ntag = new Cdy.Tag.UIntPoint3Tag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    if (mHisTagMode != null)
+                    {
+                        mHisTagMode.TagType = Cdy.Tag.TagType.UIntPoint3;
+                    }
+                    break;
+                case Cdy.Tag.TagType.LongPoint:
+                    ntag = new Cdy.Tag.LongPointTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    if (mHisTagMode != null)
+                    {
+                        mHisTagMode.TagType = Cdy.Tag.TagType.LongPoint;
+                    }
+                    break;
+                case Cdy.Tag.TagType.LongPoint3:
+                    ntag = new Cdy.Tag.LongPoint3Tag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    if (mHisTagMode != null)
+                    {
+                        mHisTagMode.TagType = Cdy.Tag.TagType.LongPoint3;
+                    }
+                    break;
+                case Cdy.Tag.TagType.ULongPoint:
+                    ntag = new Cdy.Tag.ULongPointTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    if (mHisTagMode != null)
+                    {
+                        mHisTagMode.TagType = Cdy.Tag.TagType.ULongPoint;
+                    }
+                    break;
+                case Cdy.Tag.TagType.ULongPoint3:
+                    ntag = new Cdy.Tag.ULongPoint3Tag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group };
+                    if (mHisTagMode != null)
+                    {
+                        mHisTagMode.TagType = Cdy.Tag.TagType.ULongPoint3;
+                    }
+                    break;
+
                 default:
                     break;
             }

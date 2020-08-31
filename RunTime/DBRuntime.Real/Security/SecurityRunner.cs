@@ -31,9 +31,10 @@ namespace Cdy.Tag
 
 
         private Dictionary<long, DateTime> mLastLogin2 = new Dictionary<long, DateTime>();
+
         private Dictionary<long, string> mUseIdMap2 = new Dictionary<long, string>();
 
-        public const int Timeout = 10;
+        public  int mTimeout = 10;
 
         private bool mIsClosed = false;
 
@@ -67,9 +68,22 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public int TimeOut
+        {
+            get
+            {
+                return mTimeout;
+            }
+        }
+
+
         #endregion ...Properties...
 
         #region ... Methods    ...
+
         /// <summary>
         /// 
         /// </summary>
@@ -86,7 +100,6 @@ namespace Cdy.Tag
         public void Stop()
         {
             mIsClosed = true;
-            
         }
 
         /// <summary>
@@ -103,7 +116,7 @@ namespace Cdy.Tag
                 {
                     foreach (var vv in mLastLogin)
                     {
-                        if ((dt - vv.Value).TotalMinutes >= Timeout)
+                        if ((dt - vv.Value).TotalMinutes >= mTimeout)
                         {
                             ltmp.Add(vv.Key);
                         }

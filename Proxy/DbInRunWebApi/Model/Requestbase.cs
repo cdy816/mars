@@ -53,10 +53,16 @@ namespace DbInRunWebApi.Model
         #endregion ...Constructor...
 
         #region ... Properties ...
+
         /// <summary>
         /// 
         /// </summary>
-        public DateTime Time { get; set; }
+        public long LoginTime { get; set; }
+
+        /// <summary>
+        /// 超时时间
+        /// </summary>
+        public long TimeOut { get; set; }
 
         /// <summary>
         /// 结果
@@ -100,6 +106,11 @@ namespace DbInRunWebApi.Model
         /// 
         /// </summary>
         public string Token { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Time { get; set; }
 
         #endregion ...Properties...
 

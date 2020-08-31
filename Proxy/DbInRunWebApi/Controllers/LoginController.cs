@@ -16,9 +16,9 @@ namespace DbInRunWebApi.Controllers
         [HttpPost("TryLogin")]
         public LoginResponse Login([FromBody] LoginUser user)
         {
-            string  Token = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().Login(user.UserName, user.Password);
-            //return null;
-            return new LoginResponse() { Token = Token,Result = !string.IsNullOrEmpty(Token), Time=DateTime.Now };
+            var service = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>();
+            string Token = service.Login(user.UserName, user.Password);
+            return new LoginResponse() { Token = Token, Result = !string.IsNullOrEmpty(Token), LoginTime =  DateTime.UtcNow.ToBinary(),TimeOut = service.TimeOut };
         }
 
         /// <summary>
@@ -29,7 +29,17 @@ namespace DbInRunWebApi.Controllers
         [HttpPost("Hart")]
         public bool Hart([FromBody] Requestbase token)
         {
-           // return true;
+            if (string.IsNullOrEmpty(token.Time))
+            {
+                return false;
+            }
+            long ltmp = long.Parse(token.Time);
+
+            if ((DateTime.UtcNow - DateTime.FromBinary(ltmp)).TotalSeconds > Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().TimeOut)
+            {
+                return false;
+            }
+
             return Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().FreshUserId(token.Token);
         }
 
@@ -41,7 +51,6 @@ namespace DbInRunWebApi.Controllers
         [HttpPost("Logout")]
         public bool Logout([FromBody] Requestbase token)
         {
-            //return true;
             return Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().Logout(token.Token);
         }
 

@@ -70,6 +70,15 @@ namespace DBGrpcApi
             }
         }
 
+        /// <summary>
+        /// 超时时间
+        /// </summary>
+        public int TimeOut { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime LoginTime { get; set; }
 
         #endregion ...Properties...
 
@@ -95,8 +104,6 @@ namespace DBGrpcApi
 
                 mSecurityClient = new Security.SecurityClient(grpcChannel);
 
-                
-
             }
             catch (Exception ex)
             {
@@ -118,7 +125,10 @@ namespace DBGrpcApi
             {
                 try
                 {
-                    mLoginId = mSecurityClient.Login(new LoginRequest() { Name = username, Password = password }).Token;
+                    var re = mSecurityClient.Login(new LoginRequest() { Name = username, Password = password });
+                    TimeOut = re.Timeout;
+                    LoginTime = DateTime.FromBinary(re.Time).ToLocalTime();
+                    mLoginId = re.Token;
                 }
                 catch
                 {

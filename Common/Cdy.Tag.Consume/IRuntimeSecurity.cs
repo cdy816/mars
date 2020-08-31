@@ -33,6 +33,11 @@ namespace Cdy.Tag
 
         #region ... Properties ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        int TimeOut { get; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...

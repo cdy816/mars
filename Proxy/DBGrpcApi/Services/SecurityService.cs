@@ -24,7 +24,7 @@ namespace DBGrpcApi
         public override Task<LoginReply> Login(LoginRequest request, ServerCallContext context)
         {
             string Token = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().Login(request.Name, request.Password);
-            return Task.FromResult(new LoginReply() { Token = Token });
+            return Task.FromResult(new LoginReply() { Token = Token, Time = DateTime.UtcNow.ToBinary(), Timeout = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().TimeOut });
         }
 
 
@@ -49,6 +49,13 @@ namespace DBGrpcApi
         /// <returns></returns>
         public override Task<HartReply> Hart(HartRequest request, ServerCallContext context)
         {
+
+            var dt = DateTime.FromBinary(request.Time);
+            if ((DateTime.UtcNow - dt).TotalSeconds > Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().TimeOut)
+            {
+                return Task.FromResult(new HartReply() { Result = false });
+            }
+
             Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().FreshUserId(request.Token);
             return Task.FromResult(new HartReply() { Result = true });
         }

@@ -986,6 +986,15 @@ namespace DBInStudio.Desktop.ViewModel
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        public bool CanContinueLoadData()
+        {
+            return mTotalPageNumber < 0 || mCurrentPageIndex < mTotalPageNumber;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private void ContinueQueryTags()
         {
             if (mIsBusy) return;

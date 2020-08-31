@@ -682,7 +682,7 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Database is changed,do you want to save? 的本地化字符串。
+        ///   查找类似 Data is changed,do you want to save? 的本地化字符串。
         /// </summary>
         internal static string saveprompt {
             get {

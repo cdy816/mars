@@ -327,7 +327,7 @@
     <value>save failed!</value>
   </data>
   <data name="saveprompt" xml:space="preserve">
-    <value>Database is changed,do you want to save?</value>
+    <value>Data is changed,do you want to save?</value>
   </data>
   <data name="SaveSucessful" xml:space="preserve">
     <value>save sucessfull!</value>

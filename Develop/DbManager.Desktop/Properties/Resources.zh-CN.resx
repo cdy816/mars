@@ -197,7 +197,7 @@
     <value>导入</value>
   </data>
   <data name="ImportErroMsg" xml:space="preserve">
-    <value>Some erro has happened,do you see erro.txt for detail?</value>
+    <value>导入过程发生错误,是否要查看错误日志: erro.txt?</value>
   </data>
   <data name="ImportMode" xml:space="preserve">
     <value>导入模式</value>

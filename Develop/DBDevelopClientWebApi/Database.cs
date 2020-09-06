@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DBDevelopService.Controllers
+namespace DBDevelopClientWebApi
 {
     public class Database
     {
@@ -36,6 +36,4 @@ namespace DBDevelopService.Controllers
         /// </summary>
         public Cdy.Tag.HisTag HisTag { get; set; }
     }
-
-
 }

@@ -79,14 +79,14 @@ namespace DBDevelopService
             sip += ":" + port;
             mhost = CreateHostBuilder(sip).Build();
            
-            LoggerService.Service.Info("DBService", "启动服务:"+ sip);
+            LoggerService.Service.Info("GrpcDBService", "启动服务:"+ sip);
             try
             {
                 await mhost.StartAsync();
             }
             catch(Exception ex)
             {
-                LoggerService.Service.Erro("DBService", ex.Message);
+                LoggerService.Service.Erro("GrpcDBService", ex.Message);
             }
         }
 
@@ -95,7 +95,7 @@ namespace DBDevelopService
         /// </summary>
         public async void StopAsync()
         {
-            LoggerService.Service.Info("DBService", "关闭服务:");
+            LoggerService.Service.Info("GrpcDBService", "关闭服务:");
             await mhost.StopAsync();
             mhost.Dispose();
         }

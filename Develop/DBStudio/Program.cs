@@ -10,6 +10,8 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
+using System.Reflection;
+using System.Xml.Linq;
 
 namespace DBStudio
 {
@@ -22,15 +24,90 @@ namespace DBStudio
 
         static object mLockObj = new object();
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public class Config
+        {
+
+            #region ... Variables  ...
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public static Config Instance = new Config();
+
+            #endregion ...Variables...
+
+            #region ... Events     ...
+
+            #endregion ...Events...
+
+            #region ... Constructor...
+
+
+            #endregion ...Constructor...
+
+            #region ... Properties ...
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool IsWebApiEnable { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public int WebApiPort { get; set; } = 9000;
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool IsGrpcEnable { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public int GrpcPort { get; set; } = 5001;
+
+            #endregion ...Properties...
+
+            #region ... Methods    ...
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public void Load()
+            {
+                string spath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.FullName), "DbInStudioServer.cfg");
+                if(System.IO.File.Exists(spath))
+                {
+                    var xxx = XElement.Load(spath);
+                    this.IsWebApiEnable = bool.Parse(xxx.Attribute("IsWebApiEnable")?.Value);
+                    this.IsGrpcEnable = bool.Parse(xxx.Attribute("IsGrpcEnable")?.Value);
+                    this.WebApiPort = int.Parse(xxx.Attribute("WebApiPort")?.Value);
+                    this.GrpcPort = int.Parse(xxx.Attribute("GrpcPort")?.Value);
+                }
+            }
+
+            #endregion ...Methods...
+
+            #region ... Interfaces ...
+
+            #endregion ...Interfaces...
+        }
+
+
         static void Main(string[] args)
         {
 
             Program pg = new Program();
+            Config.Instance.Load();
 
             ServiceLocator.Locator.Registor(typeof(DBDevelopService.IDatabaseManager), pg);
 
-            int port = 5001;
-            int webPort = 9000;
+            int port = Config.Instance.GrpcPort;
+            int webPort = Config.Instance.WebApiPort;
             if (args.Length > 0)
             {
                 port = int.Parse(args[0]);
@@ -47,8 +124,10 @@ namespace DBStudio
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             LogoHelper.Print();
-            DBDevelopService.Service.Instanse.Start(port, webPort);
-            //OutByLine("", "输入exit退出服务");
+            DBDevelopService.Service.Instanse.Start(port, webPort,Config.Instance.IsGrpcEnable,Config.Instance.IsWebApiEnable);
+
+            Thread.Sleep(100);
+
             OutByLine("", Res.Get("HelpMsg"));
             while (!mIsExited)
             {

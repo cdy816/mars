@@ -448,7 +448,7 @@ namespace DBDevelopService
                 var usergroup = db.Security.User.GetUserGroup(request.Name);
                 if(usergroup!=null)
                 {
-                    db.Security.User.RemoveUserGroup(usergroup.Name);
+                    db.Security.User.RemoveUserGroup(usergroup.FullName);
                 }
             }
             return Task.FromResult(new BoolResultReplay() { Result = true });
@@ -1413,7 +1413,7 @@ namespace DBDevelopService
         }
 
         /// <summary>
-        /// 
+        /// 清除某个变量组内所有变量
         /// </summary>
         /// <param name="request"></param>
         /// <param name="context"></param>

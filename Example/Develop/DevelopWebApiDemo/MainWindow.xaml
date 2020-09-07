@@ -14,6 +14,12 @@
         <Label Content="服务器:" HorizontalAlignment="Left" Margin="12,0,0,0" VerticalAlignment="Center"/>
         <TextBox x:Name="serverIp" HorizontalAlignment="Left" Margin="69,0,0,0" Text="http://localhost:9000" TextWrapping="Wrap" VerticalAlignment="Center" Width="558"/>
         <Button x:Name="loginb" Content="登录" HorizontalAlignment="Left" Margin="647,0,0,0" VerticalAlignment="Center" Width="72" Click="loginb_Click"/>
+        <Button x:Name="getTagGroup" Content="获取变量组" HorizontalAlignment="Left" Margin="23,47,0,0" VerticalAlignment="Top" Width="72" Click="getTagGroup_Click"  Grid.Row="1"/>
+        <Button x:Name="getTag" Content="获取变量" HorizontalAlignment="Left" Margin="23,85,0,0" VerticalAlignment="Top" Width="72" Click="getTag_Click" Grid.Row="1"/>
+        <ComboBox x:Name="groupList" SelectionChanged="groupList_SelectionChanged" HorizontalAlignment="Left" Margin="109,45,0,0" Grid.Row="1" VerticalAlignment="Top" Width="518"/>
+        <Button x:Name="getDatabase" Content="获取数据库" HorizontalAlignment="Left" Margin="23,9,0,0" VerticalAlignment="Top" Width="72" Click="getDatabase_Click"  Grid.Row="1"/>
+        <ComboBox SelectionChanged="databaseList_SelectionChanged" x:Name="databaseList" HorizontalAlignment="Left" Margin="109,8,0,0" Grid.Row="1" VerticalAlignment="Top" Width="518"/>
+        <ComboBox x:Name="taglist"  HorizontalAlignment="Left" Margin="109,84,0,0" Grid.Row="1" VerticalAlignment="Top" Width="518"/>
 
     </Grid>
 </Window>

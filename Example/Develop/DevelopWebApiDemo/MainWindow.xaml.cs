@@ -21,6 +21,8 @@ namespace DevelopWebApiDemo
     public partial class MainWindow : Window
     {
         DBDevelopClientWebApi.DevelopServiceHelper mHelper;
+        private string mCurrentDatabase="";
+        private string mTagGroup = "";
         public MainWindow()
         {
             InitializeComponent();
@@ -31,6 +33,57 @@ namespace DevelopWebApiDemo
         {
             mHelper.Server = serverIp.Text;
             mHelper.Login("Admin", "Admin");
+        }
+
+        private void getTag_Click(object sender, RoutedEventArgs e)
+        {
+           var tags =  mHelper.GetTagByGroup(mCurrentDatabase, mTagGroup, 0);
+            if(tags!=null)
+            {
+                taglist.ItemsSource = tags.Select(e => e.Item1.Name).ToList();
+            }
+        }
+
+        private void getTagGroup_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> ltmp = new List<string>();
+            ltmp.Add("");
+            var grps = mHelper.GetTagGroup(mCurrentDatabase);
+            if(grps!=null)
+            {
+                foreach(var vv in grps)
+                {
+                    if(!string.IsNullOrEmpty(vv.Parent))
+                    {
+                        ltmp.Add(vv.Parent + "." + vv.Name);
+                    }
+                    else
+                    {
+                        ltmp.Add(vv.Name);
+                    }
+                }
+            }
+            groupList.ItemsSource = ltmp;
+            
+        }
+
+        private void getDatabase_Click(object sender, RoutedEventArgs e)
+        {
+            var vdd = mHelper.QueryDatabase();
+            if (vdd != null)
+            {
+                databaseList.ItemsSource = vdd.Select(e => e.Name);
+            }
+        }
+
+        private void databaseList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            mCurrentDatabase = databaseList.SelectedItem.ToString();
+        }
+
+        private void groupList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            mTagGroup = groupList.SelectedItem.ToString();
         }
     }
 }

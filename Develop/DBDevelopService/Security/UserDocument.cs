@@ -91,13 +91,14 @@ namespace DBDevelopService
         /// 
         /// </summary>
         /// <param name="user"></param>
-        public void AddUser(User user)
+        public bool AddUser(User user)
         {
             if(!mUsers.ContainsKey(user.Name))
             {
                 mUsers.Add(user.Name, user);
+                return true;
             }
-
+            return false;
         }
 
         /// <summary>

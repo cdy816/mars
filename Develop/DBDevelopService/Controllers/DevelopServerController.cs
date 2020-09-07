@@ -76,7 +76,6 @@ namespace DBDevelopService.Controllers
         private bool HasDeleteDatabasePerssion(string id)
         {
             return SecurityManager.Manager.CheckKeyAvaiable(id) && SecurityManager.Manager.HasDeleteDatabasePermission(id);
-
         }
 
         #region database
@@ -87,7 +86,7 @@ namespace DBDevelopService.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public object NewDatabase([FromBody] NewDatabaseRequest request)
+        public object NewDatabase([FromBody] WebApiNewDatabaseRequest request)
         {
             if (!IsAdmin(request.Id) && !HasNewDatabasePermission(request.Id))
             {
@@ -114,18 +113,18 @@ namespace DBDevelopService.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public object QueryDatabase([FromBody]RequestBase request)
+        public object QueryDatabase([FromBody] RequestBase request)
         {
             if (!CheckLoginId(request.Id))
             {
-                return new ResultResponse() { ErroMsg = "权限不足",HasErro=true };
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
             }
             List<Database> re = new List<Database>();
             foreach (var vv in DbManager.Instance.ListDatabase())
             {
-                re.Add(new Database(){Name = vv, Desc = DbManager.Instance.GetDatabase(vv).Desc });
+                re.Add(new Database() { Name = vv, Desc = DbManager.Instance.GetDatabase(vv).Desc });
             }
-            return re;
+            return new ResultResponse() { Result = re };
         }
 
         /// <summary>
@@ -231,7 +230,119 @@ namespace DBDevelopService.Controllers
                     }
                 }
             }
-            return re;
+            return new ResultResponse() { Result = re };
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object AddTagGroup(WebApiAddGroupRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            string name = request.Name;
+            string parentName = request.ParentName;
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                lock (db)
+                {
+                    var vtg = db.RealDatabase.Groups.ContainsKey(request.ParentName) ? db.RealDatabase.Groups[request.ParentName] : null;
+
+                    int i = 1;
+                    while (db.RealDatabase.HasChildGroup(vtg, name))
+                    {
+                        name = request.Name + i;
+                        i++;
+                    }
+
+                    string ntmp = name;
+
+                    if (!string.IsNullOrEmpty(parentName))
+                    {
+                        name = parentName + "." + name;
+                    }
+
+                    db.RealDatabase.CheckAndAddGroup(name);
+                    return new ResultResponse() { Result = ntmp };
+                }
+            }
+            return new ResultResponse() { ErroMsg = "数据库不存在", HasErro = true };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object RemoveTagGroup(WebApiRemoveGroupRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                lock (db)
+                    db.RealDatabase.RemoveGroup(request.FullName);
+                return new ResultResponse() { Result=true };
+            }
+            return new ResultResponse() { ErroMsg = "数据库不存在", HasErro = true };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object RenameTagGroup(WebApiRenameGroupRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                lock (db)
+                {
+                    var re = db.RealDatabase.ChangeGroupName(request.OldFullName, request.Name);
+                    return new ResultResponse() { Result = re };
+                }
+            }
+            return new ResultResponse() { ErroMsg = "数据库不存在", HasErro = true };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object MoveTagGroup(WebApiMoveTagGroupRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                lock (db)
+                    db.RealDatabase.ChangeGroupParent(request.Name, request.OldParentName, request.NewParentName);
+                return new ResultResponse() { Result = true };
+            }
+            return new ResultResponse() { ErroMsg = "数据库不存在", HasErro = true };
         }
 
         /// <summary>
@@ -321,7 +432,7 @@ namespace DBDevelopService.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public  object GetTagByGroup([FromBody] GetTagByGroupRequest request)
+        public  object GetTagByGroup([FromBody] WebApiGetTagByGroupRequest request)
         {
             if (!CheckLoginId(request.Id, request.Database))
             {
@@ -339,7 +450,7 @@ namespace DBDevelopService.Controllers
                     int from = request.Index * PageCount;
                     var res = db.RealDatabase.ListAllTags().Where(e => e.Group == request.GroupName);
 
-                    if (request.Filters.Count > 0)
+                    if (request.Filters!=null && request.Filters.Count > 0)
                     {
                         res = FilterTags(db, res, request.Filters);
                     }
@@ -353,7 +464,7 @@ namespace DBDevelopService.Controllers
                     {
                         if (cc >= from && cc < (from + PageCount))
                         {
-                            WebApiTag tag = new WebApiTag() { RealTag = vv };
+                            WebApiTag tag = new WebApiTag() { RealTag = WebApiRealTag.CreatFromTagbase(vv) };
 
                             if (db.HisDatabase.HisTags.ContainsKey(vv.Id))
                             {
@@ -367,7 +478,7 @@ namespace DBDevelopService.Controllers
                     }
                 }
             }
-            return re;
+            return new ResultResponse() { Result = re };
         }
 
 
@@ -424,11 +535,11 @@ namespace DBDevelopService.Controllers
                         {
                             if (vv.RealTag.Id < 0)
                             {
-                                db.RealDatabase.Append(vv.RealTag);
+                                db.RealDatabase.Append(vv.RealTag.ConvertToTagbase());
                             }
                             else
                             {
-                                db.RealDatabase.AddOrUpdate(vv.RealTag);
+                                db.RealDatabase.AddOrUpdate(vv.RealTag.ConvertToTagbase());
                             }
 
                             var vtag = vv.HisTag;
@@ -501,14 +612,15 @@ namespace DBDevelopService.Controllers
                 {
                     lock (db)
                     {
+                        var vtag = tag.ConvertToTagbase();
                         if (db.RealDatabase.Tags.ContainsKey(tag.Id) && tag.Id > -1)
                         {
-                            db.RealDatabase.UpdateById(tag.Id, tag);
+                            db.RealDatabase.UpdateById(tag.Id, tag.ConvertToTagbase());
                             return new ResultResponse() { Result = true };
                         }
-                        else if (db.RealDatabase.NamedTags.ContainsKey(tag.FullName))
+                        else if (db.RealDatabase.NamedTags.ContainsKey(vtag.FullName))
                         {
-                            db.RealDatabase.Update(tag.FullName, tag);
+                            db.RealDatabase.Update(vtag.FullName, vtag);
                             return new ResultResponse() { Result = true };
                         }
                         else
@@ -545,7 +657,7 @@ namespace DBDevelopService.Controllers
                 {
                     lock (db)
                     {
-                        Cdy.Tag.Tagbase tag = request.Tag.RealTag;
+                        Cdy.Tag.Tagbase tag = request.Tag.RealTag.ConvertToTagbase();
                         var vtag = request.Tag.HisTag;
                         if (request.Mode == 0)
                         {
@@ -647,6 +759,503 @@ namespace DBDevelopService.Controllers
             lock (DbManager.Instance)
             {
                 DbManager.Instance.Reload(request.Database);
+            }
+            return new ResultResponse() { Result = true };
+        }
+
+        #endregion
+
+        #region database user
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object AddDatabaseUserGroup([FromBody] WebApiUserGroupRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var user = new Cdy.Tag.UserGroup() { Name = request.Name };
+                var usergroup = db.Security.User.GetUserGroup(request.Parent);
+                user.Parent = usergroup;
+                db.Security.User.AddUserGroup(user);
+            }
+            return new ResultResponse() { Result = true };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object GetDatabaseUserGroup([FromBody] WebApiDatabaseRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            List<WebApiUserGroup> re = new List<WebApiUserGroup>();
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                foreach (var vgg in db.Security.User.Groups)
+                {
+                    re.Add(new WebApiUserGroup() { Name = vgg.Value.Name, Parent = vgg.Value.Parent != null ? vgg.Value.Parent.FullName : "" });
+                }
+            }
+            return new ResultResponse() { Result = re };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object MoveDatabaseUserGroup([FromBody] WebApiMoveUserGroupRequest request)
+        {
+
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                string ofname = request.OldParentName + "." + request.Name;
+                var pgroup = db.Security.User.GetUserGroup(request.NewParentName);
+
+                var usergroup = db.Security.User.GetUserGroup(ofname);
+                if (usergroup != null)
+                {
+                    db.Security.User.RemoveUserGroup(ofname);
+                    usergroup.Parent = pgroup;
+                    db.Security.User.AddUserGroup(usergroup);
+                }
+            }
+            return new ResultResponse() { Result = true };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object RemoveDatabaseUserGroup([FromBody] WebApiRequestByUserGroup request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var usergroup = db.Security.User.GetUserGroup(request.GroupFullName);
+                if (usergroup != null)
+                {
+                    db.Security.User.RemoveUserGroup(usergroup.FullName);
+                }
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object RenameDatabaseUserGroup([FromBody] WebApiRenameUserGroupRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var usergroup = db.Security.User.GetUserGroup(request.OldFullName);
+                if (usergroup != null)
+                {
+                    usergroup.Name = request.NewName;
+                    string sname = usergroup.FullName;
+                    db.Security.User.RemoveUserGroup(request.OldFullName);
+                    db.Security.User.AddUserGroup(usergroup);
+                }
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object GetDatabaseUserByGroup([FromBody] WebApiRequestByUserGroup request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+
+            List<WebApiUserInfoWithoutPassword> re = new List<WebApiUserInfoWithoutPassword>();
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                foreach (var vgg in db.Security.User.Users.Where(e => e.Value.Group == request.GroupFullName))
+                {
+                    var user = new WebApiUserInfoWithoutPassword() { UserName = vgg.Value.Name, Group = vgg.Value.Group };
+                    user.Permissions.AddRange(vgg.Value.Permissions);
+                    re.Add(user);
+                }
+            }
+            return new ResultResponse() { Result = re };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object NewDatabaseUser([FromBody] WebApiUserInfo request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var user = new Cdy.Tag.UserItem() { Name = request.UserName, Password = request.Password, Group = request.Group, Permissions = request.Permissions };
+                db.Security.User.AddUser(user);
+            }
+            return new ResultResponse() { Result = true };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object UpdateDatabaseUser([FromBody] WebApiUserInfo request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var uss = db.Security.User.Users;
+                if (uss.ContainsKey(request.UserName))
+                {
+                    var user = uss[request.UserName];
+                    user.Permissions = request.Permissions;
+                    user.Group = request.Group;
+                }
+                else
+                {
+                    var user = new Cdy.Tag.UserItem() { Name = request.UserName, Group = request.Group };
+                    user.Permissions = request.Permissions;
+                    db.Security.User.AddUser(user);
+                }
+            }
+            return new ResultResponse() { Result = true };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object ModifyDatabaseUserPassword([FromBody] WebApiUserAndPassword request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var uss = db.Security.User.Users;
+                if (uss.ContainsKey(request.UserName))
+                {
+                    uss[request.UserName].Password = request.Password;
+                }
+            }
+            return new ResultResponse() { Result = true };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object RemoveDatabaseUser([FromBody] WebApiUserRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var uss = db.Security.User.Users;
+                if (uss.ContainsKey(request.UserName))
+                {
+                    db.Security.User.RemoveUser(request.UserName);
+                }
+            }
+            return new ResultResponse() { Result = true };
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object NewDatabasePermission([FromBody] WebApiNewDatabasePermissionRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var pers = new Cdy.Tag.UserPermission() { Name = request.Name, Desc = request.Desc, EnableWrite = request.EnableWrite,SuperPermission = request.SuperPermission };
+                pers.Group.AddRange(request.Group);
+                db.Security.Permission.Add(pers);
+            }
+            return new ResultResponse() { Result = true };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object RemoveDatabasePermission([FromBody] WebApiRemoveDatabasePermissionRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                if (db.Security.Permission.Permissions.ContainsKey(request.Permission))
+                {
+                    db.Security.Permission.Permissions.Remove(request.Permission);
+                }
+            }
+            return new ResultResponse() { Result = true };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object UpdateDatabasePermission([FromBody] WebApiNewDatabasePermissionRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                if (db.Security.Permission.Permissions.ContainsKey(request.Name))
+                {
+                    var pp = db.Security.Permission.Permissions[request.Name];
+                    pp.Group = request.Group.ToList();
+                    pp.EnableWrite = request.EnableWrite;
+                    pp.Desc = request.Desc;
+                    pp.SuperPermission = request.SuperPermission;
+                }
+                else
+                {
+                    var pp = new Cdy.Tag.UserPermission() { Name = request.Name, Desc = request.Desc, EnableWrite = request.EnableWrite,SuperPermission=request.SuperPermission };
+                    pp.Group.AddRange(request.Group);
+                    db.Security.Permission.Add(pp);
+                }
+            }
+            return new ResultResponse() { Result = true };
+        }
+
+        #endregion
+
+        #region System User
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object NewUser([FromBody] WebApiNewSystemUserRequest request)
+        {
+            if (!IsAdmin(request.Id))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var user = new User() { Name = request.UserName, Password = request.Password };
+            var re = SecurityManager.Manager.Securitys.User.AddUser(user);
+            SecurityManager.Manager.Save();
+            return new ResultResponse() { Result = re };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object ReNameUser([FromBody] WebApiReNameSystemUserRequest request)
+        {
+            if (!IsAdmin(request.Id))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            bool re = SecurityManager.Manager.Securitys.User.RenameUser(request.OldName, request.NewName);
+            SecurityManager.Manager.RenameLoginUser(request.OldName, request.NewName);
+            SecurityManager.Manager.Save();
+            return new ResultResponse() { Result = re };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object ModifyPassword([FromBody] WebApiModifySystemUserPasswordRequest request)
+        {
+            var userName = SecurityManager.Manager.GetUserName(request.Id);
+            if (!SecurityManager.Manager.CheckKeyAvaiable(request.Id))
+            {
+                if (!(userName == request.UserName && SecurityManager.Manager.CheckPasswordIsCorrect(userName, request.Password)))
+                {
+                    return Task.FromResult(new BoolResultReplay() { Result = false });
+                }
+            }
+            var user = SecurityManager.Manager.Securitys.User.GetUser(request.UserName);
+            if (user != null)
+            {
+                user.Password = request.NewPassword;
+                SecurityManager.Manager.Save();
+            }
+            return new ResultResponse() { Result = true };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object UpdateUser([FromBody] WebApiUpdateSystemUserRequest request)
+        {
+            if (!IsAdmin(request.Id))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var user = SecurityManager.Manager.Securitys.User.GetUser(request.UserName);
+            if (user != null)
+            {
+                user.IsAdmin = request.IsAdmin;
+                user.NewDatabase = request.NewDatabasePermission;
+                user.Databases = request.Databases;
+                SecurityManager.Manager.Save();
+            }
+
+            return new ResultResponse() { Result = true };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object UpdateUserPassword([FromBody] WebApiNewSystemUserRequest request)
+        {
+            if (!IsAdmin(request.Id))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var user = SecurityManager.Manager.Securitys.User.GetUser(request.UserName);
+            if (user != null)
+            {
+                user.Password = request.Password;
+                SecurityManager.Manager.Save();
+            }
+            return new ResultResponse() { Result = true };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object GetUsers([FromBody] RequestBase request)
+        {
+            if (!IsAdmin(request.Id))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+
+            List<WebApiSystemUserItem> re = new List<WebApiSystemUserItem>();
+            foreach (var vv in SecurityManager.Manager.Securitys.User.Users)
+            {
+                var user = new WebApiSystemUserItem() { UserName = vv.Value.Name, IsAdmin = vv.Value.IsAdmin, NewDatabase = vv.Value.NewDatabase };
+                if (vv.Value.Databases != null)
+                    user.Databases.AddRange(vv.Value.Databases);
+                re.Add(user);
+            }
+            return new ResultResponse() { Result = re };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object RemoveUser([FromBody] WebApiRemoveSystemUserRequest request)
+        {
+            if (!IsAdmin(request.Id))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var user = SecurityManager.Manager.Securitys.User.GetUser(request.UserName);
+            if (user != null)
+            {
+                SecurityManager.Manager.Securitys.User.RemoveUser(request.UserName);
+                SecurityManager.Manager.Save();
             }
             return new ResultResponse() { Result = true };
         }

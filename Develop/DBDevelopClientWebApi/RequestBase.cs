@@ -6,11 +6,6 @@ using System.Threading.Tasks;
 
 namespace DBDevelopClientWebApi
 {
-    public class RequestBase
-    {
-        public string Id { get; set; }
-    }
-
     /// <summary>
     /// 
     /// </summary>
@@ -49,6 +44,14 @@ namespace DBDevelopClientWebApi
         #region ... Interfaces ...
 
         #endregion ...Interfaces...
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class RequestBase
+    {
+        public string Id { get; set; }
     }
 
     /// <summary>
@@ -106,7 +109,7 @@ namespace DBDevelopClientWebApi
     /// <summary>
     /// 
     /// </summary>
-    public class NewDatabaseRequest : WebApiDatabaseRequest
+    public class WebApiNewDatabaseRequest : WebApiDatabaseRequest
     {
         /// <summary>
         /// 
@@ -118,7 +121,7 @@ namespace DBDevelopClientWebApi
     /// <summary>
     /// 
     /// </summary>
-    public class GetTagByGroupRequest : WebApiDatabaseRequest
+    public class WebApiGetTagByGroupRequest : WebApiDatabaseRequest
     {
         /// <summary>
         /// 
@@ -128,13 +131,67 @@ namespace DBDevelopClientWebApi
         /// <summary>
         /// 
         /// </summary>
-        public Dictionary<string,string> Filters { get; set; }
+        public Dictionary<string, string> Filters { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
         public int Index { get; set; }
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class WebApiAddGroupRequest : WebApiDatabaseRequest
+    {
+        public string Name { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public string ParentName { get; set; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class WebApiRemoveGroupRequest : WebApiDatabaseRequest
+    {
+        public string FullName { get; set; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class WebApiRenameGroupRequest : WebApiDatabaseRequest
+    {
+        public string Name { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public string OldFullName { get; set; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class WebApiMoveTagGroupRequest : WebApiDatabaseRequest
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string NewParentName { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string OldParentName { get; set; }
+    }
+
 
     /// <summary>
     /// 
@@ -150,6 +207,28 @@ namespace DBDevelopClientWebApi
         /// 
         /// </summary>
         public object Result { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string ErroMsg { get; set; }
+    }
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class ResultResponse<T>
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool HasErro { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public T Result { get; set; }
 
         /// <summary>
         /// 

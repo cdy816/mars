@@ -62,7 +62,7 @@ namespace SpiderDriver
             Load();
             mService = new List<DataService>();
 
-            RealDataServerProcess.AllowTagIds = new HashSet<int>(tagQuery.GetTagIdsByLinkAddress(this.Name));
+            RealDataServerProcess.AllowTagIds = new HashSet<int>(tagQuery.GetTagIdsByLinkAddress(this.Name+":"));
             
             for (int i = mPort; i <= mEndPort; i++)
             {

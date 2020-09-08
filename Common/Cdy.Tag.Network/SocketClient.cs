@@ -210,9 +210,16 @@ namespace Cdy.Tag
         /// </summary>
         public async void Close()
         {
-            if(clientChannel!=null)
-            await clientChannel.CloseAsync();
-            await group.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
+            try
+            {
+                if (clientChannel != null)
+                    await clientChannel.CloseAsync();
+                await group.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
+            }
+            catch
+            {
+
+            }
         }
 
         #endregion ...Methods...

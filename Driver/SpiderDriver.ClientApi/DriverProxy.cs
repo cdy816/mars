@@ -39,16 +39,45 @@ namespace SpiderDriver.ClientApi
 
         #region ... Constructor...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public DriverProxy()
+        {
+            this.PropertyChanged += DriverProxy_PropertyChanged;
+        }
+
         #endregion ...Constructor...
 
         #region ... Properties ...
 
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsLogin { get { return mLoginId > 0; } }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public ProcessDataPushDelegate ValueChanged { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DriverProxy_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "IsConnected")
+            {
+                mLoginId = -1;
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -298,7 +327,13 @@ namespace SpiderDriver.ClientApi
             }
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <param name="re"></param>
         private void SetTagValueToBuffer(TagType type, object value,byte quality, IByteBuffer re)
         {
             re.WriteByte((byte)type);

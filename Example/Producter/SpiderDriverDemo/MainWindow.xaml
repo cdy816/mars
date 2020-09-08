@@ -11,7 +11,7 @@
         <Label Content="IP:" HorizontalAlignment="Left" Margin="31,33,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="ipt" HorizontalAlignment="Left" Margin="106,38,0,0" Text="127.0.0.1" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
         <Label Content="Port:" HorizontalAlignment="Left" Margin="256,33,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="portt" HorizontalAlignment="Left" Margin="317,35,0,0" Text="3600" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="portt" HorizontalAlignment="Left" Margin="317,35,0,0" Text="8800" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
         <Label Content="Count:" HorizontalAlignment="Left" Margin="30,78,0,0" VerticalAlignment="Top"/>
         <Label Content="Sin:" HorizontalAlignment="Left" Margin="30,118,0,0" VerticalAlignment="Top"/>
         <Label Content="Cos:" HorizontalAlignment="Left" Margin="31,156,0,0" VerticalAlignment="Top"/>

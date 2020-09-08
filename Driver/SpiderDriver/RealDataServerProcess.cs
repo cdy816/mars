@@ -104,6 +104,7 @@ namespace SpiderDriver
                         ProcessSetRealData(client, data);
                         break;
                     case APIConst.SetTagValueAndQualityFun:
+                        ProcessSetRealDataAndQuality(client, data);
                         break;
                     case APIConst.RegistorTag:
                         ProcessValueChangeNotify(client, data);

@@ -256,7 +256,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <ComboBox   Padding="5,0" Loaded="ComboBox_Loaded" Background="#1FFFFFFF"  SelectionChanged="Type_SelectionChanged"  Margin="0" VerticalContentAlignment="Center" BorderThickness="0" ItemsSource="{Binding DriverList}" IsEditable="True" Text="{Binding DriverName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
+                            <ComboBox   Padding="5,0" Loaded="ComboBox_Loaded" Background="#1FFFFFFF"  SelectionChanged="Type_SelectionChanged"  Margin="0" VerticalContentAlignment="Center" BorderThickness="0" ItemsSource="{Binding DriverList}" IsEditable="False" SelectedItem="{Binding DriverName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -268,7 +268,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <ComboBox  Padding="5,0" Loaded="ComboBox_Loaded" Background="#1FFFFFFF" SelectionChanged="Type_SelectionChanged"  Margin="0" VerticalContentAlignment="Center" BorderThickness="0" ItemsSource="{Binding RegistorList}"  IsEditable="True" Text="{Binding RegistorName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
+                            <ComboBox  Padding="5,0" Loaded="ComboBox_Loaded" Background="#1FFFFFFF" SelectionChanged="Type_SelectionChanged"  Margin="0" VerticalContentAlignment="Center" BorderThickness="0" ItemsSource="{Binding RegistorList}"  IsEditable="True" Text="{Binding RegistorName,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>

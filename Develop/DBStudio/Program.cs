@@ -1406,7 +1406,7 @@ namespace DBStudio
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("CheckStart " + name + "  failed." + ex.Message + "  " + ex.StackTrace);
+                        //Console.WriteLine("CheckStart " + name + "  failed." + ex.Message + "  " + ex.StackTrace);
                         return false;
                     }
                 }

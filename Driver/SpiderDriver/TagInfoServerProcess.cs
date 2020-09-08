@@ -66,10 +66,12 @@ namespace SpiderDriver
                         int count = data.ReadInt();
                         if (count > 0)
                         {
-                            var re = BufferManager.Manager.Allocate(APIConst.TagInfoRequestFun, count * 4);
+                            var re = BufferManager.Manager.Allocate(APIConst.TagInfoRequestFun, (count+1) * 4);
+                            re.WriteInt(count);
                             for (int i = 0; i < count; i++)
                             {
-                                var ival = mm.GetTagIdByName(data.ReadString());
+                                string stag = data.ReadString();
+                                var ival = mm.GetTagIdByName(stag);
                                 if (ival.HasValue)
                                 {
                                     re.WriteInt(ival.Value);
@@ -135,7 +137,7 @@ namespace SpiderDriver
             foreach(var vv in tags)
             {
                 re.WriteInt(vv.Id);
-                re.WriteString(vv.Name);
+                re.WriteString(vv.FullName);
                 re.WriteByte((byte)vv.Type);
             }
             return re;

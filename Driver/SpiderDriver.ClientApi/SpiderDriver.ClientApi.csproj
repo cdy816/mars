@@ -7,6 +7,8 @@
     <Product>Mars</Product>
     <PackageProjectUrl>https://github.com/cdy816/mars</PackageProjectUrl>
     <Version>1.0.3</Version>
+    <AssemblyVersion>1.0.4.0</AssemblyVersion>
+    <FileVersion>1.0.4.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

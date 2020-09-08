@@ -97,7 +97,8 @@ namespace DBInStudio.Desktop.View
         {
             if((sender as FrameworkElement).IsLoaded)
             {
-                dg.CommitEdit();
+                if (!(sender as ComboBox).IsEditable)
+                    dg.CommitEdit();
             }
         }
 

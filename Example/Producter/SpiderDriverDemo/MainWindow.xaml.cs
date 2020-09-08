@@ -189,6 +189,13 @@ namespace SpiderDriverDemo
         private void ReadAllIds()
         {
             mAllId = driverProxy.QueryAllTagIdAndNames();
+
+            var tagName = mAllId.First().Value.Item1;
+            var ids = driverProxy.QueryTagId(new List<string>() { tagName });
+            if(ids.Count>0)
+            {
+                //test
+            }
         }
 
         private void ProcessSetTagValue()

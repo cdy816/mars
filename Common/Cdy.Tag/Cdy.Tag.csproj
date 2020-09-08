@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <Authors>Cdy</Authors>
+    <PackageProjectUrl>https://github.com/cdy816/mars</PackageProjectUrl>
+    <Description>Mars</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

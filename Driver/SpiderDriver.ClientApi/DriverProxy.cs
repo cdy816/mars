@@ -590,7 +590,7 @@ namespace SpiderDriver.ClientApi
             {
 
             }
-            return null;
+            return re;
         }
 
         /// <summary>

@@ -86,6 +86,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="datas"></param>
         protected override void ProcessData(byte fun, IByteBuffer datas)
         {
+            
             if (fun == ApiFunConst.PushDataChangedFun)
             {
                 ValueChanged?.Invoke(ProcessSingleBufferData(datas));
@@ -194,7 +195,7 @@ namespace SpiderDriver.ClientApi
                 }
                 re.Add(vid, value);
             }
-            block.Release();
+            //block.Release();
             return re;
         }
 

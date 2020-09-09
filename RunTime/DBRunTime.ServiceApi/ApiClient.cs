@@ -29,6 +29,8 @@ namespace DBRunTime.ServiceApi
         /// </summary>
         public const byte RealDataRequestFun = 10;
 
+        public const byte RealDataSetFun = 11;
+
         /// <summary>
         /// 获取实时值
         /// </summary>
@@ -102,6 +104,8 @@ namespace DBRunTime.ServiceApi
         /// 
         /// </summary>
         public const byte RequestHisDataByTimeSpan = 2;
+
+        public const byte AysncReturn = byte.MaxValue;
     }
 
     public class ApiClient:SocketClient
@@ -119,7 +123,11 @@ namespace DBRunTime.ServiceApi
 
         private ManualResetEvent realRequreEvent = new ManualResetEvent(false);
 
+        private ManualResetEvent realSetRequreEvent = new ManualResetEvent(false);
+
         private IByteBuffer mRealRequreData;
+
+        private IByteBuffer mRealSetResponseData;
 
         /// <summary>
         /// 
@@ -171,37 +179,35 @@ namespace DBRunTime.ServiceApi
             {
                 ProcessDataPush?.Invoke(datas);
             }
+            else if(fun == ApiFunConst.AysncReturn)
+            {
+                //收到异步请求回调数据
+                return;
+            }
             else
             {
                 datas.Retain();
-                //收到异步请求回调数据
-                if (datas.ReadableBytes==1)
+                switch (fun)
                 {
-                    if(datas.ReadByte() == byte.MaxValue)
-                        return;
-                    else
-                    {
+                    case ApiFunConst.TagInfoRequest:
+                        mInfoRequreData = datas;
+                        infoRequreEvent.Set();
+                        break;
+                    case ApiFunConst.RealDataRequestFun:
+                        mRealRequreData = datas;
+                        this.realRequreEvent.Set();
+                        break;
+                    case ApiFunConst.RealDataSetFun:
+                        mRealSetResponseData = datas;
+                        this.realSetRequreEvent.Set();
+                        break;
+                    case ApiFunConst.HisDataRequestFun:
+                        mHisRequreData = datas;
+                        hisRequreEvent.Set();
+                        break;
+                    default:
                         Debug.Print("DbClient ProcessData Invailed data");
-                    }
-                }
-                else
-                {
-                    switch (fun)
-                    {
-                        case ApiFunConst.TagInfoRequest:
-                            mInfoRequreData = datas ;
-                            infoRequreEvent.Set();
-                            break;
-                        case ApiFunConst.RealDataRequestFun:
-                            mRealRequreData = datas;
-                            this.realRequreEvent.Set();
-                            break;
-                        case ApiFunConst.HisDataRequestFun:
-                            mHisRequreData = datas;
-                            hisRequreEvent.Set();
-                            break;
-                    }
-
+                        break;
                 }
             }
         }
@@ -634,13 +640,20 @@ namespace DBRunTime.ServiceApi
                     mb.WriteLong((long)((ULongPoint3Data)value).Z);
                     break;
             }
-            realRequreEvent.Reset();
+            realSetRequreEvent.Reset();
             Send(mb);
             try
             {
-                if (realRequreEvent.WaitOne(timeout))
+                if (realSetRequreEvent.WaitOne(timeout))
                 {
-                    return mRealRequreData.ReadByte() > 0;
+                    if (this.mRealSetResponseData.ReadableBytes > 0)
+                    {
+                        return mRealSetResponseData.ReadByte() > 0;
+                    }
+                    else
+                    {
+                        return true;
+                    }
                 }
             }
             finally

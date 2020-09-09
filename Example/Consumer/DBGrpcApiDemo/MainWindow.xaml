@@ -9,15 +9,16 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>
-            <RowDefinition Height="411*"/>
+            <RowDefinition Height="382*"/>
+            <RowDefinition Height="32"/>
         </Grid.RowDefinitions>
-        <Label Content="Server:" HorizontalAlignment="Left" Margin="11,0,0,0" VerticalAlignment="Top"/>
+        <Label Content="Server:" HorizontalAlignment="Left" Margin="11,0,0,0" VerticalAlignment="Center"/>
         <TextBox x:Name="ServerIp"  HorizontalAlignment="Left" Margin="67,0,0,0" Text="{Binding Ip,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" TextWrapping="Wrap" VerticalAlignment="Center" Width="196"/>
-        <Button x:Name="StartB" Command="{Binding LoginCommand}" Content="开始" Margin="0,0,13,0" VerticalAlignment="Center" HorizontalAlignment="Right" Width="60"/>
+        <Button x:Name="StartB" Command="{Binding LoginCommand}" Content="开始" Margin="727,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left" Width="60"/>
         <TextBox x:Name="ServerIp_Copy"  HorizontalAlignment="Left" Margin="329,0,0,0" Text="{Binding Port, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" TextWrapping="Wrap" VerticalAlignment="Center" Width="87"/>
         <Label Content="Port:" HorizontalAlignment="Left" Margin="274,0,0,0" VerticalAlignment="Center"/>
 
-        <DataGrid Grid.Row="1" IsReadOnly="True" ItemsSource="{Binding Tags}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False">
+        <DataGrid Grid.Row="1" IsReadOnly="True" ItemsSource="{Binding Tags}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" Margin="0,0,0,0">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="32" />
                 <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
@@ -30,6 +31,12 @@
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
+
+        <Label Content="变量ID:" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Margin="70,0,0,0" Grid.Row="2" Text="{Binding Id,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Center" Width="100"/>
+        <TextBox HorizontalAlignment="Left" Margin="259,0,0,0" Grid.Row="2" Text="{Binding Value,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Center" Width="100"/>
+        <Button Content="变量下发" HorizontalAlignment="Left" Margin="398,0,0,0" Grid.Row="2" VerticalAlignment="Center" Width="76" Command="{Binding SetTagValueCommand}"/>
+        <Label Content="变量值:" HorizontalAlignment="Left" Margin="206,0,0,0" Grid.Row="2" VerticalAlignment="Center"/>
 
     </Grid>
 </Window>

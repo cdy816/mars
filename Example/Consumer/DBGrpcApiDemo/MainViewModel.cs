@@ -38,6 +38,7 @@ namespace DBGrpcApiDemo
         public string mPassword="Admin";
         private int mPort = 14333;
 
+        private ICommand mSetTagValueCommand;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -182,7 +183,33 @@ namespace DBGrpcApiDemo
             }
         }
 
+        /// <summary>
+        /// Id
+        /// </summary>
+        public string Id { get; set; }
 
+        /// <summary>
+        /// Value
+        /// </summary>
+        public double Value { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand SetTagValueCommand
+        {
+            get
+            {
+                if (mSetTagValueCommand == null)
+                {
+                    mSetTagValueCommand = new RelayCommand(() => {
+
+                        clinet.SetTagValue(Id,  Value);
+                    });
+                }
+                return mSetTagValueCommand;
+            }
+        }
 
         #endregion ...Properties...
 

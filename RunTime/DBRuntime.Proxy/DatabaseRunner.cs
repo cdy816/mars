@@ -188,7 +188,8 @@ namespace DBRuntime.Proxy
                     {
                         CloseDatabase();
                     }
-                    IsReadyEvent?.BeginInvoke(false, null, null);
+                    IsReadyEvent?.Invoke(false);
+                    //IsReadyEvent?.BeginInvoke(false, null, null);
                 }
 
             });

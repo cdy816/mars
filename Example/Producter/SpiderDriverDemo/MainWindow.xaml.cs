@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -40,6 +41,12 @@ namespace SpiderDriverDemo
         {
             driverProxy = new SpiderDriver.ClientApi.DriverProxy();
             driverProxy.Connect(this.ipt.Text, int.Parse(portt.Text));
+            driverProxy.ValueChanged = new SpiderDriver.ClientApi.DriverProxy.ProcessDataPushDelegate((values) => { 
+                foreach(var vv in values)
+                {
+                    Debug.Print(vv.Key + "," + vv.Value.ToString());
+                }
+            });
             mScanThread = new Thread(ThreadPro);
             mScanThread.IsBackground = true;
             mScanThread.Start();

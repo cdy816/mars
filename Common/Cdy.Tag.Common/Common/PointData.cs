@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Security;
 using System.Text;
 
 namespace Cdy.Tag
@@ -62,9 +63,24 @@ namespace Cdy.Tag
             return Empty;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return X+","+Y;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static IntPointData FromString(string value)
+        {
+            string[] sval = value.Split(new char[] { ',' });
+            return new IntPointData(int.Parse(sval[0]), int.Parse(sval[1]));
         }
 
     }
@@ -94,6 +110,17 @@ namespace Cdy.Tag
         {
             return X + "," + Y+","+Z;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static IntPoint3Data FromString(string value)
+        {
+            string[] sval = value.Split(new char[] { ',' });
+            return new IntPoint3Data(int.Parse(sval[0]), int.Parse(sval[1]), int.Parse(sval[2]));
+        }
     }
 
     /// <summary>
@@ -119,6 +146,13 @@ namespace Cdy.Tag
         {
             return X + "," + Y;
         }
+
+
+        public static UIntPointData FromString(string value)
+        {
+            string[] sval = value.Split(new char[] { ',' });
+            return new UIntPointData(uint.Parse(sval[0]), uint.Parse(sval[1]));
+        }
     }
     /// <summary>
     /// 
@@ -142,10 +176,24 @@ namespace Cdy.Tag
         public uint Y { get; set; }
         public uint Z { get; set; }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return X + "," + Y + "," + Z;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static UIntPoint3Data FromString(string value)
+        {
+            string[] sval = value.Split(new char[] { ',' });
+            return new UIntPoint3Data(uint.Parse(sval[0]), uint.Parse(sval[1]), uint.Parse(sval[2]));
         }
     }
 
@@ -165,12 +213,30 @@ namespace Cdy.Tag
             X = (long)x;
             Y = (long)y;
         }
+        /// <summary>
+        /// 
+        /// </summary>
         public long X { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public long Y { get; set; }
 
         public override string ToString()
         {
             return X + "," + Y;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static LongPointData FromString(string value)
+        {
+            string[] sval = value.Split(new char[] { ',' });
+            return new LongPointData(long.Parse(sval[0]), long.Parse(sval[1]));
         }
     }
 
@@ -192,13 +258,37 @@ namespace Cdy.Tag
             Y = (long)y;
             Z = (long)z;
         }
+        /// <summary>
+        /// 
+        /// </summary>
         public long X { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
         public long Y { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
         public long Z { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return X + "," + Y + "," + Z;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static LongPoint3Data FromString(string value)
+        {
+            string[] sval = value.Split(new char[] { ',' });
+            return new LongPoint3Data(long.Parse(sval[0]), long.Parse(sval[1]), long.Parse(sval[2]));
         }
     }
 
@@ -207,6 +297,11 @@ namespace Cdy.Tag
     /// </summary>
     public struct ULongPointData
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
         public ULongPointData(ulong x, ulong y)
         {
             X = x;
@@ -218,12 +313,30 @@ namespace Cdy.Tag
             X = (ulong)x;
             Y = (ulong)y;
         }
+        /// <summary>
+        /// 
+        /// </summary>
         public ulong X { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public ulong Y { get; set; }
 
         public override string ToString()
         {
             return X + "," + Y;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static ULongPointData FromString(string value)
+        {
+            string[] sval = value.Split(new char[] { ',' });
+            return new ULongPointData(ulong.Parse(sval[0]), ulong.Parse(sval[1]));
         }
     }
 
@@ -253,6 +366,12 @@ namespace Cdy.Tag
         public override string ToString()
         {
             return X + "," + Y + "," + Z;
+        }
+
+        public static ULongPoint3Data FromString(string value)
+        {
+            string[] sval = value.Split(new char[] { ',' });
+            return new ULongPoint3Data(ulong.Parse(sval[0]), ulong.Parse(sval[1]), ulong.Parse(sval[2]));
         }
     }
 

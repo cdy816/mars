@@ -55,12 +55,32 @@ namespace SpiderDriver
         /// </summary>
         private void RegistorInit()
         {
-
             this.RegistorFunCallBack(APIConst.TagInfoRequestFun, TagInfoRequest);
             this.RegistorFunCallBack(APIConst.RealValueFun, ReadDataRequest);
         }
 
-       
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        protected override void OnClientConnected(string id)
+        {
+            mRealProcess.OnClientConnected(id);
+            mInfoProcess.OnClientConnected(id);
+            base.OnClientConnected(id);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        protected override void OnClientDisConnected(string id)
+        {
+            mRealProcess.OnClientDisconnected(id);
+            mInfoProcess.OnClientDisconnected(id);
+            base.OnClientDisConnected(id);
+        }
+
 
         /// <summary>
         /// 
@@ -154,6 +174,7 @@ namespace SpiderDriver
         protected override void StartInner(int port)
         {
             mRealProcess = new RealDataServerProcess() { Parent = this };
+            mRealProcess.Init();
             mInfoProcess = new TagInfoServerProcess() { Parent = this };
             mRealProcess.Start();
             mInfoProcess.Start();

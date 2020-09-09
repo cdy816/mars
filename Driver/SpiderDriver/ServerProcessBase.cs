@@ -181,6 +181,15 @@ namespace SpiderDriver
         /// 
         /// </summary>
         /// <param name="id"></param>
+        public virtual void OnClientConnected(string id)
+        {
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
         public virtual void OnClientDisconnected(string id)
         {
 

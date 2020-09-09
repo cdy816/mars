@@ -342,7 +342,7 @@ namespace DBRuntime.Api
                 }
                 service.SetTagValueForConsumer(id, value);
             }
-            Parent.AsyncCallback(clientid, ToByteBuffer(ApiFunConst.RealDataRequestFun, (byte)1));
+            Parent.AsyncCallback(clientid, ToByteBuffer(ApiFunConst.RealDataSetFun, (byte)1));
         }
 
         /// <summary>

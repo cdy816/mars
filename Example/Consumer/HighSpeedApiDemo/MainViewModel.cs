@@ -34,6 +34,9 @@ namespace HighSpeedApiDemo
         DBHighApi.ApiClient clinet;
         private Thread mScanThread;
         private bool mExited = false;
+
+        private ICommand mSetTagValueCommand;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -97,6 +100,9 @@ namespace HighSpeedApiDemo
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public ICommand StopCommand
         {
             get
@@ -113,6 +119,33 @@ namespace HighSpeedApiDemo
             }
         }
 
+        /// <summary>
+        /// Id
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
+        /// Value
+        /// </summary>
+        public double Value { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand SetTagValueCommand
+        {
+            get
+            {
+                if(mSetTagValueCommand == null)
+                {
+                    mSetTagValueCommand = new RelayCommand(() => {
+
+                        clinet.SetTagValue(Id, (int)(Cdy.Tag.TagType.Double), Value);
+                    });
+                }
+                return mSetTagValueCommand;
+            }
+        }
 
 
         #endregion ...Properties...

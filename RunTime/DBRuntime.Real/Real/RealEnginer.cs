@@ -13,6 +13,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Cdy.Tag.Driver;
 using System.Threading;
+using System.Security.Cryptography;
 
 namespace Cdy.Tag
 {
@@ -3958,7 +3959,7 @@ namespace Cdy.Tag
                         SetBoolTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
                         break;
                     case TagType.Byte:
-                        SetByteTagValue(tag, value, (byte)QualityConst.Good, time);
+                        SetByteTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
                         break;
                     case TagType.DateTime:
                         SetDateTimeTagValueForConsumer(tag, value, (byte)QualityConst.Good, time);
@@ -4301,7 +4302,17 @@ namespace Cdy.Tag
         {
             Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
-            DateTime btmp = Convert.ToDateTime(value);
+            DateTime btmp;
+            
+            if (value is long)
+            {
+                btmp = DateTime.FromBinary((long)value);
+            }
+            else
+            {
+                btmp = Convert.ToDateTime(value);
+            }
+
             SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
             if (tag.Conveter != null)
             {
@@ -4323,7 +4334,15 @@ namespace Cdy.Tag
         {
             Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
-            IntPointData btmp = (IntPointData)(value);
+            IntPointData btmp;
+            if (value is string)
+            {
+                btmp = IntPointData.FromString(value as string);
+            }
+            else
+            {
+                btmp = (IntPointData)(value);
+            }
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)
             {
@@ -4345,7 +4364,15 @@ namespace Cdy.Tag
         {
             Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
-            UIntPointData btmp = (UIntPointData)(value);
+            UIntPointData btmp;
+            if (value is string)
+            {
+                btmp = UIntPointData.FromString(value as string);
+            }
+            else
+            {
+                btmp = (UIntPointData)(value);
+            }
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)
             {
@@ -4355,11 +4382,25 @@ namespace Cdy.Tag
             return true;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
         public bool SetUIntPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
-            UIntPoint3Data btmp = (UIntPoint3Data)(value);
+            UIntPoint3Data btmp;
+            if (value is string)
+            {
+                btmp = UIntPoint3Data.FromString(value as string);
+            }
+            else
+                btmp = (UIntPoint3Data)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)
             {
@@ -4369,12 +4410,25 @@ namespace Cdy.Tag
             return true;
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
         public bool SetIntPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
-            IntPoint3Data btmp = (IntPoint3Data)(value);
+            IntPoint3Data btmp;
+            if (value is string)
+            {
+                btmp = IntPoint3Data.FromString(value as string);
+            }
+            else
+                btmp  = (IntPoint3Data)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)
             {
@@ -4384,12 +4438,25 @@ namespace Cdy.Tag
             return true;
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
         public bool SetLongPointTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
-            LongPointData btmp = (LongPointData)(value);
+            LongPointData btmp;
+            if (value is string)
+            {
+                btmp = LongPointData.FromString(value as string);
+            }
+            else
+                btmp = (LongPointData)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)
             {
@@ -4399,11 +4466,27 @@ namespace Cdy.Tag
             return true;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
         public bool SetULongPointTagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
-            ULongPointData btmp = (ULongPointData)(value);
+            ULongPointData btmp;
+            
+            if (value is string)
+            {
+                btmp = ULongPointData.FromString(value as string);
+            }
+            else
+                btmp = (ULongPointData)(value);
+
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)
             {
@@ -4413,12 +4496,25 @@ namespace Cdy.Tag
             return true;
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
         public bool SetLongPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
-            LongPoint3Data btmp = (LongPoint3Data)(value);
+            LongPoint3Data btmp;
+            if (value is string)
+            {
+                btmp = LongPoint3Data.FromString(value as string);
+            }
+            else
+                btmp  = (LongPoint3Data)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)
             {
@@ -4428,11 +4524,25 @@ namespace Cdy.Tag
             return true;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="qulity"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
         public bool SetULongPoint3TagValueForConsumer(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
-            ULongPoint3Data btmp = (ULongPoint3Data)(value);
+            ULongPoint3Data btmp;
+            if (value is string)
+            {
+                btmp = ULongPoint3Data.FromString(value as string);
+            }
+            else
+                btmp = (ULongPoint3Data)(value);
             SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
             if (tag.Conveter != null)
             {

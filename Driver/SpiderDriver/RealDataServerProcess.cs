@@ -32,7 +32,7 @@ namespace SpiderDriver
         private Dictionary<string, HashSet<int>> mCallBackRegistorIds = new Dictionary<string, HashSet<int>>();
 
 
-        private Queue<Dictionary<int,object>> mChangedTags = new Queue<Dictionary<int, object>>(10);
+        private Queue<KeyValuePair<int,object>> mChangedTags = new Queue<KeyValuePair<int, object>>(10);
 
 
         private Thread mScanThread;
@@ -47,12 +47,13 @@ namespace SpiderDriver
 
         private ITagManager mTagManager;
 
-        
-
         /// <summary>
         /// 
         /// </summary>
         public static HashSet<int> AllowTagIds = new HashSet<int>();
+
+
+        private string mName;
 
         #endregion ...Variables...
 
@@ -62,14 +63,12 @@ namespace SpiderDriver
 
         #region ... Constructor...
 
+        /// <summary>
+        /// 
+        /// </summary>
         public RealDataServerProcess()
         {
             mTagManager = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.ITagManager>();
-            ServiceLocator.Locator.Resolve<IRealTagProduct>().SubscribeValueChangedForProducter("SpiderDriver" + DateTime.Now.Ticks,
-            new ProducterValueChangedNotifyProcesser.ValueChangedDelagete((vals) => {
-                lock(mChangedTags)
-                mChangedTags.Enqueue(vals);
-            }), () => { return new List<int>() { -1 }; });            
         }
 
         #endregion ...Constructor...
@@ -81,6 +80,27 @@ namespace SpiderDriver
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Init()
+        {
+            mName = "SpiderDriver" + Guid.NewGuid().ToString();
+            ServiceLocator.Locator.Resolve<IRealTagProduct>().SubscribeValueChangedForProducter(mName,
+           new ProducterValueChangedNotifyProcesser.ValueChangedDelagete((vals) =>
+           {
+               lock (mChangedTags)
+               {
+                   foreach (var vv in vals)
+                   {
+                       mChangedTags.Enqueue(vv);
+                   }
+               }
+               //mChangedTags.Enqueue(vals);
+               resetEvent.Set();
+           }), () => { return new List<int>() { -1 }; });
+        }
 
         /// <summary>
         /// 
@@ -211,7 +231,11 @@ namespace SpiderDriver
             Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientid"></param>
+        /// <param name="block"></param>
         private void ProcessSetRealDataAndQuality(string clientid, IByteBuffer block)
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
@@ -296,7 +320,11 @@ namespace SpiderDriver
         }
 
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="block"></param>
         private void ProcessRemoveValueChangeNotify(string clientId, IByteBuffer block)
         {
             try
@@ -494,63 +522,59 @@ namespace SpiderDriver
 
                     HashSet<int> hval = new HashSet<int>();
 
-                    Dictionary<int,object> changtags;
+                    List<KeyValuePair<int, object>>  changtags = new List<KeyValuePair<int, object>>();
 
-                    while (mChangedTags.Count > 0)
+                    lock (mChangedTags)
                     {
-                        lock(mChangedTags)
-                        changtags = mChangedTags.Dequeue();
-
-                        if (mCallBackRegistorIds.Count == 0) break;
-
-                        var clients = mCallBackRegistorIds.ToArray();
-
-                        //Stopwatch sw = new Stopwatch();
-                        //sw.Start();
-                        foreach (var cb in clients)
-                        {
-                            var buffer = BufferManager.Manager.Allocate(APIConst.RealValueFun, changtags.Count * 64+5);
-                            buffer.WriteByte(APIConst.PushDataChangedFun);
-                            buffer.WriteInt(0);
-                            buffers.Add(cb.Key, buffer);
-                            mDataCounts[cb.Key]= 0;
-                        }
-
-                        foreach (var vv in changtags)
-                        {
-                            foreach (var vvc in clients)
-                            {
-                                try
-                                {
-                                    if (vvc.Value.Contains(vv.Key))
-                                    {
-                                        byte tp = (byte)mTagManager.GetTagById(vv.Key).Type;
-                                        ProcessTagPush(buffers[vvc.Key], vv.Key, tp, vv.Value);
-                                        mDataCounts[vvc.Key]++;
-                                    }
-                                }
-                                catch(Exception ex)
-                                {
-                                    LoggerService.Service.Erro("SpiderDriver", "RealDataService "+ex.Message);
-                                }
-                            }
-                        }
-
-                        foreach (var cb in buffers)
-                        {
-                            if (cb.Value.WriterIndex > 6)
-                            {
-                                cb.Value.MarkWriterIndex();
-                                cb.Value.SetWriterIndex(2);
-                                cb.Value.WriteInt(mDataCounts[cb.Key]);
-                                cb.Value.ResetWriterIndex();
-                            }
-                            Parent.PushRealDatatoClient(cb.Key, cb.Value);
-                        }
-                        buffers.Clear();
-                        //sw.Stop();
-                        //LoggerService.Service.Erro("RealDataServerProcess", "推送数据耗时"+sw.ElapsedMilliseconds+" 大小:"+ changtags.Length);
+                        changtags.AddRange(mChangedTags);
+                        mChangedTags.Clear();
                     }
+
+                    if (mCallBackRegistorIds.Count == 0) break;
+
+                    var clients = mCallBackRegistorIds.ToArray();
+                    foreach (var cb in clients)
+                    {
+                        //var buffer = BufferManager.Manager.Allocate(APIConst.RealValueFun, changtags.Count * 64 + 5);
+                        var buffer = BufferManager.Manager.Allocate(APIConst.PushDataChangedFun, changtags.Count * 64 + 5);
+                        //buffer.WriteByte(APIConst.PushDataChangedFun);
+                        buffer.WriteInt(0);
+                        buffers.Add(cb.Key, buffer);
+                        mDataCounts[cb.Key] = 0;
+                    }
+
+                    foreach (var vv in changtags)
+                    {
+                        foreach (var vvc in clients)
+                        {
+                            try
+                            {
+                                if (vvc.Value.Contains(vv.Key))
+                                {
+                                    byte tp = (byte)mTagManager.GetTagById(vv.Key).Type;
+                                    ProcessTagPush(buffers[vvc.Key], vv.Key, tp, vv.Value);
+                                    mDataCounts[vvc.Key]++;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                LoggerService.Service.Erro("SpiderDriver", "RealDataService " + ex.Message);
+                            }
+                        }
+                    }
+
+                    foreach (var cb in buffers)
+                    {
+                        if (cb.Value.WriterIndex > 6)
+                        {
+                            cb.Value.MarkWriterIndex();
+                            cb.Value.SetWriterIndex(1);
+                            cb.Value.WriteInt(mDataCounts[cb.Key]);
+                            cb.Value.ResetWriterIndex();
+                        }
+                        Parent.PushRealDatatoClient(cb.Key, cb.Value);
+                    }
+                    buffers.Clear();
                 }
                 catch(Exception ex)
                 {
@@ -585,6 +609,24 @@ namespace SpiderDriver
             base.Stop();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        public override void OnClientConnected(string id)
+        {
+            if(!mCallBackRegistorIds.ContainsKey(id))
+            {
+                mCallBackRegistorIds.Add(id, new HashSet<int>());
+            }
+            base.OnClientConnected(id);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
         public override void OnClientDisconnected(string id)
         {
             if(mCallBackRegistorIds.ContainsKey(id))
@@ -592,6 +634,16 @@ namespace SpiderDriver
                 mCallBackRegistorIds.Remove(id);
             }
             base.OnClientDisconnected(id);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override void Dispose()
+        {
+            ServiceLocator.Locator.Resolve<IRealTagProduct>().UnSubscribeValueChangedForProducter(mName);
+            this.mTagManager = null;
+            base.Dispose();
         }
 
         #endregion ...Methods...

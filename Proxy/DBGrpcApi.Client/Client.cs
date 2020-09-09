@@ -177,7 +177,11 @@ namespace DBGrpcApi
             return false;
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <returns></returns>
         private string GetGroupName(string tag)
         {
             if (tag.LastIndexOf(".") > 0)
@@ -547,6 +551,24 @@ namespace DBGrpcApi
                 return re;
             }
             return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(string tag,object value)
+        {
+            if(mRealDataClient!=null && !string.IsNullOrEmpty(mLoginId))
+            {
+                SetRealValueRequest svr = new SetRealValueRequest() { Token = mLoginId };
+                svr.Values.Add(new SetRealValueItem() { TagName = tag, Value = value.ToString() });
+                var res = mRealDataClient.SetRealValue(svr);
+                return res.Result;
+            }
+            return false;
         }
 
         /// <summary>

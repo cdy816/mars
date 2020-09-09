@@ -30,6 +30,11 @@ namespace DBRuntime.Api
         /// <summary>
         /// 
         /// </summary>
+        public const byte RealDataSetFun = 11;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public const byte RealDataPushFun = 12;
 
 

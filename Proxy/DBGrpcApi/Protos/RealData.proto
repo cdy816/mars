@@ -16,6 +16,9 @@ service RealData {
   rpc GetRealValueOnlyById (GetRealValueByIdRequest) returns (GetRealValueOnlyReply);
 
   rpc SetRealValue (SetRealValueRequest) returns (BoolResultReply);
+
+  rpc SetRealValueById (SetRealValueByIdRequest) returns (BoolResultReply);
+
   rpc GetTagIdByName (GetTagIdByNameRequest) returns (GetTagIdByNameReplay);
 }
 
@@ -95,11 +98,19 @@ message SetRealValueRequest{
 	repeated SetRealValueItem Values=2;
 }
 
+message SetRealValueByIdRequest{
+	string Token=1;
+	repeated SetRealValueItem2 Values=2;
+}
 //
 message SetRealValueItem{
 	string TagName=1;
-	int32 ValueType=2;
-	string Value=3;
+	string Value=2;
+}
+
+message SetRealValueItem2{
+	int32 TagId=1;
+	string Value=2;
 }
 
 message BoolResultReply{

@@ -274,5 +274,37 @@ namespace DBGrpcApi
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReply> SetRealValueById(SetRealValueByIdRequest request, ServerCallContext context)
+        {
+            bool re = true;
+            if (SecurityManager.Manager.IsLogin(request.Token))
+            {
+                var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+                var smm = ServiceLocator.Locator.Resolve<ITagManager>();
+                foreach (var vv in request.Values)
+                {
+                    string sname = smm.GetTagById(vv.TagId).Group;
+                    re &= SecurityManager.Manager.CheckWritePermission(request.Token, sname);
+                }
+
+                if (re)
+                {
+                    foreach (var vv in request.Values)
+                    {
+                        service.SetTagValueForConsumer(vv.TagId, vv.Value);
+                    }
+                }
+
+                return Task.FromResult(new BoolResultReply { Result = re });
+            }
+            return Task.FromResult(new BoolResultReply { Result = false });
+        }
+
     }
 }

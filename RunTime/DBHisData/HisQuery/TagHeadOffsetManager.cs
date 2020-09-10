@@ -29,7 +29,7 @@ namespace Cdy.Tag
         /// </summary>
         public Dictionary<HeadOffsetKey,Tuple<Dictionary<int, int>,long>> mHeadOffsets = new Dictionary<HeadOffsetKey, Tuple<Dictionary<int, int>, long>>();
 
-        public Dictionary<string, Dictionary<int, long>> LogHeadOffsets = new Dictionary<string, Dictionary<int, long>>();
+        public Dictionary<string, Dictionary<int, AddressAndSize>> LogHeadOffsets = new Dictionary<string, Dictionary<int, AddressAndSize>>();
 
         #endregion ...Variables...
 
@@ -62,7 +62,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="name"></param>
         /// <param name="addrs"></param>
-        public void AddLogHead(string name,Dictionary<int,long> addrs)
+        public void AddLogHead(string name,Dictionary<int, AddressAndSize> addrs)
         {
             if (!LogHeadOffsets.ContainsKey(name))
             {
@@ -127,7 +127,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public Dictionary<int, long> Get(string key)
+        public Dictionary<int, AddressAndSize> GetLog(string key)
         {
             return LogHeadOffsets[key];
         }
@@ -138,6 +138,22 @@ namespace Cdy.Tag
 
         #endregion ...Interfaces...
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class AddressAndSize
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public long Address { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public long Size { get; set; }
+    }
+
 
     /// <summary>
     /// 

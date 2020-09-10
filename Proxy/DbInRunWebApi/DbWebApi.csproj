@@ -7,6 +7,7 @@
     <AssemblyName>DbWebApi</AssemblyName>
     <RootNamespace>DbWebApi</RootNamespace>
     <ApplicationIcon>mrdbw.ico</ApplicationIcon>
+    <Authors>Chongdaoyang</Authors>
   </PropertyGroup>
 
   <ItemGroup>

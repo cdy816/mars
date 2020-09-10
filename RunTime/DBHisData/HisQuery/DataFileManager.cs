@@ -32,7 +32,7 @@ namespace Cdy.Tag
         private Dictionary<string, LogFileInfo> mLogFileMaps = new Dictionary<string, LogFileInfo>();
 
         /// <summary>
-        /// 
+        /// 记录所有变量历史记录中最后的时间
         /// </summary>
         internal static Dictionary<string, DateTime> CurrentDateTime = new Dictionary<string, DateTime>();
 
@@ -145,6 +145,7 @@ namespace Cdy.Tag
         public async Task Int()
         {
             string datapath = GetPrimaryHisDataPath();
+            
             await Scan(datapath);
             if (System.IO.Directory.Exists(datapath))
             {
@@ -154,11 +155,20 @@ namespace Cdy.Tag
             }
 
             string logpath = GetPrimaryLogDataPath();
+            ScanLogFile(logpath);
             if (System.IO.Directory.Exists(logpath))
             {
                 logDataWatcher = new System.IO.FileSystemWatcher(logpath);
                 logDataWatcher.Changed += LogDataWatcher_Changed;
                 logDataWatcher.EnableRaisingEvents = true;
+            }
+
+            foreach (var vv in this.mTimeFileMaps)
+            {
+                foreach (var vvv in vv.Value)
+                {
+                    vvv.Value.UpdateLastDatetime();
+                }
             }
 
            //await Scan(GetBackHisDataPath());
@@ -341,7 +351,7 @@ namespace Cdy.Tag
             }
         }
 
-        public async Task ScanLogFile(string path)
+        public void ScanLogFile(string path)
         {
             System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(path);
             if (dir.Exists)
@@ -353,10 +363,10 @@ namespace Cdy.Tag
                         ParseLogFile(vv.FullName);
                     }
                 }
-                foreach (var vv in dir.GetDirectories())
-                {
-                    await ScanLogFile(vv.FullName);
-                }
+                //foreach (var vv in dir.GetDirectories())
+                //{
+                //    await ScanLogFile(vv.FullName);
+                //}
             }
         }
 
@@ -596,7 +606,7 @@ namespace Cdy.Tag
             }
             else
             {
-                logFileTimes = new Tuple<DateTime, DateTime>(DateTime.MinValue, DateTime.MinValue);
+                logFileTimes = new Tuple<DateTime, DateTime>(starttime, endtime);
                 return GetDataFiles(starttime, endtime - starttime, Id);
             }
             

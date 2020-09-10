@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <ApplicationIcon>mrdbr.ico</ApplicationIcon>
     <StartupObject>DBInRun.Program</StartupObject>
+    <Authors>Chongdaoyang</Authors>
   </PropertyGroup>
 
   <ItemGroup>

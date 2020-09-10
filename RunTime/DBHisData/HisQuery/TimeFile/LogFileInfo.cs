@@ -118,61 +118,62 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="tid"></param>
         /// <returns></returns>
-        private static long ReadTagIndex(this DataFileSeriserbase datafile,int tid,out long offset,out short len)
+        private static AddressAndSize ReadTagIndex(this DataFileSeriserbase datafile,int tid,out long offset,out short len)
         {
-            len = datafile.ReadShort(0);
+            len = datafile.ReadShort(0); //读取时长
             var vsize = datafile.ReadInt(2);
-            offset = vsize;
+            offset = vsize+6;
 
             lock (TagHeadOffsetManager.manager.LogHeadOffsets)
             {
                 if (!TagHeadOffsetManager.manager.Contains(datafile.FileName))
                 {
-                    var data = datafile.Read(6, vsize);
-                    MarshalVarintCodeMemory vcm = new MarshalVarintCodeMemory(data.StartMemory, vsize);
-                    var ltmp = vcm.ToLongList();
-                    int addroffset = (ltmp.Count - 1) / 2;
-                    List<int> ids = new List<int>();
-                    List<long> addrs = new List<long>();
+                    var data = datafile.ReadBytes(6, vsize);
+                    VarintCodeMemory vcm = new VarintCodeMemory(data);
 
-                    long lp = ltmp[1];
-                    for (int i = 1; i < ltmp[0]; i++)
+                    Dictionary<int, AddressAndSize> dtmps = new Dictionary<int, AddressAndSize>();
+                    List<int> ll = new List<int>();
+
+                    var tagcount = vcm.ReadInt64();
+
+                    long tmp = 0;
+                    for (int i = 0; i < tagcount; i++)
                     {
-                        var lp2 = ltmp[i + 1] + lp;
-                        ids.Add((int)lp2);
-                        lp = lp2;
+                        tmp = tmp + vcm.ReadInt64();
+                        dtmps.Add((int)tmp, new AddressAndSize());
+                        ll.Add((int)tmp);
                     }
 
-                    lp = ltmp[1 + addroffset];
-                    for (int i = 1; i < ltmp[0]; i++)
+                    tmp = 0;
+                    for (int i = 0; i < tagcount; i++)
                     {
-                        var lp2 = ltmp[i + 1 + addroffset] + lp;
-                        addrs.Add(lp2);
-                        lp = lp2;
+                        var vs = vcm.ReadInt64();
+                        tmp = tmp + vs;
+                        dtmps[ll[i]].Address = tmp;
+                        if(i>1)
+                        {
+                            dtmps[ll[i - 1]].Size = vs;
+                        }
                     }
 
-                    Dictionary<int, long> idaddrs = new Dictionary<int, long>();
-                    for(int i=0;i<ids.Count;i++)
-                    {
-                        idaddrs.Add(ids[i], addrs[i]);
-                    }
+                    tmp = vcm.ReadInt64();
+                    dtmps[ll[ll.Count - 1]].Size = tmp - dtmps[ll[ll.Count - 1]].Address;
 
-                    TagHeadOffsetManager.manager.AddLogHead(datafile.FileName, idaddrs);
-
-                    if (idaddrs.ContainsKey(tid))
-                        return idaddrs[tid];
                     vcm.Dispose();
-                    data.Dispose();
+
+                    TagHeadOffsetManager.manager.AddLogHead(datafile.FileName, dtmps);
+
+                    if (dtmps.ContainsKey(tid))
+                        return dtmps[tid];
                 }
                 else
                 {
-                   var idaddrs = TagHeadOffsetManager.manager.Get(datafile.FileName);
+                   var idaddrs = TagHeadOffsetManager.manager.GetLog(datafile.FileName);
                     if (idaddrs.ContainsKey(tid))
                         return idaddrs[tid];
                 }
             }
-
-            return -1;
+            return null;
         }
 
         /// <summary>
@@ -257,7 +258,7 @@ namespace Cdy.Tag
             {
                 foreach (var vv in valIndex)
                 {
-                    re.Add(datafile.ReadShort(offset + valueaddr + vv*2));
+                    re.Add(datafile.ReadShort(offset + valueaddr + vv * 2));
                 }
                 datasize = 2;
             }
@@ -339,7 +340,7 @@ namespace Cdy.Tag
                 foreach (var vv in valIndex)
                 {
                     var x = datafile.ReadInt(offset + valueaddr + vv * 8);
-                    var y = datafile.ReadInt(offset + valueaddr + vv * 8+4);
+                    var y = datafile.ReadInt(offset + valueaddr + vv * 8 + 4);
                     re.Add(new IntPointData() { X = x, Y = y });
                 }
                 datasize = 8;
@@ -381,7 +382,7 @@ namespace Cdy.Tag
                     var x = datafile.ReadInt(offset + valueaddr + vv * 12);
                     var y = datafile.ReadInt(offset + valueaddr + vv * 12 + 4);
                     var z = datafile.ReadInt(offset + valueaddr + vv * 12 + 8);
-                    re.Add(new IntPoint3Data() { X = x, Y = y,Z=z });
+                    re.Add(new IntPoint3Data() { X = x, Y = y, Z = z });
                 }
                 datasize = 12;
             }
@@ -418,7 +419,10 @@ namespace Cdy.Tag
                 }
                 datasize = 24;
             }
-            datasize = 0;
+            else
+            {
+                datasize = 0;
+            }
             return re;
         }
 
@@ -438,16 +442,17 @@ namespace Cdy.Tag
             short len = 0;
             int datasize = 0;
             var aid = datafile.ReadTagIndex(tid,out addroffset,out len);
-            if(aid>=0)
+            if(aid!=null)
             {
                 int tagcount = len * 60;
-                var tindex = ReadTimeIndex(datafile, addroffset, aid, startTime, endTime,time, tagcount);
-                var vals = ReadValueInner<T>(datafile,tindex.Keys.ToList(), addroffset, aid + tagcount * 2,out datasize);
-                var qus = datafile.ReadBytes(aid + addroffset + tagcount * (2 + datasize), tagcount);
+                var tindex = ReadTimeIndex(datafile, addroffset, aid.Address, startTime, endTime,time, tagcount);
+                var vals = ReadValueInner<T>(datafile,tindex.Keys.ToList(), addroffset, aid.Address + tagcount * 2,out datasize);
+                var qus = datafile.ReadBytes(aid.Address + addroffset + tagcount * (2 + datasize), tagcount);
                 int i = 0;
                 foreach(var vv in tindex)
                 {
                     result.Add(vals[i], vv.Value, qus[vv.Key]);
+                    i++;
                 }
             }
         }
@@ -652,13 +657,13 @@ namespace Cdy.Tag
             short len = 0;
             int datasize = 0;
             var aid = datafile.ReadTagIndex(tid, out addroffset, out len);
-            if(aid>0)
+            if(aid!=null)
             {
                 int tagcount = len * 60;
-                var qs = ReadTimeIndex(datafile, addroffset, aid, startTime, tagcount);
+                var qs = ReadTimeIndex(datafile, addroffset, aid.Address, startTime, tagcount);
                 
-                var vals = ReadValueInner<T>(datafile, qs.Keys.ToList(), addroffset, aid + tagcount * 2, out datasize);
-                var qq = datafile.ReadBytes(aid + addroffset + tagcount * (datasize + 2), tagcount);
+                var vals = ReadValueInner<T>(datafile, qs.Keys.ToList(), addroffset, aid.Address + tagcount * 2, out datasize);
+                var qq = datafile.ReadBytes(aid.Address + addroffset + tagcount * (datasize + 2), tagcount);
 
                 var vv = qs.ToArray();
                 long valaddr = addroffset + tagcount * 2;

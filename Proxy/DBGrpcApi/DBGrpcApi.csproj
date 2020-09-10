@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <ApplicationIcon>mrdbg.ico</ApplicationIcon>
+    <Authors>Chongdaoyang</Authors>
   </PropertyGroup>
 
   <ItemGroup>

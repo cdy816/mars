@@ -147,6 +147,9 @@ namespace Cdy.Tag
                 ltmp += vv.Value.Length;
                 i++;
             }
+
+            memory.WriteInt64(ltmp);
+
         }
 
         /// <summary>
@@ -168,7 +171,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         private string GetLogFilePath(DateTime starttime,DateTime endtime)
         {
-            return System.IO.Path.Combine(mLogDirector, starttime.ToString("yyyyMMddHHmmss")+  ((int)Math.Floor((mEndTime - starttime).TotalSeconds)).ToString("D3")+".log"); ;
+            return System.IO.Path.Combine(mLogDirector, starttime.ToString("yyyyMMddHHmmss")+  ((int)((mEndTime - starttime).TotalSeconds)).ToString("D3")+".log"); ;
         }
 
         /// <summary>
@@ -269,10 +272,11 @@ namespace Cdy.Tag
             LoggerService.Service.Info("LogManager", "开始记日志录文件：" + fileName);
             using (var stream = System.IO.File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
             {
-                stream.Write(BitConverter.GetBytes(TimeLen));
-                stream.Write(BitConverter.GetBytes(memory.Position));
-                stream.Write(memory.Buffer, 0, memory.Position);
-                mNeedSaveMemory1.RecordToLog(stream);
+                
+                stream.Write(BitConverter.GetBytes(TimeLen));         //写入文件时长
+                stream.Write(BitConverter.GetBytes(memory.Position)); //写入文件头长度
+                stream.Write(memory.Buffer, 0, memory.Position);      //写入文件头
+                mNeedSaveMemory1.RecordToLog(stream);                 //写入内存数据
             }
             sw.Stop();
             LoggerService.Service.Info("LogManager", "日志文件："+ fileName + " 记录完成! 耗时:"+sw.ElapsedMilliseconds );

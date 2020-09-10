@@ -318,7 +318,7 @@
                 </DataTemplate>
             </DataGrid.RowDetailsTemplate>
         </DataGrid>
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Grid.Column="1" Height="32" VerticalAlignment="Bottom"  Background="#0FFFFFFF">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Grid.Column="1" Height="32" VerticalAlignment="Bottom"  Background="#07FFFFFF">
             <Button  BorderBrush="Green"  BorderThickness="0,0,0,2"  Content="{local:ResMarker Add}" Command="{Binding AddCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" Padding="0">
                 <Button.ContentTemplate>
                     <DataTemplate>

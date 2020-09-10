@@ -9,6 +9,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
+using System.Numerics;
 using System.Text;
 
 namespace Cdy.Tag
@@ -21,7 +23,7 @@ namespace Cdy.Tag
 
         #region ... Variables  ...
 
-        private SortedDictionary<DateTime, Tuple<TimeSpan, long>> mTimeOffsets = new SortedDictionary<DateTime, Tuple<TimeSpan, long>>();
+        private SortedDictionary<DateTime, Tuple<TimeSpan, long,DateTime>> mTimeOffsets = new SortedDictionary<DateTime, Tuple<TimeSpan, long, DateTime>>();
 
         private bool mInited = false;
 
@@ -126,14 +128,14 @@ namespace Cdy.Tag
                     if (offset != 0)
                     {
                         var dt2 = ss.ReadDateTime(offset + 16);
-                        mTimeOffsets.Add(time, new Tuple<TimeSpan, long>(dt2 - time, oset));
+                        mTimeOffsets.Add(time, new Tuple<TimeSpan, long,DateTime>(dt2 - time, oset,dt2));
                         mLastTime = dt2;
                     }
                     else
                     {
                         var tspan = StartTime + Duration - time;
                         if(tspan.TotalMilliseconds>0)
-                        mTimeOffsets.Add(time, new Tuple<TimeSpan, long>(tspan, oset));
+                        mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(tspan, oset,time+tspan));
                         mLastTime = time + tspan;
                     }
                 }
@@ -168,12 +170,11 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <returns></returns>
-        public Dictionary<DateTime, Tuple<TimeSpan, long>> GetFileOffsets(DateTime startTime, DateTime endTime)
+        public Dictionary<DateTime, Tuple<TimeSpan, long,DateTime>> GetFileOffsets(DateTime startTime, DateTime endTime)
         {
             lock (mLockObj)
                 if (!mInited) Scan();
-            Dictionary<DateTime, Tuple<TimeSpan, long>> re = new Dictionary<DateTime, Tuple<TimeSpan, long>>();
-
+            Dictionary<DateTime, Tuple<TimeSpan, long, DateTime>> re = new Dictionary<DateTime, Tuple<TimeSpan, long, DateTime>>();
             foreach (var vv in mTimeOffsets)
             {
                 if (vv.Key >= startTime && vv.Key < endTime)
@@ -185,12 +186,144 @@ namespace Cdy.Tag
             return re;
         }
 
+
+
+        /// <summary>
+        /// 获取某个时间段内，不包括数据的时间段集合
+        /// </summary>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <returns></returns>
+        public List<Tuple<DateTime,DateTime>> GetNoValueOffsets(DateTime startTime,DateTime endTime)
+        {
+            List<Tuple<DateTime, DateTime>> re = new List<Tuple<DateTime, DateTime>>();
+            DateTime stime = startTime;
+            List<DateTimeSpan> dtmp = new List<DateTimeSpan>();
+            DateTimeSpan ddt = new DateTimeSpan() { Start = startTime, End = endTime };
+            foreach(var vv in mTimeOffsets)
+            {
+                DateTimeSpan dts = new DateTimeSpan() { Start = vv.Key, End = vv.Value.Item3 };
+                dts = dts.Cross(ddt);
+                if (!dts.IsEmpty())
+                    dtmp.Add(dts);
+            }
+
+            foreach (var vv in dtmp)
+            {
+                if (vv.Start > stime)
+                {
+                    re.Add(new Tuple<DateTime, DateTime>(stime, vv.Start));
+                }
+                stime = vv.End;
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 判断某个时间点是否有数据
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public bool HasValue(DateTime time)
+        {
+            foreach (var vv in mTimeOffsets)
+            {
+                if (vv.Key <= time && time < vv.Value.Item3)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...
 
         #endregion ...Interfaces...
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class DateTimeSpan
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTimeSpan Empty = new DateTimeSpan() { Start = DateTime.MinValue, End = DateTime.MinValue };
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime Start { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime End { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool IsEmpty()
+        {
+            return Start == DateTime.MinValue && End == DateTime.MinValue;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool IsZore()
+        {
+            return (End - Start).TotalSeconds == 0;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public DateTimeSpan Cross(DateTimeSpan target)
+        {
+            DateTime stime = Max(target.Start, this.Start);
+            DateTime etime = Min(target.End, this.End);
+            if(etime<stime)
+            {
+                return Empty;
+            }
+            else
+            {
+                return new DateTimeSpan() { Start = stime, End = etime };
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="time1"></param>
+        /// <param name="time2"></param>
+        /// <returns></returns>
+        public DateTime Min(DateTime time1,DateTime time2)
+        {
+            return time1 <= time2 ? time1 : time2;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="time1"></param>
+        /// <param name="time2"></param>
+        /// <returns></returns>
+        public DateTime Max(DateTime time1,DateTime time2)
+        {
+            return time1 >= time2 ? time1 : time2;
+        }
+
+    }
+
 
     public static class DataFileInfoExtend
     {
@@ -222,7 +355,7 @@ namespace Cdy.Tag
         public static void ReadAllValue<T>(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<T> result)
         {
             var vff = file.GetFileSeriser();
-            Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
+            //Dictionary<long, Tuple<DateTime, DateTime>> moffs = new Dictionary<long, Tuple<DateTime, DateTime>>();
 
             var offset = file.GetFileOffsets(startTime, endTime);
 

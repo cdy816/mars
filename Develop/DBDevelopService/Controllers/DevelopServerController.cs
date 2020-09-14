@@ -432,7 +432,7 @@ namespace DBDevelopService.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public  object GetTagByGroup([FromBody] WebApiGetTagByGroupRequest request)
+        public object GetTagByGroup([FromBody] WebApiGetTagByGroupRequest request)
         {
             if (!CheckLoginId(request.Id, request.Database))
             {
@@ -450,7 +450,7 @@ namespace DBDevelopService.Controllers
                     int from = request.Index * PageCount;
                     var res = db.RealDatabase.ListAllTags().Where(e => e.Group == request.GroupName);
 
-                    if (request.Filters!=null && request.Filters.Count > 0)
+                    if (request.Filters != null && request.Filters.Count > 0)
                     {
                         res = FilterTags(db, res, request.Filters);
                     }
@@ -478,7 +478,7 @@ namespace DBDevelopService.Controllers
                     }
                 }
             }
-            return new ResultResponse() { Result = re };
+            return new GetTagsByGroupResponse() { Result = re, TotalPages = totalpage };
         }
 
 

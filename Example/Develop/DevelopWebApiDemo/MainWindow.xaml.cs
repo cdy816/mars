@@ -37,7 +37,8 @@ namespace DevelopWebApiDemo
 
         private void getTag_Click(object sender, RoutedEventArgs e)
         {
-           var tags =  mHelper.GetTagByGroup(mCurrentDatabase, mTagGroup, 0);
+            int count = 0;
+           var tags =  mHelper.GetTagByGroup(mCurrentDatabase, mTagGroup, 0,out count);
             if(tags!=null)
             {
                 taglist.ItemsSource = tags.Select(e => e.Item1.Name).ToList();

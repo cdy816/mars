@@ -8,6 +8,7 @@
     <PackageProjectUrl>https://github.com/cdy816/mars</PackageProjectUrl>
     <Description>DBDevelop Server WebApi SDK</Description>
     <Copyright />
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

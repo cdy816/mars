@@ -236,6 +236,18 @@ namespace DBDevelopClientWebApi
         public string ErroMsg { get; set; }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class GetTagsResponse<T> : ResultResponse<T>
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public int TotalPages { get; set; }
+    }
+
 
 
 }

@@ -172,6 +172,15 @@ namespace DBDevelopService.Controllers
         public string ErroMsg { get; set; }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    public class GetTagsByGroupResponse : ResultResponse
+    {
+        public int TotalPages { get; set; }
+    }
+
+
 
 
 }

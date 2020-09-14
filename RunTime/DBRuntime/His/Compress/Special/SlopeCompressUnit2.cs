@@ -96,13 +96,12 @@ namespace Cdy.Tag
                     {
                         isFirst = false;
                         mVarintMemory2.WriteInt32(id);
-                        preids = id;
                     }
                     else
                     {
                         mVarintMemory2.WriteInt32(id - preids);
-                        preids = id;
                     }
+                    preids = id;
                     ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
                 }
             }

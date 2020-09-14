@@ -118,71 +118,79 @@ namespace Cdy.Tag
         /// <param name="port"></param>
         protected virtual async void StartInner(int port)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            try
             {
-                GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
-            }
-
-            if (UseLibuv)
-            {
-                var dispatcher = new DispatcherEventLoopGroup();
-                bossGroup = dispatcher;
-                workGroup = new WorkerEventLoopGroup(dispatcher);
-            }
-            else
-            {
-                bossGroup = new MultithreadEventLoopGroup(1);
-                workGroup = new MultithreadEventLoopGroup();
-            }
-
-            X509Certificate2 tlsCertificate = null;
-            if (IsSsl)
-            {
-               // tlsCertificate = new X509Certificate2(Path.Combine(ExampleHelper.ProcessDirectory, "dotnetty.com.pfx"), "password");
-            }
-
-            var bootstrap = new ServerBootstrap();
-            bootstrap.Group(bossGroup, workGroup);
-
-            if (UseLibuv)
-            {
-                bootstrap.Channel<TcpServerChannel>();
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
-                    || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    bootstrap
-                        .Option(ChannelOption.SoReuseport, true)
-                        .ChildOption(ChannelOption.SoReuseaddr, true);
+                    GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
+                }
+
+                if (UseLibuv)
+                {
+                    var dispatcher = new DispatcherEventLoopGroup();
+                    bossGroup = dispatcher;
+                    workGroup = new WorkerEventLoopGroup(dispatcher);
+                }
+                else
+                {
+                    bossGroup = new MultithreadEventLoopGroup(1);
+                    workGroup = new MultithreadEventLoopGroup();
+                }
+
+                X509Certificate2 tlsCertificate = null;
+                if (IsSsl)
+                {
+                    // tlsCertificate = new X509Certificate2(Path.Combine(ExampleHelper.ProcessDirectory, "dotnetty.com.pfx"), "password");
+                }
+
+                var bootstrap = new ServerBootstrap();
+                bootstrap.Group(bossGroup, workGroup);
+
+                if (UseLibuv)
+                {
+                    bootstrap.Channel<TcpServerChannel>();
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                        || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    {
+                        bootstrap
+                            .Option(ChannelOption.SoReuseport, true)
+                            .ChildOption(ChannelOption.SoReuseaddr, true);
+                    }
+                }
+                else
+                {
+                    bootstrap.Channel<TcpServerSocketChannel>();
+                }
+
+                bootstrap
+                        .Option(ChannelOption.SoBacklog, 8192)
+                        .ChildHandler(new ActionChannelInitializer<IChannel>(channel =>
+                        {
+                            IChannelPipeline pipeline = channel.Pipeline;
+                            if (tlsCertificate != null)
+                            {
+                                pipeline.AddLast(TlsHandler.Server(tlsCertificate));
+                            }
+                            pipeline.AddLast("framing-enc", new LengthFieldPrepender(4));
+                            pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(Int32.MaxValue, 0, 4, 0, 4));
+                            mProcessHandle = new ServerChannelHandler(this);
+                            mProcessHandle.DataArrived = new ServerChannelHandler.DataArrivedDelegate((context, fun, data) => { return ExecuteCallBack(context, fun, data); });
+                            pipeline.AddLast(mProcessHandle);
+                        }));
+
+                if (string.IsNullOrEmpty(mIp))
+                {
+                    boundChannel = await bootstrap.BindAsync(port);
+                }
+                else
+                {
+                    boundChannel = await bootstrap.BindAsync(IPAddress.Parse(mIp), port);
                 }
             }
-            else
+            catch(Exception ex)
             {
-                bootstrap.Channel<TcpServerSocketChannel>();
-            }
-
-            bootstrap
-                    .Option(ChannelOption.SoBacklog, 8192)
-                    .ChildHandler(new ActionChannelInitializer<IChannel>(channel =>
-                    {
-                        IChannelPipeline pipeline = channel.Pipeline;
-                        if (tlsCertificate != null)
-                        {
-                            pipeline.AddLast(TlsHandler.Server(tlsCertificate));
-                        }
-                        pipeline.AddLast("framing-enc", new LengthFieldPrepender(4));
-                        pipeline.AddLast("framing-dec", new LengthFieldBasedFrameDecoder(Int32.MaxValue, 0, 4, 0, 4));
-                        mProcessHandle = new ServerChannelHandler(this);
-                        mProcessHandle.DataArrived = new ServerChannelHandler.DataArrivedDelegate((context,fun, data) => { return ExecuteCallBack(context,fun,data); });
-                        pipeline.AddLast(mProcessHandle);
-                    }));
-
-            if (string.IsNullOrEmpty(mIp))
-            {
-                boundChannel = await bootstrap.BindAsync(port);
-            }
-            else
-            {
-                boundChannel = await bootstrap.BindAsync(IPAddress.Parse(mIp),port);
+                LoggerService.Service.Erro("SocketServer", ex.Message);
+                LoggerService.Service.Erro("SocketServer", ex.StackTrace.ToString());
             }
         }
 

@@ -17,6 +17,7 @@ namespace DBInRun
         {
             Console.CancelKeyPress += Console_CancelKeyPress;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
+            AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
             WindowConsolHelper.DisbleQuickEditMode();
 
             Runner.RunInstance.Init();
@@ -154,6 +155,12 @@ namespace DBInRun
                         break;
                 }
             }
+        }
+
+        private static void CurrentDomain_FirstChanceException(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
+        {
+            Console.WriteLine(e.Exception.StackTrace);
+            e.Exception.HResult = 0;
         }
 
         /// <summary>

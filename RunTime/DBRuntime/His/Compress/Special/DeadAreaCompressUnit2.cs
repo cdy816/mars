@@ -32,6 +32,10 @@ namespace Cdy.Tag
 
         protected ProtoMemory mVarintMemory2;
 
+        //Dictionary<int, double> dvals = new Dictionary<int, double>();
+
+        //Dictionary<int, int> dtims = new Dictionary<int, int>();
+
         /// <summary>
         /// 
         /// </summary>
@@ -57,7 +61,7 @@ namespace Cdy.Tag
             }
             else
             {
-                return Math.Abs((newVal - preVal) / preVal) > deadArea;
+                return preVal > 0 ? Math.Abs((newVal - preVal) / preVal) > deadArea : true;
             }
         }
 
@@ -99,7 +103,7 @@ namespace Cdy.Tag
         {
             int preids = 0;
             mVarintMemory2.Reset();
-
+            //dtims.Clear();
             bool isFirst = true;
             int id = 0;
 
@@ -121,6 +125,8 @@ namespace Cdy.Tag
                     {
                         mVarintMemory2.WriteInt32(id - preids);
                     }
+                    //dtims.Add(i, id);
+                    preids = id;
                 }
                 else
                 {
@@ -431,6 +437,14 @@ namespace Cdy.Tag
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
+
+                    //StringBuilder sb = new StringBuilder();
+                    //foreach(var vv in dvals)
+                    //{
+                    //    sb.Append(dtims[vv.Key] + "," + vv.Value+";");
+                    //}
+                    //System.IO.File.WriteAllText(DateTime.Now.Ticks.ToString() + ".deadarea", sb.ToString());
+
                     break;
                 case TagType.Float:
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
@@ -947,6 +961,8 @@ namespace Cdy.Tag
                     double dsval = 0;
                     mDCompress.Reset();
                     mDCompress.Precision = this.Precision;
+                    //dvals.Clear();
+
                     for (int i = 0; i < count; i++)
                     {
                         if (i != ig)
@@ -957,6 +973,7 @@ namespace Cdy.Tag
                                 mDCompress.Append(id);
                                 isFirst = false;
                                 dsval = id;
+                                //dvals.Add(i, id);
                             }
                             else
                             {
@@ -965,6 +982,7 @@ namespace Cdy.Tag
                                     mDCompress.Append(id);
                                     // mMarshalMemory.Write(id);
                                     dsval = id;
+                                    //dvals.Add(i, id);
                                 }
                                 else
                                 {

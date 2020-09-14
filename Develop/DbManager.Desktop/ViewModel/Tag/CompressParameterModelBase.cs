@@ -46,7 +46,6 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
-
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -64,7 +63,7 @@ namespace DBInStudio.Desktop.ViewModel
         /// </summary>
         public virtual void FillParameters()
         {
-
+           
         }
 
         #endregion ...Methods...
@@ -109,6 +108,7 @@ namespace DBInStudio.Desktop.ViewModel
                 {
                     mDeadValue = value;
                     FillParameters();
+                    OnPropertyChanged("DeadValue");
                 }
             }
         }
@@ -180,6 +180,7 @@ namespace DBInStudio.Desktop.ViewModel
             {
                 Parameters.Add("DeadType", Type);
             }
+            base.FillParameters();
         }
 
         #endregion ...Methods...
@@ -291,6 +292,7 @@ namespace DBInStudio.Desktop.ViewModel
             {
                 Parameters.Add("SlopeType", Type);
             }
+            base.FillParameters();
         }
 
         #endregion ...Methods...

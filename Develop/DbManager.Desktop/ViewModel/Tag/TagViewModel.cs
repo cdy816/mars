@@ -993,6 +993,10 @@ namespace DBInStudio.Desktop
         /// </summary>
         private void CheckRecordTypeParameterModel()
         {
+            if(CompressParameterModel!=null)
+            {
+                CompressParameterModel.PropertyChanged -= CompressParameterModel_PropertyChanged;
+            }
             if(mHisTagMode==null)
             {
                 CompressParameterModel = null;
@@ -1011,7 +1015,19 @@ namespace DBInStudio.Desktop
                     CompressParameterModel = new SlopeCompressParameterViewModel() { Parameters = HisTagMode.Parameters };
                     break;
             }
-            
+            if (CompressParameterModel != null)
+            {
+                CompressParameterModel.PropertyChanged += CompressParameterModel_PropertyChanged;
+            }
+        }
+
+        private void CompressParameterModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (mHisTagMode != null)
+            {
+               // mHisTagMode.Parameters = (sender as CompressParameterModelBase).Parameters;
+                IsChanged = true;
+            }
         }
 
         /// <summary>

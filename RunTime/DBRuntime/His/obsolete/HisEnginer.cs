@@ -298,7 +298,7 @@ namespace Cdy.Tag
                             mHisTag = new LongPoint3HisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.Value.CompressType, Parameters = vv.Value.Parameters };
                             break;
                     }
-                    mHisTag.MaxCount = count;
+                    mHisTag.MaxCount = count-1;
                     mHisTags.Add(vv.Key, mHisTag);
 
                     if (mHisTag.Type == Cdy.Tag.RecordType.Timer)

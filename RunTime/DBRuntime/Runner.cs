@@ -166,6 +166,9 @@ namespace Cdy.Tag
 
             //注册线性转换器
             ValueConvertManager.manager.Registor(new LinerConvert());
+
+            DataFileSeriserManager.manager.Init();
+            CPUAssignHelper.Helper.Init();
         }
 
         /// <summary>
@@ -276,8 +279,6 @@ namespace Cdy.Tag
             }
             InitPath();
 
-            CPUAssignHelper.Helper.Init();
-
             if (CheckDatabaseExist(mDatabaseName))
             {
                 LoadDatabase();
@@ -371,7 +372,7 @@ namespace Cdy.Tag
         /// 启动
         /// </summary>
         /// <param name="database"></param>
-        public async void StartAsync(string database,int port = 14330)
+        public async void StartAsync(string database,int port = -1)
         {
             LoggerService.Service.EnableLogger = true;
             LoggerService.Service.Info("Runner", " 数据库 " + database+" 开始启动");
@@ -385,7 +386,14 @@ namespace Cdy.Tag
             {
                 return;
             }
-            DBRuntime.Api.DataService.Service.Start(port);
+
+            int pt = port;
+            if(pt<1)
+            {
+                pt = mDatabase.Setting.RealDataServerPort;
+            }
+
+            DBRuntime.Api.DataService.Service.Start(pt);
 
             if (RDDCManager.Manager.CurrentState == WorkState.Primary)
             {

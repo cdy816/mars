@@ -33,6 +33,11 @@ namespace Cdy.Tag
 
         #region ... Properties ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public int RealDataServerPort { get; set; } = 14330;
+
         #endregion ...Properties...
 
         #region ... Methods    ...

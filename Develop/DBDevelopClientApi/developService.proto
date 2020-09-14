@@ -187,7 +187,43 @@ service DevelopServer {
 
    rpc IsDatabaseRunning(DatabasesRequest) returns (BoolResultReplay);
 
+   //
+   rpc GetRealDataServerPort(DatabasesRequest) returns (IntResultReplay);
+
+   //
+   rpc SetRealDataServerPort(SetRealDataServerPortRequest) returns  (BoolResultReplay);
+
+   //
+   rpc GetDriverSetting(GetDriverSettingRequest) returns (GetDriverSettingReplay);
+
+   //
+   rpc UpdateDrvierSetting(UpdateDrvierSettingRequest) returns  (BoolResultReplay);
+
 }
+
+//
+message GetDriverSettingRequest
+{
+    string LoginId=1;
+    string Driver=2;
+}
+
+//
+message GetDriverSettingReplay
+{
+    bool Result =1;
+    string ErroMessage=2;
+    string Drivers=3;
+    string SettingString=4;
+}
+
+message UpdateDrvierSettingRequest
+{
+ string LoginId=1;
+ string Driver=2;
+ string SettingString=4;
+}
+
 
 //获取驱动列表返回消息
 message GetRegisteDriversReplay
@@ -575,6 +611,13 @@ message GetTagByGroupRequest
     repeated FilterMessageItem Filters=5;
 }
 
+message SetRealDataServerPortRequest
+{
+    string LoginId=1;
+    int32 Port=2;
+    string Database=3;
+}
+
 message FilterMessageItem
 {
     string key=1;
@@ -589,6 +632,12 @@ message BoolResultReplay
 }
 
 
+message IntResultReplay
+{
+    bool Result =1;
+    int32 value=2;
+    string ErroMessage=3;
+}
 
 //获取变量配置
 message GetTagMessageReply

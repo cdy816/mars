@@ -133,7 +133,12 @@ namespace Cdy.Tag
         /// <returns></returns>
         private SettingDoc LoadSetting(XElement xe)
         {
-            return null;
+            SettingDoc doc = new SettingDoc();
+            if (xe.Attribute("RealDataServerPort") != null)
+            {
+                doc.RealDataServerPort = int.Parse(xe.Attribute("RealDataServerPort").Value);
+            }
+            return doc;
         }
 
         /// <summary>
@@ -144,6 +149,7 @@ namespace Cdy.Tag
         private XElement Save(SettingDoc doc)
         {
             XElement xe = new XElement("Setting");
+            xe.SetAttributeValue("RealDataServerPort", doc.RealDataServerPort);
             return xe;
         }
 

@@ -163,7 +163,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Init()
         {
-            DataFileSeriserManager.manager.Init();
+            
           
 
             var his = ServiceLocator.Locator.Resolve<IHisEngine2>();

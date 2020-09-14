@@ -1929,6 +1929,47 @@ namespace DBDevelopService
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
 
-        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> SetRealDataServerPort(SetRealDataServerPortRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, request.Database))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if(db!=null)
+            {
+                db.Setting.RealDataServerPort = request.Port;
+                return Task.FromResult(new BoolResultReplay() { Result = true });
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = false });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<IntResultReplay> GetRealDataServerPort(DatabasesRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, request.Database))
+            {
+                return Task.FromResult(new IntResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                return Task.FromResult(new IntResultReplay() { Result = true,Value= db.Setting.RealDataServerPort });
+            }
+            return Task.FromResult(new IntResultReplay() { Result = false });
+        }
+
     }
 }

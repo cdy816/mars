@@ -396,6 +396,11 @@ namespace DBRuntime.Proxy
         {
             
         }
+
+        public bool Init()
+        {
+            return true;
+        }
     }
 
     public static class ApiClientExtends

@@ -319,8 +319,8 @@
                             <MenuItem Header="{local:ResMarker Paste}" Command="{Binding PasteCommand}" />
                         </ContextMenu>
 
-                        <HierarchicalDataTemplate  DataType="{x:Type local:TagGroupViewModel}"  ItemsSource="{Binding Children}">
-                            <StackPanel Orientation="Horizontal" Height="24">
+                        <HierarchicalDataTemplate  DataType="{x:Type local:TagGroupViewModel}"  ItemsSource="{Binding Children}" >
+                            <StackPanel Orientation="Horizontal" Height="24"  Background="Transparent">
                                 <Image Focusable="False" Source="/Image/文件夹.png"  Margin="0,0,4,0" Height="18" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                                 <Grid ContextMenu="{StaticResource groupMenu}"  Background="{Binding Background}" VerticalAlignment="Center" Focusable="False"  Name="spanel"    >
                                     <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{Binding Name}" VerticalAlignment="Center" />
@@ -337,7 +337,7 @@
                         </HierarchicalDataTemplate>
 
                         <HierarchicalDataTemplate  DataType="{x:Type local:ServerSecurityTreeViewModel}"  ItemsSource="{Binding Children}">
-                            <StackPanel Orientation="Horizontal" Height="24">
+                            <StackPanel Orientation="Horizontal" Height="24"  Background="Transparent">
                                 <Image Focusable="False" Source="/Image/server-security.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                                 <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker ServerSecurity}" VerticalAlignment="Center" />
                             </StackPanel>
@@ -352,35 +352,43 @@
 
 
                         <DataTemplate  DataType="{x:Type local:ServerUserManagerTreeViewModel}" >
-                            <StackPanel Orientation="Horizontal" Height="24">
+                            <StackPanel Orientation="Horizontal" Height="24"  Background="Transparent">
                                 <Image Focusable="False" Source="/Image/user.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                                 <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker User}" VerticalAlignment="Center" />
                             </StackPanel>
                         </DataTemplate>
 
+
+                        <DataTemplate  DataType="{x:Type local:DatabaseSettingViewModel}" >
+                            <StackPanel Orientation="Horizontal" Height="24" Background="Transparent">
+                                <Image Focusable="False" Source="/Image/setting.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                                <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker Setting}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+
                         <HierarchicalDataTemplate  DataType="{x:Type local:RootTagGroupViewModel}"  ItemsSource="{Binding Children}">
-                            <StackPanel ContextMenu="{StaticResource rootgroupMenu}" Orientation="Horizontal" Height="24">
+                            <StackPanel ContextMenu="{StaticResource rootgroupMenu}" Orientation="Horizontal" Height="24"  Background="Transparent">
                                 <Image Focusable="False" Source="/Image/文件夹.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="18" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                                 <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{Binding Name}" VerticalAlignment="Center" />
                             </StackPanel>
                         </HierarchicalDataTemplate>
 
                         <HierarchicalDataTemplate  DataType="{x:Type local:SecurityTreeItemViewModel}"  ItemsSource="{Binding Children}">
-                            <StackPanel Orientation="Horizontal" Height="24">
+                            <StackPanel Orientation="Horizontal" Height="24"  Background="Transparent">
                                 <Image Focusable="False" Source="/Image/Security.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="18" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                                 <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{Binding Name}" VerticalAlignment="Center" />
                             </StackPanel>
                         </HierarchicalDataTemplate>
 
                         <HierarchicalDataTemplate  DataType="{x:Type local:UserGroupRootViewModel}"  ItemsSource="{Binding Children}">
-                            <StackPanel Orientation="Horizontal" Height="24">
+                            <StackPanel Orientation="Horizontal" Height="24"  Background="Transparent">
                                 <Image Focusable="False" Source="/Image/user.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="18" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                                 <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker User}" VerticalAlignment="Center" />
                             </StackPanel>
                         </HierarchicalDataTemplate>
 
                         <HierarchicalDataTemplate  DataType="{x:Type local:PermissionTreeItemViewModel}"  ItemsSource="{Binding Children}">
-                            <StackPanel Orientation="Horizontal" Height="24">
+                            <StackPanel Orientation="Horizontal" Height="24"  Background="Transparent">
                                 <Image Focusable="False" Source="/Image/permissions.png" VerticalAlignment="Center" Margin="0,0,4,0" Height="18" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                                 <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker Permission}" VerticalAlignment="Center" />
                             </StackPanel>

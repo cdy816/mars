@@ -348,6 +348,9 @@
   <data name="ServerIp" xml:space="preserve">
     <value>Server Ip</value>
   </data>
+  <data name="ServerPort" xml:space="preserve">
+    <value>ServerPort</value>
+  </data>
   <data name="ServerSecurity" xml:space="preserve">
     <value>ServerSecurity</value>
   </data>

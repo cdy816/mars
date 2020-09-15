@@ -44,6 +44,7 @@
     <None Remove="Image\save.png" />
     <None Remove="Image\Security.png" />
     <None Remove="Image\server-security.png" />
+    <None Remove="Image\setting.png" />
     <None Remove="Image\show.png" />
     <None Remove="Image\start.png" />
     <None Remove="Image\start2.png" />
@@ -91,6 +92,7 @@
     <Resource Include="Image\save.png" />
     <Resource Include="Image\Security.png" />
     <Resource Include="Image\server-security.png" />
+    <Resource Include="Image\setting.png" />
     <Resource Include="Image\show.png" />
     <Resource Include="Image\start.png" />
     <Resource Include="Image\start2.png" />

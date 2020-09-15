@@ -27,7 +27,7 @@ namespace SpiderDriver
 
         private List<DataService> mService;
 
-        public void Load()
+        private void Load()
         {
 
             string sfileName = Assembly.GetEntryAssembly().Location;
@@ -69,6 +69,53 @@ namespace SpiderDriver
         public void Save()
         {
             Save(PathHelper.helper.GetApplicationFilePath("Config", "SpiderDriver.cfg"));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        public void SaveForDatabase(string database)
+        {
+            Save(System.IO.Path.Combine(PathHelper.helper.GetDatabasePath(database), "SpiderDriver.cfg"));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public Dictionary<string,string> LoadFromDatabase(string database)
+        {
+            Dictionary<string, string> re = new Dictionary<string, string>();
+
+            var sfileName = System.IO.Path.Combine(PathHelper.helper.GetDatabasePath(database), "SpiderDriver.cfg");
+            if (System.IO.File.Exists(sfileName))
+            {
+                XElement xe = XElement.Load(sfileName);
+                if (xe.Element("Server") != null)
+                {
+                    xe = xe.Element("Server");
+
+                    if (xe.Attribute("StartPort") != null)
+                    {
+                        var mPort = int.Parse(xe.Attribute("StartPort").Value);
+                        re.Add("StartPort", mPort.ToString());
+                    }
+
+                    if (xe.Attribute("EndPort") != null)
+                    {
+                        var mEndPort = int.Parse(xe.Attribute("EndPort").Value);
+                        re.Add("EndPort", mEndPort.ToString());
+                    }
+                }
+            }
+            else
+            {
+                re.Add("StartPort", mPort.ToString());
+                re.Add("EndPort", mEndPort.ToString());
+            }
+            return re;
         }
 
         /// <summary>
@@ -132,7 +179,7 @@ namespace SpiderDriver
         /// <returns></returns>
         public Dictionary<string, string> GetConfig(string database)
         {
-            throw new NotImplementedException();
+            return LoadFromDatabase(database);
         }
 
         /// <summary>
@@ -142,7 +189,26 @@ namespace SpiderDriver
         /// <param name="config"></param>
         public void UpdateConfig(string database, Dictionary<string, string> config)
         {
-            throw new NotImplementedException();
+            if(config.ContainsKey("StartPort"))
+            {
+                mPort = int.Parse(config["StartPort"]);
+            }
+            if (config.ContainsKey("EndPort"))
+            {
+                mEndPort = int.Parse(config["EndPort"]);
+            }
+
+            SaveForDatabase(database);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool Init()
+        {
+            Load();
+            return true;
         }
     }
 }

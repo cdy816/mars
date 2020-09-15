@@ -81,6 +81,7 @@ namespace Cdy.Tag
                             if (!mDrivers.ContainsKey(driver.Name))
                             {
                                 mDrivers.Add(driver.Name, driver);
+                                driver.Init();
                             }
                         }
                         else

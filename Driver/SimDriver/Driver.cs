@@ -317,6 +317,11 @@ namespace SimDriver
 
         }
 
+        public bool Init()
+        {
+            return true;
+        }
+
 
 
         #endregion ...Methods...

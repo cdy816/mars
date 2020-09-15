@@ -658,6 +658,9 @@ namespace DBInStudio.Desktop
                 securityModel.Database = mDatabase;
                 securityModel.Init();
 
+                dbitem.Children.Add(new DatabaseSettingViewModel() { Database = this.Database });
+
+
                 Task.Run(() => {
                     TagViewModel.Drivers = DevelopServiceHelper.Helper.GetRegistorDrivers(mDatabase);
                     QueryGroups();
@@ -839,6 +842,9 @@ namespace DBInStudio.Desktop
                     dbitem.Children.Add(securityModel);
                     securityModel.Database = mDatabase;
                     securityModel.Init();
+
+                    dbitem.Children.Add(new DatabaseSettingViewModel() { Database = this.Database });
+
                     Task.Run(() => {
                         TagViewModel.Drivers = DevelopServiceHelper.Helper.GetRegistorDrivers(mDatabase);
                         QueryGroups();
@@ -935,6 +941,9 @@ namespace DBInStudio.Desktop
                     dbitem.Children.Add(securityModel);
                     securityModel.Database = mDatabase;
                     securityModel.Init();
+
+                    dbitem.Children.Add(new DatabaseSettingViewModel() { Database = this.Database });
+
                     Task.Run(() => {
                         TagViewModel.Drivers = DevelopServiceHelper.Helper.GetRegistorDrivers(mDatabase);
                         QueryGroups();

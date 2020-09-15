@@ -36,6 +36,13 @@ namespace Cdy.Tag.Driver
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        bool Init();
+
         /// <summary>
         /// 
         /// </summary>

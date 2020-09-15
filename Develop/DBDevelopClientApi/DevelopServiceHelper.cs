@@ -1313,7 +1313,7 @@ namespace DBDevelopClientApi
             Dictionary<string, string> re = new Dictionary<string, string>();
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
-                var res = mCurrentClient.GetDriverSetting(new DBDevelopService.GetDriverSettingRequest() { Database = database, LoginId = mLoginId });
+                var res = mCurrentClient.GetDriverSetting(new DBDevelopService.GetDriverSettingRequest() { Database = database, LoginId = mLoginId,Driver=driver });
                 var sval = res.SettingString;
                 if(!string.IsNullOrEmpty(sval))
                 {

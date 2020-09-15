@@ -745,6 +745,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 ServerPort 的本地化字符串。
+        /// </summary>
+        internal static string ServerPort {
+            get {
+                return ResourceManager.GetString("ServerPort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 ServerSecurity 的本地化字符串。
         /// </summary>
         internal static string ServerSecurity {

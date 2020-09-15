@@ -67,6 +67,11 @@
         <view:MarInfoView />
     </DataTemplate>
 
+
+    <DataTemplate DataType="{x:Type viewmodel:DatabaseSettingConfigViewModel}">
+        <view:DatabaseSettingView />
+    </DataTemplate>
+
     <BooleanToVisibilityConverter x:Key="bvc" />
     
     

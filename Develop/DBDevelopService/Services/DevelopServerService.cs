@@ -2037,7 +2037,7 @@ namespace DBDevelopService
                     dd.UpdateConfig(request.Database, dtmp);
                 }
             }
-            return base.UpdateDrvierSetting(request, context);
+            return Task.FromResult(new BoolResultReplay() { Result = true });
         }
 
     }

@@ -1,4 +1,5 @@
-﻿using Cdy.Tag.Driver;
+﻿using Cdy.Tag;
+using Cdy.Tag.Driver;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -33,6 +34,16 @@ namespace SpiderDriver
             string spath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(sfileName), "Config");
             sfileName = System.IO.Path.Combine(spath,  "SpiderDriver.cfg");
 
+            var dbpath = ServiceLocator.Locator.Resolve("DatabaseLocation");
+            if(dbpath!=null)
+            {
+                var sdp = System.IO.Path.Combine(dbpath.ToString(), "SpiderDriver.cfg");
+                if(System.IO.File.Exists(sdp))
+                {
+                    sfileName = sdp;
+                }
+            }
+
             if (System.IO.File.Exists(sfileName))
             {
                 XElement xe = XElement.Load(sfileName);
@@ -50,6 +61,28 @@ namespace SpiderDriver
                     mEndPort = int.Parse(xe.Attribute("EndPort").Value);
                 }
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Save()
+        {
+            Save(PathHelper.helper.GetApplicationFilePath("Config", "SpiderDriver.cfg"));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="file"></param>
+        public void Save(string file)
+        {
+            XElement xx = new XElement("Config");
+            XElement xe = new XElement("Server");
+            xe.SetAttributeValue("StartPort", mPort);
+            xe.SetAttributeValue("EndPort", mEndPort);
+            xx.Add(xe);
+            xx.Save(file);
         }
 
         /// <summary>
@@ -90,6 +123,26 @@ namespace SpiderDriver
             foreach(var vvs in mService)
             vvs.Stop();
             return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public Dictionary<string, string> GetConfig(string database)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="config"></param>
+        public void UpdateConfig(string database, Dictionary<string, string> config)
+        {
+            throw new NotImplementedException();
         }
     }
 }

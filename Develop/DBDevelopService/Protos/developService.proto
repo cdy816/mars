@@ -206,6 +206,7 @@ message GetDriverSettingRequest
 {
     string LoginId=1;
     string Driver=2;
+    string Database=3;
 }
 
 //
@@ -213,14 +214,14 @@ message GetDriverSettingReplay
 {
     bool Result =1;
     string ErroMessage=2;
-    string Drivers=3;
-    string SettingString=4;
+    string SettingString=3;
 }
 
 message UpdateDrvierSettingRequest
 {
  string LoginId=1;
  string Driver=2;
+ string Database=3;
  string SettingString=4;
 }
 

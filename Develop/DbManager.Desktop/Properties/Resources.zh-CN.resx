@@ -357,6 +357,9 @@
   <data name="SetPasswordSeccussful" xml:space="preserve">
     <value>设置密码成功.</value>
   </data>
+  <data name="Setting" xml:space="preserve">
+    <value>设置</value>
+  </data>
   <data name="SlopeAreaValue" xml:space="preserve">
     <value>斜率区间</value>
   </data>

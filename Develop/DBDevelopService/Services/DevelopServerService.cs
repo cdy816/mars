@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Cdy.Tag;
+using System.Text;
+using System.Data.Common;
+
 namespace DBDevelopService
 {
     public class DevelopServerService : DevelopServer.DevelopServerBase
@@ -1969,6 +1972,72 @@ namespace DBDevelopService
                 return Task.FromResult(new IntResultReplay() { Result = true,Value= db.Setting.RealDataServerPort });
             }
             return Task.FromResult(new IntResultReplay() { Result = false });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<GetDriverSettingReplay> GetDriverSetting(GetDriverSettingRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, request.Database))
+            {
+                return Task.FromResult(new GetDriverSettingReplay() { Result = false });
+            }
+            if(DriverManager.Manager.Drivers.ContainsKey(request.Driver))
+            {
+                var re = new GetDriverSettingReplay() {  Result = true };
+                var dd = DriverManager.Manager.Drivers[request.Driver];
+                var config = dd.GetConfig(request.Database);
+                if(config!=null)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    foreach(var vv in config)
+                    {
+                        sb.Append(vv.Key + ":" + vv.Value + ",");
+                    }
+                    sb.Length = sb.Length > 0 ? sb.Length - 1 : sb.Length;
+                    re.SettingString = sb.ToString();
+                }
+                return Task.FromResult(re);
+            }
+            return Task.FromResult(new GetDriverSettingReplay() { Result = false });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> UpdateDrvierSetting(UpdateDrvierSettingRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, request.Database))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            if (DriverManager.Manager.Drivers.ContainsKey(request.Driver))
+            {
+                var dd = DriverManager.Manager.Drivers[request.Driver];
+                string sval = request.SettingString;
+                if(!string.IsNullOrEmpty(sval))
+                {
+                    Dictionary<string, string> dtmp = new Dictionary<string, string>();
+                    string[] ss = sval.Split(new char[] { ',' });
+                    foreach(var vv in ss)
+                    {
+                        string[] svv = vv.Split(new char[] { ':' });
+                        if(!dtmp.ContainsKey(svv[0]))
+                        {
+                            dtmp.Add(svv[0], svv[1]);
+                        }
+                    }
+                    dd.UpdateConfig(request.Database, dtmp);
+                }
+            }
+            return base.UpdateDrvierSetting(request, context);
         }
 
     }

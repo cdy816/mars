@@ -376,6 +376,26 @@ namespace DBRuntime.Proxy
             resetEvent.Set();
             return true;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public Dictionary<string, string> GetConfig(string database)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="config"></param>
+        public void UpdateConfig(string database, Dictionary<string, string> config)
+        {
+            
+        }
     }
 
     public static class ApiClientExtends

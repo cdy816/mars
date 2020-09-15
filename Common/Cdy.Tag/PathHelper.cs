@@ -8,6 +8,7 @@
 //==============================================================
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Text;
 
 namespace Cdy.Tag
@@ -48,6 +49,29 @@ namespace Cdy.Tag
         #endregion ...Constructor...
 
         #region ... Properties ...
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        public string AppPath
+        {
+            get
+            {
+                return mAppPath;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string DataPath
+        {
+            get
+            {
+                return mDataPath;
+            }
+        }
+
 
         #endregion ...Properties...
 
@@ -93,7 +117,30 @@ namespace Cdy.Tag
             return System.IO.Path.Combine(mDataPath,databaseName, path);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public string GetDatabasePath(string database)
+        {
+            return System.IO.Path.Combine(mDataPath, database);
+        }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public string GetApplicationFilePath(params string[] file)
+        {
+            string spath = mAppPath;
+            foreach(var vv in file)
+            {
+                spath = System.IO.Path.Combine(spath, vv);
+            }
+            return spath;
+        }
 
         #endregion ...Methods...
 

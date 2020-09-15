@@ -357,6 +357,9 @@
   <data name="SetPasswordSeccussful" xml:space="preserve">
     <value>set password seccussfull.</value>
   </data>
+  <data name="Setting" xml:space="preserve">
+    <value>Setting</value>
+  </data>
   <data name="SlopeAreaValue" xml:space="preserve">
     <value>Slope zone</value>
   </data>

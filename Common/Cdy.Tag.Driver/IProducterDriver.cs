@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Cdy.Tag.Driver
 {
@@ -46,6 +47,20 @@ namespace Cdy.Tag.Driver
         /// </summary>
         /// <returns></returns>
         bool Stop();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        Dictionary<string,string> GetConfig(string database);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="config"></param>
+        void UpdateConfig(string database, Dictionary<string, string> config);
 
         #endregion ...Methods...
 

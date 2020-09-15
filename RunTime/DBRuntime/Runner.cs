@@ -130,10 +130,10 @@ namespace Cdy.Tag
         }
 
 
-        /// <summary>
-        /// 数据库存访路径
-        /// </summary>
-        public string DatabasePath { get; set; }
+        ///// <summary>
+        ///// 数据库存访路径
+        ///// </summary>
+        //public string DatabasePath { get; set; }
 
         /// <summary>
         /// 
@@ -271,7 +271,7 @@ namespace Cdy.Tag
             if (System.IO.Path.IsPathRooted(database))
             {
                 this.mDatabaseName = System.IO.Path.GetFileNameWithoutExtension(database);
-                this.DatabasePath = System.IO.Path.GetDirectoryName(database);
+                //this.DatabasePath = System.IO.Path.GetDirectoryName(database);
             }
             else
             {
@@ -294,6 +294,8 @@ namespace Cdy.Tag
                 ServiceLocator.Locator.Registor<IRealDataNotifyForProducter>(realEnginer);
                 ServiceLocator.Locator.Registor<IRealTagConsumer>(realEnginer);
                 ServiceLocator.Locator.Registor<IRealTagProduct>(realEnginer);
+
+                ServiceLocator.Locator.Registor("DatabaseLocation", PathHelper.helper.GetDatabasePath(mDatabase.Name));
 
                 hisEnginer = new HisEnginer2(mHisDatabase, realEnginer);
                 hisEnginer.MergeMemoryTime = mHisDatabase.Setting.DataBlockDuration * 60;

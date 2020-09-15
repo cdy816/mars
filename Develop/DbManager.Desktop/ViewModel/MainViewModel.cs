@@ -653,9 +653,11 @@ namespace DBInStudio.Desktop
                 this.TagGroup.Add(sec);
                 dbitem.Children.Add(mRootTagGroupModel);
                 mRootTagGroupModel.Database = mDatabase;
+
                 dbitem.Children.Add(securityModel);
                 securityModel.Database = mDatabase;
                 securityModel.Init();
+
                 Task.Run(() => {
                     TagViewModel.Drivers = DevelopServiceHelper.Helper.GetRegistorDrivers(mDatabase);
                     QueryGroups();

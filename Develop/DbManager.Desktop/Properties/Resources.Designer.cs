@@ -772,6 +772,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Setting 的本地化字符串。
+        /// </summary>
+        internal static string Setting {
+            get {
+                return ResourceManager.GetString("Setting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Slope zone 的本地化字符串。
         /// </summary>
         internal static string SlopeAreaValue {

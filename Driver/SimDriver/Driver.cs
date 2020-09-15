@@ -297,15 +297,35 @@ namespace SimDriver
             return true;
         }
 
-        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public Dictionary<string, string> GetConfig(string database)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="config"></param>
+        public void UpdateConfig(string database, Dictionary<string, string> config)
+        {
+
+        }
+
+
 
         #endregion ...Methods...
 
         #region ... Interfaces ...
 
         #endregion ...Interfaces...
-        
 
-        
+
+
     }
 }

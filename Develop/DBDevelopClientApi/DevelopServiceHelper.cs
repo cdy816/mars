@@ -14,6 +14,7 @@ using System.Net.Http;
 using System.Text;
 using System.Linq;
 using Cdy.Tag;
+using System.Data.Common;
 
 namespace DBDevelopClientApi
 {
@@ -1263,6 +1264,100 @@ namespace DBDevelopClientApi
             }
             return re;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public int GetRealServerPort(string database)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                var res = mCurrentClient.GetRealDataServerPort(new DBDevelopService.DatabasesRequest() { Database = database, LoginId = mLoginId });
+                return res.Value;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="port"></param>
+        /// <returns></returns>
+        public bool SetRealServerPort(string database,int port)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                var res = mCurrentClient.SetRealDataServerPort(new DBDevelopService.SetRealDataServerPortRequest() { Database = database, LoginId = mLoginId,Port=port });
+                return res.Result;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 获取驱动配置
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="driver"></param>
+        /// <returns></returns>
+        public Dictionary<string,string> GetDriverSetting(string database,string driver)
+        {
+            Dictionary<string, string> re = new Dictionary<string, string>();
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                var res = mCurrentClient.GetDriverSetting(new DBDevelopService.GetDriverSettingRequest() { Database = database, LoginId = mLoginId });
+                var sval = res.SettingString;
+                if(!string.IsNullOrEmpty(sval))
+                {
+                    string[] ss = sval.Split(new char[] { ',' });
+                    foreach (var vv in ss)
+                    {
+                        string[] svv = vv.Split(new char[] { ':' });
+                        if (!re.ContainsKey(svv[0]))
+                        {
+                            re.Add(svv[0], svv[1]);
+                        }
+                    }
+                }
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 更新驱动配置
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="driver"></param>
+        /// <param name="settings"></param>
+        /// <returns></returns>
+        public bool UpdateDriverSetting(string database,string driver,Dictionary<string,string> settings)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                if(settings!=null&&settings.Count>0)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    foreach (var vv in settings)
+                    {
+                        sb.Append(vv.Key + ":" + vv.Value + ",");
+                    }
+                    sb.Length = sb.Length > 0 ? sb.Length - 1 : sb.Length;
+
+                    return mCurrentClient.UpdateDrvierSetting(new DBDevelopService.UpdateDrvierSettingRequest() { Database = database, Driver = driver, LoginId = mLoginId, SettingString = sb.ToString() }).Result;
+
+                }
+            }
+            return false;
+        }
+
 
         /// <summary>
         /// 

@@ -28,9 +28,13 @@ namespace Cdy.Tag
         /// </summary>
         private ManualResetEvent resetEvent;
 
+        private ManualResetEvent mManualEvent;
+
         private ManualResetEvent closedEvent;
 
         private Thread mCompressThread;
+
+        private Thread mManualCompressThread;
 
         private bool mIsClosed = false;
 
@@ -154,9 +158,16 @@ namespace Cdy.Tag
             //Init();
             resetEvent = new ManualResetEvent(false);
             closedEvent = new ManualResetEvent(false);
+
+            mManualEvent = new ManualResetEvent(false);
+
             mCompressThread = new Thread(ThreadPro);
             mCompressThread.IsBackground = true;
             mCompressThread.Start();
+
+            mManualCompressThread = new Thread(ManualThreadPro);
+            mManualCompressThread.IsBackground = true;
+            mManualCompressThread.Start();
         }
 
         /// <summary>
@@ -168,6 +179,7 @@ namespace Cdy.Tag
 
             mIsClosed = true;
             resetEvent.Set();
+            mManualEvent.Set();
             closedEvent.WaitOne();
 
             resetEvent.Dispose();
@@ -178,6 +190,9 @@ namespace Cdy.Tag
                 while (vv.Value.IsBusy())
                     vv.Value.DecRef();
             }
+
+            while (mCompressThread.IsAlive) Thread.Sleep(1);
+            while (mManualCompressThread.IsAlive) Thread.Sleep(1);
         }
 
         /// <summary>
@@ -298,6 +313,43 @@ namespace Cdy.Tag
             mTargetMemorys.Clear();
             mSourceMemory = null;
             mHisTagService = null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="data"></param>
+        public void RequestManualToCompress(ManualHisDataMemoryBlock data)
+        {
+            foreach (var vv in mTargetMemorys)
+            {
+                if (data.Id >= vv.Value.Id * TagCountOneFile && data.Id < (vv.Value.Id + 1) * TagCountOneFile)
+                {
+                    vv.Value.AddRequestManualToCompress(data);
+                }
+            }
+            mManualEvent.Set();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void ManualThreadPro()
+        {
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+            while (!mIsClosed)
+            {
+                mManualEvent.WaitOne();
+                mManualEvent.Reset();
+                if (mIsClosed)
+                    break;
+
+                foreach (var vv in mTargetMemorys.Values)
+                {
+                    vv.RequestManualToCompress();
+                }
+
+            }
         }
 
         #endregion ...Methods...

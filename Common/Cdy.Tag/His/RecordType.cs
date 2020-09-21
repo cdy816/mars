@@ -24,7 +24,11 @@ namespace Cdy.Tag
         /// <summary>
         /// 值改变
         /// </summary>
-        ValueChanged
+        ValueChanged,
+        /// <summary>
+        /// 手动
+        /// </summary>
+        Manual
     }
 
 

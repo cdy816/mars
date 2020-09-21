@@ -40,5 +40,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <returns></returns>
         public List<HisRunTag> ListAllTags();
+
+        /// <summary>
+        /// 手动插入历史数据
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool InsertHisValues(long id,SortedDictionary<DateTime, object> values);
     }
 }

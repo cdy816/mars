@@ -14,6 +14,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Buffers;
+using DotNetty.Common;
 
 /*
  * ****文件结构****
@@ -163,9 +164,6 @@ namespace Cdy.Tag
         /// </summary>
         public void Init()
         {
-            
-          
-
             var his = ServiceLocator.Locator.Resolve<IHisEngine2>();
             var histag = his.ListAllTags().OrderBy(e => e.Id);
 
@@ -185,6 +183,7 @@ namespace Cdy.Tag
             foreach (var vv in mSeriserFiles)
             {
                 vv.Value.FileWriter = DataFileSeriserManager.manager.GetSeriser(DataSeriser).New();
+                vv.Value.FileWriter2 = DataFileSeriserManager.manager.GetSeriser(DataSeriser).New();
                 vv.Value.Init();
             }
         }
@@ -317,6 +316,24 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="time"></param>
+        /// <param name="data"></param>
+        /// <param name="size"></param>
+        public void ManualRequestToSeriseFile(int id, DateTime time, MarshalMemoryBlock data, int size)
+        {
+            foreach(var vv in mSeriserFiles)
+            {
+                if( id >= vv.Value.Id* TagCountOneFile && id<(vv.Value.Id+1)* TagCountOneFile)
+                {
+                    vv.Value.ManualRequestToSeriseFile(id, data, size, time);
+                }
+            }
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...
@@ -328,9 +345,9 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class SeriseFileItem2:IDisposable
+    public class SeriseFileItem2 : IDisposable
     {
-#region ... Variables  ...
+        #region ... Variables  ...
 
         /// <summary>
         /// 变量的数据指针的相对起始地址
@@ -350,6 +367,8 @@ namespace Cdy.Tag
         private string mCurrentFileName;
 
         private DataFileSeriserbase mFileWriter;
+
+        private DataFileSeriserbase mFileWriter2;
 
         /// <summary>
         /// 数据文件扩展名
@@ -384,18 +403,20 @@ namespace Cdy.Tag
 
         static object mFileLocker = new object();
 
-#endregion ...Variables...
+        private List<int> mTagIdsCach;
 
-#region ... Events     ...
+        #endregion ...Variables...
 
-#endregion ...Events...
+        #region ... Events     ...
 
-#region ... Constructor...
+        #endregion ...Events...
+
+        #region ... Constructor...
 
 
-#endregion ...Constructor...
+        #endregion ...Constructor...
 
-#region ... Properties ...
+        #region ... Properties ...
         /// <summary>
         /// 
         /// </summary>
@@ -404,7 +425,12 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public DataFileSeriserbase FileWriter { get { return mFileWriter; } set { mFileWriter=value; } }
+        public DataFileSeriserbase FileWriter { get { return mFileWriter; } set { mFileWriter = value; } }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DataFileSeriserbase FileWriter2 { get { return mFileWriter2; } set { mFileWriter2 = value; } }
 
         /// <summary>
         /// 
@@ -438,9 +464,9 @@ namespace Cdy.Tag
         public string DatabaseName { get; set; }
 
 
-#endregion ...Properties...
+        #endregion ...Properties...
 
-#region ... Methods    ...
+        #region ... Methods    ...
 
         /// <summary>
         /// 
@@ -455,7 +481,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 添加文件头部
         /// </summary>
-        private void AppendFileHeader(DateTime time, string databaseName)
+        private void AppendFileHeader(DateTime time, string databaseName,DataFileSeriserbase mFileWriter)
         {
             DateTime date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
             mFileWriter.Write(date, 0);
@@ -470,7 +496,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 添加区域头部
         /// </summary>
-        private void AppendDataRegionHeader()
+        private void AppendDataRegionHeader(DataFileSeriserbase mFileWriter,long mPreDataRegion)
         {
             byte[] bval;
             int totalLen;
@@ -480,8 +506,8 @@ namespace Cdy.Tag
             {
                 mFileWriter.Write(mCurrentDataRegion, mPreDataRegion + 8);
             }
-            
-            bval = GeneratorDataRegionHeader(out totalLen,out datalen);
+
+            bval = GeneratorDataRegionHeader(out totalLen, out datalen);
             mFileWriter.Append(bval, 0, datalen);
             mFileWriter.AppendZore(totalLen - datalen);
 
@@ -496,20 +522,20 @@ namespace Cdy.Tag
         /// 生成区域头部
         /// <paramref name="offset">偏移位置</paramref>
         /// </summary>
-        private byte[]  GeneratorDataRegionHeader(out int totallenght,out int datalen)
+        private byte[] GeneratorDataRegionHeader(out int totallenght, out int datalen)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
             //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+tagcount(4)+ tagid sum(8) +file duration(4)+ block duration(4)+Time tick duration(4)+ { len + [tag id]}+ [data blockpoint(8)]
             int blockcount = FileDuration * 60 / BlockDuration;
-            int len = GetDataRegionHeaderLength() + 4+ mTagIdMemoryCach.Position + mTagCount * (blockcount * 8);
-            
+            int len = GetDataRegionHeaderLength() + 4 + mTagIdMemoryCach.Position + mTagCount * (blockcount * 8);
+
             totallenght = len;
 
             byte[] bvals = ArrayPool<byte>.Shared.Rent(52 + mTagIdMemoryCach.Position);
 
             using (System.IO.MemoryStream mHeadMemory = new System.IO.MemoryStream(bvals))
-            {              
+            {
 
                 mHeadMemory.Position = 0;
                 mHeadMemory.Write(BitConverter.GetBytes((long)mPreDataRegion));//更新Pre DataRegion 指针
@@ -538,13 +564,13 @@ namespace Cdy.Tag
             }
         }
 
-#endregion ...Methods...
+        #endregion ...Methods...
 
-#region ... Interfaces ...
+        #region ... Interfaces ...
 
-#endregion ...Interfaces...
+        #endregion ...Interfaces...
 
-        
+
 
         /// <summary>
         /// 
@@ -585,13 +611,126 @@ namespace Cdy.Tag
                     offset = nextaddr;
                 }
             }
-            mPreDataRegion = offset;
+           // mPreDataRegion = offset;
 
             mFileWriter.GoToEnd();
             mCurrentDataRegion = mFileWriter.CurrentPostion;
 
-            return 0;
+            return offset;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="writer"></param>
+        /// <returns></returns>
+        private Dictionary<DateTime,long> GetDataRegions(DataFileSeriserbase writer)
+        {
+            Dictionary<DateTime, long> dd = new Dictionary<DateTime, long>();
+            long offset = FileHeadSize;
+            while (true)
+            {
+                var nextaddr = writer.ReadLong(offset + 8);
+                DateTime dt = DateTime.FromBinary(writer.ReadLong(offset + 16));
+                dd.Add(dt, offset);
+                if (nextaddr <= 0)
+                {
+                    break;
+                }
+                else
+                {
+                    offset = nextaddr;
+                }
+            }
+            return dd;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        private long GetDataRegionHeadPoint(int id,DateTime time,out DataFileSeriserbase mFileReader)
+        {
+            string sfile = GetFileName(time);
+           // DataFileSeriserbase reader = mFileWriter2;
+
+            if (mFileWriter2.CreatOrOpenFile(sfile))
+            {
+                AppendFileHeader(time, this.DatabaseName, mFileWriter2);
+                //新建文件
+                mCurrentDataRegion = FileHeadSize;
+                AppendDataRegionHeader(mFileWriter2,-1);
+            }
+            else
+            {
+                if (mFileWriter2.Length < 72)
+                {
+                    AppendFileHeader(time, this.DatabaseName, mFileWriter2);
+                    //新建文件
+                    mCurrentDataRegion = FileHeadSize;
+                    AppendDataRegionHeader(mFileWriter2,-1);
+                }
+                else
+                {
+                    //打开已有文件
+                    var pp = SearchLastDataRegion();
+                    AppendDataRegionHeader(mFileWriter2,pp);
+                }
+            }
+
+            var vregions = GetDataRegions(mFileWriter2);
+
+            long ltmp = 0;
+
+            foreach (var vv in vregions)
+            {
+                if (time > vv.Key)
+                {
+                    ltmp = vv.Value;
+                }
+                else if (time == vv.Key)
+                {
+                    ltmp = vv.Value;
+                    break;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            //计算本次更新对应的指针区域的起始地址
+            var fsh = (time.Hour / FileDuration) * FileDuration;
+            int bid = ((time.Hour - fsh) * 60 + time.Minute) / BlockDuration;
+
+            var icount = mTagIdsCach.IndexOf(id);
+
+            ltmp += mBlockPointOffset + icount * 8 * bid;
+
+            mFileReader = mFileWriter2;
+            return ltmp;
+        }
+
+        /// <summary>
+        /// 通过手动更新的方式，提交历史记录
+        /// </summary>
+        /// <param name="datablock"></param>
+        /// <param name="time"></param>
+        public void ManualRequestToSeriseFile(int id,MarshalMemoryBlock datablock, int size, DateTime time)
+        {
+            lock (mFileLocker)
+            {
+                DataFileSeriserbase mwriter;
+                var heads = GetDataRegionHeadPoint(id, time, out mwriter);
+                var vfile = mwriter.GoToEnd().CurrentPostion;
+                datablock.WriteToStream(mFileWriter.GetStream(), vfile, size);//直接拷贝数据块
+                datablock.WriteLong(heads, vfile);
+                mwriter.Flush();
+                mwriter.Close();
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -611,24 +750,25 @@ namespace Cdy.Tag
         private int CalTagIdsSize()
         {
             if (mTagIdMemoryCach != null) mTagIdMemoryCach.Dispose();
-            var aids = ServiceLocator.Locator.Resolve<IHisEngine2>().ListAllTags().Where(e => e.Id >= Id * TagCountOneFile && e.Id < (Id + 1) * TagCountOneFile).OrderBy(e => e.Id).ToArray();
+            mTagIdsCach = ServiceLocator.Locator.Resolve<IHisEngine2>().ListAllTags().Where(e => e.Id >= Id * TagCountOneFile && e.Id < (Id + 1) * TagCountOneFile).OrderBy(e => e.Id).Select(e => e.Id).ToList();
 
             mTagIdSum = 0;
 
-            mTagIdMemoryCach = new VarintCodeMemory((int)(aids.Count() * 4 * 1.2));
-            if (aids.Length > 0)
+            mTagIdMemoryCach = new VarintCodeMemory((int)(mTagIdsCach.Count * 4 * 1.2));
+            if (mTagIdsCach.Count > 0)
             {
-                int preids = aids[0].Id;
+                int preids = mTagIdsCach[0];
                 mTagIdSum += preids;
                 mTagIdMemoryCach.WriteInt32(preids);
-                for (int i = 1; i < aids.Length; i++)
+                for (int i = 1; i < mTagIdsCach.Count; i++)
                 {
-                    var id = aids[i].Id;
+                    var id = mTagIdsCach[i];
                     mTagIdMemoryCach.WriteInt32(id - preids);
                     mTagIdSum += id;
                     preids = id;
                 }
             }
+
             return mTagIdMemoryCach.Position + 4;
         }
 
@@ -637,11 +777,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Init()
         {
-            //LoggerService.Service.Info("SeriseFileItem" + Id, "------Init------");
-            //mIdAddrs.Clear();
-            //long offset = GetDataRegionHeaderLength() + CalTagIdsSize();
-            //long offset = 0;
-            //int blockcount = FileDuration * 60 / BlockDuration;
+
             var vv = ServiceLocator.Locator.Resolve<IHisEngine2>();
             var tags = vv.ListAllTags().Where(e => e.Id >= Id * TagCountOneFile && e.Id < (Id + 1) * TagCountOneFile).OrderBy(e => e.Id);
 
@@ -651,18 +787,7 @@ namespace Cdy.Tag
             mBlockPointMemory.Clear();
 
             LoggerService.Service.Info("SeriseEnginer", "Cal BlockPointMemory memory size:" + (mBlockPointMemory.AllocSize) / 1024.0 / 1024 + "M", ConsoleColor.Cyan);
-
-            //foreach (var vtag in tags)
-            //{
-            //    mIdAddrs.Add(vtag.Id, offset);
-            //    //offset += (blockcount * 8);
-            //    offset += 8;
-            //}
-
             CalTagIdsSize();
-            
-           
-
         }
 
         /// <summary>
@@ -686,27 +811,27 @@ namespace Cdy.Tag
 
                 if (mFileWriter.CreatOrOpenFile(sfile))
                 {
-                    AppendFileHeader(time, this.DatabaseName);
+                    AppendFileHeader(time, this.DatabaseName, mFileWriter);
                     //新建文件
                     mCurrentDataRegion = FileHeadSize;
                     mPreDataRegion = -1;
-                    AppendDataRegionHeader();
+                    AppendDataRegionHeader(mFileWriter,-1);
                 }
                 else
                 {
                     if (mFileWriter.Length < 72)
                     {
-                        AppendFileHeader(time, this.DatabaseName);
+                        AppendFileHeader(time, this.DatabaseName, mFileWriter);
                         //新建文件
                         mCurrentDataRegion = FileHeadSize;
                         mPreDataRegion = -1;
-                        AppendDataRegionHeader();
+                        AppendDataRegionHeader(mFileWriter,-1);
                     }
                     else
                     {
                         //打开已有文件
-                        SearchLastDataRegion();
-                        AppendDataRegionHeader();
+                        mPreDataRegion = SearchLastDataRegion();
+                        AppendDataRegionHeader(mFileWriter, mPreDataRegion);
                     }
                 }
 
@@ -717,8 +842,8 @@ namespace Cdy.Tag
                 if (mNeedUpdateTagHeads)
                 {
                     Init();
-                    SearchLastDataRegion();
-                    AppendDataRegionHeader();
+                    mPreDataRegion = SearchLastDataRegion();
+                    AppendDataRegionHeader(mFileWriter, mPreDataRegion);
                     mNeedUpdateTagHeads = false;
                 }
             }
@@ -736,10 +861,12 @@ namespace Cdy.Tag
             SaveToFile(mProcessMemory, 0, time);
         }
 
+
+
         /// <summary>
         /// 执行存储到磁盘
         /// </summary>
-        public  void SaveToFile(MarshalMemoryBlock mProcessMemory,long dataOffset,DateTime time)
+        public void SaveToFile(MarshalMemoryBlock mProcessMemory, long dataOffset, DateTime time)
         {
             /*
              1. 检查变量ID是否变动，如果变动则重新记录变量的ID列表
@@ -749,95 +876,73 @@ namespace Cdy.Tag
             //LoggerService.Service.Info("SeriseFileItem" + Id, "*********开始执行存储**********");
             try
             {
-                Stopwatch sw = new Stopwatch();
-                sw.Start();
-
-                var datasize = mProcessMemory.ReadInt(dataOffset);
-                var count = mProcessMemory.ReadInt(dataOffset + 4);
-                mTagCount = count;
-                mCurrentTime = time;
-
-                //to do 计算变量信息是否改变
-
-                ////判断变量的ID列表是否被修改了
-                //for (int i = 0; i < count; i++)
-                //{
-                //    var id = mProcessMemory.ReadInt(offset);
-                //    if (!mIdAddrs.ContainsKey(id))
-                //    {
-                //        mNeedUpdateTagHeads = true;
-                //        break;
-                //    }
-                //    offset += 8;
-                //}
-
-                var ltmp = sw.ElapsedMilliseconds;
-
-                if (!CheckFile(time))
-                    return;
-
-                var ltmp2 = sw.ElapsedMilliseconds;
-
-                long offset = 8 + dataOffset;
-                long start = count * 8 + offset;//计算出数据起始地址
-
-                //LoggerService.Service.Info("SeriseFileItem" + Id, "开始更新指针区域");
-
-                var dataAddr = this.mFileWriter.GoToEnd().CurrentPostion;
-
-                mBlockPointMemory.CheckAndResize(mTagCount * 8);
-                mBlockPointMemory.Clear();
-                //更新BlockPoint
-                for (int i = 0; i < count; i++)
+                lock (mFileLocker)
                 {
-                    var id = mProcessMemory.ReadInt(offset);
-                    var addr = mProcessMemory.ReadInt(offset + 4) - start + dataAddr;
-                    offset += 8;
-                    if (id > -1)
+
+                    Stopwatch sw = new Stopwatch();
+                    sw.Start();
+
+                    //数据库大小
+                    var datasize = mProcessMemory.ReadInt(dataOffset);
+                    var count = mProcessMemory.ReadInt(dataOffset + 4);//变量个数
+                    mTagCount = count;
+                    mCurrentTime = time;
+
+                    var ltmp = sw.ElapsedMilliseconds;
+
+                    //打开文件
+                    if (!CheckFile(time))
+                        return;
+
+                    var ltmp2 = sw.ElapsedMilliseconds;
+
+                    long offset = 8 + dataOffset;
+                    long start = count * 8 + offset;//计算出数据起始地址
+
+                    var dataAddr = this.mFileWriter.GoToEnd().CurrentPostion;
+
+                    mBlockPointMemory.CheckAndResize(mTagCount * 8);
+                    mBlockPointMemory.Clear();
+                    //更新数据块指针
+                    for (int i = 0; i < count; i++)
                     {
-                        mBlockPointMemory.WriteLong(i * 8, addr);
+                        var id = mProcessMemory.ReadInt(offset);
+                        //计算新的偏移量
+                        var addr = mProcessMemory.ReadInt(offset + 4) - start + dataAddr;
+                        offset += 8;
+                        if (id > -1)
+                        {
+                            mBlockPointMemory.WriteLong(i * 8, addr);
+                        }
                     }
-                }
 
-                //StringBuilder sb = new StringBuilder();
-                //foreach (var vv in mBlockPointMemory.ToLongList())
-                //{
-                //    sb.Append(vv + ",");
-                //}
+                    //计算本次更新对应的指针区域的起始地址
+                    FileStartHour = (time.Hour / FileDuration) * FileDuration;
+                    int bid = ((time.Hour - FileStartHour) * 60 + time.Minute) / BlockDuration;
 
-                //计算本次更新对应的指针区域的起始地址
-                FileStartHour = (time.Hour / FileDuration) * FileDuration;
-                int bid = ((time.Hour - FileStartHour) * 60 + time.Minute) / BlockDuration;
-                var pointAddr = mBlockPointOffset + count * 8 * bid;
+                    //计算出本次更新的头地址地址
+                    var pointAddr = mBlockPointOffset + count * 8 * bid;
 
-                var ltmp3 = sw.ElapsedMilliseconds;
+                    var ltmp3 = sw.ElapsedMilliseconds;
 
-
-                //lock (mFileLocker)
-                {
                     mFileWriter.GoToEnd();
                     long lpp = mFileWriter.CurrentPostion;
 
-
                     mProcessMemory.WriteToStream(mFileWriter.GetStream(), start, datasize);//直接拷贝数据块
-
-                   // LoggerService.Service.Info("SeriseFileItem", "数据写入地址:" + lpp + " 数据大小: "+(datasize)   +" 最后地址: "+mFileWriter.CurrentPostion+ ",更新指针地址：" + pointAddr + " block index:" + bid + " tagcount:" + count + " block point Start Addr:" + mBlockPointOffset, ConsoleColor.Red);
-
-                    //this.mFileWriter.Append(mProcessMemory.Buffers, (int)start, (int)(totalsize - start)); 
+                    //写入指针头部区域
                     mFileWriter.Write(mBlockPointMemory.Buffers, pointAddr, 0, (int)mBlockPointMemory.AllocSize);
                     Flush();
-                    
+
+
+                    sw.Stop();
+
+                    LoggerService.Service.Info("SeriseFileItem" + Id, "写入数据 " + mCurrentFileName + "  数据大小：" + ((datasize) + mBlockPointMemory.AllocSize) / 1024.0 / 1024 + " m" + "其他脚本耗时:" + ltmp + "," + (ltmp2 - ltmp) + "," + (ltmp3 - ltmp2) + "存储耗时:" + (sw.ElapsedMilliseconds - ltmp3));
                 }
-                sw.Stop();
-                
-                LoggerService.Service.Info("SeriseFileItem" + Id, "写入数据 " + mCurrentFileName + "  数据大小：" + ((datasize) + mBlockPointMemory.AllocSize) / 1024.0 / 1024 + " m" +"其他脚本耗时:"+ltmp+","+(ltmp2-ltmp)+","+(ltmp3-ltmp2)+ "存储耗时:" + (sw.ElapsedMilliseconds-ltmp3));
-               
             }
-            catch(System.IO.IOException ex)
+            catch (System.IO.IOException ex)
             {
-                LoggerService.Service.Erro("SeriseEnginer" + Id,ex.Message);
+                LoggerService.Service.Erro("SeriseEnginer" + Id, ex.Message);
             }
-            //LoggerService.Service.Info("SeriseEnginer" + Id, ">>>>>>>>>完成执行存储>>>>>>>>>");
         }
 
         /// <summary>

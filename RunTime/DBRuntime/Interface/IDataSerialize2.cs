@@ -43,6 +43,15 @@ namespace Cdy.Tag
         void RequestToSeriseFile(CompressMemory2 dataMemory,DateTime date);
 
         /// <summary>
+        /// 手动更新历史数据
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="time"></param>
+        /// <param name="data"></param>
+        /// <param name="size"></param>
+        void ManualRequestToSeriseFile(int id, DateTime time, MarshalMemoryBlock data, int size);
+
+        /// <summary>
         /// 
         /// </summary>
         void RequestToSave();

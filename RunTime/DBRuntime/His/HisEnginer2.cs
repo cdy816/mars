@@ -318,7 +318,7 @@ namespace Cdy.Tag
                             mRecordTimerProcesser.Add(mLastProcesser);
                         }
                     }
-                    else
+                    else if(mHisTag.Type == RecordType.ValueChanged)
                     {
                         if(!mLastValueChangedProcesser.AddTag(mHisTag))
                         {
@@ -498,7 +498,7 @@ namespace Cdy.Tag
                         mRecordTimerProcesser.Add(mLastProcesser);
                     }
                 }
-                else
+                else if(vv.Value.Type == RecordType.ValueChanged)
                 {
                     if (!mLastValueChangedProcesser.AddTag(vv.Value))
                     {
@@ -588,6 +588,15 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagType"></param>
+        /// <param name="recordType"></param>
+        /// <param name="headSize"></param>
+        /// <param name="dataOffset"></param>
+        /// <param name="qulityOffset"></param>
+        /// <returns></returns>
         private int CalCachDatablockSize(Cdy.Tag.TagType tagType, Cdy.Tag.RecordType recordType, int headSize, out int dataOffset, out int qulityOffset)
         {
             //单个数据块内容包括：时间戳(2)+数值+质量戳(1)
@@ -669,28 +678,39 @@ namespace Cdy.Tag
             foreach (var vv in mHisTags)
             {
 
-                var ss = CalMergeBlockSize(vv.Value.TagType,vv.Value.Type,blockheadsize,out valueOffset, out qulityOffset);
+                if (vv.Value.Type != RecordType.Manual)
+                {
+                    var ss = CalMergeBlockSize(vv.Value.TagType, vv.Value.Type, blockheadsize, out valueOffset, out qulityOffset);
 
-                var abuffer = new HisDataMemoryBlock(ss) { TimerAddress=0, ValueAddress = valueOffset, QualityAddress = qulityOffset,Id=1 };
-                var bbuffer = new HisDataMemoryBlock(ss) { TimerAddress = 0, ValueAddress = valueOffset, QualityAddress = qulityOffset,Id=2 };
-                mMergeMemory1.AddTagAddress(vv.Value.Id, abuffer);
-                mMergeMemory2.AddTagAddress(vv.Value.Id, bbuffer);
+                    var abuffer = new HisDataMemoryBlock(ss) { TimerAddress = 0, ValueAddress = valueOffset, QualityAddress = qulityOffset, Id = 1 };
+                    var bbuffer = new HisDataMemoryBlock(ss) { TimerAddress = 0, ValueAddress = valueOffset, QualityAddress = qulityOffset, Id = 2 };
+                    mMergeMemory1.AddTagAddress(vv.Value.Id, abuffer);
+                    mMergeMemory2.AddTagAddress(vv.Value.Id, bbuffer);
 
-                storeHeadSize += ss;
+                    storeHeadSize += ss;
 
-                var css = CalCachDatablockSize(vv.Value.TagType, vv.Value.Type, blockheadsize, out valueOffset,out qulityOffset);
+                    var css = CalCachDatablockSize(vv.Value.TagType, vv.Value.Type, blockheadsize, out valueOffset, out qulityOffset);
 
-                var cbuffer = new HisDataMemoryBlock(css) { TimerAddress = 0, ValueAddress = valueOffset, QualityAddress = qulityOffset,Id=1 };
-                var dbuffer = new HisDataMemoryBlock(css) { TimerAddress = 0, ValueAddress = valueOffset, QualityAddress = qulityOffset,Id=2 };
+                    var cbuffer = new HisDataMemoryBlock(css) { TimerAddress = 0, ValueAddress = valueOffset, QualityAddress = qulityOffset, Id = 1 };
+                    var dbuffer = new HisDataMemoryBlock(css) { TimerAddress = 0, ValueAddress = valueOffset, QualityAddress = qulityOffset, Id = 2 };
 
-                vv.Value.HisValueMemory1 = cbuffer;
-                vv.Value.HisValueMemory2 = dbuffer;
-                mCachMemory1.AddTagAddress(vv.Value.Id, cbuffer);
-                mCachMemory2.AddTagAddress(vv.Value.Id, dbuffer);
+                    vv.Value.HisValueMemory1 = cbuffer;
+                    vv.Value.HisValueMemory2 = dbuffer;
+                    mCachMemory1.AddTagAddress(vv.Value.Id, cbuffer);
+                    mCachMemory2.AddTagAddress(vv.Value.Id, dbuffer);
 
-                vv.Value.DataSize = css;
+                    vv.Value.DataSize = css;
 
-                cachHeadSize += css;
+                    cachHeadSize += css;
+                }
+                else
+                {
+                    mMergeMemory1.AddTagAddress(vv.Value.Id, null);
+                    mMergeMemory2.AddTagAddress(vv.Value.Id, null);
+
+                    mCachMemory1.AddTagAddress(vv.Value.Id, null);
+                    mCachMemory2.AddTagAddress(vv.Value.Id, null);
+                }
             }
 
             
@@ -900,24 +920,28 @@ namespace Cdy.Tag
             foreach (var tag in mHisTags)
             {
                 var taddrs = mCurrentMergeMemory.TagAddress[tag.Value.Id];
-                var saddrs = mcc.TagAddress[tag.Value.Id]; 
+
+                var saddrs = mcc.TagAddress[tag.Value.Id];
+
+                //
+                if (taddrs == null || saddrs == null) continue;
 
                 //拷贝时间
                 var dlen = saddrs.ValueAddress;
-                var vtimeaddr =  dlen * count + 2;
+                var vtimeaddr = dlen * count + 2;
 
                 saddrs.CopyTo(taddrs, 0, vtimeaddr, dlen);
 
                 //拷贝数值
                 dlen = saddrs.QualityAddress - saddrs.ValueAddress;
-                vtimeaddr = taddrs.ValueAddress + dlen * count+tag.Value.SizeOfValue;
+                vtimeaddr = taddrs.ValueAddress + dlen * count + tag.Value.SizeOfValue;
                 saddrs.CopyTo(taddrs, saddrs.ValueAddress, vtimeaddr, dlen);
 
 
                 //拷贝质量戳
-                dlen = tag.Value.DataSize -saddrs.QualityAddress;
+                dlen = tag.Value.DataSize - saddrs.QualityAddress;
 
-                vtimeaddr = taddrs.QualityAddress + dlen * count+1;
+                vtimeaddr = taddrs.QualityAddress + dlen * count + 1;
                 saddrs.CopyTo(taddrs, saddrs.QualityAddress, vtimeaddr, dlen);
             }
             //});
@@ -1235,6 +1259,18 @@ namespace Cdy.Tag
             mCachMemory2?.Dispose();
             mMergeMemory1?.Dispose();
             mMergeMemory2?.Dispose();
+        }
+
+        /// <summary>
+        /// 手动插入历史数据
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool InsertHisValues(long id, SortedDictionary<DateTime, object> values)
+        {
+
+            return true;
         }
 
 

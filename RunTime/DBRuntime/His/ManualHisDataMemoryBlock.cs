@@ -1,22 +1,22 @@
 ﻿//==============================================================
-//  Copyright (C) 2019  Inc. All rights reserved.
+//  Copyright (C) 2020  Inc. All rights reserved.
 //
 //==============================================================
-//  Create by 种道洋 at 2019/12/27 18:45:02.
+//  Create by 种道洋 at 2020/9/21 15:04:04.
 //  Version 1.0
 //  种道洋
 //==============================================================
-using DBRuntime.His;
+
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Cdy.Tag
+namespace DBRuntime.His
 {
     /// <summary>
     /// 
     /// </summary>
-    public interface IDataCompress2
+    public class ManualHisDataMemoryBlock: HisDataMemoryBlock
     {
 
         #region ... Variables  ...
@@ -29,26 +29,27 @@ namespace Cdy.Tag
 
         #region ... Constructor...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="size"></param>
+        public ManualHisDataMemoryBlock(int size):base(size)
+        {
+
+        }
+
         #endregion ...Constructor...
 
         #region ... Properties ...
 
-        #endregion ...Properties...
-
-        #region ... Methods    ...
-        
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="dataMemory"></param>
-        void RequestToCompress(HisDataMemoryBlockCollection dataMemory);
+        public DateTime Time { get; set; }
 
-        /// <summary>
-        /// 请求手动压缩数据
-        /// </summary>
-        /// <param name="data"></param>
-        void RequestManualToCompress(ManualHisDataMemoryBlock data);
+        #endregion ...Properties...
 
+        #region ... Methods    ...
 
         #endregion ...Methods...
 

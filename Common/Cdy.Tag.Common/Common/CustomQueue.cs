@@ -51,6 +51,11 @@ namespace Cdy.Tag
         /// </summary>
         public int ReadIndex { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Length { get { return mCount; } }
+
         #endregion ...Properties...
 
         #region ... Methods    ...

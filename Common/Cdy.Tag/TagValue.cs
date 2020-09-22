@@ -2,7 +2,7 @@
 //  Copyright (C) 2020  Inc. All rights reserved.
 //
 //==============================================================
-//  Create by 种道洋 at 2020/9/21 15:04:04.
+//  Create by 种道洋 at 2020/9/22 15:09:01.
 //  Version 1.0
 //  种道洋
 //==============================================================
@@ -11,12 +11,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DBRuntime.His
+namespace Cdy.Tag
 {
     /// <summary>
     /// 
     /// </summary>
-    public class ManualHisDataMemoryBlock: HisDataMemoryBlock
+    public struct TagValue
     {
 
         #region ... Variables  ...
@@ -29,14 +29,41 @@ namespace DBRuntime.His
 
         #region ... Constructor...
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="size"></param>
-        public ManualHisDataMemoryBlock(int size):base(size)
-        {
+        #endregion ...Constructor...
 
-        }
+        #region ... Properties ...
+        public DateTime Time { get; set; }
+
+        public object Value { get; set; }
+
+        public byte Quality { get; set; }
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public struct TagValue<T>
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
 
         #endregion ...Constructor...
 
@@ -50,18 +77,12 @@ namespace DBRuntime.His
         /// <summary>
         /// 
         /// </summary>
-        public int CurrentCount { get; set; }
+        public T Value { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public int MaxCount { get; set; }
-
-        /// <summary>
-        /// 时间存储单位,ms
-        /// </summary>
-        public int TimeDuration { get; set; }
-
+        public byte Quality { get; set; }
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -72,4 +93,5 @@ namespace DBRuntime.His
 
         #endregion ...Interfaces...
     }
+
 }

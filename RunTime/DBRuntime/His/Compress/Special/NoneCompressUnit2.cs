@@ -51,9 +51,10 @@ namespace Cdy.Tag
            // LoggerService.Service.Erro("NoneCompressUnit", "目标地址:"+targetAddr +" 数值地址: " + (targetAddr+10) +" 变量个数: "+ (size - this.QulityOffset));
             target.WriteDatetime(targetAddr,this.StartTime);
             target.Write((ushort)(size - this.QulityOffset));//写入值的个数
+            target.Write(TimeTick);
             if (size > 0)
                 source.CopyTo(target, sourceAddr, targetAddr + 10, size);
-            return size + 10;
+            return size + 14;
         }
 
         /// <summary>
@@ -64,7 +65,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="startTime"></param>
         /// <returns></returns>
-        private Dictionary<int,Tuple<DateTime,bool>> ReadTimeQulity(MarshalMemoryBlock source, int sourceAddr, int timeTick,out int valueCount, out DateTime startTime)
+        private Dictionary<int,Tuple<DateTime,bool>> ReadTimeQulity(MarshalMemoryBlock source, int sourceAddr,out int valueCount, out DateTime startTime)
         {
             source.Position = sourceAddr;
 
@@ -73,6 +74,9 @@ namespace Cdy.Tag
             //读取值的个数
             int qoffset = source.ReadUShort();
             valueCount = qoffset;
+
+            //读取时间单位
+            int timeTick = source.ReadInt();
 
             var times = source.ReadUShorts(source.Position, qoffset);
 
@@ -124,7 +128,7 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
             var qq = source.ReadBytes(valuecount * 3 + 10 + sourceAddr, valuecount);
@@ -165,7 +169,7 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
+            var qs = ReadTimeQulity(source, sourceAddr,  out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
             var qq = source.ReadBytes(valuecount * 3 + 10 + sourceAddr, valuecount);
@@ -231,7 +235,7 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
             var qq = source.ReadBytes(valuecount * 4 + 10 + sourceAddr, valuecount);
@@ -297,7 +301,7 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
             var qq = source.ReadBytes(valuecount * 4 + 10 + sourceAddr, valuecount);
@@ -363,7 +367,7 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
             var qq = source.ReadBytes(valuecount * 6 + 10 + sourceAddr, valuecount);
@@ -429,7 +433,7 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
             var qq = source.ReadBytes(valuecount * 6 + 10 + sourceAddr, valuecount);
@@ -494,7 +498,7 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
             var qq = source.ReadBytes(valuecount * 10 + 10 + sourceAddr, valuecount);
@@ -559,7 +563,7 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
             var qq = source.ReadBytes(valuecount * 10 + 10 + sourceAddr, valuecount);
@@ -625,7 +629,7 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
             var qq = source.ReadBytes(valuecount * 6 + 10 + sourceAddr, valuecount);
@@ -690,7 +694,7 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick,out valuecount ,out time);
+            var qs = ReadTimeQulity(source, sourceAddr,out valuecount ,out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
             var qq = source.ReadBytes(valuecount * 10+10+ sourceAddr, valuecount);
@@ -730,7 +734,7 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
+            var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
             var qq = source.ReadBytes(valuecount * 10 + 10 + sourceAddr, valuecount);
@@ -794,7 +798,7 @@ namespace Cdy.Tag
         {
             DateTime time;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
+            var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out time);
 
             var valaddr = qs.Count * 2+10 + sourceAddr;
 
@@ -878,7 +882,7 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
             var qq = source.ReadBytes(valuecount * 3+10+sourceAddr, valuecount);
 
             var vv = qs.ToArray();
@@ -1007,7 +1011,7 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out stime);
             var qq = source.ReadBytes(qs.Count * 3+10 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
@@ -1136,7 +1140,7 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out stime);
             var qq = source.ReadBytes(qs.Count * 10+10 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
@@ -1267,7 +1271,7 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
             var qq = source.ReadBytes(qs.Count * 10+10 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
@@ -1414,7 +1418,7 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out stime);
             var qq = source.ReadBytes(qs.Count * 6 + 10 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
@@ -1652,7 +1656,7 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
             var qq = source.ReadBytes(qs.Count * 6 + 10 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
@@ -1890,7 +1894,7 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
             var qq = source.ReadBytes(qs.Count * 10 + 10 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
@@ -2135,7 +2139,7 @@ namespace Cdy.Tag
 
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
             var qq = source.ReadBytes(qs.Count * 4 + 10 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
@@ -2378,7 +2382,7 @@ namespace Cdy.Tag
 
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
 
             //var dtmp = source.ToStringList(sourceAddr + 12, Encoding.Unicode);
 
@@ -2581,7 +2585,7 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
             var qq = source.ReadBytes(qs.Count * 6 + 10 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
@@ -2822,7 +2826,7 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
             var qq = source.ReadBytes(qs.Count * 10 + 10 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
@@ -3063,7 +3067,7 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr,  out valuecount, out stime);
             var qq = source.ReadBytes(qs.Count * 4 + 10 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
@@ -3492,7 +3496,7 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
                       
 
             int i = 0;
@@ -3668,7 +3672,7 @@ namespace Cdy.Tag
             DateTime time1;
             int valuecount = 0;
             object reval = null;
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time1);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time1);
             var vv = qs.ToArray();
 
             if (typeof(T) == typeof(IntPointData))
@@ -4274,7 +4278,7 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out stime);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
            
             var vv = qs.ToArray();
 

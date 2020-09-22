@@ -64,6 +64,11 @@ namespace DBRuntime.His
         /// </summary>
         public long QualityAddress { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public byte TimeLen { get; set; } = 2;
+
         #endregion ...Properties...
 
         #region ... Methods    ...

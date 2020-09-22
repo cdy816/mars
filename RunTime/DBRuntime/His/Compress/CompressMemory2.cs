@@ -324,6 +324,7 @@ namespace Cdy.Tag
                 tp.StartTime = mCurrentTime;
                 tp.Parameters = histag.Parameters;
                 tp.Precision = histag.Precision;
+                tp.TimeTick = 100;
                 var size = tp.Compress(mSourceMemory, 0, this, targetPosition + 5, len) + 1;
                 this.WriteInt(targetPosition, (int)size);
                 //this.Dump();
@@ -362,6 +363,7 @@ namespace Cdy.Tag
                 tp.StartTime = data.Time;
                 tp.Parameters = histag.Parameters;
                 tp.Precision = histag.Precision;
+                tp.TimeTick = data.TimeDuration;
                 var size = tp.Compress(data, 0, block, 5, data.Length) + 1;
                 block.WriteInt(0, (int)size);
                 datasize = (int)(size + 5);

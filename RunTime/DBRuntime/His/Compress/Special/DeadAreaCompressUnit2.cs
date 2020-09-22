@@ -6,6 +6,7 @@
 //  Version 1.0
 //  种道洋
 //==============================================================
+using DBRuntime.His;
 using DBRuntime.His.Compress;
 using System;
 using System.Collections.Generic;
@@ -110,11 +111,15 @@ namespace Cdy.Tag
             int ig = -1;
             ig = emptyIds.ReadIndex < emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
 
+            byte tlen = (timerVals as HisDataMemoryBlock).TimeLen;
+
             for (int i = 0; i < count; i++)
             {
                 if (i != ig)
                 {
-                    id = timerVals.ReadUShort((int)startaddr + i * 2);
+                    //id = timerVals.ReadUShort((int)startaddr + i * 2);
+
+                    id = tlen == 2 ? timerVals.ReadUShort((int)startaddr + i * 2) : timerVals.ReadInt((int)startaddr + i * 4);
 
                     if (isFirst)
                     {
@@ -168,7 +173,14 @@ namespace Cdy.Tag
                 mVarintMemory2 = new ProtoMemory(count * 10);
             }
 
-            emptys2.Reset();
+            if (emptys2.Length < count)
+            {
+                emptys2 = new CustomQueue<int>(count * 2);
+            }
+            else
+            {
+                emptys2.Reset();
+            }
 
             long rsize = 0;
 
@@ -721,6 +733,8 @@ namespace Cdy.Tag
             int ig = -1;
             ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
             
+
+
             switch (type)
             {
                 case TagType.Byte:

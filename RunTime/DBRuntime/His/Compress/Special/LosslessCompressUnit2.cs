@@ -6,6 +6,7 @@
 //  Version 1.0
 //  种道洋
 //==============================================================
+using DBRuntime.His;
 using DBRuntime.His.Compress;
 using System;
 using System.Collections.Generic;
@@ -66,6 +67,7 @@ namespace Cdy.Tag
         public override long Compress(IMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size)
         {
             target.WriteDatetime(targetAddr, this.StartTime);
+            target.Write(TimeTick);
             switch (TagType)
             {
                 case TagType.Bool:
@@ -107,46 +109,46 @@ namespace Cdy.Tag
                 case TagType.ULongPoint3:
                     return Compress<ULongPoint3Data>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
             }
-            return 8;
+            return 8+4;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="timerVals"></param>
-        /// <param name="emptyIds"></param>
-        /// <returns></returns>
-        protected Memory<byte> CompressTimers(List<ushort> timerVals, CustomQueue<int> emptyIds)
-        {
-            int preids = 0;
-            mVarintMemory.Reset();
-            emptys.Reset();
-            //emptys.WriteIndex = 0;
-            //emptyIds.ReadIndex = 0;
-            bool isFirst = true;
-            for (int i = 0; i < timerVals.Count; i++)
-            {
-                if (timerVals[i] > 0||i==0)
-                {
-                    var id = timerVals[i];
-                    if (isFirst)
-                    {
-                        mVarintMemory.WriteInt32(id);
-                        isFirst = false;
-                    }
-                    else
-                    {
-                        mVarintMemory.WriteInt32(id - preids);
-                    }
-                    preids = id;
-                }
-                else
-                {
-                    emptyIds.Insert(i);
-                }
-            }
-            return mVarintMemory.DataBuffer.AsMemory(0, (int)mVarintMemory.WritePosition);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="timerVals"></param>
+        ///// <param name="emptyIds"></param>
+        ///// <returns></returns>
+        //protected Memory<byte> CompressTimers(List<int> timerVals, CustomQueue<int> emptyIds)
+        //{
+        //    int preids = 0;
+        //    mVarintMemory.Reset();
+        //    emptys.Reset();
+        //    //emptys.WriteIndex = 0;
+        //    //emptyIds.ReadIndex = 0;
+        //    bool isFirst = true;
+        //    for (int i = 0; i < timerVals.Count; i++)
+        //    {
+        //        if (timerVals[i] > 0||i==0)
+        //        {
+        //            var id = timerVals[i];
+        //            if (isFirst)
+        //            {
+        //                mVarintMemory.WriteInt32(id);
+        //                isFirst = false;
+        //            }
+        //            else
+        //            {
+        //                mVarintMemory.WriteInt32(id - preids);
+        //            }
+        //            preids = id;
+        //        }
+        //        else
+        //        {
+        //            emptyIds.Insert(i);
+        //        }
+        //    }
+        //    return mVarintMemory.DataBuffer.AsMemory(0, (int)mVarintMemory.WritePosition);
+        //}
 
         /// <summary>
         /// 
@@ -162,15 +164,16 @@ namespace Cdy.Tag
             mVarintMemory.Reset();
             emptys.Reset();
 
+            byte tlen = (timerVals as HisDataMemoryBlock).TimeLen;
+
             bool isFirst = true;
             int id = 0;
             for (int i = 0; i < count; i++)
             {
-                id = timerVals.ReadUShort((int)(startaddr + i * 2));
+                id = tlen == 2 ? timerVals.ReadUShort((int)startaddr + i * 2) : timerVals.ReadInt((int)startaddr + i * 4);
+
                 if (id > 0 || i == 0)
                 {
-                    
-                    //var id = timerVals[i];
                     if (isFirst)
                     {
                         mVarintMemory.WriteInt32(id);
@@ -1538,9 +1541,12 @@ namespace Cdy.Tag
 
         #endregion
 
-        protected Dictionary<int,DateTime> GetTimers(MarshalMemoryBlock source,int sourceAddr,DateTime startTime,DateTime endTime, int timeTick,out int valueCount)
+        protected Dictionary<int,DateTime> GetTimers(MarshalMemoryBlock source,int sourceAddr,DateTime startTime,DateTime endTime,out int valueCount)
         {
             DateTime sTime = source.ReadDateTime(sourceAddr);
+
+            int timeTick = source.ReadInt(sourceAddr + 8);
+
             Dictionary<int, DateTime> re = new Dictionary<int, DateTime>();
             ushort count = source.ReadUShort();
             var datasize = source.ReadInt();
@@ -1552,11 +1558,11 @@ namespace Cdy.Tag
                 var vtime = sTime.AddMilliseconds(timers[i] * timeTick);
                 if (vtime >= startTime && vtime < endTime)
                     re.Add(i, vtime);
-                else if(vtime>endTime && (vtime - endTime).TotalMilliseconds<100)
+                else if(vtime>endTime && (vtime - endTime).TotalMilliseconds< timeTick)
                 {
                     re.Add(i, vtime);
                 }
-                else if (vtime < startTime && (startTime - vtime).TotalMilliseconds < 100)
+                else if (vtime < startTime && (startTime - vtime).TotalMilliseconds < timeTick)
                 {
                     re.Add(i, vtime);
                 }
@@ -1573,9 +1579,11 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="valueCount"></param>
         /// <returns></returns>
-        protected Dictionary<int, DateTime> GetTimers(MarshalMemoryBlock source, int sourceAddr, int timeTick, out int valueCount)
+        protected Dictionary<int, DateTime> GetTimers(MarshalMemoryBlock source, int sourceAddr, out int valueCount)
         {
             DateTime sTime = source.ReadDateTime(sourceAddr);
+            int timeTick = source.ReadInt(sourceAddr + 8);
+
             Dictionary<int, DateTime> re = new Dictionary<int, DateTime>();
             ushort count = source.ReadUShort();
             var datasize = source.ReadInt();
@@ -1613,7 +1621,7 @@ namespace Cdy.Tag
         public override int DeCompressAllValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result)
         {
             int count = 0;
-            var timers = GetTimers(source, sourceAddr, startTime, endTime, timeTick, out count);
+            var timers = GetTimers(source, sourceAddr, startTime, endTime, out count);
 
             var valuesize = source.ReadInt();
             var value = DeCompressValue<T>(source.ReadBytes(valuesize), count);
@@ -1634,85 +1642,7 @@ namespace Cdy.Tag
 
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="source"></param>
-        ///// <param name="sourceAddr"></param>
-        ///// <param name="startTime"></param>
-        ///// <param name="endTime"></param>
-        ///// <param name="timeTick"></param>
-        ///// <param name="result"></param>
-        ///// <returns></returns>
-        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<bool> result)
-        //{
-        //   return DeCompressAllValue<bool>(source, sourceAddr, startTime, endTime, timeTick, result);
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="source"></param>
-        ///// <param name="sourceAddr"></param>
-        ///// <param name="startTime"></param>
-        ///// <param name="endTime"></param>
-        ///// <param name="timeTick"></param>
-        ///// <param name="result"></param>
-        ///// <returns></returns>
-        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<byte> result)
-        //{
-        //    return DeCompressAllValue<byte>(source, sourceAddr, startTime, endTime, timeTick, result);
-        //}
-
-        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<short> result)
-        //{
-        //    return DeCompressAllValue<short>(source, sourceAddr, startTime, endTime, timeTick, result);
-        //}
-
-        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ushort> result)
-        //{
-        //    return DeCompressAllValue<ushort>(source, sourceAddr, startTime, endTime, timeTick, result);
-        //}
-
-        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<int> result)
-        //{
-        //    return DeCompressAllValue<int>(source, sourceAddr, startTime, endTime, timeTick, result);
-        //}
-
-        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<uint> result)
-        //{
-        //    return DeCompressAllValue<uint>(source, sourceAddr, startTime, endTime, timeTick, result);
-        //}
-
-        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<long> result)
-        //{
-        //    return DeCompressAllValue<long>(source, sourceAddr, startTime, endTime, timeTick, result);
-        //}
-
-        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<ulong> result)
-        //{
-        //    return DeCompressAllValue<ulong>(source, sourceAddr, startTime, endTime, timeTick, result);
-        //}
-
-        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<float> result)
-        //{
-        //    return DeCompressAllValue<float>(source, sourceAddr, startTime, endTime, timeTick, result);
-        //}
-
-        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result)
-        //{
-        //    return DeCompressAllValue<double>(source, sourceAddr, startTime, endTime, timeTick, result);
-        //}
-
-        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<DateTime> result)
-        //{
-        //    return DeCompressAllValue<DateTime>(source, sourceAddr, startTime, endTime, timeTick, result);
-        //}
-
-        //public override int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<string> result)
-        //{
-        //    return DeCompressAllValue<string>(source, sourceAddr, startTime, endTime, timeTick, result);
-        //}
+        
 
         /// <summary>
         /// 
@@ -1733,7 +1663,7 @@ namespace Cdy.Tag
             }
 
             int count = 0;
-            var timers = GetTimers(source, sourceAddr,timeTick, out count);
+            var timers = GetTimers(source, sourceAddr, out count);
 
             var valuesize = source.ReadInt();
             var value = DeCompressValue<T>(source.ReadBytes(valuesize), count);
@@ -1878,7 +1808,7 @@ namespace Cdy.Tag
             }
 
             int count = 0;
-            var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
+            var timers = GetTimers(source, sourceAddr + 8,  out count);
 
             var valuesize = source.ReadInt();
             var value = DeCompressValue<T>(source.ReadBytes(valuesize), count);
@@ -2024,7 +1954,7 @@ namespace Cdy.Tag
         public  object DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time1, int timeTick, QueryValueMatchType type)
         {
             int count = 0;
-            var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
+            var timers = GetTimers(source, sourceAddr + 8,out count);
 
             var valuesize = source.ReadInt();
             var value = DeCompressValue<T>(source.ReadBytes(valuesize), count);
@@ -2200,7 +2130,7 @@ namespace Cdy.Tag
         public  int DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
         {
             int count = 0;
-            var timers = GetTimers(source, sourceAddr + 8, timeTick, out count);
+            var timers = GetTimers(source, sourceAddr + 8,out count);
 
             var valuesize = source.ReadInt();
             var value = DeCompressValue<T>(source.ReadBytes(valuesize), count);

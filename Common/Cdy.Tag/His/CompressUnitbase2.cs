@@ -77,6 +77,12 @@ namespace Cdy.Tag
         /// </summary>
         public int Precision { get; set; }
 
+        /// <summary>
+        /// 时间间隔单位(ms)
+        /// 影响记录的时间精度
+        /// </summary>
+        public int TimeTick { get; set; }
+
 
         #endregion ...Properties...
 

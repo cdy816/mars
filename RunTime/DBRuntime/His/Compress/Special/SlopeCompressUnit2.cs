@@ -7,6 +7,7 @@
 //  种道洋
 //  1. 2020/7/1 三沙永兴岛 优化斜率压缩算法  种道洋
 //==============================================================
+using DBRuntime.His;
 using DBRuntime.His.Compress;
 using Google.Protobuf.WellKnownTypes;
 using System;
@@ -77,7 +78,7 @@ namespace Cdy.Tag
         /// <param name="timerVals"></param>
         /// <param name="usedIndex"></param>
         /// <returns></returns>
-        protected new Memory<byte> CompressTimers(List<ushort> timerVals, CustomQueue<int> usedIndex)
+        protected  Memory<byte> CompressTimers(List<int> timerVals, CustomQueue<int> usedIndex)
         {
             usedIndex.ReadIndex = 0;
             // int preids = timerVals[0];
@@ -112,11 +113,9 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="timerVals"></param>
-        private void GetEmpityTimers(List<ushort> timerVals)
+        private void GetEmpityTimers(List<int> timerVals)
         {
             emptys.Reset();
-            //int preids = timerVals[0];
-            //mVarintMemory.Reset();
             for (int i = 1; i < timerVals.Count; i++)
             {
                 if (timerVals[i] <= 0)
@@ -233,10 +232,10 @@ namespace Cdy.Tag
 
             int count = values.ReadInt(0);
 
-            ushort mLastTime = 0;
+            int mLastTime = 0;
             byte mLastValue = 0;
 
-            ushort mStartTime = 0;
+            int mStartTime = 0;
             byte mStartValue = 0;
 
             mMarshalMemory.Position = 0;
@@ -252,7 +251,7 @@ namespace Cdy.Tag
                         isStarted = true;
 
                         mlastid = id = values.ReadInt();
-                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastTime = mStartTime = values.ReadInt();
                         mLastValue = mStartValue = values.ReadByte();
 
                         mMarshalMemory.Write(mLastValue);
@@ -262,7 +261,7 @@ namespace Cdy.Tag
                     else
                     {
                         id = values.ReadInt();
-                        var vkey = values.ReadUShort();
+                        var vkey = values.ReadInt();
                         var vval = values.ReadByte();
                         if ((id - mlastid) > 1)
                         {
@@ -345,10 +344,10 @@ namespace Cdy.Tag
 
             int count = values.ReadInt(0);
 
-            ushort mLastTime = 0;
+            int mLastTime = 0;
             short mLastValue = 0;
 
-            ushort mStartTime = 0;
+            int mStartTime = 0;
             short mStartValue = 0;
 
 
@@ -369,7 +368,7 @@ namespace Cdy.Tag
                         isStarted = true;
 
                         mlastid = id = values.ReadInt();
-                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastTime = mStartTime = values.ReadInt();
                         mLastValue = mStartValue = values.ReadShort();
 
                         //mMarshalMemory.Write(mLastValue);
@@ -392,7 +391,7 @@ namespace Cdy.Tag
                     else
                     {
                         id = values.ReadInt();
-                        var vkey = values.ReadUShort();
+                        var vkey = values.ReadInt();
                         var vval = values.ReadShort();
                         if ((id - mlastid) > 1)
                         {
@@ -521,10 +520,10 @@ namespace Cdy.Tag
 
             int count = values.ReadInt(0);
 
-            ushort mLastTime = 0;
+            int mLastTime = 0;
             ushort mLastValue = 0;
 
-            ushort mStartTime = 0;
+            int mStartTime = 0;
             ushort mStartValue = 0;
 
 
@@ -545,7 +544,7 @@ namespace Cdy.Tag
                         isStarted = true;
 
                         mlastid = id = values.ReadInt();
-                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastTime = mStartTime = values.ReadInt();
                         mLastValue = mStartValue = values.ReadUShort();
 
                         //mMarshalMemory.Write(mLastValue);
@@ -568,7 +567,7 @@ namespace Cdy.Tag
                     else
                     {
                         id = values.ReadInt();
-                        var vkey = values.ReadUShort();
+                        var vkey = values.ReadInt();
                         var vval = values.ReadUShort();
                         if ((id - mlastid) > 1)
                         {
@@ -697,10 +696,10 @@ namespace Cdy.Tag
 
             int count = values.ReadInt(0);
 
-            ushort mLastTime = 0;
+            int mLastTime = 0;
             int mLastValue = 0;
 
-            ushort mStartTime = 0;
+            int mStartTime = 0;
             int mStartValue = 0;
 
 
@@ -721,7 +720,7 @@ namespace Cdy.Tag
                         isStarted = true;
 
                         mlastid = id = values.ReadInt();
-                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastTime = mStartTime = values.ReadInt();
                         mLastValue = mStartValue = values.ReadInt();
 
                         //mMarshalMemory.Write(mLastValue);
@@ -744,7 +743,7 @@ namespace Cdy.Tag
                     else
                     {
                         id = values.ReadInt();
-                        var vkey = values.ReadUShort();
+                        var vkey = values.ReadInt();
                         var vval = values.ReadInt();
                         if ((id - mlastid) > 1)
                         {
@@ -873,10 +872,10 @@ namespace Cdy.Tag
 
             int count = values.ReadInt(0);
 
-            ushort mLastTime = 0;
+            int mLastTime = 0;
             uint mLastValue = 0;
 
-            ushort mStartTime = 0;
+            int mStartTime = 0;
             uint mStartValue = 0;
 
 
@@ -897,7 +896,7 @@ namespace Cdy.Tag
                         isStarted = true;
 
                         mlastid = id = values.ReadInt();
-                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastTime = mStartTime = values.ReadInt();
                         mLastValue = mStartValue = values.ReadUInt();
 
                         //mMarshalMemory.Write(mLastValue);
@@ -920,7 +919,7 @@ namespace Cdy.Tag
                     else
                     {
                         id = values.ReadInt();
-                        var vkey = values.ReadUShort();
+                        var vkey = values.ReadInt();
                         var vval = values.ReadUInt();
                         if ((id - mlastid) > 1)
                         {
@@ -1031,6 +1030,12 @@ namespace Cdy.Tag
             return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="mUsedTimerIndex"></param>
+        /// <returns></returns>
         private Memory<byte> SlopeCompressLong(MemoryBlock values, CustomQueue<int> mUsedTimerIndex)
         {
             double slopeArea = this.Parameters.ContainsKey("SlopeArea") ? this.Parameters["SlopeArea"] : 0;
@@ -1042,10 +1047,10 @@ namespace Cdy.Tag
 
             int count = values.ReadInt(0);
 
-            ushort mLastTime = 0;
+            int mLastTime = 0;
             long mLastValue = 0;
 
-            ushort mStartTime = 0;
+            int mStartTime = 0;
             long mStartValue = 0;
 
 
@@ -1066,7 +1071,7 @@ namespace Cdy.Tag
                         isStarted = true;
 
                         mlastid = id = values.ReadInt();
-                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastTime = mStartTime = values.ReadInt();
                         mLastValue = mStartValue = values.ReadLong();
 
                         //mMarshalMemory.Write(mLastValue);
@@ -1089,7 +1094,7 @@ namespace Cdy.Tag
                     else
                     {
                         id = values.ReadInt();
-                        var vkey = values.ReadUShort();
+                        var vkey = values.ReadInt();
                         var vval = values.ReadLong();
                         if ((id - mlastid) > 1)
                         {
@@ -1217,10 +1222,10 @@ namespace Cdy.Tag
 
             int count = values.ReadInt(0);
 
-            ushort mLastTime = 0;
+            int mLastTime = 0;
             ulong mLastValue = 0;
 
-            ushort mStartTime = 0;
+            int mStartTime = 0;
             ulong mStartValue = 0;
 
 
@@ -1241,7 +1246,7 @@ namespace Cdy.Tag
                         isStarted = true;
 
                         mlastid = id = values.ReadInt();
-                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastTime = mStartTime = values.ReadInt();
                         mLastValue = mStartValue = values.ReadULong();
 
                         //mMarshalMemory.Write(mLastValue);
@@ -1264,7 +1269,7 @@ namespace Cdy.Tag
                     else
                     {
                         id = values.ReadInt();
-                        var vkey = values.ReadUShort();
+                        var vkey = values.ReadInt();
                         var vval = values.ReadULong();
                         if ((id - mlastid) > 1)
                         {
@@ -1398,10 +1403,10 @@ namespace Cdy.Tag
             //emptys.ReadIndex = 0;
             //int ig = emptys.ReadIndex < emptyIds.WriteIndex ? emptys.IncRead() : -1;
 
-            ushort mLastTime = 0;
+            int mLastTime = 0;
             double mLastValue = 0;
 
-            ushort mStartTime = 0;
+            int mStartTime = 0;
             double mStartValue = 0;
 
             mVarintMemory.Reset();
@@ -1419,7 +1424,7 @@ namespace Cdy.Tag
                         isStarted = true;
 
                         mlastid = id = values.ReadInt();
-                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastTime = mStartTime = values.ReadInt();
                         mLastValue = mStartValue = values.ReadDouble();
 
                         mDCompress.Append(mLastValue);
@@ -1429,7 +1434,7 @@ namespace Cdy.Tag
                     else
                     {
                         id = values.ReadInt();
-                        var vkey = values.ReadUShort();
+                        var vkey = values.ReadInt();
                         var vval = values.ReadDouble();
                         if ((id-mlastid)>1)
                         {
@@ -1515,10 +1520,10 @@ namespace Cdy.Tag
 
             int count = values.ReadInt(0);
 
-            ushort mLastTime = 0;
+            int mLastTime = 0;
             float mLastValue = 0;
 
-            ushort mStartTime = 0;
+            int mStartTime = 0;
             float mStartValue = 0;
 
             mVarintMemory.Reset();
@@ -1536,7 +1541,7 @@ namespace Cdy.Tag
                         isStarted = true;
 
                         mlastid = id = values.ReadInt();
-                        mLastTime = mStartTime = values.ReadUShort();
+                        mLastTime = mStartTime = values.ReadInt();
                         mLastValue = mStartValue = values.ReadFloat();
 
                         mFCompress.Append(mLastValue);
@@ -1546,7 +1551,7 @@ namespace Cdy.Tag
                     else
                     {
                         id = values.ReadInt();
-                        var vkey = values.ReadUShort();
+                        var vkey = values.ReadInt();
                         var vval = values.ReadFloat();
                         if ((id - mlastid) > 1)
                         {
@@ -1625,7 +1630,7 @@ namespace Cdy.Tag
         /// <param name="mTimers"></param>
         /// <param name="usedIndex"></param>
         /// <returns></returns>
-        protected Memory<byte> CompressValues<T>(IMemoryBlock source, long offset, int count,List<ushort> mTimers,TagType type)
+        protected Memory<byte> CompressValues<T>(IMemoryBlock source, long offset, int count,List<int> mTimers,TagType type)
         {
             int ig = -1;
             emptys.ReadIndex = 0;
@@ -1860,7 +1865,27 @@ namespace Cdy.Tag
         protected override  long Compress<T>(IMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size, TagType type)
         {
             var count = (int)(size - this.QulityOffset);
-            var tims = source.ReadUShorts(sourceAddr, (int)count);
+
+            byte tlen = (source as HisDataMemoryBlock).TimeLen;
+
+            List<int> tims = new List<int>(count);
+
+            if (tlen == 2)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    tims.Add(source.ReadUShort(sourceAddr + i * 2));
+                }
+            }
+            else
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    tims.Add(source.ReadInt(sourceAddr + i * 4));
+                }
+            }
+
+            //tims = tlen == 2 ? source.ReadUShorts(sourceAddr, (int)count).Select(e => (int)e).ToList() : source.ReadInts(sourceAddr, (int)count);
 
             if (mMarshalMemory == null)
             {
@@ -1881,10 +1906,19 @@ namespace Cdy.Tag
             //
             if (mAvaiableDatabuffer == null)
             {
-                mAvaiableDatabuffer = new MemoryBlock(count * 18);
+                mAvaiableDatabuffer = new MemoryBlock(count * 20);
             }
 
-            usedIndex.Reset();
+            if (usedIndex.Length < count)
+            {
+                usedIndex = new CustomQueue<int>(count * 2);
+            }
+            else
+            {
+                usedIndex.Reset();
+            }
+
+          
             GetEmpityTimers(tims);
 
             long rsize = 0;

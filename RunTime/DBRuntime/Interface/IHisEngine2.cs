@@ -46,7 +46,8 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="values"></param>
+        /// <param name="timeDuration"></param>
         /// <returns></returns>
-        public bool InsertHisValues(long id,SortedDictionary<DateTime, object> values);
+        public bool ManualRecordHisValues(long id, IEnumerable<Cdy.Tag.TagValue> values, int timeDuration);
     }
 }

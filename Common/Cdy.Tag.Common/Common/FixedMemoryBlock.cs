@@ -431,6 +431,16 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
+        public void WriteULongDirect(long offset, ulong value)
+        {
+            MemoryHelper.WriteUInt64((void*)mHandles, offset, value);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="value"></param>
         public virtual void WriteFloat(long offset, float value)
         {
             MemoryHelper.WriteFloat((void*)mHandles, offset, value);
@@ -443,11 +453,31 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
+        public virtual void WriteFloatDirect(long offset, float value)
+        {
+            MemoryHelper.WriteFloat((void*)mHandles, offset, value);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="value"></param>
         public virtual void WriteDouble(long offset, double value)
         {
             MemoryHelper.WriteDouble((void*)mHandles, offset, value);
             Position = offset + 8;
 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="value"></param>
+        public virtual void WriteDoubleDirect(long offset, double value)
+        {
+            MemoryHelper.WriteDouble((void*)mHandles, offset, value);
         }
 
         /// <summary>

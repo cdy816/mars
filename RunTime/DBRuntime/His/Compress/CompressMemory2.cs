@@ -26,7 +26,6 @@ namespace Cdy.Tag
 
         #region ... Variables  ...
 
-        //private Dictionary<int, HisDataMemoryBlock> mTagAddress;
         private DateTime mCurrentTime;
         private IHisEngine2 mHisTagService;
         private Dictionary<int, CompressUnitbase2> mCompressCach = new Dictionary<int, CompressUnitbase2>();
@@ -34,7 +33,6 @@ namespace Cdy.Tag
 
         private List<int> mTagIds=new List<int>();
 
-        //private bool mIsDisposed=false;
         private bool mIsRunning=false;
 
         private Queue<ManualHisDataMemoryBlock> mMemoryCach = new Queue<ManualHisDataMemoryBlock>();
@@ -138,9 +136,14 @@ namespace Cdy.Tag
         /// </summary>
         public void RequestManualToCompress()
         {
-            while (mMemoryCach.Count > 0)
+            lock (mMemoryCach)
             {
-                RequestManualToCompress(mMemoryCach.Dequeue());
+                mIsRunning = true;
+                while (mMemoryCach.Count > 0)
+                {
+                    RequestManualToCompress(mMemoryCach.Dequeue());
+                }
+                mIsRunning = false;
             }
         }
 
@@ -164,6 +167,7 @@ namespace Cdy.Tag
             cdata.MakeMemoryBusy();
             ServiceLocator.Locator.Resolve<IDataSerialize2>().ManualRequestToSeriseFile(data.Id, data.Time, cdata, datasize);
             data.MakeMemoryNoBusy();
+            ManualHisDataMemoryBlockPool.Pool.Release(data);
         }
 
         /// <summary>
@@ -220,72 +224,75 @@ namespace Cdy.Tag
         /// </summary>
         public void Compress(HisDataMemoryBlockCollection source)
         {
-            /*
-             内存结构:Head+数据指针区域+数据区
-             Head:数据区大小(4)+变量数量(4)
-             数据区指针:[ID(4) + address(4)]
-             数据区:[data block]
-             */
-            mIsRunning = true;
-            try
+            lock (mMemoryCach)
             {
-                Stopwatch sw = new Stopwatch();
-                sw.Start();
-
-                //CheckTagAddress(source);
-                long datasize = 0;
-                int headOffset = 4 + 4;
-                long Offset = headOffset + mTagIds.Count * 8;
-
-                this.MakeMemoryBusy();
-
-                long ltmp1 = sw.ElapsedMilliseconds;
-
-                //更新数据区域
-                foreach (var vv in mTagIds)
+                /*
+                 内存结构:Head+数据指针区域+数据区
+                 Head:数据区大小(4)+变量数量(4)
+                 数据区指针:[ID(4) + address(4)]
+                 数据区:[data block]
+                 */
+                mIsRunning = true;
+                try
                 {
-                    var val = source.TagAddress[vv];
-                    if (val != null)
+                    Stopwatch sw = new Stopwatch();
+                    sw.Start();
+
+                    //CheckTagAddress(source);
+                    long datasize = 0;
+                    int headOffset = 4 + 4;
+                    long Offset = headOffset + mTagIds.Count * 8;
+
+                    this.MakeMemoryBusy();
+
+                    long ltmp1 = sw.ElapsedMilliseconds;
+
+                    //更新数据区域
+                    foreach (var vv in mTagIds)
                     {
-                        var size = CompressBlockMemory(val, Offset, val.QualityAddress, val.Length, vv);
-                        if (dtmp.ContainsKey(vv))
-                            dtmp[vv] = Offset;
-                        Offset += size;
-                        datasize += size;
+                        var val = source.TagAddress[vv];
+                        if (val != null)
+                        {
+                            var size = CompressBlockMemory(val, Offset, val.QualityAddress, val.Length, vv);
+                            if (dtmp.ContainsKey(vv))
+                                dtmp[vv] = Offset;
+                            Offset += size;
+                            datasize += size;
+                        }
+                        else
+                        {
+                            dtmp[vv] = 0;
+                        }
                     }
-                    else
+
+                    //更新指针区域
+                    this.WriteInt(0, (int)datasize);//写入整体数据大小
+                    this.Write((int)mTagIds.Count); //写入变量个数
+
+                    long ltmp2 = sw.ElapsedMilliseconds;
+
+                    //写入变量、数据区对应的索引
+                    int count = 0;
+                    foreach (var vv in dtmp)
                     {
-                        dtmp[vv] = 0;
+                        this.WriteInt(headOffset + count, (int)vv.Key);
+                        this.WriteInt(headOffset + count + 4, (int)vv.Value);
+                        count += 8;
                     }
+
+                    long ltmp3 = sw.ElapsedMilliseconds;
+
+                    ServiceLocator.Locator.Resolve<IDataSerialize2>().RequestToSeriseFile(this, mCurrentTime);
+                    sw.Stop();
+                    LoggerService.Service.Info("CompressEnginer", Id + "压缩完成 耗时:" + sw.ElapsedMilliseconds + " ltmp1:" + ltmp1 + " ltmp2:" + (ltmp2 - ltmp1) + " ltmp3:" + (ltmp3 - ltmp2) + " CPU Id:" + ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Blue);
+
                 }
-
-                //更新指针区域
-                this.WriteInt(0, (int)datasize);//写入整体数据大小
-                this.Write((int)mTagIds.Count); //写入变量个数
-
-                long ltmp2 = sw.ElapsedMilliseconds;
-
-                //写入变量、数据区对应的索引
-                int count = 0;
-                foreach (var vv in dtmp)
+                catch (Exception ex)
                 {
-                    this.WriteInt(headOffset + count, (int)vv.Key);
-                    this.WriteInt(headOffset + count + 4, (int)vv.Value);
-                    count += 8;
+                    LoggerService.Service.Erro("CompressEnginer", ex.StackTrace + "  " + ex.Message);
                 }
-
-                long ltmp3 = sw.ElapsedMilliseconds;
-
-                ServiceLocator.Locator.Resolve<IDataSerialize2>().RequestToSeriseFile(this, mCurrentTime);
-                sw.Stop();
-                LoggerService.Service.Info("CompressEnginer", Id + "压缩完成 耗时:" + sw.ElapsedMilliseconds + " ltmp1:" + ltmp1 + " ltmp2:" + (ltmp2 - ltmp1) + " ltmp3:" + (ltmp3 - ltmp2) +" CPU Id:"+ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Blue);
-                
+                mIsRunning = false;
             }
-            catch(Exception ex)
-            {
-                LoggerService.Service.Erro("CompressEnginer", ex.StackTrace+"  "+ex.Message);
-            }
-            mIsRunning = false;
         }
 
         /// <summary>
@@ -342,7 +349,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         private MarshalMemoryBlock CompressMemory(ManualHisDataMemoryBlock data,out int datasize)
         {
-            MarshalMemoryBlock block = new MarshalMemoryBlock(data.Length * 2);
+            MarshalMemoryBlock block = MarshalMemoryBlockPool.Pool.Get(data.Length * 2);
             var histag = mHisTagService.GetHisTag(data.Id);
             if (histag == null)
             {
@@ -363,7 +370,7 @@ namespace Cdy.Tag
                 tp.StartTime = data.Time;
                 tp.Parameters = histag.Parameters;
                 tp.Precision = histag.Precision;
-                tp.TimeTick = data.TimeDuration;
+                tp.TimeTick = data.TimeUnit;
                 var size = tp.Compress(data, 0, block, 5, data.Length) + 1;
                 block.WriteInt(0, (int)size);
                 datasize = (int)(size + 5);

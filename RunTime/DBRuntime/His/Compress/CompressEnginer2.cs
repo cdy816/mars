@@ -328,7 +328,7 @@ namespace Cdy.Tag
                     vv.Value.AddRequestManualToCompress(data);
                 }
             }
-            mManualEvent.Set();
+           
         }
 
         /// <summary>
@@ -346,10 +346,20 @@ namespace Cdy.Tag
 
                 foreach (var vv in mTargetMemorys.Values)
                 {
+                    vv.MakeMemoryBusy();
                     vv.RequestManualToCompress();
+                    vv.MakeMemoryNoBusy();
                 }
 
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void SubmitManualToCompress()
+        {
+            mManualEvent.Set();
         }
 
         #endregion ...Methods...

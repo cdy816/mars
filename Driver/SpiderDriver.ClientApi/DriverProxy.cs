@@ -589,6 +589,50 @@ namespace SpiderDriver.ClientApi
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="id"></param>
+        /// <param name="type"></param>
+        /// <param name="values"></param>
+        /// <param name="timeUnit"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool SetTagHisValue(int id, TagType type, List<TagValue> values,int timeUnit=100, int timeout = 5000)
+        {
+            CheckLogin();
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 22 + values.Count * 32);
+            mb.WriteByte(ApiFunConst.SetTagValueFun);
+            mb.WriteLong(this.mLoginId);
+            mb.WriteInt(id);
+            mb.WriteInt(values.Count);
+            mb.WriteByte((byte)type);
+            mb.WriteInt(timeUnit);
+
+            foreach (var vv in values)
+            {
+                mb.WriteLong(vv.Time.ToBinary());
+                SetTagValueToBuffer(type, vv.Value, mb);
+                mb.WriteByte(vv.Quality);
+            }
+            realRequreEvent.Reset();
+            Send(mb);
+
+            try
+            {
+                if (realRequreEvent.WaitOne(timeout))
+                {
+                    return mRealRequreData != null && mRealRequreData.ReadableBytes > 1;
+                }
+            }
+            catch
+            {
+
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="tags"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>

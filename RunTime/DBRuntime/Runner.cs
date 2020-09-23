@@ -245,6 +245,8 @@ namespace Cdy.Tag
             hisEnginer.ReLoadTags(htmp, db.HisDatabase);
             compressEnginer.ReSizeTagCompress(htmp);
 
+            seriseEnginer.Init();
+
             hisEnginer.Resume();
 
             this.mDatabase = db;
@@ -302,6 +304,7 @@ namespace Cdy.Tag
                 hisEnginer.LogManager = new LogManager2() { Database = mDatabaseName,Parent=hisEnginer };
                 hisEnginer.Init();
                 ServiceLocator.Locator.Registor<IHisEngine2>(hisEnginer);
+                ServiceLocator.Locator.Registor<ITagHisValueProduct>(hisEnginer);
 
                 compressEnginer = new CompressEnginer2();
                 compressEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
@@ -322,7 +325,7 @@ namespace Cdy.Tag
 
                 RegistorInterface();
 
-                DriverManager.Manager.Init(realEnginer);
+                DriverManager.Manager.Init(realEnginer, hisEnginer);
 
                 HisQueryManager.Instance.Registor(mDatabaseName);
                 HisQueryManager.Instance.StartMonitor();

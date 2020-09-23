@@ -32,6 +32,7 @@ namespace Cdy.Tag
         private Dictionary<string,IProducterDriver> mDrivers = new Dictionary<string, IProducterDriver>();
 
         private IRealTagProduct mTagDriverService;
+        private ITagHisValueProduct mHisValueDriverService;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -52,9 +53,10 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="tagDriverService"></param>
-        public void Init(IRealTagProduct tagDriverService)
+        public void Init(IRealTagProduct tagDriverService,ITagHisValueProduct hisValueService)
         {
             mTagDriverService = tagDriverService;
+            mHisValueDriverService = hisValueService;
             string cfgpath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location),"Config", "Driver.cfg");
             if(System.IO.File.Exists(cfgpath))
             {
@@ -95,7 +97,7 @@ namespace Cdy.Tag
             LoggerService.Service.Info("DriverManager", "start to Start");
             foreach (var vv in mDrivers.Values)
             {
-                vv.Start(mTagDriverService);
+                vv.Start(mTagDriverService, mHisValueDriverService);
             }
         }
 

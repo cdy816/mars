@@ -137,7 +137,7 @@ namespace SpiderDriver
         /// </summary>
         /// <param name="tagQuery"></param>
         /// <returns></returns>
-        public bool Start(IRealTagProduct tagQuery)
+        public bool Start(IRealTagProduct tagQuery, ITagHisValueProduct tagHisValueService)
         {
             Load();
             mService = new List<DataService>();

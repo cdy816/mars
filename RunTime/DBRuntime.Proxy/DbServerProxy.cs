@@ -34,7 +34,7 @@ namespace DBRuntime.Proxy
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public event EventHandler ValueUpdateEvent;
+        //public event EventHandler ValueUpdateEvent;
 
         private bool mIsClosed = false;
 
@@ -657,6 +657,14 @@ namespace DBRuntime.Proxy
             return null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public HisQueryResult<T> QueryHisData<T>(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType type)
         {
             if (IsConnected)

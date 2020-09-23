@@ -15,13 +15,14 @@ using System.Threading;
 using System.Linq;
 using System.Runtime;
 using System.ComponentModel;
+using Cdy.Tag.Driver;
 
 namespace Cdy.Tag
 {
     /// <summary>
     /// 历史数据引擎2
     /// </summary>
-    public class HisEnginer2 : IHisEngine2,IDisposable
+    public class HisEnginer2 : IHisEngine2, ITagHisValueProduct, IDisposable
     {
 
         #region ... Variables  ...
@@ -891,19 +892,6 @@ namespace Cdy.Tag
             }
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="memory"></param>
-        //private void CheckMemoryIsReady(MarshalMemoryBlock memory)
-        //{
-        //    while (memory.IsBusy())
-        //    {
-        //        LoggerService.Service.Info("Record", "记录出现阻塞 " + memory.Name);
-        //        System.Threading.Thread.Sleep(1);
-        //    }
-        //}
-
         /// <summary>
         /// 
         /// </summary>
@@ -1216,6 +1204,21 @@ namespace Cdy.Tag
             mIsClosed = true;
             SubmiteMemory(DateTime.Now);
             while (!mMegerProcessIsClosed) Thread.Sleep(1);
+            SaveManualCachData();
+        }
+
+        /// <summary>
+        /// 保存手动提交历史记录缓存部分
+        /// </summary>
+        private void SaveManualCachData()
+        {
+            foreach(var vv in mManualHisDataCach)
+            {
+                foreach (var vvv in vv.Value)
+                {
+                    ServiceLocator.Locator.Resolve<IDataCompress2>().RequestManualToCompress(vvv.Value);
+                }
+            }
         }
 
 
@@ -1333,9 +1336,9 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="values"></param>
-        /// <param name="timeDuration">时间最小单位</param>
+        /// <param name="timeUnit">时间最小单位</param>
         /// <returns></returns>
-        public bool ManualRecordHisValues(long id, IEnumerable<Cdy.Tag.TagValue> values, int timeDuration = 100)
+        private bool ManualRecordHisValues(long id, IEnumerable<Cdy.Tag.TagValue> values, int timeUnit = 100)
         {
             int valueOffset, qulityOffset = 0;
 
@@ -1368,15 +1371,25 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        var css = CalCachDatablockSize(tag.TagType, 0, MergeMemoryTime * 1000 / timeDuration, out valueOffset, out qulityOffset);
-                        hb = new ManualHisDataMemoryBlock(css) { Time = time, MaxCount = MergeMemoryTime * 1000 / timeDuration, TimeDuration = timeDuration, TimerAddress = 0, ValueAddress = valueOffset, QualityAddress = qulityOffset, Id = (int)id, TimeLen = 4 };
+                        var css = CalCachDatablockSize(tag.TagType, 0, MergeMemoryTime * 1000 / timeUnit, out valueOffset, out qulityOffset);
+                        
+                        hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
+                        hb.Time = time;
+                        hb.MaxCount = MergeMemoryTime * 1000 / timeUnit;
+                        hb.TimeUnit = timeUnit;
+                        hb.TimeLen = 4;
+                        hb.TimerAddress = 0;
+                        hb.ValueAddress = valueOffset;
+                        hb.QualityAddress = qulityOffset;
+                        hb.Id = (int)id;
+
                         datacach.Add(time, hb);
                     }
                     mLastTime = time;
 
                     if (hb.CurrentCount < hb.MaxCount)
                     {
-                        var vtime = (int)((vv.Time - hb.Time).TotalMilliseconds / timeDuration);
+                        var vtime = (int)((vv.Time - hb.Time).TotalMilliseconds / timeUnit);
                         //写入时间戳
                         hb.WriteInt(hb.TimerAddress + hb.CurrentCount * 4, vtime);
                         switch (tag.TagType)
@@ -1477,13 +1490,40 @@ namespace Cdy.Tag
                             ServiceLocator.Locator.Resolve<IDataCompress2>().RequestManualToCompress(vv.Value);
                         }
                     }
+                    ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
                 }
+               
                 return true;
             }
             else
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool SetTagHisValue(int id, List<TagValue> values, int timeUnit = 100)
+        {
+           return ManualRecordHisValues(id, values, timeUnit);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool SetTagHisValues(Dictionary<int, List<TagValue>> values, int timeUnit = 100)
+        {
+            foreach(var vv in values)
+            {
+                ManualRecordHisValues(vv.Key, vv.Value, timeUnit);
+            }
+            return true;
         }
 
         #endregion ...Methods...

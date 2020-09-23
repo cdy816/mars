@@ -41,13 +41,5 @@ namespace Cdy.Tag
         /// <returns></returns>
         public List<HisRunTag> ListAllTags();
 
-        /// <summary>
-        /// 手动插入历史数据
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="values"></param>
-        /// <param name="timeDuration"></param>
-        /// <returns></returns>
-        public bool ManualRecordHisValues(long id, IEnumerable<Cdy.Tag.TagValue> values, int timeDuration);
     }
 }

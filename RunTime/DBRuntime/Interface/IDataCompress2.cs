@@ -49,6 +49,11 @@ namespace Cdy.Tag
         /// <param name="data"></param>
         void RequestManualToCompress(ManualHisDataMemoryBlock data);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        void SubmitManualToCompress();
+
 
         #endregion ...Methods...
 

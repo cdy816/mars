@@ -370,7 +370,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 清空内存
         /// </summary>
-        public void Clear()
+        public MarshalMemoryBlock Clear()
         {
             try
             {
@@ -390,7 +390,7 @@ namespace Cdy.Tag
             }
             //mUsedSize = 0;
             mPosition = 0;
-
+            return this;
            // LoggerService.Service.Info("MemoryBlock", Name + " is clear !");
         }
 

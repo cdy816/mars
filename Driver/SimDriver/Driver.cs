@@ -24,6 +24,8 @@ namespace SimDriver
 
         private IRealTagProduct mTagService;
 
+        private ITagHisValueProduct mTagHisValueService;
+
         //private bool mIsBusy = false;
 
         private StreamWriter mWriter;
@@ -107,10 +109,11 @@ namespace SimDriver
         /// </summary>
         /// <param name="tagQuery"></param>
         /// <returns></returns>
-        public bool Start(IRealTagProduct tagQuery)
+        public bool Start(IRealTagProduct tagQuery, ITagHisValueProduct tagHisValueService)
         {
             mIsClosed = false;
             mTagService = tagQuery;
+            mTagHisValueService = tagHisValueService;
             InitTagCach(tagQuery);
             mScanThread = new Thread(ScanThreadPro);
             mScanThread.IsBackground = true;

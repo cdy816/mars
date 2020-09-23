@@ -24,6 +24,7 @@ namespace SpiderDriver
         #region ... Variables  ...
         private TagInfoServerProcess mInfoProcess;
         private RealDataServerProcess mRealProcess;
+        private HisDataServerProcess mHisProcess;
         //private IByteBuffer mAsyncCalldata;
 
         #endregion ...Variables...
@@ -56,7 +57,8 @@ namespace SpiderDriver
         private void RegistorInit()
         {
             this.RegistorFunCallBack(APIConst.TagInfoRequestFun, TagInfoRequest);
-            this.RegistorFunCallBack(APIConst.RealValueFun, ReadDataRequest);
+            this.RegistorFunCallBack(APIConst.RealValueFun, RealDataRequest);
+            this.RegistorFunCallBack(APIConst.HisValueFun, HisDataRequest);
         }
 
         /// <summary>
@@ -67,6 +69,7 @@ namespace SpiderDriver
         {
             mRealProcess.OnClientConnected(id);
             mInfoProcess.OnClientConnected(id);
+            mHisProcess.OnClientConnected(id);
             base.OnClientConnected(id);
         }
 
@@ -78,6 +81,7 @@ namespace SpiderDriver
         {
             mRealProcess.OnClientDisconnected(id);
             mInfoProcess.OnClientDisconnected(id);
+            mHisProcess.OnClientDisconnected(id);
             base.OnClientDisConnected(id);
         }
 
@@ -160,9 +164,21 @@ namespace SpiderDriver
         /// <param name="clientId"></param>
         /// <param name="memory"></param>
         /// <returns></returns>
-        private IByteBuffer ReadDataRequest(string clientId, IByteBuffer memory)
+        private IByteBuffer RealDataRequest(string clientId, IByteBuffer memory)
         {
             this.mRealProcess.ProcessData(clientId, memory);
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientid"></param>
+        /// <param name="memory"></param>
+        /// <returns></returns>
+        private IByteBuffer HisDataRequest(string clientid,IByteBuffer memory)
+        {
+            this.mHisProcess.ProcessData(clientid, memory);
             return null;
         }
 
@@ -176,8 +192,10 @@ namespace SpiderDriver
             mRealProcess = new RealDataServerProcess() { Parent = this };
             mRealProcess.Init();
             mInfoProcess = new TagInfoServerProcess() { Parent = this };
+            mHisProcess = new HisDataServerProcess() { Parent = this };
             mRealProcess.Start();
             mInfoProcess.Start();
+            mHisProcess.Start();
             base.StartInner(port);
 
         }
@@ -199,6 +217,13 @@ namespace SpiderDriver
                 mInfoProcess.Stop();
                 mInfoProcess.Dispose();
                 mInfoProcess = null;
+            }
+
+            if (mHisProcess != null)
+            {
+                mHisProcess.Stop();
+                mHisProcess.Dispose();
+                mHisProcess = null;
             }
         }
         #endregion ...Methods...

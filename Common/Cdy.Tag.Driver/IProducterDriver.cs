@@ -47,7 +47,7 @@ namespace Cdy.Tag.Driver
         /// 
         /// </summary>
         /// <returns></returns>
-        bool Start(IRealTagProduct tagQuery);
+        bool Start(IRealTagProduct tagQuery,ITagHisValueProduct tagHisValueService);
 
         /// <summary>
         /// 

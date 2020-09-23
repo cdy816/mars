@@ -21,7 +21,7 @@ namespace DBRuntime.Proxy
         Push
     }
 
-    public class NetTransformDriver : Cdy.Tag.Driver.IProducterDriver
+    public class NetTransformDriver
     {
 
         #region ... Variables  ...
@@ -76,18 +76,11 @@ namespace DBRuntime.Proxy
 
         #region ... Methods    ...
 
-
-
-        #endregion ...Methods...
-
-        #region ... Interfaces ...
-
-        #endregion ...Interfaces...
-
-        public string Name => "NetTransformDriver";
-
-        public string[] Registors => new string[0];
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
         protected string ReadString(IByteBuffer buffer)
         {
             return buffer.ReadString(buffer.ReadInt(), Encoding.Unicode);
@@ -98,7 +91,7 @@ namespace DBRuntime.Proxy
         /// </summary>
         private void RemoteDataudpatePro()
         {
-            while(!mIsClosed)
+            while (!mIsClosed)
             {
                 if (WorkMode == NetTransformWorkMode.Push)
                 {
@@ -119,12 +112,16 @@ namespace DBRuntime.Proxy
                     Client.SyncRealMemory();
                     double span = (DateTime.Now - stime).TotalMilliseconds;
                     int sleeptime = span > PollCircle ? 1 : (int)(PollCircle - span);
-                    ValueUpdateEvent?.Invoke(this,null);
+                    ValueUpdateEvent?.Invoke(this, null);
                     Thread.Sleep(sleeptime);
                 }
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="block"></param>
         private void ProcessBufferData(IByteBuffer block)
         {
 
@@ -135,7 +132,7 @@ namespace DBRuntime.Proxy
                 //LoggerService.Service.Info("ProcessBufferData", "block data");
                 ProcessBlockBufferData(block);
             }
-            else if(vtp == RealDataPush)
+            else if (vtp == RealDataPush)
             {
                 ProcessSingleBufferDataByMemoryCopy(block);
             }
@@ -154,7 +151,7 @@ namespace DBRuntime.Proxy
             Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, realenginer.Memory, start, size);
             block.SetReaderIndex(block.ReaderIndex + size);
             block.ReleaseBuffer();
-           
+
         }
 
         /// <summary>
@@ -169,7 +166,7 @@ namespace DBRuntime.Proxy
             var count = block.ReadInt();
             for (int i = 0; i < count; i++)
             {
-               
+
                 var vid = block.ReadInt();
                 if (vid < 0)
                 {
@@ -192,7 +189,7 @@ namespace DBRuntime.Proxy
             for (int i = 0; i < count; i++)
             {
                 var vid = block.ReadInt();
-                if(vid<0)
+                if (vid < 0)
                 {
                     Debug.Print("Invaild value!");
                 }
@@ -270,21 +267,21 @@ namespace DBRuntime.Proxy
         }
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        private void RegistorTag()
-        {
-            if (Client != null)
-            {
-                Client.RegistorTagValueCallBack(-1, int.MaxValue, 5000);
-                Client.ProcessDataPush = new ApiClient.ProcessDataPushDelegate((block) => {
-                    block.Retain();
-                    mCachDatas.Enqueue(block);
-                    resetEvent.Set();
-                });
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //private void RegistorTag()
+        //{
+        //    if (Client != null)
+        //    {
+        //        Client.RegistorTagValueCallBack(-1, int.MaxValue, 5000);
+        //        Client.ProcessDataPush = new ApiClient.ProcessDataPushDelegate((block) => {
+        //            block.Retain();
+        //            mCachDatas.Enqueue(block);
+        //            resetEvent.Set();
+        //        });
+        //    }
+        //}
 
         /// <summary>
         /// 
@@ -307,7 +304,7 @@ namespace DBRuntime.Proxy
         /// </summary>
         public void ReadAllData()
         {
-            if(Client!=null)
+            if (Client != null)
             {
                 int maxid = ServiceLocator.Locator.Resolve<ITagManager>().MaxTagId();
                 int minid = ServiceLocator.Locator.Resolve<ITagManager>().MinTagId();
@@ -315,7 +312,7 @@ namespace DBRuntime.Proxy
                 int countpercall = 10000;
 
                 int executed = 0;
-                while(executed<len)
+                while (executed < len)
                 {
                     var ex = Math.Min(len - executed, countpercall);
                     var res = Client.GetRealData(executed, executed + ex);
@@ -337,7 +334,7 @@ namespace DBRuntime.Proxy
             ServiceLocator.Locator.Resolve<IRealDataNotifyForProducter>().SubscribeValueChangedForProducter("NetTransformDriver", ProcessValueChanged,
                 new Func<List<int>>(() => { return new List<int>() { -1 }; })
                 );
-            
+
             if (WorkMode == NetTransformWorkMode.Push)
             {
                 RegistorBlockTag();
@@ -357,12 +354,12 @@ namespace DBRuntime.Proxy
         /// <param name="values"></param>
         private void ProcessValueChanged(Dictionary<int, object> values)
         {
-            foreach(var vv in values)
+            foreach (var vv in values)
             {
                 var vatg = mServier.GetTagById(vv.Key);
-                if(Client!=null)
+                if (Client != null)
                 {
-                    Client.SetTagValue(vv.Key, (byte)vatg.Type, vv.Value,2000);
+                    Client.SetTagValue(vv.Key, (byte)vatg.Type, vv.Value, 2000);
                 }
             }
         }
@@ -377,30 +374,13 @@ namespace DBRuntime.Proxy
             return true;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="database"></param>
-        /// <returns></returns>
-        public Dictionary<string, string> GetConfig(string database)
-        {
-            return null;
-        }
+        #endregion ...Methods...
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="database"></param>
-        /// <param name="config"></param>
-        public void UpdateConfig(string database, Dictionary<string, string> config)
-        {
-            
-        }
+        #region ... Interfaces ...
 
-        public bool Init()
-        {
-            return true;
-        }
+        #endregion ...Interfaces...
+
+
     }
 
     public static class ApiClientExtends

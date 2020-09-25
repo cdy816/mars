@@ -43,7 +43,15 @@ namespace DBDevelopService
         /// </summary>
         public void Start(int port)
         {
-            StartAsync("0.0.0.0", port);
+            try
+            {
+                LoggerService.Service.Info("WebAPIDBService", "Ready to start to WebAPI DBService.....");
+                StartAsync("0.0.0.0", port);
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Erro("WebAPIDBService", ex.Message);
+            }
         }
 
         /// <summary>

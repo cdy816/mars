@@ -32,8 +32,9 @@ namespace DBDevelopService
             DBDevelopService.SecurityManager.Manager.Init();
             //驱动初始化
             Cdy.Tag.DriverManager.Manager.Init();
-            //注册日志
-            ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
+
+            ////注册日志
+            //ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
         }
 
         #endregion ...Constructor...
@@ -49,12 +50,20 @@ namespace DBDevelopService
         /// </summary>
         public void Start(int grpcPort = 5001, int webSocketPort = 8000, bool isEnableGrpc = true, bool isEnableWebApi = true)
         {
-            DbManager.Instance.Load();
-            if (isEnableGrpc)
-                grpcDBService.Start(grpcPort);
+            try
+            {
+                LoggerService.Service.Info("Service", "Ready to start....");
+                DbManager.Instance.Load();
+                if (isEnableGrpc)
+                    grpcDBService.Start(grpcPort);
 
-            if (isEnableWebApi)
-                webDBService.Start(webSocketPort);
+                if (isEnableWebApi)
+                    webDBService.Start(webSocketPort);
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Erro("Service","start "+ ex.Message);
+            }
         }
 
         /// <summary>

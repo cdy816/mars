@@ -385,6 +385,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Manual 的本地化字符串。
+        /// </summary>
+        internal static string Manual {
+            get {
+                return ResourceManager.GetString("Manual", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Welcome to Mars realtime iot database 的本地化字符串。
         /// </summary>
         internal static string MarsTitle {

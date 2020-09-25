@@ -50,11 +50,11 @@ namespace Cdy.Tag
         {
            // LoggerService.Service.Erro("NoneCompressUnit", "目标地址:"+targetAddr +" 数值地址: " + (targetAddr+10) +" 变量个数: "+ (size - this.QulityOffset));
             target.WriteDatetime(targetAddr,this.StartTime);
-            target.Write((ushort)(size - this.QulityOffset));//写入值的个数
+            target.Write((int)(size - this.QulityOffset));//写入值的个数
             target.Write(TimeTick);
             if (size > 0)
-                source.CopyTo(target, sourceAddr, targetAddr + 10, size);
-            return size + 14;
+                source.CopyTo(target, sourceAddr, targetAddr + 16, size);
+            return size + 16;
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace Cdy.Tag
             startTime = source.ReadDateTime();
 
             //读取值的个数
-            int qoffset = source.ReadUShort();
+            int qoffset = source.ReadInt();
             valueCount = qoffset;
 
             //读取时间单位
@@ -131,9 +131,9 @@ namespace Cdy.Tag
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 3 + 10 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * 3 + 16 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 10 + sourceAddr;
+            var valaddr = valuecount * 2 + 16 + sourceAddr;
 
             var vals = source.ReadBytes(valaddr, valuecount);
 
@@ -172,9 +172,9 @@ namespace Cdy.Tag
             var qs = ReadTimeQulity(source, sourceAddr,  out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 3 + 10 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * 3 + 16 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 10 + sourceAddr;
+            var valaddr = valuecount * 2 + 16 + sourceAddr;
 
             var vals = source.ReadBytes(valaddr, valuecount);
 
@@ -238,9 +238,9 @@ namespace Cdy.Tag
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 4 + 10 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * 4 + 16 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 10 + sourceAddr;
+            var valaddr = valuecount * 2 + 16 + sourceAddr;
 
             var vals = source.ReadShorts(valaddr, valuecount);
 
@@ -304,9 +304,9 @@ namespace Cdy.Tag
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 4 + 10 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * 4 + 16 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 10 + sourceAddr;
+            var valaddr = valuecount * 2 + 16 + sourceAddr;
 
             var vals = source.ReadUShorts(valaddr, valuecount);
 
@@ -370,9 +370,9 @@ namespace Cdy.Tag
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 6 + 10 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * 6 + 16 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 10 + sourceAddr;
+            var valaddr = valuecount * 2 + 16 + sourceAddr;
 
             var vals = source.ReadInts(valaddr, valuecount);
 
@@ -436,9 +436,9 @@ namespace Cdy.Tag
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 6 + 10 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * 6 + 16 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 10 + sourceAddr;
+            var valaddr = valuecount * 2 + 16 + sourceAddr;
 
             var vals = source.ReadUInts(valaddr, valuecount);
 
@@ -501,9 +501,9 @@ namespace Cdy.Tag
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 10 + 10 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * 10 + 16 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 10 + sourceAddr;
+            var valaddr = valuecount * 2 + 16 + sourceAddr;
 
             var vals = source.ReadLongs(valaddr, valuecount);
 
@@ -566,9 +566,9 @@ namespace Cdy.Tag
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 10 + 10 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * 10 + 16 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 10 + sourceAddr;
+            var valaddr = valuecount * 2 + 16 + sourceAddr;
 
             var vals = source.ReadULongs(valaddr, valuecount);
 
@@ -632,9 +632,9 @@ namespace Cdy.Tag
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 6 + 10 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * 6 + 16 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 10 + sourceAddr;
+            var valaddr = valuecount * 2 + 16 + sourceAddr;
 
             var vals = source.ReadFloats(valaddr, valuecount);
 
@@ -688,33 +688,33 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result)
+        public int DeCompressAllValue(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<double> result)
         {
             DateTime time;
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr,out valuecount ,out time);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 10+10+ sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * 10 + 16 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2+10 + sourceAddr;
+            var valaddr = valuecount * 2 + 16 + sourceAddr;
 
             var vals = source.ReadDoubleByMemory(valaddr, valuecount);
 
             int i = 0;
             int rcount = 0;
-            for (i=0;i<valuecount;i++)
+            for (i = 0; i < valuecount; i++)
             {
-                if(qs[i].Item2&&qq[i]<100 && qs[i].Item1>=startTime&&qs[i].Item1<endTime)
+                if (qs[i].Item2 && qq[i] < 100 && qs[i].Item1 >= startTime && qs[i].Item1 < endTime)
                 {
                     result.Add(vals.Span[i], qs[i].Item1, qq[i]);
                     rcount++;
                 }
             }
-            
-            
+
+
             return rcount;
         }
 
@@ -737,9 +737,9 @@ namespace Cdy.Tag
             var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out time);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 10 + 10 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * 10 + 16 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 10 + sourceAddr;
+            var valaddr = valuecount * 2 + 16 + sourceAddr;
 
             var vals = source.ReadDateTimes(valaddr, valuecount);
 
@@ -800,7 +800,7 @@ namespace Cdy.Tag
             int valuecount = 0;
             var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out time);
 
-            var valaddr = qs.Count * 2+10 + sourceAddr;
+            var valaddr = qs.Count * 2+ 16 + sourceAddr;
 
             int i = 0;
             int rcount = 0;
@@ -883,11 +883,11 @@ namespace Cdy.Tag
             DateTime stime;
             int valuecount = 0;
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
-            var qq = source.ReadBytes(valuecount * 3+10+sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * 3+16+sourceAddr, valuecount);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2+10 + sourceAddr;
+            var valaddr = qs.Count * 2+ 16 + sourceAddr;
 
             int count = 0;
             int icount = 0;
@@ -1012,11 +1012,11 @@ namespace Cdy.Tag
             DateTime stime;
             int valuecount = 0;
             var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 3+10 + sourceAddr, qs.Count);
+            var qq = source.ReadBytes(qs.Count * 3+ 16 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2+10 + sourceAddr;
+            var valaddr = qs.Count * 2+ 16 + sourceAddr;
 
             int count = 0;
             int icount = 0;
@@ -1141,11 +1141,11 @@ namespace Cdy.Tag
             DateTime stime;
             int valuecount = 0;
             var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 10+10 + sourceAddr, qs.Count);
+            var qq = source.ReadBytes(qs.Count * 10+ 16 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2+10 + sourceAddr;
+            var valaddr = qs.Count * 2+ 16 + sourceAddr;
 
             int count = 0;
             int icount = 0;
@@ -1272,11 +1272,11 @@ namespace Cdy.Tag
             DateTime stime;
             int valuecount = 0;
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 10+10 + sourceAddr, qs.Count);
+            var qq = source.ReadBytes(qs.Count * 10+ 16 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2+10 + sourceAddr;
+            var valaddr = qs.Count * 2+ 16 + sourceAddr;
 
             int count = 0;
 
@@ -1419,11 +1419,11 @@ namespace Cdy.Tag
             DateTime stime;
             int valuecount = 0;
             var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 6 + 10 + sourceAddr, qs.Count);
+            var qq = source.ReadBytes(qs.Count * 6 + 16 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 10 + sourceAddr;
+            var valaddr = qs.Count * 2 + 16 + sourceAddr;
 
             int count = 0;
             int icount = 0;
@@ -1657,11 +1657,11 @@ namespace Cdy.Tag
             DateTime stime;
             int valuecount = 0;
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 6 + 10 + sourceAddr, qs.Count);
+            var qq = source.ReadBytes(qs.Count * 6 + 16 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 10 + sourceAddr;
+            var valaddr = qs.Count * 2 + 16 + sourceAddr;
             int count = 0;
             int icount = 0;
             int icount1 = 0;
@@ -1895,11 +1895,11 @@ namespace Cdy.Tag
             DateTime stime;
             int valuecount = 0;
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 10 + 10 + sourceAddr, qs.Count);
+            var qq = source.ReadBytes(qs.Count * 10 + 16 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 10 + sourceAddr;
+            var valaddr = qs.Count * 2 + 16 + sourceAddr;
 
             int count = 0;
             int icount = 0;
@@ -2140,11 +2140,11 @@ namespace Cdy.Tag
             DateTime stime;
             int valuecount = 0;
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 4 + 10 + sourceAddr, qs.Count);
+            var qq = source.ReadBytes(qs.Count * 4 + 16 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 10 + sourceAddr;
+            var valaddr = qs.Count * 2 + 16 + sourceAddr;
             int count = 0;
             int icount = 0;
             int icount1 = 0;
@@ -2586,11 +2586,11 @@ namespace Cdy.Tag
             DateTime stime;
             int valuecount = 0;
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 6 + 10 + sourceAddr, qs.Count);
+            var qq = source.ReadBytes(qs.Count * 6 + 16 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 10 + sourceAddr;
+            var valaddr = qs.Count * 2 + 16 + sourceAddr;
             int count = 0;
             int icount = 0;
             int icount1 = 0;
@@ -2827,11 +2827,11 @@ namespace Cdy.Tag
             DateTime stime;
             int valuecount = 0;
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 10 + 10 + sourceAddr, qs.Count);
+            var qq = source.ReadBytes(qs.Count * 10 + 16 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 10 + sourceAddr;
+            var valaddr = qs.Count * 2 + 16 + sourceAddr;
             int count = 0;
             int icount = 0;
             int icount1 = 0;
@@ -3068,11 +3068,11 @@ namespace Cdy.Tag
             DateTime stime;
             int valuecount = 0;
             var qs = ReadTimeQulity(source, sourceAddr,  out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 4 + 10 + sourceAddr, qs.Count);
+            var qq = source.ReadBytes(qs.Count * 4 + 16 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 10 + sourceAddr;
+            var valaddr = qs.Count * 2 + 16 + sourceAddr;
             int count = 0;
             int icount = 0;
             int icount1 = 0;
@@ -3505,9 +3505,9 @@ namespace Cdy.Tag
             if (typeof(T) == typeof(IntPointData))
             {
                 //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 10 + 10 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * 10 + 16 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 10 + sourceAddr;
+                var valaddr = valuecount * 2 + 16 + sourceAddr;
 
                 var vals = source.ReadInts(valaddr, valuecount * 2);
 
@@ -3524,9 +3524,9 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(UIntPointData))
             {
                 //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 10 + 10 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * 10 + 16 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 10 + sourceAddr;
+                var valaddr = valuecount * 2 + 16 + sourceAddr;
 
                 var vals = source.ReadUInts(valaddr, valuecount * 2);
 
@@ -3543,9 +3543,9 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(IntPoint3Data))
             {
                 //读取质量戳,时间戳2个字节，值12个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 14 + 10 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * 14 + 16 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 10 + sourceAddr;
+                var valaddr = valuecount * 2 + 16 + sourceAddr;
 
                 var vals = source.ReadInts(valaddr, valuecount * 3);
 
@@ -3562,9 +3562,9 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(UIntPoint3Data))
             {
                 //读取质量戳,时间戳2个字节，值12个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 14 + 10 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * 14 + 16 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 10 + sourceAddr;
+                var valaddr = valuecount * 2 + 16 + sourceAddr;
 
                 var vals = source.ReadUInts(valaddr, valuecount * 3);
 
@@ -3581,9 +3581,9 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(LongPointData))
             {
                 //读取质量戳,时间戳2个字节，值16个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 18 + 10 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * 18 + 16 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 10 + sourceAddr;
+                var valaddr = valuecount * 2 + 16 + sourceAddr;
 
                 var vals = source.ReadLongs(valaddr, valuecount * 2);
 
@@ -3600,9 +3600,9 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(ULongPointData))
             {
                 //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 18 + 10 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * 18 + 16 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 10 + sourceAddr;
+                var valaddr = valuecount * 2 + 16 + sourceAddr;
 
                 var vals = source.ReadULongs(valaddr, valuecount * 2);
 
@@ -3619,9 +3619,9 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(LongPoint3Data))
             {
                 //读取质量戳,时间戳2个字节，值24个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 26 + 10 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * 26 + 16 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 10 + sourceAddr;
+                var valaddr = valuecount * 2 + 16 + sourceAddr;
 
                 var vals = source.ReadLongs(valaddr, valuecount * 3);
 
@@ -3638,9 +3638,9 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(ULongPoint3Data))
             {
                 //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 26 + 10 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * 26 + 16 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 10 + sourceAddr;
+                var valaddr = valuecount * 2 + 16 + sourceAddr;
 
                 var vals = source.ReadULongs(valaddr, valuecount * 3);
 
@@ -3678,8 +3678,8 @@ namespace Cdy.Tag
             if (typeof(T) == typeof(IntPointData))
             {
 
-                var qq = source.ReadBytes(qs.Count * 10 + 10 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * 10 + 16 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 16 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 2)
                 {
@@ -3749,8 +3749,8 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(UIntPointData))
             {
 
-                var qq = source.ReadBytes(qs.Count * 10 + 10 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * 10 + 16 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 16 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 2)
                 {
@@ -3820,8 +3820,8 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(LongPointData))
             {
 
-                var qq = source.ReadBytes(qs.Count * 18 + 10 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * 18 + 16 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 16 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 2)
                 {
@@ -3891,8 +3891,8 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(ULongPointData))
             {
 
-                var qq = source.ReadBytes(qs.Count * 18 + 10 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * 18 + 16 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 16 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 2)
                 {
@@ -3962,8 +3962,8 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(IntPoint3Data))
             {
 
-                var qq = source.ReadBytes(qs.Count * 14 + 10 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * 14 + 16 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 16 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 3)
                 {
@@ -4037,8 +4037,8 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(LongPoint3Data))
             {
 
-                var qq = source.ReadBytes(qs.Count * 26 + 10 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * 26 + 16 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 16 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 3)
                 {
@@ -4112,8 +4112,8 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(UIntPoint3Data))
             {
 
-                var qq = source.ReadBytes(qs.Count * 14 + 10 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * 14 + 16 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 16 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 3)
                 {
@@ -4187,8 +4187,8 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(ULongPoint3Data))
             {
 
-                var qq = source.ReadBytes(qs.Count * 26 + 10 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 10 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * 26 + 16 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * 2 + 16 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 3)
                 {
@@ -4282,13 +4282,13 @@ namespace Cdy.Tag
            
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 10 + sourceAddr;
+            var valaddr = qs.Count * 2 + 16 + sourceAddr;
 
             int count = 0;
 
             if (typeof(T) == typeof(IntPointData))
             {
-                var qq = source.ReadBytes(qs.Count * 10 + 10 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * 10 + 16 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {
@@ -4389,7 +4389,7 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(IntPoint3Data))
             {
-                var qq = source.ReadBytes(qs.Count * 14 + 10 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * 14 + 16 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {
@@ -4504,7 +4504,7 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(UIntPoint3Data))
             {
-                var qq = source.ReadBytes(qs.Count * 14 + 10 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * 14 + 16 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {
@@ -4619,7 +4619,7 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(UIntPointData))
             {
-                var qq = source.ReadBytes(qs.Count * 10 + 10 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * 10 + 16 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {
@@ -4720,7 +4720,7 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(LongPointData))
             {
-                var qq = source.ReadBytes(qs.Count * 18 + 10 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * 18 + 16 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {
@@ -4821,7 +4821,7 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(ULongPointData))
             {
-                var qq = source.ReadBytes(qs.Count * 18 + 10 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * 18 + 16 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {
@@ -4922,7 +4922,7 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(LongPoint3Data))
             {
-                var qq = source.ReadBytes(qs.Count * 26 + 10 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * 26 + 16 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {
@@ -5037,7 +5037,7 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(ULongPoint3Data))
             {
-                var qq = source.ReadBytes(qs.Count * 26 + 10 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * 26 + 16 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {

@@ -63,7 +63,7 @@ namespace DBStudio
             /// <summary>
             /// 
             /// </summary>
-            public bool IsGrpcEnable { get; set; }
+            public bool IsGrpcEnable { get; set; } = true;
 
             /// <summary>
             /// 
@@ -79,14 +79,24 @@ namespace DBStudio
             /// </summary>
             public void Load()
             {
-                string spath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.FullName), "DbInStudioServer.cfg");
-                if(System.IO.File.Exists(spath))
+                try
                 {
-                    var xxx = XElement.Load(spath);
-                    this.IsWebApiEnable = bool.Parse(xxx.Attribute("IsWebApiEnable")?.Value);
-                    this.IsGrpcEnable = bool.Parse(xxx.Attribute("IsGrpcEnable")?.Value);
-                    this.WebApiPort = int.Parse(xxx.Attribute("WebApiPort")?.Value);
-                    this.GrpcPort = int.Parse(xxx.Attribute("GrpcPort")?.Value);
+                    string spath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "DbInStudioServer.cfg");
+
+                    LoggerService.Service.Info("Config", "Start to load config");
+
+                    if (System.IO.File.Exists(spath))
+                    {
+                        var xxx = XElement.Load(spath);
+                        this.IsWebApiEnable = bool.Parse(xxx.Attribute("IsWebApiEnable")?.Value);
+                        this.IsGrpcEnable = bool.Parse(xxx.Attribute("IsGrpcEnable")?.Value);
+                        this.WebApiPort = int.Parse(xxx.Attribute("WebApiPort")?.Value);
+                        this.GrpcPort = int.Parse(xxx.Attribute("GrpcPort")?.Value);
+                    }
+                }
+                catch(Exception ex)
+                {
+                    LoggerService.Service.Erro("Config", ex.Message);
                 }
             }
 
@@ -100,6 +110,10 @@ namespace DBStudio
 
         static void Main(string[] args)
         {
+            LogoHelper.Print();
+
+            //注册日志
+            ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
 
             Program pg = new Program();
             Config.Instance.Load();
@@ -123,7 +137,7 @@ namespace DBStudio
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-            LogoHelper.Print();
+            
             DBDevelopService.Service.Instanse.Start(port, webPort,Config.Instance.IsGrpcEnable,Config.Instance.IsWebApiEnable);
 
             Thread.Sleep(100);

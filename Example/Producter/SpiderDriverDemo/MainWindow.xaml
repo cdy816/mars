@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SpiderDriverDemo"
         mc:Ignorable="d"
-        Title="SpiderSim" Height="290" Width="634">
+        Title="SpiderSim" Height="353" Width="634">
     <Grid>
         <Button x:Name="Start" Content="Start" HorizontalAlignment="Left" Margin="502,33,0,0" VerticalAlignment="Top" Width="86" Click="Start_Click"/>
         <Label Content="IP:" HorizontalAlignment="Left" Margin="31,33,0,0" VerticalAlignment="Top"/>
@@ -22,6 +22,7 @@
         <Label Content="{Binding CosValue}" HorizontalAlignment="Left" Margin="102,164,0,0" VerticalAlignment="Top" Width="106"/>
         <Label Content="{Binding BoolValue}" HorizontalAlignment="Left" Margin="102,207,0,0" VerticalAlignment="Top" Width="106"/>
         <Label Content="{Binding DateTimeValue}" HorizontalAlignment="Left" Margin="102,247,0,0" VerticalAlignment="Top" Width="106"/>
+        <Button x:Name="hisDataWrite" Content="历史数据写入" HorizontalAlignment="Left" Margin="18,277,0,0" VerticalAlignment="Top" Width="86" Click="hisDataWrite_Click"/>
 
     </Grid>
 </Window>

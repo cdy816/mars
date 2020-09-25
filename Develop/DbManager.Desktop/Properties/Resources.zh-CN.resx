@@ -227,6 +227,9 @@
   <data name="MainwindowTitle" xml:space="preserve">
     <value>Mars数据库开发平台</value>
   </data>
+  <data name="Manual" xml:space="preserve">
+    <value>手动</value>
+  </data>
   <data name="MarsTitle" xml:space="preserve">
     <value>欢迎来到Mars实时物联数据库</value>
   </data>

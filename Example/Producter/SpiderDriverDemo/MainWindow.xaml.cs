@@ -289,5 +289,23 @@ namespace SpiderDriverDemo
             }
             driverProxy.SetTagValue(values);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void hisDataWrite_Click(object sender, RoutedEventArgs e)
+        {
+            List<TagValue> vals = new List<TagValue>();
+            DateTime dt = DateTime.Now.AddSeconds(-100);
+            Random rd = new Random((int)dt.Ticks);
+            for(int i=0;i<100;i++)
+            {
+                vals.Add(new TagValue() { Quality = 0, Time = dt, Value = rd.NextDouble() });
+            }
+
+            driverProxy.SetTagHisValue(0, TagType.Double, vals);
+        }
     }
 }

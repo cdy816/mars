@@ -56,6 +56,7 @@ namespace DBDevelopService
         {
             try
             {
+                LoggerService.Service.Info("GrpcDBService", "Ready to start to GrpcDBService......");
                 StartAsync("0.0.0.0", port);
             }
             catch(Exception ex)

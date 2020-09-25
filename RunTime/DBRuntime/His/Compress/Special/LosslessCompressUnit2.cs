@@ -71,45 +71,45 @@ namespace Cdy.Tag
             switch (TagType)
             {
                 case TagType.Bool:
-                    return Compress<bool>(source, sourceAddr, target, targetAddr+8, size,TagType) + 8;
+                    return Compress<bool>(source, sourceAddr, target, targetAddr+12, size,TagType) + 12;
                 case TagType.Byte:
-                    return Compress<byte>(source, sourceAddr, target, targetAddr+8, size, TagType) + 8;
+                    return Compress<byte>(source, sourceAddr, target, targetAddr+ 12, size, TagType) + 12;
                 case TagType.UShort:
-                    return Compress<ushort>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<ushort>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Short:
-                    return Compress<short>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<short>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.UInt:
-                    return Compress<uint>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<uint>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Int:
-                    return Compress<int>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<int>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.ULong:
-                    return Compress<ulong>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<ulong>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Long:
-                    return Compress<long>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<long>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Double:
-                     return Compress<double>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                     return Compress<double>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Float:
-                    return Compress<float>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<float>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.String:
-                    return Compress<string>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<string>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.IntPoint:
-                    return Compress<IntPointData>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<IntPointData>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.UIntPoint:
-                    return Compress<UIntPointData>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<UIntPointData>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.LongPoint:
-                    return Compress<LongPointData>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<LongPointData>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.ULongPoint:
-                    return Compress<ULongPointData>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<ULongPointData>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.IntPoint3:
-                    return Compress<IntPoint3Data>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<IntPoint3Data>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.UIntPoint3:
-                    return Compress<UIntPoint3Data>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<UIntPoint3Data>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.LongPoint3:
-                    return Compress<LongPoint3Data>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<LongPoint3Data>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.ULongPoint3:
-                    return Compress<ULongPoint3Data>(source, sourceAddr, target, targetAddr + 8, size, TagType) + 8;
+                    return Compress<ULongPoint3Data>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
             }
-            return 8+4;
+            return 12;
         }
 
         ///// <summary>

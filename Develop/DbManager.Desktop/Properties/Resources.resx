@@ -227,6 +227,9 @@
   <data name="MainwindowTitle" xml:space="preserve">
     <value>Mars database developer</value>
   </data>
+  <data name="Manual" xml:space="preserve">
+    <value>Manual</value>
+  </data>
   <data name="MarsTitle" xml:space="preserve">
     <value>Welcome to Mars realtime iot database</value>
   </data>

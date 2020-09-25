@@ -176,9 +176,18 @@ namespace DBInStudio.Desktop.ViewModel
             if(mServer=="127.0.0.1"||mServer=="localhost")
             {
                var pps = Process.GetProcessesByName("DBInStudioServer");
+              
                 if(pps==null||pps.Length==0)
                 {
-                    Process.Start("DBInStudioServer.exe").WaitForExit(5000);
+                    try
+                    {
+                        var vfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "DBInStudioServer.exe");
+                        Process.Start(vfile).WaitForExit(5000);
+                    }
+                    catch
+                    {
+
+                    }
                 }
             }
         }

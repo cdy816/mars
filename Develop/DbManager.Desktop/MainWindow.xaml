@@ -121,7 +121,7 @@
                 <Image Margin="5,0"  Source="{Binding Icon,RelativeSource={RelativeSource AncestorType=Window}}" Height="16" HorizontalAlignment="Left" Width="24" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" Stretch="Fill" />
                 <Label Margin="30,0,115,0" VerticalContentAlignment="Center" Content="{Binding Title,RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{DynamicResource Window.Forground}"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button x:Name="minB" BorderThickness="0"  Click="minB_Click"  Command="{Binding ReloadCommand}" HorizontalAlignment="Left"  Margin="1,0,0,0"   VerticalAlignment="Stretch" Width="32"  >
+                    <Button x:Name="minB" BorderThickness="0"  Click="minB_Click"   HorizontalAlignment="Left"  Margin="1,0,0,0"   VerticalAlignment="Stretch" Width="32"  >
                         <Button.ContentTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
@@ -131,7 +131,7 @@
                         </Button.ContentTemplate>
                     </Button>
 
-                    <Button x:Name="maxB" BorderThickness="0"  Click="maxB_Click"  Command="{Binding ReloadCommand}" HorizontalAlignment="Left"  Margin="0,0,0,0"   VerticalAlignment="Stretch" Width="32"  >
+                    <Button x:Name="maxB" BorderThickness="0"  Click="maxB_Click" HorizontalAlignment="Left"  Margin="0,0,0,0"   VerticalAlignment="Stretch" Width="32"  >
                         <Button.ContentTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
@@ -156,7 +156,7 @@
                 <Grid>
                     <StackPanel Orientation="Horizontal">
                         <Grid Margin="10,0,0,0">
-                            <Button BorderThickness="0"  Visibility="{Binding IsLoginOut,Converter={StaticResource btv}}"  Command="{Binding LoginCommand}" HorizontalAlignment="Left"   Height="32"  VerticalAlignment="Center" Width="80"  >
+                            <Button BorderThickness="0" ToolTip="{local:ResMarker Login}" Visibility="{Binding IsLoginOut,Converter={StaticResource btv}}"  Command="{Binding LoginCommand}" HorizontalAlignment="Left"   Height="32"  VerticalAlignment="Center" Width="80"  >
                                 <Button.ContentTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -167,7 +167,7 @@
                                 </Button.ContentTemplate>
                             </Button>
 
-                            <Button BorderThickness="0"   Visibility="{Binding IsLogin,Converter={StaticResource btv}}"  Command="{Binding LogoutCommand}" HorizontalAlignment="Left"   Height="32"  VerticalAlignment="Center" Width="80"  >
+                            <Button BorderThickness="0" ToolTip="{local:ResMarker Logout}"  Visibility="{Binding IsLogin,Converter={StaticResource btv}}"  Command="{Binding LogoutCommand}" HorizontalAlignment="Left"   Height="32"  VerticalAlignment="Center" Width="80"  >
                                 <Button.ContentTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal"  VerticalAlignment="Stretch" >
@@ -179,7 +179,7 @@
                             </Button>
                         </Grid>
 
-                        <Button BorderThickness="0"   Command="{Binding NewDatabaseCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                        <Button BorderThickness="0"  ToolTip="{local:ResMarker NewDatabase}"  Command="{Binding NewDatabaseCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -190,7 +190,7 @@
                             </Button.ContentTemplate>
                         </Button>
 
-                        <Button BorderThickness="0"   Command="{Binding DatabaseSelectCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                        <Button BorderThickness="0"  ToolTip="{local:ResMarker Switch}"  Command="{Binding DatabaseSelectCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -203,7 +203,7 @@
 
                         <Border BorderBrush="LightGray" BorderThickness="1,0,0,0" Width="2" VerticalAlignment="Stretch" Margin="2,4" />
 
-                        <Button BorderThickness="0"   Command="{Binding SaveCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                        <Button BorderThickness="0" ToolTip="{local:ResMarker Save}"  Command="{Binding SaveCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -214,7 +214,7 @@
                             </Button.ContentTemplate>
                         </Button>
 
-                        <Button BorderThickness="0"   Command="{Binding CancelCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                        <Button BorderThickness="0"  ToolTip="{local:ResMarker CancelSave_Tooltip}"  Command="{Binding CancelCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -225,7 +225,7 @@
                             </Button.ContentTemplate>
                         </Button>
 
-                        <Button BorderThickness="0"   Command="{Binding StartCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                        <Button BorderThickness="0" ToolTip="{local:ResMarker Start_Tooltip}"   Command="{Binding StartCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -236,7 +236,7 @@
                             </Button.ContentTemplate>
                         </Button>
 
-                        <Button BorderThickness="0"   Command="{Binding StopCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                        <Button BorderThickness="0"  ToolTip="{local:ResMarker Stop_Tooltip}"  Command="{Binding StopCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -247,7 +247,7 @@
                             </Button.ContentTemplate>
                         </Button>
 
-                        <Button BorderThickness="0"   Command="{Binding ReRunCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                        <Button BorderThickness="0"  ToolTip="{local:ResMarker HotReRun_Tooltip}"  Command="{Binding ReRunCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -258,7 +258,7 @@
                             </Button.ContentTemplate>
                         </Button>
 
-                        <Button BorderThickness="0"   Command="{Binding ExportCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                        <Button BorderThickness="0"  ToolTip="{local:ResMarker Export}" Command="{Binding ExportCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -268,7 +268,7 @@
                                 </DataTemplate>
                             </Button.ContentTemplate>
                         </Button>
-                        <Button BorderThickness="0"   Command="{Binding ImportCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                        <Button BorderThickness="0"  ToolTip="{local:ResMarker Import}"  Command="{Binding ImportCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
                             <Button.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">

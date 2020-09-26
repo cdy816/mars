@@ -1830,9 +1830,9 @@ namespace Cdy.Tag
         {
             int rsize = 0;
 
-            target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
+            target.WriteInt(targetAddr, usedIndex.WriteIndex);
 
-            rsize += 2;
+            rsize += 4;
             target.Write((int)timedata.Length);
             target.Write(timedata);
             rsize += 4;
@@ -1862,7 +1862,7 @@ namespace Cdy.Tag
         /// <param name="targetAddr"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        protected override  long Compress<T>(IMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size, TagType type)
+        protected override long Compress<T>(IMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size, TagType type)
         {
             var count = (int)(size - this.QulityOffset);
 
@@ -1918,7 +1918,7 @@ namespace Cdy.Tag
                 usedIndex.Reset();
             }
 
-          
+
             GetEmpityTimers(tims);
 
             long rsize = 0;
@@ -1929,62 +1929,62 @@ namespace Cdy.Tag
                     var cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, tims, type);
                     var timeData = CompressTimers(tims, usedIndex);
                     var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, usedIndex);
-                  
+
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Short:
                     cval = CompressValues<short>(source, count * 2 + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
                     cqus = CompressQulitys(source, count * 4 + sourceAddr, count, usedIndex);
-                    
+
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.UShort:
-                    cval = CompressValues<ushort>(source, count * 2 + sourceAddr, count,  tims, type);
+                    cval = CompressValues<ushort>(source, count * 2 + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
                     cqus = CompressQulitys(source, count * 4 + sourceAddr, count, usedIndex);
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Int:
-                    cval = CompressValues<int>(source, count * 2 + sourceAddr, count,  tims, type);
+                    cval = CompressValues<int>(source, count * 2 + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
                     cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
-                    
+
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.UInt:
-                    cval = CompressValues<uint>(source, count * 2 + sourceAddr, count,  tims, type);
+                    cval = CompressValues<uint>(source, count * 2 + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
                     cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Long:
-                    cval = CompressValues<long>(source, count * 2 + sourceAddr, count,  tims, type);
+                    cval = CompressValues<long>(source, count * 2 + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
                     cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
-                  
+
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.ULong:
-                    cval = CompressValues<ulong>(source, count * 2 + sourceAddr, count,  tims, type);
+                    cval = CompressValues<ulong>(source, count * 2 + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
                     cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Double:
 
-                    if (mDCompress == null) mDCompress = new DoubleCompressBuffer(310) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
-                    cval = CompressValues<double>(source, count * 2 + sourceAddr, count,  tims, type);
+                    if (mDCompress == null) mDCompress = new DoubleCompressBuffer(count * 2) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    cval = CompressValues<double>(source, count * 2 + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
                     cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Float:
-                    if (mFCompress == null) mFCompress = new FloatCompressBuffer(310) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
-                    cval = CompressValues<float>(source, count * 2 + sourceAddr, count,  tims, type);
+                    if (mFCompress == null) mFCompress = new FloatCompressBuffer(count * 2) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    cval = CompressValues<float>(source, count * 2 + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
                     cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
-                    
+
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 default:

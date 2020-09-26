@@ -847,7 +847,6 @@ namespace Cdy.Tag
         protected virtual long Compress<T>(IMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size, TagType type)
         {
             var count = (int)(size - this.QulityOffset);
-            //var tims = source.ReadUShorts(sourceAddr, (int)count);
 
             if(mMarshalMemory==null)
             {
@@ -859,17 +858,12 @@ namespace Cdy.Tag
                 mVarintMemory = new ProtoMemory(count * 10);
             }
 
-            //Queue<int> emptys = new Queue<int>();
-            //var datas = CompressTimers(tims, emptys);
             var datas = CompressTimers(source, sourceAddr, (int)count, emptys);
-            //var emptys2 = new Queue<int>(emptys);
-
             long rsize = 0;
-            //byte[] qus = null;
             int rcount = count - emptys.WriteIndex;
 
-            target.WriteUShort(targetAddr,(ushort)rcount);
-            rsize += 2;
+            target.WriteInt(targetAddr,rcount);
+            rsize += 4;
             target.Write((int)datas.Length);
             target.Write(datas);
             rsize += 4;
@@ -1541,6 +1535,15 @@ namespace Cdy.Tag
 
         #endregion
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="valueCount"></param>
+        /// <returns></returns>
         protected Dictionary<int,DateTime> GetTimers(MarshalMemoryBlock source,int sourceAddr,DateTime startTime,DateTime endTime,out int valueCount)
         {
             DateTime sTime = source.ReadDateTime(sourceAddr);
@@ -1548,7 +1551,7 @@ namespace Cdy.Tag
             int timeTick = source.ReadInt(sourceAddr + 8);
 
             Dictionary<int, DateTime> re = new Dictionary<int, DateTime>();
-            ushort count = source.ReadUShort();
+            var count = source.ReadInt();
             var datasize = source.ReadInt();
             byte[] datas = source.ReadBytes(datasize);
             var timers = DeCompressTimers(datas, count);
@@ -1585,7 +1588,7 @@ namespace Cdy.Tag
             int timeTick = source.ReadInt(sourceAddr + 8);
 
             Dictionary<int, DateTime> re = new Dictionary<int, DateTime>();
-            ushort count = source.ReadUShort();
+            var count = source.ReadInt();
             var datasize = source.ReadInt();
             byte[] datas = source.ReadBytes(datasize);
             var timers = DeCompressTimers(datas, count);

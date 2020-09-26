@@ -124,6 +124,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Discard the content changed 的本地化字符串。
+        /// </summary>
+        internal static string CancelSave_Tooltip {
+            get {
+                return ResourceManager.GetString("CancelSave_Tooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 you will be lost all data you have modify. To continue? 的本地化字符串。
         /// </summary>
         internal static string canceltosavemsg {
@@ -273,6 +282,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Group {
             get {
                 return ResourceManager.GetString("Group", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Rerun database 的本地化字符串。
+        /// </summary>
+        internal static string HotReRun_Tooltip {
+            get {
+                return ResourceManager.GetString("HotReRun_Tooltip", resourceCulture);
             }
         }
         
@@ -826,11 +844,29 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Run database 的本地化字符串。
+        /// </summary>
+        internal static string Start_Tooltip {
+            get {
+                return ResourceManager.GetString("Start_Tooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Stop 的本地化字符串。
         /// </summary>
         internal static string Stop {
             get {
                 return ResourceManager.GetString("Stop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Stop databse 的本地化字符串。
+        /// </summary>
+        internal static string Stop_Tooltip {
+            get {
+                return ResourceManager.GetString("Stop_Tooltip", resourceCulture);
             }
         }
         

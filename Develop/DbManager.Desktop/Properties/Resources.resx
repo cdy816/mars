@@ -138,6 +138,9 @@
   <data name="CancelSave" xml:space="preserve">
     <value>Cancel</value>
   </data>
+  <data name="CancelSave_Tooltip" xml:space="preserve">
+    <value>Discard the content changed</value>
+  </data>
   <data name="canceltosavemsg" xml:space="preserve">
     <value>you will be lost all data you have modify. To continue?</value>
   </data>
@@ -189,6 +192,9 @@
   </data>
   <data name="Group" xml:space="preserve">
     <value>Group</value>
+  </data>
+  <data name="HotReRun_Tooltip" xml:space="preserve">
+    <value>Rerun database</value>
   </data>
   <data name="Id" xml:space="preserve">
     <value>Id</value>
@@ -375,8 +381,14 @@
   <data name="Start" xml:space="preserve">
     <value>Start</value>
   </data>
+  <data name="Start_Tooltip" xml:space="preserve">
+    <value>Run database</value>
+  </data>
   <data name="Stop" xml:space="preserve">
     <value>Stop</value>
+  </data>
+  <data name="Stop_Tooltip" xml:space="preserve">
+    <value>Stop databse</value>
   </data>
   <data name="Switch" xml:space="preserve">
     <value>Switch</value>

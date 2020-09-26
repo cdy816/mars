@@ -1483,11 +1483,12 @@ namespace Cdy.Tag
                 }
                 if (values.Count() > 0)
                 {
-                    foreach (var vv in datacach)
+                    foreach (var vv in datacach.ToArray())
                     {
                         if (vv.Key < mLastTime || vv.Value.CurrentCount >= vv.Value.MaxCount)
                         {
                             ServiceLocator.Locator.Resolve<IDataCompress2>().RequestManualToCompress(vv.Value);
+                            datacach.Remove(vv.Key);
                         }
                     }
                     ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();

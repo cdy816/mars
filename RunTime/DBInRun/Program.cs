@@ -41,6 +41,7 @@ namespace DBInRun
                         int.TryParse(args[2], out port);
                     }
                     Cdy.Tag.Runner.RunInstance.StartAsync(args[1], port);
+                    Console.Title = "DbInRun-" + args[1];
                 }
                 else
                 {

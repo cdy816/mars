@@ -194,8 +194,8 @@ namespace Cdy.Tag
 
                     int rcount = count - emptys.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -223,8 +223,8 @@ namespace Cdy.Tag
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -251,8 +251,8 @@ namespace Cdy.Tag
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -277,8 +277,8 @@ namespace Cdy.Tag
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -303,8 +303,8 @@ namespace Cdy.Tag
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -328,8 +328,8 @@ namespace Cdy.Tag
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -353,8 +353,8 @@ namespace Cdy.Tag
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -378,8 +378,8 @@ namespace Cdy.Tag
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -404,8 +404,8 @@ namespace Cdy.Tag
 
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -431,8 +431,8 @@ namespace Cdy.Tag
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -466,8 +466,8 @@ namespace Cdy.Tag
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -490,8 +490,8 @@ namespace Cdy.Tag
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
                     rcount = count - emptys.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -517,8 +517,8 @@ namespace Cdy.Tag
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
                     rcount = count - emptys.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -541,8 +541,8 @@ namespace Cdy.Tag
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
                     rcount = count - emptys.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -565,8 +565,8 @@ namespace Cdy.Tag
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
                     rcount = count - emptys.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -589,8 +589,8 @@ namespace Cdy.Tag
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
                     rcount = count - emptys.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -613,8 +613,9 @@ namespace Cdy.Tag
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
                     rcount = count - emptys.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
+
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -637,8 +638,8 @@ namespace Cdy.Tag
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
                     rcount = count - emptys.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -661,8 +662,8 @@ namespace Cdy.Tag
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
                     rcount = count - emptys.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;
@@ -685,8 +686,8 @@ namespace Cdy.Tag
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
                     rcount = count - emptys.WriteIndex - 1;
                     //写入时间
-                    target.WriteUShort(targetAddr, (ushort)rcount);
-                    rsize += 2;
+                    target.WriteInt(targetAddr, rcount);
+                    rsize += 4;
                     target.Write((int)datas.Length);
                     target.Write(datas);
                     rsize += 4;

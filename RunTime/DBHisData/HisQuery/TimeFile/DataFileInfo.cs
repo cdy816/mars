@@ -46,6 +46,18 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        public DateTime LastTime
+        {
+            get
+            {
+                return mLastTime;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         public string FId { get; set; }
 
         /// <summary>

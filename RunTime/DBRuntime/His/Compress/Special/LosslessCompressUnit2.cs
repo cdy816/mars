@@ -67,6 +67,9 @@ namespace Cdy.Tag
         public override long Compress(IMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size)
         {
             target.WriteDatetime(targetAddr, this.StartTime);
+
+            LoggerService.Service.Debug("LosslessCompressUnit2", "Record time: "+this.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+
             target.Write(TimeTick);
             switch (TagType)
             {
@@ -857,6 +860,7 @@ namespace Cdy.Tag
             {
                 mVarintMemory = new ProtoMemory(count * 10);
             }
+            
 
             var datas = CompressTimers(source, sourceAddr, (int)count, emptys);
             long rsize = 0;
@@ -1152,18 +1156,18 @@ namespace Cdy.Tag
         /// <param name="timerVals"></param>
         /// <param name="emptyIds"></param>
         /// <returns></returns>
-        private List<ushort> DeCompressTimers(byte[] timerVals, int count)
+        private List<int> DeCompressTimers(byte[] timerVals, int count)
         {
-            List<ushort> re = new List<ushort>();
+            List<int> re = new List<int>();
             using (ProtoMemory memory = new ProtoMemory(timerVals))
             {
-                ushort sval = (ushort)memory.ReadInt32();
+                int sval = (int)memory.ReadInt32();
                 re.Add(sval);
-                ushort preval = sval;
+                int preval = sval;
                 for (int i = 1; i < count; i++)
                 {
-                    var ss = (ushort)memory.ReadInt32();
-                    var val = (ushort)(preval + ss);
+                    var ss = memory.ReadInt32();
+                    var val = (preval + ss);
                     re.Add(val);
                     preval = val;
                 }

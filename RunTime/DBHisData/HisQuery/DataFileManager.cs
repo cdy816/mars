@@ -583,33 +583,41 @@ namespace Cdy.Tag
         /// <param name="endtime"></param>
         /// <param name="Id"></param>
         /// <returns></returns>
-        public List<DataFileInfo> GetDataFiles(DateTime starttime, DateTime endtime,out Tuple<DateTime,DateTime> logFileTimes, int Id)
+        public List<DataFileInfo> GetDataFiles(DateTime starttime, DateTime endtime, out Tuple<DateTime, DateTime> logFileTimes, int Id)
         {
-            string sid = mDatabaseName + Id;
-            if (CurrentDateTime.ContainsKey(sid))
+            //string sid = mDatabaseName + Id;
+            //if (CurrentDateTime.ContainsKey(sid))
+            //{
+            //    if (starttime > CurrentDateTime[sid])
+            //    {
+            //        logFileTimes = new Tuple<DateTime, DateTime>(starttime, endtime);
+            //        return new List<DataFileInfo>();
+            //    }
+            //    else if (endtime <= CurrentDateTime[sid])
+            //    {
+            //        logFileTimes = new Tuple<DateTime, DateTime>(DateTime.MinValue, DateTime.MinValue);
+            //        return GetDataFiles(starttime, endtime - starttime, Id);
+            //    }
+            //    else
+            //    {
+            //        logFileTimes = new Tuple<DateTime, DateTime>(CurrentDateTime[sid], endtime);
+            //        return GetDataFiles(starttime, CurrentDateTime[sid] - starttime, Id);
+            //    }
+            //}
+            //else
+            //{
+            //    logFileTimes = new Tuple<DateTime, DateTime>(starttime, endtime);
+            //    return GetDataFiles(starttime, endtime - starttime, Id);
+            //}
+            DateTime dt = DateTime.MinValue;
+            var vfiles = GetDataFiles(starttime, endtime - starttime, Id);
+            foreach (var vv in vfiles)
             {
-                if (starttime > CurrentDateTime[sid])
-                {
-                    logFileTimes = new Tuple<DateTime, DateTime>(starttime, endtime);
-                    return new List<DataFileInfo>();
-                }
-                else if (endtime <= CurrentDateTime[sid])
-                {
-                    logFileTimes = new Tuple<DateTime, DateTime>(DateTime.MinValue, DateTime.MinValue);
-                    return GetDataFiles(starttime, endtime - starttime, Id);
-                }
-                else
-                {
-                    logFileTimes = new Tuple<DateTime, DateTime>(CurrentDateTime[sid], endtime);
-                    return GetDataFiles(starttime, CurrentDateTime[sid] - starttime, Id);
-                }
+                dt = vv.LastTime>dt?vv.LastTime:dt;
             }
-            else
-            {
-                logFileTimes = new Tuple<DateTime, DateTime>(starttime, endtime);
-                return GetDataFiles(starttime, endtime - starttime, Id);
-            }
-            
+            logFileTimes = new Tuple<DateTime, DateTime>(dt, endtime);
+            return vfiles;
+
         }
 
         /// <summary>

@@ -191,7 +191,7 @@ namespace Cdy.Tag
                     e.ReadAllValue(id, sstart, eend, result);
                 });
 
-                if (mLogFileTimes.Item1 != DateTime.MinValue)
+                if (mLogFileTimes.Item1 <mLogFileTimes.Item2)
                 {
                     ReadLogFileAllValue(id, mLogFileTimes.Item1, mLogFileTimes.Item2, result);
                 }

@@ -142,6 +142,20 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <returns></returns>
+        public List<int> ReadInt32s()
+        {
+            List<int> re = new List<int>();
+            while(!inputStream.IsAtEnd)
+            {
+                re.Add(inputStream.ReadInt32());
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public int ReadSInt32()
         {
             return inputStream.ReadSInt32();
@@ -200,6 +214,20 @@ namespace Cdy.Tag
         public long ReadInt64()
         {
             return inputStream.ReadInt64();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public List<long> ReadInt64s()
+        {
+            List<long> re = new List<long>();
+            while (!inputStream.IsAtEnd)
+            {
+                re.Add(inputStream.ReadInt64());
+            }
+            return re;
         }
 
         /// <summary>

@@ -20,6 +20,7 @@ namespace Cdy.Tag
         #region ... Variables  ...
         private T[] mColections;
         private int mCount = 0;
+        private object mReadLockObj = new object();
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -43,13 +44,15 @@ namespace Cdy.Tag
         #region ... Properties ...
 
 
-
-        public int WriteIndex { get; set; } = 0;
+        /// <summary>
+        /// 
+        /// </summary>
+        public int WriteIndex { get; set; } = -1;
 
         /// <summary>
         /// 
         /// </summary>
-        public int ReadIndex { get; set; }
+        public int ReadIndex { get; set; } = 0;
 
         /// <summary>
         /// 
@@ -66,7 +69,18 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void Insert(T value)
         {
-            mColections[WriteIndex++] = value;
+            lock(mColections)
+            mColections[++WriteIndex] = value;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="index"></param>
+        public void InsertAt(T value,int index)
+        {
+            mColections[index] = value;
         }
 
 
@@ -85,16 +99,19 @@ namespace Cdy.Tag
         /// </summary>
         public T IncRead()
         {
-            if (ReadIndex <= WriteIndex)
+            lock (mReadLockObj)
             {
-                return mColections[ReadIndex++];
+                if (ReadIndex <= WriteIndex)
+                {
+                    return mColections[ReadIndex++];
+                }
+                else
+                {
+                    ReadIndex++;
+                    return default(T);
+                }
             }
-            else
-            {
-                ReadIndex++;
-                return default(T);
-            }
-            
+
         }
 
         /// <summary>
@@ -103,16 +120,37 @@ namespace Cdy.Tag
         /// <returns></returns>
         public T DescRead()
         {
-           
-            if (ReadIndex >=0)
+            lock (mReadLockObj)
             {
-                return mColections[ReadIndex--];
+                if (ReadIndex >= 0)
+                {
+                    return mColections[ReadIndex--];
+                }
+                else
+                {
+                    ReadIndex--;
+                    return default(T);
+                }
             }
-            else
-            {
-                ReadIndex--;
-                return default(T);
-            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public T Read()
+        {
+            return mColections[ReadIndex];
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public T Read(int index)
+        {
+            return mColections[index];
         }
 
         /// <summary>
@@ -121,7 +159,6 @@ namespace Cdy.Tag
         /// <returns></returns>
         public T Remove()
         {
-            WriteIndex--;
             if (WriteIndex < 0)
             {
                 WriteIndex = -1;
@@ -129,8 +166,11 @@ namespace Cdy.Tag
             }
             else
             {
-                return mColections[WriteIndex];
+                var re = mColections[WriteIndex];
+                --WriteIndex;
+                return re;
             }
+
         }
 
         public T Get(int index)
@@ -143,7 +183,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Reset()
         {
-            WriteIndex = 0;
+            WriteIndex = -1;
             ReadIndex = 0;
         }
 

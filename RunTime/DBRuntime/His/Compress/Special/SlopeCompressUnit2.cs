@@ -81,13 +81,11 @@ namespace Cdy.Tag
         protected  Memory<byte> CompressTimers(List<int> timerVals, CustomQueue<int> usedIndex)
         {
             usedIndex.ReadIndex = 0;
-            // int preids = timerVals[0];
             int preids = 0;
-            int ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
+            int ig = usedIndex.ReadIndex <= usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
             bool isFirst = true;
 
             mVarintMemory2.Reset();
-            //mVarintMemory.WriteInt32(preids);
             for (int i = 0; i < timerVals.Count; i++)
             {
                 if (i == ig)
@@ -103,10 +101,10 @@ namespace Cdy.Tag
                         mVarintMemory2.WriteInt32(id - preids);
                     }
                     preids = id;
-                    ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
+                    ig = usedIndex.ReadIndex <= usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
                 }
             }
-            return mVarintMemory2.DataBuffer.AsSpan(0, (int)mVarintMemory2.WritePosition).ToArray();
+            return mVarintMemory2.DataBuffer.AsMemory(0, (int)mVarintMemory2.WritePosition);
         }
 
         /// <summary>
@@ -141,7 +139,7 @@ namespace Cdy.Tag
             int count = 0;
             byte qus = 0;
             mVarintMemory.Reset();
-            int ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
+            int ig = usedIndex.ReadIndex <= usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
             bool isFirst = true;
             
             for (int i = 0; i < totalcount; i++)
@@ -170,7 +168,7 @@ namespace Cdy.Tag
                             count = 1;
                         }
                     }
-                    ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
+                    ig = usedIndex.ReadIndex <= usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
                 }
             }
             mVarintMemory.WriteInt32(count);
@@ -1635,7 +1633,7 @@ namespace Cdy.Tag
             int ig = -1;
             emptys.ReadIndex = 0;
 
-            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
             int ac = 0;
             mAvaiableDatabuffer.Position = 0;
             mAvaiableDatabuffer.Write((int)0);
@@ -1656,7 +1654,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1675,7 +1673,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1694,7 +1692,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1713,7 +1711,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1732,7 +1730,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1750,7 +1748,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1768,7 +1766,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1787,7 +1785,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1805,7 +1803,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);

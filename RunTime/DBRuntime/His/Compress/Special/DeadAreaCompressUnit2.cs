@@ -109,7 +109,7 @@ namespace Cdy.Tag
             int id = 0;
 
             int ig = -1;
-            ig = emptyIds.ReadIndex < emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
+            ig = emptyIds.ReadIndex <= emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
 
             byte tlen = (timerVals as HisDataMemoryBlock).TimeLen;
 
@@ -135,7 +135,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    ig = emptyIds.ReadIndex < emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
+                    ig = emptyIds.ReadIndex <= emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
                     //    emptyIds.TryDequeue(out ig);
                 }
             }
@@ -192,7 +192,7 @@ namespace Cdy.Tag
 
                     var cval = CompressBoolValues(source, count * 2 + sourceAddr, count, emptys);
 
-                    int rcount = count - emptys.WriteIndex;
+                    int rcount = count - emptys.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -221,7 +221,7 @@ namespace Cdy.Tag
                     cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, emptys, TagType);
 
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
-                    rcount = count - emptys2.WriteIndex;
+                    rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -249,7 +249,7 @@ namespace Cdy.Tag
                     var ures = CompressValues<ushort>(source, count * 2 + sourceAddr, count, emptys, TagType);
 
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
-                    rcount = count - emptys2.WriteIndex;
+                    rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -275,7 +275,7 @@ namespace Cdy.Tag
                     var res = CompressValues<short>(source, count * 2 + sourceAddr, count, emptys, TagType);
 
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
-                    rcount = count - emptys2.WriteIndex;
+                    rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -301,7 +301,7 @@ namespace Cdy.Tag
                     var uires = CompressValues<uint>(source, count * 2 + sourceAddr, count, emptys, TagType);
 
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
-                    rcount = count - emptys2.WriteIndex;
+                    rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -326,7 +326,7 @@ namespace Cdy.Tag
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
                     var ires = CompressValues<int>(source, count * 2 + sourceAddr, count, emptys, TagType);
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
-                    rcount = count - emptys2.WriteIndex;
+                    rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -351,7 +351,7 @@ namespace Cdy.Tag
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
                     var ulres = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys, TagType);
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
-                    rcount = count - emptys2.WriteIndex;
+                    rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -376,7 +376,7 @@ namespace Cdy.Tag
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
                     var lres = CompressValues<long>(source, count * 2 + sourceAddr, count, emptys, TagType);
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
-                    rcount = count - emptys2.WriteIndex;
+                    rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -402,7 +402,7 @@ namespace Cdy.Tag
 
                     var dres = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys, TagType);
 
-                    rcount = count - emptys2.WriteIndex;
+                    rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -429,7 +429,7 @@ namespace Cdy.Tag
 
                     var ddres = CompressValues<double>(source, count * 2 + sourceAddr, count, emptys, TagType);
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
-                    rcount = count - emptys2.WriteIndex;
+                    rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -464,7 +464,7 @@ namespace Cdy.Tag
 
                     var fres = CompressValues<float>(source, count * 2 + sourceAddr, count, emptys, TagType);
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
-                    rcount = count - emptys2.WriteIndex;
+                    rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -488,7 +488,7 @@ namespace Cdy.Tag
                 case TagType.String:
 
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
-                    rcount = count - emptys.WriteIndex;
+                    rcount = count - emptys.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -515,7 +515,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.IntPoint:
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
-                    rcount = count - emptys.WriteIndex;
+                    rcount = count - emptys.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -539,7 +539,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.UIntPoint:
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
-                    rcount = count - emptys.WriteIndex;
+                    rcount = count - emptys.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -563,7 +563,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.LongPoint:
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
-                    rcount = count - emptys.WriteIndex;
+                    rcount = count - emptys.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -587,7 +587,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.ULongPoint:
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
-                    rcount = count - emptys.WriteIndex;
+                    rcount = count - emptys.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -611,7 +611,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.IntPoint3:
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
-                    rcount = count - emptys.WriteIndex;
+                    rcount = count - emptys.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -635,7 +635,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.UIntPoint3:
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
-                    rcount = count - emptys.WriteIndex;
+                    rcount = count - emptys.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -659,7 +659,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.LongPoint3:
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
-                    rcount = count - emptys.WriteIndex;
+                    rcount = count - emptys.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -683,7 +683,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.ULongPoint3:
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
-                    rcount = count - emptys.WriteIndex;
+                    rcount = count - emptys.WriteIndex - 1;
                     //写入时间
                     target.WriteUShort(targetAddr, (ushort)rcount);
                     rsize += 2;
@@ -731,7 +731,7 @@ namespace Cdy.Tag
             bool isFirst = true;
 
             int ig = -1;
-            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
             
 
 
@@ -766,7 +766,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                             emptys2.Insert(i);
                         }
                     }
@@ -800,7 +800,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                             emptys2.Insert(i);
                         }
                     }
@@ -834,7 +834,7 @@ namespace Cdy.Tag
                         else
                         {
 
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                             emptys2.Insert(i);
                         }
                     }
@@ -867,7 +867,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                             emptys2.Insert(i);
                         }
                     }
@@ -900,7 +900,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                             emptys2.Insert(i);
                         }
                     }
@@ -933,7 +933,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                             emptys2.Insert(i);
                         }
                     }
@@ -966,7 +966,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                             emptys2.Insert(i);
                         }
                     }
@@ -1006,7 +1006,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                             emptys2.Insert(i);
                         }
                     }
@@ -1042,7 +1042,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                             emptys2.Insert(i);
                         }
                     }

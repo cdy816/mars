@@ -82,7 +82,7 @@ namespace Cdy.Tag
             usedIndex.ReadIndex = 0;
             // int preids = timerVals[0];
             int preids = 0;
-            int ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
+            int ig = usedIndex.ReadIndex <= usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
             bool isFirst = true;
 
             mVarintMemory2.Reset();
@@ -103,7 +103,7 @@ namespace Cdy.Tag
                         mVarintMemory2.WriteInt32(id - preids);
                         preids = id;
                     }
-                    ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
+                    ig = usedIndex.ReadIndex <= usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
                 }
             }
             return mVarintMemory2.DataBuffer.AsSpan(0, (int)mVarintMemory2.WritePosition).ToArray();
@@ -143,7 +143,7 @@ namespace Cdy.Tag
             int count = 0;
             byte qus = 0;
             mVarintMemory.Reset();
-            int ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
+            int ig = usedIndex.ReadIndex <= usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
             bool isFirst = true;
             
             for (int i = 0; i < totalcount; i++)
@@ -172,7 +172,7 @@ namespace Cdy.Tag
                             count = 1;
                         }
                     }
-                    ig = usedIndex.ReadIndex < usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
+                    ig = usedIndex.ReadIndex <= usedIndex.WriteIndex ? usedIndex.IncRead() : -1;
                 }
             }
             mVarintMemory.WriteInt32(count);
@@ -1631,7 +1631,7 @@ namespace Cdy.Tag
             int ig = -1;
             emptys.ReadIndex = 0;
 
-            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
             int ac = 0;
             mAvaiableDatabuffer.Position = 0;
             mAvaiableDatabuffer.Write((int)0);
@@ -1652,7 +1652,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1671,7 +1671,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1690,7 +1690,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1709,7 +1709,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1728,7 +1728,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1746,7 +1746,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1764,7 +1764,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1783,7 +1783,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1801,7 +1801,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            ig = emptys.ReadIndex < emptys.WriteIndex ? emptys.IncRead() : -1;
+                            ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
                         }
                     }
                     mAvaiableDatabuffer.WriteInt(0, ac);
@@ -1826,9 +1826,9 @@ namespace Cdy.Tag
         {
             int rsize = 0;
 
-            target.WriteUShort(targetAddr, (ushort)usedIndex.WriteIndex);
+            target.WriteInt(targetAddr,(usedIndex.WriteIndex+1));
 
-            rsize += 2;
+            rsize += 4;
             target.Write((int)timedata.Length);
             target.Write(timedata);
             rsize += 4;

@@ -36,6 +36,9 @@ namespace Cdy.Tag
         /// </summary>
         internal static Dictionary<string, DateTime> CurrentDateTime = new Dictionary<string, DateTime>();
 
+        /// <summary>
+        /// 
+        /// </summary>
         private string mDatabaseName;
 
         /// <summary>
@@ -43,12 +46,15 @@ namespace Cdy.Tag
         /// </summary>
         public const string DataFileExtends = ".dbd";
 
+        /// <summary>
+        /// 
+        /// </summary>
         public const string LogFileExtends = ".log";
 
         /// <summary>
         /// 
         /// </summary>
-        public const int FileHeadSize = 72;
+        public const int FileHeadSize = 84;
 
         private System.IO.FileSystemWatcher hisDataWatcher;
 
@@ -246,12 +252,12 @@ namespace Cdy.Tag
                         var vifno = new System.IO.FileInfo(vv.Key);
                         if (vv.Value == System.IO.WatcherChangeTypes.Created)
                         {
-                            LoggerService.Service.Info("DataFileMananger", "HisDataFile " + vv.Key + " is Created & will be add to dataFileCach！");
+                            LoggerService.Service.Info("DataFileMananger", "HisDataFile " + vv.Key + " is Created & will be add to dataFileCach!");
                             ParseFileName(vifno);
                         }
                         else
                         {
-                            LoggerService.Service.Info("DataFileMananger", "HisDataFile " + vv.Key + " is changed & will be processed！");
+                            LoggerService.Service.Info("DataFileMananger", "HisDataFile " + vv.Key + " is changed & will be processed!");
 
                             var vfile = CheckAndGetDataFile(vv.Key);
                             if (vfile != null)
@@ -293,11 +299,14 @@ namespace Cdy.Tag
                         mFileCach.Add(e.FullPath, e.ChangeType);
                     }
                 }
-                //LoggerService.Service.Info("DataFileMananger", "LogFile "+ e.Name + " add to FileCach！");
-                //ParseLogFile(e.FullPath);
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void HisDataWatcher_Changed(object sender, System.IO.FileSystemEventArgs e)
         {
             mResetEvent.Set();
@@ -312,17 +321,12 @@ namespace Cdy.Tag
                         if (vifno.Extension == DataFileExtends)
                         {
                             mHisFileCach.Add(e.FullPath, e.ChangeType);
-                            //ParseFileName(vifno);
                         }
                     }
-                    //LoggerService.Service.Info("DataFileMananger", "HisDataFile " + e.Name + " is Created & will be add to dataFileCach！");
-                    
                 }
             }
             else if(e.ChangeType == System.IO.WatcherChangeTypes.Changed)
             {
-               // LoggerService.Service.Info("DataFileMananger", "HisDataFile " + e.Name + " is changed & will be processed！");
-               
                 lock (mLocker)
                 {
                     if (!mHisFileCach.ContainsKey(e.FullPath))
@@ -331,26 +335,16 @@ namespace Cdy.Tag
                         if (vifno.Extension == DataFileExtends)
                         {
                             mHisFileCach.Add(e.FullPath, e.ChangeType);
-                            //ParseFileName(vifno);
                         }
                     }
-
-                    //if (vtmp.Extension == DataFileExtends)
-                    //{
-                    //    var vfile = CheckAndGetDataFile(e.Name);
-                    //    if (vfile != null)
-                    //    {
-                    //        vfile.UpdateLastDatetime();
-                    //    }
-                    //    else
-                    //    {
-                    //        ParseFileName(vtmp);
-                    //    }
-                    //}
                 }
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="path"></param>
         public void ScanLogFile(string path)
         {
             System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(path);
@@ -541,7 +535,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         private bool  CheckDataInLogFile(DateTime time,int id)
         {
-            string sname = mDatabaseName + id;
+            string sname = mDatabaseName + (id/ TagCountOneFile);
             if(CurrentDateTime.ContainsKey(sname))
             return CurrentDateTime[sname] < time;
             else
@@ -585,30 +579,6 @@ namespace Cdy.Tag
         /// <returns></returns>
         public List<DataFileInfo> GetDataFiles(DateTime starttime, DateTime endtime, out Tuple<DateTime, DateTime> logFileTimes, int Id)
         {
-            //string sid = mDatabaseName + Id;
-            //if (CurrentDateTime.ContainsKey(sid))
-            //{
-            //    if (starttime > CurrentDateTime[sid])
-            //    {
-            //        logFileTimes = new Tuple<DateTime, DateTime>(starttime, endtime);
-            //        return new List<DataFileInfo>();
-            //    }
-            //    else if (endtime <= CurrentDateTime[sid])
-            //    {
-            //        logFileTimes = new Tuple<DateTime, DateTime>(DateTime.MinValue, DateTime.MinValue);
-            //        return GetDataFiles(starttime, endtime - starttime, Id);
-            //    }
-            //    else
-            //    {
-            //        logFileTimes = new Tuple<DateTime, DateTime>(CurrentDateTime[sid], endtime);
-            //        return GetDataFiles(starttime, CurrentDateTime[sid] - starttime, Id);
-            //    }
-            //}
-            //else
-            //{
-            //    logFileTimes = new Tuple<DateTime, DateTime>(starttime, endtime);
-            //    return GetDataFiles(starttime, endtime - starttime, Id);
-            //}
             DateTime dt = DateTime.MinValue;
             var vfiles = GetDataFiles(starttime, endtime - starttime, Id);
             foreach (var vv in vfiles)

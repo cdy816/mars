@@ -1940,14 +1940,30 @@ namespace Cdy.Tag
                     break;
                 case TagType.Double:
 
-                    if (mDCompress == null) mDCompress = new DoubleCompressBuffer(310) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    if (mDCompress == null)
+                    {
+                        mDCompress = new DoubleCompressBuffer(count) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    }
+                    else
+                    {
+                        mDCompress.CheckAndResizeTo(count);
+                    }
+
                     cval = CompressValues<double>(source, count * 2 + sourceAddr, count,  tims, type);
                     timeData = CompressTimers(tims, usedIndex);
                     cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Float:
-                    if (mFCompress == null) mFCompress = new FloatCompressBuffer(310) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    if (mFCompress == null)
+                    {
+                        mFCompress = new FloatCompressBuffer(count) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    }
+                    else
+                    {
+                        mFCompress.CheckAndResizeTo(count);
+                    }
+
                     cval = CompressValues<float>(source, count * 2 + sourceAddr, count,  tims, type);
                     timeData = CompressTimers(tims, usedIndex);
                     cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);

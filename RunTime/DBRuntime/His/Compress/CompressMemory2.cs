@@ -126,6 +126,11 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime EndTime { get; set; }
+
 
         #endregion ...Properties...
 
@@ -165,7 +170,7 @@ namespace Cdy.Tag
             int datasize = 0;
             var cdata = CompressMemory(data, out datasize);
             cdata.MakeMemoryBusy();
-            ServiceLocator.Locator.Resolve<IDataSerialize2>().ManualRequestToSeriseFile(data.Id, data.Time, cdata, datasize);
+            ServiceLocator.Locator.Resolve<IDataSerialize2>().ManualRequestToSeriseFile(data.Id, data.Time,data.EndTime, cdata, datasize);
             data.MakeMemoryNoBusy();
             ManualHisDataMemoryBlockPool.Pool.Release(data);
         }
@@ -282,7 +287,7 @@ namespace Cdy.Tag
 
                     long ltmp3 = sw.ElapsedMilliseconds;
 
-                    ServiceLocator.Locator.Resolve<IDataSerialize2>().RequestToSeriseFile(this, mCurrentTime);
+                    ServiceLocator.Locator.Resolve<IDataSerialize2>().RequestToSeriseFile(this);
                     sw.Stop();
                     LoggerService.Service.Info("CompressEnginer", Id + "压缩完成 耗时:" + sw.ElapsedMilliseconds + " ltmp1:" + ltmp1 + " ltmp2:" + (ltmp2 - ltmp1) + " ltmp3:" + (ltmp3 - ltmp2) + " CPU Id:" + ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Blue);
 

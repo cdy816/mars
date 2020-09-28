@@ -81,6 +81,18 @@ namespace DBRuntime.His.Compress
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="count"></param>
+        public void CheckAndResizeTo(int count)
+        {
+            if(count>mBuffer.Length)
+            {
+                mBuffer = new float[count];
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
         private bool CanDecompress(float value)

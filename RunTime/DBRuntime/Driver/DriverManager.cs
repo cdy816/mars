@@ -94,7 +94,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Start()
         {
-            LoggerService.Service.Info("DriverManager", "start to Start");
+            LoggerService.Service.Info("DriverManager", "开始启动");
             foreach (var vv in mDrivers.Values)
             {
                 vv.Start(mTagDriverService, mHisValueDriverService);
@@ -106,7 +106,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Stop()
         {
-            LoggerService.Service.Info("DriverManager", "start to stop");
+            LoggerService.Service.Info("DriverManager", "开始停止");
             foreach (var vv in mDrivers.Values)
             {
                 vv.Stop();

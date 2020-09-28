@@ -50,6 +50,11 @@ namespace DBRuntime.His
         /// <summary>
         /// 
         /// </summary>
+        public DateTime EndTime { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public int CurrentCount { get; set; }
 
         /// <summary>

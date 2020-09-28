@@ -23,9 +23,9 @@ using DBRuntime.His;
  * [] 表示重复的一个或多个内容
  * 
  HisData File Structor
- FileHead(72) + [HisDataRegion] 
+ FileHead(84) + [HisDataRegion]
 
- FileHead: dataTime(8)+DatabaseName(64)
+ FileHead: dataTime(8)(FileTime)+dateTime(8)(LastUpdateTime)+DataRegionCount(4)+DatabaseName(64)
  
  HisDataRegion Structor: RegionHead + DataBlockPoint Area + DataBlock Area
 
@@ -55,11 +55,7 @@ namespace Cdy.Tag
 
         private bool mIsClosed = false;
 
-        //private MemoryBlock mProcessMemory;
-
         private DateTime mCurrentTime;
-
-        //private SeriseFileItem[] mSeriseFile;
 
         private Dictionary<int, CompressMemory2> mWaitForProcessMemory = new Dictionary<int, CompressMemory2>();
 
@@ -194,7 +190,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Start()
         {
-            LoggerService.Service.Info("SeriseEnginer", "start to Start");
+            LoggerService.Service.Info("SeriseEnginer", "开始启动");
             mIsClosed = false;
             resetEvent = new ManualResetEvent(false);
             closedEvent = new ManualResetEvent(false);
@@ -208,7 +204,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Stop()
         {
-            LoggerService.Service.Info("SeriseEnginer", "start to stop");
+            LoggerService.Service.Info("SeriseEnginer", "开始停止");
             mIsClosed = true;
             resetEvent.Set();
             closedEvent.WaitOne();
@@ -227,7 +223,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="dataMemory"></param>
         /// <param name="date"></param>
-        public void RequestToSeriseFile(CompressMemory2 dataMemory, DateTime date)
+        public void RequestToSeriseFile(CompressMemory2 dataMemory)
         {
             lock (mWaitForProcessMemory)
             {
@@ -240,7 +236,7 @@ namespace Cdy.Tag
                     mWaitForProcessMemory.Add(dataMemory.Id, dataMemory);
                 }
             }
-            mCurrentTime = date;
+            mCurrentTime = dataMemory.CurrentTime;
         }
 
         /// <summary>
@@ -294,7 +290,7 @@ namespace Cdy.Tag
 
             foreach (var vv in mtmp)
             {
-                mSeriserFiles[vv.Id].SaveToFile(vv, vv.CurrentTime);
+                mSeriserFiles[vv.Id].SaveToFile(vv, vv.CurrentTime,vv.EndTime);
                 vv.Clear();
                 vv.MakeMemoryNoBusy();
             }
@@ -327,13 +323,13 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         /// <param name="data"></param>
         /// <param name="size"></param>
-        public void ManualRequestToSeriseFile(int id, DateTime time, MarshalMemoryBlock data, int size)
+        public void ManualRequestToSeriseFile(int id, DateTime time,DateTime endTime, MarshalMemoryBlock data, int size)
         {
             foreach(var vv in mSeriserFiles)
             {
                 if( id >= vv.Value.Id* TagCountOneFile && id<(vv.Value.Id+1)* TagCountOneFile)
                 {
-                    vv.Value.ManualRequestToSeriseFile(id, data, size, time);
+                    vv.Value.ManualRequestToSeriseFile(id, data, size, time,endTime);
                 }
             }
         }
@@ -382,7 +378,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 文件头大小
         /// </summary>
-        public const int FileHeadSize = 72;
+        public const int FileHeadSize = 84;
 
         private MemoryBlock mBlockPointMemory;
 
@@ -498,11 +494,10 @@ namespace Cdy.Tag
         {
             DateTime date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
             mFileWriter.Write(date, 0);
-            //byte[] nameBytes = new byte[64];
             byte[] nameBytes = ArrayPool<byte>.Shared.Rent(64);
             var ntmp = Encoding.UTF8.GetBytes(databaseName);
             Buffer.BlockCopy(ntmp, 0, nameBytes, 0, Math.Min(64, ntmp.Length));
-            mFileWriter.Write(nameBytes, 8);
+            mFileWriter.Write(nameBytes, 20);
             ArrayPool<byte>.Shared.Return(nameBytes);
         }
 
@@ -524,6 +519,8 @@ namespace Cdy.Tag
             mFileWriter.Append(bval, 0, datalen);
             mFileWriter.AppendZore(totalLen - datalen);
 
+            mFileWriter.Write(mFileWriter.ReadInt(16) + 1, 16);
+
             mPreDataRegion = mCurrentDataRegion;
 
             mBlockPointOffset = mCurrentDataRegion + mBlockPointOffset;
@@ -544,6 +541,8 @@ namespace Cdy.Tag
             bval = GeneratorDataRegionHeader(out totalLen, out datalen);
             mFileWriter.Append(bval, 0, datalen);
             mFileWriter.AppendZore(totalLen - datalen);
+
+            mFileWriter.Write(mFileWriter.ReadInt(16) + 1, 16);
 
             ArrayPool<byte>.Shared.Return(bval);
         }
@@ -633,11 +632,8 @@ namespace Cdy.Tag
                     offset = nextaddr;
                 }
             }
-            // mPreDataRegion = offset;
-
             mFileWriter.GoToEnd();
             mCurrentDataRegion = mFileWriter.CurrentPostion;
-
             return offset;
         }
 
@@ -695,7 +691,7 @@ namespace Cdy.Tag
                 else
                 {
 
-                    if (mFileWriter2.Length < 72)
+                    if (mFileWriter2.Length < FileHeadSize)
                     {
                         //新建文件
                         AppendFileHeader(time, this.DatabaseName, mFileWriter2);
@@ -744,12 +740,22 @@ namespace Cdy.Tag
         /// <param name="datablock"></param>
         /// <param name="size"></param>
         /// <param name="time"></param>
-        public void ManualRequestToSeriseFile(int id, MarshalMemoryBlock datablock, int size, DateTime time)
+        /// <param name="endTime"></param>
+        public void ManualRequestToSeriseFile(int id, MarshalMemoryBlock datablock, int size, DateTime time,DateTime endTime)
         {
             lock (mFileLocker)
             {
                 DataFileSeriserbase mwriter;
+
                 var heads = GetDataRegionHeadPoint(id, time, out mwriter);
+
+                //如果更新时间，小于最后更新时间，则更新
+                var vtmp = mwriter.ReadDateTime(8);
+                if (endTime > vtmp)
+                {
+                    mwriter.Write(endTime, 8);
+                }
+
                 var vpointer = mwriter.GoToEnd().CurrentPostion;
                 datablock.WriteToStream(mFileWriter.GetStream(), vpointer, size);//直接拷贝数据块
                 datablock.WriteLong(heads, vpointer);
@@ -877,7 +883,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    if (mFileWriter.Length < 72)
+                    if (mFileWriter.Length < FileHeadSize)
                     {
                         AppendFileHeader(time, this.DatabaseName, mFileWriter);
                         //新建文件
@@ -915,11 +921,16 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="mProcessMemory"></param>
         /// <param name="time"></param>
-        public void SaveToFile(MarshalMemoryBlock mProcessMemory, DateTime time)
+        public void SaveToFile(MarshalMemoryBlock mProcessMemory, DateTime time,DateTime endTime)
         {
-            SaveToFile(mProcessMemory, 0, time);
+            SaveToFile(mProcessMemory, 0, time,endTime);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
         private DateTime FormateTime(DateTime time)
         {
             return new DateTime(time.Year, time.Month, time.Day, time.Hour, time.Minute, 0);
@@ -928,7 +939,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 执行存储到磁盘
         /// </summary>
-        public void SaveToFile(MarshalMemoryBlock mProcessMemory, long dataOffset, DateTime time)
+        public void SaveToFile(MarshalMemoryBlock mProcessMemory, long dataOffset, DateTime time,DateTime endTime)
         {
             /*
              1. 检查变量ID是否变动，如果变动则重新记录变量的ID列表
@@ -955,6 +966,13 @@ namespace Cdy.Tag
                     //打开文件
                     if (!CheckFile(time))
                         return;
+
+                    //更新最后写入时间
+                    var vtmp = mFileWriter.ReadDateTime(8);
+                    if (endTime > vtmp)
+                    {
+                        mFileWriter.Write(endTime, 8);
+                    }
 
                     var ltmp2 = sw.ElapsedMilliseconds;
 

@@ -192,7 +192,7 @@ namespace SimDriver
 #if DEBUG
                 sw.Stop();
                 if (mNumber%10 == 0)
-                LoggerService.Service.Info("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds);
+                LoggerService.Service.Debug("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds);
 #endif
                 Thread.Sleep(delay);
             }

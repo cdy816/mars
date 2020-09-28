@@ -78,6 +78,19 @@ namespace DBRuntime.His.Compress
 
         #region ... Methods    ...
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="count"></param>
+        public void CheckAndResizeTo(int count)
+        {
+            if (count > mBuffer.Length)
+            {
+                mBuffer = new double[count];
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>

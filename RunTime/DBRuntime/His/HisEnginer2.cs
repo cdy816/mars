@@ -823,7 +823,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Start()
         {
-            LoggerService.Service.Info("HisEnginer", "start to Start");
+            LoggerService.Service.Info("HisEnginer", "开始启动");
             mIsClosed = false;
             mMegerProcessIsClosed = false;
             LoggerService.Service.Info("Record", "历史变量个数: " + this.mHisTags.Count);
@@ -924,6 +924,7 @@ namespace Cdy.Tag
                         RecordAllLastValue();
                         //mMergeMemory.Dump();
 
+                        mCurrentMergeMemory.EndDateTime = mSnapAllTagTime;
                         mCurrentMergeMemory.MakeMemoryBusy();
                         //提交到数据压缩流程
                         ServiceLocator.Locator.Resolve<IDataCompress2>().RequestToCompress(mCurrentMergeMemory);
@@ -1053,6 +1054,8 @@ namespace Cdy.Tag
             if (mcc != null)
             {
                 mcc.MakeMemoryBusy();
+                mcc.EndDateTime = dateTime;
+
                 mWaitForMergeMemory = mcc;
                 //通知进行内存合并
                 resetEvent.Set();
@@ -1227,7 +1230,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Stop()
         {
-            LoggerService.Service.Info("HisEnginer", "start to stop");
+            LoggerService.Service.Info("HisEnginer", "开始停止");
             if(mRecordTimer!=null)
             {
                 mRecordTimer.Stop();
@@ -1477,7 +1480,7 @@ namespace Cdy.Tag
                                 break;
                         }
                         hb.WriteInt(hb.QualityAddress + hb.CurrentCount, vv.Quality);
-
+                        hb.EndTime = vv.Time;
                         hb.CurrentCount++;
                     }
                 }

@@ -113,6 +113,8 @@ namespace Cdy.Tag
 
             byte tlen = (timerVals as HisDataMemoryBlock).TimeLen;
 
+            int rcount = 0;
+
             for (int i = 0; i < count; i++)
             {
                 if (i != ig)
@@ -130,6 +132,7 @@ namespace Cdy.Tag
                     {
                         mVarintMemory2.WriteInt32(id - preids);
                     }
+                    rcount++;
                     //dtims.Add(i, id);
                     preids = id;
                 }
@@ -139,7 +142,10 @@ namespace Cdy.Tag
                     //    emptyIds.TryDequeue(out ig);
                 }
             }
-            return mVarintMemory2.DataBuffer.AsMemory(0, (int)mVarintMemory.WritePosition);
+
+            LoggerService.Service.Debug("DeadAreaCompress", "记录时间个数:"+rcount +" 空时间个数:"+ (emptyIds.WriteIndex+1));
+
+            return mVarintMemory2.DataBuffer.AsMemory(0, (int)mVarintMemory2.WritePosition);
         }
 
         /// <summary>
@@ -425,7 +431,14 @@ namespace Cdy.Tag
                     break;
                 case TagType.Double:
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
-                    if (mDCompress == null) mDCompress = new DoubleCompressBuffer(310) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    if (mDCompress == null)
+                    {
+                        mDCompress = new DoubleCompressBuffer(count) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    }
+                    else
+                    {
+                        mDCompress.CheckAndResizeTo(count);
+                    }
 
                     var ddres = CompressValues<double>(source, count * 2 + sourceAddr, count, emptys, TagType);
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
@@ -434,9 +447,15 @@ namespace Cdy.Tag
                     target.WriteInt(targetAddr, rcount);
                     rsize += 4;
                     target.Write((int)datas.Length);
-                    target.Write(datas);
                     rsize += 4;
+                    target.Write(datas);
                     rsize += datas.Length;
+
+                    if(rcount>0 && datas.Length==0)
+                    {
+                        LoggerService.Service.Debug("DeadAreaCompressUnit", "压缩后数据长度为0 :"+rcount);
+                    }
+
                     //写入数据
                     target.Write(ddres.Length);
                     target.Write(ddres);
@@ -460,7 +479,14 @@ namespace Cdy.Tag
                     break;
                 case TagType.Float:
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
-                    if (mFCompress == null) mFCompress = new FloatCompressBuffer(310) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    if (mFCompress == null)
+                    {
+                        mFCompress = new FloatCompressBuffer(count) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    }
+                    else
+                    {
+                        mFCompress.CheckAndResizeTo(count);
+                    }
 
                     var fres = CompressValues<float>(source, count * 2 + sourceAddr, count, emptys, TagType);
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);

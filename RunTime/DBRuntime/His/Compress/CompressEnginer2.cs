@@ -153,7 +153,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Start()
         {
-            LoggerService.Service.Info("CompressEnginer", "start to Start");
+            LoggerService.Service.Info("CompressEnginer", "开始启动");
             mIsClosed = false;
             //Init();
             resetEvent = new ManualResetEvent(false);
@@ -175,7 +175,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Stop()
         {
-            LoggerService.Service.Info("CompressEnginer", "start to stop");
+            LoggerService.Service.Info("CompressEnginer", "开始停止");
 
             mIsClosed = true;
             resetEvent.Set();
@@ -206,6 +206,7 @@ namespace Cdy.Tag
             foreach(var vv in mTargetMemorys)
             {
                 vv.Value.CurrentTime = mCurrentTime;
+                vv.Value.EndTime = dataMemory.EndDateTime;
             }
             resetEvent.Set();
         }

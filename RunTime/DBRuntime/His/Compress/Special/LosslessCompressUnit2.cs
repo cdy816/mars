@@ -993,8 +993,15 @@ namespace Cdy.Tag
                     rsize += cqus.Length;
                     break;
                 case TagType.Double:
-                    
-                    if (mDCompress == null) mDCompress = new DoubleCompressBuffer(310) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+
+                    if (mDCompress == null)
+                    {
+                        mDCompress = new DoubleCompressBuffer(count) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    }
+                    else
+                    {
+                        mDCompress.CheckAndResizeTo(count);
+                    }
 
                     var ddres = CompressValues<double>(source, count * 2 + sourceAddr, count, emptys, TagType);
                     target.Write(ddres.Length);
@@ -1010,7 +1017,14 @@ namespace Cdy.Tag
                     break;
                 case TagType.Float:
 
-                    if (mFCompress == null) mFCompress = new FloatCompressBuffer(310) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    if (mFCompress == null)
+                    {
+                        mFCompress = new FloatCompressBuffer(count) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    }
+                    else
+                    {
+                        mFCompress.CheckAndResizeTo(count);
+                    }
 
                     var fres = CompressValues<float>(source, count * 2 + sourceAddr, count, emptys, TagType);
                     target.Write(fres.Length);
@@ -1557,6 +1571,7 @@ namespace Cdy.Tag
             Dictionary<int, DateTime> re = new Dictionary<int, DateTime>();
             var count = source.ReadInt();
             var datasize = source.ReadInt();
+                       
             byte[] datas = source.ReadBytes(datasize);
             var timers = DeCompressTimers(datas, count);
 

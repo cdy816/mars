@@ -78,6 +78,10 @@ namespace DBRuntime.His
         /// </summary>
         public DateTime CurrentDatetime { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime EndDateTime { get; set; }
 
         #endregion ...Properties...
 

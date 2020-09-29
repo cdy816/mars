@@ -183,6 +183,8 @@ namespace Cdy.Tag
                 vv.Value.FileWriter2 = DataFileSeriserManager.manager.GetSeriser(DataSeriser).New();
                 vv.Value.Init();
             }
+
+            HisDataPath = SelectHisDataPath();
         }
 
         /// <summary>
@@ -325,7 +327,9 @@ namespace Cdy.Tag
         /// <param name="size"></param>
         public void ManualRequestToSeriseFile(int id, DateTime time,DateTime endTime, MarshalMemoryBlock data, int size)
         {
-            foreach(var vv in mSeriserFiles)
+            HisDataPath = SelectHisDataPath();
+
+            foreach (var vv in mSeriserFiles)
             {
                 if( id >= vv.Value.Id* TagCountOneFile && id<(vv.Value.Id+1)* TagCountOneFile)
                 {
@@ -384,6 +388,8 @@ namespace Cdy.Tag
 
         //指针区域的起始地址
         private long mBlockPointOffset = 0;
+
+        private long mDataRegionHeadSize = 0;
 
         private VarintCodeMemory mTagIdMemoryCach;
 
@@ -504,7 +510,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 添加区域头部
         /// </summary>
-        private void AppendDataRegionHeader(DataFileSeriserbase mFileWriter,long mPreDataRegion)
+        private void AppendDataRegionHeader(DateTime mCurrentTime, DataFileSeriserbase mFileWriter,long mPreDataRegion)
         {
             byte[] bval;
             int totalLen;
@@ -515,7 +521,7 @@ namespace Cdy.Tag
                 mFileWriter.Write(mCurrentDataRegion, mPreDataRegion + 8);
             }
 
-            bval = GeneratorDataRegionHeader(out totalLen, out datalen);
+            bval = GeneratorDataRegionHeader(mCurrentTime,out totalLen, out datalen);
             mFileWriter.Append(bval, 0, datalen);
             mFileWriter.AppendZore(totalLen - datalen);
 
@@ -532,13 +538,13 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="mFileWriter"></param>
-        private void NewDataRegionHeader(DataFileSeriserbase mFileWriter)
+        private void NewDataRegionHeader(DateTime mCurrentTime, DataFileSeriserbase mFileWriter)
         {
             byte[] bval;
             int totalLen;
             int datalen;
 
-            bval = GeneratorDataRegionHeader(out totalLen, out datalen);
+            bval = GeneratorDataRegionHeader(mCurrentTime,out totalLen, out datalen);
             mFileWriter.Append(bval, 0, datalen);
             mFileWriter.AppendZore(totalLen - datalen);
 
@@ -551,7 +557,7 @@ namespace Cdy.Tag
         /// 生成区域头部
         /// <paramref name="offset">偏移位置</paramref>
         /// </summary>
-        private byte[] GeneratorDataRegionHeader(out int totallenght, out int datalen)
+        private byte[] GeneratorDataRegionHeader(DateTime mCurrentTime, out int totallenght, out int datalen)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -582,7 +588,7 @@ namespace Cdy.Tag
                 mHeadMemory.Write(BitConverter.GetBytes(mTagIdMemoryCach.Position));// mHeadMemory.Write(mTagIdMemoryCach.Position);//写入压缩后的数组的长度
                 mHeadMemory.Write(mTagIdMemoryCach.Buffer, 0, mTagIdMemoryCach.Position);//写入压缩数据
 
-                mBlockPointOffset = mHeadMemory.Position;
+                mDataRegionHeadSize = mBlockPointOffset = mHeadMemory.Position;
                 datalen = (int)mHeadMemory.Position;
                 sw.Stop();
 
@@ -684,42 +690,25 @@ namespace Cdy.Tag
             {
                 if (mFileWriter2.CreatOrOpenFile(sfile))
                 {
+                    var date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
                     //新建文件
                     AppendFileHeader(time, this.DatabaseName, mFileWriter2);
-                    NewDataRegionHeader(mFileWriter2);
+                    NewDataRegionHeader(date, mFileWriter2);
                 }
                 else
                 {
-
+                    //如果文件格式不正确，则新建
                     if (mFileWriter2.Length < FileHeadSize)
                     {
+                        var date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
                         //新建文件
                         AppendFileHeader(time, this.DatabaseName, mFileWriter2);
-                        NewDataRegionHeader(mFileWriter2);
+                        NewDataRegionHeader(date, mFileWriter2);
                     }
                 }
             }
 
-            var vregions = GetDataRegions(mFileWriter2);
-
             long ltmp = 0;
-
-            foreach (var vv in vregions)
-            {
-                if (time > vv.Key)
-                {
-                    ltmp = vv.Value;
-                }
-                else if (time == vv.Key)
-                {
-                    ltmp = vv.Value;
-                    break;
-                }
-                else
-                {
-                    break;
-                }
-            }
 
             //计算本次更新对应的指针区域的起始地址
             var fsh = (time.Hour / FileDuration) * FileDuration;
@@ -727,10 +716,52 @@ namespace Cdy.Tag
 
             var icount = mTagIdsCach.IndexOf(id);
 
-            ltmp += mBlockPointOffset + icount * 8 * bid;
+            ltmp = SearchDataRegionToDatetime(mFileWriter2, time);
 
             mFileReader = mFileWriter2;
+
+            if (ltmp < 0)
+            {
+                LoggerService.Service.Warn("SeriseEnginer2", "不允许修改本次运行之前时间的历史记录!");
+                return -1;
+            }
+
+            ltmp += mDataRegionHeadSize + mTagCount * 8 * bid + icount * 8;
+
             return ltmp;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        private long SearchDataRegionToDatetime(DataFileSeriserbase mFileWriter, DateTime time)
+        {
+            long preoffset = -1, offset = FileHeadSize;
+            DateTime tm;
+            while (true)
+            {
+                tm = mFileWriter.ReadDateTime(offset + 16);
+                if (tm > time)
+                {
+                    break;
+                }
+
+                var nextaddr = mFileWriter.ReadLong(offset + 8);
+                if (nextaddr <= 0)
+                {
+                    preoffset = offset;
+                    break;
+                }
+                else
+                {
+                    preoffset = offset;
+                    offset = nextaddr;
+                }
+            }
+            return preoffset;
         }
 
         /// <summary>
@@ -748,6 +779,8 @@ namespace Cdy.Tag
                 DataFileSeriserbase mwriter;
 
                 var heads = GetDataRegionHeadPoint(id, time, out mwriter);
+
+                if (heads < 0) return;
 
                 //如果更新时间，小于最后更新时间，则更新
                 var vtmp = mwriter.ReadDateTime(8);
@@ -872,30 +905,33 @@ namespace Cdy.Tag
                 }
 
                 string sfile = GetDataPath(time);
+                
 
                 if (mFileWriter.CreatOrOpenFile(sfile))
                 {
+                    var date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
                     AppendFileHeader(time, this.DatabaseName, mFileWriter);
                     //新建文件
                     mCurrentDataRegion = FileHeadSize;
                     mPreDataRegion = -1;
-                    AppendDataRegionHeader(mFileWriter, -1);
+                    AppendDataRegionHeader(date,mFileWriter, -1);
                 }
                 else
                 {
                     if (mFileWriter.Length < FileHeadSize)
                     {
+                        var date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
                         AppendFileHeader(time, this.DatabaseName, mFileWriter);
                         //新建文件
                         mCurrentDataRegion = FileHeadSize;
                         mPreDataRegion = -1;
-                        AppendDataRegionHeader(mFileWriter, -1);
+                        AppendDataRegionHeader(date, mFileWriter, -1);
                     }
                     else 
                     {
                         //打开已有文件
                         mPreDataRegion = SearchLastDataRegion();
-                        AppendDataRegionHeader(mFileWriter, mPreDataRegion);
+                        AppendDataRegionHeader(mCurrentTime,mFileWriter, mPreDataRegion);
                         
                     }
                 }
@@ -909,7 +945,7 @@ namespace Cdy.Tag
                 if (mNeedRecordDataHeader)
                 {
                     mPreDataRegion = SearchLastDataRegion();
-                    AppendDataRegionHeader(mFileWriter, mPreDataRegion);
+                    AppendDataRegionHeader(mCurrentTime,mFileWriter, mPreDataRegion);
                     mNeedRecordDataHeader = false;
                 }
             }
@@ -967,11 +1003,20 @@ namespace Cdy.Tag
                     if (!CheckFile(time))
                         return;
 
+
+
                     //更新最后写入时间
                     var vtmp = mFileWriter.ReadDateTime(8);
                     if (endTime > vtmp)
                     {
                         mFileWriter.Write(endTime, 8);
+                    }
+
+                    if(datasize==0)
+                    {
+                        Flush();
+                        sw.Stop();
+                        return;
                     }
 
                     var ltmp2 = sw.ElapsedMilliseconds;

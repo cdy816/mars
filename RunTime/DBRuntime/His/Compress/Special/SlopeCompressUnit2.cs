@@ -78,7 +78,7 @@ namespace Cdy.Tag
         /// <param name="timerVals"></param>
         /// <param name="usedIndex"></param>
         /// <returns></returns>
-        protected  Memory<byte> CompressTimers(List<int> timerVals, CustomQueue<int> usedIndex)
+        protected  Memory<byte> CompressTimers(int[] timerVals, CustomQueue<int> usedIndex)
         {
             usedIndex.ReadIndex = 0;
             int preids = 0;
@@ -86,7 +86,7 @@ namespace Cdy.Tag
             bool isFirst = true;
 
             mVarintMemory2.Reset();
-            for (int i = 0; i < timerVals.Count; i++)
+            for (int i = 0; i < timerVals.Length; i++)
             {
                 if (i == ig)
                 {
@@ -111,10 +111,10 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="timerVals"></param>
-        private void GetEmpityTimers(List<int> timerVals)
+        private void GetEmpityTimers(int[] timerVals)
         {
             emptys.Reset();
-            for (int i = 1; i < timerVals.Count; i++)
+            for (int i = 1; i < timerVals.Length; i++)
             {
                 if (timerVals[i] <= 0)
                 {
@@ -189,7 +189,7 @@ namespace Cdy.Tag
             //转换成以秒为时间单位的斜率计算
             //timesSpan是以100ms为单位的时间间隔
 
-            return (Convert.ToDouble(lastVal) - Convert.ToDouble(fval)) / timSpan * 10;
+            return (Convert.ToDouble(lastVal) - Convert.ToDouble(fval)) / (timSpan* TimeTick) * 1000;
         }
 
         /// <summary>
@@ -1628,7 +1628,7 @@ namespace Cdy.Tag
         /// <param name="mTimers"></param>
         /// <param name="usedIndex"></param>
         /// <returns></returns>
-        protected Memory<byte> CompressValues<T>(IMemoryBlock source, long offset, int count,List<int> mTimers,TagType type)
+        protected Memory<byte> CompressValues<T>(IMemoryBlock source, long offset, int count, int[] mTimers,TagType type)
         {
             int ig = -1;
             emptys.ReadIndex = 0;
@@ -1866,20 +1866,22 @@ namespace Cdy.Tag
 
             byte tlen = (source as HisDataMemoryBlock).TimeLen;
 
-            List<int> tims = new List<int>(count);
+           var tims =  System.Buffers.ArrayPool<int>.Shared.Rent(count);
+
+            //List<int> tims = new List<int>(count);
 
             if (tlen == 2)
             {
                 for (int i = 0; i < count; i++)
                 {
-                    tims.Add(source.ReadUShort(sourceAddr + i * 2));
+                    tims[i]=(source.ReadUShort(sourceAddr + i * 2));
                 }
             }
             else
             {
                 for (int i = 0; i < count; i++)
                 {
-                    tims.Add(source.ReadInt(sourceAddr + i * 4));
+                    tims[i]=(source.ReadInt(sourceAddr + i * 4));
                 }
             }
 
@@ -1907,15 +1909,9 @@ namespace Cdy.Tag
                 mAvaiableDatabuffer = new MemoryBlock(count * 20);
             }
 
-            if (usedIndex.Length < count)
-            {
-                usedIndex = new CustomQueue<int>(count * 2);
-            }
-            else
-            {
-                usedIndex.Reset();
-            }
-
+            emptys.CheckAndResize(count);
+            usedIndex.CheckAndResize(count);
+            usedIndex.Reset();
 
             GetEmpityTimers(tims);
 
@@ -2004,6 +2000,8 @@ namespace Cdy.Tag
                     base.Compress<T>(source, sourceAddr, target, targetAddr, size, type);
                     break;
             }
+
+            System.Buffers.ArrayPool<int>.Shared.Return(tims);
             return rsize;
         }
         

@@ -22,9 +22,13 @@ namespace SpiderDriver.ClientApi
 
         private IByteBuffer mRealRequreData;
 
+        private IByteBuffer mHisRequreData;
+
         private ManualResetEvent infoRequreEvent = new ManualResetEvent(false);
 
         private ManualResetEvent realRequreEvent = new ManualResetEvent(false);
+
+        private ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
 
         public delegate void ProcessDataPushDelegate(Dictionary<int, object> datas);
 
@@ -104,6 +108,10 @@ namespace SpiderDriver.ClientApi
                     case ApiFunConst.RealValueFun:
                         mRealRequreData = datas;
                         this.realRequreEvent.Set();
+                        break;
+                    case ApiFunConst.HisValueFun:
+                        mHisRequreData = datas;
+                        hisRequreEvent.Set();
                         break;
                 }
             }
@@ -333,11 +341,183 @@ namespace SpiderDriver.ClientApi
         /// </summary>
         /// <param name="type"></param>
         /// <param name="value"></param>
+        /// <param name="re"></param>
+        private void SetTagValueToBuffer2(TagType type, object value, IByteBuffer re)
+        {
+            switch (type)
+            {
+                case TagType.Bool:
+                    re.WriteByte((byte)value);
+                    break;
+                case TagType.Byte:
+                    re.WriteByte((byte)value);
+                    break;
+                case TagType.Short:
+                    re.WriteShort((short)value);
+                    break;
+                case TagType.UShort:
+                    re.WriteUnsignedShort((ushort)value);
+                    break;
+                case TagType.Int:
+                    re.WriteInt((int)value);
+                    break;
+                case TagType.UInt:
+                    re.WriteInt((int)value);
+                    break;
+                case TagType.Long:
+                case TagType.ULong:
+                    re.WriteLong((long)value);
+                    break;
+                case TagType.Float:
+                    re.WriteFloat((float)value);
+                    break;
+                case TagType.Double:
+                    re.WriteDouble((double)value);
+                    break;
+                case TagType.String:
+                    string sval = value.ToString();
+                    re.WriteInt(sval.Length);
+                    re.WriteString(sval, Encoding.Unicode);
+                    break;
+                case TagType.DateTime:
+                    re.WriteLong(((DateTime)value).Ticks);
+                    break;
+                case TagType.IntPoint:
+                    re.WriteInt(((IntPointData)value).X);
+                    re.WriteInt(((IntPointData)value).Y);
+                    break;
+                case TagType.UIntPoint:
+                    re.WriteInt((int)((UIntPointData)value).X);
+                    re.WriteInt((int)((UIntPointData)value).Y);
+                    break;
+                case TagType.IntPoint3:
+                    re.WriteInt(((IntPoint3Data)value).X);
+                    re.WriteInt(((IntPoint3Data)value).Y);
+                    re.WriteInt(((IntPoint3Data)value).Z);
+                    break;
+                case TagType.UIntPoint3:
+                    re.WriteInt((int)((UIntPoint3Data)value).X);
+                    re.WriteInt((int)((UIntPoint3Data)value).Y);
+                    re.WriteInt((int)((UIntPoint3Data)value).Z);
+                    break;
+                case TagType.LongPoint:
+                    re.WriteLong(((LongPointData)value).X);
+                    re.WriteLong(((LongPointData)value).Y);
+                    break;
+                case TagType.ULongPoint:
+                    re.WriteLong((long)((ULongPointData)value).X);
+                    re.WriteLong((long)((ULongPointData)value).Y);
+                    break;
+                case TagType.LongPoint3:
+                    re.WriteLong(((LongPoint3Data)value).X);
+                    re.WriteLong(((LongPoint3Data)value).Y);
+                    re.WriteLong(((LongPoint3Data)value).Z);
+                    break;
+                case TagType.ULongPoint3:
+                    re.WriteLong((long)((ULongPoint3Data)value).X);
+                    re.WriteLong((long)((ULongPoint3Data)value).Y);
+                    re.WriteLong((long)((ULongPoint3Data)value).Z);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
         /// <param name="quality"></param>
         /// <param name="re"></param>
         private void SetTagValueToBuffer(TagType type, object value,byte quality, IByteBuffer re)
         {
             re.WriteByte((byte)type);
+            switch (type)
+            {
+                case TagType.Bool:
+                    re.WriteByte((byte)value);
+                    break;
+                case TagType.Byte:
+                    re.WriteByte((byte)value);
+                    break;
+                case TagType.Short:
+                    re.WriteShort((short)value);
+                    break;
+                case TagType.UShort:
+                    re.WriteUnsignedShort((ushort)value);
+                    break;
+                case TagType.Int:
+                    re.WriteInt((int)value);
+                    break;
+                case TagType.UInt:
+                    re.WriteInt((int)value);
+                    break;
+                case TagType.Long:
+                case TagType.ULong:
+                    re.WriteLong((long)value);
+                    break;
+                case TagType.Float:
+                    re.WriteFloat((float)value);
+                    break;
+                case TagType.Double:
+                    re.WriteDouble((double)value);
+                    break;
+                case TagType.String:
+                    string sval = value.ToString();
+                    re.WriteInt(sval.Length);
+                    re.WriteString(sval, Encoding.Unicode);
+                    break;
+                case TagType.DateTime:
+                    re.WriteLong(((DateTime)value).Ticks);
+                    break;
+                case TagType.IntPoint:
+                    re.WriteInt(((IntPointData)value).X);
+                    re.WriteInt(((IntPointData)value).Y);
+                    break;
+                case TagType.UIntPoint:
+                    re.WriteInt((int)((UIntPointData)value).X);
+                    re.WriteInt((int)((UIntPointData)value).Y);
+                    break;
+                case TagType.IntPoint3:
+                    re.WriteInt(((IntPoint3Data)value).X);
+                    re.WriteInt(((IntPoint3Data)value).Y);
+                    re.WriteInt(((IntPoint3Data)value).Z);
+                    break;
+                case TagType.UIntPoint3:
+                    re.WriteInt((int)((UIntPoint3Data)value).X);
+                    re.WriteInt((int)((UIntPoint3Data)value).Y);
+                    re.WriteInt((int)((UIntPoint3Data)value).Z);
+                    break;
+                case TagType.LongPoint:
+                    re.WriteLong(((LongPointData)value).X);
+                    re.WriteLong(((LongPointData)value).Y);
+                    break;
+                case TagType.ULongPoint:
+                    re.WriteLong((long)((ULongPointData)value).X);
+                    re.WriteLong((long)((ULongPointData)value).Y);
+                    break;
+                case TagType.LongPoint3:
+                    re.WriteLong(((LongPoint3Data)value).X);
+                    re.WriteLong(((LongPoint3Data)value).Y);
+                    re.WriteLong(((LongPoint3Data)value).Z);
+                    break;
+                case TagType.ULongPoint3:
+                    re.WriteLong((long)((ULongPoint3Data)value).X);
+                    re.WriteLong((long)((ULongPoint3Data)value).Y);
+                    re.WriteLong((long)((ULongPoint3Data)value).Z);
+                    break;
+            }
+            re.WriteByte(quality);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <param name="re"></param>
+        private void SetTagValueToBuffer2(TagType type, object value, byte quality, IByteBuffer re)
+        {
             switch (type)
             {
                 case TagType.Bool:
@@ -586,6 +766,7 @@ namespace SpiderDriver.ClientApi
             return false;
         }
 
+
         /// <summary>
         /// 
         /// </summary>
@@ -598,8 +779,8 @@ namespace SpiderDriver.ClientApi
         public bool SetTagHisValue(int id, TagType type, List<TagValue> values,int timeUnit=100, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 22 + values.Count * 32);
-            mb.WriteByte(ApiFunConst.SetTagValueFun);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 22 + values.Count * 32);
+            mb.WriteByte(ApiFunConst.SetTagHisValue);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(id);
             mb.WriteInt(values.Count);
@@ -609,17 +790,16 @@ namespace SpiderDriver.ClientApi
             foreach (var vv in values)
             {
                 mb.WriteLong(vv.Time.ToBinary());
-                SetTagValueToBuffer(type, vv.Value, mb);
-                mb.WriteByte(vv.Quality);
+                SetTagValueToBuffer2(type, vv.Value,vv.Quality, mb);
             }
-            realRequreEvent.Reset();
+            hisRequreEvent.Reset();
             Send(mb);
 
             try
             {
-                if (realRequreEvent.WaitOne(timeout))
+                if (this.hisRequreEvent.WaitOne(timeout))
                 {
-                    return mRealRequreData != null && mRealRequreData.ReadableBytes > 1;
+                    return mHisRequreData != null && mHisRequreData.ReadableBytes > 1;
                 }
             }
             catch

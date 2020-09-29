@@ -197,11 +197,14 @@ namespace SpiderDriverDemo
         {
             mAllId = driverProxy.QueryAllTagIdAndNames();
 
-            var tagName = mAllId.First().Value.Item1;
-            var ids = driverProxy.QueryTagId(new List<string>() { tagName });
-            if(ids.Count>0)
+            if (mAllId.Count > 0)
             {
-                //test
+                var tagName = mAllId.First().Value.Item1;
+                var ids = driverProxy.QueryTagId(new List<string>() { tagName });
+                if (ids.Count > 0)
+                {
+                    //test
+                }
             }
         }
 
@@ -302,7 +305,7 @@ namespace SpiderDriverDemo
             Random rd = new Random((int)dt.Ticks);
             for(int i=0;i<100;i++)
             {
-                vals.Add(new TagValue() { Quality = 0, Time = dt, Value = rd.NextDouble() });
+                vals.Add(new TagValue() { Quality = 0, Time = dt.AddSeconds(i), Value = rd.NextDouble() });
             }
 
             driverProxy.SetTagHisValue(0, TagType.Double, vals);

@@ -129,42 +129,44 @@ namespace Cdy.Tag
                 if (!TagHeadOffsetManager.manager.Contains(datafile.FileName))
                 {
                     var data = datafile.ReadBytes(6, vsize);
-                    VarintCodeMemory vcm = new VarintCodeMemory(data);
-
-                    Dictionary<int, AddressAndSize> dtmps = new Dictionary<int, AddressAndSize>();
-                    List<int> ll = new List<int>();
-
-                    var tagcount = vcm.ReadInt64();
-
-                    long tmp = 0;
-                    for (int i = 0; i < tagcount; i++)
+                    if (data.Length > 0)
                     {
-                        tmp = tmp + vcm.ReadInt64();
-                        dtmps.Add((int)tmp, new AddressAndSize());
-                        ll.Add((int)tmp);
-                    }
+                        VarintCodeMemory vcm = new VarintCodeMemory(data);
 
-                    tmp = 0;
-                    for (int i = 0; i < tagcount; i++)
-                    {
-                        var vs = vcm.ReadInt64();
-                        tmp = tmp + vs;
-                        dtmps[ll[i]].Address = tmp;
-                        if(i>1)
+                        Dictionary<int, AddressAndSize> dtmps = new Dictionary<int, AddressAndSize>();
+                        List<int> ll = new List<int>();
+
+                        var tagcount = vcm.ReadInt64();
+
+                        long tmp = 0;
+                        for (int i = 0; i < tagcount; i++)
                         {
-                            dtmps[ll[i - 1]].Size = vs;
+                            tmp = tmp + vcm.ReadInt64();
+                            dtmps.Add((int)tmp, new AddressAndSize());
+                            ll.Add((int)tmp);
                         }
+
+                        tmp = 0;
+                        for (int i = 0; i < tagcount; i++)
+                        {
+                            var vs = vcm.ReadInt64();
+                            tmp = tmp + vs;
+                            dtmps[ll[i]].Address = tmp;
+                            if (i > 1)
+                            {
+                                dtmps[ll[i - 1]].Size = vs;
+                            }
+                        }
+
+                        tmp = vcm.ReadInt64();
+                        dtmps[ll[ll.Count - 1]].Size = tmp - dtmps[ll[ll.Count - 1]].Address;
+
+                        vcm.Dispose();
+
+                        TagHeadOffsetManager.manager.AddLogHead(datafile.FileName, dtmps);
+                        if (dtmps.ContainsKey(tid))
+                            return dtmps[tid];
                     }
-
-                    tmp = vcm.ReadInt64();
-                    dtmps[ll[ll.Count - 1]].Size = tmp - dtmps[ll[ll.Count - 1]].Address;
-
-                    vcm.Dispose();
-
-                    TagHeadOffsetManager.manager.AddLogHead(datafile.FileName, dtmps);
-
-                    if (dtmps.ContainsKey(tid))
-                        return dtmps[tid];
                 }
                 else
                 {

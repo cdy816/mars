@@ -179,7 +179,7 @@ namespace Cdy.Tag
                     //读取下个区域位置
                     offset = ss.ReadLong(offset + 8);
 
-                    if (offset != 0)
+                    if (offset > 0)
                     {
                         var dt2 = ss.ReadDateTime(offset + 16);
                         mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(dt2 - time, oset, dt2));
@@ -194,7 +194,7 @@ namespace Cdy.Tag
                     }
                     mLastProcessOffset = oset;
                 }
-                while (offset != 0);
+                while (offset > 0);
 
                 if (mLastTime <= fileTime)
                 {

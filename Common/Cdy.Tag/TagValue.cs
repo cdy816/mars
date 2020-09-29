@@ -32,11 +32,21 @@ namespace Cdy.Tag
         #endregion ...Constructor...
 
         #region ... Properties ...
+        /// <summary>
+        /// 
+        /// </summary>
         public DateTime Time { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public object Value { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public byte Quality { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...

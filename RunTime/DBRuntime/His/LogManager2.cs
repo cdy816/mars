@@ -110,12 +110,14 @@ namespace Cdy.Tag
                 memory = null;
             }
 
-            memory = new VarintCodeMemory(mtags.TagAddress.Count * 16);
-            memory.WriteInt64(mtags.TagAddress.Count);
+            var vtmp = mtags.TagAddress.Where(e => e.Value != null);
+
+            memory = new VarintCodeMemory(vtmp.Count() * 16);
+            memory.WriteInt64(vtmp.Count());
             
             long prev =0;
             int i = 0;
-            foreach(var vv in mtags.TagAddress)
+            foreach(var vv in vtmp)
             {
                 if (i == 0)
                 {
@@ -133,7 +135,7 @@ namespace Cdy.Tag
             prev = 0;
             i = 0;
             long ltmp = 0;
-            foreach (var vv in mtags.TagAddress)
+            foreach (var vv in vtmp)
             {
                 if (i == 0)
                 {

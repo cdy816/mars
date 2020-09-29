@@ -45,6 +45,16 @@ namespace Cdy.Tag.Driver
         /// <returns></returns>
         bool SetTagHisValue(int id, List<TagValue> values, int timeUnit);
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="timeUnit"></param>
+        /// <returns></returns>
+        bool SetTagHisValue(int id, TagValue value, int timeUnit);
+
         /// <summary>
         /// 设置变量的历史值
         /// </summary>
@@ -52,6 +62,14 @@ namespace Cdy.Tag.Driver
         /// <param name="timeUnit"></param>
         /// <returns></returns>
         bool SetTagHisValues(Dictionary<int, List<TagValue>> values, int timeUnit);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="timeUnit"></param>
+        /// <returns></returns>
+        bool SetTagHisValue(Dictionary<int, TagValue> values, int timeUnit);
 
         #endregion ...Methods...
 

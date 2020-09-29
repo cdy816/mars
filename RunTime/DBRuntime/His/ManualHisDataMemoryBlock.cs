@@ -10,6 +10,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace DBRuntime.His
 {
@@ -20,7 +21,7 @@ namespace DBRuntime.His
     {
 
         #region ... Variables  ...
-
+        private object mLockObj = new object();
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -70,6 +71,22 @@ namespace DBRuntime.His
         #endregion ...Properties...
 
         #region ... Methods    ...
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Lock()
+        {
+            Monitor.Enter(mLockObj);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Relase()
+        {
+            Monitor.Exit(mLockObj);
+        }
 
         #endregion ...Methods...
 

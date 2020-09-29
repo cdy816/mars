@@ -78,9 +78,16 @@ namespace Cdy.Tag
         {
             emptys.Reset();
             int id = 0;
+
+            byte tlen = 2;
+            if(timerVals is HisDataMemoryBlock)
+            {
+                tlen = (timerVals as HisDataMemoryBlock).TimeLen;
+            }
+
             for (int i = 0; i < count; i++)
             {
-                id = timerVals.ReadUShort((int)startaddr + i * 2);
+                id = tlen==2? timerVals.ReadUShort((int)startaddr + i * 2): timerVals.ReadUShort((int)startaddr + i * 4);
                 if (id > 0 || i == 0)
                 {
                     continue;
@@ -179,14 +186,10 @@ namespace Cdy.Tag
                 mVarintMemory2 = new ProtoMemory(count * 10);
             }
 
-            if (emptys2.Length < count)
-            {
-                emptys2 = new CustomQueue<int>(count * 2);
-            }
-            else
-            {
-                emptys2.Reset();
-            }
+            emptys.CheckAndResize(count);
+            emptys2.CheckAndResize(count);
+
+            emptys2.Reset();
 
             long rsize = 0;
 
@@ -759,8 +762,6 @@ namespace Cdy.Tag
 
             int ig = -1;
             ig = emptys.ReadIndex <= emptys.WriteIndex ? emptys.IncRead() : -1;
-            
-
 
             switch (type)
             {
@@ -771,6 +772,18 @@ namespace Cdy.Tag
                         if (i != ig)
                         {
                             var id = source.ReadByte((int)offset + i);
+
+                            //对于第一个和最后一个的质量戳为100的情况
+                            //直接记录
+                            if (i == 0 || i == count - 1)
+                            {
+                                var qus = source.ReadByte(offset + count + i);
+                                if (qus >= 100)
+                                {
+                                    mMarshalMemory.Write(id);
+                                }
+                            }
+
                             if (isFirst)
                             {
                                 sval = id;
@@ -805,6 +818,19 @@ namespace Cdy.Tag
                         if (i != ig)
                         {
                             var id = source.ReadShort((int)offset + i * 2);
+
+                            //对于第一个和最后一个的质量戳为100的情况
+                            //直接记录
+                            if (i == 0 || i == count - 1)
+                            {
+                                var qus = source.ReadByte(offset + count*2 + i);
+                                if (qus >= 100)
+                                {
+                                    mVarintMemory.WriteSInt32(id);
+                                    continue;
+                                }
+                            }
+
                             if (isFirst)
                             {
                                 mVarintMemory.WriteSInt32(id);
@@ -839,6 +865,19 @@ namespace Cdy.Tag
                         if (i != ig)
                         {
                             var id = source.ReadUShort((int)offset + i * 2);
+
+                            //对于第一个和最后一个的质量戳为100的情况
+                            //直接记录
+                            if (i == 0 || i == count - 1)
+                            {
+                                var qus = source.ReadByte(offset + count * 2 + i);
+                                if (qus >= 100)
+                                {
+                                    mVarintMemory.WriteSInt32(id);
+                                    continue;
+                                }
+                            }
+
                             if (isFirst)
                             {
                                 mVarintMemory.WriteSInt32(id);
@@ -873,6 +912,19 @@ namespace Cdy.Tag
                         if (i != ig)
                         {
                             var id = source.ReadInt((int)offset + i * 4);
+
+                            //对于第一个和最后一个的质量戳为100的情况
+                            //直接记录
+                            if (i == 0 || i == count - 1)
+                            {
+                                var qus = source.ReadByte(offset + count * 4 + i);
+                                if (qus >= 100)
+                                {
+                                    mVarintMemory.WriteInt32(id);
+                                    continue;
+                                }
+                            }
+
                             if (isFirst)
                             {
                                 mVarintMemory.WriteInt32(id);
@@ -906,6 +958,19 @@ namespace Cdy.Tag
                         if (i != ig)
                         {
                             var id = source.ReadUInt((int)offset + i * 4);
+
+                            //对于第一个和最后一个的质量戳为100的情况
+                            //直接记录
+                            if (i == 0 || i == count - 1)
+                            {
+                                var qus = source.ReadByte(offset + count * 4 + i);
+                                if (qus >= 100)
+                                {
+                                    mVarintMemory.WriteInt32(id);
+                                    continue;
+                                }
+                            }
+
                             if (isFirst)
                             {
                                 mVarintMemory.WriteInt32(id);
@@ -939,6 +1004,18 @@ namespace Cdy.Tag
                         if (i != ig)
                         {
                             var id = source.ReadLong((int)offset + i * 8);
+                            //对于第一个和最后一个的质量戳为100的情况
+                            //直接记录
+                            if (i == 0 || i == count - 1)
+                            {
+                                var qus = source.ReadByte(offset + count * 8 + i);
+                                if (qus >= 100)
+                                {
+                                    mVarintMemory.WriteInt64(id);
+                                    continue;
+                                }
+                            }
+
                             if (isFirst)
                             {
                                 mVarintMemory.WriteInt64(id);
@@ -972,6 +1049,19 @@ namespace Cdy.Tag
                         if (i != ig)
                         {
                             var id = source.ReadULong((int)offset + i * 8);
+
+                            //对于第一个和最后一个的质量戳为100的情况
+                            //直接记录
+                            if (i == 0 || i == count - 1)
+                            {
+                                var qus = source.ReadByte(offset + count * 8 + i);
+                                if (qus >= 100)
+                                {
+                                    mVarintMemory.WriteInt64(id);
+                                    continue;
+                                }
+                            }
+
                             if (isFirst)
                             {
                                 mVarintMemory.WriteInt64(id);
@@ -1009,6 +1099,19 @@ namespace Cdy.Tag
                         if (i != ig)
                         {
                             var id = source.ReadDouble((int)offset + i * 8);
+
+                            //对于第一个和最后一个的质量戳为100的情况
+                            //直接记录
+                            if (i == 0 || i == count - 1)
+                            {
+                                var qus = source.ReadByte(offset + count * 8 + i);
+                                if (qus >= 100)
+                                {
+                                    mDCompress.Append(id);
+                                    continue;
+                                }
+                            }
+
                             if (isFirst)
                             {
                                 mDCompress.Append(id);
@@ -1048,6 +1151,19 @@ namespace Cdy.Tag
                         if (i != ig)
                         {
                             var id = source.ReadFloat((int)offset + i * 4);
+
+                            //对于第一个和最后一个的质量戳为100的情况
+                            //直接记录
+                            if (i == 0 || i == count - 1)
+                            {
+                                var qus = source.ReadByte(offset + count * 4 + i);
+                                if (qus >= 100)
+                                {
+                                    mFCompress.Append(id);
+                                    continue;
+                                }
+                            }
+
                             if (isFirst)
                             {
                                 mFCompress.Append(id);

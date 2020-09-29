@@ -147,7 +147,7 @@ namespace DBRuntime.His
             if (TagAddress == null) return;
             foreach(var vv in TagAddress)
             {
-                vv.Value.Clear();
+                vv.Value?.Clear();
             }
         }
 
@@ -158,7 +158,7 @@ namespace DBRuntime.His
         {
             while (this.IsBusy()) Thread.Sleep(1);
             foreach (var vv in mTagAddress)
-                vv.Value.Dispose();
+                vv.Value?.Dispose();
             mTagAddress.Clear();
             mTagAddress = null;
            
@@ -183,7 +183,7 @@ namespace DBRuntime.His
         {
             foreach(var vv in memory.TagAddress)
             {
-                vv.Value.RecordToLog2(stream);
+                vv.Value?.RecordToLog2(stream);
             }
         }
 
@@ -220,7 +220,7 @@ namespace DBRuntime.His
             {
                 foreach (var vv in memory.TagAddress)
                 {
-                    vv.Value.Dump(stream);    
+                    vv.Value?.Dump(stream);    
                 }
             }
         }

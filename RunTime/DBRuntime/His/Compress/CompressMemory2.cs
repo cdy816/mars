@@ -192,7 +192,8 @@ namespace Cdy.Tag
                 {
                     mCompressCach.Add(cpt, CompressUnitManager2.Manager.GetCompressQuick(cpt).Clone());
                 }
-                lsize += vv.Value.Length;
+                if (vv.Value != null)
+                    lsize += vv.Value.Length;
             }
 
             this.ReAlloc(HeadSize + (long)(lsize*1.2));
@@ -218,7 +219,8 @@ namespace Cdy.Tag
                 {
                     mCompressCach.Add(cpt, CompressUnitManager2.Manager.GetCompressQuick(cpt).Clone());
                 }
-                lsize += vv.Value.Length;
+                if (vv.Value != null)
+                    lsize += vv.Value.Length;
             }
 
             this.Resize(HeadSize + lsize);

@@ -860,7 +860,8 @@ namespace Cdy.Tag
             {
                 mVarintMemory = new ProtoMemory(count * 10);
             }
-            
+
+            emptys.CheckAndResize(count);
 
             var datas = CompressTimers(source, sourceAddr, (int)count, emptys);
             long rsize = 0;

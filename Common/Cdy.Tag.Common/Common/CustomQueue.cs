@@ -43,6 +43,19 @@ namespace Cdy.Tag
 
         #region ... Properties ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="size"></param>
+        public void CheckAndResize(int size)
+        {
+            if(size>mCount)
+            {
+                mColections = new T[size];
+                mCount = size;
+            }
+        }
+
 
         /// <summary>
         /// 

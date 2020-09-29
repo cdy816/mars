@@ -7,6 +7,7 @@
 //  种道洋
 //==============================================================
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -94,8 +95,15 @@ namespace Cdy.Tag
         /// </summary>
         public override DataFileSeriserbase Flush()
         {
-            if (mStream != null)
-                mStream.Flush();
+            try
+            {
+                if (mStream != null && mStream.CanWrite)
+                    mStream.Flush();
+            }
+            catch
+            {
+
+            }
             return this;
         }
 
@@ -104,9 +112,16 @@ namespace Cdy.Tag
         /// </summary>
         public override DataFileSeriserbase Close()
         {
-            if (mStream != null)
+            try
             {
-                mStream.Close();
+                if (mStream != null)
+                {
+                    mStream.Close();
+                }
+            }
+            catch
+            {
+
             }
             return this;
         }
@@ -195,16 +210,26 @@ namespace Cdy.Tag
         {
             mStream.Position = mStream.Length;
             int size = 1024 * 128;
-            byte[] bvals = new byte[size];
-            for(int i=0;i<(len/size);i++)
+            //byte[] bvals = new byte[size];
+
+            var bvals = ArrayPool<byte>.Shared.Rent(size);
+            try
             {
-                mStream.Write(bvals, 0, bvals.Length);
+                for (int i = 0; i < (len / size); i++)
+                {
+                    mStream.Write(bvals, 0, bvals.Length);
+                }
+                int csize = len % size;
+                if (csize > 0)
+                {
+                    mStream.Write(bvals, 0, csize);
+                }
             }
-            int csize = len % size;
-            if (csize > 0)
+            catch
             {
-                mStream.Write(bvals, 0, csize);
+
             }
+            ArrayPool<byte>.Shared.Return(bvals);
             return this;
         }
 
@@ -216,9 +241,17 @@ namespace Cdy.Tag
         public override long ReadLong(long start)
         {
             mStream.Position = start;
-            byte[] re = new byte[8];
-            mStream.Read(re, 0, re.Length);
-            return BitConverter.ToInt64(re, 0);
+            //byte[] re = new byte[8];
+            var re = ArrayPool<byte>.Shared.Rent(8);
+            try
+            {
+                mStream.Read(re, 0, re.Length);
+                return BitConverter.ToInt64(re, 0);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(re);
+            }
         }
 
         /// <summary>
@@ -229,9 +262,17 @@ namespace Cdy.Tag
         public override int ReadInt(long start)
         {
             mStream.Position = start;
-            byte[] re = new byte[4];
-            mStream.Read(re, 0, re.Length);
-            return BitConverter.ToInt32(re, 0);
+            //byte[] re = new byte[4];
+            var re = ArrayPool<byte>.Shared.Rent(4);
+            try
+            {
+                mStream.Read(re, 0, re.Length);
+                return BitConverter.ToInt32(re, 0);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(re);
+            }
         }
 
         /// <summary>
@@ -242,9 +283,17 @@ namespace Cdy.Tag
         public override float ReadFloat(long start)
         {
             mStream.Position = start;
-            byte[] re = new byte[4];
-            mStream.Read(re, 0, re.Length);
-            return MemoryHelper.ReadFloat(re);
+            // byte[] re = new byte[4];
+            var re = ArrayPool<byte>.Shared.Rent(4);
+            try
+            {
+                mStream.Read(re, 0, re.Length);
+                return MemoryHelper.ReadFloat(re);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(re);
+            }
         }
 
         /// <summary>
@@ -255,9 +304,17 @@ namespace Cdy.Tag
         public override double ReadDouble(long start)
         {
             mStream.Position = start;
-            byte[] re = new byte[8];
-            mStream.Read(re, 0, re.Length);
-            return MemoryHelper.ReadDouble(re);
+            // byte[] re = new byte[8];
+            var re = ArrayPool<byte>.Shared.Rent(8);
+            try
+            {
+                mStream.Read(re, 0, re.Length);
+                return MemoryHelper.ReadDouble(re);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(re);
+            }
         }
 
         /// <summary>
@@ -277,12 +334,19 @@ namespace Cdy.Tag
         public override DateTime ReadDateTime(long start)
         {
             mStream.Position = start;
-            byte[] re = new byte[8];
-            mStream.Read(re, 0, re.Length);
+            // byte[] re = new byte[8];
+            var re = ArrayPool<byte>.Shared.Rent(8);
+            try
+            {
+                mStream.Read(re, 0, re.Length);
 
-            return MemoryHelper.ReadDateTime(re);
-
-           // return DateTime.FromBinary(BitConverter.ToInt64(re, 0));
+                return MemoryHelper.ReadDateTime(re);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(re);
+            }
+            // return DateTime.FromBinary(BitConverter.ToInt64(re, 0));
         }
 
         /// <summary>

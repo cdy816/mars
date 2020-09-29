@@ -154,7 +154,7 @@ namespace SpiderDriver
         /// </summary>
         private IByteBuffer TagInfoRequest(string clientId, IByteBuffer memory)
         {
-            mInfoProcess.ProcessData(clientId, memory);
+            mInfoProcess?.ProcessData(clientId, memory);
             return null;
         }
 
@@ -166,7 +166,7 @@ namespace SpiderDriver
         /// <returns></returns>
         private IByteBuffer RealDataRequest(string clientId, IByteBuffer memory)
         {
-            this.mRealProcess.ProcessData(clientId, memory);
+            this.mRealProcess?.ProcessData(clientId, memory);
             return null;
         }
 
@@ -178,7 +178,7 @@ namespace SpiderDriver
         /// <returns></returns>
         private IByteBuffer HisDataRequest(string clientid,IByteBuffer memory)
         {
-            this.mHisProcess.ProcessData(clientid, memory);
+            this.mHisProcess?.ProcessData(clientid, memory);
             return null;
         }
 

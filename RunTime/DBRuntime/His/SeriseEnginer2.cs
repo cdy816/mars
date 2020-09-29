@@ -527,6 +527,8 @@ namespace Cdy.Tag
 
             mFileWriter.Write(mFileWriter.ReadInt(16) + 1, 16);
 
+            LoggerService.Service.Debug("SeriseEnginer2", "AppendDataRegionHeader_数据区数量更新:" + mFileWriter.ReadInt(16));
+
             mPreDataRegion = mCurrentDataRegion;
 
             mBlockPointOffset = mCurrentDataRegion + mBlockPointOffset;
@@ -549,6 +551,8 @@ namespace Cdy.Tag
             mFileWriter.AppendZore(totalLen - datalen);
 
             mFileWriter.Write(mFileWriter.ReadInt(16) + 1, 16);
+
+            LoggerService.Service.Debug("SeriseEnginer2", "NewDataRegionHeader_数据区数量更新:" + mFileWriter.ReadInt(16));
 
             ArrayPool<byte>.Shared.Return(bval);
         }
@@ -679,34 +683,46 @@ namespace Cdy.Tag
             string sfile = GetFileName(time);
             // DataFileSeriserbase reader = mFileWriter2;
 
+            DataFileSeriserbase dfs;
+
             if (time > mCurrentTime)
             {
                 //如果需要新建的文件，影响到自动记录存储要用到的文件，
                 //则转到自动记录存储逻辑进行处理
                 CheckFile(time);
+                dfs = this.mFileWriter;
                 //mCurrentTime = time;
             }
             else
             {
-                if (mFileWriter2.CreatOrOpenFile(sfile))
+                if (sfile == mCurrentFileName)
                 {
-                    var date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
-                    //新建文件
-                    AppendFileHeader(time, this.DatabaseName, mFileWriter2);
-                    NewDataRegionHeader(date, mFileWriter2);
+                    dfs = this.mFileWriter;
                 }
                 else
                 {
-                    //如果文件格式不正确，则新建
-                    if (mFileWriter2.Length < FileHeadSize)
+                    dfs = mFileWriter2;
+                    if (mFileWriter2.CreatOrOpenFile(sfile))
                     {
                         var date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
                         //新建文件
                         AppendFileHeader(time, this.DatabaseName, mFileWriter2);
                         NewDataRegionHeader(date, mFileWriter2);
                     }
+                    else
+                    {
+                        //如果文件格式不正确，则新建
+                        if (mFileWriter2.Length < FileHeadSize)
+                        {
+                            var date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
+                            //新建文件
+                            AppendFileHeader(time, this.DatabaseName, mFileWriter2);
+                            NewDataRegionHeader(date, mFileWriter2);
+                        }
+                    }
                 }
             }
+            mFileReader = dfs;
 
             long ltmp = 0;
 
@@ -716,9 +732,7 @@ namespace Cdy.Tag
 
             var icount = mTagIdsCach.IndexOf(id);
 
-            ltmp = SearchDataRegionToDatetime(mFileWriter2, time);
-
-            mFileReader = mFileWriter2;
+            ltmp = SearchDataRegionToDatetime(dfs, time);
 
             if (ltmp < 0)
             {
@@ -727,6 +741,8 @@ namespace Cdy.Tag
             }
 
             ltmp += mDataRegionHeadSize + mTagCount * 8 * bid + icount * 8;
+
+            LoggerService.Service.Debug("SeriseEnginer2", "DataRegion Pointer:"+ ltmp + ",mDataRegionHeadSize:" + mDataRegionHeadSize + ",BlockIndex:" + bid + " tag index:" + icount);
 
             return ltmp;
         }
@@ -792,8 +808,13 @@ namespace Cdy.Tag
                 var vpointer = mwriter.GoToEnd().CurrentPostion;
                 datablock.WriteToStream(mFileWriter.GetStream(), vpointer, size);//直接拷贝数据块
                 datablock.WriteLong(heads, vpointer);
+
+                LoggerService.Service.Debug("SeriseEnginer2", "更新数据区指针:"+heads+" Values:"+vpointer);
+
                 mwriter.Flush();
-                mwriter.Close();
+
+                if (mwriter != mFileWriter)
+                    mwriter.Close();
 
                 datablock.MakeMemoryNoBusy();
                 MarshalMemoryBlockPool.Pool.Release(datablock);
@@ -1003,8 +1024,6 @@ namespace Cdy.Tag
                     if (!CheckFile(time))
                         return;
 
-
-
                     //更新最后写入时间
                     var vtmp = mFileWriter.ReadDateTime(8);
                     if (endTime > vtmp)
@@ -1012,7 +1031,7 @@ namespace Cdy.Tag
                         mFileWriter.Write(endTime, 8);
                     }
 
-                    if(datasize==0)
+                    if (datasize == 0)
                     {
                         Flush();
                         sw.Stop();

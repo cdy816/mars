@@ -807,7 +807,8 @@ namespace Cdy.Tag
 
                 var vpointer = mwriter.GoToEnd().CurrentPostion;
                 datablock.WriteToStream(mFileWriter.GetStream(), vpointer, size);//直接拷贝数据块
-                datablock.WriteLong(heads, vpointer);
+                mFileWriter.Write(vpointer, heads);
+               // datablock.WriteLong(heads, vpointer);
 
                 LoggerService.Service.Debug("SeriseEnginer2", "更新数据区指针:"+heads+" Values:"+vpointer);
 

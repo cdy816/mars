@@ -141,15 +141,18 @@ namespace Cdy.Tag
         /// </summary>
         public void RequestManualToCompress()
         {
-            lock (mMemoryCach)
+            mIsRunning = true;
+            while (mMemoryCach.Count > 0)
             {
-                mIsRunning = true;
-                while (mMemoryCach.Count > 0)
+                ManualHisDataMemoryBlock vpp;
+                lock (mMemoryCach)
                 {
-                    RequestManualToCompress(mMemoryCach.Dequeue());
+                    vpp = mMemoryCach.Dequeue();
                 }
-                mIsRunning = false;
+                RequestManualToCompress(vpp);
             }
+            mIsRunning = false;
+            
         }
 
         /// <summary>
@@ -158,7 +161,8 @@ namespace Cdy.Tag
         /// <param name="data"></param>
         public void AddRequestManualToCompress(ManualHisDataMemoryBlock data)
         {
-            mMemoryCach.Enqueue(data);
+            lock (mMemoryCach)
+                mMemoryCach.Enqueue(data);
         }
 
         /// <summary>

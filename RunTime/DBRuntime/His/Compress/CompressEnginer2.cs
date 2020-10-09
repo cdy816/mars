@@ -345,12 +345,20 @@ namespace Cdy.Tag
                 if (mIsClosed)
                     break;
 
-                foreach (var vv in mTargetMemorys.Values)
+                System.Threading.Tasks.Parallel.ForEach(mTargetMemorys.Values, (vv) =>
                 {
+                    ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
                     vv.MakeMemoryBusy();
                     vv.RequestManualToCompress();
                     vv.MakeMemoryNoBusy();
-                }
+                });
+
+                //foreach (var vv in mTargetMemorys.Values)
+                //{
+                //    vv.MakeMemoryBusy();
+                //    vv.RequestManualToCompress();
+                //    vv.MakeMemoryNoBusy();
+                //}
 
             }
         }

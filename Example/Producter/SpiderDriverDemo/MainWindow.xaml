@@ -21,7 +21,7 @@
         <Label Content="{Binding SimValue}" HorizontalAlignment="Left" Margin="102,127,0,0" VerticalAlignment="Top" Width="106"/>
         <Label Content="{Binding CosValue}" HorizontalAlignment="Left" Margin="102,164,0,0" VerticalAlignment="Top" Width="106"/>
         <Label Content="{Binding BoolValue}" HorizontalAlignment="Left" Margin="102,207,0,0" VerticalAlignment="Top" Width="106"/>
-        <Label Content="{Binding DateTimeValue}" HorizontalAlignment="Left" Margin="102,247,0,0" VerticalAlignment="Top" Width="106"/>
+        <Label Content="{Binding DateTimeValue}" HorizontalAlignment="Left" Margin="102,247,0,0" VerticalAlignment="Top" Width="136"/>
         <Button x:Name="hisDataWrite" Content="历史数据写入" HorizontalAlignment="Left" Margin="18,277,0,0" VerticalAlignment="Top" Width="86" Click="hisDataWrite_Click"/>
 
     </Grid>

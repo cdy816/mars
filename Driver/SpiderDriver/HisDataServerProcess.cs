@@ -67,8 +67,10 @@ namespace SpiderDriver
                     case APIConst.SetTagHisValue:
                         ProcessSetHisData(client, data);
                         break;
+                    case APIConst.SetTagHisValue2:
+                        ProcessSetHisData2(client, data);
+                        break;
                 }
-
             }
             base.ProcessSingleData(client, data);
         }
@@ -276,6 +278,132 @@ namespace SpiderDriver
             Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.HisValueFun, (byte)1));
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientid"></param>
+        /// <param name="block"></param>
+        private void ProcessSetHisData2(string clientid, IByteBuffer block)
+        {
+            int timedu = block.ReadInt();
+            int count = block.ReadInt();
+            Dictionary<int, TagValue> tagvalues = new Dictionary<int, TagValue>(count);
+            for (int i = 0; i < count; i++)
+            {
+                int id = block.ReadInt();
+                var dt = DateTime.FromBinary(block.ReadLong());
+                TagType tp = (TagType)block.ReadByte();
+                switch (tp)
+                {
+                    case TagType.Bool:
+                        var bval = block.ReadBoolean();
+                        var qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = bval });
+                        break;
+                    case TagType.Byte:
+                        var btval = block.ReadByte();
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = btval });
+                        break;
+                    case TagType.Short:
+                        var sbval = block.ReadShort();
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = sbval });
+                        break;
+                    case TagType.UShort:
+                        var usbval = block.ReadUnsignedShort();
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = usbval });
+                        break;
+                    case TagType.Int:
+                        var ibval = block.ReadInt();
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = ibval });
+                        break;
+                    case TagType.UInt:
+                        var uibval = block.ReadUnsignedInt();
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = uibval });
+                        break;
+                    case TagType.Long:
+                        var lbval = block.ReadLong();
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = lbval });
+                        break;
+                    case TagType.ULong:
+                        var ulbval = (ulong)block.ReadLong();
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = ulbval });
+                        break;
+                    case TagType.Float:
+                        var fbval = block.ReadFloat();
+                         qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = fbval });
+                        break;
+                    case TagType.Double:
+                        var dbval = block.ReadDouble();
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = dbval });
+                        break;
+                    case TagType.String:
+                        var stbval = block.ReadString();
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = stbval });
+                        break;
+                    case TagType.DateTime:
+                        var dtbval = DateTime.FromBinary(block.ReadLong());
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = dtbval });
+                        break;
+                    case TagType.IntPoint:
+                        var ipbval = new IntPointData() { X = block.ReadInt(), Y = block.ReadInt() };
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = ipbval });
+                        break;
+                    case TagType.UIntPoint:
+                        var upbval = new UIntPointData() { X = block.ReadUnsignedInt(), Y = block.ReadUnsignedInt() };
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = upbval });
+                        break;
+                    case TagType.IntPoint3:
+                        var ip3bval = new IntPoint3Data() { X = block.ReadInt(), Y = block.ReadInt(), Z = block.ReadInt() };
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = ip3bval });
+                        break;
+                    case TagType.UIntPoint3:
+                        var up3bval = new UIntPoint3Data() { X = block.ReadUnsignedInt(), Y = block.ReadUnsignedInt(), Z = block.ReadUnsignedInt() };
+                         qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = up3bval });
+                        break;
+                    case TagType.LongPoint:
+                        var lpbval = new LongPointData() { X = block.ReadLong(), Y = block.ReadLong() };
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = lpbval });
+                        break;
+                    case TagType.ULongPoint:
+                        var ulpbval = new ULongPointData() { X = (ulong)block.ReadLong(), Y = (ulong)block.ReadLong() };
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = ulpbval });
+                        break;
+                    case TagType.LongPoint3:
+                        var lp3bval = new LongPoint3Data() { X = block.ReadLong(), Y = block.ReadLong(), Z = block.ReadLong() };
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = lp3bval });
+                        break;
+                    case TagType.ULongPoint3:
+                        var ulp3bval = new ULongPoint3Data() { X = (ulong)block.ReadLong(), Y = (ulong)block.ReadLong(), Z = (ulong)block.ReadLong() };
+                        qa = block.ReadByte();
+                        tagvalues.Add(id,new TagValue() { Quality = qa, Time = dt, Value = ulp3bval });
+                        break;
+                }
+            }
+
+            var service = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
+
+            service.SetTagHisValues(tagvalues, timedu);
+
+            Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.HisValueFun, (byte)1));
+        }
         #endregion ...Methods...
 
         #region ... Interfaces ...

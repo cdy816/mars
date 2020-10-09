@@ -225,6 +225,9 @@ namespace SpiderDriverDemo
             DateTimeValue = dnow.ToString();
 
             var values = new Dictionary<int, Tuple<Cdy.Tag.TagType, object>>();
+
+            var hisvalus = new Dictionary<int, TagValueAndType>();
+
             foreach(var vv in mAllId)
             {
                 switch ((TagType)vv.Value.Item2)
@@ -232,65 +235,88 @@ namespace SpiderDriverDemo
                     case TagType.Double:
                         
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, sin));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = sin, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Bool:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, bval));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = bval, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Byte:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, btmp));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = btmp, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.DateTime:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, dnow));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = dnow, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Float:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, cos));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = cos, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Int:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Long:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.UInt:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.ULong:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.UShort:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Short:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.IntPoint:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new IntPointData( mCount,mCount)));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new IntPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.UIntPoint:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new UIntPointData(mCount, mCount)));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new UIntPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.IntPoint3:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new IntPoint3Data(mCount, mCount, mCount)));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new IntPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.UIntPoint3:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new UIntPoint3Data(mCount, mCount, mCount)));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new UIntPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.LongPoint:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new LongPointData(mCount, mCount)));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new LongPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
+
                         break;
                     case TagType.ULongPoint:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new ULongPointData(mCount, mCount)));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new ULongPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
+
                         break;
                     case TagType.LongPoint3:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new LongPoint3Data(mCount, mCount, mCount)));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new LongPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.ULongPoint3:
                         values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new ULongPoint3Data(mCount, mCount, mCount)));
+                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new ULongPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
+
                         break;
                 }
 
             }
             driverProxy.SetTagValue(values);
+            driverProxy.SetTagHisValue(hisvalus, 100, 5000);
         }
 
         /// <summary>
@@ -301,11 +327,12 @@ namespace SpiderDriverDemo
         private void hisDataWrite_Click(object sender, RoutedEventArgs e)
         {
             List<TagValue> vals = new List<TagValue>();
-            DateTime dt = DateTime.Now.AddSeconds(-100);
+            DateTime dt = DateTime.Now.AddSeconds(-300);
             Random rd = new Random((int)dt.Ticks);
-            for(int i=0;i<100;i++)
+            double dval = rd.NextDouble();
+            for(int i=0;i<300;i++)
             {
-                vals.Add(new TagValue() { Quality = 0, Time = dt.AddSeconds(i), Value = rd.NextDouble() });
+                vals.Add(new TagValue() { Quality = 0, Time = dt.AddSeconds(i), Value = dval+i*1.0/10 });
             }
 
             driverProxy.SetTagHisValue(0, TagType.Double, vals);

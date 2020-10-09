@@ -527,7 +527,7 @@ namespace Cdy.Tag
 
             mFileWriter.Write(mFileWriter.ReadInt(16) + 1, 16);
 
-            LoggerService.Service.Debug("SeriseEnginer2", "AppendDataRegionHeader_数据区数量更新:" + mFileWriter.ReadInt(16));
+            //LoggerService.Service.Debug("SeriseEnginer2", "AppendDataRegionHeader_数据区数量更新:" + mFileWriter.ReadInt(16));
 
             mPreDataRegion = mCurrentDataRegion;
 
@@ -552,7 +552,7 @@ namespace Cdy.Tag
 
             mFileWriter.Write(mFileWriter.ReadInt(16) + 1, 16);
 
-            LoggerService.Service.Debug("SeriseEnginer2", "NewDataRegionHeader_数据区数量更新:" + mFileWriter.ReadInt(16));
+            //LoggerService.Service.Debug("SeriseEnginer2", "NewDataRegionHeader_数据区数量更新:" + mFileWriter.ReadInt(16));
 
             ArrayPool<byte>.Shared.Return(bval);
         }
@@ -794,6 +794,8 @@ namespace Cdy.Tag
             {
                 DataFileSeriserbase mwriter;
 
+                mTagCount = datablock.ReadInt(0);//变量个数
+              
                 var heads = GetDataRegionHeadPoint(id, time, out mwriter);
 
                 if (heads < 0) return;
@@ -805,12 +807,14 @@ namespace Cdy.Tag
                     mwriter.Write(endTime, 8);
                 }
 
-                var vpointer = mwriter.GoToEnd().CurrentPostion;
-                datablock.WriteToStream(mFileWriter.GetStream(), vpointer, size);//直接拷贝数据块
+                mwriter.GoToEnd();
+                var vpointer = mwriter.CurrentPostion;
+
+                datablock.WriteToStream(mFileWriter.GetStream(), 4, size);//直接拷贝数据块
                 mFileWriter.Write(vpointer, heads);
                // datablock.WriteLong(heads, vpointer);
 
-                LoggerService.Service.Debug("SeriseEnginer2", "更新数据区指针:"+heads+" Values:"+vpointer);
+                LoggerService.Service.Debug("SeriseEnginer2", "手动记录历史数据 变量:"+ id +" 头指针:"+heads+"  数据区指针:"+vpointer);
 
                 mwriter.Flush();
 
@@ -1013,7 +1017,7 @@ namespace Cdy.Tag
                     Stopwatch sw = new Stopwatch();
                     sw.Start();
 
-                    //数据库大小
+                    //数据大小
                     var datasize = mProcessMemory.ReadInt(dataOffset);
                     var count = mProcessMemory.ReadInt(dataOffset + 4);//变量个数
                     mTagCount = count;

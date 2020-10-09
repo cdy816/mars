@@ -35,6 +35,11 @@ namespace SpiderDriver.ClientApi
         /// </summary>
         public const byte SetTagHisValue = 61;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte SetTagHisValue2 = 62;
+
 
         /// <summary>
         /// 

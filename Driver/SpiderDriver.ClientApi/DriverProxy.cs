@@ -779,7 +779,7 @@ namespace SpiderDriver.ClientApi
         public bool SetTagHisValue(int id, TagType type, List<TagValue> values,int timeUnit=100, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 22 + values.Count * 32);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 22 + values.Count * 33);
             mb.WriteByte(ApiFunConst.SetTagHisValue);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(id);
@@ -807,6 +807,88 @@ namespace SpiderDriver.ClientApi
 
             }
 
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="idvalues"></param>
+        /// <param name="timeUnit"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool SetTagHisValue(Dictionary<int,TagValueAndType> idvalues,int timeUnit=100,int timeout=5000)
+        {
+            if (idvalues == null && idvalues.Count == 0) return false;
+
+            CheckLogin();
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 17 + idvalues.Count * 38);
+            mb.WriteByte(ApiFunConst.SetTagHisValue2);
+            mb.WriteLong(this.mLoginId);
+            mb.WriteInt(timeUnit);
+            mb.WriteInt(idvalues.Count);
+
+            foreach (var vv in idvalues)
+            {
+                mb.WriteInt(vv.Key);
+                mb.WriteLong(vv.Value.Time.ToBinary());
+                mb.WriteByte((byte)vv.Value.ValueType);
+                SetTagValueToBuffer2(vv.Value.ValueType, vv.Value.Value, vv.Value.Quality, mb);
+            }
+
+            hisRequreEvent.Reset();
+            Send(mb);
+
+            try
+            {
+                if (this.hisRequreEvent.WaitOne(timeout))
+                {
+                    return mHisRequreData != null && mHisRequreData.ReadableBytes > 1;
+                }
+            }
+            catch
+            {
+
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="values"></param>
+        /// <param name="timeUnit"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool SetTagHisValue(int id, TagValueAndType values, int timeUnit = 100, int timeout = 5000)
+        {
+            CheckLogin();
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 17 + 38);
+            mb.WriteByte(ApiFunConst.SetTagHisValue2);
+            mb.WriteLong(this.mLoginId);
+            mb.WriteInt(timeUnit);
+            mb.WriteInt(1);
+
+            mb.WriteInt(id);
+            mb.WriteLong(values.Time.ToBinary());
+            mb.WriteByte((byte)values.ValueType);
+            SetTagValueToBuffer2(values.ValueType, values.Value, values.Quality, mb);
+
+            hisRequreEvent.Reset();
+            Send(mb);
+
+            try
+            {
+                if (this.hisRequreEvent.WaitOne(timeout))
+                {
+                    return mHisRequreData != null && mHisRequreData.ReadableBytes > 1;
+                }
+            }
+            catch
+            {
+
+            }
             return false;
         }
 

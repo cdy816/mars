@@ -1740,6 +1740,21 @@ namespace Cdy.Tag
             return true;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="timeUnit"></param>
+        /// <returns></returns>
+        public bool SetTagHisValues(Dictionary<int, TagValue> values, int timeUnit = 100)
+        {
+            foreach (var vv in values)
+            {
+                ManualRecordHisValues(vv.Key, vv.Value, timeUnit);
+            }
+            return true;
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

@@ -61,6 +61,57 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
+    public struct TagValueAndType
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public TagType ValueType { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime Time { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public object Value { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public byte Quality { get; set; }
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+
+    /// <summary>
+    /// 
+    /// </summary>
     /// <typeparam name="T"></typeparam>
     public struct TagValue<T>
     {

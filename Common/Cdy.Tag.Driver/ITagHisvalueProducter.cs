@@ -63,6 +63,9 @@ namespace Cdy.Tag.Driver
         /// <returns></returns>
         bool SetTagHisValues(Dictionary<int, List<TagValue>> values, int timeUnit);
 
+
+        bool SetTagHisValues(Dictionary<int, TagValue> values, int timeUnit);
+
         /// <summary>
         /// 
         /// </summary>

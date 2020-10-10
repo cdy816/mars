@@ -10,7 +10,9 @@ using DBRuntime.His;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 
@@ -28,17 +30,16 @@ namespace Cdy.Tag
         /// </summary>
         private ManualResetEvent resetEvent;
 
-        private ManualResetEvent mManualEvent;
-
         private ManualResetEvent closedEvent;
 
         private Thread mCompressThread;
 
-        private Thread mManualCompressThread;
-
         private bool mIsClosed = false;
 
-        private HisDataMemoryBlockCollection mSourceMemory;
+        /// <summary>
+        /// 
+        /// </summary>
+        private Queue<HisDataMemoryBlockCollection> mSourceMemorys = new Queue<HisDataMemoryBlockCollection>();
 
 
         /// <summary>
@@ -155,19 +156,11 @@ namespace Cdy.Tag
         {
             LoggerService.Service.Info("CompressEnginer", "开始启动");
             mIsClosed = false;
-            //Init();
             resetEvent = new ManualResetEvent(false);
             closedEvent = new ManualResetEvent(false);
-
-            mManualEvent = new ManualResetEvent(false);
-
             mCompressThread = new Thread(ThreadPro);
             mCompressThread.IsBackground = true;
             mCompressThread.Start();
-
-            mManualCompressThread = new Thread(ManualThreadPro);
-            mManualCompressThread.IsBackground = true;
-            mManualCompressThread.Start();
         }
 
         /// <summary>
@@ -179,7 +172,6 @@ namespace Cdy.Tag
 
             mIsClosed = true;
             resetEvent.Set();
-            mManualEvent.Set();
             closedEvent.WaitOne();
 
             resetEvent.Dispose();
@@ -191,8 +183,6 @@ namespace Cdy.Tag
                     vv.Value.DecRef();
             }
 
-            while (mCompressThread.IsAlive) Thread.Sleep(1);
-            while (mManualCompressThread.IsAlive) Thread.Sleep(1);
         }
 
         /// <summary>
@@ -201,17 +191,42 @@ namespace Cdy.Tag
         /// <param name="dataMemory"></param>
         public void RequestToCompress(HisDataMemoryBlockCollection dataMemory)
         {
-            mSourceMemory = dataMemory;
-            mCurrentTime = mSourceMemory.CurrentDatetime;
+            lock(mSourceMemorys)
+            mSourceMemorys.Enqueue(dataMemory);
+            mCurrentTime = dataMemory.CurrentDatetime;
             foreach(var vv in mTargetMemorys)
             {
                 vv.Value.CurrentTime = mCurrentTime;
                 vv.Value.EndTime = dataMemory.EndDateTime;
             }
-            resetEvent.Set();
+            lock (resetEvent)
+                resetEvent.Set();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="data"></param>
+        public void RequestManualToCompress(ManualHisDataMemoryBlock data)
+        {
+            foreach (var vv in mTargetMemorys)
+            {
+                if (data.Id >= vv.Value.Id * TagCountOneFile && data.Id < (vv.Value.Id + 1) * TagCountOneFile)
+                {
+                    vv.Value.AddManualToCompress(data);
+                }
+            }
 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void SubmitManualToCompress()
+        {
+            lock (resetEvent)
+                resetEvent.Set();
+        }
 
         /// <summary>
         /// 
@@ -254,32 +269,55 @@ namespace Cdy.Tag
                 try
                 {
                     resetEvent.WaitOne();
-                    resetEvent.Reset();
-                    if (mIsClosed)
-                        break;
+                    lock (resetEvent)
+                    {
+                        resetEvent.Reset();
+                    }
 
                     //#if DEBUG 
                     Stopwatch sw = new Stopwatch();
                     sw.Start();
                     LoggerService.Service.Info("Compress", "********开始执行压缩********", ConsoleColor.Blue);
                     //#endif
-                    var sm = mSourceMemory;
 
-                    while (CheckIsBusy())
+                    if (mSourceMemorys.Count > 0)
                     {
-                        LoggerService.Service.Warn("Compress", "压缩出现阻塞");
-                        Thread.Sleep(500);
+                        while (mSourceMemorys.Count > 0)
+                        {
+                            HisDataMemoryBlockCollection sm;
+                            lock (mSourceMemorys)
+                                sm = mSourceMemorys.Dequeue();
+
+                            while (CheckIsBusy())
+                            {
+                                LoggerService.Service.Warn("Compress", "压缩出现阻塞");
+                                Thread.Sleep(500);
+                            }
+
+                            System.Threading.Tasks.Parallel.ForEach(mTargetMemorys, (mm) =>
+                            {
+                                ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+                                mm.Value.Compress(sm);
+                            });
+
+                            sm.Clear();
+                            sm.MakeMemoryNoBusy();
+
+                            System.Threading.Tasks.Parallel.ForEach(mTargetMemorys.Where(e => e.Value.HasManualCompressItems), (mm) =>
+                            {
+                                ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+                                mm.Value.ManualCompress();
+                            });
+                        }
                     }
-
-                    System.Threading.Tasks.Parallel.ForEach(mTargetMemorys, (mm) =>
+                    else
                     {
-                        ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
-                        mm.Value.Compress(sm);
-                    });
-
-                    sm.Clear();
-                  //  ServiceLocator.Locator.Resolve<IHisEngine2>().ClearMemoryHisData(sm);
-                    sm.MakeMemoryNoBusy();
+                        System.Threading.Tasks.Parallel.ForEach(mTargetMemorys.Where(e => e.Value.HasManualCompressItems), (mm) =>
+                          {
+                              ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+                              mm.Value.ManualCompress();
+                          });
+                    }
 
                     ServiceLocator.Locator.Resolve<IDataSerialize2>().RequestToSave();
 
@@ -287,12 +325,15 @@ namespace Cdy.Tag
                     sw.Stop();
                     LoggerService.Service.Info("Compress", ">>>>>>>>>压缩完成>>>>>>>>>" + " ElapsedMilliseconds:" + sw.ElapsedMilliseconds, ConsoleColor.Blue);
                     //#endif
+                    
                 }
                 catch(Exception ex)
                 {
                     LoggerService.Service.Erro("Compress", ex.Message+ex.StackTrace);
                 }
 
+                if (mIsClosed)
+                    break;
             }
             closedEvent.Set();
 
@@ -312,64 +353,43 @@ namespace Cdy.Tag
                 vv.Value.Dispose();
             }
             mTargetMemorys.Clear();
-            mSourceMemory = null;
             mHisTagService = null;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="data"></param>
-        public void RequestManualToCompress(ManualHisDataMemoryBlock data)
-        {
-            foreach (var vv in mTargetMemorys)
-            {
-                if (data.Id >= vv.Value.Id * TagCountOneFile && data.Id < (vv.Value.Id + 1) * TagCountOneFile)
-                {
-                    vv.Value.AddRequestManualToCompress(data);
-                }
-            }
-           
-        }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        private void ManualThreadPro()
-        {
-            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
-            while (!mIsClosed)
-            {
-                mManualEvent.WaitOne();
-                mManualEvent.Reset();
-                if (mIsClosed)
-                    break;
 
-                System.Threading.Tasks.Parallel.ForEach(mTargetMemorys.Values, (vv) =>
-                {
-                    ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
-                    vv.MakeMemoryBusy();
-                    vv.RequestManualToCompress();
-                    vv.MakeMemoryNoBusy();
-                });
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //private void ManualThreadPro()
+        //{
+        //    ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+        //    while (!mIsClosed)
+        //    {
+        //        mManualEvent.WaitOne();
+        //        mManualEvent.Reset();
+        //        if (mIsClosed)
+        //            break;
 
-                //foreach (var vv in mTargetMemorys.Values)
-                //{
-                //    vv.MakeMemoryBusy();
-                //    vv.RequestManualToCompress();
-                //    vv.MakeMemoryNoBusy();
-                //}
+        //        System.Threading.Tasks.Parallel.ForEach(mTargetMemorys.Values, (vv) =>
+        //        {
+        //            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+        //            vv.MakeMemoryBusy();
+        //            vv.ManualCompress();
+        //            vv.MakeMemoryNoBusy();
+        //        });
 
-            }
-        }
+        //        //foreach (var vv in mTargetMemorys.Values)
+        //        //{
+        //        //    vv.MakeMemoryBusy();
+        //        //    vv.RequestManualToCompress();
+        //        //    vv.MakeMemoryNoBusy();
+        //        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public void SubmitManualToCompress()
-        {
-            mManualEvent.Set();
-        }
+        //    }
+        //}
+
+
 
         #endregion ...Methods...
 

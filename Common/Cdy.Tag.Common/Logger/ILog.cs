@@ -29,9 +29,22 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="name"></param>
         /// <param name="msg"></param>
+        /// <param name="parameter"></param>
+        void Debug(string name, string msg, object parameter);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="msg"></param>
         void Info(string name, string msg);
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="msg"></param>
+        /// <param name="parameter"></param>
         void Info(string name, string msg, object parameter);
         
 

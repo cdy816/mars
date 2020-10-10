@@ -52,6 +52,13 @@ namespace Cdy.Tag
             Console.WriteLine(string.Format(debugFormate, DateTime.Now.ToString(), name, msg));
         }
 
+        public void Debug(string name, string msg, object parameter)
+        {
+            Console.ForegroundColor = (ConsoleColor)(parameter);
+            Console.WriteLine(string.Format(debugFormate, DateTime.Now.ToString(), name, msg));
+            Console.ResetColor();
+        }
+
         /// <summary>
         /// 
         /// </summary>

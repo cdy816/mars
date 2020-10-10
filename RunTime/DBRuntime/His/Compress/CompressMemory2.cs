@@ -36,7 +36,12 @@ namespace Cdy.Tag
         private bool mIsRunning=false;
 
         private Queue<ManualHisDataMemoryBlock> mMemoryCach = new Queue<ManualHisDataMemoryBlock>();
-       
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private object mLockObj = new object();
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -131,6 +136,17 @@ namespace Cdy.Tag
         /// </summary>
         public DateTime EndTime { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool HasManualCompressItems
+        {
+            get
+            {
+                return mMemoryCach.Count>0;
+            }
+        }
+
 
         #endregion ...Properties...
 
@@ -139,27 +155,30 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public void RequestManualToCompress()
+        public void ManualCompress()
         {
-            mIsRunning = true;
-            while (mMemoryCach.Count > 0)
+            lock (mLockObj)
             {
-                ManualHisDataMemoryBlock vpp;
-                lock (mMemoryCach)
+                mIsRunning = true;
+                while (mMemoryCach.Count > 0)
                 {
-                    vpp = mMemoryCach.Dequeue();
+                    ManualHisDataMemoryBlock vpp;
+                    lock (mMemoryCach)
+                    {
+                        vpp = mMemoryCach.Dequeue();
+                    }
+                    Compress(vpp);
+                    Thread.Sleep(1);
                 }
-                RequestManualToCompress(vpp);
+                mIsRunning = false;
             }
-            mIsRunning = false;
-            
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="data"></param>
-        public void AddRequestManualToCompress(ManualHisDataMemoryBlock data)
+        public void AddManualToCompress(ManualHisDataMemoryBlock data)
         {
             lock (mMemoryCach)
                 mMemoryCach.Enqueue(data);
@@ -169,12 +188,11 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="data"></param>
-        private void RequestManualToCompress(ManualHisDataMemoryBlock data)
+        private void Compress(ManualHisDataMemoryBlock data)
         {
-            int datasize = 0;
-            var cdata = CompressMemory(data, out datasize);
+            var cdata = CompressBlockMemory(data);
             cdata.MakeMemoryBusy();
-            ServiceLocator.Locator.Resolve<IDataSerialize2>().ManualRequestToSeriseFile(data.Id, data.Time,data.EndTime, cdata, datasize);
+            ServiceLocator.Locator.Resolve<IDataSerialize2>().ManualRequestToSeriseFile(cdata);
             data.MakeMemoryNoBusy();
             ManualHisDataMemoryBlockPool.Pool.Release(data);
         }
@@ -235,7 +253,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Compress(HisDataMemoryBlockCollection source)
         {
-            lock (mMemoryCach)
+            lock (mLockObj)
             {
                 /*
                  内存结构:Head+数据指针区域+数据区
@@ -358,20 +376,22 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        private MarshalMemoryBlock CompressMemory(ManualHisDataMemoryBlock data, out int datasize)
+        private MarshalMemoryBlock CompressBlockMemory(ManualHisDataMemoryBlock data)
         {
-            MarshalMemoryBlock block = MarshalMemoryBlockPool.Pool.Get(data.Length * 2 + 4);
+            MarshalMemoryBlock block = MarshalMemoryBlockPool.Pool.Get(data.Length * 2 + 28 + 5);
             var histag = mHisTagService.GetHisTag(data.Id);
             if (histag == null)
             {
-                datasize = 0;
                 return null;
             }
+            int datasize = 0;
 
-            var targetPosition = 4;
+            var targetPosition = 28;
 
-            //写入变量的个数
-            block.WriteInt(0, mTagIds.Count);
+            block.WriteDatetime(4, data.Time);     //时间
+            block.WriteDatetime(12, data.EndTime); //结束时间
+            //block.WriteInt(20, 0);                 //写入数据大小
+            block.WriteInt(24, mTagIds.Count);//写入变量的个数
 
             var qulityoffset = data.QualityAddress;
             var comtype = histag.CompressType;//压缩类型
@@ -390,10 +410,7 @@ namespace Cdy.Tag
                 var size = tp.Compress(data, 0, block, targetPosition + 5, data.Length) + 1;
                 block.WriteInt(targetPosition, (int)size);
                 datasize = (int)(targetPosition + size + 5);
-            }
-            else
-            {
-                datasize = 0;
+                block.WriteInt(20, datasize);                 //写入数据大小
             }
             return block;
         }

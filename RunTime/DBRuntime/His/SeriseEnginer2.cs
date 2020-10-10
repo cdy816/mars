@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.Buffers;
 using DotNetty.Common;
 using DBRuntime.His;
+using System.Collections;
 
 /*
  * ****文件结构****
@@ -58,6 +59,11 @@ namespace Cdy.Tag
         private DateTime mCurrentTime;
 
         private Dictionary<int, CompressMemory2> mWaitForProcessMemory = new Dictionary<int, CompressMemory2>();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private Queue<MarshalMemoryBlock> mCachSeriseMemoryBlock = new Queue<MarshalMemoryBlock>();
 
         /// <summary>
         /// 
@@ -217,7 +223,6 @@ namespace Cdy.Tag
             {
                 vv.Value.Reset();
             }
-
         }
 
         /// <summary>
@@ -246,7 +251,8 @@ namespace Cdy.Tag
         /// </summary>
         public void RequestToSave()
         {
-            resetEvent.Set();
+            lock (resetEvent)
+                resetEvent.Set();
         }
 
         /// <summary>
@@ -259,10 +265,27 @@ namespace Cdy.Tag
             while (!mIsClosed)
             {
                 resetEvent.WaitOne();
-                resetEvent.Reset();
+                lock (resetEvent)
+                    resetEvent.Reset();
+
+                if (mWaitForProcessMemory.Count > 0)
+                {
+                    SaveToFile();
+                }
+                
+                if (mCachSeriseMemoryBlock.Count > 0)
+                {
+                    while (mCachSeriseMemoryBlock.Count > 0)
+                    {
+                        MarshalMemoryBlock vb;
+                        lock (mCachSeriseMemoryBlock)
+                            vb = mCachSeriseMemoryBlock.Dequeue();
+                        ProcessManualSeriseToFile(vb);
+                    }
+                }
+
                 if (mIsClosed)
                     break;
-                SaveToFile();
             }
             closedEvent.Set();
         }
@@ -321,21 +344,33 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="data"></param>
+        private void ProcessManualSeriseToFile(MarshalMemoryBlock data)
+        {
+            int id = data.ReadInt(0);
+
+            foreach (var vv in mSeriserFiles)
+            {
+                if (id >= vv.Value.Id * TagCountOneFile && id < (vv.Value.Id + 1) * TagCountOneFile)
+                {
+                    vv.Value.ManualRequestToSeriseFile(id, data);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="id"></param>
         /// <param name="time"></param>
         /// <param name="data"></param>
         /// <param name="size"></param>
-        public void ManualRequestToSeriseFile(int id, DateTime time,DateTime endTime, MarshalMemoryBlock data, int size)
+        public void ManualRequestToSeriseFile(MarshalMemoryBlock data)
         {
             HisDataPath = SelectHisDataPath();
+            lock (mCachSeriseMemoryBlock)
+                mCachSeriseMemoryBlock.Enqueue(data);
 
-            foreach (var vv in mSeriserFiles)
-            {
-                if( id >= vv.Value.Id* TagCountOneFile && id<(vv.Value.Id+1)* TagCountOneFile)
-                {
-                    vv.Value.ManualRequestToSeriseFile(id, data, size, time,endTime);
-                }
-            }
         }
 
         #endregion ...Methods...
@@ -742,7 +777,7 @@ namespace Cdy.Tag
 
             ltmp += mDataRegionHeadSize + mTagCount * 8 * bid + icount * 8;
 
-            LoggerService.Service.Debug("SeriseEnginer2", "DataRegion Pointer:"+ ltmp + ",mDataRegionHeadSize:" + mDataRegionHeadSize + ",BlockIndex:" + bid + " tag index:" + icount);
+            //LoggerService.Service.Debug("SeriseEnginer", "DataRegion Pointer:"+ ltmp + ",mDataRegionHeadSize:" + mDataRegionHeadSize + ",BlockIndex:" + bid + " tag index:" + icount);
 
             return ltmp;
         }
@@ -788,14 +823,17 @@ namespace Cdy.Tag
         /// <param name="size"></param>
         /// <param name="time"></param>
         /// <param name="endTime"></param>
-        public void ManualRequestToSeriseFile(int id, MarshalMemoryBlock datablock, int size, DateTime time,DateTime endTime)
+        public void ManualRequestToSeriseFile(int id,MarshalMemoryBlock datablock )
         {
             lock (mFileLocker)
             {
                 DataFileSeriserbase mwriter;
 
-                mTagCount = datablock.ReadInt(0);//变量个数
-              
+                DateTime time = datablock.ReadDateTime(4);
+                DateTime endTime = datablock.ReadDateTime(12);
+                int size = datablock.ReadInt(20);
+                mTagCount = datablock.ReadInt(24);//变量个数
+
                 var heads = GetDataRegionHeadPoint(id, time, out mwriter);
 
                 if (heads < 0) return;
@@ -810,11 +848,10 @@ namespace Cdy.Tag
                 mwriter.GoToEnd();
                 var vpointer = mwriter.CurrentPostion;
 
-                datablock.WriteToStream(mFileWriter.GetStream(), 4, size);//直接拷贝数据块
+                datablock.WriteToStream(mFileWriter.GetStream(), 28, size-28);//直接拷贝数据块
                 mFileWriter.Write(vpointer, heads);
-               // datablock.WriteLong(heads, vpointer);
 
-                LoggerService.Service.Debug("SeriseEnginer2", "手动记录历史数据 变量:"+ id +" 头指针:"+heads+"  数据区指针:"+vpointer);
+                LoggerService.Service.Debug("SeriseEnginer", "单数据块更新 变量:"+ id +" 头指针:"+heads+"  数据区指针:"+vpointer, ConsoleColor.Cyan);
 
                 mwriter.Flush();
 
@@ -1154,9 +1191,5 @@ namespace Cdy.Tag
         #region ... Interfaces ...
 
         #endregion ...Interfaces...
-
-
-
-
     }
 }

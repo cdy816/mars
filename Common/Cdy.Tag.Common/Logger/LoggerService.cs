@@ -79,6 +79,16 @@ namespace Cdy.Tag
             }
         }
 
+
+        public void Debug(string name, string msg, object parameter)
+        {
+            lock (mLockObj)
+            {
+                if (EnableLogger)
+                    mLogger?.Debug(name, msg,parameter);
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>

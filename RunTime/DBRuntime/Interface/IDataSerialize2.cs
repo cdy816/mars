@@ -49,7 +49,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         /// <param name="data"></param>
         /// <param name="size"></param>
-        void ManualRequestToSeriseFile(int id, DateTime time,DateTime enddate, MarshalMemoryBlock data, int size);
+        void ManualRequestToSeriseFile(MarshalMemoryBlock data);
 
         /// <summary>
         /// 

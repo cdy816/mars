@@ -1225,6 +1225,7 @@ namespace Cdy.Tag
                 {
                     ServiceLocator.Locator.Resolve<IDataCompress2>().RequestManualToCompress(vvv.Value);
                 }
+                ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
             }
         }
 
@@ -1347,6 +1348,8 @@ namespace Cdy.Tag
         /// <returns></returns>
         private bool ManualRecordHisValues(long id, IEnumerable<Cdy.Tag.TagValue> values, int timeUnit = 100)
         {
+            if (mIsClosed) return false;
+
             int valueOffset, qulityOffset = 0;
 
             DateTime mLastTime = DateTime.MinValue;
@@ -1524,6 +1527,8 @@ namespace Cdy.Tag
         /// <returns></returns>
         private bool ManualRecordHisValues(long id, Cdy.Tag.TagValue value, int timeUnit = 100)
         {
+            if (mIsClosed) return false;
+
             int valueOffset, qulityOffset = 0;
 
             DateTime mLastTime = DateTime.MinValue;

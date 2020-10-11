@@ -1569,6 +1569,7 @@ namespace Cdy.Tag
                     hb.ValueAddress = valueOffset;
                     hb.QualityAddress = qulityOffset;
                     hb.Id = (int)id;
+                    hb.CurrentCount = 0;
 
                     datacach.Add(time, hb);
                 }

@@ -1576,9 +1576,13 @@ namespace Cdy.Tag
             byte[] datas = source.ReadBytes(datasize);
             var timers = DeCompressTimers(datas, count);
 
+            DateTime preTimer = DateTime.MinValue;
+
             for (int i = 0; i < timers.Count; i++)
             {
                 var vtime = sTime.AddMilliseconds(timers[i] * timeTick);
+
+                if (vtime < preTimer) continue;
                 if (vtime >= startTime && vtime < endTime)
                     re.Add(i, vtime);
                 else if(vtime>endTime && (vtime - endTime).TotalMilliseconds< timeTick)
@@ -1589,6 +1593,7 @@ namespace Cdy.Tag
                 {
                     re.Add(i, vtime);
                 }
+                preTimer = vtime;
             }
             valueCount = count;
             return re;

@@ -97,12 +97,12 @@ namespace SpiderDriver
                         {
                             if((i+1)*psize>vtags.Count())
                             {
-                                var vv = vtags.Skip(i * psize).Take(psize);
+                                var vv = vtags.Skip(i * psize).Take(vtags.Count() % psize);
                                 Parent.AsyncCallback(client, GetTagBuffer(vv, (short)i, (short)tcount));
                             }
                             else
                             {
-                                var vv = vtags.Skip(i * psize).Take(vtags.Count() % psize);
+                                var vv = vtags.Skip(i * psize).Take(psize);
                                 Parent.AsyncCallback(client, GetTagBuffer(vv, (short)i, (short)tcount));
                             }
                         }

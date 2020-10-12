@@ -65,7 +65,7 @@ namespace Cdy.Tag
         private ManualResetEvent mResetEvent = new ManualResetEvent(false);
         private bool mIsClosed = false;
 
-        private Dictionary<string, WatcherChangeTypes> mFileCach = new Dictionary<string, WatcherChangeTypes>();
+        private Dictionary<string, WatcherChangeTypes> mLogFileCach = new Dictionary<string, WatcherChangeTypes>();
 
         private Dictionary<string, WatcherChangeTypes> mHisFileCach = new Dictionary<string, WatcherChangeTypes>();
 
@@ -160,13 +160,17 @@ namespace Cdy.Tag
                 hisDataWatcher.EnableRaisingEvents = true;
             }
 
-            string logpath = GetPrimaryLogDataPath();
-            ScanLogFile(logpath);
-            if (System.IO.Directory.Exists(logpath))
+            //只有在不支持内存查询的情况，才需要监视日志文件
+            if (ServiceLocator.Locator.Resolve<IHisQueryFromMemory>() != null)
             {
-                logDataWatcher = new System.IO.FileSystemWatcher(logpath);
-                logDataWatcher.Changed += LogDataWatcher_Changed;
-                logDataWatcher.EnableRaisingEvents = true;
+                string logpath = GetPrimaryLogDataPath();
+                ScanLogFile(logpath);
+                if (System.IO.Directory.Exists(logpath))
+                {
+                    logDataWatcher = new System.IO.FileSystemWatcher(logpath);
+                    logDataWatcher.Changed += LogDataWatcher_Changed;
+                    logDataWatcher.EnableRaisingEvents = true;
+                }
             }
 
             foreach (var vv in this.mTimeFileMaps)
@@ -222,13 +226,13 @@ namespace Cdy.Tag
                     mResetCount++;
                 }
 
-                if(mFileCach.Count>0)
+                if(mLogFileCach.Count>0)
                 {
                    
                     lock(mLocker)
                     {
-                        ltmp = mFileCach.ToList();
-                        mFileCach.Clear();
+                        ltmp = mLogFileCach.ToList();
+                        mLogFileCach.Clear();
                     }
 
                     foreach(var vv in ltmp)
@@ -294,9 +298,9 @@ namespace Cdy.Tag
             {
                 lock (mLocker)
                 {
-                    if (!mFileCach.ContainsKey(e.FullPath))
+                    if (!mLogFileCach.ContainsKey(e.FullPath))
                     {
-                        mFileCach.Add(e.FullPath, e.ChangeType);
+                        mLogFileCach.Add(e.FullPath, e.ChangeType);
                     }
                 }
             }

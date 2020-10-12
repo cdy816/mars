@@ -443,6 +443,9 @@ namespace Cdy.Tag
             long addroffset = 0;
             short len = 0;
             int datasize = 0;
+
+            if (!datafile.IsOpened()) return;
+
             var aid = datafile.ReadTagIndex(tid,out addroffset,out len);
             if(aid!=null)
             {
@@ -658,6 +661,8 @@ namespace Cdy.Tag
             long addroffset = 0;
             short len = 0;
             int datasize = 0;
+            if (!datafile.IsOpened()) return;
+
             var aid = datafile.ReadTagIndex(tid, out addroffset, out len);
             if(aid!=null)
             {

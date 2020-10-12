@@ -616,7 +616,13 @@ namespace Cdy.Tag
             return this;
         }
 
-       
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override bool IsOpened()
+        {
+            return mStream != null;
+        }
     }
 }

@@ -225,7 +225,7 @@ namespace Cdy.Tag
         /// <param name="tags"></param>
         private void ProcessTags(List<HisRunTag> tags)
         {            
-            int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
+            int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer2.MemoryTimeTick);
             foreach (var vv in tags)
             {
                 vv.UpdateValue2(tim);

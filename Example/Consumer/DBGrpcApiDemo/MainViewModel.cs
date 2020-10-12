@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -39,6 +40,13 @@ namespace DBGrpcApiDemo
         private int mPort = 14333;
 
         private ICommand mSetTagValueCommand;
+
+        private ICommand mQueryHisDataCommand;
+
+        private DateTime mStartTime = DateTime.Now.Date;
+
+        private DateTime mEndTime;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -52,6 +60,7 @@ namespace DBGrpcApiDemo
         public MainViewModel()
         {
             Init();
+            mEndTime = mStartTime.AddDays(1);
         }
         #endregion ...Constructor...
 
@@ -210,6 +219,66 @@ namespace DBGrpcApiDemo
                 return mSetTagValueCommand;
             }
         }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public DateTime StartTime
+        {
+            get
+            {
+                return mStartTime;
+            }
+            set
+            {
+                if (mStartTime != value)
+                {
+                    mStartTime = value;
+                    OnPropertyChanged("StartTime");
+                }
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public DateTime EndTime
+        {
+            get
+            {
+                return mEndTime;
+            }
+            set
+            {
+                if (mEndTime != value)
+                {
+                    mEndTime = value;
+                    OnPropertyChanged("EndTime");
+                }
+            }
+        }
+
+
+        public ICommand QueryHisDataCommand
+        {
+            get
+            {
+                if (mQueryHisDataCommand == null)
+                {
+                    mQueryHisDataCommand = new RelayCommand(() =>
+                    {
+                        var vals = clinet.ReadAllHisValue(new List<string> { "tag2" }, StartTime, EndTime);
+                        if (vals != null&&vals.Count>0)
+                        {
+                            MessageBox.Show("读取历史数据个数:" + vals.First().Value.Count);
+                        }
+                    });
+                }
+                return mQueryHisDataCommand;
+            }
+        }
+
+
 
         #endregion ...Properties...
 

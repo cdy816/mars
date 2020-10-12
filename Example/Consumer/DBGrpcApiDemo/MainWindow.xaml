@@ -9,8 +9,8 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>
-            <RowDefinition Height="382*"/>
-            <RowDefinition Height="32"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="64"/>
         </Grid.RowDefinitions>
         <Label Content="Server:" HorizontalAlignment="Left" Margin="11,0,0,0" VerticalAlignment="Center"/>
         <TextBox x:Name="ServerIp"  HorizontalAlignment="Left" Margin="67,0,0,0" Text="{Binding Ip,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" TextWrapping="Wrap" VerticalAlignment="Center" Width="196"/>
@@ -32,11 +32,16 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <Label Content="变量ID:" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="2" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Margin="70,0,0,0" Grid.Row="2" Text="{Binding Id,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Center" Width="100"/>
-        <TextBox HorizontalAlignment="Left" Margin="259,0,0,0" Grid.Row="2" Text="{Binding Value,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Center" Width="100"/>
-        <Button Content="变量下发" HorizontalAlignment="Left" Margin="398,0,0,0" Grid.Row="2" VerticalAlignment="Center" Width="76" Command="{Binding SetTagValueCommand}"/>
-        <Label Content="变量值:" HorizontalAlignment="Left" Margin="206,0,0,0" Grid.Row="2" VerticalAlignment="Center"/>
+        <Label Content="变量ID:" HorizontalAlignment="Left" Margin="10,4,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Margin="70,9,0,0" Grid.Row="2" Text="{Binding Id,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Top" Width="100"/>
+        <TextBox HorizontalAlignment="Left" Margin="282,9,0,0" Grid.Row="2" Text="{Binding Value,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Top" Width="100"/>
+        <Button Content="变量下发" HorizontalAlignment="Left" Margin="458,8,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding SetTagValueCommand}"/>
+        <Label Content="变量值:" HorizontalAlignment="Left" Margin="229,5,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <Label Content="开始时间:" HorizontalAlignment="Left" Margin="4,33,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <DatePicker SelectedDate="{Binding StartTime,Mode=TwoWay}" HorizontalAlignment="Left" Margin="70,35,0,0" Grid.Row="2" VerticalAlignment="Top" Width="132"/>
+        <Button x:Name="hisqB" Content="读取历史" HorizontalAlignment="Left" Margin="458,37,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding QueryHisDataCommand}"/>
+        <Label Content="结束时间:" HorizontalAlignment="Left" Margin="211,33,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <DatePicker SelectedDate="{Binding EndTime,Mode=TwoWay}" HorizontalAlignment="Left" Margin="277,35,0,0" Grid.Row="2" VerticalAlignment="Top" Width="132"/>
 
     </Grid>
 </Window>

@@ -147,7 +147,7 @@ namespace Cdy.Tag
 
         private int mStartMergeCount = 0;
 
-        private Dictionary<long,Dictionary<DateTime, ManualHisDataMemoryBlock>> mManualHisDataCach = new Dictionary<long, Dictionary<DateTime, ManualHisDataMemoryBlock>>();
+        private Dictionary<long,SortedDictionary<DateTime, ManualHisDataMemoryBlock>> mManualHisDataCach = new Dictionary<long, SortedDictionary<DateTime, ManualHisDataMemoryBlock>>();
 
         #endregion ...Variables...
 
@@ -179,7 +179,7 @@ namespace Cdy.Tag
 
         #region ... Properties ...
 
-   
+    
 
         /// <summary>
         /// 当前工作的内存区域
@@ -197,6 +197,29 @@ namespace Cdy.Tag
                 //HisRunTag.HisAddr = mCurrentMemory;
             }
         }
+
+        /// <summary>
+        /// 当前正在使用的内存
+        /// </summary>
+        public HisDataMemoryBlockCollection CurrentMergeMemory
+        {
+            get
+            {
+                return mCurrentMergeMemory;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Cdy.Tag.HisDatabase HisTagManager
+        {
+            get
+            {
+                return mManager;
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -853,6 +876,8 @@ namespace Cdy.Tag
             CurrentMemory = mCachMemory1;
             CurrentMemory.CurrentDatetime = mLastProcessTime;
 
+            HisDataMemoryQueryService.Service.RegistorMemory(CurrentMemory.CurrentDatetime, mLastProcessTime.AddSeconds(CachMemoryTime), CurrentMemory);
+
             mCurrentMergeMemory = mMergeMemory1;
             mCurrentMergeMemory.CurrentDatetime = CurrentMemory.CurrentDatetime;
 
@@ -925,6 +950,9 @@ namespace Cdy.Tag
                         //mMergeMemory.Dump();
 
                         mCurrentMergeMemory.EndDateTime = mSnapAllTagTime;
+
+                        HisDataMemoryQueryService.Service.RegistorMemory(mCurrentMergeMemory.CurrentDatetime, mCurrentMergeMemory.EndDateTime, mCurrentMergeMemory);
+
                         mCurrentMergeMemory.MakeMemoryBusy();
                         //提交到数据压缩流程
                         ServiceLocator.Locator.Resolve<IDataCompress2>().RequestToCompress(mCurrentMergeMemory);
@@ -971,7 +999,6 @@ namespace Cdy.Tag
             
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            //System.Threading.Tasks.Parallel.ForEach(mHisTags, (tag) => {
             foreach (var tag in mHisTags)
             {
                 var taddrs = mCurrentMergeMemory.TagAddress[tag.Value.Id];
@@ -999,13 +1026,11 @@ namespace Cdy.Tag
                 vtimeaddr = taddrs.QualityAddress + dlen * count + 1;
                 saddrs.CopyTo(taddrs, saddrs.QualityAddress, vtimeaddr, dlen);
             }
-            //});
-            //mCurrentMergeMemory.Dump();
-            //mcc.Dump();
+
+            HisDataMemoryQueryService.Service.ClearMemoryTime(mcc.CurrentDatetime);
+            HisDataMemoryQueryService.Service.RegistorMemory(mCurrentMergeMemory.CurrentDatetime, mcc.EndDateTime, mCurrentMergeMemory);
 
             mcc.MakeMemoryNoBusy();
-            //ClearMemoryHisData(mcc);
-           
             sw.Stop();
             LoggerService.Service.Info("Record", "合并完成 " + mcc.Name+" 次数:"+(count+1)+" 耗时:"+sw.ElapsedMilliseconds);
         }
@@ -1038,6 +1063,8 @@ namespace Cdy.Tag
             }
 
             CurrentMemory.CurrentDatetime = dateTime;
+
+            HisDataMemoryQueryService.Service.RegistorMemory(CurrentMemory.CurrentDatetime,dateTime.AddSeconds(CachMemoryTime), CurrentMemory);
 
             if (mMergeCount==0)
             {
@@ -1354,7 +1381,7 @@ namespace Cdy.Tag
 
             DateTime mLastTime = DateTime.MinValue;
 
-            Dictionary<DateTime, ManualHisDataMemoryBlock> datacach;
+            SortedDictionary<DateTime, ManualHisDataMemoryBlock> datacach;
 
             if (mHisTags.ContainsKey(id) && mHisTags[id].Type == RecordType.Manual)
             {
@@ -1364,7 +1391,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    datacach = new Dictionary<DateTime, ManualHisDataMemoryBlock>();
+                    datacach = new SortedDictionary<DateTime, ManualHisDataMemoryBlock>();
                     mManualHisDataCach.Add(id, datacach);
                 }
 
@@ -1381,6 +1408,8 @@ namespace Cdy.Tag
                     }
                     else
                     {
+                        if(hb!=null)
+                            HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
                         var css = CalCachDatablockSize(tag.TagType, 0, MergeMemoryTime * 1000 / timeUnit, out valueOffset, out qulityOffset);
                         hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
                         hb.Time = time;
@@ -1391,8 +1420,9 @@ namespace Cdy.Tag
                         hb.ValueAddress = valueOffset;
                         hb.QualityAddress = qulityOffset;
                         hb.Id = (int)id;
-
+                        HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, time, hb);
                         datacach.Add(time, hb);
+
                     }
                     mLastTime = time;
 
@@ -1492,6 +1522,8 @@ namespace Cdy.Tag
                         hb.Relase();
                     }
                 }
+                if (hb != null)
+                    HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
 
                 bool isNeedSubmite = false;
 
@@ -1533,7 +1565,7 @@ namespace Cdy.Tag
 
             DateTime mLastTime = DateTime.MinValue;
 
-            Dictionary<DateTime, ManualHisDataMemoryBlock> datacach;
+            SortedDictionary<DateTime, ManualHisDataMemoryBlock> datacach;
 
             if (mHisTags.ContainsKey(id) && mHisTags[id].Type == RecordType.Manual)
             {
@@ -1543,7 +1575,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    datacach = new Dictionary<DateTime, ManualHisDataMemoryBlock>();
+                    datacach = new SortedDictionary<DateTime, ManualHisDataMemoryBlock>();
                     mManualHisDataCach.Add(id, datacach);
                 }
 
@@ -1669,6 +1701,9 @@ namespace Cdy.Tag
                     hb.EndTime = value.Time;
                     hb.CurrentCount++;
                     hb.Relase();
+
+                    HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
+
                 }
 
                 bool isNeedSubmite = false;

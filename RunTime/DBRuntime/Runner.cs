@@ -8,6 +8,7 @@
 //==============================================================
 using Cdy.Tag.Driver;
 using DBRuntime;
+using DBRuntime.His;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -305,6 +306,11 @@ namespace Cdy.Tag
                 hisEnginer.Init();
                 ServiceLocator.Locator.Registor<IHisEngine2>(hisEnginer);
                 ServiceLocator.Locator.Registor<ITagHisValueProduct>(hisEnginer);
+
+                //初始化从内存中查询数据的服务
+                HisDataMemoryQueryService.Service.HisEnginer = hisEnginer;
+                ServiceLocator.Locator.Registor<IHisQueryFromMemory>(HisDataMemoryQueryService.Service);
+
 
                 compressEnginer = new CompressEnginer2();
                 compressEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;

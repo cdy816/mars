@@ -194,6 +194,8 @@ namespace Cdy.Tag
             cdata.MakeMemoryBusy();
             ServiceLocator.Locator.Resolve<IDataSerialize2>().ManualRequestToSeriseFile(cdata);
             data.MakeMemoryNoBusy();
+
+            HisDataMemoryQueryService.Service.ClearManualMemoryTime(data.Id, data.Time);
             ManualHisDataMemoryBlockPool.Pool.Release(data);
         }
 

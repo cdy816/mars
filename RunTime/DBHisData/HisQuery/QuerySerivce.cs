@@ -17,23 +17,24 @@ namespace Cdy.Tag
     /// </summary>
     public class QuerySerivce: IHisQuery
     {
-
+        IHisQueryFromMemory mMemoryService;
 
         /// <summary>
         /// 
         /// </summary>
         public QuerySerivce()
         {
-
+            mMemoryService = ServiceLocator.Locator.Resolve<IHisQueryFromMemory>() as IHisQueryFromMemory;
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="databaseName"></param>
-        public QuerySerivce(string databaseName)
+        public QuerySerivce(string databaseName) : this()
         {
             Database = databaseName;
+            
         }
 
         public string Database { get; set; }
@@ -50,6 +51,15 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        private bool IsCanQueryFromMemory()
+        {
+            return mMemoryService != null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="id"></param>
         /// <param name="times"></param>
@@ -57,13 +67,36 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValue<T>(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
         {
+            List<DateTime> ltmp = new List<DateTime>();
+            List<DateTime> mMemoryTimes = new List<DateTime>();
+            //判断数据是否在内存中
+            if (IsCanQueryFromMemory())
+            {
+                foreach(var vv in times)
+                {
+                    if(!mMemoryService.CheckTime(id,vv))
+                    {
+                        ltmp.Add(vv);
+                    }
+                    else
+                    {
+                        mMemoryTimes.Add(vv);
+                    }
+                }
+            }
+            else
+            {
+                ltmp.AddRange(times);
+            }
+
             List<DateTime> mLogTimes = new List<DateTime>();
-            var vfiles = GetFileManager().GetDataFiles(times, mLogTimes, id);
+            var vfiles = GetFileManager().GetDataFiles(ltmp, mLogTimes, id);
 
             DataFileInfo mPreFile = null;
 
             List<DateTime> mtime = new List<DateTime>();
 
+            //从历史文件中读取数据
             foreach (var vv in vfiles)
             {
                 if (vv.Value == null)
@@ -96,9 +129,24 @@ namespace Cdy.Tag
                 mPreFile.Read<T>(id, mtime, type, result);
             }
 
+            //从日志文件中读取数据
             ReadLogFile(id, mLogTimes, type, result);
+
+            //从内存中读取数据
+            ReadFromMemory(id, mMemoryTimes, type, result);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        private void ReadFromMemory<T>(int id,List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
+        {
+            mMemoryService?.ReadValue(id, times, type, result);
+        }
 
         /// <summary>
         /// 
@@ -175,6 +223,19 @@ namespace Cdy.Tag
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="id"></param>
+        /// <param name="starttime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="result"></param>
+        private void ReadAllValueFromMemory<T>(int id,DateTime starttime,DateTime endTime,HisQueryResult<T> result)
+        {
+            mMemoryService?.ReadAllValue(id, starttime, endTime, result);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
@@ -182,19 +243,50 @@ namespace Cdy.Tag
         {
             try
             {
-                Tuple<DateTime, DateTime> mLogFileTimes;
-                var vfiles = GetFileManager().GetDataFiles(startTime, endTime, out mLogFileTimes, id);
-                vfiles.ForEach(e =>
-                {
-                    DateTime sstart = e.StartTime > startTime ? e.StartTime : startTime;
-                    DateTime eend = e.EndTime > endTime ? endTime : endTime;
-                    e.ReadAllValue(id, sstart, eend, result);
-                });
 
-                if (mLogFileTimes.Item1 <mLogFileTimes.Item2)
+                DateTime etime = endTime,stime = startTime;
+
+                DateTime memoryTime = DateTime.MaxValue;
+                if(IsCanQueryFromMemory())
                 {
-                    ReadLogFileAllValue(id, mLogFileTimes.Item1, mLogFileTimes.Item2, result);
+                    memoryTime = mMemoryService.GetStartMemoryTime(id);
                 }
+
+                if(startTime>=memoryTime)
+                {
+                    ReadAllValueFromMemory(id, startTime, endTime, result);
+                }
+                else
+                {
+                    if(endTime>memoryTime)
+                    {
+                        etime = memoryTime;
+                    }
+
+                    Tuple<DateTime, DateTime> mLogFileTimes;
+                    var vfiles = GetFileManager().GetDataFiles(stime, etime, out mLogFileTimes, id);
+                    //从历史记录中读取数据
+                    vfiles.ForEach(e =>
+                    {
+                        DateTime sstart = e.StartTime > startTime ? e.StartTime : startTime;
+                        DateTime eend = e.EndTime > endTime ? endTime : endTime;
+                        e.ReadAllValue(id, sstart, eend, result);
+                    });
+
+                    //从日志文件中读取数据
+                    if (mLogFileTimes.Item1 < mLogFileTimes.Item2)
+                    {
+                        ReadLogFileAllValue(id, mLogFileTimes.Item1, mLogFileTimes.Item2, result);
+                    }
+
+                    //从内存中读取数据
+                    if(endTime>memoryTime)
+                    {
+                        ReadAllValueFromMemory(id, memoryTime, endTime, result);
+                    }
+                }
+
+                
             }
             catch(Exception ex)
             {

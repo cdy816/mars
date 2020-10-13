@@ -1797,7 +1797,7 @@ namespace Cdy.Tag
         /// <param name="memory"></param>
         public static void MakeMemoryBusy(this MemoryBlock memory)
         {
-            LoggerService.Service.Info("MemoryBlock", memory.Name + " is busy.....");
+            //LoggerService.Service.Info("MemoryBlock", memory.Name + " is busy.....");
             memory.IsBusy = true;
             //memory.StartMemory[0] = 1;
         }
@@ -1808,7 +1808,7 @@ namespace Cdy.Tag
         /// <param name="memory"></param>
         public static void MakeMemoryNoBusy(this MemoryBlock memory)
         {
-            LoggerService.Service.Info("MemoryBlock", memory.Name+ " is ready !");
+            //LoggerService.Service.Info("MemoryBlock", memory.Name+ " is ready !");
             memory.IsBusy = false;
             //memory.StartMemory[0] = 0;
         }

@@ -1478,7 +1478,7 @@ namespace Cdy.Tag
         /// <param name="memory"></param>
         public static void MakeMemoryBusy(this FixedMemoryBlock memory)
         {
-            LoggerService.Service.Info("FixedMemoryBlock", memory.Name + " is busy.....");
+            //LoggerService.Service.Info("FixedMemoryBlock", memory.Name + " is busy.....");
             memory.IncRef();
             //memory.StartMemory[0] = 1;
         }
@@ -1489,7 +1489,7 @@ namespace Cdy.Tag
         /// <param name="memory"></param>
         public static void MakeMemoryNoBusy(this FixedMemoryBlock memory)
         {
-            LoggerService.Service.Info("FixedMemoryBlock", memory.Name+ " is ready !");
+            //LoggerService.Service.Info("FixedMemoryBlock", memory.Name+ " is ready !");
             memory.DecRef();
             //memory.StartMemory[0] = 0;
         }

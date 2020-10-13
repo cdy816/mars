@@ -26,7 +26,7 @@ namespace DBRuntime.His
         /// <summary>
         /// 
         /// </summary>
-        private Dictionary<int, Dictionary<ManualHisDataMemoryBlock, bool>> mPools = new Dictionary<int, Dictionary<ManualHisDataMemoryBlock, bool>>();
+        private Dictionary<int, Queue<ManualHisDataMemoryBlock>> mFreePools = new Dictionary<int, Queue<ManualHisDataMemoryBlock>>();
 
         #endregion ...Variables...
 
@@ -48,34 +48,54 @@ namespace DBRuntime.His
         /// 
         /// </summary>
         /// <param name="size"></param>
+        public void PreAlloc(int size)
+        {
+            lock (mFreePools)
+            {
+                if (mFreePools.ContainsKey(size))
+                {
+                    var pp = mFreePools[size];
+                    var bnb = NewBlock(size);
+                    pp.Enqueue(bnb);
+                }
+                else
+                {
+                    var bnb = NewBlock(size);
+                    Queue<ManualHisDataMemoryBlock> dd = new Queue<ManualHisDataMemoryBlock>();
+                    dd.Enqueue(bnb);
+                    mFreePools.Add(size,dd);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="size"></param>
         /// <returns></returns>
         public ManualHisDataMemoryBlock Get(int size)
         {
-            lock (mPools)
+            lock (mFreePools)
             {
-                if (mPools.ContainsKey(size))
+                if (mFreePools.ContainsKey(size))
                 {
-                    var pp = mPools[size].Where(e => !e.Value);
-                    if (pp.Count() > 0)
+                    var pp = mFreePools[size];
+                    if (pp.Count > 0)
                     {
-                        var bnb = pp.First().Key;
-                        mPools[size][bnb] = true;
+                        var bnb = pp.Dequeue();
                         return bnb;
                     }
                     else
                     {
                         var bnb = NewBlock(size);
-                        mPools[size].Add(bnb, true);
-
                         return bnb;
                     }
                 }
                 else
                 {
                     var bnb = NewBlock(size);
-                    Dictionary<ManualHisDataMemoryBlock, bool> dd = new Dictionary<ManualHisDataMemoryBlock, bool>();
-                    dd.Add(bnb, true);
-                    mPools.Add(size, dd);
+                    Queue<ManualHisDataMemoryBlock> dd = new Queue<ManualHisDataMemoryBlock>();
+                    mFreePools.Add(size, dd);
                     return bnb;
                 }
             }
@@ -98,13 +118,13 @@ namespace DBRuntime.His
 
         public void Release(ManualHisDataMemoryBlock block)
         {
-            var size = (int)block.AllocSize;
-            if(mPools.ContainsKey(size))
+            lock (mFreePools)
             {
-                var vv = mPools[size];
-                if(vv.ContainsKey(block))
+                var size = (int)block.AllocSize;
+                if (mFreePools.ContainsKey(size))
                 {
-                    vv[block] = false;
+                    var vv = mFreePools[size];
+                    vv.Enqueue(block);
                     block.Clear();
                 }
             }

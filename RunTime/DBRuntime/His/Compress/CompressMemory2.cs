@@ -168,7 +168,7 @@ namespace Cdy.Tag
                         vpp = mMemoryCach.Dequeue();
                     }
                     Compress(vpp);
-                    Thread.Sleep(1);
+                    //Thread.Sleep(1);
                 }
                 mIsRunning = false;
             }
@@ -389,7 +389,7 @@ namespace Cdy.Tag
             int datasize = 0;
 
             var targetPosition = 28;
-
+            block.WriteInt(0,data.Id);
             block.WriteDatetime(4, data.Time);     //时间
             block.WriteDatetime(12, data.EndTime); //结束时间
             //block.WriteInt(20, 0);                 //写入数据大小

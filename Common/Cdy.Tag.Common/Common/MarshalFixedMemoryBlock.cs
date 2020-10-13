@@ -1512,7 +1512,7 @@ namespace Cdy.Tag
         public static void MakeMemoryBusy(this MarshalFixedMemoryBlock memory)
         {
             memory.IncRef();
-            LoggerService.Service.Info("MemoryBlock","make "+ memory.Name + " is busy.....");
+            //LoggerService.Service.Info("MemoryBlock","make "+ memory.Name + " is busy.....");
             //memory.IsBusy = true;
             
             //memory.StartMemory[0] = 1;
@@ -1525,7 +1525,7 @@ namespace Cdy.Tag
         public static void MakeMemoryNoBusy(this MarshalFixedMemoryBlock memory)
         {
             memory.DecRef();
-            LoggerService.Service.Info("MemoryBlock", "make " + memory.Name+ " is ready !");
+            //LoggerService.Service.Info("MemoryBlock", "make " + memory.Name+ " is ready !");
             
             //memory.StartMemory[0] = 0;
         }

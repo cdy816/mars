@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace SimDriver
@@ -14,7 +15,9 @@ namespace SimDriver
 
         #region ... Variables  ...
 
-        System.Collections.Generic.Dictionary<string, List<Tagbase>> mTagIdCach = new Dictionary<string, List<Tagbase>>();
+        Dictionary<string, List<Tagbase>> mTagIdCach = new Dictionary<string, List<Tagbase>>();
+
+        Dictionary<string, List<int>> mManualRecordTagCach = new Dictionary<string, List<int>>();
 
         //private System.Timers.Timer mScanTimer;
 
@@ -102,6 +105,14 @@ namespace SimDriver
         private void InitTagCach(IRealTagProduct tagQuery)
         {
             mTagIdCach = tagQuery.GetTagsByLinkAddress(new List<string>() { "Sim:cos", "Sim:sin", "Sim:step", "Sim:steppoint", "Sim:square" });
+
+            mTagHisValueService = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
+
+            foreach (var vv in mTagIdCach)
+            {
+                mManualRecordTagCach.Add(vv.Key, mTagHisValueService.GetTagRecordType(vv.Value.Select(e => e.Id).ToList()).Where(e=>e.Value == RecordType.Manual).Select(e=>e.Key).ToList());
+            }
+
         }
 
         /// <summary>
@@ -184,6 +195,41 @@ namespace SimDriver
                 });
                 mTagService.SubmiteNotifyChanged();
 
+                long llsw = sw.ElapsedMilliseconds;
+
+                System.Threading.Tasks.Parallel.ForEach(mManualRecordTagCach, (vv) => {
+                    if (vv.Key == "Sim:cos")
+                    {
+                        TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = fval };
+                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv), 1000);
+                    }
+                    else if (vv.Key == "Sim:sin")
+                    {
+                        TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = sval };
+                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv), 1000);
+                        //mTagService.SetTagValue(vv.Value, sval);
+                    }
+                    else if (vv.Key == "Sim:step")
+                    {
+                        TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = mNumber };
+                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv), 1000);
+                        //mTagService.SetTagValue(vv.Value, mNumber);
+                    }
+                    else if (vv.Key == "Sim:steppoint")
+                    {
+                        TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = fval };
+                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv), 1000);
+                        // mTagService.SetPointValue(vv.Value, mNumber, mNumber, mNumber);
+                    }
+                    else if (vv.Key == "Sim:square")
+                    {
+                        TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = mBoolNumber };
+                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv), 1000);
+                        //mTagService.SetTagValue(vv.Value, mBoolNumber);
+                    }
+                });
+
+
                 int delay = (int)(500 - (DateTime.Now - mLastProcessTime).TotalMilliseconds);
                 if(delay < 0)
                 {
@@ -192,7 +238,7 @@ namespace SimDriver
 #if DEBUG
                 sw.Stop();
                 if (mNumber%10 == 0)
-                LoggerService.Service.Debug("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds);
+                LoggerService.Service.Debug("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds+", set his value elapsed:"+(sw.ElapsedMilliseconds-llsw));
 #endif
                 Thread.Sleep(delay);
             }

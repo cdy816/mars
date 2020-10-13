@@ -17,6 +17,7 @@ using System.Buffers;
 using DotNetty.Common;
 using DBRuntime.His;
 using System.Collections;
+using System.Drawing;
 
 /*
  * ****文件结构****
@@ -268,6 +269,12 @@ namespace Cdy.Tag
                 lock (resetEvent)
                     resetEvent.Reset();
 
+                //#if DEBUG 
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                LoggerService.Service.Info("SeriseEnginer", "********开始执行存储********", ConsoleColor.Cyan);
+                //#endif
+
                 if (mWaitForProcessMemory.Count > 0)
                 {
                     SaveToFile();
@@ -283,6 +290,11 @@ namespace Cdy.Tag
                         ProcessManualSeriseToFile(vb);
                     }
                 }
+
+                //#if DEBUG
+                sw.Stop();
+                LoggerService.Service.Info("SeriseEnginer", ">>>>>>>>>完成执行存储>>>>>>>  ElapsedMilliseconds:" + sw.ElapsedMilliseconds, ConsoleColor.Cyan);
+                //#endif
 
                 if (mIsClosed)
                     break;
@@ -300,11 +312,7 @@ namespace Cdy.Tag
              2. 拷贝数据块
              3. 更新数据块指针
              */
-            //#if DEBUG 
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            LoggerService.Service.Info("SeriseEnginer", "********开始执行存储********", ConsoleColor.Cyan);
-            //#endif
+
             HisDataPath = SelectHisDataPath();
             List<CompressMemory2> mtmp;
             lock (mWaitForProcessMemory)
@@ -320,10 +328,7 @@ namespace Cdy.Tag
                 vv.MakeMemoryNoBusy();
             }
 
-            //#if DEBUG
-            sw.Stop();
-            LoggerService.Service.Info("SeriseEnginer", ">>>>>>>>>完成执行存储>>>>>>> Count:" + mtmp.Count + " ElapsedMilliseconds:" + sw.ElapsedMilliseconds, ConsoleColor.Cyan);
-            //#endif
+
         }
 
         /// <summary>
@@ -351,7 +356,7 @@ namespace Cdy.Tag
 
             foreach (var vv in mSeriserFiles)
             {
-                if (id >= vv.Value.Id * TagCountOneFile && id < (vv.Value.Id + 1) * TagCountOneFile)
+                if (id >= vv.Value.IdStart && id < vv.Value.IdEnd)
                 {
                     vv.Value.ManualRequestToSeriseFile(id, data);
                 }
@@ -370,7 +375,7 @@ namespace Cdy.Tag
             HisDataPath = SelectHisDataPath();
             lock (mCachSeriseMemoryBlock)
                 mCachSeriseMemoryBlock.Enqueue(data);
-
+            if (mCachSeriseMemoryBlock.Count > 10) RequestToSave();
         }
 
         #endregion ...Methods...
@@ -444,8 +449,9 @@ namespace Cdy.Tag
 
         private List<int> mTagIdsCach;
 
-
         private Dictionary<DateTime, Dictionary<int, long>> mPointerCach = new Dictionary<DateTime, Dictionary<int, long>>();
+
+        private int mId = 0;
 
         #endregion ...Variables...
 
@@ -458,10 +464,21 @@ namespace Cdy.Tag
         #endregion ...Constructor...
 
         #region ... Properties ...
+
         /// <summary>
         /// 
         /// </summary>
-        public int Id { get; set; }
+        public int IdStart { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int IdEnd { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Id { get { return mId; } set { mId = value; IdStart = value * TagCountOneFile;IdEnd = (value + 1) * TagCountOneFile; } }
 
         /// <summary>
         /// 
@@ -505,6 +522,8 @@ namespace Cdy.Tag
         public string DatabaseName { get; set; }
 
         public bool IsNeedInit { get; set; }
+
+        private Dictionary<int, MarshalMemoryBlock> mManualHisDataCach = new Dictionary<int, MarshalMemoryBlock>();
 
         #endregion ...Properties...
 
@@ -813,6 +832,48 @@ namespace Cdy.Tag
                 }
             }
             return preoffset;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="datablock"></param>
+        public void AppendManualSeriseFile(int id,MarshalMemoryBlock datablock)
+        {
+            mManualHisDataCach.Add(id, datablock);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void FreshManualDataToDisk()
+        {
+            string oldFile = string.Empty;
+            DataFileSeriserbase mwriter;
+
+            Dictionary<int, long> mHeadAddress = new Dictionary<int, long>();
+            Dictionary<int, long> mHeadValue = new Dictionary<int, long>();
+
+            foreach (var vv in mManualHisDataCach)
+            {
+                var id = vv.Key;
+                var datablock = vv.Value;
+                DateTime time = datablock.ReadDateTime(4);
+                DateTime endTime = datablock.ReadDateTime(12);
+                int size = datablock.ReadInt(20);
+                mTagCount = datablock.ReadInt(24);//变量个数
+                string sfile = GetFileName(time);
+                if(sfile!=oldFile)
+                {
+                    mHeadAddress = new Dictionary<int, long>();
+                    mHeadValue = new Dictionary<int, long>();
+
+                    var heads = GetDataRegionHeadPoint(id, time, out mwriter);
+                    mHeadAddress.Add(id, heads);
+                }
+
+            }
         }
 
         /// <summary>

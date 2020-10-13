@@ -27,7 +27,7 @@ namespace DBRuntime.His
         /// <summary>
         /// 
         /// </summary>
-        private Dictionary<MarshalMemoryBlock, bool> mPools = new Dictionary<MarshalMemoryBlock, bool>();
+        private Dictionary<long, Queue<MarshalMemoryBlock>> mFreePools = new Dictionary<long, Queue<MarshalMemoryBlock>>();
 
         #endregion ...Variables...
 
@@ -52,19 +52,27 @@ namespace DBRuntime.His
         /// <returns></returns>
         public MarshalMemoryBlock Get(long size)
         {
-            lock (mPools)
+            lock (mFreePools)
             {
-                var mms = mPools.Where(e => !e.Value && e.Key.AllocSize == size);
-                if (mms.Count() > 0)
+                if (mFreePools.ContainsKey(size))
                 {
-                    var vv = mms.First().Key;
-                    mPools[vv] = true;
-                    return vv;
+                    var pp = mFreePools[size];
+                    if (pp.Count > 0)
+                    {
+                        var bnb = pp.Dequeue();
+                        return bnb;
+                    }
+                    else
+                    {
+                        var bnb = NewBlock(size);
+                        return bnb;
+                    }
                 }
                 else
                 {
                     var bnb = NewBlock(size);
-                    mPools.Add(bnb, true);
+                    Queue<MarshalMemoryBlock> dd = new Queue<MarshalMemoryBlock>();
+                    mFreePools.Add(size, dd);
                     return bnb;
                 }
             }
@@ -77,7 +85,7 @@ namespace DBRuntime.His
         /// <returns></returns>
         private MarshalMemoryBlock NewBlock(long size)
         {
-            return new MarshalMemoryBlock(size).Clear();
+            return new MarshalMemoryBlock(size,(int)size).Clear();
         }
 
         /// <summary>
@@ -87,11 +95,16 @@ namespace DBRuntime.His
 
         public void Release(MarshalMemoryBlock block)
         {
-            if(mPools.ContainsKey(block))
+            lock (mFreePools)
             {
-                mPools[block] = false;
+                var size = (int)block.AllocSize;
+                if (mFreePools.ContainsKey(size))
+                {
+                    var vv = mFreePools[size];
+                    vv.Enqueue(block);
+                    block.Clear();
+                }
             }
-            block.Clear();
         }
 
         #endregion ...Methods...

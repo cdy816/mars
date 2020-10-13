@@ -382,6 +382,12 @@ namespace Cdy.Tag
                         if (mIsDisposed) break;
                         Marshal.Copy(zoreData, 0, vv + i * zoreData.Length, zoreData.Length);
                     }
+
+                    if(BufferItemSize % zoreData.Length >0)
+                    {
+                        Marshal.Copy(zoreData, 0, vv + (BufferItemSize > zoreData.Length ? BufferItemSize - zoreData.Length : 0), BufferItemSize > zoreData.Length ? zoreData.Length : BufferItemSize);
+                    }
+
                 }
             }
             catch
@@ -2490,7 +2496,7 @@ namespace Cdy.Tag
         public static void MakeMemoryBusy(this MarshalMemoryBlock memory)
         {
             memory.IncRef();
-            LoggerService.Service.Info("MemoryBlock","make "+ memory.Name + " is busy.....");
+            //LoggerService.Service.Info("MemoryBlock","make "+ memory.Name + " is busy.....");
             //memory.IsBusy = true;
             
             //memory.StartMemory[0] = 1;
@@ -2503,7 +2509,7 @@ namespace Cdy.Tag
         public static void MakeMemoryNoBusy(this MarshalMemoryBlock memory)
         {
             memory.DecRef();
-            LoggerService.Service.Info("MemoryBlock", "make " + memory.Name+ " is ready !");
+            //LoggerService.Service.Info("MemoryBlock", "make " + memory.Name+ " is ready !");
             
             //memory.StartMemory[0] = 0;
         }

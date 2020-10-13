@@ -68,7 +68,7 @@ namespace Cdy.Tag
         {
             target.WriteDatetime(targetAddr, this.StartTime);
 
-            LoggerService.Service.Debug("LosslessCompressUnit2", "Record time: "+this.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+            //LoggerService.Service.Debug("LosslessCompressUnit2", "Record time: "+this.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
             target.Write(TimeTick);
             switch (TagType)

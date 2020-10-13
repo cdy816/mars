@@ -99,7 +99,13 @@ namespace Cdy.Tag.Driver
         /// <returns></returns>
         bool SetTagValue(Tagbase tag, object value, DateTime time, byte quality);
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
         bool SetTagValue(Tagbase tag, object value, byte quality);
 
         /// <summary>

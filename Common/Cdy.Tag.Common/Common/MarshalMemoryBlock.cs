@@ -19,7 +19,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 划分内存
     /// </summary>
-    public unsafe class MarshalMemoryBlock : IDisposable
+    public unsafe class MarshalMemoryBlock : IDisposable, IMemoryBlock
     {
 
         #region ... Variables  ...
@@ -41,7 +41,7 @@ namespace Cdy.Tag
         private object mUserSizeLock = new object();
 
 
-        public int BufferItemSize = 1024 * 1024 * 128;
+        private int mBufferItemSize = 1024 * 1024 * 128;
 
         public const int BufferSize256 = 1024 * 1024 * 256;
 
@@ -93,7 +93,7 @@ namespace Cdy.Tag
         /// <param name="blockSize"></param>
         public MarshalMemoryBlock(long size, int blockSize)
         {
-            BufferItemSize = blockSize;
+            mBufferItemSize = blockSize;
             Init(size);
         }
 
@@ -109,6 +109,15 @@ namespace Cdy.Tag
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        public int BufferItemSize
+        {
+            get
+            {
+                return mBufferItemSize;
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -166,7 +175,7 @@ namespace Cdy.Tag
         {
             get
             {
-                return mHandles.Count * (long)BufferItemSize;
+                return mHandles.Count * (long)mBufferItemSize;
             }
         }
 
@@ -214,13 +223,13 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        internal List<IntPtr> Handles
+        public List<IntPtr> Handles
         {
             get
             {
                 return mHandles;
             }
-            set
+            internal set
             {
                 mHandles = value;
             }
@@ -266,14 +275,14 @@ namespace Cdy.Tag
         /// <param name="size"></param>
         protected void Init(long size)
         {
-            int count = (int)(size / BufferItemSize);
+            int count = (int)(size / mBufferItemSize);
 
-            count = size % BufferItemSize > 0 ? count + 1 : count;           
+            count = size % mBufferItemSize > 0 ? count + 1 : count;           
 
             mHandles = new List<IntPtr>();
             for (int i = 0; i < count; i++)
             {
-                mHandles.Add(Marshal.AllocHGlobal(BufferItemSize));
+                mHandles.Add(Marshal.AllocHGlobal(mBufferItemSize));
             }
             mAllocSize = size;
         }
@@ -293,7 +302,7 @@ namespace Cdy.Tag
         /// <param name="size"></param>
         public void Resize(long size)
         {
-            int count = (int)(size / BufferItemSize) + 1;
+            int count = (int)(size / mBufferItemSize) + 1;
             //List<IntPtr> nBuffers = new List<IntPtr>(count);
 
             if (count > mHandles.Count)
@@ -305,7 +314,7 @@ namespace Cdy.Tag
                 //}
                 for(int j= mHandles.Count; j<count;j++)
                 {
-                    mHandles.Add(Marshal.AllocHGlobal(BufferItemSize));
+                    mHandles.Add(Marshal.AllocHGlobal(mBufferItemSize));
                 }
                // mHandles = nBuffers;
             }
@@ -332,8 +341,8 @@ namespace Cdy.Tag
             {
                 if (size > this.Length)
                 {
-                    int count = (int)(size / BufferItemSize);
-                    count = size % BufferItemSize > 0 ? count + 1 : count;
+                    int count = (int)(size / mBufferItemSize);
+                    count = size % mBufferItemSize > 0 ? count + 1 : count;
 
                     if (mHandles.Count < count)
                     {
@@ -347,7 +356,7 @@ namespace Cdy.Tag
 
                         for (int j = i; j < count; j++)
                         {
-                            nBuffers.Add(Marshal.AllocHGlobal(BufferItemSize));
+                            nBuffers.Add(Marshal.AllocHGlobal(mBufferItemSize));
                            // nBuffers[j] = new byte[BufferItemSize];
                         }
 
@@ -370,22 +379,22 @@ namespace Cdy.Tag
         /// <summary>
         /// 清空内存
         /// </summary>
-        public MarshalMemoryBlock Clear()
+        public IMemoryBlock Clear()
         {
             try
             {
                 foreach (var vv in mHandles)
                 {
                     if (mIsDisposed) break;
-                    for (int i = 0; i < BufferItemSize / zoreData.Length; i++)
+                    for (int i = 0; i < mBufferItemSize / zoreData.Length; i++)
                     {
                         if (mIsDisposed) break;
                         Marshal.Copy(zoreData, 0, vv + i * zoreData.Length, zoreData.Length);
                     }
 
-                    if(BufferItemSize % zoreData.Length >0)
+                    if(mBufferItemSize % zoreData.Length >0)
                     {
-                        Marshal.Copy(zoreData, 0, vv + (BufferItemSize > zoreData.Length ? BufferItemSize - zoreData.Length : 0), BufferItemSize > zoreData.Length ? zoreData.Length : BufferItemSize);
+                        Marshal.Copy(zoreData, 0, vv + (mBufferItemSize > zoreData.Length ? mBufferItemSize - zoreData.Length : 0), mBufferItemSize > zoreData.Length ? zoreData.Length : mBufferItemSize);
                     }
 
                 }
@@ -438,8 +447,8 @@ namespace Cdy.Tag
         /// <param name="offset"></param>
         private IntPtr RelocationAddress(long position, out long offset)
         {
-            offset = position % BufferItemSize;
-            int id = (int)(position / BufferItemSize);
+            offset = position % mBufferItemSize;
+            int id = (int)(position / mBufferItemSize);
             return mHandles[id];
         }
 
@@ -451,8 +460,8 @@ namespace Cdy.Tag
         /// <returns></returns>
         public int RelocationAddressToArrayIndex(long position,out long offset)
         {
-            offset = position % BufferItemSize;
-            return (int)(position / BufferItemSize);
+            offset = position % mBufferItemSize;
+            return (int)(position / mBufferItemSize);
         }
 
         /// <summary>
@@ -463,7 +472,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         private bool IsCrossDataBuffer(long position, int size)
         {
-            return (position % BufferItemSize) + size >= BufferItemSize;
+            return (position % mBufferItemSize) + size >= mBufferItemSize;
         }
 
         /// <summary>
@@ -758,23 +767,23 @@ namespace Cdy.Tag
         /// <param name="len"></param>
         public void Clear(long offset,long len)
         {
-            int id = (int)(offset / BufferItemSize);
+            int id = (int)(offset / mBufferItemSize);
 
-            long ost = offset % BufferItemSize;
+            long ost = offset % mBufferItemSize;
 
-            if (len + ost < BufferItemSize)
+            if (len + ost < mBufferItemSize)
             {
                 Clear(mHandles[id], (int)ost, (int)len);
                 //System.Array.Clear(mBuffers[id], (int)ost, (int)len);
             }
             else
             {
-                int ll = BufferItemSize - (int)ost;
+                int ll = mBufferItemSize - (int)ost;
 
                 Clear(mHandles[id], (int)ost, (int)ll);
                 // System.Array.Clear(mBuffers[id], (int)ost, (int)ll);
 
-                if (len - ll < BufferItemSize)
+                if (len - ll < mBufferItemSize)
                 {
                     id++;
                     Clear(mHandles[id], (int)ost, (int)(len - ll));
@@ -783,15 +792,15 @@ namespace Cdy.Tag
                 else
                 {
                     long ltmp = len - ll;
-                    int bcount = ll / BufferItemSize;
+                    int bcount = ll / mBufferItemSize;
                     int i = 0;
                     for (i = 0; i < bcount; i++)
                     {
                         id++;
-                        Clear(mHandles[id], 0, BufferItemSize);
+                        Clear(mHandles[id], 0, mBufferItemSize);
                        // System.Array.Clear(mBuffers[id], 0, BufferItemSize);
                     }
-                    int otmp = ll % BufferItemSize;
+                    int otmp = ll % mBufferItemSize;
                     if (otmp > 0)
                     {
                         id++;
@@ -814,42 +823,42 @@ namespace Cdy.Tag
 
             CheckAndResize(offset + len);
 
-            int id = (int)(offset / BufferItemSize);
+            int id = (int)(offset / mBufferItemSize);
 
-            long ost = offset % BufferItemSize;
+            long ost = offset % mBufferItemSize;
             var vpp = values.Pin();
-            if (len + ost < BufferItemSize)
+            if (len + ost < mBufferItemSize)
             {
 
-                Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer+valueoffset),(void*)(mHandles[id] + (int)ost), BufferItemSize, len);
+                Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer+valueoffset),(void*)(mHandles[id] + (int)ost), mBufferItemSize, len);
             }
             else
             {
-                int ll = BufferItemSize - (int)ost;
+                int ll = mBufferItemSize - (int)ost;
 
 
-                 Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset), (void*)(mHandles[id] + (int)ost), BufferItemSize, ll);
+                 Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset), (void*)(mHandles[id] + (int)ost), mBufferItemSize, ll);
 
-                if (len - ll < BufferItemSize)
+                if (len - ll < mBufferItemSize)
                 {
                     id++;
-                    Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset+ll), (void*)(mHandles[id]), BufferItemSize,len- ll);
+                    Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset+ll), (void*)(mHandles[id]), mBufferItemSize,len- ll);
                 }
                 else
                 {
                     long ltmp = len - ll;
-                    int bcount = ll / BufferItemSize;
+                    int bcount = ll / mBufferItemSize;
                     int i = 0;
                     for (i = 0; i < bcount; i++)
                     {
                         id++;
-                        Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset + ll + i * BufferItemSize), (void*)(mHandles[id]), BufferItemSize, BufferItemSize);
+                        Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset + ll + i * mBufferItemSize), (void*)(mHandles[id]), mBufferItemSize, mBufferItemSize);
                     }
-                    int otmp = ll % BufferItemSize;
+                    int otmp = ll % mBufferItemSize;
                     if (otmp > 0)
                     {
                         id++;
-                        Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset + ll + i * BufferItemSize), (void*)(mHandles[id]), BufferItemSize, otmp);
+                        Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset + ll + i * mBufferItemSize), (void*)(mHandles[id]), mBufferItemSize, otmp);
                     }
                 }
             }
@@ -869,24 +878,24 @@ namespace Cdy.Tag
 
             CheckAndResize(offset + len);
 
-            int id = (int)(offset / BufferItemSize);
+            int id = (int)(offset / mBufferItemSize);
 
-            long ost = offset % BufferItemSize;
+            long ost = offset % mBufferItemSize;
 
-            if (len + ost < BufferItemSize)
+            if (len + ost < mBufferItemSize)
             {
                 Marshal.Copy(values, valueoffset, mHandles[id] + (int)ost, len);
                // Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, len);
             }
             else
             {
-                int ll = BufferItemSize - (int)ost;
+                int ll = mBufferItemSize - (int)ost;
 
                 Marshal.Copy(values, valueoffset, mHandles[id] + (int)ost, ll);
 
                // Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, ll);
 
-                if (len - ll < BufferItemSize)
+                if (len - ll < mBufferItemSize)
                 {
                     id++;
                     Marshal.Copy(values, valueoffset+ll, mHandles[id], len - ll);
@@ -895,19 +904,19 @@ namespace Cdy.Tag
                 else
                 {
                     long ltmp = len - ll;
-                    int bcount = ll / BufferItemSize;
+                    int bcount = ll / mBufferItemSize;
                     int i = 0;
                     for (i = 0; i < bcount; i++)
                     {
                         id++;
-                        Marshal.Copy(values, valueoffset+ ll + i * BufferItemSize, mHandles[id], BufferItemSize);
+                        Marshal.Copy(values, valueoffset+ ll + i * mBufferItemSize, mHandles[id], mBufferItemSize);
                         // Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, BufferItemSize);
                     }
-                    int otmp = ll % BufferItemSize;
+                    int otmp = ll % mBufferItemSize;
                     if (otmp > 0)
                     {
                         id++;
-                        Marshal.Copy(values, valueoffset + ll + i * BufferItemSize, mHandles[id], otmp);
+                        Marshal.Copy(values, valueoffset + ll + i * mBufferItemSize, mHandles[id], otmp);
                         //Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, otmp);
                     }
                 }
@@ -918,13 +927,13 @@ namespace Cdy.Tag
 
         public void WriteBytesDirect(long offset,IntPtr values,int valueOffset,int len)
         {
-            int id = (int)(offset / BufferItemSize);
+            int id = (int)(offset / mBufferItemSize);
 
-            long ost = offset % BufferItemSize;
+            long ost = offset % mBufferItemSize;
 
-            if (len + ost < BufferItemSize)
+            if (len + ost < mBufferItemSize)
             {
-                Buffer.MemoryCopy((void*)(values + valueOffset), (void*)(mHandles[id] + (int)ost), BufferItemSize-ost,len);
+                Buffer.MemoryCopy((void*)(values + valueOffset), (void*)(mHandles[id] + (int)ost), mBufferItemSize-ost,len);
 
                 //double dtmp1 = MemoryHelper.ReadDouble((void*)(values + valueOffset), 0);
                 
@@ -937,37 +946,37 @@ namespace Cdy.Tag
             else
             {
                 //LoggerService.Service.Warn("WriteBytesDirect", " len+ost:"+len+ost);
-                int ll = BufferItemSize - (int)ost;
+                int ll = mBufferItemSize - (int)ost;
 
-                Buffer.MemoryCopy((void*)(values + valueOffset), (void*)(mHandles[id] + (int)ost), BufferItemSize - ost, ll);
+                Buffer.MemoryCopy((void*)(values + valueOffset), (void*)(mHandles[id] + (int)ost), mBufferItemSize - ost, ll);
 
                 // Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, ll);
 
-                if (len - ll < BufferItemSize)
+                if (len - ll < mBufferItemSize)
                 {
                     id++;
-                    Buffer.MemoryCopy((void*)(values + valueOffset+ll), (void*)(mHandles[id]), BufferItemSize,len- ll);
+                    Buffer.MemoryCopy((void*)(values + valueOffset+ll), (void*)(mHandles[id]), mBufferItemSize,len- ll);
 
                     // Buffer.BlockCopy(values, ll + valueoffset, mBuffers[id], 0, len - ll);
                 }
                 else
                 {
                     long ltmp = len - ll;
-                    int bcount = ll / BufferItemSize;
+                    int bcount = ll / mBufferItemSize;
                     int i = 0;
                     for (i = 0; i < bcount; i++)
                     {
                         id++;
 
-                        Buffer.MemoryCopy((void*)(values + valueOffset+ll + i * BufferItemSize), (void*)(mHandles[id]), BufferItemSize, BufferItemSize);
+                        Buffer.MemoryCopy((void*)(values + valueOffset+ll + i * mBufferItemSize), (void*)(mHandles[id]), mBufferItemSize, mBufferItemSize);
 
                         // Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, BufferItemSize);
                     }
-                    int otmp = ll % BufferItemSize;
+                    int otmp = ll % mBufferItemSize;
                     if (otmp > 0)
                     {
                         id++;
-                        Buffer.MemoryCopy((void*)(values + valueOffset + ll + i * BufferItemSize), (void*)(mHandles[id]), BufferItemSize, otmp);
+                        Buffer.MemoryCopy((void*)(values + valueOffset + ll + i * mBufferItemSize), (void*)(mHandles[id]), mBufferItemSize, otmp);
 
                         // Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, otmp);
                     }
@@ -984,23 +993,23 @@ namespace Cdy.Tag
         /// <param name="len"></param>
         public void WriteBytesDirect(long offset, byte[] values, int valueoffset, int len)
         {
-            int id = (int)(offset / BufferItemSize);
+            int id = (int)(offset / mBufferItemSize);
 
-            long ost = offset % BufferItemSize;
+            long ost = offset % mBufferItemSize;
 
-            if (len + ost < BufferItemSize)
+            if (len + ost < mBufferItemSize)
             {
                 Marshal.Copy(values, valueoffset, mHandles[id] + (int)ost, len);
                 // Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, len);
             }
             else
             {
-                int ll = BufferItemSize - (int)ost;
+                int ll = mBufferItemSize - (int)ost;
 
                 Marshal.Copy(values, valueoffset, mHandles[id] + (int)ost, ll);
                 // Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, ll);
 
-                if (len - ll < BufferItemSize)
+                if (len - ll < mBufferItemSize)
                 {
                     id++;
                     Marshal.Copy(values, valueoffset+ll, mHandles[id], len-ll);
@@ -1009,19 +1018,19 @@ namespace Cdy.Tag
                 else
                 {
                     long ltmp = len - ll;
-                    int bcount = ll / BufferItemSize;
+                    int bcount = ll / mBufferItemSize;
                     int i = 0;
                     for (i = 0; i < bcount; i++)
                     {
                         id++;
-                        Marshal.Copy(values, valueoffset + ll + i * BufferItemSize, mHandles[id], BufferItemSize);
+                        Marshal.Copy(values, valueoffset + ll + i * mBufferItemSize, mHandles[id], mBufferItemSize);
                        // Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, BufferItemSize);
                     }
-                    int otmp = ll % BufferItemSize;
+                    int otmp = ll % mBufferItemSize;
                     if (otmp > 0)
                     {
                         id++;
-                        Marshal.Copy(values, valueoffset + ll + i * BufferItemSize, mHandles[id], otmp);
+                        Marshal.Copy(values, valueoffset + ll + i * mBufferItemSize, mHandles[id], otmp);
                        // Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, otmp);
                     }
                 }
@@ -1634,25 +1643,25 @@ namespace Cdy.Tag
             var  mm = MemoryPool<byte>.Shared;
             var vm = mm.Rent(len).Memory;
 
-            int id = (int)(offset / BufferItemSize);
+            int id = (int)(offset / mBufferItemSize);
 
-            long ost = offset % BufferItemSize;
+            long ost = offset % mBufferItemSize;
 
             using(var vp = vm.Pin())
             {
-                if (len + ost <= BufferItemSize)
+                if (len + ost <= mBufferItemSize)
                 {
                     Buffer.MemoryCopy((void*)(mHandles[id] + (int)ost), vp.Pointer, len, len);
                 }
                 else
                 {
-                    int ll = BufferItemSize - (int)ost;
+                    int ll = mBufferItemSize - (int)ost;
 
                   //  Marshal.Copy(mHandles[id] + (int)ost, re, 0, ll);
 
                     Buffer.MemoryCopy((void*)(mHandles[id] + (int)ost), vp.Pointer, ll, ll);
 
-                    if (len - ll <= BufferItemSize)
+                    if (len - ll <= mBufferItemSize)
                     {
                         id++;
                         //Marshal.Copy(mHandles[id], re, ll, len - ll);
@@ -1661,20 +1670,20 @@ namespace Cdy.Tag
                     else
                     {
                         long ltmp = len - ll;
-                        int bcount = ll / BufferItemSize;
+                        int bcount = ll / mBufferItemSize;
                         int i = 0;
                         for (i = 0; i < bcount; i++)
                         {
                             id++;
                          //   Marshal.Copy(mHandles[id], re, ll + i * BufferItemSize, BufferItemSize);
-                            Buffer.MemoryCopy((void*)(mHandles[id] ), (void*)((IntPtr)vp.Pointer + +(int)ll + i * BufferItemSize), BufferItemSize, BufferItemSize);
+                            Buffer.MemoryCopy((void*)(mHandles[id] ), (void*)((IntPtr)vp.Pointer + +(int)ll + i * mBufferItemSize), mBufferItemSize, mBufferItemSize);
                         }
-                        int otmp = ll % BufferItemSize;
+                        int otmp = ll % mBufferItemSize;
                         if (otmp > 0)
                         {
                             id++;
                             //Marshal.Copy(mHandles[id], re, ll + i * BufferItemSize, otmp);
-                            Buffer.MemoryCopy((void*)(mHandles[id]), (void*)((IntPtr)vp.Pointer + +(int)ll + i * BufferItemSize), otmp, otmp);
+                            Buffer.MemoryCopy((void*)(mHandles[id]), (void*)((IntPtr)vp.Pointer + +(int)ll + i * mBufferItemSize), otmp, otmp);
                         }
                     }
                 }
@@ -1693,24 +1702,24 @@ namespace Cdy.Tag
         private byte[] ReadBytesInner(long offset,int len)
         {
             byte[] re = new byte[len];
-            int id = (int)(offset / BufferItemSize);
+            int id = (int)(offset / mBufferItemSize);
 
-            long ost = offset % BufferItemSize;
+            long ost = offset % mBufferItemSize;
 
-            if (len + ost <= BufferItemSize)
+            if (len + ost <= mBufferItemSize)
             {
                 Marshal.Copy(mHandles[id]+ (int)ost, re, 0, len);
                // Buffer.BlockCopy(mBuffers[id], (int)ost,re, 0, len);
             }
             else
             {
-                int ll = BufferItemSize - (int)ost;
+                int ll = mBufferItemSize - (int)ost;
 
                 Marshal.Copy(mHandles[id] + (int)ost, re, 0, ll);
 
                // Buffer.BlockCopy(mBuffers[id], (int)ost,re,0, ll);
 
-                if (len - ll <= BufferItemSize)
+                if (len - ll <= mBufferItemSize)
                 {
                     id++;
                     Marshal.Copy(mHandles[id], re, ll, len - ll);
@@ -1719,19 +1728,19 @@ namespace Cdy.Tag
                 else
                 {
                     long ltmp = len - ll;
-                    int bcount = ll / BufferItemSize;
+                    int bcount = ll / mBufferItemSize;
                     int i = 0;
                     for (i = 0; i < bcount; i++)
                     {
                         id++;
-                        Marshal.Copy(mHandles[id], re, ll + i * BufferItemSize, BufferItemSize);
+                        Marshal.Copy(mHandles[id], re, ll + i * mBufferItemSize, mBufferItemSize);
                        // Buffer.BlockCopy(mBuffers[id], 0, re, ll + i * BufferItemSize, BufferItemSize);
                     }
-                    int otmp = ll % BufferItemSize;
+                    int otmp = ll % mBufferItemSize;
                     if (otmp > 0)
                     {
                         id++;
-                        Marshal.Copy(mHandles[id], re, ll + i * BufferItemSize, otmp);
+                        Marshal.Copy(mHandles[id], re, ll + i * mBufferItemSize, otmp);
                         //Buffer.BlockCopy(mBuffers[id], 0,re, ll + i * BufferItemSize, otmp);
                     }
                 }
@@ -1742,24 +1751,24 @@ namespace Cdy.Tag
 
         private byte[] ReadBytesInner(long offset, int len,ref byte[] re)
         {
-            int id = (int)(offset / BufferItemSize);
+            int id = (int)(offset / mBufferItemSize);
 
-            long ost = offset % BufferItemSize;
+            long ost = offset % mBufferItemSize;
 
-            if (len + ost <= BufferItemSize)
+            if (len + ost <= mBufferItemSize)
             {
                 Marshal.Copy(mHandles[id] + (int)ost, re, 0, len);
                 // Buffer.BlockCopy(mBuffers[id], (int)ost,re, 0, len);
             }
             else
             {
-                int ll = BufferItemSize - (int)ost;
+                int ll = mBufferItemSize - (int)ost;
 
                 Marshal.Copy(mHandles[id] + (int)ost, re, 0, ll);
 
                 // Buffer.BlockCopy(mBuffers[id], (int)ost,re,0, ll);
 
-                if (len - ll <= BufferItemSize)
+                if (len - ll <= mBufferItemSize)
                 {
                     id++;
                     Marshal.Copy(mHandles[id], re, ll, len - ll);
@@ -1768,19 +1777,19 @@ namespace Cdy.Tag
                 else
                 {
                     long ltmp = len - ll;
-                    int bcount = ll / BufferItemSize;
+                    int bcount = ll / mBufferItemSize;
                     int i = 0;
                     for (i = 0; i < bcount; i++)
                     {
                         id++;
-                        Marshal.Copy(mHandles[id], re, ll + i * BufferItemSize, BufferItemSize);
+                        Marshal.Copy(mHandles[id], re, ll + i * mBufferItemSize, mBufferItemSize);
                         // Buffer.BlockCopy(mBuffers[id], 0, re, ll + i * BufferItemSize, BufferItemSize);
                     }
-                    int otmp = ll % BufferItemSize;
+                    int otmp = ll % mBufferItemSize;
                     if (otmp > 0)
                     {
                         id++;
-                        Marshal.Copy(mHandles[id], re, ll + i * BufferItemSize, otmp);
+                        Marshal.Copy(mHandles[id], re, ll + i * mBufferItemSize, otmp);
                         //Buffer.BlockCopy(mBuffers[id], 0,re, ll + i * BufferItemSize, otmp);
                     }
                 }
@@ -2095,20 +2104,20 @@ namespace Cdy.Tag
             long sourceAddr = source.Handles.ToInt64()+ sourceStart;
 
             var hdt = RelocationAddressToArrayIndex(targetAddr, out ostt);
-            if (ostt + len < BufferItemSize)
+            if (ostt + len < mBufferItemSize)
             {
-                Buffer.MemoryCopy((void*)sourceAddr, (void*)(mHandles[hdt] + (int)ostt), BufferItemSize - ostt, len);
+                Buffer.MemoryCopy((void*)sourceAddr, (void*)(mHandles[hdt] + (int)ostt), mBufferItemSize - ostt, len);
             }
             else
             {
-                Buffer.MemoryCopy((void*)sourceAddr, (void*)(mHandles[hdt] + (int)ostt), BufferItemSize - ostt, (BufferItemSize - ostt));
+                Buffer.MemoryCopy((void*)sourceAddr, (void*)(mHandles[hdt] + (int)ostt), mBufferItemSize - ostt, (mBufferItemSize - ostt));
                 hdt++;
-                olen = BufferItemSize - ostt;
+                olen = mBufferItemSize - ostt;
 
                 while (olen<len)
                 {
-                    long ltmp = Math.Min((len - olen), BufferItemSize);
-                    Buffer.MemoryCopy((void*)(sourceAddr + olen), (void*)(mHandles[hdt]), BufferItemSize, ltmp);
+                    long ltmp = Math.Min((len - olen), mBufferItemSize);
+                    Buffer.MemoryCopy((void*)(sourceAddr + olen), (void*)(mHandles[hdt]), mBufferItemSize, ltmp);
                     olen += ltmp;
                     hdt++;
                 }
@@ -2133,17 +2142,17 @@ namespace Cdy.Tag
             //计算从源数据需要读取数据块索引
             //Array Index,Start Address,Data Len
             List<Tuple<int, int, long>> mSourceIndex = new List<Tuple<int, int, long>>();
-            if (osts + len < BufferItemSize)
+            if (osts + len < mBufferItemSize)
             {
                 mSourceIndex.Add(new Tuple<int, int, long>(hds, (int)osts, len));
             }
             else
             {
-                int ll = BufferItemSize - (int)osts;
+                int ll = mBufferItemSize - (int)osts;
 
                 mSourceIndex.Add(new Tuple<int, int, long>(hds, (int)osts, ll));
 
-                if ((len - ll) < BufferItemSize)
+                if ((len - ll) < mBufferItemSize)
                 {
                     hds++;
                     mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, len - ll));
@@ -2151,14 +2160,14 @@ namespace Cdy.Tag
                 else
                 {
                     long ltmp = len - ll;
-                    int bcount = (int)(ltmp / BufferItemSize);
+                    int bcount = (int)(ltmp / mBufferItemSize);
                     int i = 0;
                     for (i = 0; i < bcount; i++)
                     {
                         hds++;
-                        mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, BufferItemSize));
+                        mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, mBufferItemSize));
                     }
-                    int otmp = (int)(ltmp % BufferItemSize);
+                    int otmp = (int)(ltmp % mBufferItemSize);
                     if (otmp > 0)
                     {
                         hds++;
@@ -2195,17 +2204,17 @@ namespace Cdy.Tag
             //计算从源数据需要读取数据块索引
             //Array Index,Start Address,Data Len
             List<Tuple<int, int,  long>> mSourceIndex = new List<Tuple<int, int, long>>();
-            if(osts+len<BufferItemSize)
+            if(osts+len<mBufferItemSize)
             {
                 mSourceIndex.Add(new Tuple<int, int, long>(hds, (int)osts, len));
             }
             else
             {
-                int ll = BufferItemSize - (int)osts;
+                int ll = mBufferItemSize - (int)osts;
 
                 mSourceIndex.Add(new Tuple<int, int, long>(hds, (int)osts,  ll));
 
-                if ((len - ll) < BufferItemSize)
+                if ((len - ll) < mBufferItemSize)
                 {
                     hds++;
                     mSourceIndex.Add(new Tuple<int, int, long>(hds, 0,len-ll));
@@ -2213,14 +2222,14 @@ namespace Cdy.Tag
                 else
                 {
                     long ltmp = len - ll;
-                    int bcount = (int)(ltmp / BufferItemSize);
+                    int bcount = (int)(ltmp / mBufferItemSize);
                     int i = 0;
                     for (i = 0; i < bcount; i++)
                     {
                         hds++;
-                        mSourceIndex.Add(new Tuple<int, int,  long>(hds, 0, BufferItemSize));
+                        mSourceIndex.Add(new Tuple<int, int,  long>(hds, 0, mBufferItemSize));
                     }
-                    int otmp = (int)(ltmp % BufferItemSize);
+                    int otmp = (int)(ltmp % mBufferItemSize);
                     if (otmp > 0)
                     {
                         hds++;
@@ -2235,16 +2244,16 @@ namespace Cdy.Tag
             foreach (var vv in mSourceIndex)
             {
                 var hdt = RelocationAddressToArrayIndex(targetAddr, out ostt);
-                if (ostt + vv.Item3 < BufferItemSize)
+                if (ostt + vv.Item3 < mBufferItemSize)
                 {
-                    Buffer.MemoryCopy((void*)(this.mHandles[vv.Item1] + vv.Item2), (void*)(target.mHandles[hdt] + (int)ostt), BufferItemSize-ostt, vv.Item3);
+                    Buffer.MemoryCopy((void*)(this.mHandles[vv.Item1] + vv.Item2), (void*)(target.mHandles[hdt] + (int)ostt), mBufferItemSize-ostt, vv.Item3);
                 }
                 else
                 {
-                    var count = vv.Item3 + ostt - BufferItemSize;
-                    Buffer.MemoryCopy((void*)(this.mHandles[vv.Item1] + vv.Item2), (void*)(target.mHandles[hdt] + (int)ostt), BufferItemSize - ostt, (BufferItemSize - ostt));
+                    var count = vv.Item3 + ostt - mBufferItemSize;
+                    Buffer.MemoryCopy((void*)(this.mHandles[vv.Item1] + vv.Item2), (void*)(target.mHandles[hdt] + (int)ostt), mBufferItemSize - ostt, (mBufferItemSize - ostt));
                     hdt++;
-                    Buffer.MemoryCopy((void*)(this.mHandles[vv.Item1] + vv.Item2), (void*)(target.mHandles[hdt]), BufferItemSize, (count));
+                    Buffer.MemoryCopy((void*)(this.mHandles[vv.Item1] + vv.Item2), (void*)(target.mHandles[hdt]), mBufferItemSize, (count));
                 }
                 targetAddr += vv.Item3;
             }
@@ -2257,39 +2266,39 @@ namespace Cdy.Tag
         /// <param name="offset"></param>
         /// <param name="len"></param>
         /// <returns></returns>
-        public MarshalMemoryBlock WriteToStream(Stream stream,long offset,long len)
+        public IMemoryBlock WriteToStream(Stream stream,long offset,long len)
         {
             try
             {
                 long osts = 0;
                 var hds = RelocationAddressToArrayIndex(offset, out osts);
 
-                if ((osts + len) < BufferItemSize)
+                if ((osts + len) < mBufferItemSize)
                 {
                     WriteToStream(stream, mHandles[hds], (int)osts, (int)len);
                 }
                 else
                 {
                     List<Tuple<int, int, long>> mSourceIndex = new List<Tuple<int, int, long>>();
-                    int ll = BufferItemSize - (int)osts;
+                    int ll = mBufferItemSize - (int)osts;
 
                     mSourceIndex.Add(new Tuple<int, int, long>(hds, (int)osts, ll));
 
-                    if (len - ll < BufferItemSize)
+                    if (len - ll < mBufferItemSize)
                     {
                         hds++;
                         mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, len - ll));
                     }
                     else
                     {
-                        int bcount = (int)((len - ll) / BufferItemSize);
+                        int bcount = (int)((len - ll) / mBufferItemSize);
                         int i = 0;
                         for (i = 0; i < bcount; i++)
                         {
                             hds++;
-                            mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, BufferItemSize));
+                            mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, mBufferItemSize));
                         }
-                        int otmp = (int)((len - ll) % BufferItemSize);
+                        int otmp = (int)((len - ll) % mBufferItemSize);
                         if (otmp > 0)
                         {
                             hds++;
@@ -2319,18 +2328,43 @@ namespace Cdy.Tag
         /// <param name="len"></param>
         private void WriteToStream(Stream stream,IntPtr source,int start,int len)
         {
-            byte[] bvals = new byte[1024*1024*4];
-            int stmp = start;
-            int ltmp = len;
+           // byte[] bvals = new byte[1024*1024*4];
+
+            //byte[] bvals = ArrayPool<byte>.Shared.Rent(1024 * 1024 * 4);
+
+            //int stmp = start;
+            //int ltmp = len;
            
-            while(ltmp>0)
+            //while(ltmp>0)
+            //{
+            //    int ctmp = Math.Min(bvals.Length, ltmp);
+            //    Marshal.Copy(source + stmp, bvals, 0, ctmp);
+            //    stream.Write(bvals, 0, ctmp);
+            //    stmp += ctmp;
+            //    ltmp -= ctmp;
+            //}
+
+            using (System.IO.UnmanagedMemoryStream stream1 = new UnmanagedMemoryStream((byte*)(source + start), len))
             {
-                int ctmp = Math.Min(bvals.Length, ltmp);
-                Marshal.Copy(source + stmp, bvals, 0, ctmp);
-                stream.Write(bvals, 0, ctmp);
-                stmp += ctmp;
-                ltmp -= ctmp;
+                stream1.CopyTo(stream);
             }
+
+            //ArrayPool<byte>.Shared.Return(bvals);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="source"></param>
+        /// <param name="start"></param>
+        /// <param name="len"></param>
+        private void WriteToStream2(Stream stream, IntPtr source, int start, int len)
+        {
+            byte[] bvals = ArrayPool<byte>.Shared.Rent(len);
+            Marshal.Copy(source + start, bvals, 0, len);
+            stream.Write(bvals, 0, len);
+            ArrayPool<byte>.Shared.Return(bvals);
         }
 
         /// <summary>

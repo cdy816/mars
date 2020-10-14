@@ -175,6 +175,13 @@ namespace Cdy.Tag
                 {
                     //读取数据区时间
                     time = ss.ReadDateTime(offset + 16);
+
+                    if (time == DateTime.MinValue)
+                    {
+                        tmp = time;
+                        continue;
+                    }
+
                     long oset = offset;
                     //读取下个区域位置
                     offset = ss.ReadLong(offset + 8);

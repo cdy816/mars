@@ -132,7 +132,7 @@ namespace Cdy.Tag
         /// <param name="totalcount"></param>
         /// <param name="usedIndex"></param>
         /// <returns></returns>
-        protected new  Memory<byte> CompressQulitys(IMemoryBlock source, long offset, int totalcount, CustomQueue<int> usedIndex)
+        protected new  Memory<byte> CompressQulitys(IMemoryFixedBlock source, long offset, int totalcount, CustomQueue<int> usedIndex)
         {
             usedIndex.ReadIndex = 0;
 
@@ -1628,7 +1628,7 @@ namespace Cdy.Tag
         /// <param name="mTimers"></param>
         /// <param name="usedIndex"></param>
         /// <returns></returns>
-        protected Memory<byte> CompressValues<T>(IMemoryBlock source, long offset, int count, int[] mTimers,TagType type)
+        protected Memory<byte> CompressValues<T>(IMemoryFixedBlock source, long offset, int count, int[] mTimers,TagType type)
         {
             int ig = -1;
             emptys.ReadIndex = 0;
@@ -1824,7 +1824,7 @@ namespace Cdy.Tag
         /// <param name="target"></param>
         /// <param name="targetAddr"></param>
         /// <returns></returns>
-        private long FillData(Memory<byte> valuedata,Memory<byte> qualitydata, Memory<byte> timedata,MarshalMemoryBlock target, long targetAddr)
+        private long FillData(Memory<byte> valuedata,Memory<byte> qualitydata, Memory<byte> timedata, IMemoryBlock target, long targetAddr)
         {
             int rsize = 0;
 
@@ -1860,7 +1860,7 @@ namespace Cdy.Tag
         /// <param name="targetAddr"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        protected override long Compress<T>(IMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size, TagType type)
+        protected override long Compress<T>(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size, TagType type)
         {
             var count = (int)(size - this.QulityOffset);
 

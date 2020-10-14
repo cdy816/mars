@@ -18,7 +18,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 划分内存
     /// </summary>
-    public unsafe class MemoryBlock : IDisposable
+    public unsafe class MemoryBlock : IDisposable, IMemoryBlock
     {
 
         #region ... Variables  ...
@@ -47,9 +47,13 @@ namespace Cdy.Tag
         private object mUserSizeLock = new object();
 
 
-        public int BufferItemSize = 1024 * 1024 * 4;
+        private int mBufferItemSize = 1024 * 1024 * 4;
 
         public static byte[] zoreData = new byte[1024 * 10];
+
+        private bool mIsDisposed = false;
+
+        private int mRefCount = 0;
 
         #endregion ...Variables...
 
@@ -75,7 +79,7 @@ namespace Cdy.Tag
         /// <param name="blockSize"></param>
         public MemoryBlock(long size, int blockSize)
         {
-            BufferItemSize = blockSize;
+            mBufferItemSize = blockSize;
             Init(size);
         }
 
@@ -96,6 +100,17 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int BufferItemSize
+        {
+            get
+            {
+                return mBufferItemSize;
+            }
+        }
 
         /// <summary>
         /// 
@@ -196,13 +211,13 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        internal List<IntPtr> Handles
+        public List<IntPtr> Handles
         {
             get
             {
                 return mHandles;
             }
-            set
+            internal set
             {
                 mHandles = value;
             }
@@ -213,6 +228,24 @@ namespace Cdy.Tag
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void IncRef()
+        {
+            lock (mUserSizeLock)
+                Interlocked.Increment(ref mRefCount);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void DecRef()
+        {
+            lock (mUserSizeLock)
+                mRefCount = mRefCount > 0 ? mRefCount - 1 : mRefCount;
+        }
 
         /// <summary>
         /// 
@@ -363,21 +396,15 @@ namespace Cdy.Tag
         /// <summary>
         /// 清空内存
         /// </summary>
-        public void Clear()
+        public IMemoryBlock Clear()
         {
-            //foreach (var vv in mBuffers)
-            //    Array.Clear(vv, 0, vv.Length);
             foreach (var vv in mBuffers)
             {
-                for (int i = 0; i < BufferItemSize / zoreData.Length; i++)
-                {
-                    Buffer.BlockCopy(zoreData, 0, vv,i * zoreData.Length, zoreData.Length);
-                }
+                if (mIsDisposed) break;
+                Array.Clear(vv, 0, vv.Length);
             }
-            //mUsedSize = 0;
             mPosition = 0;
-
-            LoggerService.Service.Info("MemoryBlock", Name + " is clear !");
+            return this;
         }
 
         /// <summary>
@@ -422,7 +449,7 @@ namespace Cdy.Tag
         /// <param name="position"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
-        private int RelocationAddressToArrayIndex(long position,out long offset)
+        public int RelocationAddressToArrayIndex(long position,out long offset)
         {
             offset = position % BufferItemSize;
             return (int)(position / BufferItemSize);
@@ -1530,6 +1557,7 @@ namespace Cdy.Tag
         public virtual void Dispose()
         {
             //mDataBuffer = null;
+            mIsDisposed = true;
             mBuffers.Clear();
             mHandles.Clear();
             LoggerService.Service.Erro("MemoryBlock", Name + " Disposed ");
@@ -1650,6 +1678,316 @@ namespace Cdy.Tag
                 targetAddr += vv.Item3;
             }
             //Buffer.BlockCopy(this.mDataBuffer, sourceStart, target.mDataBuffer, targgetStart, len);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="offset"></param>
+        /// <param name="len"></param>
+        /// <returns></returns>
+        public IMemoryBlock WriteToStream(Stream stream, long offset, long len)
+        {
+            try
+            {
+                long osts = 0;
+                var hds = RelocationAddressToArrayIndex(offset, out osts);
+
+                if ((osts + len) < BufferItemSize)
+                {
+                    WriteToStream(stream, Buffers[hds], (int)osts, (int)len);
+                }
+                else
+                {
+                    List<Tuple<int, int, long>> mSourceIndex = new List<Tuple<int, int, long>>();
+                    int ll = BufferItemSize - (int)osts;
+
+                    mSourceIndex.Add(new Tuple<int, int, long>(hds, (int)osts, ll));
+
+                    if (len - ll < BufferItemSize)
+                    {
+                        hds++;
+                        mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, len - ll));
+                    }
+                    else
+                    {
+                        int bcount = (int)((len - ll) / BufferItemSize);
+                        int i = 0;
+                        for (i = 0; i < bcount; i++)
+                        {
+                            hds++;
+                            mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, BufferItemSize));
+                        }
+                        int otmp = (int)((len - ll) % BufferItemSize);
+                        if (otmp > 0)
+                        {
+                            hds++;
+                            mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, otmp));
+                        }
+
+                        foreach (var vv in mSourceIndex)
+                        {
+                            WriteToStream(stream, Buffers[vv.Item1], vv.Item2, (int)vv.Item3);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Service.Erro("MarshalMemoryBlock", "WriteToStream:" + ex.Message);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="source"></param>
+        /// <param name="start"></param>
+        /// <param name="len"></param>
+        private void WriteToStream(Stream stream, byte[] source, int start, int len)
+        {
+            stream.Write(source, start, len);
+        }
+
+        bool IMemoryBlock.IsBusy()
+        {
+            return mRefCount > 0;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        public void Write(Memory<byte> values)
+        {
+            WriteMemory(mPosition, values);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="values"></param>
+        public void WriteMemory(long offset, Memory<byte> values)
+        {
+            WriteMemory(offset, values, 0, values.Length);
+        }
+
+        public void WriteMemory(long offset, Memory<byte> values, int valueoffset, int len)
+        {
+            CheckAndResize(offset + len);
+
+            int id = (int)(offset / mBufferItemSize);
+
+            long ost = offset % mBufferItemSize;
+            var vpp = values.Pin();
+            if (len + ost < mBufferItemSize)
+            {
+
+                Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset), (void*)(mHandles[id] + (int)ost), mBufferItemSize, len);
+            }
+            else
+            {
+                int ll = mBufferItemSize - (int)ost;
+
+
+                Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset), (void*)(mHandles[id] + (int)ost), mBufferItemSize, ll);
+
+                if (len - ll < mBufferItemSize)
+                {
+                    id++;
+                    Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset + ll), (void*)(mHandles[id]), mBufferItemSize, len - ll);
+                }
+                else
+                {
+                    long ltmp = len - ll;
+                    int bcount = ll / mBufferItemSize;
+                    int i = 0;
+                    for (i = 0; i < bcount; i++)
+                    {
+                        id++;
+                        Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset + ll + i * mBufferItemSize), (void*)(mHandles[id]), mBufferItemSize, mBufferItemSize);
+                    }
+                    int otmp = ll % mBufferItemSize;
+                    if (otmp > 0)
+                    {
+                        id++;
+                        Buffer.MemoryCopy((void*)((IntPtr)vpp.Pointer + valueoffset + ll + i * mBufferItemSize), (void*)(mHandles[id]), mBufferItemSize, otmp);
+                    }
+                }
+            }
+            vpp.Dispose();
+            Position = offset + len;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="values"></param>
+        /// <param name="valueOffset"></param>
+        /// <param name="len"></param>
+        public void WriteBytesDirect(long offset, IntPtr values, int valueOffset, int len)
+        {
+            int id = (int)(offset / mBufferItemSize);
+
+            long ost = offset % mBufferItemSize;
+
+            if (len + ost < mBufferItemSize)
+            {
+                Buffer.MemoryCopy((void*)(values + valueOffset), (void*)(mHandles[id] + (int)ost), mBufferItemSize - ost, len);
+
+                //double dtmp1 = MemoryHelper.ReadDouble((void*)(values + valueOffset), 0);
+
+                //double dtmp2 = MemoryHelper.ReadDouble((void*)(void*)(mHandles[id] + (int)ost), 0);
+
+                //LoggerService.Service.Info("memoryBlock",dtmp1 + "," + dtmp2);
+
+                // Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, len);
+            }
+            else
+            {
+                //LoggerService.Service.Warn("WriteBytesDirect", " len+ost:"+len+ost);
+                int ll = mBufferItemSize - (int)ost;
+
+                Buffer.MemoryCopy((void*)(values + valueOffset), (void*)(mHandles[id] + (int)ost), mBufferItemSize - ost, ll);
+
+                // Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, ll);
+
+                if (len - ll < mBufferItemSize)
+                {
+                    id++;
+                    Buffer.MemoryCopy((void*)(values + valueOffset + ll), (void*)(mHandles[id]), mBufferItemSize, len - ll);
+
+                    // Buffer.BlockCopy(values, ll + valueoffset, mBuffers[id], 0, len - ll);
+                }
+                else
+                {
+                    long ltmp = len - ll;
+                    int bcount = ll / mBufferItemSize;
+                    int i = 0;
+                    for (i = 0; i < bcount; i++)
+                    {
+                        id++;
+
+                        Buffer.MemoryCopy((void*)(values + valueOffset + ll + i * mBufferItemSize), (void*)(mHandles[id]), mBufferItemSize, mBufferItemSize);
+
+                        // Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, BufferItemSize);
+                    }
+                    int otmp = ll % mBufferItemSize;
+                    if (otmp > 0)
+                    {
+                        id++;
+                        Buffer.MemoryCopy((void*)(values + valueOffset + ll + i * mBufferItemSize), (void*)(mHandles[id]), mBufferItemSize, otmp);
+
+                        // Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, otmp);
+                    }
+                }
+            }
+        }
+
+        public List<DateTime> ReadDateTimes(long offset, int count)
+        {
+            List<DateTime> re = new List<DateTime>(count);
+            for (int i = 0; i < count; i++)
+            {
+                re.Add(ReadDateTime(offset + 8 * i));
+            }
+            return re;
+        }
+
+        public List<int> ReadInts(long offset, int count)
+        {
+            List<int> re = new List<int>(count);
+            for (int i = 0; i < count; i++)
+            {
+                re.Add(ReadInt(offset + 4 * i));
+            }
+            return re;
+        }
+
+        public List<uint> ReadUInts(long offset, int count)
+        {
+            List<uint> re = new List<uint>(count);
+            for (int i = 0; i < count; i++)
+            {
+                re.Add(ReadUInt(offset + 4 * i));
+            }
+            return re;
+        }
+
+        public List<float> ReadFloats(long offset, int count)
+        {
+            List<float> re = new List<float>(count);
+            for (int i = 0; i < count; i++)
+            {
+                re.Add(ReadFloat(offset + 4 * i));
+            }
+            return re;
+        }
+
+        public List<double> ReadDoubles(long offset, int count)
+        {
+            List<double> re = new List<double>(count);
+            for (int i = 0; i < count; i++)
+            {
+                re.Add(ReadDouble(offset + 8 * i));
+            }
+            return re;
+        }
+
+        public List<long> ReadLongs(long offset, int count)
+        {
+            List<long> re = new List<long>(count);
+            for (int i = 0; i < count; i++)
+            {
+                re.Add(ReadLong(offset + 8 * i));
+            }
+            return re;
+        }
+
+        public List<ulong> ReadULongs(long offset, int count)
+        {
+            List<ulong> re = new List<ulong>(count);
+            for (int i = 0; i < count; i++)
+            {
+                re.Add(ReadULong(offset + 8 * i));
+            }
+            return re;
+        }
+
+        public List<short> ReadShorts(long offset, int count)
+        {
+            List<short> re = new List<short>(count);
+            for (int i = 0; i < count; i++)
+            {
+                re.Add(ReadShort(offset + 2 * i));
+            }
+            return re;
+        }
+
+        public List<ushort> ReadUShorts(long offset, int count)
+        {
+            List<ushort> re = new List<ushort>(count);
+            for (int i = 0; i < count; i++)
+            {
+                re.Add(ReadUShort(offset + 2 * i));
+            }
+            return re;
+        }
+
+        public List<string> ReadStrings(long offset, int count)
+        {
+            mPosition = offset;
+            List<string> re = new List<string>(count);
+            for (int i = 0; i < count; i++)
+            {
+                re.Add(ReadString());
+            }
+            return re;
         }
 
         #endregion ...Methods...
@@ -1798,8 +2136,9 @@ namespace Cdy.Tag
         public static void MakeMemoryBusy(this MemoryBlock memory)
         {
             //LoggerService.Service.Info("MemoryBlock", memory.Name + " is busy.....");
-            memory.IsBusy = true;
+            // memory.IsBusy = true;
             //memory.StartMemory[0] = 1;
+            memory.IncRef();
         }
 
         /// <summary>
@@ -1809,8 +2148,9 @@ namespace Cdy.Tag
         public static void MakeMemoryNoBusy(this MemoryBlock memory)
         {
             //LoggerService.Service.Info("MemoryBlock", memory.Name+ " is ready !");
-            memory.IsBusy = false;
+            // memory.IsBusy = false;
             //memory.StartMemory[0] = 0;
+            memory.DecRef();
         }
 
         public static void SaveToFile(this MemoryBlock memory, string fileName)

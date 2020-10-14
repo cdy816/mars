@@ -74,7 +74,7 @@ namespace Cdy.Tag
         /// <param name="startaddr"></param>
         /// <param name="count"></param>
         /// <param name="emptyIds"></param>
-        protected void FindEmpityIds(IMemoryBlock timerVals, long startaddr, int count, CustomQueue<int> emptyIds)
+        protected void FindEmpityIds(IMemoryFixedBlock timerVals, long startaddr, int count, CustomQueue<int> emptyIds)
         {
             emptys.Reset();
             int id = 0;
@@ -107,7 +107,7 @@ namespace Cdy.Tag
         /// <param name="count"></param>
         /// <param name="emptyIds"></param>
         /// <returns></returns>
-        protected virtual Memory<byte> CompressTimers2(IMemoryBlock timerVals, long startaddr, int count, CustomQueue<int> emptyIds)
+        protected virtual Memory<byte> CompressTimers2(IMemoryFixedBlock timerVals, long startaddr, int count, CustomQueue<int> emptyIds)
         {
             int preids = 0;
             mVarintMemory2.Reset();
@@ -166,7 +166,7 @@ namespace Cdy.Tag
         /// <param name="size"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        protected override long Compress<T>(IMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size, TagType type)
+        protected override long Compress<T>(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size, TagType type)
         {
             var count = (int)(size - this.QulityOffset);
             //var tims = source.ReadUShorts(sourceAddr, (int)count);
@@ -750,7 +750,7 @@ namespace Cdy.Tag
         /// <param name="count"></param>
         /// <param name="emptyIds"></param>
         /// <returns></returns>
-        protected override Memory<byte> CompressValues<T>(IMemoryBlock source, long offset, int count, CustomQueue<int> emptys, TagType type)
+        protected override Memory<byte> CompressValues<T>(IMemoryFixedBlock source, long offset, int count, CustomQueue<int> emptys, TagType type)
         {
             var deadArea = this.Parameters.ContainsKey("DeadValue") ? this.Parameters["DeadValue"] : 0;
             var deadType = (int)(this.Parameters.ContainsKey("DeadType") ? this.Parameters["DeadType"] : 0);

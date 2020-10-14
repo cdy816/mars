@@ -64,7 +64,7 @@ namespace Cdy.Tag
         /// <param name="targetAddr"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        public override long Compress(IMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size)
+        public override long Compress(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size)
         {
             target.WriteDatetime(targetAddr, this.StartTime);
 
@@ -161,7 +161,7 @@ namespace Cdy.Tag
         /// <param name="count"></param>
         /// <param name="emptyIds"></param>
         /// <returns></returns>
-        protected virtual Memory<byte> CompressTimers(IMemoryBlock timerVals,long startaddr,int count, CustomQueue<int> emptyIds)
+        protected virtual Memory<byte> CompressTimers(IMemoryFixedBlock timerVals,long startaddr,int count, CustomQueue<int> emptyIds)
         {
             int preids = 0;
             mVarintMemory.Reset();
@@ -205,7 +205,7 @@ namespace Cdy.Tag
         /// <param name="count"></param>
         /// <param name="emptyIds"></param>
         /// <returns></returns>
-        protected virtual Memory<byte> CompressValues<T>(IMemoryBlock source,long offset,int count, CustomQueue<int> emptyIds,TagType type)
+        protected virtual Memory<byte> CompressValues<T>(IMemoryFixedBlock source,long offset,int count, CustomQueue<int> emptyIds,TagType type)
         {
             mMarshalMemory.Position = 0;
             mVarintMemory.Reset();
@@ -709,7 +709,7 @@ namespace Cdy.Tag
         /// <param name="totalcount"></param>
         /// <param name="emptyIds"></param>
         /// <returns></returns>
-        protected Memory<byte> CompressQulitys(IMemoryBlock source, long offset, int totalcount, CustomQueue<int> emptyIds)
+        protected Memory<byte> CompressQulitys(IMemoryFixedBlock source, long offset, int totalcount, CustomQueue<int> emptyIds)
         {
             int count = 1;
             byte qus = source.ReadByte((int)offset);
@@ -792,7 +792,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
-        protected Memory<byte> CompressBoolValues(IMemoryBlock source, long offset, int totalcount, CustomQueue<int> emptyIds)
+        protected Memory<byte> CompressBoolValues(IMemoryFixedBlock source, long offset, int totalcount, CustomQueue<int> emptyIds)
         {
             List<short> re = new List<short>(totalcount);
             byte bval = source.ReadByte((int)offset);
@@ -847,7 +847,7 @@ namespace Cdy.Tag
         /// <param name="target"></param>
         /// <param name="targetAddr"></param>
         /// <param name="size"></param>
-        protected virtual long Compress<T>(IMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size, TagType type)
+        protected virtual long Compress<T>(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size, TagType type)
         {
             var count = (int)(size - this.QulityOffset);
 

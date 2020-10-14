@@ -57,19 +57,16 @@ namespace Cdy.Tag
 
         private bool mIsClosed = false;
 
-        private DateTime mCurrentTime;
+        //private DateTime mCurrentTime;
 
         private Dictionary<int, CompressMemory2> mWaitForProcessMemory = new Dictionary<int, CompressMemory2>();
 
         /// <summary>
         /// 
         /// </summary>
-        private Queue<MarshalMemoryBlock> mCachSeriseMemoryBlock = new Queue<MarshalMemoryBlock>();
-
-        /// <summary>
-        /// 
-        /// </summary>
         private Dictionary<int, SeriseFileItem2> mSeriserFiles = new Dictionary<int, SeriseFileItem2>();
+
+        //private int mManualRequestSaveCount = 0;
 
         #endregion ...Variables...
 
@@ -244,9 +241,33 @@ namespace Cdy.Tag
                     mWaitForProcessMemory.Add(dataMemory.Id, dataMemory);
                 }
             }
-            mCurrentTime = dataMemory.CurrentTime;
+            //mCurrentTime = dataMemory.CurrentTime;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="time"></param>
+        /// <param name="data"></param>
+        /// <param name="size"></param>
+        public void ManualRequestToSeriseFile(IMemoryBlock data)
+        {
+            HisDataPath = SelectHisDataPath();
+
+            int id = data.ReadInt(0);
+
+            foreach (var vv in mSeriserFiles)
+            {
+                if (id >= vv.Value.IdStart && id < vv.Value.IdEnd)
+                {
+                    vv.Value.AppendManualSeriseFile(id, data);
+                    //mManualRequestSaveCount++;
+                    break;
+                }
+            }
+            //if (mManualRequestSaveCount > 10) RequestToSave();
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -275,20 +296,17 @@ namespace Cdy.Tag
                 LoggerService.Service.Info("SeriseEnginer", "********开始执行存储********", ConsoleColor.Cyan);
                 //#endif
 
+                //mManualRequestSaveCount = 0;
+
                 if (mWaitForProcessMemory.Count > 0)
                 {
                     SaveToFile();
                 }
-                
-                if (mCachSeriseMemoryBlock.Count > 0)
+
+                foreach (var vv in mSeriserFiles)
                 {
-                    while (mCachSeriseMemoryBlock.Count > 0)
-                    {
-                        MarshalMemoryBlock vb;
-                        lock (mCachSeriseMemoryBlock)
-                            vb = mCachSeriseMemoryBlock.Dequeue();
-                        ProcessManualSeriseToFile(vb);
-                    }
+                    if (vv.Value.HasManualRecordData)
+                        vv.Value.FreshManualDataToDisk();
                 }
 
                 //#if DEBUG
@@ -344,38 +362,6 @@ namespace Cdy.Tag
                 }
                 mSeriserFiles.Clear();
             }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="data"></param>
-        private void ProcessManualSeriseToFile(MarshalMemoryBlock data)
-        {
-            int id = data.ReadInt(0);
-
-            foreach (var vv in mSeriserFiles)
-            {
-                if (id >= vv.Value.IdStart && id < vv.Value.IdEnd)
-                {
-                    vv.Value.ManualRequestToSeriseFile(id, data);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="time"></param>
-        /// <param name="data"></param>
-        /// <param name="size"></param>
-        public void ManualRequestToSeriseFile(MarshalMemoryBlock data)
-        {
-            HisDataPath = SelectHisDataPath();
-            lock (mCachSeriseMemoryBlock)
-                mCachSeriseMemoryBlock.Enqueue(data);
-            if (mCachSeriseMemoryBlock.Count > 10) RequestToSave();
         }
 
         #endregion ...Methods...
@@ -451,6 +437,8 @@ namespace Cdy.Tag
 
         private Dictionary<DateTime, Dictionary<int, long>> mPointerCach = new Dictionary<DateTime, Dictionary<int, long>>();
 
+        private Dictionary<string, Dictionary<int, IMemoryBlock>> mManualHisDataCach = new Dictionary<string, Dictionary<int, IMemoryBlock>>();
+
         private int mId = 0;
 
         #endregion ...Variables...
@@ -523,7 +511,18 @@ namespace Cdy.Tag
 
         public bool IsNeedInit { get; set; }
 
-        private Dictionary<int, MarshalMemoryBlock> mManualHisDataCach = new Dictionary<int, MarshalMemoryBlock>();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool HasManualRecordData
+        {
+            get
+            {
+                return mManualHisDataCach.Count > 0;
+            }
+        }
+
 
         #endregion ...Properties...
 
@@ -802,9 +801,134 @@ namespace Cdy.Tag
         }
 
 
+        private Dictionary<int,long> GetDataRegionHeadPoint(string sfile, SortedDictionary<int,DateTime> ids, DateTime time, out DataFileSeriserbase mFileReader)
+        {
+
+            Dictionary<int, long> re = new Dictionary<int, long>();
+
+            DataFileSeriserbase dfs;
+
+            if (time > mCurrentTime)
+            {
+                //如果需要新建的文件，影响到自动记录存储要用到的文件，
+                //则转到自动记录存储逻辑进行处理
+                CheckFile(time);
+                dfs = this.mFileWriter;
+                //mCurrentTime = time;
+            }
+            else
+            {
+                if (sfile == mCurrentFileName)
+                {
+                    dfs = this.mFileWriter;
+                }
+                else
+                {
+                    dfs = mFileWriter2;
+                    if (mFileWriter2.CreatOrOpenFile(sfile))
+                    {
+                        var date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
+                        //新建文件
+                        AppendFileHeader(time, this.DatabaseName, mFileWriter2);
+                        NewDataRegionHeader(date, mFileWriter2);
+                    }
+                    else
+                    {
+                        //如果文件格式不正确，则新建
+                        if (mFileWriter2.Length < FileHeadSize)
+                        {
+                            var date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
+                            //新建文件
+                            AppendFileHeader(time, this.DatabaseName, mFileWriter2);
+                            NewDataRegionHeader(date, mFileWriter2);
+                        }
+                    }
+                }
+            }
+            mFileReader = dfs;
+
+            DateTime mLastRegionStartTime = DateTime.MaxValue;
+            DateTime mLastRegionEndTime = DateTime.MaxValue;
+            long regionOffset = 0;
+
+            foreach (var vv in ids)
+            {
+                long ltmp = 0;
+                //计算本次更新对应的指针区域的起始地址
+                var fsh = (vv.Value.Hour / FileDuration) * FileDuration;
+                int bid = ((vv.Value.Hour - fsh) * 60 + time.Minute) / BlockDuration;
+
+                if (mLastRegionStartTime == DateTime.MaxValue || vv.Value < mLastRegionStartTime || vv.Value > mLastRegionEndTime)
+                {
+                    regionOffset = SearchDataRegionToDatetime(dfs, vv.Value,out mLastRegionStartTime,out mLastRegionEndTime);
+                    ltmp = regionOffset;
+                }
+                else
+                {
+                    ltmp = regionOffset;
+                }
+
+                if (ltmp < 0)
+                {
+                    LoggerService.Service.Warn("SeriseEnginer2", "不允许修改本次运行之前时间的历史记录!");
+                    return re;
+                }
+
+                var icount = mTagIdsCach.IndexOf(vv.Key);
+
+                ltmp += mDataRegionHeadSize + mTagCount * 8 * bid + icount * 8;
+
+                re.Add(vv.Key,ltmp);
+            }
+            //LoggerService.Service.Debug("SeriseEnginer", "DataRegion Pointer:" + ltmp + ",mDataRegionHeadSize:" + mDataRegionHeadSize + ",BlockIndex:" + bid + " tag index:" + icount);
+
+            return re;
+        }
+
+
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        private long SearchDataRegionToDatetime(DataFileSeriserbase mFileWriter, DateTime time,out DateTime startTime,out DateTime endTime)
+        {
+            long preoffset = -1, offset = FileHeadSize;
+            DateTime tm;
+            DateTime mStartTime=time.Date, mEndTime;
+            while (true)
+            {
+                tm = mFileWriter.ReadDateTime(offset + 16);
+                if (tm > time)
+                {
+                    mEndTime = tm;
+                    break;
+                }
+
+                var nextaddr = mFileWriter.ReadLong(offset + 8);
+                if (nextaddr <= 0)
+                {
+                    mStartTime = tm;
+                    mEndTime = mStartTime.AddDays(1);
+                    preoffset = offset;
+                    break;
+                }
+                else
+                {
+                    mStartTime = tm;
+                    preoffset = offset;
+                    offset = nextaddr;
+                }
+            }
+            startTime = mStartTime;
+            endTime = mEndTime;
+            return preoffset;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mFileWriter"></param>
         /// <param name="time"></param>
         /// <returns></returns>
         private long SearchDataRegionToDatetime(DataFileSeriserbase mFileWriter, DateTime time)
@@ -839,9 +963,25 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="datablock"></param>
-        public void AppendManualSeriseFile(int id,MarshalMemoryBlock datablock)
+        public void AppendManualSeriseFile(int id, IMemoryBlock datablock)
         {
-            mManualHisDataCach.Add(id, datablock);
+            DateTime time = datablock.ReadDateTime(4);
+            string sfile = GetFileName(time);
+
+            lock (mManualHisDataCach)
+            {
+                if (mManualHisDataCach.ContainsKey(sfile))
+                {
+                    if (!mManualHisDataCach[sfile].ContainsKey(id))
+                        mManualHisDataCach[sfile].Add(id, datablock);
+                }
+                else
+                {
+                    Dictionary<int, IMemoryBlock> blocks = new Dictionary<int, IMemoryBlock>();
+                    blocks.Add(id, datablock);
+                    mManualHisDataCach.Add(sfile, blocks);
+                }
+            }
         }
 
         /// <summary>
@@ -855,23 +995,117 @@ namespace Cdy.Tag
             Dictionary<int, long> mHeadAddress = new Dictionary<int, long>();
             Dictionary<int, long> mHeadValue = new Dictionary<int, long>();
 
-            foreach (var vv in mManualHisDataCach)
+            while(mManualHisDataCach.Count>0)
             {
-                var id = vv.Key;
-                var datablock = vv.Value;
-                DateTime time = datablock.ReadDateTime(4);
-                DateTime endTime = datablock.ReadDateTime(12);
-                int size = datablock.ReadInt(20);
-                mTagCount = datablock.ReadInt(24);//变量个数
-                string sfile = GetFileName(time);
-                if(sfile!=oldFile)
+                var vv = mManualHisDataCach.First();
+                lock(mManualHisDataCach)
                 {
-                    mHeadAddress = new Dictionary<int, long>();
-                    mHeadValue = new Dictionary<int, long>();
-
-                    var heads = GetDataRegionHeadPoint(id, time, out mwriter);
-                    mHeadAddress.Add(id, heads);
+                    mManualHisDataCach.Remove(vv.Key);
                 }
+
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+
+
+                LoggerService.Service.Info("SeriseEnginer", "SeriseFileItem" + this.Id + " 开始执行存储,数据块:" + vv.Value.Count, ConsoleColor.Cyan);
+
+                SortedDictionary<int, DateTime> times = new SortedDictionary<int, DateTime>();
+                DateTime maxTime = DateTime.MinValue;
+                DateTime mLastModifyTime = DateTime.MinValue;
+                foreach(var vvv in vv.Value)
+                {
+                    DateTime time = vvv.Value.ReadDateTime(4);
+
+                    DateTime endTime = vvv.Value.ReadDateTime(12);
+                   
+                    mTagCount = vvv.Value.ReadInt(24);//变量个数
+
+                    times.Add(vvv.Key, time);
+                    maxTime = time > maxTime ? time : maxTime;
+                    mLastModifyTime = endTime > mLastModifyTime ? endTime : mLastModifyTime;
+                }
+
+                mHeadAddress = GetDataRegionHeadPoint(vv.Key, times, maxTime, out mwriter);
+
+                long ltmp = sw.ElapsedMilliseconds;
+
+                mHeadValue.Clear();
+                mwriter.GoToEnd();
+                var vpointer = mwriter.CurrentPostion;
+
+                //写入数据，同时获取数据块地址
+                foreach (var vvv in vv.Value)
+                {
+                    int size = vvv.Value.ReadInt(20);
+                    mHeadValue.Add(vvv.Key, vpointer);
+                    vvv.Value.WriteToStream(mwriter.GetStream(), 28, size - 28);//直接拷贝数据块
+                    vpointer += (size - 28);
+                }
+
+                long ltmp2 = sw.ElapsedMilliseconds;
+
+                //更新数据块指针
+                foreach (var hd in mHeadAddress)
+                {
+                    mwriter.Write(mHeadValue[hd.Key], hd.Value);
+                }
+
+                long ltmp3 = sw.ElapsedMilliseconds;
+
+
+                //更新文件的最后修改时间
+                var vtmp = mwriter.ReadDateTime(8);
+                if (mLastModifyTime > vtmp)
+                {
+                    mwriter.Write(mLastModifyTime, 8);
+                }
+
+                mwriter.Flush();
+
+                if (mwriter != mFileWriter)
+                    mwriter.Close();
+                
+
+                foreach (var vvv in vv.Value)
+                {
+                    (vvv.Value as MarshalMemoryBlock).MakeMemoryNoBusy();
+                    MarshalMemoryBlockPool.Pool.Release(vvv.Value as MarshalMemoryBlock);
+                }
+
+                foreach (var tm in times)
+                {
+                    var vtime = FormateTime(tm.Value);
+
+                    //如果时间大于上次自动存储的时间，则需要将地址指针记录下来，等到下次自动存储内容更新时，将当前更新的数据的指针区同步过去
+                    //仿制被覆盖过去
+                    lock (mPointerCach)
+                    {
+                        if (tm.Value > mCurrentTime)
+                        {
+                            if (mPointerCach.ContainsKey(vtime))
+                            {
+                                var dd = mPointerCach[vtime];
+                                if (dd.ContainsKey(tm.Key))
+                                {
+                                    dd[tm.Key] = mHeadValue[tm.Key];
+                                }
+                                else
+                                {
+                                    dd.Add(tm.Key, mHeadValue[tm.Key]);
+                                }
+                            }
+                            else
+                            {
+                                Dictionary<int, long> dtmp = new Dictionary<int, long>();
+                                dtmp.Add(tm.Key, mHeadValue[tm.Key]);
+                                mPointerCach.Add(vtime, dtmp);
+                            }
+                        }
+                    }
+                }
+
+                //LoggerService.Service.Info("SeriseEnginer", "SeriseFileItem" + this.Id + " 完成存储,数据块:" + vv.Value.Count + " ReadHeadPoint:" + ltmp + " WriteData:" + (ltmp2 - ltmp) + " UpdateHead:" + (ltmp3 - ltmp2), ConsoleColor.Cyan);
+
 
             }
         }
@@ -899,7 +1133,7 @@ namespace Cdy.Tag
 
                 if (heads < 0) return;
 
-                //如果更新时间，小于最后更新时间，则更新
+                //如果更新时间，大于最后更新时间，则更新最后更新时间
                 var vtmp = mwriter.ReadDateTime(8);
                 if (endTime > vtmp)
                 {

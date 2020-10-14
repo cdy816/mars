@@ -46,7 +46,7 @@ namespace Cdy.Tag
         /// <param name="targetAddr"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        public override long Compress(IMemoryBlock source, long sourceAddr, MarshalMemoryBlock target, long targetAddr, long size)
+        public override long Compress(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size)
         {
            // LoggerService.Service.Erro("NoneCompressUnit", "目标地址:"+targetAddr +" 数值地址: " + (targetAddr+10) +" 变量个数: "+ (size - this.QulityOffset));
             target.WriteDatetime(targetAddr,this.StartTime);

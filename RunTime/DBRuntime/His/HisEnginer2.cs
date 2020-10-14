@@ -1041,6 +1041,8 @@ namespace Cdy.Tag
         /// </summary>
         private void SubmiteMemory(DateTime dateTime)
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             int number = MergeMemoryTime / CachMemoryTime;
 
             var mcc = mCurrentMemory;
@@ -1063,6 +1065,8 @@ namespace Cdy.Tag
             }
 
             CurrentMemory.CurrentDatetime = dateTime;
+
+            long ltmp = sw.ElapsedMilliseconds;
 
             HisDataMemoryQueryService.Service.RegistorMemory(CurrentMemory.CurrentDatetime,dateTime.AddSeconds(CachMemoryTime), CurrentMemory);
 
@@ -1090,6 +1094,11 @@ namespace Cdy.Tag
                 mLogManager?.RequestToSave(mcc.CurrentDatetime,dateTime, mcc);
 
             }
+            long ltmp2 = sw.ElapsedMilliseconds;
+            sw.Stop();
+           
+            LoggerService.Service.Info("HisEnginer", "SubmiteMemory 耗时:" + ltmp+","+ltmp2, ConsoleColor.Cyan);
+
         }
 
         /// <summary>

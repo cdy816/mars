@@ -19,7 +19,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 划分内存
     /// </summary>
-    public unsafe class FixedMemoryBlock : IDisposable, IMemoryBlock
+    public unsafe class FixedMemoryBlock : IDisposable, IMemoryFixedBlock
     {
 
         #region ... Variables  ...
@@ -252,9 +252,10 @@ namespace Cdy.Tag
         /// <summary>
         /// 清空内存
         /// </summary>
-        public void Clear()
+        public IMemoryFixedBlock Clear()
         {
             Array.Clear(this.Buffers, 0, Buffers.Length);
+            return this;
         }
 
 
@@ -1074,7 +1075,7 @@ namespace Cdy.Tag
         /// <param name="sourceStart"></param>
         /// <param name="targetStart"></param>
         /// <param name="len"></param>
-        public void CopyTo(IMemoryBlock target, long sourceStart, long targetStart, long len)
+        public void CopyTo(IMemoryFixedBlock target, long sourceStart, long targetStart, long len)
         {
             CopyTo(target as FixedMemoryBlock, sourceStart, targetStart, len);
         }
@@ -1087,7 +1088,7 @@ namespace Cdy.Tag
         /// <param name="sourceStart"></param>
         /// <param name="targetStart"></param>
         /// <param name="len"></param>
-        public void CopyTo(MarshalMemoryBlock target, long sourceStart, long targetStart, long len)
+        public void CopyTo(IMemoryBlock target, long sourceStart, long targetStart, long len)
         {
             if (target == null) return;
 
@@ -1096,32 +1097,66 @@ namespace Cdy.Tag
             //计算从源数据需要读取数据块索引
             long targetAddr = targetStart;
 
-            //拷贝数据到目标数据块中
-            var hdt = target.RelocationAddressToArrayIndex(targetAddr, out ostt);
-            if (ostt + len < target.BufferItemSize)
+            if (target is MarshalMemoryBlock)
             {
-                Marshal.Copy(this.Buffers, (int)sourceStart, (target.Handles[hdt] + (int)ostt), (int)len);
-               // Buffer.MemoryCopy((void*)(sourceStart), (void*)(target.Handles[hdt] + (int)ostt), this.Length - ostt, len);
+                var vtarget = target as MarshalMemoryBlock;
+
+                //拷贝数据到目标数据块中
+                var hdt = vtarget.RelocationAddressToArrayIndex(targetAddr, out ostt);
+                if (ostt + len < vtarget.BufferItemSize)
+                {
+                    Marshal.Copy(this.Buffers, (int)sourceStart, (vtarget.Handles[hdt] + (int)ostt), (int)len);
+                    // Buffer.MemoryCopy((void*)(sourceStart), (void*)(target.Handles[hdt] + (int)ostt), this.Length - ostt, len);
+                }
+                else
+                {
+                    Marshal.Copy(this.Buffers, (int)sourceStart, (vtarget.Handles[hdt] + (int)ostt), (int)(vtarget.BufferItemSize - ostt));
+                    // Buffer.MemoryCopy((void*)(sourceStart), (void*)(target.Handles[hdt] + (int)ostt), this.Length - ostt, (this.Length - ostt));
+                    var vcount = vtarget.BufferItemSize - ostt;
+                    var count = len - vcount;
+                    while (count > vtarget.BufferItemSize)
+                    {
+                        hdt++;
+                        Marshal.Copy(this.Buffers, (int)(sourceStart + vcount), (vtarget.Handles[hdt]), (int)(vtarget.BufferItemSize));
+                        //Buffer.MemoryCopy((void*)(sourceStart + vcount), (void*)(target.Handles[hdt]), target.BufferItemSize, target.BufferItemSize);
+                        count = len - vcount;
+                        vcount += vtarget.BufferItemSize;
+                    }
+                    if (count > 0)
+                    {
+                        hdt++;
+                        Marshal.Copy(this.Buffers, (int)(sourceStart + vcount), (vtarget.Handles[hdt]), (int)count);
+                        // Buffer.MemoryCopy((void*)(sourceStart + vcount), (void*)(target.Handles[hdt]), target.BufferItemSize, (count));
+                    }
+                }
             }
             else
             {
-                Marshal.Copy(this.Buffers, (int)sourceStart, (target.Handles[hdt] + (int)ostt), (int)(target.BufferItemSize - ostt));
-                // Buffer.MemoryCopy((void*)(sourceStart), (void*)(target.Handles[hdt] + (int)ostt), this.Length - ostt, (this.Length - ostt));
-                var vcount = target.BufferItemSize - ostt;
-                var count = len - vcount;
-                while (count > target.BufferItemSize)
+                var vtarget = target as MemoryBlock;
+
+                //拷贝数据到目标数据块中
+                var hdt = vtarget.RelocationAddressToArrayIndex(targetAddr, out ostt);
+                if (ostt + len < vtarget.BufferItemSize)
                 {
-                    hdt++;
-                    Marshal.Copy(this.Buffers, (int)(sourceStart+ vcount), (target.Handles[hdt]), (int)(target.BufferItemSize));
-                    //Buffer.MemoryCopy((void*)(sourceStart + vcount), (void*)(target.Handles[hdt]), target.BufferItemSize, target.BufferItemSize);
-                    count = len - vcount;
-                    vcount += target.BufferItemSize;
+                    Marshal.Copy(this.Buffers, (int)sourceStart, (vtarget.Handles[hdt] + (int)ostt), (int)len);
                 }
-                if (count > 0)
+                else
                 {
-                    hdt++;
-                    Marshal.Copy(this.Buffers, (int)(sourceStart + vcount), (target.Handles[hdt]), (int)count);
-                    // Buffer.MemoryCopy((void*)(sourceStart + vcount), (void*)(target.Handles[hdt]), target.BufferItemSize, (count));
+                    Marshal.Copy(this.Buffers, (int)sourceStart, (vtarget.Handles[hdt] + (int)ostt), (int)(vtarget.BufferItemSize - ostt));
+                    var vcount = vtarget.BufferItemSize - ostt;
+                    var count = len - vcount;
+                    while (count > vtarget.BufferItemSize)
+                    {
+                        hdt++;
+                        Marshal.Copy(this.Buffers, (int)(sourceStart + vcount), (vtarget.Handles[hdt]), (int)(vtarget.BufferItemSize));
+                        count = len - vcount;
+                        vcount += vtarget.BufferItemSize;
+                    }
+                    if (count > 0)
+                    {
+                        hdt++;
+                        Marshal.Copy(this.Buffers, (int)(sourceStart + vcount), (vtarget.Handles[hdt]), (int)count);
+                    }
                 }
             }
         }

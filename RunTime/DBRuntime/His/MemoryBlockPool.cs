@@ -15,19 +15,19 @@ using System.Text;
 
 namespace DBRuntime.His
 {
-    public class MarshalMemoryBlockPool
+    public class MemoryBlockPool
     {
 
         #region ... Variables  ...
         /// <summary>
         /// 
         /// </summary>
-        public static MarshalMemoryBlockPool Pool = new MarshalMemoryBlockPool();
+        public static MemoryBlockPool Pool = new MemoryBlockPool();
 
         /// <summary>
         /// 
         /// </summary>
-        private Dictionary<long, Queue<MarshalMemoryBlock>> mFreePools = new Dictionary<long, Queue<MarshalMemoryBlock>>();
+        private Dictionary<long, Queue<MemoryBlock>> mFreePools = new Dictionary<long, Queue<MemoryBlock>>();
 
         #endregion ...Variables...
 
@@ -50,7 +50,7 @@ namespace DBRuntime.His
         /// </summary>
         /// <param name="size"></param>
         /// <returns></returns>
-        public MarshalMemoryBlock Get(long size)
+        public MemoryBlock Get(long size)
         {
             lock (mFreePools)
             {
@@ -71,7 +71,7 @@ namespace DBRuntime.His
                 else
                 {
                     var bnb = NewBlock(size);
-                    Queue<MarshalMemoryBlock> dd = new Queue<MarshalMemoryBlock>();
+                    Queue<MemoryBlock> dd = new Queue<MemoryBlock>();
                     mFreePools.Add(size, dd);
                     return bnb;
                 }
@@ -83,9 +83,9 @@ namespace DBRuntime.His
         /// </summary>
         /// <param name="size"></param>
         /// <returns></returns>
-        private MarshalMemoryBlock NewBlock(long size)
+        private MemoryBlock NewBlock(long size)
         {
-            return new MarshalMemoryBlock(size,(int)size).Clear() as MarshalMemoryBlock;
+            return new MemoryBlock(size,(int)size).Clear() as MemoryBlock;
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace DBRuntime.His
         /// </summary>
         /// <param name="block"></param>
 
-        public void Release(MarshalMemoryBlock block)
+        public void Release(MemoryBlock block)
         {
             lock (mFreePools)
             {

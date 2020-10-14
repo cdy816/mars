@@ -445,7 +445,7 @@ namespace Cdy.Tag
             DateTime startTime = new DateTime(yy, mm, dd, hh, 0, 0);
             try
             {
-                if (mTimeFileMaps.ContainsKey(id))
+                if (mTimeFileMaps.ContainsKey(id)&& mTimeFileMaps[id].ContainsKey(yy))
                 {
                     return mTimeFileMaps[id][yy].GetDataFile(startTime);
                 }

@@ -196,7 +196,7 @@ namespace SimDriver
                 mTagService.SubmiteNotifyChanged();
 
                 long llsw = sw.ElapsedMilliseconds;
-
+                if(!mIsSecond)
                 System.Threading.Tasks.Parallel.ForEach(mManualRecordTagCach, (vv) => {
                     if (vv.Key == "Sim:cos")
                     {

@@ -466,6 +466,17 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override bool CheckAndOpen()
+        {
+            if(mStream==null || !mStream.CanRead)
+            return OpenFile(FileName);
+            return true;
+        }
+
         public override DataFileSeriserbase CloseAndReOpen()
         {
             long pos = mStream.Position;

@@ -20,7 +20,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 划分内存
     /// </summary>
-    public unsafe class MarshalFixedMemoryBlock : IDisposable,IMemoryBlock
+    public unsafe class MarshalFixedMemoryBlock : IDisposable,IMemoryFixedBlock
     {
 
         #region ... Variables  ...
@@ -276,7 +276,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 清空内存
         /// </summary>
-        public void Clear()
+        public IMemoryFixedBlock Clear()
         {
             long i = 0;
             for (i = 0; i < mSize / zoreData.Length; i++)
@@ -290,6 +290,7 @@ namespace Cdy.Tag
 
             //mUsedSize = 0;
             mPosition = 0;
+            return this;
         }
 
         /// <summary>
@@ -1263,7 +1264,7 @@ namespace Cdy.Tag
         /// <param name="sourceStart"></param>
         /// <param name="targetStart"></param>
         /// <param name="len"></param>
-        public void CopyTo(IMemoryBlock target,long sourceStart, long targetStart, long len)
+        public void CopyTo(IMemoryFixedBlock target,long sourceStart, long targetStart, long len)
         {
             if (target == null || !(target is MarshalFixedMemoryBlock)) return;
 
@@ -1291,7 +1292,7 @@ namespace Cdy.Tag
         /// <param name="sourceStart"></param>
         /// <param name="targetStart"></param>
         /// <param name="len"></param>
-        public void CopyTo(MarshalMemoryBlock target, long sourceStart, long targetStart, long len)
+        public void CopyTo(IMemoryBlock target, long sourceStart, long targetStart, long len)
         {
             if (target == null) return;
 
@@ -1300,28 +1301,60 @@ namespace Cdy.Tag
             //计算从源数据需要读取数据块索引
             long targetAddr = targetStart;
 
-            //拷贝数据到目标数据块中
-            var hdt = target.RelocationAddressToArrayIndex(targetAddr, out ostt);
-            if (ostt + len < target.BufferItemSize)
+            if (target is MarshalMemoryBlock)
             {
-                Buffer.MemoryCopy((void*)(sourceStart), (void*)(target.Handles[hdt] + (int)ostt), target.BufferItemSize - ostt, len);
+                var vtarget = target as MarshalMemoryBlock;
+                //拷贝数据到目标数据块中
+                var hdt = vtarget.RelocationAddressToArrayIndex(targetAddr, out ostt);
+                if (ostt + len < vtarget.BufferItemSize)
+                {
+                    Buffer.MemoryCopy((void*)(sourceStart), (void*)(vtarget.Handles[hdt] + (int)ostt), vtarget.BufferItemSize - ostt, len);
+                }
+                else
+                {
+                    Buffer.MemoryCopy((void*)(sourceStart), (void*)(vtarget.Handles[hdt] + (int)ostt), vtarget.BufferItemSize - ostt, (vtarget.BufferItemSize - ostt));
+                    var vcount = vtarget.BufferItemSize - ostt;
+                    var count = len - vcount;
+                    while (count > vtarget.BufferItemSize)
+                    {
+                        hdt++;
+                        Buffer.MemoryCopy((void*)(sourceStart + vcount), (void*)(vtarget.Handles[hdt]), vtarget.BufferItemSize, vtarget.BufferItemSize);
+                        count = len - vcount;
+                        vcount += vtarget.BufferItemSize;
+                    }
+                    if (count > 0)
+                    {
+                        hdt++;
+                        Buffer.MemoryCopy((void*)(sourceStart + vcount), (void*)(vtarget.Handles[hdt]), vtarget.BufferItemSize, (count));
+                    }
+                }
             }
             else
             {
-                Buffer.MemoryCopy((void*)(sourceStart), (void*)(target.Handles[hdt] + (int)ostt), target.BufferItemSize - ostt, (target.BufferItemSize - ostt));
-                var vcount = target.BufferItemSize - ostt;
-                var count = len - vcount;
-                while (count > target.BufferItemSize)
+                var vtarget = target as MemoryBlock;
+                //拷贝数据到目标数据块中
+                var hdt = vtarget.RelocationAddressToArrayIndex(targetAddr, out ostt);
+                if (ostt + len < vtarget.BufferItemSize)
                 {
-                    hdt++;
-                    Buffer.MemoryCopy((void*)(sourceStart+ vcount), (void*)(target.Handles[hdt]), target.BufferItemSize, target.BufferItemSize);
-                    count = len - vcount;
-                    vcount += target.BufferItemSize;
+                    Buffer.MemoryCopy((void*)(sourceStart), (void*)(vtarget.Handles[hdt] + (int)ostt), vtarget.BufferItemSize - ostt, len);
                 }
-                if (count > 0)
+                else
                 {
-                    hdt++;
-                    Buffer.MemoryCopy((void*)(sourceStart+ vcount), (void*)(target.Handles[hdt]), target.BufferItemSize, (count));
+                    Buffer.MemoryCopy((void*)(sourceStart), (void*)(vtarget.Handles[hdt] + (int)ostt), vtarget.BufferItemSize - ostt, (vtarget.BufferItemSize - ostt));
+                    var vcount = vtarget.BufferItemSize - ostt;
+                    var count = len - vcount;
+                    while (count > vtarget.BufferItemSize)
+                    {
+                        hdt++;
+                        Buffer.MemoryCopy((void*)(sourceStart + vcount), (void*)(vtarget.Handles[hdt]), vtarget.BufferItemSize, vtarget.BufferItemSize);
+                        count = len - vcount;
+                        vcount += vtarget.BufferItemSize;
+                    }
+                    if (count > 0)
+                    {
+                        hdt++;
+                        Buffer.MemoryCopy((void*)(sourceStart + vcount), (void*)(vtarget.Handles[hdt]), vtarget.BufferItemSize, (count));
+                    }
                 }
             }
         }
@@ -1333,7 +1366,7 @@ namespace Cdy.Tag
         /// <param name="offset"></param>
         /// <param name="len"></param>
         /// <returns></returns>
-        public IMemoryBlock WriteToStream(Stream stream,long offset,long len)
+        public IMemoryFixedBlock WriteToStream(Stream stream,long offset,long len)
         {
             byte[] bvals = new byte[1024 * 1024 * 4];
             long ltmp = len;

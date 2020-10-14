@@ -52,7 +52,11 @@ namespace Cdy.Tag
         /// </summary>
         public abstract DataFileSeriserbase Close();
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public abstract bool CheckAndOpen();
 
         /// <summary>
         /// 创建新的画面

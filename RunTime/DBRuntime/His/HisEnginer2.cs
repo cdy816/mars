@@ -741,6 +741,61 @@ namespace Cdy.Tag
             }
         }
 
+
+        private int CalCachDatablockSizeForManualRecord(Cdy.Tag.TagType tagType, int headSize, int valueCount, out int dataOffset, out int qulityOffset)
+        {
+            //单个数据块内容包括：时间戳(2)+数值+质量戳(1)
+
+            qulityOffset = headSize;
+            int count = Math.Max(CachMemoryTime, valueCount);
+
+            //数据区偏移,时间戳占4个字节,质量戳占1个字节
+            dataOffset = headSize + count * 4;
+            switch (tagType)
+            {
+                case Cdy.Tag.TagType.Byte:
+                case Cdy.Tag.TagType.Bool:
+                    qulityOffset = dataOffset + count;
+                    return qulityOffset + count;
+                case Cdy.Tag.TagType.Short:
+                case Cdy.Tag.TagType.UShort:
+                    qulityOffset = dataOffset + count * 2;
+                    return qulityOffset + count;
+                case Cdy.Tag.TagType.Int:
+                case Cdy.Tag.TagType.UInt:
+                case Cdy.Tag.TagType.Float:
+                    qulityOffset = dataOffset + count * 4;
+                    return qulityOffset + count;
+                case Cdy.Tag.TagType.Long:
+                case Cdy.Tag.TagType.ULong:
+                case Cdy.Tag.TagType.Double:
+                case Cdy.Tag.TagType.DateTime:
+                case TagType.UIntPoint:
+                case TagType.IntPoint:
+                    qulityOffset = dataOffset + count * 8;
+                    return qulityOffset + count;
+                case Cdy.Tag.TagType.IntPoint3:
+                case Cdy.Tag.TagType.UIntPoint3:
+                    qulityOffset = dataOffset + count * 12;
+                    return qulityOffset + count;
+
+                case Cdy.Tag.TagType.LongPoint:
+                case Cdy.Tag.TagType.ULongPoint:
+                    qulityOffset = dataOffset + count * 16;
+                    return qulityOffset + count;
+
+                case Cdy.Tag.TagType.LongPoint3:
+                case Cdy.Tag.TagType.ULongPoint3:
+                    qulityOffset = dataOffset + count * 24;
+                    return qulityOffset + count;
+                case Cdy.Tag.TagType.String:
+                    qulityOffset = dataOffset + count * Const.StringSize;
+                    return qulityOffset + count;
+                default:
+                    return 0;
+            }
+        }
+
         /// <summary>
         /// 分配内存
         /// </summary>
@@ -768,7 +823,7 @@ namespace Cdy.Tag
             foreach (var vv in mHisTags)
             {
 
-                if (vv.Value.Type != RecordType.Manual)
+                if (vv.Value.Type != RecordType.Driver)
                 {
                     var ss = CalMergeBlockSize(vv.Value.TagType, blockheadsize, out valueOffset, out qulityOffset);
 
@@ -1096,8 +1151,8 @@ namespace Cdy.Tag
             }
             long ltmp2 = sw.ElapsedMilliseconds;
             sw.Stop();
-           
-            LoggerService.Service.Info("HisEnginer", "SubmiteMemory 耗时:" + ltmp+","+ltmp2, ConsoleColor.Cyan);
+
+            LoggerService.Service.Info("HisEnginer", "SubmiteMemory 耗时:" + ltmp + "," + ltmp2, ConsoleColor.Cyan);
 
         }
 
@@ -1392,7 +1447,7 @@ namespace Cdy.Tag
 
             SortedDictionary<DateTime, ManualHisDataMemoryBlock> datacach;
 
-            if (mHisTags.ContainsKey(id) && mHisTags[id].Type == RecordType.Manual)
+            if (mHisTags.ContainsKey(id) && mHisTags[id].Type == RecordType.Driver)
             {
                 lock (mManualHisDataCach)
                 {
@@ -1422,10 +1477,10 @@ namespace Cdy.Tag
                     {
                         if(hb!=null)
                             HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
-                        var css = CalCachDatablockSize(tag.TagType, 0, MergeMemoryTime * 1000 / timeUnit, out valueOffset, out qulityOffset);
+                        var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * 1000 / timeUnit, out valueOffset, out qulityOffset);
                         hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
                         hb.Time = time;
-                        hb.MaxCount = MergeMemoryTime * 1000 / timeUnit;
+                        hb.MaxCount = MergeMemoryTime * 1000 / timeUnit + 2;
                         hb.TimeUnit = timeUnit;
                         hb.TimeLen = 4;
                         hb.TimerAddress = 0;
@@ -1760,7 +1815,7 @@ namespace Cdy.Tag
 
             SortedDictionary<DateTime, ManualHisDataMemoryBlock> datacach;
 
-            if (mHisTags.ContainsKey(id) && mHisTags[id].Type == RecordType.Manual)
+            if (mHisTags.ContainsKey(id) && mHisTags[id].Type == RecordType.Driver)
             {
                 lock (mManualHisDataCach)
                 {
@@ -1787,10 +1842,10 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    var css = CalCachDatablockSize(tag.TagType, 0, MergeMemoryTime * 1000 / timeUnit, out valueOffset, out qulityOffset);
+                    var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * 1000 / timeUnit, out valueOffset, out qulityOffset);
                     hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
                     hb.Time = time;
-                    hb.MaxCount = MergeMemoryTime * 1000 / timeUnit;
+                    hb.MaxCount = MergeMemoryTime * 1000 / timeUnit +2;
                     hb.TimeUnit = timeUnit;
                     hb.TimeLen = 4;
                     hb.TimerAddress = 0;
@@ -2023,7 +2078,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public List<int> GetManualRecordTagId()
         {
-            return mManager.HisTags.Where(e => e.Value.Type == RecordType.Manual).Select(e=>e.Value.Id).ToList();
+            return mManager.HisTags.Where(e => e.Value.Type == RecordType.Driver).Select(e=>e.Value.Id).ToList();
         }
 
         /// <summary>

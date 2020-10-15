@@ -851,7 +851,9 @@ namespace Cdy.Tag
         {
             var count = (int)(size - this.QulityOffset);
 
-            if(mMarshalMemory==null)
+            byte tlen = (source as HisDataMemoryBlock).TimeLen;
+
+            if (mMarshalMemory==null)
             {
                 mMarshalMemory = new MemoryBlock(count * 10);
             }
@@ -862,6 +864,8 @@ namespace Cdy.Tag
             }
 
             emptys.CheckAndResize(count);
+
+           
 
             var datas = CompressTimers(source, sourceAddr, (int)count, emptys);
             long rsize = 0;
@@ -877,117 +881,117 @@ namespace Cdy.Tag
             switch (type)
             {
                 case TagType.Bool:
-                    var cval = CompressBoolValues(source, count * 2 + sourceAddr, count, emptys);
+                    var cval = CompressBoolValues(source, count * tlen + sourceAddr, count, emptys);
                     target.Write(cval.Length);
                     target.Write(cval);
                     rsize += 4;
                     rsize += cval.Length;
                     emptys.ReadIndex = 0;
-                    var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, emptys);
+                    var cqus = CompressQulitys(source, count * (tlen+1) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.Byte:
-                    cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, emptys,TagType);
+                    cval = CompressValues<byte>(source, count * tlen + sourceAddr, count, emptys,TagType);
                     target.Write(cval.Length);
                     target.Write(cval);
                     rsize += 4;
                     rsize += cval.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 3 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 1) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.UShort:
-                    var ures = CompressValues<ushort>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var ures = CompressValues<ushort>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ures.Length);
                     target.Write(ures);
                     rsize += 4;
                     rsize += ures.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 4 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 2) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.Short:
-                   var  res = CompressValues<short>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                   var  res = CompressValues<short>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(res.Length);
                     target.Write(res);
                     rsize += 4;
                     rsize += res.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 4 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 2) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.UInt:
-                    var uires = CompressValues<uint>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var uires = CompressValues<uint>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(uires.Length);
                     target.Write(uires);
                     rsize += 4;
                     rsize += uires.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 4) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.Int:
-                    var ires = CompressValues<int>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var ires = CompressValues<int>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ires.Length);
                     target.Write(ires);
                     rsize += 4;
                     rsize += ires.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 4) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.ULong:
-                    var ulres = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var ulres = CompressValues<ulong>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ulres.Length);
                     target.Write(ulres);
                     rsize += 4;
                     rsize += ulres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.Long:
-                    var lres = CompressValues<long>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var lres = CompressValues<long>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(lres.Length);
                     target.Write(lres);
                     rsize += 4;
                     rsize += lres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.DateTime:
-                    var dres = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var dres = CompressValues<ulong>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(dres.Length);
                     target.Write(dres);
                     rsize += 4;
                     rsize += dres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1004,13 +1008,13 @@ namespace Cdy.Tag
                         mDCompress.CheckAndResizeTo(count);
                     }
 
-                    var ddres = CompressValues<double>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var ddres = CompressValues<double>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ddres.Length);
                     target.Write(ddres);
                     rsize += 4;
                     rsize += ddres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen+8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1027,20 +1031,20 @@ namespace Cdy.Tag
                         mFCompress.CheckAndResizeTo(count);
                     }
 
-                    var fres = CompressValues<float>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var fres = CompressValues<float>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(fres.Length);
                     target.Write(fres);
                     rsize += 4;
                     rsize += fres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen+4) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.String:
-                    var vals = source.ReadStrings(count * 2 + (int)sourceAddr, count);
+                    var vals = source.ReadStrings(count * tlen + (int)sourceAddr, count);
                     var qus = source.ReadBytes(count);
                     var sres = CompressValues(vals, emptys);
                     target.Write(sres.Length);
@@ -1055,104 +1059,104 @@ namespace Cdy.Tag
                     rsize += cqus.Length;
                     break;
                 case TagType.IntPoint:
-                    var ipres = CompressValues<IntPointData>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var ipres = CompressValues<IntPointData>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen+8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.UIntPoint:
-                    ipres = CompressValues<UIntPointData>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    ipres = CompressValues<UIntPointData>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.LongPoint:
-                    ipres = CompressValues<LongPointData>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    ipres = CompressValues<LongPointData>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 18 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 16) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.ULongPoint:
-                    ipres = CompressValues<ULongPointData>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    ipres = CompressValues<ULongPointData>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 18 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 16) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.IntPoint3:
-                    ipres = CompressValues<IntPoint3Data>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    ipres = CompressValues<IntPoint3Data>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 14 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 12) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.UIntPoint3:
-                    ipres = CompressValues<UIntPoint3Data>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    ipres = CompressValues<UIntPoint3Data>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 14 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 12) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.LongPoint3:
-                    ipres = CompressValues<LongPoint3Data>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    ipres = CompressValues<LongPoint3Data>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 26 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 24) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
                     rsize += cqus.Length;
                     break;
                 case TagType.ULongPoint3:
-                    ipres = CompressValues<ULongPoint3Data>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    ipres = CompressValues<ULongPoint3Data>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 26 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen+24) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;

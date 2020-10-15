@@ -110,7 +110,7 @@ namespace SimDriver
 
             foreach (var vv in mTagIdCach)
             {
-                mManualRecordTagCach.Add(vv.Key, mTagHisValueService.GetTagRecordType(vv.Value.Select(e => e.Id).ToList()).Where(e=>e.Value == RecordType.Manual).Select(e=>e.Key).ToList());
+                mManualRecordTagCach.Add(vv.Key, mTagHisValueService.GetTagRecordType(vv.Value.Select(e => e.Id).ToList()).Where(e=>e.Value == RecordType.Driver).Select(e=>e.Key).ToList());
             }
 
         }

@@ -1920,49 +1920,49 @@ namespace Cdy.Tag
             switch (type)
             {
                 case TagType.Byte:
-                    var cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, tims, type);
+                    var cval = CompressValues<byte>(source, count * tlen + sourceAddr, count, tims, type);
                     var timeData = CompressTimers(tims, usedIndex);
-                    var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, usedIndex);
+                    var cqus = CompressQulitys(source, count * (tlen + 1) + sourceAddr, count, usedIndex);
 
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Short:
-                    cval = CompressValues<short>(source, count * 2 + sourceAddr, count, tims, type);
+                    cval = CompressValues<short>(source, count * tlen + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
-                    cqus = CompressQulitys(source, count * 4 + sourceAddr, count, usedIndex);
+                    cqus = CompressQulitys(source, count * (tlen + 2) + sourceAddr, count, usedIndex);
 
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.UShort:
-                    cval = CompressValues<ushort>(source, count * 2 + sourceAddr, count, tims, type);
+                    cval = CompressValues<ushort>(source, count * tlen + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
-                    cqus = CompressQulitys(source, count * 4 + sourceAddr, count, usedIndex);
+                    cqus = CompressQulitys(source, count * (tlen + 2) + sourceAddr, count, usedIndex);
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Int:
-                    cval = CompressValues<int>(source, count * 2 + sourceAddr, count, tims, type);
+                    cval = CompressValues<int>(source, count * tlen + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
-                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
+                    cqus = CompressQulitys(source, count * (tlen + 4) + sourceAddr, count, usedIndex);
 
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.UInt:
-                    cval = CompressValues<uint>(source, count * 2 + sourceAddr, count, tims, type);
+                    cval = CompressValues<uint>(source, count * tlen + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
-                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
+                    cqus = CompressQulitys(source, count * (tlen + 4) + sourceAddr, count, usedIndex);
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Long:
-                    cval = CompressValues<long>(source, count * 2 + sourceAddr, count, tims, type);
+                    cval = CompressValues<long>(source, count * tlen + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
+                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, usedIndex);
 
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.ULong:
-                    cval = CompressValues<ulong>(source, count * 2 + sourceAddr, count, tims, type);
+                    cval = CompressValues<ulong>(source, count * tlen + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
+                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, usedIndex);
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Double:
@@ -1976,9 +1976,9 @@ namespace Cdy.Tag
                         mDCompress.CheckAndResizeTo(count);
                     }
 
-                    cval = CompressValues<double>(source, count * 2 + sourceAddr, count, tims, type);
+                    cval = CompressValues<double>(source, count * tlen + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, usedIndex);
+                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, usedIndex);
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;
                 case TagType.Float:
@@ -1990,9 +1990,9 @@ namespace Cdy.Tag
                     {
                         mFCompress.CheckAndResizeTo(count);
                     }
-                    cval = CompressValues<float>(source, count * 2 + sourceAddr, count, tims, type);
+                    cval = CompressValues<float>(source, count * tlen + sourceAddr, count, tims, type);
                     timeData = CompressTimers(tims, usedIndex);
-                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, usedIndex);
+                    cqus = CompressQulitys(source, count * (tlen + 4) + sourceAddr, count, usedIndex);
 
                     rsize = FillData(cval, cqus, timeData, target, targetAddr);
                     break;

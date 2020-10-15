@@ -26,9 +26,9 @@ namespace Cdy.Tag
         /// </summary>
         ValueChanged,
         /// <summary>
-        /// 手动
+        /// 驱动自己更新
         /// </summary>
-        Manual
+        Driver
     }
 
 

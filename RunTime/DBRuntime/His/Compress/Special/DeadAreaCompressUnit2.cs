@@ -171,6 +171,8 @@ namespace Cdy.Tag
             var count = (int)(size - this.QulityOffset);
             //var tims = source.ReadUShorts(sourceAddr, (int)count);
 
+            byte tlen = (source as HisDataMemoryBlock).TimeLen;
+
             if (mMarshalMemory == null)
             {
                 mMarshalMemory = new MemoryBlock(count * 10);
@@ -199,7 +201,7 @@ namespace Cdy.Tag
 
                     var datas = CompressTimers(source, sourceAddr, (int)count, emptys);
 
-                    var cval = CompressBoolValues(source, count * 2 + sourceAddr, count, emptys);
+                    var cval = CompressBoolValues(source, count * tlen + sourceAddr, count, emptys);
 
                     int rcount = count - emptys.WriteIndex - 1;
                     //写入时间
@@ -218,7 +220,7 @@ namespace Cdy.Tag
                     emptys.ReadIndex = 0;
 
                     //写入质量戳
-                    var cqus = CompressQulitys(source, count * 3 + sourceAddr, count, emptys);
+                    var cqus = CompressQulitys(source, count * (tlen + 1) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -227,7 +229,7 @@ namespace Cdy.Tag
                 case TagType.Byte:
 
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
-                    cval = CompressValues<byte>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    cval = CompressValues<byte>(source, count * tlen + sourceAddr, count, emptys, TagType);
 
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
@@ -247,7 +249,7 @@ namespace Cdy.Tag
                     emptys2.ReadIndex = 0;
 
                     //写入质量戳
-                    cqus = CompressQulitys(source, count * 3 + sourceAddr, count, emptys2);
+                    cqus = CompressQulitys(source, count * (tlen + 1) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -255,7 +257,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.UShort:
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
-                    var ures = CompressValues<ushort>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var ures = CompressValues<ushort>(source, count * tlen + sourceAddr, count, emptys, TagType);
 
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
@@ -273,7 +275,7 @@ namespace Cdy.Tag
                     rsize += ures.Length;
                     //质量戳
                     emptys2.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 4 + sourceAddr, count, emptys2);
+                    cqus = CompressQulitys(source, count * (tlen + 2) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -281,7 +283,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.Short:
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
-                    var res = CompressValues<short>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var res = CompressValues<short>(source, count * tlen + sourceAddr, count, emptys, TagType);
 
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
@@ -299,7 +301,7 @@ namespace Cdy.Tag
                     rsize += res.Length;
 
                     emptys2.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 4 + sourceAddr, count, emptys2);
+                    cqus = CompressQulitys(source, count * (tlen + 2) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -307,7 +309,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.UInt:
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
-                    var uires = CompressValues<uint>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var uires = CompressValues<uint>(source, count * tlen + sourceAddr, count, emptys, TagType);
 
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
@@ -325,7 +327,7 @@ namespace Cdy.Tag
                     rsize += uires.Length;
                     //质量
                     emptys2.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, emptys2);
+                    cqus = CompressQulitys(source, count * (tlen + 4) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -333,7 +335,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.Int:
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
-                    var ires = CompressValues<int>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var ires = CompressValues<int>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
@@ -350,7 +352,7 @@ namespace Cdy.Tag
                     rsize += ires.Length;
                     emptys2.ReadIndex = 0;
                     //质量
-                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, emptys2);
+                    cqus = CompressQulitys(source, count * (tlen + 4) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -358,7 +360,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.ULong:
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
-                    var ulres = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var ulres = CompressValues<ulong>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
@@ -375,7 +377,7 @@ namespace Cdy.Tag
                     rsize += ulres.Length;
                     //质量
                     emptys2.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys2);
+                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -383,7 +385,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.Long:
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
-                    var lres = CompressValues<long>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var lres = CompressValues<long>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
@@ -400,7 +402,7 @@ namespace Cdy.Tag
                     rsize += lres.Length;
                     //质量
                     emptys2.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys2);
+                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -409,7 +411,7 @@ namespace Cdy.Tag
                 case TagType.DateTime:
                     datas = CompressTimers(source, sourceAddr, (int)count, emptys);
 
-                    var dres = CompressValues<ulong>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var dres = CompressValues<ulong>(source, count * tlen + sourceAddr, count, emptys, TagType);
 
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
@@ -426,7 +428,7 @@ namespace Cdy.Tag
                     rsize += dres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -443,7 +445,7 @@ namespace Cdy.Tag
                         mDCompress.CheckAndResizeTo(count);
                     }
 
-                    var ddres = CompressValues<double>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var ddres = CompressValues<double>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
@@ -466,7 +468,7 @@ namespace Cdy.Tag
                     rsize += ddres.Length;
                     //质量
                     emptys2.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys2);
+                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -491,7 +493,7 @@ namespace Cdy.Tag
                         mFCompress.CheckAndResizeTo(count);
                     }
 
-                    var fres = CompressValues<float>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var fres = CompressValues<float>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
                     //写入时间
@@ -508,7 +510,7 @@ namespace Cdy.Tag
                     rsize += fres.Length;
                     //质量
                     emptys2.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 6 + sourceAddr, count, emptys2);
+                    cqus = CompressQulitys(source, count * (tlen + 4) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -528,7 +530,7 @@ namespace Cdy.Tag
 
                     //写入数据
 
-                    var vals = source.ReadStrings(count * 2 + (int)sourceAddr, count);
+                    var vals = source.ReadStrings(count * tlen + (int)sourceAddr, count);
                     var qus = source.ReadBytes(count);
                     var sres = CompressValues(vals, emptys);
                     target.Write(sres.Length);
@@ -553,14 +555,14 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += datas.Length;
                     //数值
-                    var ipres = CompressValues<IntPointData>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    var ipres = CompressValues<IntPointData>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -577,14 +579,14 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += datas.Length;
                     //数值
-                    ipres = CompressValues<UIntPointData>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    ipres = CompressValues<UIntPointData>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 10 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -601,14 +603,14 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += datas.Length;
                     //值
-                    ipres = CompressValues<LongPointData>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    ipres = CompressValues<LongPointData>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 18 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 16) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -625,14 +627,14 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += datas.Length;
                     //值
-                    ipres = CompressValues<ULongPointData>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    ipres = CompressValues<ULongPointData>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 18 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 16) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -650,14 +652,14 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += datas.Length;
                     //值
-                    ipres = CompressValues<IntPoint3Data>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    ipres = CompressValues<IntPoint3Data>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 14 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 12) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -674,14 +676,14 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += datas.Length;
                     //值
-                    ipres = CompressValues<UIntPoint3Data>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    ipres = CompressValues<UIntPoint3Data>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 14 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 12) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -698,14 +700,14 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += datas.Length;
                     //值
-                    ipres = CompressValues<LongPoint3Data>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    ipres = CompressValues<LongPoint3Data>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 26 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 24) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -722,14 +724,14 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += datas.Length;
                     //值
-                    ipres = CompressValues<ULongPoint3Data>(source, count * 2 + sourceAddr, count, emptys, TagType);
+                    ipres = CompressValues<ULongPoint3Data>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     target.Write(ipres.Length);
                     target.Write(ipres);
                     rsize += 4;
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * 26 + sourceAddr, count, emptys);
+                    cqus = CompressQulitys(source, count * (tlen + 24) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;

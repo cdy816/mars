@@ -168,7 +168,7 @@ namespace DBRuntime.His
         {
             if (this.HisEnginer.HisTagManager.HisTags.ContainsKey(id))
             {
-                return HisEnginer.HisTagManager.HisTags[id].Type == RecordType.Manual;
+                return HisEnginer.HisTagManager.HisTags[id].Type == RecordType.Driver;
             }
             return false;
         }

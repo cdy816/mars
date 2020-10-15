@@ -974,6 +974,10 @@ namespace Cdy.Tag
                 {
                     if (!mManualHisDataCach[sfile].ContainsKey(id))
                         mManualHisDataCach[sfile].Add(id, datablock);
+                    else
+                    {
+                        LoggerService.Service.Warn("SeriseEnginer", "数据存储出现阻塞:"+id);
+                    }
                 }
                 else
                 {

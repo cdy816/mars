@@ -320,13 +320,13 @@ namespace Cdy.Tag
                           });
                     }
 
-                    ServiceLocator.Locator.Resolve<IDataSerialize2>().RequestToSave();
-
                     //#if DEBUG
                     sw.Stop();
                     LoggerService.Service.Info("Compress", ">>>>>>>>>压缩完成>>>>>>>>>" + " ElapsedMilliseconds:" + sw.ElapsedMilliseconds, ConsoleColor.Blue);
                     //#endif
-                    
+
+                    ServiceLocator.Locator.Resolve<IDataSerialize2>().RequestToSave();
+
                 }
                 catch(Exception ex)
                 {

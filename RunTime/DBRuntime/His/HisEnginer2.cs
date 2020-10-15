@@ -904,7 +904,7 @@ namespace Cdy.Tag
             LoggerService.Service.Info("HisEnginer", "开始启动");
             mIsClosed = false;
             mMegerProcessIsClosed = false;
-            LoggerService.Service.Info("Record", "历史变量个数: " + this.mHisTags.Count);
+            LoggerService.Service.Info("HisEnginer", "历史变量个数: " + this.mHisTags.Count);
 
             ClearMemoryHisData(mCachMemory1);
             ClearMemoryHisData(mCachMemory2);
@@ -967,7 +967,7 @@ namespace Cdy.Tag
         {
             while (memory.IsBusy())
             {
-                LoggerService.Service.Info("Record",  "记录出现阻塞 " + memory.Name);
+                LoggerService.Service.Info("HisEnginer",  "记录出现阻塞 " + memory.Name);
                 System.Threading.Thread.Sleep(1);
             }
         }
@@ -1050,7 +1050,7 @@ namespace Cdy.Tag
             }
 
             var mcc = mWaitForMergeMemory;
-            LoggerService.Service.Info("Record", "开始内存合并" + mcc.Name, ConsoleColor.Green);
+            LoggerService.Service.Info("HisEnginer", "开始内存合并" + mcc.Name, ConsoleColor.Green);
             
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -1087,7 +1087,7 @@ namespace Cdy.Tag
 
             mcc.MakeMemoryNoBusy();
             sw.Stop();
-            LoggerService.Service.Info("Record", "合并完成 " + mcc.Name+" 次数:"+(count+1)+" 耗时:"+sw.ElapsedMilliseconds);
+            LoggerService.Service.Info("HisEnginer", "合并完成 " + mcc.Name+" 次数:"+(count+1)+" 耗时:"+sw.ElapsedMilliseconds);
         }
 
 
@@ -1096,8 +1096,8 @@ namespace Cdy.Tag
         /// </summary>
         private void SubmiteMemory(DateTime dateTime)
         {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
+            //Stopwatch sw = new Stopwatch();
+            //sw.Start();
             int number = MergeMemoryTime / CachMemoryTime;
 
             var mcc = mCurrentMemory;
@@ -1121,7 +1121,7 @@ namespace Cdy.Tag
 
             CurrentMemory.CurrentDatetime = dateTime;
 
-            long ltmp = sw.ElapsedMilliseconds;
+            //long ltmp = sw.ElapsedMilliseconds;
 
             HisDataMemoryQueryService.Service.RegistorMemory(CurrentMemory.CurrentDatetime,dateTime.AddSeconds(CachMemoryTime), CurrentMemory);
 
@@ -1149,10 +1149,10 @@ namespace Cdy.Tag
                 mLogManager?.RequestToSave(mcc.CurrentDatetime,dateTime, mcc);
 
             }
-            long ltmp2 = sw.ElapsedMilliseconds;
-            sw.Stop();
+            //long ltmp2 = sw.ElapsedMilliseconds;
+            //sw.Stop();
 
-            LoggerService.Service.Info("HisEnginer", "SubmiteMemory 耗时:" + ltmp + "," + ltmp2, ConsoleColor.Cyan);
+            //LoggerService.Service.Info("HisEnginer", "SubmiteMemory 耗时:" + ltmp + "," + ltmp2, ConsoleColor.Cyan);
 
         }
 
@@ -1245,13 +1245,17 @@ namespace Cdy.Tag
             //这里以最快的固定频率触发事件处理每个内存块；对于定时记录情况，对于没有定时到的情况，不记录，对于定时到的情况，更新实际的时间戳、数值和质量戳。
             //对于值改变的情况，同样按照固定的频路定时更新质量戳（没有值），对于值改变的情况，记录实际时间戳、数值和质量戳。由此可以值改变的频路不能够大于我们最大的频率。
 
-            //LoggerService.Service.Info("Record", "Thread id:"+Thread.CurrentThread.ManagedThreadId);
+            //LoggerService.Service.Info("HisEnginer", "Thread id:"+Thread.CurrentThread.ManagedThreadId);
             if (mIsBusy)
             {
                 mBlockCount++;
-                LoggerService.Service.Warn("RecordTimer", "出现阻塞"+ mBlockCount);
+                LoggerService.Service.Warn("HisEnginer", "RecordTimer 出现阻塞" + mBlockCount);
                 return;
             }
+
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
             mIsBusy = true;
             mBlockCount = 0;
             DateTime dt = DateTime.Now;
@@ -1266,7 +1270,7 @@ namespace Cdy.Tag
                     return;
                 }
 
-                LoggerService.Service.Info("Record", "准备新的内存，提交内存 "+ CurrentMemory.Name+ " 到压缩 线程ID:"+ Thread.CurrentThread.ManagedThreadId+" CPU ID:"+ ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Green);
+                LoggerService.Service.Info("HisEnginer", "RecordTimer 准备新的内存，提交内存 " + CurrentMemory.Name+ " 到压缩 线程ID:"+ Thread.CurrentThread.ManagedThreadId+" CPU ID:"+ ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Green);
                 if (mLastProcessTick != -1)
                 {
                     mLastProcessTime = dt;
@@ -1277,16 +1281,26 @@ namespace Cdy.Tag
                 mLastProcessTick = mm;
 
             }
+
+            long ltmp1 = sw.ElapsedMilliseconds;
+
             foreach (var vv in mRecordTimerProcesser)
             {
                 vv.Notify(dt);
             }
+
+            long ltmp2 = sw.ElapsedMilliseconds;
 
             //值改变的变量,也受内部定时逻辑处理。这样值改变频路高于MemoryTimeTick 的值时，无效。
             foreach (var vv in mValueChangedProcesser)
             {
                 vv.Notify(dt);
             }
+
+            long ltmp3 = sw.ElapsedMilliseconds;
+
+            if(ltmp3>0)
+            LoggerService.Service.Debug("HisEnginer", "MRecordTimer_Elapsed:" + ltmp1 + "," + ltmp2 + "," + ltmp3);
 
             mIsBusy = false;
         }
@@ -1361,7 +1375,7 @@ namespace Cdy.Tag
             //while (memory.IsBusy()) ;
             memory.Clear();           
             sw.Stop();
-            LoggerService.Service.Info("Record", memory.Name + "清空数据区耗时:" + sw.ElapsedMilliseconds);
+            LoggerService.Service.Info("HisEnginer", memory.Name + "清空数据区耗时:" + sw.ElapsedMilliseconds);
         }
 
         /// <summary>
@@ -1374,7 +1388,7 @@ namespace Cdy.Tag
             sw.Start();
             memory.Clear();
             sw.Stop();
-            LoggerService.Service.Info("Record", memory.Name+ "清空数据区耗时:" + sw.ElapsedMilliseconds);
+            LoggerService.Service.Info("HisEnginer", memory.Name+ "清空数据区耗时:" + sw.ElapsedMilliseconds);
         }
 
         /// <summary>

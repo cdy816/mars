@@ -1007,11 +1007,11 @@ namespace Cdy.Tag
                     mManualHisDataCach.Remove(vv.Key);
                 }
 
-                Stopwatch sw = new Stopwatch();
-                sw.Start();
+                //Stopwatch sw = new Stopwatch();
+                //sw.Start();
 
 
-                LoggerService.Service.Info("SeriseEnginer", "SeriseFileItem" + this.Id + " 开始执行存储,数据块:" + vv.Value.Count, ConsoleColor.Cyan);
+                //LoggerService.Service.Info("SeriseEnginer", "SeriseFileItem" + this.Id + " 开始执行存储,数据块:" + vv.Value.Count, ConsoleColor.Cyan);
 
                 SortedDictionary<int, DateTime> times = new SortedDictionary<int, DateTime>();
                 DateTime maxTime = DateTime.MinValue;
@@ -1031,7 +1031,7 @@ namespace Cdy.Tag
 
                 mHeadAddress = GetDataRegionHeadPoint(vv.Key, times, maxTime, out mwriter);
 
-                long ltmp = sw.ElapsedMilliseconds;
+                //long ltmp = sw.ElapsedMilliseconds;
 
                 mHeadValue.Clear();
                 mwriter.GoToEnd();
@@ -1046,7 +1046,7 @@ namespace Cdy.Tag
                     vpointer += (size - 28);
                 }
 
-                long ltmp2 = sw.ElapsedMilliseconds;
+                //long ltmp2 = sw.ElapsedMilliseconds;
 
                 //更新数据块指针
                 foreach (var hd in mHeadAddress)
@@ -1054,7 +1054,7 @@ namespace Cdy.Tag
                     mwriter.Write(mHeadValue[hd.Key], hd.Value);
                 }
 
-                long ltmp3 = sw.ElapsedMilliseconds;
+                //long ltmp3 = sw.ElapsedMilliseconds;
 
 
                 //更新文件的最后修改时间

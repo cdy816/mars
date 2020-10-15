@@ -226,13 +226,11 @@ namespace Cdy.Tag
                 ServiceLocator.Locator.Resolve<IHisEngine>().ClearMemoryHisData(sm);
                 sm.MakeMemoryNoBusy();
 
-                ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSave();
-
 //#if DEBUG
                 sw.Stop();
                 LoggerService.Service.Info("Compress", ">>>>>>>>>压缩完成>>>>>>>>>" +  " ElapsedMilliseconds:" + sw.ElapsedMilliseconds, ConsoleColor.Blue);
 //#endif
-
+                ServiceLocator.Locator.Resolve<IDataSerialize>().RequestToSave();
             }
             closedEvent.Set();
 

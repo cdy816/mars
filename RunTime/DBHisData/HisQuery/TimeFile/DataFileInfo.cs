@@ -170,87 +170,49 @@ namespace Cdy.Tag
                 {
                     return;
                 }
-
-                do
+                try
                 {
-                    //读取数据区时间
-                    time = ss.ReadDateTime(offset + 16);
-
-                    if (time == DateTime.MinValue)
+                    do
                     {
-                        tmp = time;
-                        continue;
-                    }
+                        //读取数据区时间
+                        time = ss.ReadDateTime(offset + 16);
 
-                    long oset = offset;
-                    //读取下个区域位置
-                    offset = ss.ReadLong(offset + 8);
+                        if (time == DateTime.MinValue)
+                        {
+                            tmp = time;
+                            continue;
+                        }
 
-                    if (offset > 0)
-                    {
-                        var dt2 = ss.ReadDateTime(offset + 16);
-                        mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(dt2 - time, oset, dt2));
-                        tmp = dt2;
+                        long oset = offset;
+                        //读取下个区域位置
+                        offset = ss.ReadLong(offset + 8);
+
+                        if (offset > 0)
+                        {
+                            var dt2 = ss.ReadDateTime(offset + 16);
+                            mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(dt2 - time, oset, dt2));
+                            tmp = dt2;
+                        }
+                        else
+                        {
+                            var tspan = StartTime + Duration - time;
+                            if (tspan.TotalMilliseconds > 0)
+                                mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(tspan, oset, time + tspan));
+                            tmp = time + tspan;
+                        }
+                        mLastProcessOffset = oset;
                     }
-                    else
+                    while (offset > 0);
+
+                    if (mLastTime <= fileTime)
                     {
-                        var tspan = StartTime + Duration - time;
-                        if (tspan.TotalMilliseconds > 0)
-                            mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(tspan, oset, time + tspan));
-                        tmp = time + tspan;
+                        mLastTime = tmp;
                     }
-                    mLastProcessOffset = oset;
                 }
-                while (offset > 0);
-
-                if (mLastTime <= fileTime)
+                catch
                 {
-                    mLastTime = tmp;
+
                 }
-
-                //if (mLastProcessOffset == -1)
-                //{
-
-                //}
-                //else
-                //{
-                //    offset = mLastProcessOffset;
-                //    //读取数据区时间
-                //    time = ss.ReadDateTime(offset + 16);
-                //    long oset = offset;
-                //    //读取下个区域位置
-                //    offset = ss.ReadLong(offset + 8);
-
-                //    if (offset != 0)
-                //    {
-                //        var dt2 = ss.ReadDateTime(offset + 16);
-                //        if (mTimeOffsets.ContainsKey(time))
-                //        {
-                //            mTimeOffsets[time] = new Tuple<TimeSpan, long, DateTime>(dt2 - time, oset, dt2);
-                //        }
-                //        else
-                //        {
-                //            mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(dt2 - time, oset, dt2));
-                //        }
-                //        tmp = dt2;
-                //    }
-                //    else
-                //    {
-                //        var tspan = StartTime + Duration - time;
-                //        if (tspan.TotalMilliseconds > 0)
-                //        {
-                //            if (mTimeOffsets.ContainsKey(time))
-                //            {
-                //                mTimeOffsets[time] = new Tuple<TimeSpan, long, DateTime>(tspan, oset, time + tspan);
-                //            }
-                //            else
-                //            {
-                //                mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(tspan, oset, time + tspan));
-                //            }
-                //        }
-                //        tmp = time + tspan;
-                //    }
-                //}
 
                 mInited = true;
             }

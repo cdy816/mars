@@ -304,6 +304,7 @@ namespace Cdy.Tag
                             sm.Clear();
                             sm.MakeMemoryNoBusy();
 
+
                             System.Threading.Tasks.Parallel.ForEach(mTargetMemorys.Where(e => e.Value.HasManualCompressItems), (mm) =>
                             {
                                 ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);

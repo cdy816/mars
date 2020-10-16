@@ -207,17 +207,30 @@ namespace Cdy.Tag
         {
             mTagIds.Clear();
             long lsize = 0;
+
+            //var tagserver = ServiceLocator.Locator.Resolve<IHisEngine2>();
+            
+            //var tags = tagserver.ListAllTags().Where(e => e.Id >= Id * TagCountPerMemory && e.Id < (Id + 1) * TagCountPerMemory).OrderBy(e => e.Id);
+
+            foreach(var vv in CompressUnitManager2.Manager.CompressUnit)
+            {
+                mCompressCach.Add(vv.Key, vv.Value.Clone());
+            }
+
+            //foreach(var vv in tags)
+            //{
+            //    var cpt = vv.CompressType;
+            //    if (!mCompressCach.ContainsKey(cpt))
+            //    {
+            //        mCompressCach.Add(cpt, CompressUnitManager2.Manager.GetCompressQuick(cpt).Clone());
+            //    }
+            //}
+
             foreach (var vv in sourceM.TagAddress.Where(e => e.Key >= Id * TagCountPerMemory && e.Key < (Id + 1) * TagCountPerMemory))
             {
                 mTagIds.Add(vv.Key);
                 dtmp.Add(vv.Key, 0);
-                var cpt = mHisTagService.GetHisTag(vv.Key).CompressType;
-                if (!mCompressCach.ContainsKey(cpt))
-                {
-                    mCompressCach.Add(cpt, CompressUnitManager2.Manager.GetCompressQuick(cpt).Clone());
-                }
-                if (vv.Value != null)
-                    lsize += vv.Value.Length;
+                lsize += vv.Value.Length;
             }
 
             this.ReAlloc(HeadSize + (long)(lsize*1.2));

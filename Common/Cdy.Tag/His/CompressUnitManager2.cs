@@ -49,6 +49,16 @@ namespace Cdy.Tag
         #endregion ...Constructor...
 
         #region ... Properties ...
+        /// <summary>
+        /// 
+        /// </summary>
+        public Dictionary<int, CompressUnitbase2> CompressUnit
+        {
+            get
+            {
+                return mCompressUnit;
+            }
+        }
 
         #endregion ...Properties...
 

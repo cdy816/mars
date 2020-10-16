@@ -848,14 +848,14 @@ namespace Cdy.Tag
 
                     cachHeadSize += css;
                 }
-                else
-                {
-                    mMergeMemory1.AddTagAddress(vv.Value.Id, null);
-                    mMergeMemory2.AddTagAddress(vv.Value.Id, null);
+                //else
+                //{
+                //    mMergeMemory1.AddTagAddress(vv.Value.Id, null);
+                //    mMergeMemory2.AddTagAddress(vv.Value.Id, null);
 
-                    mCachMemory1.AddTagAddress(vv.Value.Id, null);
-                    mCachMemory2.AddTagAddress(vv.Value.Id, null);
-                }
+                //    mCachMemory1.AddTagAddress(vv.Value.Id, null);
+                //    mCachMemory2.AddTagAddress(vv.Value.Id, null);
+                //}
             }
 
             
@@ -1054,14 +1054,18 @@ namespace Cdy.Tag
             
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            foreach (var tag in mHisTags)
-            {
-                var taddrs = mCurrentMergeMemory.TagAddress[tag.Value.Id];
 
-                var saddrs = mcc.TagAddress[tag.Value.Id];
+            //foreach (var tag in mHisTags)
+            foreach(var vv in mcc.TagAddress)
+            {
+                var tag = mHisTags[vv.Key];
+                var taddrs = mCurrentMergeMemory.TagAddress[tag.Id];
+
+                //var saddrs = mcc.TagAddress[tag.Value.Id];
+                var saddrs = vv.Value;
 
                 //
-                if (taddrs == null || saddrs == null) continue;
+                //if (taddrs == null || saddrs == null) continue;
 
                 //拷贝时间
                 var dlen = saddrs.ValueAddress;
@@ -1071,12 +1075,12 @@ namespace Cdy.Tag
 
                 //拷贝数值
                 dlen = saddrs.QualityAddress - saddrs.ValueAddress;
-                vtimeaddr = taddrs.ValueAddress + dlen * count + tag.Value.SizeOfValue;
+                vtimeaddr = taddrs.ValueAddress + dlen * count + tag.SizeOfValue;
                 saddrs.CopyTo(taddrs, saddrs.ValueAddress, vtimeaddr, dlen);
 
 
                 //拷贝质量戳
-                dlen = tag.Value.DataSize - saddrs.QualityAddress;
+                dlen = tag.DataSize - saddrs.QualityAddress;
 
                 vtimeaddr = taddrs.QualityAddress + dlen * count + 1;
                 saddrs.CopyTo(taddrs, saddrs.QualityAddress, vtimeaddr, dlen);
@@ -1166,6 +1170,7 @@ namespace Cdy.Tag
             sw.Start();
             foreach(var vv in mHisTags)
             {
+                if(vv.Value.Type != RecordType.Driver)
                 vv.Value.Snape();
             }
             sw.Stop();
@@ -1314,9 +1319,12 @@ namespace Cdy.Tag
             mNeedSnapAllTag = true;
             mForceSubmiteToCompress = true;
             mIsClosed = true;
+
+            SaveManualCachData();
+
             SubmiteMemory(DateTime.Now);
             while (!mMegerProcessIsClosed) Thread.Sleep(1);
-            SaveManualCachData();
+            
         }
 
         /// <summary>
@@ -1619,8 +1627,8 @@ namespace Cdy.Tag
                             isNeedSubmite = true;
                         }
                     }
-                    if(isNeedSubmite)
-                    ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
+                    if (isNeedSubmite)
+                        ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
                 }
                
                 return true;
@@ -1641,173 +1649,6 @@ namespace Cdy.Tag
         private bool ManualRecordHisValues(long id, Cdy.Tag.TagValue value, int timeUnit = 100)
         {
             return ManualRecordHisValues(id, value.Time, value.Value, value.Quality, timeUnit);
-            //if (mIsClosed) return false;
-
-            //int valueOffset, qulityOffset = 0;
-
-            //DateTime mLastTime = DateTime.MinValue;
-
-            //SortedDictionary<DateTime, ManualHisDataMemoryBlock> datacach;
-
-            //if (mHisTags.ContainsKey(id) && mHisTags[id].Type == RecordType.Manual)
-            //{
-            //    if (mManualHisDataCach.ContainsKey(id))
-            //    {
-            //        datacach = mManualHisDataCach[id];
-            //    }
-            //    else
-            //    {
-            //        datacach = new SortedDictionary<DateTime, ManualHisDataMemoryBlock>();
-            //        mManualHisDataCach.Add(id, datacach);
-            //    }
-
-            //    var tag = mHisTags[id];
-            //    ManualHisDataMemoryBlock hb = null;
-
-            //    var vdata = value.Time.Date;
-            //    var mms = (int)(value.Time.Subtract(vdata).TotalSeconds / MergeMemoryTime);
-            //    var time = vdata.AddSeconds(mms * MergeMemoryTime);
-            //    if (datacach.ContainsKey(time))
-            //    {
-            //        hb = datacach[time];
-            //    }
-            //    else
-            //    {
-            //        var css = CalCachDatablockSize(tag.TagType, 0, MergeMemoryTime * 1000 / timeUnit, out valueOffset, out qulityOffset);
-            //        hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
-            //        hb.Time = time;
-            //        hb.MaxCount = MergeMemoryTime * 1000 / timeUnit;
-            //        hb.TimeUnit = timeUnit;
-            //        hb.TimeLen = 4;
-            //        hb.TimerAddress = 0;
-            //        hb.ValueAddress = valueOffset;
-            //        hb.QualityAddress = qulityOffset;
-            //        hb.Id = (int)id;
-            //        hb.CurrentCount = 0;
-
-            //        datacach.Add(time, hb);
-            //    }
-            //    mLastTime = time;
-
-            //    if (hb.CurrentCount < hb.MaxCount && value.Time > hb.EndTime)
-            //    {
-            //        hb.Lock();
-            //        var vtime = (int)((value.Time - hb.Time).TotalMilliseconds / timeUnit);
-            //        //写入时间戳
-            //        hb.WriteInt(hb.TimerAddress + hb.CurrentCount * 4, vtime);
-            //        switch (tag.TagType)
-            //        {
-            //            case TagType.Bool:
-            //                hb.WriteByteDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, Convert.ToByte(Convert.ToBoolean(value.Value)));
-            //                break;
-            //            case TagType.Byte:
-            //                hb.WriteByteDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, Convert.ToByte(value.Value));
-            //                break;
-            //            case TagType.Short:
-            //                hb.WriteShortDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, Convert.ToInt16(value.Value));
-            //                break;
-            //            case TagType.UShort:
-            //                hb.WriteUShortDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, Convert.ToUInt16(value.Value));
-            //                break;
-            //            case TagType.Int:
-            //                hb.WriteIntDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, Convert.ToInt32(value.Value));
-            //                break;
-            //            case TagType.UInt:
-            //                hb.WriteUIntDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, Convert.ToUInt32(value.Value));
-            //                break;
-            //            case TagType.Long:
-            //                hb.WriteLongDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, Convert.ToInt64(value.Value));
-            //                break;
-            //            case TagType.ULong:
-            //                hb.WriteULongDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, Convert.ToUInt64(value.Value));
-            //                break;
-            //            case TagType.Float:
-            //                hb.WriteFloatDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, Convert.ToSingle(value.Value));
-            //                break;
-            //            case TagType.Double:
-            //                hb.WriteDoubleDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, Convert.ToDouble(value.Value));
-            //                break;
-            //            case TagType.String:
-            //                hb.WriteStringDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, Convert.ToString(value.Value), Encoding.Unicode);
-            //                break;
-            //            case TagType.DateTime:
-            //                hb.WriteDatetime(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, Convert.ToDateTime(value.Value));
-            //                break;
-            //            case TagType.UIntPoint:
-            //                UIntPointData data = (UIntPointData)value.Value;
-            //                hb.WriteUIntDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, data.X);
-            //                hb.WriteUIntDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue + 4, data.Y);
-            //                break;
-            //            case TagType.IntPoint:
-            //                IntPointData idata = (IntPointData)value.Value;
-            //                hb.WriteIntDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, idata.X);
-            //                hb.WriteIntDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue + 4, idata.Y);
-            //                break;
-            //            case TagType.UIntPoint3:
-            //                UIntPoint3Data udata3 = (UIntPoint3Data)value.Value;
-            //                hb.WriteUIntDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, udata3.X);
-            //                hb.WriteUIntDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue + 4, udata3.Y);
-            //                hb.WriteUIntDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue + 8, udata3.Z);
-            //                break;
-            //            case TagType.IntPoint3:
-            //                IntPoint3Data idata3 = (IntPoint3Data)value.Value;
-            //                hb.WriteIntDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, idata3.X);
-            //                hb.WriteIntDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue + 4, idata3.Y);
-            //                hb.WriteIntDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue + 8, idata3.Z);
-            //                break;
-
-            //            case TagType.ULongPoint:
-            //                ULongPointData udata = (ULongPointData)value.Value;
-            //                hb.WriteULongDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, udata.X);
-            //                hb.WriteULongDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue + 8, udata.Y);
-            //                break;
-            //            case TagType.LongPoint:
-            //                LongPointData lidata = (LongPointData)value.Value;
-            //                hb.WriteLongDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, lidata.X);
-            //                hb.WriteLongDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue + 8, lidata.Y);
-            //                break;
-            //            case TagType.ULongPoint3:
-            //                ULongPoint3Data ludata3 = (ULongPoint3Data)value.Value;
-            //                hb.WriteULongDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, ludata3.X);
-            //                hb.WriteULongDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue + 16, ludata3.Y);
-            //                hb.WriteULongDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue + 24, ludata3.Z);
-            //                break;
-            //            case TagType.LongPoint3:
-            //                LongPoint3Data lidata3 = (LongPoint3Data)value.Value;
-            //                hb.WriteLongDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue, lidata3.X);
-            //                hb.WriteLongDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue + 16, lidata3.Y);
-            //                hb.WriteLongDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue + 24, lidata3.Z);
-            //                break;
-            //        }
-            //        hb.WriteInt(hb.QualityAddress + hb.CurrentCount, value.Quality);
-            //        hb.EndTime = value.Time;
-            //        hb.CurrentCount++;
-            //        hb.Relase();
-
-            //        HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
-
-            //    }
-
-            //    bool isNeedSubmite = false;
-
-            //    foreach (var vv in datacach.ToArray())
-            //    {
-            //        if (vv.Key < mLastTime || vv.Value.CurrentCount >= vv.Value.MaxCount)
-            //        {
-            //            ServiceLocator.Locator.Resolve<IDataCompress2>().RequestManualToCompress(vv.Value);
-            //            datacach.Remove(vv.Key);
-            //            isNeedSubmite = true;
-            //        }
-            //    }
-            //    if (isNeedSubmite)
-            //        ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
-
-            //    return true;
-            //}
-            //else
-            //{
-            //    return false;
-            //}
         }
 
         /// <summary>

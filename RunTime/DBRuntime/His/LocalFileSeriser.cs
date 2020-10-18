@@ -145,15 +145,17 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override MarshalMemoryBlock Read(long start, int len)
         {
-            var vtmp = len / 1024 * 100;
-            vtmp = len % (1024 * 100) > 0 ? vtmp + 1 : vtmp;
+            //var vtmp = len / 1024 * 100;
+            //vtmp = len % (1024 * 100) > 0 ? vtmp + 1 : vtmp;
 
             MarshalMemoryBlock re = new MarshalMemoryBlock(len, 1024 * 100);
             mStream.Position = start;
 
-            byte[] bval = new byte[len];
-            mStream.Read(bval, 0, len);
-            re.WriteBytesDirect(0, bval);
+            //byte[] bval = new byte[len];
+            //mStream.Read(bval, 0, len);
+            //re.WriteBytesDirect(0, bval);
+
+            re.ReadFromStream(mStream, len);
 
             //mStream.Write(re.StartMemory, 0, len);
             return re;
@@ -213,6 +215,7 @@ namespace Cdy.Tag
             //byte[] bvals = new byte[size];
 
             var bvals = ArrayPool<byte>.Shared.Rent(size);
+            Array.Clear(bvals, 0, bvals.Length);
             try
             {
                 for (int i = 0; i < (len / size); i++)
@@ -243,6 +246,7 @@ namespace Cdy.Tag
             mStream.Position = start;
             //byte[] re = new byte[8];
             var re = ArrayPool<byte>.Shared.Rent(8);
+            
             try
             {
                 mStream.Read(re, 0, re.Length);
@@ -264,6 +268,7 @@ namespace Cdy.Tag
             mStream.Position = start;
             //byte[] re = new byte[4];
             var re = ArrayPool<byte>.Shared.Rent(4);
+            
             try
             {
                 mStream.Read(re, 0, re.Length);

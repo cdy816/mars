@@ -1655,22 +1655,26 @@ namespace Cdy.Tag
             int count = 0;
             var timers = GetTimers(source, sourceAddr, startTime, endTime, out count);
 
-            var valuesize = source.ReadInt();
-            var value = DeCompressValue<T>(source.ReadBytes(valuesize), count);
-
-            var qusize = source.ReadInt();
-
-            var qulityes = DeCompressQulity(source.ReadBytes(qusize));
-            int resultCount = 0;
-            for (int i = 0; i < count; i++)
+            if (timers.Count > 0)
             {
-                if (qulityes[i] < 100 && timers.ContainsKey(i))
+                var valuesize = source.ReadInt();
+                var value = DeCompressValue<T>(source.ReadBytes(valuesize), count);
+
+                var qusize = source.ReadInt();
+
+                var qulityes = DeCompressQulity(source.ReadBytes(qusize));
+                int resultCount = 0;
+                for (int i = 0; i < count; i++)
                 {
-                    result.Add<T>(value[i], timers[i], qulityes[i]);
-                    resultCount++;
+                    if (qulityes[i] < 100 && timers.ContainsKey(i))
+                    {
+                        result.Add<T>(value[i], timers[i], qulityes[i]);
+                        resultCount++;
+                    }
                 }
+                return resultCount;
             }
-            return resultCount;
+            return 0;
 
         }
 

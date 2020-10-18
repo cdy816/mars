@@ -992,6 +992,7 @@ namespace DBHighApi.Api
 
  
                     var chgarry = ArrayPool<int>.Shared.Rent(mMonitors.Count());
+                    Array.Clear(chgarry, 0, chgarry.Length);
 
                     int i = 0;
                     DateTime te;

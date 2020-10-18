@@ -66,6 +66,35 @@ namespace DBDevelopService
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="database"></param>
+        public void ReLoad(string database)
+        {
+            string databasePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Data");
+
+            if (System.IO.Directory.Exists(databasePath))
+            {
+                foreach (var vv in System.IO.Directory.EnumerateDirectories(databasePath))
+                {
+                    string sname = new System.IO.DirectoryInfo(vv).Name;
+
+                    if (sname == database)
+                    {
+                        Cdy.Tag.Database db = new Cdy.Tag.DatabaseSerise().Load(sname);
+                        if (!mDatabase.ContainsKey(db.Name))
+                            mDatabase.Add(db.Name, db);
+                        else
+                        {
+                            mDatabase[db.Name] = db;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public void Reload()
         {
             mDatabase.Clear();

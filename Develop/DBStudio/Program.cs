@@ -12,6 +12,7 @@ using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Reflection;
 using System.Xml.Linq;
+using DBDevelopService;
 
 namespace DBStudio
 {
@@ -257,6 +258,7 @@ namespace DBStudio
                 if (cmsg == "save")
                 {
                     new DatabaseSerise() { Dbase = db }.Save();
+                    DbManager.Instance.ReLoad(db.Name);
                 }
                 else if (cmsg == "add")
                 {

@@ -885,6 +885,7 @@ namespace Cdy.Tag
                 foreach(var vv in mHisTags)
                 {
                     vv.Value.HisValueMemoryStartAddr = vv.Value.HisValueMemory1;
+                    vv.Value.Reset();
                 }
             }
             else
@@ -892,6 +893,7 @@ namespace Cdy.Tag
                 foreach (var vv in mHisTags)
                 {
                     vv.Value.HisValueMemoryStartAddr = vv.Value.HisValueMemory2;
+                    vv.Value.Reset();
                 }
             }
         }
@@ -1100,8 +1102,8 @@ namespace Cdy.Tag
         /// </summary>
         private void SubmiteMemory(DateTime dateTime)
         {
-            //Stopwatch sw = new Stopwatch();
-            //sw.Start();
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             int number = MergeMemoryTime / CachMemoryTime;
 
             var mcc = mCurrentMemory;
@@ -1125,22 +1127,23 @@ namespace Cdy.Tag
 
             CurrentMemory.CurrentDatetime = dateTime;
 
-            //long ltmp = sw.ElapsedMilliseconds;
+            long ltmp = sw.ElapsedMilliseconds;
 
             HisDataMemoryQueryService.Service.RegistorMemory(CurrentMemory.CurrentDatetime,dateTime.AddSeconds(CachMemoryTime), CurrentMemory);
-
+            long ltmp21 = sw.ElapsedMilliseconds;
             if (mMergeCount==0)
             {
                 mNeedSnapAllTag = true;
                 LoggerService.Service.Info("HisEnginer", "使用新的时间起点:" + CurrentMemory.Name + "  " + FormateDatetime(CurrentMemory.CurrentDatetime), ConsoleColor.Cyan);
                 HisRunTag.StartTime = dateTime;
             }
-            //PrepareForReadyMemory();
-            foreach (var vv in mHisTags.Values)
-            {
-                vv.Reset();
-            }
-
+            long ltmp22 = sw.ElapsedMilliseconds;
+            ////PrepareForReadyMemory();
+            //foreach (var vv in mHisTags)
+            //{
+            //    vv.Value.Reset();
+            //}
+            long ltmp2 = sw.ElapsedMilliseconds;
             if (mcc != null)
             {
                 mcc.MakeMemoryBusy();
@@ -1153,10 +1156,10 @@ namespace Cdy.Tag
                 mLogManager?.RequestToSave(mcc.CurrentDatetime,dateTime, mcc);
 
             }
-            //long ltmp2 = sw.ElapsedMilliseconds;
-            //sw.Stop();
+            long ltmp3 = sw.ElapsedMilliseconds;
+            sw.Stop();
 
-            //LoggerService.Service.Info("HisEnginer", "SubmiteMemory 耗时:" + ltmp + "," + ltmp2, ConsoleColor.Cyan);
+            LoggerService.Service.Info("HisEnginer", "SubmiteMemory 耗时:" + ltmp + "," + (ltmp2-ltmp22)+","+(ltmp21-ltmp)+","+(ltmp22-ltmp21)+","+(ltmp3-ltmp2), ConsoleColor.Cyan);
 
         }
 
@@ -1170,7 +1173,7 @@ namespace Cdy.Tag
             sw.Start();
             foreach(var vv in mHisTags)
             {
-                if(vv.Value.Type != RecordType.Driver)
+                //if(vv.Value.Type != RecordType.Driver)
                 vv.Value.Snape();
             }
             sw.Stop();
@@ -1320,11 +1323,10 @@ namespace Cdy.Tag
             mForceSubmiteToCompress = true;
             mIsClosed = true;
 
-            SaveManualCachData();
-
             SubmiteMemory(DateTime.Now);
             while (!mMegerProcessIsClosed) Thread.Sleep(1);
-            
+
+            SaveManualCachData();
         }
 
         /// <summary>
@@ -1435,7 +1437,6 @@ namespace Cdy.Tag
 
             foreach (var vv in mValueChangedProcesser)
             {
-                vv.Stop();
                 vv.Dispose();
             }
             mValueChangedProcesser.Clear();
@@ -1503,7 +1504,7 @@ namespace Cdy.Tag
                         hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
                         hb.Time = time;
                         hb.MaxCount = MergeMemoryTime * 1000 / timeUnit + 2;
-                        hb.TimeUnit = timeUnit;
+                        hb.TimeUnit = 1;
                         hb.TimeLen = 4;
                         hb.TimerAddress = 0;
                         hb.ValueAddress = valueOffset;
@@ -1518,7 +1519,7 @@ namespace Cdy.Tag
                     if (hb.CurrentCount < hb.MaxCount && vv.Time > hb.EndTime)
                     {
                         hb.Lock();
-                        var vtime = (int)((vv.Time - hb.Time).TotalMilliseconds / timeUnit);
+                        var vtime = (int)((vv.Time - hb.Time).TotalMilliseconds / 1);
                         //写入时间戳
                         hb.WriteInt(hb.TimerAddress + hb.CurrentCount * 4, vtime);
                         switch (tag.TagType)
@@ -1620,7 +1621,7 @@ namespace Cdy.Tag
                 {
                     foreach (var vv in datacach.ToArray())
                     {
-                        if (vv.Key < mLastTime || vv.Value.CurrentCount >= vv.Value.MaxCount)
+                        if (vv.Key < mLastTime)
                         {
                             ServiceLocator.Locator.Resolve<IDataCompress2>().RequestManualToCompress(vv.Value);
                             datacach.Remove(vv.Key);
@@ -1701,7 +1702,7 @@ namespace Cdy.Tag
                     hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
                     hb.Time = time;
                     hb.MaxCount = MergeMemoryTime * 1000 / timeUnit +2;
-                    hb.TimeUnit = timeUnit;
+                    hb.TimeUnit = 1;
                     hb.TimeLen = 4;
                     hb.TimerAddress = 0;
                     hb.ValueAddress = valueOffset;
@@ -1716,7 +1717,7 @@ namespace Cdy.Tag
                 if (hb.CurrentCount < hb.MaxCount && datetime > hb.EndTime)
                 {
                     hb.Lock();
-                    var vtime = (int)((datetime - hb.Time).TotalMilliseconds / timeUnit);
+                    var vtime = (int)((datetime - hb.Time).TotalMilliseconds / 1);
                     //写入时间戳
                     hb.WriteInt(hb.TimerAddress + hb.CurrentCount * 4, vtime);
                     switch (tag.TagType)
@@ -1816,7 +1817,7 @@ namespace Cdy.Tag
 
                 foreach (var vv in datacach.ToArray())
                 {
-                    if (vv.Key < mLastTime || vv.Value.CurrentCount >= vv.Value.MaxCount)
+                    if (vv.Key < mLastTime)
                     {
                         ServiceLocator.Locator.Resolve<IDataCompress2>().RequestManualToCompress(vv.Value);
                         datacach.Remove(vv.Key);

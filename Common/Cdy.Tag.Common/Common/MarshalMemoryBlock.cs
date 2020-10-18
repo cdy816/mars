@@ -2352,19 +2352,67 @@ namespace Cdy.Tag
             //ArrayPool<byte>.Shared.Return(bvals);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="source"></param>
-        /// <param name="start"></param>
-        /// <param name="len"></param>
-        private void WriteToStream2(Stream stream, IntPtr source, int start, int len)
+       
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="stream"></param>
+        ///// <param name="source"></param>
+        ///// <param name="start"></param>
+        ///// <param name="len"></param>
+        //private void WriteToStream2(Stream stream, IntPtr source, int start, int len)
+        //{
+        //    byte[] bvals = ArrayPool<byte>.Shared.Rent(len);
+        //    Marshal.Copy(source + start, bvals, 0, len);
+        //    stream.Write(bvals, 0, len);
+        //    ArrayPool<byte>.Shared.Return(bvals);
+        //}
+
+        public void ReadFromStream(Stream stream,int len)
         {
-            byte[] bvals = ArrayPool<byte>.Shared.Rent(len);
-            Marshal.Copy(source + start, bvals, 0, len);
-            stream.Write(bvals, 0, len);
-            ArrayPool<byte>.Shared.Return(bvals);
+            var buffer = ArrayPool<byte>.Shared.Rent(1024 * 16);
+            Array.Clear(buffer, 0, buffer.Length);
+            int count = len / mBufferItemSize;
+            int size = 0;
+            int tsize = 0;
+            var bsize = buffer.Length;
+            for(int i=0;i<count;i++)
+            {
+                using (System.IO.UnmanagedMemoryStream stream1 = new UnmanagedMemoryStream((byte*)this.Buffers[i], mBufferItemSize,mBufferItemSize,FileAccess.Write))
+                {
+                    size = 0;
+                    while (size < mBufferItemSize)
+                    {
+                        tsize = mBufferItemSize - size > bsize ? bsize : mBufferItemSize - size;
+
+                        size += tsize;
+
+                        stream.Read(buffer, 0, tsize);
+                        stream1.Write(buffer, 0, tsize);
+                    }
+                }
+            }
+
+            if(len%mBufferItemSize>0)
+            {
+                size = 0;
+                int isize = len % mBufferItemSize;
+                using (System.IO.UnmanagedMemoryStream stream1 = new UnmanagedMemoryStream((byte*)this.Buffers[count], isize,isize,FileAccess.Write))
+                {
+                    while (size < isize)
+                    {
+                        tsize = isize - size > bsize ? bsize : isize - size;
+
+                        size += tsize;
+
+                        stream.Read(buffer, 0, tsize);
+                        stream1.Write(buffer, 0, tsize);
+                    }
+
+                }
+            }
+            ArrayPool<byte>.Shared.Return(buffer);
         }
 
         /// <summary>

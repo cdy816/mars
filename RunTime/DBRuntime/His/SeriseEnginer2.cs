@@ -405,7 +405,7 @@ namespace Cdy.Tag
         /// </summary>
         public const int FileHeadSize = 84;
 
-        private MemoryBlock mBlockPointMemory;
+        //private MemoryBlock mBlockPointMemory;
 
         //指针区域的起始地址
         private long mBlockPointOffset = 0;
@@ -551,6 +551,7 @@ namespace Cdy.Tag
             DateTime date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
             mFileWriter.Write(date, 0);
             byte[] nameBytes = ArrayPool<byte>.Shared.Rent(64);
+            Array.Clear(nameBytes, 0, nameBytes.Length);
             var ntmp = Encoding.UTF8.GetBytes(databaseName);
             Buffer.BlockCopy(ntmp, 0, nameBytes, 0, Math.Min(64, ntmp.Length));
             mFileWriter.Write(nameBytes, 20);
@@ -613,8 +614,8 @@ namespace Cdy.Tag
         /// </summary>
         private byte[] GeneratorDataRegionHeader(DateTime mCurrentTime, out int totallenght, out int datalen)
         {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
+            //Stopwatch sw = new Stopwatch();
+            //sw.Start();
             //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+tagcount(4)+ tagid sum(8) +file duration(4)+ block duration(4)+Time tick duration(4)+ { len + [tag id]}+ [data blockpoint(8)]
             int blockcount = FileDuration * 60 / BlockDuration;
             int len = GetDataRegionHeaderLength() + 4 + mTagIdMemoryCach.Position + mTagCount * (blockcount * 8);
@@ -622,6 +623,7 @@ namespace Cdy.Tag
             totallenght = len;
 
             byte[] bvals = ArrayPool<byte>.Shared.Rent(52 + mTagIdMemoryCach.Position);
+            Array.Clear(bvals, 0, bvals.Length);
 
             using (System.IO.MemoryStream mHeadMemory = new System.IO.MemoryStream(bvals))
             {
@@ -644,9 +646,9 @@ namespace Cdy.Tag
 
                 mDataRegionHeadSize = mBlockPointOffset = mHeadMemory.Position;
                 datalen = (int)mHeadMemory.Position;
-                sw.Stop();
+                //sw.Stop();
 
-                LoggerService.Service.Info("SeriseFileItem" + Id, "GeneratorDataRegionHeader " + sw.ElapsedMilliseconds);
+                //LoggerService.Service.Info("SeriseFileItem" + Id, "GeneratorDataRegionHeader " + sw.ElapsedMilliseconds);
 
                 return bvals;
                 //return mHeadMemory.ToArray();
@@ -1076,6 +1078,11 @@ namespace Cdy.Tag
                     {
                         mwriter.Write(mHeadValue[hd.Key][i], hd.Value[i]);
                     }
+
+                    if(hd.Key==0)
+                    {
+                        LoggerService.Service.Info("SeriseEnginer", "Id0 Adress:" + hd.Value[0] + ", value:" + mHeadValue[0][0],ConsoleColor.Red);
+                    }
                     //mwriter.Write(mHeadValue[hd.Key], hd.Value);
                 }
 
@@ -1102,7 +1109,7 @@ namespace Cdy.Tag
                 }
 
 
-                LoggerService.Service.Info("SeriseEnginer", "SeriseFileItem" + this.Id + " 完成存储,数据块:" + vv.Value.Count + " ReadHeadPoint:" + ltmp + " WriteData:" + (ltmp2 - ltmp) + " UpdateHead:" + (ltmp3 - ltmp2), ConsoleColor.Cyan);
+                LoggerService.Service.Info("SeriseEnginer", "SeriseFileItem" + this.Id + " 完成存储,数据块:" + vv.Value.Count + " ReadHeadPoint:" + ltmp + " WriteData:" + (ltmp2 - ltmp) + " UpdateHead:" + (ltmp3 - ltmp2));
 
 
             }
@@ -1244,16 +1251,16 @@ namespace Cdy.Tag
 
             mTagIdsCach = tags.Select(e => e.Id).ToList();
 
-            if (mBlockPointMemory != null) mBlockPointMemory.Dispose();
+            //if (mBlockPointMemory != null) mBlockPointMemory.Dispose();
 
-            mBlockPointMemory = new MemoryBlock(tags.Count() * 8, 4 * 1024 * 1024);
-            mBlockPointMemory.Clear();
+            //mBlockPointMemory = new MemoryBlock(tags.Count() * 8, 4 * 1024 * 1024);
+            //mBlockPointMemory.Clear();
 
             CalTagIdsSize();
 
             mTagCount = mTagIdsCach.Count();
                      
-            LoggerService.Service.Info("SeriseEnginer", "Cal BlockPointMemory memory size:" + (mBlockPointMemory.AllocSize) / 1024.0 / 1024 + "M", ConsoleColor.Cyan);
+            //LoggerService.Service.Info("SeriseEnginer", "Cal BlockPointMemory memory size:" + (mBlockPointMemory.AllocSize) / 1024.0 / 1024 + "M", ConsoleColor.Cyan);
 
         }
 
@@ -1392,13 +1399,13 @@ namespace Cdy.Tag
 
                     var dataAddr = this.mFileWriter.GoToEnd().CurrentPostion;
 
-                    mBlockPointMemory.CheckAndResize(mTagCount * 8);
-                    mBlockPointMemory.Clear();
+                    //mBlockPointMemory.CheckAndResize(mTagCount * 8);
+                    //mBlockPointMemory.Clear();
 
 
                     Dictionary<int, long> mHeadValues = new Dictionary<int, long>();
 
-                    var vtime = FormateTime(time);
+                    //var vtime = FormateTime(time);
                     //Dictionary<int, long> timecach;
 
                     //lock (mPointerCach)
@@ -1453,8 +1460,7 @@ namespace Cdy.Tag
                     int bid = ((time.Hour - FileStartHour) * 60 + time.Minute) / BlockDuration;
 
                     //计算出本次更新的头地址地址
-                    var pointAddr = mBlockPointOffset + count * 8 * bid;
-
+                     var pointAddr = mBlockPointOffset + mTagCount * 8 * bid;
 
                     var ltmp3 = sw.ElapsedMilliseconds;
 
@@ -1462,13 +1468,13 @@ namespace Cdy.Tag
                     //long lpp = mFileWriter.CurrentPostion;
 
                     mProcessMemory.WriteToStream(mFileWriter.GetStream(), start, datasize);//直接拷贝数据块
-                    
-                    //写入指针头部区域
-                   // mFileWriter.Write(mBlockPointMemory.Buffers, pointAddr, 0, (int)mBlockPointMemory.AllocSize);
 
-                    foreach(var vv in mHeadValues)
+                    //写入指针头部区域
+                    // mFileWriter.Write(mBlockPointMemory.Buffers, pointAddr, 0, (int)mBlockPointMemory.AllocSize);
+
+                    foreach (var vv in mHeadValues)
                     {
-                        mFileWriter.Write(pointAddr + mTagIndexCach[vv.Key] * 8, vv.Value);
+                        mFileWriter.Write(vv.Value, pointAddr + mTagIndexCach[vv.Key] * 8);
                     }
 
                     Flush();
@@ -1476,7 +1482,7 @@ namespace Cdy.Tag
 
                     sw.Stop();
 
-                    LoggerService.Service.Info("SeriseFileItem" + Id, "写入数据 " + mCurrentFileName + "  数据大小：" + ((datasize) + mBlockPointMemory.AllocSize) / 1024.0 / 1024 + " m" + "其他脚本耗时:" + ltmp + "," + (ltmp2 - ltmp) + "," + (ltmp3 - ltmp2) + "存储耗时:" + (sw.ElapsedMilliseconds - ltmp3));
+                    LoggerService.Service.Info("SeriseFileItem" + Id, "写入数据 " + mCurrentFileName + "  数据大小：" + ((datasize) ) / 1024.0 / 1024 + " m" + "其他脚本耗时:" + ltmp + "," + (ltmp2 - ltmp) + "," + (ltmp3 - ltmp2) + "存储耗时:" + (sw.ElapsedMilliseconds - ltmp3));
                 }
             }
             catch (System.IO.IOException ex)

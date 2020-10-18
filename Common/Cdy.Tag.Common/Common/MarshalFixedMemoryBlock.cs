@@ -1584,6 +1584,7 @@ namespace Cdy.Tag
             using (var stream = System.IO.File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
             {
                 byte[] bvals = ArrayPool<byte>.Shared.Rent(1024);
+                Array.Clear(bvals, 0, bvals.Length);
                 for (long i = 0; i < memory.Length / 1024; i++)
                 {
                     Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * 1024), bvals, 0, 1024);
@@ -1602,6 +1603,7 @@ namespace Cdy.Tag
         public static void Dump(this MarshalFixedMemoryBlock memory, Stream stream)
         {
             byte[] bvals = ArrayPool<byte>.Shared.Rent(1024);
+            Array.Clear(bvals, 0, bvals.Length);
             long i = 0;
             for (i = 0; i < memory.Length / 1024; i++)
             {
@@ -1630,7 +1632,7 @@ namespace Cdy.Tag
             var source = memory.Handles;
 
              var bvals = ArrayPool<byte>.Shared.Rent(ls);
-
+            Array.Clear(bvals, 0, bvals.Length);
             while (ltmp > 0)
             {
                 int ctmp = Math.Min(bvals.Length, ltmp);
@@ -1649,6 +1651,7 @@ namespace Cdy.Tag
             var source = memory.Handles;
 
             var bvals = ArrayPool<byte>.Shared.Rent(ltmp);
+            Array.Clear(bvals, 0, bvals.Length);
             while (ltmp > 0)
             {
                 int ctmp = Math.Min(bvals.Length, ltmp);

@@ -463,6 +463,8 @@ namespace Cdy.Tag
             mFileWriter.Write(date, 0);
             //byte[] nameBytes = new byte[64];
             byte[] nameBytes = ArrayPool<byte>.Shared.Rent(64);
+            Array.Clear(nameBytes, 0, nameBytes.Length);
+
             var ntmp = Encoding.UTF8.GetBytes(databaseName);
             Buffer.BlockCopy(ntmp, 0, nameBytes, 0, Math.Min(64, ntmp.Length));
             mFileWriter.Write(nameBytes, 8);
@@ -509,6 +511,7 @@ namespace Cdy.Tag
             totallenght = len;
 
             byte[] bvals = ArrayPool<byte>.Shared.Rent(52 + mTagIdMemoryCach.Position);
+            Array.Clear(bvals, 0, bvals.Length);
 
             using (System.IO.MemoryStream mHeadMemory = new System.IO.MemoryStream(bvals))
             {              

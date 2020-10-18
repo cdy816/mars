@@ -1435,7 +1435,7 @@ namespace Cdy.Tag
             var source = memory.Handles;
 
             var bvals = ArrayPool<byte>.Shared.Rent(ls);
-
+            Array.Clear(bvals, 0, bvals.Length);
             while (ltmp > 0)
             {
                 int ctmp = Math.Min(bvals.Length, ltmp);

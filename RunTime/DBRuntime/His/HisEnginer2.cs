@@ -854,6 +854,7 @@ namespace Cdy.Tag
                 {
                     var css = CalCachDatablockSizeForManualRecord(vv.Value.TagType, 0, MergeMemoryTime * vv.Value.MaxValueCountPerSecond , out valueOffset, out qulityOffset);
                     ManualHisDataMemoryBlockPool.Pool.PreAlloc(css);
+                    ManualHisDataMemoryBlockPool.Pool.PreAlloc(css);
                     cachHeadSize += css;
                 }
                 //else

@@ -22,6 +22,7 @@ namespace DBRuntime.His
 
         #region ... Variables  ...
         private object mLockObj = new object();
+        public static int Count = 0;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -36,7 +37,7 @@ namespace DBRuntime.His
         /// <param name="size"></param>
         public ManualHisDataMemoryBlock(int size):base(size)
         {
-
+            Count++;
         }
 
         #endregion ...Constructor...

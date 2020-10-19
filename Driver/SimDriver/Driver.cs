@@ -164,10 +164,10 @@ namespace SimDriver
                 double fval = Math.Cos(mNumber / 180.0 * Math.PI);
                 double sval = Math.Sin(mNumber / 180.0 * Math.PI);
 
-#if DEBUG
+//#if DEBUG
             Stopwatch sw = new Stopwatch();
             sw.Start();
-#endif
+//#endif
 
 
                 System.Threading.Tasks.Parallel.ForEach(mTagIdCach, (vv) =>
@@ -196,38 +196,39 @@ namespace SimDriver
                 mTagService.SubmiteNotifyChanged();
 
                 long llsw = sw.ElapsedMilliseconds;
-                if(!mIsSecond)
-                System.Threading.Tasks.Parallel.ForEach(mManualRecordTagCach, (vv) => {
-                    if (vv.Key == "Sim:cos")
+                if (!mIsSecond)
+                    foreach (var vv in mManualRecordTagCach)
                     {
-                        TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = fval };
-                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
+                        if (vv.Key == "Sim:cos")
+                        {
+                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = fval };
+                            mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
+                        }
+                        else if (vv.Key == "Sim:sin")
+                        {
+                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = sval };
+                            mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
+                            //mTagService.SetTagValue(vv.Value, sval);
+                        }
+                        else if (vv.Key == "Sim:step")
+                        {
+                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = mNumber };
+                            mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
+                            //mTagService.SetTagValue(vv.Value, mNumber);
+                        }
+                        else if (vv.Key == "Sim:steppoint")
+                        {
+                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = fval };
+                            mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
+                            // mTagService.SetPointValue(vv.Value, mNumber, mNumber, mNumber);
+                        }
+                        else if (vv.Key == "Sim:square")
+                        {
+                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = mBoolNumber };
+                            mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
+                            //mTagService.SetTagValue(vv.Value, mBoolNumber);
+                        }
                     }
-                    else if (vv.Key == "Sim:sin")
-                    {
-                        TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = sval };
-                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
-                        //mTagService.SetTagValue(vv.Value, sval);
-                    }
-                    else if (vv.Key == "Sim:step")
-                    {
-                        TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = mNumber };
-                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
-                        //mTagService.SetTagValue(vv.Value, mNumber);
-                    }
-                    else if (vv.Key == "Sim:steppoint")
-                    {
-                        TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = fval };
-                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
-                        // mTagService.SetPointValue(vv.Value, mNumber, mNumber, mNumber);
-                    }
-                    else if (vv.Key == "Sim:square")
-                    {
-                        TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = mBoolNumber };
-                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
-                        //mTagService.SetTagValue(vv.Value, mBoolNumber);
-                    }
-                });
 
 
                 int delay = (int)(500 - (DateTime.Now - mLastProcessTime).TotalMilliseconds);

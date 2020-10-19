@@ -160,6 +160,10 @@ namespace Cdy.Tag
             lock (mLockObj)
             {
                 mIsRunning = true;
+
+                LoggerService.Service.Debug("CompressMemory", this.Name+ "开始手动压缩 数量："+mMemoryCach.Count);
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
                 while (mMemoryCach.Count > 0)
                 {
                     ManualHisDataMemoryBlock vpp;
@@ -170,6 +174,8 @@ namespace Cdy.Tag
                     Compress(vpp);
                     //Thread.Sleep(1);
                 }
+                sw.Stop();
+                LoggerService.Service.Debug("CompressMemory", this.Name + "结束手动压缩 耗时：" + sw.ElapsedMilliseconds);
                 mIsRunning = false;
             }
         }

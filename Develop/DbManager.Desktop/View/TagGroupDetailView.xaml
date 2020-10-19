@@ -307,8 +307,18 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker Circle,:}" VerticalAlignment="Center" />
-                                <TextBox  CaretBrush="White"  Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="8,0" Grid.Column="1" Width="60" Text="{Binding CompressCircle,Mode=TwoWay}" VerticalAlignment="Center" />
+                                <TextBox  CaretBrush="White"  Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="8,0" Grid.Column="1" Width="60" Text="{Binding CompressCircle,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
                             </Grid>
+
+                            <Grid Margin="4,0"  Visibility="{Binding IsDriverRecord,Converter={StaticResource btv}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker MaxValueCountPersecond,:}" VerticalAlignment="Center" />
+                                <TextBox  CaretBrush="White"  Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="8,0" Grid.Column="1" Width="60" Text="{Binding MaxValueCountPerSecond,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
+                            </Grid>
+
                             <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker CompressType,:}"  VerticalAlignment="Center"/>
                             <ComboBox  Background="#1FFFFFFF"  Margin="8,0" Width="160" VerticalAlignment="Center" ItemsSource="{Binding CompressTypeList}" SelectedIndex="{Binding CompressType,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
                             <ContentControl  VerticalAlignment="Center" Content="{Binding CompressParameterModel}" HorizontalAlignment="Stretch" />

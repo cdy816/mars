@@ -430,6 +430,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 MaxValueCountPersecond 的本地化字符串。
+        /// </summary>
+        internal static string MaxValueCountPersecond {
+            get {
+                return ResourceManager.GetString("MaxValueCountPersecond", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 MinValue 的本地化字符串。
         /// </summary>
         internal static string MinValue {

@@ -333,6 +333,8 @@ namespace Cdy.Tag
                             mHisTag = new LongPoint3HisRunTag() { Id = vv.Value.Id, Circle = vv.Value.Circle, Type = vv.Value.Type, TagType = vv.Value.TagType, RealMemoryAddr = realbaseaddr, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.Value.CompressType, Parameters = vv.Value.Parameters };
                             break;
                     }
+
+                    mHisTag.MaxValueCountPerSecond = vv.Value.MaxValueCountPerSecond;
                     mHisTag.MaxCount = count-1;
                     mHisTags.Add(vv.Key, mHisTag);
 
@@ -846,6 +848,12 @@ namespace Cdy.Tag
 
                     vv.Value.DataSize = css;
 
+                    cachHeadSize += css;
+                }
+                else
+                {
+                    var css = CalCachDatablockSizeForManualRecord(vv.Value.TagType, 0, MergeMemoryTime * vv.Value.MaxValueCountPerSecond , out valueOffset, out qulityOffset);
+                    ManualHisDataMemoryBlockPool.Pool.PreAlloc(css);
                     cachHeadSize += css;
                 }
                 //else
@@ -1458,9 +1466,8 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="values"></param>
-        /// <param name="timeUnit">时间最小单位</param>
         /// <returns></returns>
-        private bool ManualRecordHisValues(long id, IEnumerable<Cdy.Tag.TagValue> values, int timeUnit = 100)
+        private bool ManualRecordHisValues(long id, IEnumerable<Cdy.Tag.TagValue> values)
         {
             if (mIsClosed) return false;
 
@@ -1472,6 +1479,8 @@ namespace Cdy.Tag
 
             if (mHisTags.ContainsKey(id) && mHisTags[id].Type == RecordType.Driver)
             {
+                var tag = mHisTags[id];
+
                 lock (mManualHisDataCach)
                 {
                     if (mManualHisDataCach.ContainsKey(id))
@@ -1484,8 +1493,7 @@ namespace Cdy.Tag
                         mManualHisDataCach.Add(id, datacach);
                     }
                 }
-
-                var tag = mHisTags[id];
+               
                 ManualHisDataMemoryBlock hb = null;
                 foreach (var vv in values)
                 {
@@ -1500,10 +1508,10 @@ namespace Cdy.Tag
                     {
                         if(hb!=null)
                             HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
-                        var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * 1000 / timeUnit, out valueOffset, out qulityOffset);
+                        var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * tag.MaxValueCountPerSecond, out valueOffset, out qulityOffset);
                         hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
                         hb.Time = time;
-                        hb.MaxCount = MergeMemoryTime * 1000 / timeUnit + 2;
+                        hb.MaxCount = MergeMemoryTime * tag.MaxValueCountPerSecond + 2;
                         hb.TimeUnit = 1;
                         hb.TimeLen = 4;
                         hb.TimerAddress = 0;
@@ -1645,11 +1653,10 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
-        /// <param name="timeUnit"></param>
         /// <returns></returns>
-        private bool ManualRecordHisValues(long id, Cdy.Tag.TagValue value, int timeUnit = 100)
+        private bool ManualRecordHisValues(long id, Cdy.Tag.TagValue value)
         {
-            return ManualRecordHisValues(id, value.Time, value.Value, value.Quality, timeUnit);
+            return ManualRecordHisValues(id, value.Time, value.Value, value.Quality);
         }
 
         /// <summary>
@@ -1659,9 +1666,8 @@ namespace Cdy.Tag
         /// <param name="datetime"></param>
         /// <param name="value"></param>
         /// <param name="quality"></param>
-        /// <param name="timeUnit"></param>
         /// <returns></returns>
-        private bool ManualRecordHisValues(long id,DateTime datetime ,object value,byte quality=0, int timeUnit = 100)
+        private bool ManualRecordHisValues(long id,DateTime datetime ,object value,byte quality=0)
         {
             if (mIsClosed) return false;
 
@@ -1673,6 +1679,9 @@ namespace Cdy.Tag
 
             if (mHisTags.ContainsKey(id) && mHisTags[id].Type == RecordType.Driver)
             {
+                var tag = mHisTags[id];
+                ManualHisDataMemoryBlock hb = null;
+
                 lock (mManualHisDataCach)
                 {
                     if (mManualHisDataCach.ContainsKey(id))
@@ -1686,9 +1695,6 @@ namespace Cdy.Tag
                     }
                 }
 
-                var tag = mHisTags[id];
-                ManualHisDataMemoryBlock hb = null;
-
                 var vdata = datetime.Date;
                 var mms = (int)(datetime.Subtract(vdata).TotalSeconds / MergeMemoryTime);
                 var time = vdata.AddSeconds(mms * MergeMemoryTime);
@@ -1698,10 +1704,10 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * 1000 / timeUnit, out valueOffset, out qulityOffset);
+                    var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * tag.MaxValueCountPerSecond, out valueOffset, out qulityOffset);
                     hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
                     hb.Time = time;
-                    hb.MaxCount = MergeMemoryTime * 1000 / timeUnit +2;
+                    hb.MaxCount = MergeMemoryTime * tag.MaxValueCountPerSecond + 2;
                     hb.TimeUnit = 1;
                     hb.TimeLen = 4;
                     hb.TimerAddress = 0;
@@ -1842,11 +1848,11 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         /// <param name="timeUnit"></param>
         /// <returns></returns>
-        public bool SetTagHisValue(Dictionary<int,TagValue> values,int timeUnit=100)
+        public bool SetTagHisValue(Dictionary<int,TagValue> values)
         {
             foreach(var vv in values)
             {
-                ManualRecordHisValues(vv.Key, vv.Value, timeUnit);
+                ManualRecordHisValues(vv.Key, vv.Value);
             }
             return true;
         }
@@ -1858,9 +1864,9 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="timeUnit"></param>
         /// <returns></returns>
-        public bool SetTagHisValue(int id, TagValue value, int timeUnit = 100)
+        public bool SetTagHisValue(int id, TagValue value)
         {
-            return ManualRecordHisValues(id, value, timeUnit);
+            return ManualRecordHisValues(id, value);
         }
 
         /// <summary>
@@ -1872,9 +1878,9 @@ namespace Cdy.Tag
         /// <param name="quality"></param>
         /// <param name="timeUnit"></param>
         /// <returns></returns>
-        public bool SetTagHisValue(int id, DateTime time, object value, byte quality, int timeUnit=100)
+        public bool SetTagHisValue(int id, DateTime time, object value, byte quality)
         {
-            return ManualRecordHisValues(id, time, value, quality, timeUnit);
+            return ManualRecordHisValues(id, time, value, quality);
         }
 
         /// <summary>
@@ -1884,9 +1890,9 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="timeUnit"></param>
         /// <returns></returns>
-        public bool SetTagHisValue(int id, object value, int timeUnit)
+        public bool SetTagHisValue(int id, object value)
         {
-            return SetTagHisValue(id, DateTime.Now, value, 0, timeUnit);
+            return SetTagHisValue(id, DateTime.Now, value, 0);
         }
         /// <summary>
         /// 
@@ -1894,9 +1900,9 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         /// <param name="values"></param>
         /// <returns></returns>
-        public bool SetTagHisValue(int id, List<TagValue> values, int timeUnit = 100)
+        public bool SetTagHisValue(int id, List<TagValue> values)
         {
-           return ManualRecordHisValues(id, values, timeUnit);
+           return ManualRecordHisValues(id, values);
         }
 
         /// <summary>
@@ -1904,11 +1910,11 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
-        public bool SetTagHisValues(Dictionary<int, List<TagValue>> values, int timeUnit = 100)
+        public bool SetTagHisValues(Dictionary<int, List<TagValue>> values)
         {
             foreach(var vv in values)
             {
-                ManualRecordHisValues(vv.Key, vv.Value, timeUnit);
+                ManualRecordHisValues(vv.Key, vv.Value);
             }
             return true;
         }
@@ -1919,11 +1925,11 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         /// <param name="timeUnit"></param>
         /// <returns></returns>
-        public bool SetTagHisValues(Dictionary<int, TagValue> values, int timeUnit = 100)
+        public bool SetTagHisValues(Dictionary<int, TagValue> values)
         {
             foreach (var vv in values)
             {
-                ManualRecordHisValues(vv.Key, vv.Value, timeUnit);
+                ManualRecordHisValues(vv.Key, vv.Value);
             }
             return true;
         }

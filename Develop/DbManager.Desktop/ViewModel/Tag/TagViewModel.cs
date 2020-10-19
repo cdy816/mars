@@ -454,9 +454,11 @@ namespace DBInStudio.Desktop
                 }
                 OnPropertyChanged("RecordType");
                 OnPropertyChanged("CompressCircle");
+                OnPropertyChanged("MaxValueCountPerSecond");
                 OnPropertyChanged("CompressType");
                 OnPropertyChanged("HasHisTag");
                 OnPropertyChanged("IsTimerRecord");
+                OnPropertyChanged("IsDriverRecord");
                 OnPropertyChanged("RecordTypeString");
             }
         }
@@ -480,8 +482,8 @@ namespace DBInStudio.Desktop
                     OnPropertyChanged("RecordType");
                     OnPropertyChanged("RecordTypeString");
                     OnPropertyChanged("IsTimerRecord");
+                    OnPropertyChanged("IsDriverRecord");
 
-                    
                 }
             }
         }
@@ -497,9 +499,17 @@ namespace DBInStudio.Desktop
             }
         }
 
+        public bool IsDriverRecord
+        {
+            get
+            {
+                return RecordType == (int)(Cdy.Tag.RecordType.Driver);
+            }
+        }
+
         /// <summary>
-            /// 
-            /// </summary>
+        /// 
+        /// </summary>
         public string ConvertString
         {
             get
@@ -696,6 +706,9 @@ namespace DBInStudio.Desktop
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsFloatingTag
         {
             get
@@ -754,7 +767,7 @@ namespace DBInStudio.Desktop
         /// <summary>
         /// 
         /// </summary>
-        public long CompressCircle
+        public int CompressCircle
         {
             get
             {
@@ -771,11 +784,34 @@ namespace DBInStudio.Desktop
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public short MaxValueCountPerSecond
+        {
+            get
+            {
+                return mHisTagMode != null ? mHisTagMode.MaxValueCountPerSecond : (short)1;
+            }
+            set
+            {
+                if (mHisTagMode != null && mHisTagMode.MaxValueCountPerSecond != value)
+                {
+                    mHisTagMode.MaxValueCountPerSecond = value;
+                    IsChanged = true;
+                    OnPropertyChanged("MaxValueCountPerSecond");
+                }
+            }
+        }
+
 
         #endregion ...Properties....
 
         #region ... Methods    ...
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void RefreshHisTag()
         {
             OnPropertyChanged("CompressType");
@@ -783,7 +819,8 @@ namespace DBInStudio.Desktop
             OnPropertyChanged("RecordType");
             OnPropertyChanged("RecordTypeString");
             OnPropertyChanged("IsTimerRecord");
-
+            OnPropertyChanged("IsDriverRecord");
+            OnPropertyChanged("MaxValueCountPerSecond");
         }
 
         /// <summary>
@@ -1040,7 +1077,7 @@ namespace DBInStudio.Desktop
             Cdy.Tag.HisTag htag = null;
             if(mHisTagMode != null)
             {
-                htag = new Cdy.Tag.HisTag() { Id = mHisTagMode.Id, Circle = mHisTagMode.Circle, CompressType = mHisTagMode.CompressType, TagType = mHisTagMode.TagType, Type = mHisTagMode.Type };
+                htag = new Cdy.Tag.HisTag() { Id = mHisTagMode.Id, Circle = mHisTagMode.Circle,MaxValueCountPerSecond=mHisTagMode.MaxValueCountPerSecond, CompressType = mHisTagMode.CompressType, TagType = mHisTagMode.TagType, Type = mHisTagMode.Type };
 
                 if (this.mHisTagMode.Parameters != null)
                 {
@@ -1218,7 +1255,8 @@ namespace DBInStudio.Desktop
                 sb.Append(mHisTagMode.Type + ",");
                 sb.Append(mHisTagMode.Circle + ",");
                 sb.Append(mHisTagMode.CompressType + ",");
-                if(mHisTagMode.Parameters!=null)
+                sb.Append(mHisTagMode.MaxValueCountPerSecond + ",");
+                if (mHisTagMode.Parameters!=null)
                 {
                     foreach(var vv in mHisTagMode.Parameters)
                     {
@@ -1267,13 +1305,14 @@ namespace DBInStudio.Desktop
                 Cdy.Tag.HisTag histag = new HisTag();
                 histag.Type = (Cdy.Tag.RecordType)Enum.Parse(typeof(Cdy.Tag.RecordType), stmp[11]);
 
-                histag.Circle = long.Parse(stmp[12]);
+                histag.Circle = int.Parse(stmp[12]);
                 histag.CompressType = int.Parse(stmp[13]);
                 histag.Parameters = new Dictionary<string, double>();
                 histag.TagType = realtag.Type;
                 histag.Id = realtag.Id;
+                histag.MaxValueCountPerSecond = short.Parse(stmp[14]);
 
-                for (int i=14;i<stmp.Length;i++)
+                for (int i=15;i<stmp.Length;i++)
                 {
                     string skey = stmp[i];
                     if(string.IsNullOrEmpty(skey))

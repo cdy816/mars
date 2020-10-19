@@ -1109,7 +1109,7 @@ namespace DBDevelopService
                             if (db.HisDatabase.HisTags.ContainsKey(vv.Id))
                             {
                                 var vvv = db.HisDatabase.HisTags[vv.Id];
-                                var vitem = new HisTagMessage() { Id = vv.Id, Type = (uint)vvv.Type, TagType = (uint)vvv.TagType, CompressType = (uint)vvv.CompressType, Circle = (ulong)vvv.Circle };
+                                var vitem = new HisTagMessage() { Id = vv.Id, Type = (uint)vvv.Type, TagType = (uint)vvv.TagType, CompressType = (uint)vvv.CompressType, Circle = (uint)vvv.Circle,MaxValueCountPerSecond=(uint)vvv.MaxValueCountPerSecond };
                                 if (vvv.Parameters != null && vvv.Parameters.Count > 0)
                                 {
                                     foreach (var vvp in vvv.Parameters)
@@ -1175,7 +1175,7 @@ namespace DBDevelopService
                             if (db.HisDatabase.HisTags.ContainsKey(vv.Id))
                             {
                                 var vvv = db.HisDatabase.HisTags[vv.Id];
-                                var vitem = new HisTagMessage() { Id = vv.Id, Type = (uint)vv.Type, TagType = (uint)vvv.TagType, CompressType = (uint)vvv.CompressType, Circle = (ulong)vvv.Circle };
+                                var vitem = new HisTagMessage() { Id = vv.Id, Type = (uint)vv.Type, TagType = (uint)vvv.TagType, CompressType = (uint)vvv.CompressType, Circle = (uint)vvv.Circle,MaxValueCountPerSecond=(uint)vvv.MaxValueCountPerSecond };
                                 if (vvv.Parameters != null && vvv.Parameters.Count > 0)
                                 {
                                     foreach (var vvp in vvv.Parameters)
@@ -1216,7 +1216,7 @@ namespace DBDevelopService
                 {
                     foreach (var vv in db.HisDatabase.HisTags.Values)
                     {
-                        var vitem = new HisTagMessage() { Id = vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType, Circle = (ulong)vv.Circle };
+                        var vitem = new HisTagMessage() { Id = vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType, Circle = (uint)vv.Circle,MaxValueCountPerSecond=(uint)vv.MaxValueCountPerSecond };
                         if (vv.Parameters != null && vv.Parameters.Count > 0)
                         {
                             foreach (var vvv in vv.Parameters)
@@ -1309,7 +1309,7 @@ namespace DBDevelopService
                     List<HisTagMessage> re = new List<HisTagMessage>();
                     foreach (var vv in htags)
                     {
-                        var vitem = new HisTagMessage() { Id = vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType };
+                        var vitem = new HisTagMessage() { Id = vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType,Circle=(uint)vv.Circle,MaxValueCountPerSecond=(uint)vv.MaxValueCountPerSecond };
                         if (vv.Parameters != null && vv.Parameters.Count > 0)
                         {
                             foreach (var vvv in vv.Parameters)
@@ -1527,6 +1527,8 @@ namespace DBDevelopService
                             hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
                             hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
                             hisTag.CompressType = (int)(vtag.CompressType);
+                            hisTag.Circle = (int)vtag.Circle;
+                            hisTag.MaxValueCountPerSecond = (short)vtag.MaxValueCountPerSecond;
                             hisTag.Parameters = new Dictionary<string, double>();
                             if (vtag.Parameter != null)
                             {
@@ -1707,6 +1709,8 @@ namespace DBDevelopService
                             hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
                             hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
                             hisTag.CompressType = (int)(vtag.CompressType);
+                            hisTag.Circle = (int)vtag.Circle;
+                            hisTag.MaxValueCountPerSecond = (short)vtag.MaxValueCountPerSecond;
 
                             hisTag.Parameters = new Dictionary<string, double>();
                             if (vtag.Parameter != null)
@@ -1782,6 +1786,8 @@ namespace DBDevelopService
                                 hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
                                 hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
                                 hisTag.CompressType = (int)(vtag.CompressType);
+                                hisTag.Circle = (int)vtag.Circle;
+                                hisTag.MaxValueCountPerSecond = (short)vtag.MaxValueCountPerSecond;
 
                                 hisTag.Parameters = new Dictionary<string, double>();
                                 if (vtag.Parameter != null)
@@ -1805,6 +1811,8 @@ namespace DBDevelopService
                             hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
                             hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
                             hisTag.CompressType = (int)(vtag.CompressType);
+                            hisTag.Circle = (int)vtag.Circle;
+                            hisTag.MaxValueCountPerSecond = (short)vtag.MaxValueCountPerSecond;
 
                             hisTag.Parameters = new Dictionary<string, double>();
                             if (vtag.Parameter != null)
@@ -1836,6 +1844,8 @@ namespace DBDevelopService
                                 hisTag.TagType = (Cdy.Tag.TagType)(vtag.TagType);
                                 hisTag.Type = (Cdy.Tag.RecordType)(vtag.Type);
                                 hisTag.CompressType = (int)(vtag.CompressType);
+                                hisTag.Circle = (int)vtag.Circle;
+                                hisTag.MaxValueCountPerSecond = (short)vtag.MaxValueCountPerSecond;
 
                                 hisTag.Parameters = new Dictionary<string, double>();
                                 if (vtag.Parameter != null)

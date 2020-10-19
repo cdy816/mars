@@ -85,7 +85,7 @@ namespace SpiderDriver
             var id = block.ReadInt();
             var count = block.ReadInt();
             var typ = block.ReadByte();
-            int timedu = block.ReadInt();
+            //int timedu = block.ReadInt();
 
             List<TagValue> tagvalues = new List<TagValue>();
             switch (typ)
@@ -273,7 +273,7 @@ namespace SpiderDriver
             }
             var service = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
             
-            service.SetTagHisValue(id, tagvalues, timedu);
+            service.SetTagHisValue(id, tagvalues);
 
             Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.HisValueFun, (byte)1));
         }
@@ -285,7 +285,7 @@ namespace SpiderDriver
         /// <param name="block"></param>
         private void ProcessSetHisData2(string clientid, IByteBuffer block)
         {
-            int timedu = block.ReadInt();
+            //int timedu = block.ReadInt();
             int count = block.ReadInt();
             Dictionary<int, TagValue> tagvalues = new Dictionary<int, TagValue>(count);
             for (int i = 0; i < count; i++)
@@ -400,7 +400,7 @@ namespace SpiderDriver
 
             var service = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
 
-            service.SetTagHisValues(tagvalues, timedu);
+            service.SetTagHisValues(tagvalues);
 
             Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.HisValueFun, (byte)1));
         }

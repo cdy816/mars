@@ -46,7 +46,13 @@ namespace Cdy.Tag
         /// <summary>
         /// 定时记录周期,ms
         /// </summary>
-        public long Circle { get; set; } = 1000;
+        public int Circle { get; set; } = 1000;
+
+        /// <summary>
+        /// 驱动自主添加历史数据时
+        /// 一秒内可记录的数据的数量
+        /// </summary>
+        public short MaxValueCountPerSecond { get; set; } = 1;
     }
 
     /// <summary>
@@ -67,7 +73,7 @@ namespace Cdy.Tag
             xe.SetAttributeValue("TagType", (int)tag.TagType);
             xe.SetAttributeValue("Circle", tag.Circle);
             xe.SetAttributeValue("CompressType", tag.CompressType);
-
+            xe.SetAttributeValue("MaxValueCountPerSecond", tag.MaxValueCountPerSecond);
             if (tag.Parameters != null && tag.Parameters.Count > 0)
             {
                 XElement para = new XElement("Parameters");
@@ -80,9 +86,6 @@ namespace Cdy.Tag
                 }
                 xe.Add(para);
             }
-            //xe.SetAttributeValue("CompressParameter1", tag.CompressParameter1);
-            //xe.SetAttributeValue("CompressParameter2", tag.CompressParameter2);
-            //xe.SetAttributeValue("CompressParameter3", tag.CompressParameter3);
             return xe;
         }
 
@@ -95,11 +98,12 @@ namespace Cdy.Tag
         {
             HisTag hisTag = new HisTag();
             hisTag.Id = int.Parse(xe.Attribute("Id").Value);
-            hisTag.Circle = long.Parse(xe.Attribute("Circle").Value);
+            hisTag.Circle = int.Parse(xe.Attribute("Circle").Value);
             hisTag.Type = (RecordType)(int.Parse(xe.Attribute("Type").Value));
             hisTag.TagType = (TagType)(int.Parse(xe.Attribute("TagType").Value));
             hisTag.CompressType = int.Parse(xe.Attribute("CompressType").Value);
-
+            if(xe.Attribute("MaxValueCountPerSecond")!=null)
+            hisTag.MaxValueCountPerSecond = short.Parse(xe.Attribute("MaxValueCountPerSecond").Value);
             if(xe.Element("Parameters") !=null)
             {
                 Dictionary<string, double> dvals = new Dictionary<string, double>();
@@ -114,10 +118,6 @@ namespace Cdy.Tag
                 }
                 hisTag.Parameters = dvals;
             }
-
-            //hisTag.CompressParameter1 = float.Parse(xe.Attribute("CompressParameter1").Value);
-            //hisTag.CompressParameter2 = float.Parse(xe.Attribute("CompressParameter2").Value);
-            //hisTag.CompressParameter3 = float.Parse(xe.Attribute("CompressParameter3").Value);
             return hisTag;
         }
 

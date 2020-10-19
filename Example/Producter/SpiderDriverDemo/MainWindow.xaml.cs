@@ -316,7 +316,7 @@ namespace SpiderDriverDemo
 
             }
             driverProxy.SetTagValue(values);
-            driverProxy.SetTagHisValue(hisvalus, 100, 5000);
+            driverProxy.SetTagHisValue(hisvalus,  5000);
         }
 
         /// <summary>

@@ -43,14 +43,6 @@ namespace SpiderDriver.ClientApi
 
         #region ... Constructor...
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public DriverProxy()
-        {
-            this.PropertyChanged += DriverProxy_PropertyChanged;
-        }
-
         #endregion ...Constructor...
 
         #region ... Properties ...
@@ -72,16 +64,11 @@ namespace SpiderDriver.ClientApi
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void DriverProxy_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        /// <param name="value"></param>
+        protected override void OnConnectChanged(bool value)
         {
-            if (e.PropertyName == "IsConnected")
-            {
-                mLoginId = -1;
-            }
+            if (!value) mLoginId = -1;
         }
-
 
         /// <summary>
         /// 
@@ -776,7 +763,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="timeUnit"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetTagHisValue(int id, TagType type, List<TagValue> values,int timeUnit=100, int timeout = 5000)
+        public bool SetTagHisValue(int id, TagType type, List<TagValue> values, int timeout = 5000)
         {
             CheckLogin();
             var mb = GetBuffer(ApiFunConst.HisValueFun, 22 + values.Count * 33);
@@ -785,7 +772,7 @@ namespace SpiderDriver.ClientApi
             mb.WriteInt(id);
             mb.WriteInt(values.Count);
             mb.WriteByte((byte)type);
-            mb.WriteInt(timeUnit);
+            
 
             foreach (var vv in values)
             {
@@ -817,7 +804,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="timeUnit"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetTagHisValue(Dictionary<int,TagValueAndType> idvalues,int timeUnit=100,int timeout=5000)
+        public bool SetTagHisValue(Dictionary<int,TagValueAndType> idvalues,int timeout=5000)
         {
             if (idvalues == null && idvalues.Count == 0) return false;
 
@@ -825,7 +812,6 @@ namespace SpiderDriver.ClientApi
             var mb = GetBuffer(ApiFunConst.HisValueFun, 17 + idvalues.Count * 38);
             mb.WriteByte(ApiFunConst.SetTagHisValue2);
             mb.WriteLong(this.mLoginId);
-            mb.WriteInt(timeUnit);
             mb.WriteInt(idvalues.Count);
 
             foreach (var vv in idvalues)
@@ -861,13 +847,12 @@ namespace SpiderDriver.ClientApi
         /// <param name="timeUnit"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetTagHisValue(int id, TagValueAndType values, int timeUnit = 100, int timeout = 5000)
+        public bool SetTagHisValue(int id, TagValueAndType values,  int timeout = 5000)
         {
             CheckLogin();
             var mb = GetBuffer(ApiFunConst.HisValueFun, 17 + 38);
             mb.WriteByte(ApiFunConst.SetTagHisValue2);
             mb.WriteLong(this.mLoginId);
-            mb.WriteInt(timeUnit);
             mb.WriteInt(1);
 
             mb.WriteInt(id);

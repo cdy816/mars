@@ -242,6 +242,9 @@
   <data name="MaxValue" xml:space="preserve">
     <value>MaxValue</value>
   </data>
+  <data name="MaxValueCountPersecond" xml:space="preserve">
+    <value>MaxValueCountPersecond</value>
+  </data>
   <data name="MinValue" xml:space="preserve">
     <value>MinValue</value>
   </data>

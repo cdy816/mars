@@ -56,7 +56,7 @@ namespace Cdy.Tag.Driver
         /// <param name="values"></param>
         /// <param name="timeUnit"></param>
         /// <returns></returns>
-        bool SetTagHisValue(int id, List<TagValue> values, int timeUnit);
+        bool SetTagHisValue(int id, List<TagValue> values);
 
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace Cdy.Tag.Driver
         /// <param name="value"></param>
         /// <param name="timeUnit"></param>
         /// <returns></returns>
-        bool SetTagHisValue(int id, TagValue value, int timeUnit);
+        bool SetTagHisValue(int id, TagValue value);
 
         /// <summary>
         /// 
@@ -77,7 +77,7 @@ namespace Cdy.Tag.Driver
         /// <param name="quality"></param>
         /// <param name="timeUnit"></param>
         /// <returns></returns>
-        bool SetTagHisValue(int id, DateTime time, object value, byte quality, int timeUnit);
+        bool SetTagHisValue(int id, DateTime time, object value, byte quality);
 
         /// <summary>
         /// 
@@ -86,7 +86,7 @@ namespace Cdy.Tag.Driver
         /// <param name="value"></param>
         /// <param name="timeUnit"></param>
         /// <returns></returns>
-        bool SetTagHisValue(int id, object value, int timeUnit);
+        bool SetTagHisValue(int id, object value);
 
         /// <summary>
         /// 设置变量的历史值
@@ -94,7 +94,7 @@ namespace Cdy.Tag.Driver
         /// <param name="values"></param>
         /// <param name="timeUnit"></param>
         /// <returns></returns>
-        bool SetTagHisValues(Dictionary<int, List<TagValue>> values, int timeUnit);
+        bool SetTagHisValues(Dictionary<int, List<TagValue>> values);
 
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace Cdy.Tag.Driver
         /// <param name="values"></param>
         /// <param name="timeUnit"></param>
         /// <returns></returns>
-        bool SetTagHisValues(Dictionary<int, TagValue> values, int timeUnit);
+        bool SetTagHisValues(Dictionary<int, TagValue> values);
 
         /// <summary>
         /// 
@@ -111,7 +111,7 @@ namespace Cdy.Tag.Driver
         /// <param name="values"></param>
         /// <param name="timeUnit"></param>
         /// <returns></returns>
-        bool SetTagHisValue(Dictionary<int, TagValue> values, int timeUnit);
+        bool SetTagHisValue(Dictionary<int, TagValue> values);
 
         #endregion ...Methods...
 

@@ -201,30 +201,30 @@ namespace SimDriver
                     if (vv.Key == "Sim:cos")
                     {
                         TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = fval };
-                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv), 1000);
+                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
                     }
                     else if (vv.Key == "Sim:sin")
                     {
                         TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = sval };
-                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv), 1000);
+                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
                         //mTagService.SetTagValue(vv.Value, sval);
                     }
                     else if (vv.Key == "Sim:step")
                     {
                         TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = mNumber };
-                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv), 1000);
+                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
                         //mTagService.SetTagValue(vv.Value, mNumber);
                     }
                     else if (vv.Key == "Sim:steppoint")
                     {
                         TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = fval };
-                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv), 1000);
+                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
                         // mTagService.SetPointValue(vv.Value, mNumber, mNumber, mNumber);
                     }
                     else if (vv.Key == "Sim:square")
                     {
                         TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = mBoolNumber };
-                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv), 1000);
+                        mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
                         //mTagService.SetTagValue(vv.Value, mBoolNumber);
                     }
                 });

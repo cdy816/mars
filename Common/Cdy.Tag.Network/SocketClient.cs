@@ -72,7 +72,7 @@ namespace Cdy.Tag
                     mIsConnected = value;
                     if (PropertyChanged != null)
                     {
-                        Task.Run(() => { PropertyChanged(this, new PropertyChangedEventArgs("IsConnected")); });
+                        Task.Run(() => { PropertyChanged(this, new PropertyChangedEventArgs("IsConnected")); OnConnectChanged(value); });
                     }
                 }
             }
@@ -86,6 +86,15 @@ namespace Cdy.Tag
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        protected virtual void OnConnectChanged(bool value)
+        {
+
+        }
 
         /// <summary>
         /// 

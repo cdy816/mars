@@ -242,6 +242,9 @@
   <data name="MaxValue" xml:space="preserve">
     <value>最大值</value>
   </data>
+  <data name="MaxValueCountPersecond" xml:space="preserve">
+    <value>每秒记录最大值数量</value>
+  </data>
   <data name="MinValue" xml:space="preserve">
     <value>最小值</value>
   </data>

@@ -705,8 +705,9 @@ message HisTagMessage
  uint32 Type=2;
  uint32 TagType=3;
  uint32 CompressType=4;
- uint64 Circle=5;
- repeated hisTagParameterItem Parameter=6;
+ uint32 Circle=5;
+ uint32  MaxValueCountPerSecond=6;
+ repeated hisTagParameterItem Parameter=7;
 }
 
 message hisTagParameterItem

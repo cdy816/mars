@@ -735,6 +735,7 @@ namespace DBStudio
                 sb.Append(mHisTagMode.Type + ",");
                 sb.Append(mHisTagMode.Circle + ",");
                 sb.Append(mHisTagMode.CompressType + ",");
+                sb.Append(mHisTagMode.MaxValueCountPerSecond + ",");
                 if (mHisTagMode.Parameters != null)
                 {
                     foreach (var vv in mHisTagMode.Parameters)
@@ -785,13 +786,13 @@ namespace DBStudio
                 Cdy.Tag.HisTag histag = new HisTag();
                 histag.Type = (Cdy.Tag.RecordType)Enum.Parse(typeof(Cdy.Tag.RecordType), stmp[11]);
 
-                histag.Circle = long.Parse(stmp[12]);
+                histag.Circle = int.Parse(stmp[12]);
                 histag.CompressType = int.Parse(stmp[13]);
                 histag.Parameters = new Dictionary<string, double>();
                 histag.TagType = realtag.Type;
                 histag.Id = realtag.Id;
-
-                for (int i = 14; i < stmp.Length; i++)
+                histag.MaxValueCountPerSecond = short.Parse(stmp[14]);
+                for (int i = 15; i < stmp.Length; i++)
                 {
                     string skey = stmp[i];
                     if (string.IsNullOrEmpty(skey))
@@ -926,7 +927,10 @@ namespace DBStudio
                     tag.Type = (RecordType)(int.Parse(value));
                     break;
                 case "circle":
-                    tag.Circle = long.Parse(value);
+                    tag.Circle = int.Parse(value);
+                    break;
+                case "maxvaluecountpersecond":
+                    tag.MaxValueCountPerSecond = short.Parse(value);
                     break;
                 case "compresstype":
                     tag.CompressType = int.Parse(value);

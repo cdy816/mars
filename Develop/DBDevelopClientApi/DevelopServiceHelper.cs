@@ -688,6 +688,8 @@ namespace DBDevelopClientApi
                     foreach (var vv in result.HisTag)
                     {
                         var tag = new Cdy.Tag.HisTag { Id = (int)vv.Id, TagType = (Cdy.Tag.TagType)vv.TagType, Type = (Cdy.Tag.RecordType)vv.Type, CompressType = (int)vv.CompressType };
+                        tag.Circle = (int)vv.Circle;
+                        tag.MaxValueCountPerSecond = (short)vv.MaxValueCountPerSecond;
                         if (vv.Parameter.Count > 0)
                         {
                             tag.Parameters = new Dictionary<string, double>();
@@ -768,6 +770,8 @@ namespace DBDevelopClientApi
                     foreach (var vv in result.HisTag)
                     {
                         var tag = new Cdy.Tag.HisTag { Id = (int)vv.Id, TagType = (Cdy.Tag.TagType)vv.TagType, Type = (Cdy.Tag.RecordType)vv.Type, CompressType = (int)vv.CompressType };
+                        tag.Circle = (int)vv.Circle;
+                        tag.MaxValueCountPerSecond = (short)vv.MaxValueCountPerSecond;
                         if (vv.Parameter.Count > 0)
                         {
                             tag.Parameters = new Dictionary<string, double>();
@@ -878,6 +882,8 @@ namespace DBDevelopClientApi
                     foreach (var vv in result.HisTag)
                     {
                         var tag = new Cdy.Tag.HisTag { Id = (int)vv.Id, TagType = (Cdy.Tag.TagType)vv.TagType, Type = (Cdy.Tag.RecordType)vv.Type, CompressType = (int)vv.CompressType };
+                        tag.Circle = (int)vv.Circle;
+                        tag.MaxValueCountPerSecond = (short)vv.MaxValueCountPerSecond;
                         if (vv.Parameter.Count > 0)
                         {
                             tag.Parameters = new Dictionary<string, double>();
@@ -970,6 +976,8 @@ namespace DBDevelopClientApi
                     foreach (var vv in result.HisTag)
                     {
                         var tag = new Cdy.Tag.HisTag { Id = (int)vv.Id, TagType = (Cdy.Tag.TagType)vv.TagType, Type = (Cdy.Tag.RecordType)vv.Type, CompressType = (int)vv.CompressType };
+                        tag.Circle = (int)vv.Circle;
+                        tag.MaxValueCountPerSecond = (short)vv.MaxValueCountPerSecond;
                         if (vv.Parameter.Count > 0)
                         {
                             tag.Parameters = new Dictionary<string, double>();
@@ -1227,7 +1235,8 @@ namespace DBDevelopClientApi
                 re.TagType = (uint)tag.TagType;
                 re.Type = (uint)tag.Type;
                 re.CompressType = (uint)tag.CompressType;
-                re.Circle = (ulong)tag.Circle;
+                re.Circle = (uint)tag.Circle;
+                re.MaxValueCountPerSecond = (uint)tag.MaxValueCountPerSecond;
                 if (tag.Parameters != null)
                 {
                     foreach (var vv in tag.Parameters)

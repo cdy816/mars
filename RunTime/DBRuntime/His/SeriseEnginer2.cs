@@ -1051,6 +1051,8 @@ namespace Cdy.Tag
                 mwriter.GoToEnd();
                 var vpointer = mwriter.CurrentPostion;
 
+                int datasize = 0;
+
                 //写入数据，同时获取数据块地址
                 foreach (var vvv in vv.Value)
                 {
@@ -1067,6 +1069,7 @@ namespace Cdy.Tag
                    // mHeadValue.Add(vvv.Key, vpointer);
                     vvv.WriteToStream(mwriter.GetStream(), 28, size - 28);//直接拷贝数据块
                     vpointer += (size - 28);
+                    datasize += (size - 28);
                 }
 
                 long ltmp2 = sw.ElapsedMilliseconds;
@@ -1078,11 +1081,11 @@ namespace Cdy.Tag
                     {
                         mwriter.Write(mHeadValue[hd.Key][i], hd.Value[i]);
                     }
-
-                    if(hd.Key==0)
-                    {
-                        LoggerService.Service.Info("SeriseEnginer", "Id0 Adress:" + hd.Value[0] + ", value:" + mHeadValue[0][0],ConsoleColor.Red);
-                    }
+                    datasize += 8;
+                    //if(hd.Key==0)
+                    //{
+                    //    LoggerService.Service.Info("SeriseEnginer", "Id0 Adress:" + hd.Value[0] + ", value:" + mHeadValue[0][0],ConsoleColor.Red);
+                    //}
                     //mwriter.Write(mHeadValue[hd.Key], hd.Value);
                 }
 
@@ -1109,7 +1112,7 @@ namespace Cdy.Tag
                 }
 
 
-                LoggerService.Service.Info("SeriseEnginer", "SeriseFileItem" + this.Id + " 完成存储,数据块:" + vv.Value.Count + " ReadHeadPoint:" + ltmp + " WriteData:" + (ltmp2 - ltmp) + " UpdateHead:" + (ltmp3 - ltmp2));
+                LoggerService.Service.Info("SeriseEnginer", "SeriseFileItem " + this.Id + " 完成存储,数据块:" + vv.Value.Count + " 数据量:" + datasize +" 查找数据区偏移耗时:"+ ltmp + " 写入数据耗时:" + (ltmp2 - ltmp) + " 更新指针耗时:" + (ltmp3 - ltmp2));
 
 
             }

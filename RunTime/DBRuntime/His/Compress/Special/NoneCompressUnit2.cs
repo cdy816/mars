@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using DBRuntime.His;
 
 namespace Cdy.Tag
 {
@@ -51,10 +52,12 @@ namespace Cdy.Tag
            // LoggerService.Service.Erro("NoneCompressUnit", "目标地址:"+targetAddr +" 数值地址: " + (targetAddr+10) +" 变量个数: "+ (size - this.QulityOffset));
             target.WriteDatetime(targetAddr,this.StartTime);
             target.Write((int)(size - this.QulityOffset));//写入值的个数
-            target.Write(TimeTick);
+            target.Write((int)TimeTick);//写入时间间隔
+            target.WriteByte((byte)(source as HisDataMemoryBlock).TimeLen);//写入时间字段长度
+
             if (size > 0)
-                source.CopyTo(target, sourceAddr, targetAddr + 16, size);
-            return size + 16;
+                source.CopyTo(target, sourceAddr, targetAddr + 17, size);
+            return size + 17;
         }
 
         /// <summary>
@@ -65,7 +68,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="startTime"></param>
         /// <returns></returns>
-        private Dictionary<int,Tuple<DateTime,bool>> ReadTimeQulity(MarshalMemoryBlock source, int sourceAddr,out int valueCount, out DateTime startTime)
+        private Dictionary<int,Tuple<DateTime,bool>> ReadTimeQulity(MarshalMemoryBlock source, int sourceAddr,out int valueCount, out DateTime startTime,out byte timelen)
         {
             source.Position = sourceAddr;
 
@@ -78,34 +81,44 @@ namespace Cdy.Tag
             //读取时间单位
             int timeTick = source.ReadInt();
 
-            var times = source.ReadUShorts(source.Position, qoffset);
-
-            Dictionary<int, Tuple<DateTime, bool>> timeQulities = new Dictionary<int, Tuple<DateTime, bool>>(qoffset);
-
-            for(int i=0;i<times.Count;i++)
+            timelen = source.ReadByte();
+            Dictionary<int, Tuple<DateTime, bool>> timeQulities;
+            if (timelen == 2)
             {
-                if (times[i] == 0&&i>0)
+                var times = source.ReadUShorts(source.Position, qoffset);
+
+                timeQulities = new Dictionary<int, Tuple<DateTime, bool>>(qoffset);
+
+                for (int i = 0; i < times.Count; i++)
                 {
-                    timeQulities.Add(i, new Tuple<DateTime, bool>(startTime, false));
-                }
-                else
-                {
-                    timeQulities.Add(i, new Tuple<DateTime, bool>(startTime.AddMilliseconds(times[i]*timeTick), true));
+                    if (times[i] == 0 && i > 0)
+                    {
+                        timeQulities.Add(i, new Tuple<DateTime, bool>(startTime, false));
+                    }
+                    else
+                    {
+                        timeQulities.Add(i, new Tuple<DateTime, bool>(startTime.AddMilliseconds(times[i] * timeTick), true));
+                    }
                 }
             }
+            else
+            {
+                var times = source.ReadInts(source.Position, qoffset);
 
-            //for(int i=0;i<qoffset;i++)
-            //{
-            //    var vtmp = source.ReadUShort() * timeTick;
-            //    if (i > 0 && vtmp == 0)
-            //    {
-            //        timeQulities.Add(i, new Tuple<DateTime, bool>(startTime.AddMilliseconds(vtmp), false));
-            //    }
-            //    else
-            //    {
-            //        timeQulities.Add(i, new Tuple<DateTime, bool>(startTime.AddMilliseconds(vtmp), true));
-            //    }
-            //}
+                timeQulities = new Dictionary<int, Tuple<DateTime, bool>>(qoffset);
+
+                for (int i = 0; i < times.Count; i++)
+                {
+                    if (times[i] == 0 && i > 0)
+                    {
+                        timeQulities.Add(i, new Tuple<DateTime, bool>(startTime, false));
+                    }
+                    else
+                    {
+                        timeQulities.Add(i, new Tuple<DateTime, bool>(startTime.AddMilliseconds(times[i] * timeTick), true));
+                    }
+                }
+            }
             return timeQulities;
         }
 
@@ -128,12 +141,14 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
+            byte timelen = 0;
 
-            //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 3 + 16 + sourceAddr, valuecount);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time,out timelen);
 
-            var valaddr = valuecount * 2 + 16 + sourceAddr;
+            //读取质量戳,时间戳2/4个字节，值8个字节，质量戳1个字节
+            var qq = source.ReadBytes(valuecount * (timelen+1) + 17 + sourceAddr, valuecount);
+
+            var valaddr = valuecount * timelen + 17 + sourceAddr;
 
             var vals = source.ReadBytes(valaddr, valuecount);
 
@@ -169,12 +184,14 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr,  out valuecount, out time);
+            byte timelen = 0;
 
-            //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 3 + 16 + sourceAddr, valuecount);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time, out timelen);
 
-            var valaddr = valuecount * 2 + 16 + sourceAddr;
+            //读取质量戳,时间戳2/4个字节，值8个字节，质量戳1个字节
+            var qq = source.ReadBytes(valuecount * (timelen + 1) + 17 + sourceAddr, valuecount);
+
+            var valaddr = valuecount * timelen + 17 + sourceAddr;
 
             var vals = source.ReadBytes(valaddr, valuecount);
 
@@ -190,33 +207,6 @@ namespace Cdy.Tag
             }
 
             return rcount;
-
-            //DateTime time;
-            //int valuecount = 0;
-            //var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
-
-            ////读取质量戳,时间戳2个字节，值1个字节，质量戳1个字节
-            //var qq = source.ReadBytes(valuecount * 3+10, qs.Count);
-
-            //var valaddr = valuecount * 2 + 10;
-
-            //int i = 0;
-            //int rcount = 0;
-            //foreach (var vv in qs)
-            //{
-            //    if (qq[vv.Key] < 100)
-            //    {
-            //        if (vv.Value.Item1 < startTime || vv.Value.Item1 > endTime || !vv.Value.Item2)
-            //        {
-            //            continue;
-            //        }
-            //        var bval = source.ReadByte(valaddr + i);
-            //        result.Add(bval, vv.Value.Item1, qq[vv.Key]);
-            //        rcount++;
-            //    }
-            //    i++;
-            //}
-            //return rcount;
         }
 
         /// <summary>
@@ -235,12 +225,14 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
+            byte timelen = 0;
 
-            //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 4 + 16 + sourceAddr, valuecount);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time, out timelen);
 
-            var valaddr = valuecount * 2 + 16 + sourceAddr;
+            //读取质量戳,时间戳2/4个字节，值8个字节，质量戳1个字节
+            var qq = source.ReadBytes(valuecount * (timelen+2) + 17 + sourceAddr, valuecount);
+
+            var valaddr = valuecount * timelen + 17 + sourceAddr;
 
             var vals = source.ReadShorts(valaddr, valuecount);
 
@@ -256,33 +248,6 @@ namespace Cdy.Tag
             }
 
             return rcount;
-
-            //DateTime time;
-            //int valuecount = 0;
-            //var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
-
-            ////读取质量戳,时间戳2个字节，值2个字节，质量戳1个字节
-            //var qq = source.ReadBytes(valuecount * 4+10, qs.Count);
-
-            //var valaddr = valuecount * 2+10;
-
-            //int i = 0;
-            //int rcount = 0;
-            //foreach (var vv in qs)
-            //{
-            //    if (qq[vv.Key] < 100)
-            //    {
-            //        if (vv.Value.Item1 < startTime || vv.Value.Item1 > endTime || !vv.Value.Item2)
-            //        {
-            //            continue;
-            //        }
-            //        var bval = source.ReadShort(valaddr + i * 2);
-            //        result.Add(bval, vv.Value.Item1, qq[vv.Key]);
-            //        rcount++;
-            //    }
-            //    i++;
-            //}
-            //return rcount;
         }
 
         /// <summary>
@@ -301,12 +266,14 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time, out timelen);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 4 + 16 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * (timelen+2) + 17 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 16 + sourceAddr;
+            var valaddr = valuecount * timelen + 17 + sourceAddr;
 
             var vals = source.ReadUShorts(valaddr, valuecount);
 
@@ -322,33 +289,6 @@ namespace Cdy.Tag
             }
 
             return rcount;
-
-            //DateTime time;
-            //int valuecount = 0;
-            //var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
-
-            ////读取质量戳,时间戳2个字节，值2个字节，质量戳1个字节
-            //var qq = source.ReadBytes(valuecount * 4+10, qs.Count);
-
-            //var valaddr = valuecount * 2+10;
-
-            //int i = 0;
-            //int rcount = 0;
-            //foreach (var vv in qs)
-            //{
-            //    if (qq[vv.Key] < 100)
-            //    {
-            //        if (vv.Value.Item1 < startTime || vv.Value.Item1 > endTime || !vv.Value.Item2)
-            //        {
-            //            continue;
-            //        }
-            //        var bval = source.ReadUShort(valaddr + i * 2);
-            //        result.Add(bval, vv.Value.Item1, qq[vv.Key]);
-            //        rcount++;
-            //    }
-            //    i++;
-            //}
-            //return rcount;
         }
 
         /// <summary>
@@ -367,12 +307,14 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
+            byte timelen = 0;
 
-            //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 6 + 16 + sourceAddr, valuecount);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time, out timelen);
 
-            var valaddr = valuecount * 2 + 16 + sourceAddr;
+            //读取质量戳,时间戳2/4个字节，值8个字节，质量戳1个字节
+            var qq = source.ReadBytes(valuecount * (timelen+4) + 17 + sourceAddr, valuecount);
+
+            var valaddr = valuecount * timelen + 17 + sourceAddr;
 
             var vals = source.ReadInts(valaddr, valuecount);
 
@@ -388,33 +330,6 @@ namespace Cdy.Tag
             }
 
             return rcount;
-
-            //DateTime time;
-            //int valuecount = 0;
-            //var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
-
-            ////读取质量戳,时间戳2个字节，值4个字节，质量戳1个字节
-            //var qq = source.ReadBytes(valuecount * 6+10, qs.Count);
-
-            //var valaddr = valuecount * 2+10;
-
-            //int i = 0;
-            //int rcount = 0;
-            //foreach (var vv in qs)
-            //{
-            //    if (qq[vv.Key] < 100)
-            //    {
-            //        if (vv.Value.Item1 < startTime || vv.Value.Item1 > endTime || !vv.Value.Item2)
-            //        {
-            //            continue;
-            //        }
-            //        var bval = source.ReadInt(valaddr + i * 2);
-            //        result.Add(bval, vv.Value.Item1, qq[vv.Key]);
-            //        rcount++;
-            //    }
-            //    i++;
-            //}
-            //return rcount;
         }
 
         /// <summary>
@@ -433,12 +348,14 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time, out timelen);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 6 + 16 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * (timelen + 4) + 17 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 16 + sourceAddr;
+            var valaddr = valuecount * timelen + 17 + sourceAddr;
 
             var vals = source.ReadUInts(valaddr, valuecount);
 
@@ -454,32 +371,6 @@ namespace Cdy.Tag
             }
 
             return rcount;
-            //DateTime time;
-            //int valuecount = 0;
-            //var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
-
-            ////读取质量戳,时间戳2个字节，值4个字节，质量戳1个字节
-            //var qq = source.ReadBytes(valuecount * 6+10, qs.Count);
-
-            //var valaddr = valuecount * 2+10;
-
-            //int i = 0;
-            //int rcount = 0;
-            //foreach (var vv in qs)
-            //{
-            //    if (qq[vv.Key] < 100)
-            //    {
-            //        if (vv.Value.Item1 < startTime || vv.Value.Item1 > endTime || !vv.Value.Item2)
-            //        {
-            //            continue;
-            //        }
-            //        var bval = source.ReadUInt(valaddr + i * 2);
-            //        result.Add(bval, vv.Value.Item1, qq[vv.Key]);
-            //        rcount++;
-            //    }
-            //    i++;
-            //}
-            //return rcount;
         }
 
         /// <summary>
@@ -498,12 +389,14 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time, out timelen);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 10 + 16 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * (timelen+8) + 17 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 16 + sourceAddr;
+            var valaddr = valuecount * timelen + 17 + sourceAddr;
 
             var vals = source.ReadLongs(valaddr, valuecount);
 
@@ -519,32 +412,7 @@ namespace Cdy.Tag
             }
 
             return rcount;
-            //DateTime time;
-            //int valuecount = 0;
-            //var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
-
-            ////读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            //var qq = source.ReadBytes(valuecount * 10+10, qs.Count);
-
-            //var valaddr = valuecount * 2+10;
-
-            //int i = 0;
-            //int rcount = 0;
-            //foreach (var vv in qs)
-            //{
-            //    if (qq[vv.Key] < 100)
-            //    {
-            //        if (vv.Value.Item1 < startTime || vv.Value.Item1 > endTime || !vv.Value.Item2)
-            //        {
-            //            continue;
-            //        }
-            //        var bval = source.ReadLong(valaddr + i * 2);
-            //        result.Add(bval, vv.Value.Item1, qq[vv.Key]);
-            //        rcount++;
-            //    }
-            //    i++;
-            //}
-            //return rcount;
+            
         }
 
         /// <summary>
@@ -562,13 +430,14 @@ namespace Cdy.Tag
             DateTime time;
 
             int valuecount = 0;
+            byte timelen = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time, out timelen);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 10 + 16 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * (timelen + 8) + 17 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 16 + sourceAddr;
+            var valaddr = valuecount * timelen + 17 + sourceAddr;
 
             var vals = source.ReadULongs(valaddr, valuecount);
 
@@ -584,33 +453,6 @@ namespace Cdy.Tag
             }
 
             return rcount;
-
-            //DateTime time;
-            //int valuecount = 0;
-            //var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
-
-            ////读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            //var qq = source.ReadBytes(valuecount * 10+10, qs.Count);
-
-            //var valaddr = valuecount * 2+10;
-
-            //int i = 0;
-            //int rcount = 0;
-            //foreach (var vv in qs)
-            //{
-            //    if (qq[vv.Key] < 100)
-            //    {
-            //        if (vv.Value.Item1 < startTime || vv.Value.Item1 > endTime || !vv.Value.Item2)
-            //        {
-            //            continue;
-            //        }
-            //        var bval = source.ReadULong(valaddr + i * 2);
-            //        result.Add(bval, vv.Value.Item1, qq[vv.Key]);
-            //        rcount++;
-            //    }
-            //    i++;
-            //}
-            //return rcount;
         }
 
         /// <summary>
@@ -629,12 +471,14 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time, out timelen);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 6 + 16 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * (timelen+4) + 17 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 16 + sourceAddr;
+            var valaddr = valuecount * timelen + 17 + sourceAddr;
 
             var vals = source.ReadFloats(valaddr, valuecount);
 
@@ -650,32 +494,6 @@ namespace Cdy.Tag
             }
 
             return rcount;
-            //DateTime time;
-            //int valuecount = 0;
-            //var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
-
-            ////读取质量戳,时间戳2个字节，值4个字节，质量戳1个字节
-            //var qq = source.ReadBytes(valuecount * 6+10, qs.Count);
-
-            //var valaddr = valuecount * 2+10;
-
-            //int i = 0;
-            //int rcount = 0;
-            //foreach (var vv in qs)
-            //{
-            //    if (qq[vv.Key] < 100)
-            //    {
-            //        if (vv.Value.Item1 < startTime || vv.Value.Item1 > endTime || !vv.Value.Item2)
-            //        {
-            //            continue;
-            //        }
-            //        var bval = source.ReadFloat(valaddr + i * 2);
-            //        result.Add(bval, vv.Value.Item1, qq[vv.Key]);
-            //        rcount++;
-            //    }
-            //    i++;
-            //}
-            //return rcount;
         }
 
         /// <summary>
@@ -694,12 +512,14 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time, out timelen);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 10 + 16 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * (timelen+8) + 17 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 16 + sourceAddr;
+            var valaddr = valuecount * timelen + 17 + sourceAddr;
 
             var vals = source.ReadDoubleByMemory(valaddr, valuecount);
 
@@ -734,12 +554,14 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out time);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time, out timelen);
 
             //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            var qq = source.ReadBytes(valuecount * 10 + 16 + sourceAddr, valuecount);
+            var qq = source.ReadBytes(valuecount * (timelen+8) + 17 + sourceAddr, valuecount);
 
-            var valaddr = valuecount * 2 + 16 + sourceAddr;
+            var valaddr = valuecount * timelen + 17 + sourceAddr;
 
             var vals = source.ReadDateTimes(valaddr, valuecount);
 
@@ -755,33 +577,6 @@ namespace Cdy.Tag
             }
 
             return rcount;
-
-            //DateTime time;
-            //int valuecount = 0;
-            //var qs = ReadTimeQulity(source, sourceAddr, timeTick, out valuecount, out time);
-
-            ////读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-            //var qq = source.ReadBytes(valuecount * 10+10, qs.Count);
-
-            //var valaddr = valuecount * 2+10;
-
-            //int i = 0;
-            //int rcount = 0;
-            //foreach (var vv in qs)
-            //{
-            //    if (qq[vv.Key] < 100)
-            //    {
-            //        if (vv.Value.Item1 < startTime || vv.Value.Item1 > endTime || !vv.Value.Item2)
-            //        {
-            //            continue;
-            //        }
-            //        var bval = source.ReadDateTime(valaddr + i * 2);
-            //        result.Add(bval, vv.Value.Item1, qq[vv.Key]);
-            //        rcount++;
-            //    }
-            //    i++;
-            //}
-            //return rcount;
         }
 
         /// <summary>
@@ -798,9 +593,11 @@ namespace Cdy.Tag
         {
             DateTime time;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out time);
+            byte timelen = 0;
 
-            var valaddr = qs.Count * 2+ 16 + sourceAddr;
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time, out timelen);
+
+            var valaddr = qs.Count * timelen + 17 + sourceAddr;
 
             int i = 0;
             int rcount = 0;
@@ -823,24 +620,6 @@ namespace Cdy.Tag
                     rcount++;
                 }
             }
-
-            //foreach (var vv in qs)
-            //{
-            //    if (qq[vv.Key] < 100)
-            //    {
-            //        if (vv.Value.Item1 < startTime || vv.Value.Item1 > endTime || !vv.Value.Item2)
-            //        {
-            //            continue;
-            //        }
-
-            //        result.Add(ls[i],vv.Value.Item1,qq[vv.Key]);
-
-            //        //var bval = source.ReadUShort(valaddr + i * 8);
-            //        //result.Add(bval, vv.Key, qq[vv.Value]);
-            //        rcount++;
-            //    }
-            //    i++;
-            //}
             return rcount;
         }
 
@@ -882,12 +661,17 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
-            var qq = source.ReadBytes(valuecount * 3+16+sourceAddr, valuecount);
+            //var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
+
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime, out timelen);
+
+            var qq = source.ReadBytes(valuecount * (timelen+1) + 17 + sourceAddr, valuecount);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2+ 16 + sourceAddr;
+            var valaddr = qs.Count * timelen+ 17 + sourceAddr;
 
             int count = 0;
             int icount = 0;
@@ -1011,12 +795,15 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 3+ 16 + sourceAddr, qs.Count);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime, out timelen);
+            //var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out stime);
+            var qq = source.ReadBytes(qs.Count * (timelen+1)+ 17 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2+ 16 + sourceAddr;
+            var valaddr = qs.Count * timelen + 17 + sourceAddr;
 
             int count = 0;
             int icount = 0;
@@ -1140,12 +927,17 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 10+ 16 + sourceAddr, qs.Count);
+            //var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out stime);
+
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime, out timelen);
+
+            var qq = source.ReadBytes(qs.Count * (timelen+8) + 17 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2+ 16 + sourceAddr;
+            var valaddr = qs.Count * timelen + 17 + sourceAddr;
 
             int count = 0;
             int icount = 0;
@@ -1271,12 +1063,17 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 10+ 16 + sourceAddr, qs.Count);
+            //var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
+
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime, out timelen);
+
+            var qq = source.ReadBytes(qs.Count * (timelen+8) + 17 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2+ 16 + sourceAddr;
+            var valaddr = qs.Count * timelen + 17 + sourceAddr;
 
             int count = 0;
 
@@ -1418,12 +1215,15 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 6 + 16 + sourceAddr, qs.Count);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime, out timelen);
+            //var qs = ReadTimeQulity(source, sourceAddr,out valuecount, out stime);
+            var qq = source.ReadBytes(qs.Count * (timelen+4) + 17 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 16 + sourceAddr;
+            var valaddr = qs.Count * timelen + 17 + sourceAddr;
 
             int count = 0;
             int icount = 0;
@@ -1530,92 +1330,7 @@ namespace Cdy.Tag
                     icount = icount1;
                 }
             }
-            //foreach (var time1 in time)
-            //{
-            //    for (int i = 0; i < vv.Length - 1; i++)
-            //    {
-            //        var skey = vv[i];
-
-            //        var snext = vv[i + 1];
-
-            //        if (time1 == skey.Value.Item1)
-            //        {
-            //            var val = source.ReadFloat(valaddr + i*4);
-            //            result.Add(val, time1, qq[skey.Key]);
-            //            count++;
-            //            break;
-            //        }
-            //        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
-            //        {
-
-            //            switch (type)
-            //            {
-            //                case QueryValueMatchType.Previous:
-            //                    var val = source.ReadFloat(valaddr + i * 4);
-            //                    result.Add(val, time1, qq[skey.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.After:
-            //                    val = source.ReadFloat(valaddr + (i + 1) * 4);
-            //                    result.Add(val, time1, qq[snext.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.Linear:
-            //                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
-            //                    {
-            //                        var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
-            //                        var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-            //                        var sval1 = source.ReadFloat(valaddr + i * 4);
-            //                        var sval2 = source.ReadFloat(valaddr + (i + 1) * 4);
-            //                        var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
-            //                        result.Add((float)val1, time1, 0);
-            //                    }
-            //                    else if (qq[skey.Key] < 20)
-            //                    {
-            //                        val = source.ReadFloat(valaddr + i * 4);
-            //                        result.Add(val, time1, qq[skey.Key]);
-            //                    }
-            //                    else if (qq[snext.Key] < 20)
-            //                    {
-            //                        val = source.ReadFloat(valaddr + (i + 1) * 4);
-            //                        result.Add(val, time1, qq[snext.Key]);
-            //                    }
-            //                    else
-            //                    {
-            //                        result.Add(0, time1, (byte)QualityConst.Null);
-            //                    }
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.Closed:
-            //                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
-            //                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
-
-            //                    if (pval < fval)
-            //                    {
-            //                        val = source.ReadFloat(valaddr + i * 4);
-            //                        result.Add(val, time1, qq[skey.Key]);
-            //                    }
-            //                    else
-            //                    {
-            //                        val = source.ReadFloat(valaddr + (i + 1) * 4);
-            //                        result.Add(val, time1, qq[snext.Key]);
-            //                    }
-            //                    count++;
-            //                    break;
-            //            }
-
-            //            break;
-            //        }
-            //        else if (time1 == snext.Value.Item1)
-            //        {
-            //            var val = source.ReadFloat(valaddr + (i + 1) * 4);
-            //            result.Add(val, time1, qq[snext.Key]);
-            //            count++;
-            //            break;
-            //        }
-
-            //    }
-            //}
+            
             return count;
         }
 
@@ -1656,12 +1371,14 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 6 + 16 + sourceAddr, qs.Count);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime, out timelen);
+            var qq = source.ReadBytes(qs.Count * (timelen+4) + 17 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 16 + sourceAddr;
+            var valaddr = qs.Count * timelen + 17 + sourceAddr;
             int count = 0;
             int icount = 0;
             int icount1 = 0;
@@ -1767,93 +1484,6 @@ namespace Cdy.Tag
                     icount = icount1;
                 }
             }
-            //int count = 0;
-            //foreach (var time1 in time)
-            //{
-            //    for (int i = 0; i < vv.Length - 1; i++)
-            //    {
-            //        var skey = vv[i];
-
-            //        var snext = vv[i + 1];
-
-            //        if (time1 == skey.Value.Item1)
-            //        {
-            //            var val = source.ReadInt(valaddr + i*4);
-            //            result.Add(val, time1, qq[skey.Key]);
-            //            count++;
-            //            break;
-            //        }
-            //        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
-            //        {
-
-            //            switch (type)
-            //            {
-            //                case QueryValueMatchType.Previous:
-            //                    var val = source.ReadInt(valaddr + i * 4);
-            //                    result.Add(val, time1, qq[skey.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.After:
-            //                    val = source.ReadInt(valaddr + (i + 1) * 4);
-            //                    result.Add(val, time1, qq[snext.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.Linear:
-            //                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
-            //                    {
-            //                        var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
-            //                        var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-            //                        var sval1 = source.ReadInt(valaddr + i * 4);
-            //                        var sval2 = source.ReadInt(valaddr + (i + 1) * 4);
-            //                        var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
-            //                        result.Add((int)val1, time1, 0);
-            //                    }
-            //                    else if (qq[skey.Key] < 20)
-            //                    {
-            //                        val = source.ReadInt(valaddr + i * 4);
-            //                        result.Add(val, time1, qq[skey.Key]);
-            //                    }
-            //                    else if (qq[snext.Key] < 20)
-            //                    {
-            //                        val = source.ReadInt(valaddr + (i + 1) * 4);
-            //                        result.Add(val, time1, qq[snext.Key]);
-            //                    }
-            //                    else
-            //                    {
-            //                        result.Add(0, time1, (byte)QualityConst.Null);
-            //                    }
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.Closed:
-            //                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
-            //                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
-
-            //                    if (pval < fval)
-            //                    {
-            //                        val = source.ReadInt(valaddr + i * 4);
-            //                        result.Add(val, time1, qq[skey.Key]);
-            //                    }
-            //                    else
-            //                    {
-            //                        val = source.ReadInt(valaddr + (i + 1) * 4);
-            //                        result.Add(val, time1, qq[snext.Key]);
-            //                    }
-            //                    count++;
-            //                    break;
-            //            }
-
-            //            break;
-            //        }
-            //        else if (time1 == snext.Value.Item1)
-            //        {
-            //            var val = source.ReadInt(valaddr + (i + 1) * 4);
-            //            result.Add(val, time1, qq[snext.Key]);
-            //            count++;
-            //            break;
-            //        }
-
-            //    }
-            //}
             return count;
         }
 
@@ -1894,12 +1524,14 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 10 + 16 + sourceAddr, qs.Count);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime, out timelen);
+            var qq = source.ReadBytes(qs.Count * (timelen+8) + 17 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 16 + sourceAddr;
+            var valaddr = qs.Count * timelen + 17 + sourceAddr;
 
             int count = 0;
             int icount = 0;
@@ -2008,97 +1640,6 @@ namespace Cdy.Tag
                 }
             }
             return count;
-
-            //int count = 0;
-            //foreach (var time1 in time)
-            //{
-            //    for (int i = 0; i < vv.Length - 1; i++)
-            //    {
-            //        var skey = vv[i];
-
-            //        var snext = vv[i + 1];
-
-            //        if (time1 == skey.Value.Item1)
-            //        {
-            //            var val = source.ReadLong(valaddr + i*8);
-            //            result.Add(val, time1, qq[skey.Key]);
-            //            count++;
-            //            break;
-            //        }
-            //        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
-            //        {
-
-            //            switch (type)
-            //            {
-            //                case QueryValueMatchType.Previous:
-            //                    var val = source.ReadLong(valaddr + i * 8);
-            //                    result.Add(val, time1, qq[skey.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.After:
-            //                    val = source.ReadLong(valaddr + (i + 1) * 8);
-            //                    result.Add(val, time1, qq[snext.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.Linear:
-            //                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
-            //                    {
-            //                        var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
-            //                        var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-            //                        var sval1 = source.ReadLong(valaddr + i * 8);
-            //                        var sval2 = source.ReadLong(valaddr + (i + 1) * 8);
-            //                        var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
-            //                        result.Add((long)val1, time1, 0);
-            //                    }
-            //                    else if (qq[skey.Key] < 20)
-            //                    {
-            //                        val = source.ReadLong(valaddr + i * 8);
-            //                        result.Add(val, time1, qq[skey.Key]);
-            //                    }
-            //                    else if (qq[snext.Key] < 20)
-            //                    {
-            //                        val = source.ReadLong(valaddr + (i + 1) * 8);
-            //                        result.Add(val, time1, qq[snext.Key]);
-            //                    }
-            //                    else
-            //                    {
-            //                        result.Add(0, time1, (byte)QualityConst.Null);
-            //                    }
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.Closed:
-            //                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
-            //                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
-
-            //                    if (pval < fval)
-            //                    {
-            //                        val = source.ReadLong(valaddr + i * 8);
-            //                        result.Add(val, time1, qq[skey.Key]);
-            //                    }
-            //                    else
-            //                    {
-            //                        val = source.ReadLong(valaddr + (i + 1) * 8);
-            //                        result.Add(val, time1, qq[snext.Key]);
-            //                    }
-            //                    count++;
-            //                    break;
-            //            }
-
-            //            break;
-            //        }
-            //        else if (time1 == snext.Value.Item1)
-            //        {
-            //            var val = source.ReadLong(valaddr + (i + 1) * 8);
-            //            result.Add(val, time1, qq[snext.Key]);
-            //            count++;
-            //            break;
-            //        }
-
-            //    }
-            //}
-            //return count;
-
-
         }
 
         /// <summary>
@@ -2139,12 +1680,14 @@ namespace Cdy.Tag
 
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 4 + 16 + sourceAddr, qs.Count);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime, out timelen);
+            var qq = source.ReadBytes(qs.Count * (timelen+2) + 17 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 16 + sourceAddr;
+            var valaddr = qs.Count * timelen + 17 + sourceAddr;
             int count = 0;
             int icount = 0;
             int icount1 = 0;
@@ -2382,11 +1925,13 @@ namespace Cdy.Tag
 
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime, out timelen);
 
             //var dtmp = source.ToStringList(sourceAddr + 12, Encoding.Unicode);
 
-            var valaddr = qs.Count * 2 + sourceAddr;
+            var valaddr = qs.Count * timelen + 17 + sourceAddr;
             Dictionary<int, string> dtmp = new Dictionary<int, string>();
             source.Position = valaddr;
 
@@ -2482,68 +2027,7 @@ namespace Cdy.Tag
                 }
             }
             return count;
-            //int count = 0;
-            //foreach (var time1 in time)
-            //{
-            //    for (int i = 0; i < vv.Length - 1; i++)
-            //    {
-            //        var skey = vv[i];
-
-            //        var snext = vv[i + 1];
-
-            //        if (time1 == skey.Value.Item1)
-            //        {
-            //            var val = dtmp[i];
-            //            result.Add(val, time1, qq[skey.Key]);
-            //            count++;
-            //            break;
-            //        }
-            //        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
-            //        {
-            //            switch (type)
-            //            {
-            //                case QueryValueMatchType.Previous:
-            //                    var val = dtmp[i];
-            //                    result.Add(val, time1, qq[skey.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.After:
-            //                    val = dtmp[i + 1];
-            //                    result.Add(val, time1, qq[snext.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.Linear:
-            //                case QueryValueMatchType.Closed:
-            //                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
-            //                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
-
-            //                    if (pval < fval)
-            //                    {
-            //                        val = dtmp[i];
-            //                        result.Add(val, time1, qq[skey.Key]);
-            //                        break;
-            //                    }
-            //                    else
-            //                    {
-            //                        val = dtmp[i + 1];
-            //                        result.Add(val, time1, qq[snext.Key]);
-            //                        break;
-            //                    }
-            //            }
-            //            count++;
-            //            break;
-            //        }
-            //        else if (time1 == snext.Value.Item1)
-            //        {
-            //            var val = dtmp[i];
-            //            result.Add(val, time1, qq[snext.Key]);
-            //            count++;
-            //            break;
-            //        }
-
-            //    }
-            //}
-            //return count;
+            
         }
 
 
@@ -2585,12 +2069,14 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 6 + 16 + sourceAddr, qs.Count);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime, out timelen);
+            var qq = source.ReadBytes(qs.Count * (timelen+4) + 17 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 16 + sourceAddr;
+            var valaddr = qs.Count * timelen + 17 + sourceAddr;
             int count = 0;
             int icount = 0;
             int icount1 = 0;
@@ -2697,94 +2183,7 @@ namespace Cdy.Tag
                 }
             }
             return count;
-            //int count = 0;
-            //foreach (var time1 in time)
-            //{
-            //    for (int i = 0; i < vv.Length - 1; i++)
-            //    {
-            //        var skey = vv[i];
-
-            //        var snext = vv[i + 1];
-
-            //        if (time1 == skey.Value.Item1)
-            //        {
-            //            var val = source.ReadUInt(valaddr + i*4);
-            //            result.Add(val, time1, qq[skey.Key]);
-            //            count++;
-            //            break;
-            //        }
-            //        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
-            //        {
-
-            //            switch (type)
-            //            {
-            //                case QueryValueMatchType.Previous:
-            //                    var val = source.ReadUInt(valaddr + i * 4);
-            //                    result.Add(val, time1, qq[skey.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.After:
-            //                    val = source.ReadUInt(valaddr + (i + 1) * 4);
-            //                    result.Add(val, time1, qq[snext.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.Linear:
-            //                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
-            //                    {
-            //                        var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
-            //                        var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-            //                        var sval1 = source.ReadUInt(valaddr + i * 4);
-            //                        var sval2 = source.ReadUInt(valaddr + (i + 1) * 4);
-            //                        var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
-            //                        result.Add((uint)val1, time1, 0);
-            //                    }
-            //                    else if (qq[skey.Key] < 20)
-            //                    {
-            //                        val = source.ReadUInt(valaddr + i * 4);
-            //                        result.Add(val, time1, qq[skey.Key]);
-            //                    }
-            //                    else if (qq[snext.Key] < 20)
-            //                    {
-            //                        val = source.ReadUInt(valaddr + (i + 1) * 4);
-            //                        result.Add(val, time1, qq[snext.Key]);
-            //                    }
-            //                    else
-            //                    {
-            //                        result.Add(0, time1, (byte)QualityConst.Null);
-            //                    }
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.Closed:
-            //                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
-            //                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
-
-            //                    if (pval < fval)
-            //                    {
-            //                        val = source.ReadUInt(valaddr + i * 4);
-            //                        result.Add(val, time1, qq[skey.Key]);
-            //                    }
-            //                    else
-            //                    {
-            //                        val = source.ReadUInt(valaddr + (i + 1) * 4);
-            //                        result.Add(val, time1, qq[snext.Key]);
-            //                    }
-            //                    count++;
-            //                    break;
-            //            }
-
-            //            break;
-            //        }
-            //        else if (time1 == snext.Value.Item1)
-            //        {
-            //            var val = source.ReadUInt(valaddr + (i + 1) * 4);
-            //            result.Add(val, time1, qq[snext.Key]);
-            //            count++;
-            //            break;
-            //        }
-
-            //    }
-            //}
-            //return count;
+            
         }
 
         /// <summary>
@@ -2826,12 +2225,14 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 10 + 16 + sourceAddr, qs.Count);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime, out timelen);
+            var qq = source.ReadBytes(qs.Count * (timelen+8) + 17 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 16 + sourceAddr;
+            var valaddr = qs.Count * timelen + 17 + sourceAddr;
             int count = 0;
             int icount = 0;
             int icount1 = 0;
@@ -2939,93 +2340,7 @@ namespace Cdy.Tag
                 }
             }
             return count;
-            //int count = 0;
-            //foreach (var time1 in time)
-            //{
-            //    for (int i = 0; i < vv.Length - 1; i++)
-            //    {
-            //        var skey = vv[i];
-
-            //        var snext = vv[i + 1];
-
-            //        if (time1 == skey.Value.Item1)
-            //        {
-            //            var val = source.ReadULong(valaddr + i * 8);
-            //            result.Add(val, time1, qq[skey.Key]);
-            //            count++;
-            //            break;
-            //        }
-            //        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
-            //        {
-
-            //            switch (type)
-            //            {
-            //                case QueryValueMatchType.Previous:
-            //                    var val = source.ReadULong(valaddr + i * 8);
-            //                    result.Add(val, time1, qq[skey.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.After:
-            //                    val = source.ReadULong(valaddr + (i + 1) * 8);
-            //                    result.Add(val, time1, qq[snext.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.Linear:
-            //                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
-            //                    {
-            //                        var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
-            //                        var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-            //                        var sval1 = source.ReadULong(valaddr + i * 8);
-            //                        var sval2 = source.ReadULong(valaddr + (i + 1) * 8);
-            //                        var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
-            //                        result.Add((ulong)val1, time1, 0);
-            //                    }
-            //                    else if (qq[skey.Key] < 20)
-            //                    {
-            //                        val = source.ReadULong(valaddr + i * 8);
-            //                        result.Add(val, time1, qq[skey.Key]);
-            //                    }
-            //                    else if (qq[snext.Key] < 20)
-            //                    {
-            //                        val = source.ReadULong(valaddr + (i + 1) * 8);
-            //                        result.Add(val, time1, qq[snext.Key]);
-            //                    }
-            //                    else
-            //                    {
-            //                        result.Add(0, time1, (byte)QualityConst.Null);
-            //                    }
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.Closed:
-            //                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
-            //                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
-
-            //                    if (pval < fval)
-            //                    {
-            //                        val = source.ReadULong(valaddr + i * 8);
-            //                        result.Add(val, time1, qq[skey.Key]);
-            //                    }
-            //                    else
-            //                    {
-            //                        val = source.ReadULong(valaddr + (i + 1) * 8);
-            //                        result.Add(val, time1, qq[snext.Key]);
-            //                    }
-            //                    count++;
-            //                    break;
-            //            }
-
-            //            break;
-            //        }
-            //        else if (time1 == snext.Value.Item1)
-            //        {
-            //            var val = source.ReadULong(valaddr + (i + 1) * 8);
-            //            result.Add(val, time1, qq[snext.Key]);
-            //            count++;
-            //            break;
-            //        }
-            //    }
-            //}
-            //return count;
+            
         }
 
         /// <summary>
@@ -3067,12 +2382,14 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr,  out valuecount, out stime);
-            var qq = source.ReadBytes(qs.Count * 4 + 16 + sourceAddr, qs.Count);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime, out timelen);
+            var qq = source.ReadBytes(qs.Count * (timelen+2) + 17 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 16 + sourceAddr;
+            var valaddr = qs.Count * timelen + 17 + sourceAddr;
             int count = 0;
             int icount = 0;
             int icount1 = 0;
@@ -3179,94 +2496,7 @@ namespace Cdy.Tag
                 }
             }
             return count;
-            //int count = 0;
-            //foreach (var time1 in time)
-            //{
-            //    for (int i = 0; i < vv.Length - 1; i++)
-            //    {
-            //        var skey = vv[i];
-
-            //        var snext = vv[i + 1];
-
-            //        if (time1 == skey.Value.Item1)
-            //        {
-            //            var val = source.ReadUShort(valaddr + i * 2);
-            //            result.Add(val, time1, qq[skey.Key]);
-            //            count++;
-            //            break;
-            //        }
-            //        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
-            //        {
-
-            //            switch (type)
-            //            {
-            //                case QueryValueMatchType.Previous:
-            //                    var val = source.ReadUShort(valaddr + i * 2);
-            //                    result.Add(val, time1, qq[skey.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.After:
-            //                    val = source.ReadUShort(valaddr + (i + 1) * 2);
-            //                    result.Add(val, time1, qq[snext.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.Linear:
-            //                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
-            //                    {
-            //                        var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
-            //                        var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-            //                        var sval1 = source.ReadUShort(valaddr + i * 2);
-            //                        var sval2 = source.ReadUShort(valaddr + (i + 1) * 2);
-            //                        var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
-            //                        result.Add((ushort)val1, time1, 0);
-            //                    }
-            //                    else if (qq[skey.Key] < 20)
-            //                    {
-            //                        val = source.ReadUShort(valaddr + i * 2);
-            //                        result.Add(val, time1, qq[skey.Key]);
-            //                    }
-            //                    else if (qq[snext.Key] < 20)
-            //                    {
-            //                        val = source.ReadUShort(valaddr + (i + 1) * 2);
-            //                        result.Add(val, time1, qq[snext.Key]);
-            //                    }
-            //                    else
-            //                    {
-            //                        result.Add(0, time1, (byte)QualityConst.Null);
-            //                    }
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.Closed:
-            //                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
-            //                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
-
-            //                    if (pval < fval)
-            //                    {
-            //                        val = source.ReadUShort(valaddr + i * 2);
-            //                        result.Add(val, time1, qq[skey.Key]);
-            //                    }
-            //                    else
-            //                    {
-            //                        val = source.ReadUShort(valaddr + (i + 1) * 2);
-            //                        result.Add(val, time1, qq[snext.Key]);
-            //                    }
-            //                    count++;
-            //                    break;
-            //            }
-
-            //            break;
-            //        }
-            //        else if (time1 == snext.Value.Item1)
-            //        {
-            //            var val = source.ReadUShort(valaddr + (i + 1) * 2);
-            //            result.Add(val, time1, qq[snext.Key]);
-            //            count++;
-            //            break;
-            //        }
-
-            //    }
-            //}
-            //return count;
+            
         }
 
         /// <summary>
@@ -3496,8 +2726,10 @@ namespace Cdy.Tag
 
             int valuecount = 0;
 
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time);
-                      
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time, out timelen);
+
 
             int i = 0;
             int rcount = 0;
@@ -3505,9 +2737,9 @@ namespace Cdy.Tag
             if (typeof(T) == typeof(IntPointData))
             {
                 //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 10 + 16 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * (timelen+8) + 17 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 16 + sourceAddr;
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
 
                 var vals = source.ReadInts(valaddr, valuecount * 2);
 
@@ -3524,9 +2756,9 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(UIntPointData))
             {
                 //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 10 + 16 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * (timelen + 8) + 17 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 16 + sourceAddr;
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
 
                 var vals = source.ReadUInts(valaddr, valuecount * 2);
 
@@ -3543,9 +2775,9 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(IntPoint3Data))
             {
                 //读取质量戳,时间戳2个字节，值12个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 14 + 16 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * (timelen + 12) + 17 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 16 + sourceAddr;
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
 
                 var vals = source.ReadInts(valaddr, valuecount * 3);
 
@@ -3562,9 +2794,9 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(UIntPoint3Data))
             {
                 //读取质量戳,时间戳2个字节，值12个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 14 + 16 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * (timelen + 12) + 17 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 16 + sourceAddr;
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
 
                 var vals = source.ReadUInts(valaddr, valuecount * 3);
 
@@ -3581,9 +2813,9 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(LongPointData))
             {
                 //读取质量戳,时间戳2个字节，值16个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 18 + 16 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * (timelen + 16) + 17 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 16 + sourceAddr;
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
 
                 var vals = source.ReadLongs(valaddr, valuecount * 2);
 
@@ -3600,9 +2832,9 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(ULongPointData))
             {
                 //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 18 + 16 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * (timelen + 16) + 17 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 16 + sourceAddr;
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
 
                 var vals = source.ReadULongs(valaddr, valuecount * 2);
 
@@ -3619,9 +2851,9 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(LongPoint3Data))
             {
                 //读取质量戳,时间戳2个字节，值24个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 26 + 16 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * (timelen + 24) + 17 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 16 + sourceAddr;
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
 
                 var vals = source.ReadLongs(valaddr, valuecount * 3);
 
@@ -3638,9 +2870,9 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(ULongPoint3Data))
             {
                 //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
-                var qq = source.ReadBytes(valuecount * 26 + 16 + sourceAddr, valuecount);
+                var qq = source.ReadBytes(valuecount * (timelen + 24) + 17 + sourceAddr, valuecount);
 
-                var valaddr = valuecount * 2 + 16 + sourceAddr;
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
 
                 var vals = source.ReadULongs(valaddr, valuecount * 3);
 
@@ -3672,14 +2904,16 @@ namespace Cdy.Tag
             DateTime time1;
             int valuecount = 0;
             object reval = null;
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time1);
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time1, out timelen);
             var vv = qs.ToArray();
 
             if (typeof(T) == typeof(IntPointData))
             {
 
-                var qq = source.ReadBytes(qs.Count * 10 + 16 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 16 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * (timelen+8) + 17 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * timelen + 17 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 2)
                 {
@@ -3749,8 +2983,8 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(UIntPointData))
             {
 
-                var qq = source.ReadBytes(qs.Count * 10 + 16 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 16 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * (timelen + 8) + 17 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * timelen + 17 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 2)
                 {
@@ -3820,8 +3054,8 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(LongPointData))
             {
 
-                var qq = source.ReadBytes(qs.Count * 18 + 16 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 16 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * (timelen + 16) + 17 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * timelen + 17 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 2)
                 {
@@ -3891,8 +3125,8 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(ULongPointData))
             {
 
-                var qq = source.ReadBytes(qs.Count * 18 + 16 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 16 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * (timelen + 16) + 17 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * timelen + 17 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 2)
                 {
@@ -3962,8 +3196,8 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(IntPoint3Data))
             {
 
-                var qq = source.ReadBytes(qs.Count * 14 + 16 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 16 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * (timelen + 12) + 17 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * timelen + 17 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 3)
                 {
@@ -4037,8 +3271,8 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(LongPoint3Data))
             {
 
-                var qq = source.ReadBytes(qs.Count * 26 + 16 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 16 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * (timelen + 24) + 17 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * timelen + 17 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 3)
                 {
@@ -4112,8 +3346,8 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(UIntPoint3Data))
             {
 
-                var qq = source.ReadBytes(qs.Count * 14 + 16 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 16 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * (timelen + 12) + 17 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * timelen + 17 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 3)
                 {
@@ -4187,8 +3421,8 @@ namespace Cdy.Tag
             else if (typeof(T) == typeof(ULongPoint3Data))
             {
 
-                var qq = source.ReadBytes(qs.Count * 26 + 16 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * 2 + 16 + sourceAddr;
+                var qq = source.ReadBytes(qs.Count * (timelen + 24) + 17 + sourceAddr, qs.Count);
+                var valaddr = qs.Count * timelen + 17 + sourceAddr;
 
                 for (int i = 0; i < vv.Length - 1; i = i + 3)
                 {
@@ -4278,17 +3512,19 @@ namespace Cdy.Tag
         {
             DateTime stime;
             int valuecount = 0;
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime);
-           
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime, out timelen);
+
             var vv = qs.ToArray();
 
-            var valaddr = qs.Count * 2 + 16 + sourceAddr;
+            var valaddr = qs.Count * timelen + 17 + sourceAddr;
 
             int count = 0;
 
             if (typeof(T) == typeof(IntPointData))
             {
-                var qq = source.ReadBytes(qs.Count * 10 + 16 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * (timelen+8) + 17 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {
@@ -4389,7 +3625,7 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(IntPoint3Data))
             {
-                var qq = source.ReadBytes(qs.Count * 14 + 16 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * (timelen + 12) + 17 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {
@@ -4504,7 +3740,7 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(UIntPoint3Data))
             {
-                var qq = source.ReadBytes(qs.Count * 14 + 16 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * (timelen + 12) + 17 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {
@@ -4619,7 +3855,7 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(UIntPointData))
             {
-                var qq = source.ReadBytes(qs.Count * 10 + 16 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * (timelen + 8) + 17 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {
@@ -4720,7 +3956,7 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(LongPointData))
             {
-                var qq = source.ReadBytes(qs.Count * 18 + 16 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * (timelen + 16) + 17 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {
@@ -4821,7 +4057,7 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(ULongPointData))
             {
-                var qq = source.ReadBytes(qs.Count * 18 + 16 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * (timelen + 16) + 17 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {
@@ -4922,7 +4158,7 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(LongPoint3Data))
             {
-                var qq = source.ReadBytes(qs.Count * 26 + 16 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * (timelen + 24) + 17 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {
@@ -5037,7 +4273,7 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(ULongPoint3Data))
             {
-                var qq = source.ReadBytes(qs.Count * 26 + 16 + sourceAddr, qs.Count);
+                var qq = source.ReadBytes(qs.Count * (timelen + 24) + 17 + sourceAddr, qs.Count);
 
                 foreach (var time1 in time)
                 {

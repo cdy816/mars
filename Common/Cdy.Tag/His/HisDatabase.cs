@@ -15,7 +15,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class HisDatabase
+    public class HisDatabase: IHisTagQuery
     {
 
         /// <summary>
@@ -92,6 +92,15 @@ namespace Cdy.Tag
                 HisTags[tag.Id] = tag;
             }
             IsDirty = true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<HisTag> ListAllTags()
+        {
+            return HisTags.Values;
         }
     }
 }

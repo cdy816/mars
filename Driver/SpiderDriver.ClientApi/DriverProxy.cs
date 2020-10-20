@@ -995,6 +995,76 @@ namespace SpiderDriver.ClientApi
             return re;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public List<int> QueryDriverRecordTypeTagIds(int timeout = 5000)
+        {
+            List<int> re = new List<int>();
+            CheckLogin();
+            var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8);
+            mb.WriteByte(ApiFunConst.QueryAllTagNameAndIds);
+            mb.WriteLong(this.mLoginId);
+            DateTime dt = DateTime.Now;
+            infoRequreEvent.Reset();
+            lock (mInfoRequreData)
+                mInfoRequreData.Clear();
+            Send(mb);
+            try
+            {
+                if (infoRequreEvent.WaitOne(timeout) && mInfoRequreData.Count > 0)
+                {
+                    while (true)
+                    {
+                        if (mInfoRequreData.Count > 0)
+                        {
+                            var vdata = mInfoRequreData.Peek();
+                            var cmd = vdata.ReadByte();
+                            if (cmd == ApiFunConst.QueryAllTagNameAndIds)
+                            {
+                                int total = vdata.ReadShort();
+                                int icount = vdata.ReadShort();
+                                int tcount = vdata.ReadInt();
+                                for (int i = 0; i < tcount; i++)
+                                {
+                                    var id = vdata.ReadInt();
+                                    re.Add(id);
+                                }
+
+                                lock (mInfoRequreData)
+                                    mInfoRequreData.Dequeue();
+
+                                if (icount >= (total - 1)) break;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            if ((DateTime.Now - dt).TotalSeconds > timeout)
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                Thread.Sleep(100);
+                            }
+                        }
+                    }
+
+                }
+            }
+            catch
+            {
+
+            }
+            return re;
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

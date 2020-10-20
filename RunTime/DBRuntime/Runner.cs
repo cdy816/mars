@@ -356,9 +356,8 @@ namespace Cdy.Tag
         {
            
             ServiceLocator.Locator.Registor<IHisQuery>(querySerivce);
-
+            ServiceLocator.Locator.Registor<IHisTagQuery>(mHisDatabase);
             ServiceLocator.Locator.Registor<ITagManager>(mRealDatabase);
-
             ServiceLocator.Locator.Registor<IRuntimeSecurity>(mSecurityRunner);
         }
 

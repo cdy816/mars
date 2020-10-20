@@ -28,6 +28,8 @@ namespace DBRuntime.Proxy
 
         private RealDatabase mRealDatabase;
 
+        private HisDatabase mHisDatabase;
+
         private SecurityRunner mSecurityRunner;
 
         private DbServerProxy mProxy;
@@ -265,6 +267,7 @@ namespace DBRuntime.Proxy
                 }
 
                 this.mRealDatabase = mDatabase.RealDatabase;
+                mHisDatabase = mDatabase.HisDatabase;
                 mSecurityRunner = new SecurityRunner() { Document = mDatabase.Security };
             }
             realEnginer = new RealEnginer(mRealDatabase);
@@ -293,6 +296,8 @@ namespace DBRuntime.Proxy
             ServiceLocator.Locator.Registor<IRealDataNotifyForProducter>(realEnginer);
             ServiceLocator.Locator.Registor<IRealTagConsumer>(realEnginer);
             ServiceLocator.Locator.Registor<ITagManager>(mRealDatabase);
+            ServiceLocator.Locator.Registor<IHisTagQuery>(mHisDatabase);
+            
             ServiceLocator.Locator.Registor<IRuntimeSecurity>(mSecurityRunner);
         }
 

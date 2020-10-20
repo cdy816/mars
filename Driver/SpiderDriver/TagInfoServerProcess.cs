@@ -26,6 +26,8 @@ namespace SpiderDriver
 
         public const byte QueryAllTagNameAndIds = 2;
 
+        public const byte GetDriverRecordTypeTagIds = 5;
+
         public const byte Login = 1;
 
         #endregion ...Variables...
@@ -108,6 +110,32 @@ namespace SpiderDriver
                         }
                     }
                     break;
+                case GetDriverRecordTypeTagIds:
+                    loginId = data.ReadLong();
+                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
+                    {
+                        int psize = 100000;
+
+                        var vserver = ServiceLocator.Locator.Resolve<IHisTagQuery>();
+
+                        var vtags = vserver.ListAllTags().Where(e=>e.Type == RecordType.Driver);
+                        int tcount = vtags.Count() / psize;
+                        tcount += (vtags.Count() % psize > 0 ? 1 : 0);
+                        for (int i = 0; i < tcount; i++)
+                        {
+                            if ((i + 1) * psize > vtags.Count())
+                            {
+                                var vv = vtags.Skip(i * psize).Take(vtags.Count() % psize);
+                                Parent.AsyncCallback(client, GetRecordTypeBuffer(vv, (short)i, (short)tcount));
+                            }
+                            else
+                            {
+                                var vv = vtags.Skip(i * psize).Take(psize);
+                                Parent.AsyncCallback(client, GetRecordTypeBuffer(vv, (short)i, (short)tcount));
+                            }
+                        }
+                    }
+                    break;
                 case Login:
                     string user = data.ReadString();
                     string pass = data.ReadString();
@@ -129,7 +157,7 @@ namespace SpiderDriver
         /// <returns></returns>
         private IByteBuffer GetTagBuffer(IEnumerable<Tagbase> tags,short bcount,short totalcount)
         {
-            IByteBuffer re = BufferManager.Manager.Allocate(APIConst.TagInfoRequestFun, tags.Count() * 64+5);
+            IByteBuffer re = BufferManager.Manager.Allocate(APIConst.TagInfoRequestFun, tags.Count() * 64+9);
             re.WriteByte(QueryAllTagNameAndIds);
             re.WriteShort(totalcount);
             re.WriteShort(bcount);
@@ -139,6 +167,20 @@ namespace SpiderDriver
                 re.WriteInt(vv.Id);
                 re.WriteString(vv.FullName);
                 re.WriteByte((byte)vv.Type);
+            }
+            return re;
+        }
+
+        private IByteBuffer GetRecordTypeBuffer(IEnumerable<HisTag> tags, short bcount, short totalcount)
+        {
+            IByteBuffer re = BufferManager.Manager.Allocate(APIConst.TagInfoRequestFun, tags.Count() * 4 + 9);
+            re.WriteByte(QueryAllTagNameAndIds);
+            re.WriteShort(totalcount);
+            re.WriteShort(bcount);
+            re.WriteInt(tags.Count());
+            foreach (var vv in tags)
+            {
+                re.WriteInt(vv.Id);
             }
             return re;
         }

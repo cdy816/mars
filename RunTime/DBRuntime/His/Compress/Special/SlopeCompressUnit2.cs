@@ -1866,9 +1866,9 @@ namespace Cdy.Tag
 
             byte tlen = (source as HisDataMemoryBlock).TimeLen;
 
-           var tims =  System.Buffers.ArrayPool<int>.Shared.Rent(count);
-            
-            //List<int> tims = new List<int>(count);
+            //var tims =  System.Buffers.ArrayPool<int>.Shared.Rent(count);
+
+            int[] tims = new int[count];
 
             if (tlen == 2)
             {

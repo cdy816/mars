@@ -174,7 +174,7 @@ namespace SpiderDriver
         private IByteBuffer GetRecordTypeBuffer(IEnumerable<HisTag> tags, short bcount, short totalcount)
         {
             IByteBuffer re = BufferManager.Manager.Allocate(APIConst.TagInfoRequestFun, tags.Count() * 4 + 9);
-            re.WriteByte(QueryAllTagNameAndIds);
+            re.WriteByte(GetDriverRecordTypeTagIds);
             re.WriteShort(totalcount);
             re.WriteShort(bcount);
             re.WriteInt(tags.Count());

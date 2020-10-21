@@ -550,12 +550,13 @@ namespace Cdy.Tag
         {
             DateTime date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
             mFileWriter.Write(date, 0);
-            byte[] nameBytes = ArrayPool<byte>.Shared.Rent(64);
+            byte[] nameBytes = new byte[64];
+            //byte[] nameBytes = ArrayPool<byte>.Shared.Rent(64);
             Array.Clear(nameBytes, 0, nameBytes.Length);
             var ntmp = Encoding.UTF8.GetBytes(databaseName);
             Buffer.BlockCopy(ntmp, 0, nameBytes, 0, Math.Min(64, ntmp.Length));
             mFileWriter.Write(nameBytes, 20);
-            ArrayPool<byte>.Shared.Return(nameBytes);
+            //ArrayPool<byte>.Shared.Return(nameBytes);
         }
 
         /// <summary>

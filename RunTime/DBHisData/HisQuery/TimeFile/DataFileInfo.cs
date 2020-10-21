@@ -180,7 +180,7 @@ namespace Cdy.Tag
                         if (time == DateTime.MinValue)
                         {
                             tmp = time;
-                            continue;
+                            break;
                         }
 
                         long oset = offset;

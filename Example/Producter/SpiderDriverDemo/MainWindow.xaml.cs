@@ -206,6 +206,12 @@ namespace SpiderDriverDemo
                     //test
                 }
             }
+
+            var driverrecordTags = driverProxy.GetDriverRecordTypeTagIds();
+            foreach(var vv in driverrecordTags)
+            {
+                //to do hear
+            }
         }
 
         private void ProcessSetTagValue()

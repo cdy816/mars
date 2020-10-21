@@ -34,6 +34,7 @@ namespace SpiderDriver.ClientApi
 
         private string mUser, mPass;
 
+        private object mTagInfoLockObj = new object();
 
         #endregion ...Variables...
 
@@ -885,39 +886,42 @@ namespace SpiderDriver.ClientApi
         /// <returns></returns>
         public List<int> QueryTagId(List<string> tags,int timeout = 5000)
         {
-            List<int> re = new List<int>();
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8 + tags.Count * 256);
-            mb.WriteByte(ApiFunConst.GetTagIdByNameFun);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(tags.Count);
-            foreach (var vv in tags)
+            lock (mTagInfoLockObj)
             {
-                mb.WriteString(vv);
-            }
-            infoRequreEvent.Reset();
-            Send(mb);
-
-            try
-            {
-                if (infoRequreEvent.WaitOne(timeout) && mInfoRequreData.Count > 0)
+                List<int> re = new List<int>();
+                CheckLogin();
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8 + tags.Count * 256);
+                mb.WriteByte(ApiFunConst.GetTagIdByNameFun);
+                mb.WriteLong(this.mLoginId);
+                mb.WriteInt(tags.Count);
+                foreach (var vv in tags)
                 {
-                    var vdata = mInfoRequreData.Dequeue();
-                    if(vdata != null)
+                    mb.WriteString(vv);
+                }
+                infoRequreEvent.Reset();
+                Send(mb);
+
+                try
+                {
+                    if (infoRequreEvent.WaitOne(timeout) && mInfoRequreData.Count > 0)
                     {
-                        var count = vdata.ReadInt();
-                        for(int i=0;i<count;i++)
+                        var vdata = mInfoRequreData.Dequeue();
+                        if (vdata != null)
                         {
-                            re.Add(vdata.ReadInt());
+                            var count = vdata.ReadInt();
+                            for (int i = 0; i < count; i++)
+                            {
+                                re.Add(vdata.ReadInt());
+                            }
                         }
                     }
                 }
-            }
-            catch
-            {
+                catch
+                {
 
+                }
+                return re;
             }
-            return re;
         }
 
         /// <summary>
@@ -925,144 +929,150 @@ namespace SpiderDriver.ClientApi
         /// </summary>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public Dictionary<int, Tuple<string, byte>> QueryAllTagIdAndNames(int timeout=5000)
+        public Dictionary<int, Tuple<string, byte>> QueryAllTagIdAndNames(int timeout = 5000)
         {
-            Dictionary<int,Tuple<string,byte>> re = new Dictionary<int, Tuple<string, byte>>();
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8);
-            mb.WriteByte(ApiFunConst.QueryAllTagNameAndIds);
-            mb.WriteLong(this.mLoginId);
-            DateTime dt = DateTime.Now;
-            infoRequreEvent.Reset();
-            lock(mInfoRequreData)
-            mInfoRequreData.Clear();
-            Send(mb);
-            try
+            lock (mTagInfoLockObj)
             {
-                if (infoRequreEvent.WaitOne(timeout) && mInfoRequreData.Count > 0)
+                Dictionary<int, Tuple<string, byte>> re = new Dictionary<int, Tuple<string, byte>>();
+                CheckLogin();
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8);
+                mb.WriteByte(ApiFunConst.QueryAllTagNameAndIds);
+                mb.WriteLong(this.mLoginId);
+                DateTime dt = DateTime.Now;
+                infoRequreEvent.Reset();
+                lock (mInfoRequreData)
+                    mInfoRequreData.Clear();
+                Send(mb);
+                try
                 {
-                    while(true)
+                    if (infoRequreEvent.WaitOne(timeout) && mInfoRequreData.Count > 0)
                     {
-                        if (mInfoRequreData.Count > 0)
+                        while (true)
                         {
-                            var vdata = mInfoRequreData.Peek();
-                            var cmd = vdata.ReadByte();
-                            if(cmd == ApiFunConst.QueryAllTagNameAndIds)
+                            if (mInfoRequreData.Count > 0)
                             {
-                                int total = vdata.ReadShort();
-                                int icount = vdata.ReadShort();
-                                int tcount = vdata.ReadInt();
-                                for(int i=0;i<tcount;i++)
+                                var vdata = mInfoRequreData.Peek();
+                                var cmd = vdata.ReadByte();
+                                if (cmd == ApiFunConst.QueryAllTagNameAndIds)
                                 {
-                                    var id = vdata.ReadInt();
-                                    var name = vdata.ReadString();
-                                    var type = vdata.ReadByte();
-                                    if(!re.ContainsKey(id))
+                                    int total = vdata.ReadShort();
+                                    int icount = vdata.ReadShort();
+                                    int tcount = vdata.ReadInt();
+                                    for (int i = 0; i < tcount; i++)
                                     {
-                                        re.Add(id,new Tuple<string, byte>(name,type));
+                                        var id = vdata.ReadInt();
+                                        var name = vdata.ReadString();
+                                        var type = vdata.ReadByte();
+                                        if (!re.ContainsKey(id))
+                                        {
+                                            re.Add(id, new Tuple<string, byte>(name, type));
+                                        }
                                     }
+
+                                    lock (mInfoRequreData)
+                                        mInfoRequreData.Dequeue();
+
+                                    if (icount >= (total - 1)) break;
                                 }
-                             
-                                lock (mInfoRequreData)
-                                    mInfoRequreData.Dequeue();
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                if ((DateTime.Now - dt).TotalSeconds > timeout)
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    Thread.Sleep(100);
+                                }
+                            }
+                        }
 
-                                if (icount >= (total - 1)) break;
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            if ((DateTime.Now - dt).TotalSeconds > timeout)
-                            {
-                                break;
-                            }
-                            else
-                            {
-                                Thread.Sleep(100);
-                            }
-                        }
                     }
-                    
                 }
-            }
-            catch
-            {
+                catch
+                {
 
+                }
+                return re;
             }
-            return re;
         }
 
         /// <summary>
-        /// 
+        /// 获取所有驱动更新的历史记录的变量的ID
         /// </summary>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public List<int> QueryDriverRecordTypeTagIds(int timeout = 5000)
+        public List<int> GetDriverRecordTypeTagIds(int timeout = 5000)
         {
-            List<int> re = new List<int>();
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8);
-            mb.WriteByte(ApiFunConst.QueryAllTagNameAndIds);
-            mb.WriteLong(this.mLoginId);
-            DateTime dt = DateTime.Now;
-            infoRequreEvent.Reset();
-            lock (mInfoRequreData)
-                mInfoRequreData.Clear();
-            Send(mb);
-            try
+            lock (mTagInfoLockObj)
             {
-                if (infoRequreEvent.WaitOne(timeout) && mInfoRequreData.Count > 0)
+                List<int> re = new List<int>();
+                CheckLogin();
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8);
+                mb.WriteByte(ApiFunConst.GetDriverRecordTypeTagIds);
+                mb.WriteLong(this.mLoginId);
+                DateTime dt = DateTime.Now;
+                infoRequreEvent.Reset();
+                lock (mInfoRequreData)
+                    mInfoRequreData.Clear();
+                Send(mb);
+                try
                 {
-                    while (true)
+                    if (infoRequreEvent.WaitOne(timeout) && mInfoRequreData.Count > 0)
                     {
-                        if (mInfoRequreData.Count > 0)
+                        while (true)
                         {
-                            var vdata = mInfoRequreData.Peek();
-                            var cmd = vdata.ReadByte();
-                            if (cmd == ApiFunConst.QueryAllTagNameAndIds)
+                            if (mInfoRequreData.Count > 0)
                             {
-                                int total = vdata.ReadShort();
-                                int icount = vdata.ReadShort();
-                                int tcount = vdata.ReadInt();
-                                for (int i = 0; i < tcount; i++)
+                                var vdata = mInfoRequreData.Peek();
+                                var cmd = vdata.ReadByte();
+                                if (cmd == ApiFunConst.GetDriverRecordTypeTagIds)
                                 {
-                                    var id = vdata.ReadInt();
-                                    re.Add(id);
+                                    int total = vdata.ReadShort();
+                                    int icount = vdata.ReadShort();
+                                    int tcount = vdata.ReadInt();
+                                    for (int i = 0; i < tcount; i++)
+                                    {
+                                        var id = vdata.ReadInt();
+                                        re.Add(id);
+                                    }
+
+                                    lock (mInfoRequreData)
+                                        mInfoRequreData.Dequeue();
+
+                                    if (icount >= (total - 1)) break;
                                 }
-
-                                lock (mInfoRequreData)
-                                    mInfoRequreData.Dequeue();
-
-                                if (icount >= (total - 1)) break;
+                                else
+                                {
+                                    break;
+                                }
                             }
                             else
                             {
-                                break;
+                                if ((DateTime.Now - dt).TotalSeconds > timeout)
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    Thread.Sleep(100);
+                                }
                             }
                         }
-                        else
-                        {
-                            if ((DateTime.Now - dt).TotalSeconds > timeout)
-                            {
-                                break;
-                            }
-                            else
-                            {
-                                Thread.Sleep(100);
-                            }
-                        }
+
                     }
+                }
+                catch
+                {
 
                 }
+                return re;
             }
-            catch
-            {
-
-            }
-            return re;
         }
 
         #endregion ...Methods...

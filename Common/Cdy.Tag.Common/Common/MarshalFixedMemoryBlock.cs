@@ -1585,10 +1585,10 @@ namespace Cdy.Tag
             {
                 byte[] bvals = ArrayPool<byte>.Shared.Rent(1024);
                 Array.Clear(bvals, 0, bvals.Length);
-                for (long i = 0; i < memory.Length / 1024; i++)
+                for (long i = 0; i < memory.Length / bvals.Length; i++)
                 {
-                    Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * 1024), bvals, 0, 1024);
-                    stream.Write(bvals, 0, 1024);
+                    Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * bvals.Length), bvals, 0, bvals.Length);
+                    stream.Write(bvals, 0, bvals.Length);
                 }
                 ArrayPool<byte>.Shared.Return(bvals);
                 stream.Flush();
@@ -1605,16 +1605,16 @@ namespace Cdy.Tag
             byte[] bvals = ArrayPool<byte>.Shared.Rent(1024);
             Array.Clear(bvals, 0, bvals.Length);
             long i = 0;
-            for (i = 0; i < memory.Length / 1024; i++)
+            for (i = 0; i < memory.Length / bvals.Length; i++)
             {
-                Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * 1024), bvals, 0, 1024);
-                stream.Write(bvals, 0, 1024);
+                Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * bvals.Length), bvals, 0, bvals.Length);
+                stream.Write(bvals, 0, bvals.Length);
             }
 
-            long cc = memory.Length % 1024;
+            long cc = memory.Length % bvals.Length;
 
-            Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * 1024), bvals, 0, (int)cc);
-            stream.Write(bvals, 0, 1024);
+            Marshal.Copy(new IntPtr(memory.Handles.ToInt64() + i * bvals.Length), bvals, 0, (int)cc);
+            stream.Write(bvals, 0, bvals.Length);
             ArrayPool<byte>.Shared.Return(bvals);
             stream.Flush();
         }

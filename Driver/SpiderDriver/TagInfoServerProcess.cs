@@ -28,6 +28,8 @@ namespace SpiderDriver
 
         public const byte GetDriverRecordTypeTagIds = 5;
 
+        public const byte GetDriverRecordTypeTagIds2 = 51;
+
         public const byte Login = 1;
 
         #endregion ...Variables...
@@ -119,6 +121,37 @@ namespace SpiderDriver
                         var vserver = ServiceLocator.Locator.Resolve<IHisTagQuery>();
 
                         var vtags = vserver.ListAllTags().Where(e=>e.Type == RecordType.Driver);
+                        int tcount = vtags.Count() / psize;
+                        tcount += (vtags.Count() % psize > 0 ? 1 : 0);
+                        for (int i = 0; i < tcount; i++)
+                        {
+                            if ((i + 1) * psize > vtags.Count())
+                            {
+                                var vv = vtags.Skip(i * psize).Take(vtags.Count() % psize);
+                                Parent.AsyncCallback(client, GetRecordTypeBuffer(vv, (short)i, (short)tcount));
+                            }
+                            else
+                            {
+                                var vv = vtags.Skip(i * psize).Take(psize);
+                                Parent.AsyncCallback(client, GetRecordTypeBuffer(vv, (short)i, (short)tcount));
+                            }
+                        }
+                    }
+                    break;
+                case GetDriverRecordTypeTagIds2:
+                    loginId = data.ReadLong();
+                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
+                    {
+                        int psize = 100000;
+                        var vserver = ServiceLocator.Locator.Resolve<IHisTagQuery>();
+                        int icount = data.ReadInt();
+                        List<HisTag> ids = new List<HisTag>();
+                        for(int i=0;i<icount;i++)
+                        {
+                            ids.Add(vserver.GetHisTagById(data.ReadInt()));
+                        }
+
+                        var vtags = ids.Where(e => e.Type == RecordType.Driver);
                         int tcount = vtags.Count() / psize;
                         tcount += (vtags.Count() % psize > 0 ? 1 : 0);
                         for (int i = 0; i < tcount; i++)

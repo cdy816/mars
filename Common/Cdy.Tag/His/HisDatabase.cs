@@ -102,5 +102,15 @@ namespace Cdy.Tag
         {
             return HisTags.Values;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public HisTag GetHisTagById(int id)
+        {
+            return HisTags.ContainsKey(id) ? HisTags[id] : null;
+        }
     }
 }

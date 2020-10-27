@@ -1033,12 +1033,10 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <returns></returns>
-        public List<HisRunTag> ListAllTags()
+        public IEnumerable<HisRunTag> ListAllTags()
         {
-            return mHisTags.Values.ToList();
+            return mHisTags.Values;
         }
-
-        
 
         #endregion ...Methods...
 

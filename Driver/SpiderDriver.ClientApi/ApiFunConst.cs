@@ -90,6 +90,8 @@ namespace SpiderDriver.ClientApi
 
         public const byte GetDriverRecordTypeTagIds = 5;
 
+        public const byte GetDriverRecordTypeTagIds2 = 51;
+
         /// <summary>
         /// 
         /// </summary>

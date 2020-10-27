@@ -257,6 +257,8 @@ namespace Cdy.Tag
             CurrentDatabaseVersion = db.Version;
             CurrentDatabase = db.Name;
             CurrentDatabaseLastUpdateTime = mRealDatabase.UpdateTime;
+
+            RegistorInterface();
             sw.Stop();
             LoggerService.Service.Info("ReStartDatabase", "ReInit" + mDatabaseName + " take " + sw.ElapsedMilliseconds.ToString() + " ms");
 
@@ -354,7 +356,6 @@ namespace Cdy.Tag
         /// </summary>
         private void RegistorInterface()
         {
-           
             ServiceLocator.Locator.Registor<IHisQuery>(querySerivce);
             ServiceLocator.Locator.Registor<IHisTagQuery>(mHisDatabase);
             ServiceLocator.Locator.Registor<ITagManager>(mRealDatabase);

@@ -18,5 +18,11 @@ namespace Cdy.Tag
     public interface IHisTagQuery
     {
         IEnumerable<HisTag> ListAllTags();
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        HisTag GetHisTagById(int id);
     }
 }

@@ -1075,6 +1075,85 @@ namespace SpiderDriver.ClientApi
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public List<int> GetDriverRecordTypeTagIds(List<int> ids,int timeout = 5000)
+        {
+            lock (mTagInfoLockObj)
+            {
+                List<int> re = new List<int>();
+                CheckLogin();
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8+4+ids.Count*4);
+                mb.WriteByte(ApiFunConst.GetDriverRecordTypeTagIds2);
+                mb.WriteLong(this.mLoginId);
+                mb.WriteInt(ids.Count);
+                foreach(var vv in ids)
+                {
+                    mb.WriteInt(vv);
+                }
+                DateTime dt = DateTime.Now;
+                infoRequreEvent.Reset();
+                lock (mInfoRequreData)
+                    mInfoRequreData.Clear();
+                Send(mb);
+                try
+                {
+                    if (infoRequreEvent.WaitOne(timeout) && mInfoRequreData.Count > 0)
+                    {
+                        while (true)
+                        {
+                            if (mInfoRequreData.Count > 0)
+                            {
+                                var vdata = mInfoRequreData.Peek();
+                                var cmd = vdata.ReadByte();
+                                if (cmd == ApiFunConst.GetDriverRecordTypeTagIds2)
+                                {
+                                    int total = vdata.ReadShort();
+                                    int icount = vdata.ReadShort();
+                                    int tcount = vdata.ReadInt();
+                                    for (int i = 0; i < tcount; i++)
+                                    {
+                                        var id = vdata.ReadInt();
+                                        re.Add(id);
+                                    }
+
+                                    lock (mInfoRequreData)
+                                        mInfoRequreData.Dequeue();
+
+                                    if (icount >= (total - 1)) break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                if ((DateTime.Now - dt).TotalSeconds > timeout)
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    Thread.Sleep(100);
+                                }
+                            }
+                        }
+
+                    }
+                }
+                catch
+                {
+
+                }
+                return re;
+            }
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

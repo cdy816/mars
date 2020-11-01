@@ -83,6 +83,29 @@ namespace Cdy.Tag
             return new IntPointData(int.Parse(sval[0]), int.Parse(sval[1]));
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator == (IntPointData b, IntPointData c)
+        {
+            return b.X == c.X && b.Y == c.Y;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator !=(IntPointData b, IntPointData c)
+        {
+            return b.X != c.X || b.Y != c.Y;
+        }
+
+
     }
     /// <summary>
     /// 
@@ -121,6 +144,28 @@ namespace Cdy.Tag
             string[] sval = value.Split(new char[] { ',' });
             return new IntPoint3Data(int.Parse(sval[0]), int.Parse(sval[1]), int.Parse(sval[2]));
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator ==(IntPoint3Data b, IntPoint3Data c)
+        {
+            return b.X == c.X && b.Y == c.Y && b.Z == c.Z;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator !=(IntPoint3Data b, IntPoint3Data c)
+        {
+            return b.X != c.X || b.Y != c.Y || b.Z != c.Z;
+        }
     }
 
     /// <summary>
@@ -152,6 +197,28 @@ namespace Cdy.Tag
         {
             string[] sval = value.Split(new char[] { ',' });
             return new UIntPointData(uint.Parse(sval[0]), uint.Parse(sval[1]));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator ==(UIntPointData b, UIntPointData c)
+        {
+            return b.X == c.X && b.Y == c.Y;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator !=(UIntPointData b, UIntPointData c)
+        {
+            return b.X != c.X || b.Y != c.Y;
         }
     }
     /// <summary>
@@ -195,6 +262,28 @@ namespace Cdy.Tag
             string[] sval = value.Split(new char[] { ',' });
             return new UIntPoint3Data(uint.Parse(sval[0]), uint.Parse(sval[1]), uint.Parse(sval[2]));
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator ==(UIntPoint3Data b, UIntPoint3Data c)
+        {
+            return b.X == c.X && b.Y == c.Y && b.Z == c.Z;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator !=(UIntPoint3Data b, UIntPoint3Data c)
+        {
+            return b.X != c.X || b.Y != c.Y || b.Z != c.Z;
+        }
     }
 
     /// <summary>
@@ -237,6 +326,28 @@ namespace Cdy.Tag
         {
             string[] sval = value.Split(new char[] { ',' });
             return new LongPointData(long.Parse(sval[0]), long.Parse(sval[1]));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator ==(LongPointData b, LongPointData c)
+        {
+            return b.X == c.X && b.Y == c.Y;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator !=(LongPointData b, LongPointData c)
+        {
+            return b.X != c.X || b.Y != c.Y;
         }
     }
 
@@ -290,6 +401,28 @@ namespace Cdy.Tag
             string[] sval = value.Split(new char[] { ',' });
             return new LongPoint3Data(long.Parse(sval[0]), long.Parse(sval[1]), long.Parse(sval[2]));
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator ==(LongPoint3Data b, LongPoint3Data c)
+        {
+            return b.X == c.X && b.Y == c.Y && b.Z == c.Z;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator !=(LongPoint3Data b, LongPoint3Data c)
+        {
+            return b.X != c.X || b.Y != c.Y || b.Z != c.Z;
+        }
     }
 
     /// <summary>
@@ -338,6 +471,28 @@ namespace Cdy.Tag
             string[] sval = value.Split(new char[] { ',' });
             return new ULongPointData(ulong.Parse(sval[0]), ulong.Parse(sval[1]));
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator ==(ULongPointData b, ULongPointData c)
+        {
+            return b.X == c.X && b.Y == c.Y;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator !=(ULongPointData b, ULongPointData c)
+        {
+            return b.X != c.X || b.Y != c.Y;
+        }
     }
 
     /// <summary>
@@ -372,6 +527,28 @@ namespace Cdy.Tag
         {
             string[] sval = value.Split(new char[] { ',' });
             return new ULongPoint3Data(ulong.Parse(sval[0]), ulong.Parse(sval[1]), ulong.Parse(sval[2]));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator ==(ULongPoint3Data b, ULongPoint3Data c)
+        {
+            return b.X == c.X && b.Y == c.Y && b.Z == c.Z;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static bool operator !=(ULongPoint3Data b, ULongPoint3Data c)
+        {
+            return b.X != c.X || b.Y != c.Y || b.Z != c.Z;
         }
     }
 

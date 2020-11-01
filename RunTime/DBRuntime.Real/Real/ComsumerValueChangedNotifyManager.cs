@@ -102,7 +102,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="ids"></param>
-        public void UpdateValue(List<int> ids)
+        public void UpdateValue(IEnumerable<int> ids)
         {
             foreach (var vv in mProcesser)
             {

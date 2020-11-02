@@ -1641,6 +1641,30 @@ namespace DBDevelopService
                 case (uint)(Cdy.Tag.TagType.String):
                     re = new Cdy.Tag.StringTag();
                     break;
+                case (uint)(Cdy.Tag.TagType.IntPoint):
+                    re = new Cdy.Tag.IntPointTag();
+                    break;
+                case (uint)(Cdy.Tag.TagType.UIntPoint):
+                    re = new Cdy.Tag.UIntPointTag();
+                    break;
+                case (uint)(Cdy.Tag.TagType.IntPoint3):
+                    re = new Cdy.Tag.IntPoint3Tag();
+                    break;
+                case (uint)(Cdy.Tag.TagType.UIntPoint3):
+                    re = new Cdy.Tag.UIntPoint3Tag();
+                    break;
+                case (uint)(Cdy.Tag.TagType.LongPoint):
+                    re = new Cdy.Tag.LongPointTag();
+                    break;
+                case (uint)(Cdy.Tag.TagType.ULongPoint):
+                    re = new Cdy.Tag.ULongPointTag();
+                    break;
+                case (uint)(Cdy.Tag.TagType.LongPoint3):
+                    re = new Cdy.Tag.LongPoint3Tag();
+                    break;
+                case (uint)(Cdy.Tag.TagType.ULongPoint3):
+                    re = new Cdy.Tag.ULongPoint3Tag();
+                    break;
             }
             if (re != null)
             {

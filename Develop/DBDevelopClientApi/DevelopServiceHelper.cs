@@ -1375,7 +1375,7 @@ namespace DBDevelopClientApi
         /// <returns></returns>
         private Cdy.Tag.Tagbase GetTag(int tagType)
         {
-            switch(tagType)
+            switch (tagType)
             {
                 case (int)Cdy.Tag.TagType.Bool:
                     return new Cdy.Tag.BoolTag();
@@ -1401,6 +1401,30 @@ namespace DBDevelopClientApi
                     return new Cdy.Tag.ULongTag();
                 case (int)Cdy.Tag.TagType.UShort:
                     return new Cdy.Tag.UShortTag();
+                case (int)(Cdy.Tag.TagType.IntPoint):
+                    return new Cdy.Tag.IntPointTag();
+
+                case (int)(Cdy.Tag.TagType.UIntPoint):
+                    return new Cdy.Tag.UIntPointTag();
+
+                case (int)(Cdy.Tag.TagType.IntPoint3):
+                    return new Cdy.Tag.IntPoint3Tag();
+
+                case (int)(Cdy.Tag.TagType.UIntPoint3):
+                    return new Cdy.Tag.UIntPoint3Tag();
+
+                case (int)(Cdy.Tag.TagType.LongPoint):
+                    return new Cdy.Tag.LongPointTag();
+
+                case (int)(Cdy.Tag.TagType.ULongPoint):
+                    return new Cdy.Tag.ULongPointTag();
+
+                case (int)(Cdy.Tag.TagType.LongPoint3):
+                    return new Cdy.Tag.LongPoint3Tag();
+
+                case (int)(Cdy.Tag.TagType.ULongPoint3):
+                    return new Cdy.Tag.ULongPoint3Tag();
+
             }
             return null;
         }

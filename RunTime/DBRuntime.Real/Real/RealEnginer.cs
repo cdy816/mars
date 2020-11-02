@@ -361,7 +361,11 @@ namespace Cdy.Tag
             MemoryHelper.WriteByte(mMHandle, addr + 9, quality);
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="time"></param>
         public void UpdateByteValueTimeByAddr(long addr, DateTime time)
         {
             MemoryHelper.WriteDateTime(mMHandle, addr + 1, time);
@@ -499,6 +503,11 @@ namespace Cdy.Tag
             MemoryHelper.WriteByte(mMHandle, addr + 12, quality); ;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="time"></param>
         public void UpdatefloatValueTimeByAddr(long addr, DateTime time)
         {
             MemoryHelper.WriteDateTime(mMHandle, addr + 4, time);
@@ -530,6 +539,11 @@ namespace Cdy.Tag
             MemoryHelper.WriteByte(mMHandle, addr + 16, quality);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="time"></param>
         public void UpdateDoubleValueTimeByAddr(long addr, DateTime time)
         {
             MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
@@ -560,6 +574,11 @@ namespace Cdy.Tag
             MemoryHelper.WriteByte(mMHandle, addr + 16, quality); ;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="time"></param>
         public void UpdateDatetimeValueTimeByAddr(long addr, DateTime time)
         {
             MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
@@ -709,7 +728,11 @@ namespace Cdy.Tag
             MemoryHelper.WriteByte(mMHandle, addr + 24, quality); 
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="time"></param>
         public void UpdateLongPointValueTimeByAddr(long addr, DateTime time)
         {
             MemoryHelper.WriteDateTime(mMHandle, addr + 16, time);
@@ -775,1071 +798,908 @@ namespace Cdy.Tag
             MemoryHelper.WriteUInt64(mMHandle, addr + 16, value3);
             MemoryHelper.WriteDateTime(mMHandle, addr + 24, time);
             MemoryHelper.WriteByte(mMHandle, addr + 32, quality); 
+
+            
         }
         #endregion
 
-        #region SetValue By Id
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        public void SetValue(int id, bool value)
-        {
-            DateTime time = DateTime.Now;
-            if (value)
-            {
-                SetValue(id, (byte)1, 0, time);
-            }
-            else
-            {
-                SetValue(id, (byte)0, 0, time);
-            }
-        }
+        //#region SetValue By Id
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        //public void SetValue(int id, bool value)
+        //{
+        //    DateTime time = DateTime.Now;
+        //    if (value)
+        //    {
+        //        SetValue(id, (byte)1, 0, time);
+        //    }
+        //    else
+        //    {
+        //        SetValue(id, (byte)0, 0, time);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        public void SetValue(int id, byte value)
-        {
-            DateTime time = DateTime.Now;
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                var addr = mIdAndAddr[id];
-                if (ReadByteValueByAddr(addr) !=value)
-                {
-                    SetValueByAddr(addr, value, 0, time);
-                    NotifyValueChangedToConsumer(id);
-                }
-                else
-                {
-                    UpdateByteValueTimeByAddr(addr,time);
-                }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        //public void SetValue(int id, byte value)
+        //{
+        //    DateTime time = DateTime.Now;
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        var addr = mIdAndAddr[id];
+        //        if (ReadByteValueByAddr(addr) !=value)
+        //        {
+        //            SetValueByAddr(addr, value, 0, time);
+        //            NotifyValueChangedToConsumer(id);
+        //        }
+        //        else
+        //        {
+        //            UpdateByteValueTimeByAddr(addr,time);
+        //        }
                 
-            }
-        }
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int,byte> values)
-        {
-            DateTime time = DateTime.Now;
-            //Parallel.ForEach(values, (vv) => {
-            foreach(var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int,byte> values)
+        //{
+        //    DateTime time = DateTime.Now;
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach(var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, Tuple<byte,byte,DateTime>> values)
-        {
-            //Parallel.ForEach(values,(vv) => {
-                foreach (var vv in values)
-                    if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, Tuple<byte,byte,DateTime>> values)
+        //{
+        //    //Parallel.ForEach(values,(vv) => {
+        //        foreach (var vv in values)
+        //            if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="quality"></param>
-        /// <param name="time"></param>
-        public void SetValue(int id, byte value,byte quality,DateTime time)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value,quality,time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        public void SetValue(int id, short value)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, short> values)
-        {
-            DateTime time = DateTime.Now;
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="quality"></param>
-        /// <param name="time"></param>
-        public void SetValue(int id, short value, byte quality, DateTime time)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, Tuple<short, byte, DateTime>> values)
-        {
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="quality"></param>
+        ///// <param name="time"></param>
+        //public void SetValue(int id, byte value,byte quality,DateTime time)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value,quality,time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        public void SetValue(int id, ushort value)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        //public void SetValue(int id, short value)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, ushort> values)
-        {
-            DateTime time = DateTime.Now;
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, short> values)
+        //{
+        //    DateTime time = DateTime.Now;
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="quality"></param>
-        /// <param name="time"></param>
-        public void SetValue(int id, ushort value, byte quality, DateTime time)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="quality"></param>
+        ///// <param name="time"></param>
+        //public void SetValue(int id, short value, byte quality, DateTime time)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, Tuple<ushort, byte, DateTime>> values)
-        {
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        public void SetValue(int id, int value)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, int> values)
-        {
-            DateTime time = DateTime.Now;
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="quality"></param>
-        /// <param name="time"></param>
-        public void SetValue(int id, int value, byte quality, DateTime time)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, Tuple<int, byte, DateTime>> values)
-        {
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, Tuple<short, byte, DateTime>> values)
+        //{
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        public void SetValue(int id, uint value)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        //public void SetValue(int id, ushort value)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, uint> values)
-        {
-            //Parallel.ForEach(values, (vv) => {
-            DateTime time = DateTime.Now;
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, ushort> values)
+        //{
+        //    DateTime time = DateTime.Now;
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="quality"></param>
-        /// <param name="time"></param>
-        public void SetValue(int id, uint value, byte quality, DateTime time)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="quality"></param>
+        ///// <param name="time"></param>
+        //public void SetValue(int id, ushort value, byte quality, DateTime time)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, Tuple<uint, byte, DateTime>> values)
-        {
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, Tuple<ushort, byte, DateTime>> values)
+        //{
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        public void SetValue(int id, long value)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        //public void SetValue(int id, int value)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, long> values)
-        {
-            //Parallel.ForEach(values, (vv) => {
-            DateTime time = DateTime.Now;
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, int> values)
+        //{
+        //    DateTime time = DateTime.Now;
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="quality"></param>
-        /// <param name="time"></param>
-        public void SetValue(int id, long value, byte quality, DateTime time)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="quality"></param>
+        ///// <param name="time"></param>
+        //public void SetValue(int id, int value, byte quality, DateTime time)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, Tuple<long, byte, DateTime>> values)
-        {
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        public void SetValue(int id, ulong value)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, ulong> values)
-        {
-            DateTime time = DateTime.Now;
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="quality"></param>
-        /// <param name="time"></param>
-        public void SetValue(int id, ulong value, byte quality, DateTime time)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, Tuple<ulong, byte, DateTime>> values)
-        {
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="time"></param>
-        /// <param name="quality"></param>
-        public void SetValue(int id, IntPointData value,DateTime time,byte quality)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetPointValueByAddr(mIdAndAddr[id], value.X,value.Y,quality,time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="time"></param>
-        /// <param name="quality"></param>
-        public void SetValue(int id, UIntPointData value, DateTime time, byte quality)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="time"></param>
-        /// <param name="quality"></param>
-        public void SetValue(int id, IntPoint3Data value, DateTime time, byte quality)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="time"></param>
-        /// <param name="quality"></param>
-        public void SetValue(int id, UIntPoint3Data value, DateTime time, byte quality)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="time"></param>
-        /// <param name="quality"></param>
-        public void SetValue(int id, ULongPoint3Data value, DateTime time, byte quality)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="time"></param>
-        /// <param name="quality"></param>
-        public void SetValue(int id, LongPoint3Data value, DateTime time, byte quality)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="time"></param>
-        /// <param name="quality"></param>
-        public void SetValue(int id, LongPointData value, DateTime time, byte quality)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="time"></param>
-        /// <param name="quality"></param>
-        public void SetValue(int id, ULongPointData value, DateTime time, byte quality)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, Tuple<int, byte, DateTime>> values)
+        //{
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        public void SetValue(int id, float value)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, float> values)
-        {
-            DateTime time = DateTime.Now;
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        //public void SetValue(int id, uint value)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="quality"></param>
-        /// <param name="time"></param>
-        public void SetValue(int id, float value, byte quality, DateTime time)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, uint> values)
+        //{
+        //    //Parallel.ForEach(values, (vv) => {
+        //    DateTime time = DateTime.Now;
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, Tuple<float, byte, DateTime>> values)
-        {
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="quality"></param>
+        ///// <param name="time"></param>
+        //public void SetValue(int id, uint value, byte quality, DateTime time)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        public void SetValue(int id, double value)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, Tuple<uint, byte, DateTime>> values)
+        //{
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        //public void SetValue(int id, long value)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, long> values)
+        //{
+        //    //Parallel.ForEach(values, (vv) => {
+        //    DateTime time = DateTime.Now;
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="quality"></param>
+        ///// <param name="time"></param>
+        //public void SetValue(int id, long value, byte quality, DateTime time)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, Tuple<long, byte, DateTime>> values)
+        //{
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, double> values)
-        {
-            DateTime time = DateTime.Now;
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        //public void SetValue(int id, ulong value)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="quality"></param>
-        /// <param name="time"></param>
-        public void SetValue(int id, double value, byte quality, DateTime time)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, ulong> values)
+        //{
+        //    DateTime time = DateTime.Now;
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, Tuple<double, byte, DateTime>> values)
-        {
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="quality"></param>
+        ///// <param name="time"></param>
+        //public void SetValue(int id, ulong value, byte quality, DateTime time)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, Tuple<ulong, byte, DateTime>> values)
+        //{
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="time"></param>
+        ///// <param name="quality"></param>
+        //public void SetValue(int id, IntPointData value,DateTime time,byte quality)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetPointValueByAddr(mIdAndAddr[id], value.X,value.Y,quality,time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="time"></param>
+        ///// <param name="quality"></param>
+        //public void SetValue(int id, UIntPointData value, DateTime time, byte quality)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="time"></param>
+        ///// <param name="quality"></param>
+        //public void SetValue(int id, IntPoint3Data value, DateTime time, byte quality)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="time"></param>
+        ///// <param name="quality"></param>
+        //public void SetValue(int id, UIntPoint3Data value, DateTime time, byte quality)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="time"></param>
+        ///// <param name="quality"></param>
+        //public void SetValue(int id, ULongPoint3Data value, DateTime time, byte quality)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="time"></param>
+        ///// <param name="quality"></param>
+        //public void SetValue(int id, LongPoint3Data value, DateTime time, byte quality)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, value.Z, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="time"></param>
+        ///// <param name="quality"></param>
+        //public void SetValue(int id, LongPointData value, DateTime time, byte quality)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="time"></param>
+        ///// <param name="quality"></param>
+        //public void SetValue(int id, ULongPointData value, DateTime time, byte quality)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetPointValueByAddr(mIdAndAddr[id], value.X, value.Y, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        public void SetValue(int id, DateTime value)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                if (ReadDateTimeValueByAddr(mIdAndAddr[id]) != value)
-                {
-                    SetValueByAddr(mIdAndAddr[id], value, 0, DateTime.Now);
-                    NotifyValueChangedToConsumer(id);
-                }
-                else
-                {
-                    UpdateDatetimeValueTimeByAddr(mIdAndAddr[id], DateTime.Now);
-                }
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        //public void SetValue(int id, float value)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, float> values)
+        //{
+        //    DateTime time = DateTime.Now;
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, DateTime> values)
-        {
-            DateTime time = DateTime.Now;
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    if (ReadDateTimeValueByAddr(mIdAndAddr[vv.Key]) != vv.Value)
-                    {
-                        SetValueByAddr(mIdAndAddr[vv.Key], vv.Value, 0, time);
-                        NotifyValueChangedToConsumer(vv.Key);
-                    }
-                    else
-                    {
-                        UpdateDatetimeValueTimeByAddr(mIdAndAddr[vv.Key], time);
-                    }
-                }           
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="quality"></param>
+        ///// <param name="time"></param>
+        //public void SetValue(int id, float value, byte quality, DateTime time)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="quality"></param>
-        /// <param name="time"></param>
-        public void SetValue(int id, DateTime value, byte quality, DateTime time)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                if (ReadDateTimeValueByAddr(mIdAndAddr[id]) != value)
-                {
-                    SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                    NotifyValueChangedToConsumer(id);
-                }
-                else
-                {
-                    UpdateDatetimeValueTimeByAddr(mIdAndAddr[id], time);
-                }
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, Tuple<float, byte, DateTime>> values)
+        //{
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, Tuple<DateTime, byte, DateTime>> values)
-        {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    if (ReadDateTimeValueByAddr(mIdAndAddr[vv.Key]) != vv.Value.Item1)
-                    {
-                        SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
-                        NotifyValueChangedToConsumer(vv.Key);
-                    }
-                    else
-                    {
-                        UpdateDatetimeValueTimeByAddr(vv.Key, vv.Value.Item3);
-                    }
-                }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        //public void SetValue(int id, double value)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        public void SetValue(int id, string value)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                if (ReadStringValueByAddr(mIdAndAddr[id], Encoding.Unicode) != value)
-                {
-                    SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
-                    NotifyValueChangedToConsumer(id);
-                }
-                else
-                {
-                    UpdateStringValueTimeByAddr(mIdAndAddr[id], DateTime.Now);
-                }
-            }
-        }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="quality"></param>
-        /// <param name="time"></param>
-        /// <param name="values"></param>
-        /// <returns></returns>
-        public bool SetPointValue(int id, byte quality, DateTime time, params object[] values)
-        {
-            if (mIdAndAddr.ContainsKey(id) && mConfigDatabase.Tags.ContainsKey(id))
-            {
-                SetPointValue(mConfigDatabase.Tags[id], quality, time, values);
-            }
-            return true;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, double> values)
+        //{
+        //    DateTime time = DateTime.Now;
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="tag"></param>
-        /// <param name="quality"></param>
-        /// <param name="time"></param>
-        /// <param name="values"></param>
-        /// <returns></returns>
-        public bool SetPointValue(Tagbase tag, byte quality, DateTime time, params object[] values)
-        {
-            if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-            switch (tag.Type)
-            {
-                case TagType.IntPoint:
-                    var tmp = ReadIntPointValueByAddr(mIdAndAddr[tag.Id]);
-                    if (tmp.X != Convert.ToInt32(values[0]) || tmp.Y != Convert.ToInt32(values[1]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt32(values[0]), Convert.ToInt32(values[1]), quality, time);
-                        NotifyValueChangedToConsumer(tag.Id);
-                    }
-                    else
-                    {
-                        UpdateIntPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
-                case TagType.UIntPoint:
-                    var utmp = ReadUIntPointValueByAddr(mIdAndAddr[tag.Id]);
-                    if (utmp.X != Convert.ToUInt32(values[0]) || utmp.Y != Convert.ToUInt32(values[1]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt32(values[0]), Convert.ToUInt32(values[1]), quality, time);
-                        NotifyValueChangedToConsumer(tag.Id);
-                    }
-                    else
-                    {
-                        UpdateIntPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
-                case TagType.IntPoint3:
-                    var tmp3 = ReadIntPoint3ValueByAddr(mIdAndAddr[tag.Id]);
-                    if (tmp3.X != Convert.ToInt32(values[0]) || tmp3.Y != Convert.ToInt32(values[1]) || tmp3.Y != Convert.ToInt32(values[2]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt32(values[0]), Convert.ToInt32(values[1]), Convert.ToInt32(values[2]), quality, time);
-                        NotifyValueChangedToConsumer(tag.Id);
-                    }
-                    else
-                    {
-                        UpdateIntPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
-                case TagType.UIntPoint3:
-                    var utmp3 = ReadUIntPoint3ValueByAddr(mIdAndAddr[tag.Id]);
-                    if (utmp3.X != Convert.ToUInt32(values[0]) || utmp3.Y != Convert.ToUInt32(values[1]) || utmp3.Y != Convert.ToUInt32(values[2]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt32(values[0]), Convert.ToUInt32(values[1]), Convert.ToUInt32(values[2]), quality, time);
-                        NotifyValueChangedToConsumer(tag.Id);
-                    }
-                    else
-                    {
-                        UpdateIntPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
-                case TagType.LongPoint:
-                    var ltmp = ReadLongPointValueByAddr(mIdAndAddr[tag.Id]);
-                    if (ltmp.X != Convert.ToInt64(values[0]) || ltmp.Y != Convert.ToInt64(values[1]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt64(values[0]), Convert.ToInt64(values[1]), quality, time);
-                    }
-                    else
-                    {
-                        UpdateLongPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
-                case TagType.ULongPoint:
-                    var ultmp = ReadULongPointValueByAddr(mIdAndAddr[tag.Id]);
-                    if (ultmp.X != Convert.ToUInt64(values[0]) || ultmp.Y != Convert.ToUInt64(values[1]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt64(values[0]), Convert.ToUInt64(values[1]), quality, time);
-                        NotifyValueChangedToConsumer(tag.Id);
-                    }
-                    else
-                    {
-                        UpdateLongPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
-                case TagType.LongPoint3:
-                    var ltmp3 = ReadLongPoint3ValueByAddr(mIdAndAddr[tag.Id]);
-                    if (ltmp3.X != Convert.ToInt64(values[0]) || ltmp3.Y != Convert.ToInt64(values[1]) || ltmp3.Z != Convert.ToInt64(values[2]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt64(values[0]), Convert.ToInt64(values[1]), Convert.ToInt64(values[2]), quality, time);
-                        NotifyValueChangedToConsumer(tag.Id);
-                    }
-                    else
-                    {
-                        UpdateLongPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="quality"></param>
+        ///// <param name="time"></param>
+        //public void SetValue(int id, double value, byte quality, DateTime time)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
 
-                case TagType.ULongPoint3:
-                    var ultmp3 = ReadULongPoint3ValueByAddr(mIdAndAddr[tag.Id]);
-                    if (ultmp3.X != Convert.ToUInt64(values[0]) || ultmp3.Y != Convert.ToUInt64(values[1]) || ultmp3.Z != Convert.ToUInt64(values[2]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt64(values[0]), Convert.ToUInt64(values[1]), Convert.ToUInt64(values[2]), quality, time);
-                        NotifyValueChangedToConsumer(tag.Id);
-                    }
-                    else
-                    {
-                        UpdateLongPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
-            }
-            return true;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, Tuple<double, byte, DateTime>> values)
+        //{
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="quality"></param>
-        /// <param name="values"></param>
-        /// <returns></returns>
-        public bool SetPointValue(int id, byte quality,  params object[] values)
-        {
-            DateTime time = DateTime.Now;
-            return SetPointValue(id, (byte)QualityConst.Good,time, values);
-        }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="tag"></param>
-        /// <param name="quality"></param>
-        /// <param name="values"></param>
-        /// <returns></returns>
-        public bool SetPointValue(Tagbase tag, byte quality, params object[] values)
-        {
-            DateTime time = DateTime.Now;
-            return SetPointValue(tag, (byte)QualityConst.Good, time, values);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        //public void SetValue(int id, DateTime value)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        if (ReadDateTimeValueByAddr(mIdAndAddr[id]) != value)
+        //        {
+        //            SetValueByAddr(mIdAndAddr[id], value, 0, DateTime.Now);
+        //            NotifyValueChangedToConsumer(id);
+        //        }
+        //        else
+        //        {
+        //            UpdateDatetimeValueTimeByAddr(mIdAndAddr[id], DateTime.Now);
+        //        }
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="values"></param>
-        /// <returns></returns>
-        public bool SetPointValue(int id,  params object[] values)
-        {
-            return SetPointValue(id, (byte)QualityConst.Good, values);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, DateTime> values)
+        //{
+        //    DateTime time = DateTime.Now;
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            if (ReadDateTimeValueByAddr(mIdAndAddr[vv.Key]) != vv.Value)
+        //            {
+        //                SetValueByAddr(mIdAndAddr[vv.Key], vv.Value, 0, time);
+        //                NotifyValueChangedToConsumer(vv.Key);
+        //            }
+        //            else
+        //            {
+        //                UpdateDatetimeValueTimeByAddr(mIdAndAddr[vv.Key], time);
+        //            }
+        //        }           
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, string> values)
-        {
-            DateTime time = DateTime.Now;
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="quality"></param>
+        ///// <param name="time"></param>
+        //public void SetValue(int id, DateTime value, byte quality, DateTime time)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        if (ReadDateTimeValueByAddr(mIdAndAddr[id]) != value)
+        //        {
+        //            SetValueByAddr(mIdAndAddr[id], value, quality, time);
+        //            NotifyValueChangedToConsumer(id);
+        //        }
+        //        else
+        //        {
+        //            UpdateDatetimeValueTimeByAddr(mIdAndAddr[id], time);
+        //        }
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="quality"></param>
-        /// <param name="time"></param>
-        public void SetValue(int id, string value, byte quality, DateTime time)
-        {
-            if (mIdAndAddr.ContainsKey(id))
-            {
-                SetValueByAddr(mIdAndAddr[id], value, quality, time);
-                NotifyValueChangedToConsumer(id);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, Tuple<DateTime, byte, DateTime>> values)
+        //{
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            if (ReadDateTimeValueByAddr(mIdAndAddr[vv.Key]) != vv.Value.Item1)
+        //            {
+        //                SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
+        //                NotifyValueChangedToConsumer(vv.Key);
+        //            }
+        //            else
+        //            {
+        //                UpdateDatetimeValueTimeByAddr(vv.Key, vv.Value.Item3);
+        //            }
+        //        }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        public void SetValue(Dictionary<int, Tuple<string, byte, DateTime>> values)
-        {
-            //Parallel.ForEach(values, (vv) => {
-            foreach (var vv in values)
-                if (mIdAndAddr.ContainsKey(vv.Key))
-                {
-                    if (ReadStringValueByAddr(mIdAndAddr[vv.Key], Encoding.Unicode) != vv.Value.Item1)
-                    {
-                        SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
-                        NotifyValueChangedToConsumer(vv.Key);
-                    }
-                    else
-                    {
-                        UpdateStringValueTimeByAddr(mIdAndAddr[vv.Key], vv.Value.Item3);
-                    }
-                }
-            //});
-            NotifyValueChangedToConsumer(values.Keys);
-        }
-        #endregion
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        //public void SetValue(int id, string value)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        if (ReadStringValueByAddr(mIdAndAddr[id], Encoding.Unicode) != value)
+        //        {
+        //            SetValueByAddr(mIdAndAddr[id], value,0,DateTime.Now);
+        //            NotifyValueChangedToConsumer(id);
+        //        }
+        //        else
+        //        {
+        //            UpdateStringValueTimeByAddr(mIdAndAddr[id], DateTime.Now);
+        //        }
+        //    }
+        //}
+
+        
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, string> values)
+        //{
+        //    DateTime time = DateTime.Now;
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            SetValueByAddr(mIdAndAddr[vv.Key], vv.Value,0,time);
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="value"></param>
+        ///// <param name="quality"></param>
+        ///// <param name="time"></param>
+        //public void SetValue(int id, string value, byte quality, DateTime time)
+        //{
+        //    if (mIdAndAddr.ContainsKey(id))
+        //    {
+        //        SetValueByAddr(mIdAndAddr[id], value, quality, time);
+        //        NotifyValueChangedToConsumer(id);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        //public void SetValue(Dictionary<int, Tuple<string, byte, DateTime>> values)
+        //{
+        //    //Parallel.ForEach(values, (vv) => {
+        //    foreach (var vv in values)
+        //        if (mIdAndAddr.ContainsKey(vv.Key))
+        //        {
+        //            if (ReadStringValueByAddr(mIdAndAddr[vv.Key], Encoding.Unicode) != vv.Value.Item1)
+        //            {
+        //                SetValueByAddr(mIdAndAddr[vv.Key], vv.Value.Item1, vv.Value.Item2, vv.Value.Item3);
+        //                NotifyValueChangedToConsumer(vv.Key);
+        //            }
+        //            else
+        //            {
+        //                UpdateStringValueTimeByAddr(mIdAndAddr[vv.Key], vv.Value.Item3);
+        //            }
+        //        }
+        //    //});
+        //    NotifyValueChangedToConsumer(values.Keys);
+        //}
+        //#endregion
 
         #endregion
 
@@ -1922,6 +1782,31 @@ namespace Cdy.Tag
             return MemoryHelper.ReadInt32(mMHandle, addr);
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <returns></returns>
+        public uint ReadUIntValueByAddr(long addr)
+        {
+            return MemoryHelper.ReadUInt32(mMHandle, addr);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public uint ReadUIntValueByAddr(long addr, out DateTime time, out byte quality)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 4);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 12);
+            return MemoryHelper.ReadUInt32(mMHandle, addr);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -1931,6 +1816,8 @@ namespace Cdy.Tag
         {
             return MemoryHelper.ReadShort(mMHandle, addr);
         }
+
+        
 
         /// <summary>
         /// 
@@ -1944,6 +1831,30 @@ namespace Cdy.Tag
             time = MemoryHelper.ReadDateTime(mMHandle, addr + 2);
             quality = MemoryHelper.ReadByte(mMHandle, addr + 10);
             return MemoryHelper.ReadShort(mMHandle, addr);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <returns></returns>
+        public ushort ReadUShortValueByAddr(long addr)
+        {
+            return MemoryHelper.ReadUShort(mMHandle, addr);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public ushort ReadUShortValueByAddr(long addr, out DateTime time, out byte quality)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 2);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 10);
+            return MemoryHelper.ReadUShort(mMHandle, addr);
         }
 
         /// <summary>
@@ -1968,6 +1879,30 @@ namespace Cdy.Tag
             time = MemoryHelper.ReadDateTime(mMHandle, addr + 8);
             quality = MemoryHelper.ReadByte(mMHandle, addr + 16);
             return MemoryHelper.ReadInt64(mMHandle, addr);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <returns></returns>
+        public ulong ReadUInt64ValueByAddr(long addr)
+        {
+            return MemoryHelper.ReadUInt64(mMHandle, addr);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public ulong ReadUInt64ValueByAddr(long addr, out DateTime time, out byte quality)
+        {
+            time = MemoryHelper.ReadDateTime(mMHandle, addr + 8);
+            quality = MemoryHelper.ReadByte(mMHandle, addr + 16);
+            return MemoryHelper.ReadUInt64(mMHandle, addr);
         }
 
         /// <summary>
@@ -3178,7 +3113,7 @@ namespace Cdy.Tag
             }
             if (vtag != null)
             {
-                if ((ushort)ReadShortValueByAddr(tag.ValueAddress) != btmp)
+                if (ReadUShortValueByAddr(tag.ValueAddress) != btmp)
                 {
                     SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
                     NotifyValueChangedToConsumer(tag.Id);
@@ -3250,7 +3185,7 @@ namespace Cdy.Tag
             }
             if (vtag != null)
             {
-                if ((uint)ReadIntValueByAddr(tag.ValueAddress) != btmp)
+                if (ReadUIntValueByAddr(tag.ValueAddress) != btmp)
                 {
                     SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
                     NotifyValueChangedToConsumer(tag.Id);
@@ -3322,7 +3257,7 @@ namespace Cdy.Tag
             }
             if (vtag != null)
             {
-                if ((ulong)ReadInt64ValueByAddr(tag.ValueAddress) != btmp)
+                if (ReadUInt64ValueByAddr(tag.ValueAddress) != btmp)
                 {
                     SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
                     NotifyValueChangedToConsumer(tag.Id);
@@ -3467,37 +3402,204 @@ namespace Cdy.Tag
             }
         }
 
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="tag"></param>
+        ///// <param name="value"></param>
+        ///// <param name="qulity"></param>
+        ///// <param name="time"></param>
+        //public void SetIntPointTagValue(Tagbase tag, object value, byte qulity, DateTime time)
+        //{
+        //    Take();
+        //    IntPointData btmp;
+        //    if (tag.Conveter != null)
+        //    {
+        //        btmp = (IntPointData)(tag.Conveter.ConvertTo(value));
+        //    }
+        //    else
+        //    {
+        //        btmp = (IntPointData)(value);
+        //    }
+
+        //    if (ReadIntPointValueByAddr(tag.ValueAddress) != btmp)
+        //    {
+        //        SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
+        //        NotifyValueChangedToConsumer(tag.Id);
+        //    }
+        //    else
+        //    {
+        //        UpdateIntPointValueTimeByAddr(tag.ValueAddress, time);
+        //    }
+        //}
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool SetPointValue(int id, byte quality, DateTime time, params object[] values)
+        {
+            if (mIdAndAddr.ContainsKey(id) && mConfigDatabase.Tags.ContainsKey(id))
+            {
+                SetPointValue(mConfigDatabase.Tags[id], quality, time, values);
+            }
+            return true;
+        }
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="tag"></param>
-        /// <param name="value"></param>
-        /// <param name="qulity"></param>
+        /// <param name="quality"></param>
         /// <param name="time"></param>
-        public void SetIntPointTagValue(Tagbase tag, object value, byte qulity, DateTime time)
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool SetPointValue(Tagbase tag, byte quality, DateTime time, params object[] values)
         {
-            Take();
-            IntPointData btmp;
-            if (tag.Conveter != null)
+            if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+            switch (tag.Type)
             {
-                btmp = (IntPointData)(tag.Conveter.ConvertTo(value));
-            }
-            else
-            {
-                btmp = (IntPointData)(value);
-            }
+                case TagType.IntPoint:
+                    var tmp = ReadIntPointValueByAddr(mIdAndAddr[tag.Id]);
+                    if (tmp.X != Convert.ToInt32(values[0]) || tmp.Y != Convert.ToInt32(values[1]))
+                    {
+                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt32(values[0]), Convert.ToInt32(values[1]), quality, time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateIntPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                    }
+                    break;
+                case TagType.UIntPoint:
+                    var utmp = ReadUIntPointValueByAddr(mIdAndAddr[tag.Id]);
+                    if (utmp.X != Convert.ToUInt32(values[0]) || utmp.Y != Convert.ToUInt32(values[1]))
+                    {
+                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt32(values[0]), Convert.ToUInt32(values[1]), quality, time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateIntPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                    }
+                    break;
+                case TagType.IntPoint3:
+                    var tmp3 = ReadIntPoint3ValueByAddr(mIdAndAddr[tag.Id]);
+                    if (tmp3.X != Convert.ToInt32(values[0]) || tmp3.Y != Convert.ToInt32(values[1]) || tmp3.Y != Convert.ToInt32(values[2]))
+                    {
+                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt32(values[0]), Convert.ToInt32(values[1]), Convert.ToInt32(values[2]), quality, time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateIntPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                    }
+                    break;
+                case TagType.UIntPoint3:
+                    var utmp3 = ReadUIntPoint3ValueByAddr(mIdAndAddr[tag.Id]);
+                    if (utmp3.X != Convert.ToUInt32(values[0]) || utmp3.Y != Convert.ToUInt32(values[1]) || utmp3.Y != Convert.ToUInt32(values[2]))
+                    {
+                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt32(values[0]), Convert.ToUInt32(values[1]), Convert.ToUInt32(values[2]), quality, time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateIntPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                    }
+                    break;
+                case TagType.LongPoint:
+                    var ltmp = ReadLongPointValueByAddr(mIdAndAddr[tag.Id]);
+                    if (ltmp.X != Convert.ToInt64(values[0]) || ltmp.Y != Convert.ToInt64(values[1]))
+                    {
+                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt64(values[0]), Convert.ToInt64(values[1]), quality, time);
+                    }
+                    else
+                    {
+                        UpdateLongPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                    }
+                    break;
+                case TagType.ULongPoint:
+                    var ultmp = ReadULongPointValueByAddr(mIdAndAddr[tag.Id]);
+                    if (ultmp.X != Convert.ToUInt64(values[0]) || ultmp.Y != Convert.ToUInt64(values[1]))
+                    {
+                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt64(values[0]), Convert.ToUInt64(values[1]), quality, time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateLongPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                    }
+                    break;
+                case TagType.LongPoint3:
+                    var ltmp3 = ReadLongPoint3ValueByAddr(mIdAndAddr[tag.Id]);
+                    if (ltmp3.X != Convert.ToInt64(values[0]) || ltmp3.Y != Convert.ToInt64(values[1]) || ltmp3.Z != Convert.ToInt64(values[2]))
+                    {
+                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt64(values[0]), Convert.ToInt64(values[1]), Convert.ToInt64(values[2]), quality, time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateLongPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                    }
+                    break;
 
-            if (ReadIntPointValueByAddr(tag.ValueAddress) != btmp)
-            {
-                SetPointValueByAddr(tag.ValueAddress, btmp.X, btmp.Y, qulity, time);
-                NotifyValueChangedToConsumer(tag.Id);
+                case TagType.ULongPoint3:
+                    var ultmp3 = ReadULongPoint3ValueByAddr(mIdAndAddr[tag.Id]);
+                    if (ultmp3.X != Convert.ToUInt64(values[0]) || ultmp3.Y != Convert.ToUInt64(values[1]) || ultmp3.Z != Convert.ToUInt64(values[2]))
+                    {
+                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt64(values[0]), Convert.ToUInt64(values[1]), Convert.ToUInt64(values[2]), quality, time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateLongPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                    }
+                    break;
             }
-            else
-            {
-                UpdateIntPointValueTimeByAddr(tag.ValueAddress, time);
-            }
+            return true;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool SetPointValue(int id, byte quality, params object[] values)
+        {
+            DateTime time = DateTime.Now;
+            return SetPointValue(id, (byte)QualityConst.Good, time, values);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="quality"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool SetPointValue(Tagbase tag, byte quality, params object[] values)
+        {
+            DateTime time = DateTime.Now;
+            return SetPointValue(tag, (byte)QualityConst.Good, time, values);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool SetPointValue(int id, params object[] values)
+        {
+            return SetPointValue(id, (byte)QualityConst.Good, values);
+        }
         #endregion
 
         /// <summary>
@@ -4143,6 +4245,11 @@ namespace Cdy.Tag
             return null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <returns></returns>
         public object GetTagValue(Tagbase tag)
         {
             try
@@ -4199,6 +4306,11 @@ namespace Cdy.Tag
             return null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public object GetTagValue(int id)
         {
             Take();

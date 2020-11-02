@@ -8,6 +8,7 @@
 //==============================================================
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Cdy.Tag
@@ -20,6 +21,31 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        private float mLastValue = float.MinValue;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public override byte SizeOfValue => 4;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="startMemory"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
+        {
+            var val = MemoryHelper.ReadFloat(startMemory, offset);
+            if(val!=mLastValue || mLastValue == float.MinValue)
+            {
+                mLastValue = val;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }

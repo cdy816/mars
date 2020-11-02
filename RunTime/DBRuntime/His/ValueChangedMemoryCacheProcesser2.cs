@@ -50,6 +50,8 @@ namespace Cdy.Tag
 
         private bool mIsStarted = false;
 
+        private object mLockObj = new object();
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -108,11 +110,11 @@ namespace Cdy.Tag
         public void Notify(DateTime time)
         {
             mLastUpdateTime = time;
-            if(mLastUpdateTime.Second!=mLastUpdateSecond)
-            {
+            //if(mLastUpdateTime.Second!=mLastUpdateSecond)
+            //{
                 mLastUpdateSecond = mLastUpdateTime.Second;
                 resetEvent.Set();
-            }
+            //}
         }
 
         /// <summary>
@@ -124,8 +126,15 @@ namespace Cdy.Tag
             ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeValueChangedForConsumer(this.Name, new ValueChangedNotifyProcesser.ValueChangedDelegate((ids) => {
                 foreach(var vv in ids)
                 {
+                    lock(mLockObj)
                     mChangedTags[vv] = true;
+
+                    //if (vv == 1)
+                    //{
+                    //    LoggerService.Service.Info("ValueChangedMemoryCacheProcesser", "tag " + vv + " Notify changed", ConsoleColor.Red);
+                    //}
                 }
+                //LoggerService.Service.Info("TagChanged", "变化变量数:"+ids.Length);
             }),null,null, new Func<List<int>>(() => { return  mTags.Keys.ToList(); }));
 
             foreach(var vv in mTags.Keys)
@@ -213,8 +222,15 @@ namespace Cdy.Tag
                     {
                         if (vv.Value)
                         {
-                            mChangedTags[vv.Key] = false;
-                            mTags[vv.Key].UpdateValue2(tim);
+                            lock (mLockObj)
+                            {
+                                mTags[vv.Key].UpdateChangedValue(tim);
+                                mChangedTags[vv.Key] = false;
+                                //if (vv.Key==1)
+                                //{
+                                //    LoggerService.Service.Info("ValueChangedMemoryCacheProcesser", "tag "+ vv.Key+" is changed",ConsoleColor.Yellow);
+                                //}
+                            }
                         }
                     }
                 }

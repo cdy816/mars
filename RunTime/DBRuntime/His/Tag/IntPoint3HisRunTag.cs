@@ -17,6 +17,23 @@ namespace Cdy.Tag
     /// </summary>
     public class IntPoint3HisRunTag:HisRunTag
     {
+        private int x = int.MinValue, y = int.MinValue, z = int.MinValue;
         public override byte SizeOfValue => 12;
+
+        public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
+        {
+            int xx = MemoryHelper.ReadInt32(startMemory,offset) , yy = MemoryHelper.ReadInt32(startMemory, offset+4), zz = MemoryHelper.ReadInt32(startMemory, offset+8);
+            if(xx!=x||yy!=y||zz!=z || xx == int.MinValue)
+            {
+                x = xx;
+                y = yy;
+                z = zz;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }

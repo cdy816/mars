@@ -18,12 +18,33 @@ namespace Cdy.Tag
     /// </summary>
     public class StirngHisRunTag:HisRunTag
     {
+        private string mLastValue = string.Empty;
+
         /// <summary>
         /// 
         /// </summary>
         public override byte SizeOfValue => (byte)(Const.StringSize);
 
-        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="startMemory"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
+        {
+            var len = MemoryHelper.ReadByte(startMemory, offset+1);
+            var val = new string((char*)startMemory, (int)(offset + 1), len);
+            if (val != mLastValue)
+            {
+                mLastValue = val;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
     }
 }

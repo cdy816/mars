@@ -708,7 +708,14 @@ namespace HisDataTools.ViewModel
             {
                 return Convert.ToDouble(((dynamic)value).X);
             }
-            return Convert.ToDouble(value);
+            try
+            {
+                return Convert.ToDouble(value);
+            }
+            catch
+            {
+                return 0;
+            }
         }
 
         /// <summary>

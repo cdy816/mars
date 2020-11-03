@@ -223,6 +223,9 @@ namespace Cdy.Tag
             switch(mDataType)
             {
                 case 0:
+                    Marshal.WriteByte(handle + mPosition, (byte)(((bool)value)?1:0));
+                    mPosition++;
+                    break;
                 case 1:
                     Marshal.WriteByte(handle+mPosition, (byte)value);
                     //mDataBuffer[mPosition] = (byte)value;
@@ -947,7 +950,7 @@ namespace Cdy.Tag
                     re = MemoryHelper.ReadShort((void*)handle, index*2);
                     break;
                 case 3:
-                    re = MemoryHelper.ReadShort((void*)handle, index * 2);
+                    re = MemoryHelper.ReadUShort((void*)handle, index * 2);
                     break;
                 case 4:
                     re = MemoryHelper.ReadInt32((void*)handle, index * 4);

@@ -41,7 +41,7 @@ namespace HisDataTools.View
         {
             if(value is double || value is float)
             {
-               return ((double)value).ToString("f4");
+               return (System.Convert.ToDouble(value)).ToString("f4");
             }
             return value;
         }

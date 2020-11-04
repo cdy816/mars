@@ -140,6 +140,7 @@ namespace Cdy.Tag
                     case TagType.Long:
                     case TagType.ULong:
                     case TagType.Double:
+                    case TagType.DateTime:
                         msize += 17;
                         break;
                     case TagType.IntPoint:
@@ -665,8 +666,8 @@ namespace Cdy.Tag
         public void SetValueByAddr(long addr, string value)
         {
             //字符串存储内容：长度+内容
-            MemoryHelper.WriteByte(mMHandle, addr, (byte)value.Length);
-            
+            var val = Encoding.Unicode.GetBytes(value);
+            MemoryHelper.WriteByte(mMHandle, addr, (byte)val.Length);
             System.Buffer.BlockCopy(value.ToCharArray(), 0, mMemory, (int)addr+1, value.Length);
             MemoryHelper.WriteByte(mMHandle, addr+Const.StringSize + 8, 0);
         }
@@ -690,7 +691,9 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public void SetValueByAddr(long addr, string value, byte quality, DateTime time)
         {
-            System.Buffer.BlockCopy(value.ToCharArray(), 0, mMemory, (int)addr, value.Length);
+            var val = Encoding.Unicode.GetBytes(value);
+            MemoryHelper.WriteByte(mMHandle, addr, (byte)val.Length);
+            System.Buffer.BlockCopy(val, 0, mMemory, (int)addr+1, val.Length);
             MemoryHelper.WriteDateTime(mMHandle, addr+ Const.StringSize, time);
             MemoryHelper.WriteByte(mMHandle, addr+Const.StringSize + 8, quality); 
         }
@@ -1784,10 +1787,10 @@ namespace Cdy.Tag
         /// <param name="addr"></param>
         /// <param name="encoding"></param>
         /// <returns></returns>
-        public string ReadStringValueByAddr(long addr, Encoding encoding)
+        public string ReadStringValueByAddr(long addr)
         {
             int len = MemoryHelper.ReadByte((sbyte*)mMHandle, addr);
-            return new string((sbyte*)mMHandle, (int)addr+1, len, encoding);
+            return new string((sbyte*)mMHandle, (int)addr+1, len, Encoding.Unicode);
         }
 
         /// <summary>
@@ -1798,10 +1801,10 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        public string ReadStringValueByAddr(long addr, Encoding encoding,out DateTime time, out byte quality)
+        public string ReadStringValueByAddr(long addr,out DateTime time, out byte quality)
         {
             int len = MemoryHelper.ReadByte((sbyte*)mMHandle, addr);
-            var re = new string((sbyte*)mMHandle, (int)addr+1, len, encoding);
+            var re = new string((sbyte*)mMHandle, (int)addr+1, len, Encoding.Unicode);
             time = MemoryHelper.ReadDateTime(mMHandle, addr+ Const.StringSize);
             quality = MemoryHelper.ReadByte(mMHandle, addr + Const.StringSize + 8);
             return re;
@@ -2601,11 +2604,11 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public string ReadStringValue(int id,Encoding encoding)
+        public string ReadStringValue(int id)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                return ReadStringValueByAddr(mIdAndAddr[id], encoding);
+                return ReadStringValueByAddr(mIdAndAddr[id]);
             }
             return null;
         }
@@ -2617,11 +2620,11 @@ namespace Cdy.Tag
         /// <param name="quality"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public string ReadStringValue(int id, Encoding encoding, out byte quality, out DateTime time)
+        public string ReadStringValue(int id, out byte quality, out DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                return ReadStringValueByAddr(mIdAndAddr[id],encoding, out time, out quality);
+                return ReadStringValueByAddr(mIdAndAddr[id], out time, out quality);
             }
             quality = byte.MaxValue;
             time = DateTime.MinValue;
@@ -3510,7 +3513,7 @@ namespace Cdy.Tag
                     btmp = Convert.ToString(value);
                 }
 
-                if (ReadStringValueByAddr(tag.ValueAddress, Encoding.Unicode) != btmp)
+                if (ReadStringValueByAddr(tag.ValueAddress) != btmp)
                 {
                     SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
                     NotifyValueChangedToConsumer(tag.Id);
@@ -4242,7 +4245,7 @@ namespace Cdy.Tag
                     re = ReadShortValueByAddr(tag.ValueAddress);
                     break;
                 case TagType.String:
-                    re = ReadStringValueByAddr(tag.ValueAddress,Encoding.Unicode);
+                    re = ReadStringValueByAddr(tag.ValueAddress);
                     break;
                 case TagType.UInt:
                     re = (uint)ReadIntValueByAddr(tag.ValueAddress);
@@ -4383,7 +4386,7 @@ namespace Cdy.Tag
                     case TagType.Short:
                         return ReadShortValueByAddr(tag.ValueAddress, out time, out quality);
                     case TagType.String:
-                        return ReadStringValueByAddr(tag.ValueAddress, Encoding.Unicode, out time, out quality);
+                        return ReadStringValueByAddr(tag.ValueAddress,out time, out quality);
                     case TagType.UInt:
                         return (uint)ReadIntValueByAddr(tag.ValueAddress, out time, out quality);
                     case TagType.ULong:
@@ -4446,7 +4449,7 @@ namespace Cdy.Tag
                     case TagType.Short:
                         return ReadShortValueByAddr(tag.ValueAddress);
                     case TagType.String:
-                        return ReadStringValueByAddr(tag.ValueAddress, Encoding.Unicode);
+                        return ReadStringValueByAddr(tag.ValueAddress);
                     case TagType.UInt:
                         return (uint)ReadIntValueByAddr(tag.ValueAddress);
                     case TagType.ULong:
@@ -4517,7 +4520,7 @@ namespace Cdy.Tag
                     re = ReadShortValueByAddr(tag.ValueAddress);
                     break;
                 case TagType.String:
-                    re = ReadStringValueByAddr(tag.ValueAddress, Encoding.Unicode);
+                    re = ReadStringValueByAddr(tag.ValueAddress);
                     break;
                 case TagType.UInt:
                     re = (uint)ReadIntValueByAddr(tag.ValueAddress);

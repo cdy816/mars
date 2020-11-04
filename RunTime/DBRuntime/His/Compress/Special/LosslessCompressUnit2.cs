@@ -91,6 +91,8 @@ namespace Cdy.Tag
                     return Compress<long>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Double:
                      return Compress<double>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.DateTime:
+                    return Compress<DateTime>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Float:
                     return Compress<float>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.String:
@@ -371,6 +373,31 @@ namespace Cdy.Tag
                             {
                                 mVarintMemory.WriteSInt64((long)(id - ulsval));
                                 ulsval = id;
+                            }
+                        }
+                        else
+                        {
+                            ig = emptyIds.ReadIndex <= emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
+                        }
+                    }
+                    break;
+                case TagType.DateTime:
+                    ulong udlsval = 0;
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (i != ig)
+                        {
+                            var id = source.ReadULong((int)offset + i * 8);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt64(id);
+                                isFirst = false;
+                                udlsval = id;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt64((long)(id - udlsval));
+                                udlsval = id;
                             }
                         }
                         else
@@ -1044,7 +1071,7 @@ namespace Cdy.Tag
                     rsize += cqus.Length;
                     break;
                 case TagType.String:
-                    var vals = source.ReadStrings(count * tlen + (int)sourceAddr, count);
+                    var vals = source.ReadStringsByFixSize(count * tlen + (int)sourceAddr, count);
                     var qus = source.ReadBytes(count);
                     var sres = CompressValues(vals, emptys);
                     target.Write(sres.Length);
@@ -1580,7 +1607,13 @@ namespace Cdy.Tag
             Dictionary<int, DateTime> re = new Dictionary<int, DateTime>();
             var count = source.ReadInt();
             var datasize = source.ReadInt();
-                       
+
+            if (datasize <= 0)
+            {
+                valueCount = 0;
+                return re;
+            }
+            
             byte[] datas = source.ReadBytes(datasize);
             var timers = DeCompressTimers(datas, count);
 

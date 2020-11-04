@@ -45,6 +45,8 @@ namespace Cdy.Tag
 
         private int mSize;
 
+        private List<string> mStringCach;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -886,19 +888,25 @@ namespace Cdy.Tag
                     break;
                 case 11:
 
-                    int cc = 0;
-                    int pos = 0;
-                    while (true)
+                    if(mStringCach!=null)
                     {
-                        if (cc >= index)
-                        {
-                            break;
-                        }
-                        //pos += (mDataBuffer[pos]+1);
-                        pos += MemoryHelper.ReadByte((void*)handle, pos) + 1;
-                        cc++;
+                        re =mStringCach[index];
                     }
-                    re = new string((char*)handle, pos + 1, MemoryHelper.ReadByte((void*)handle, pos));
+                    else
+                    {
+                        mStringCach = new List<string>(mCount);
+                        int cc = 0;
+                        int pos = 0;
+                        int len = 0;
+                        while (cc<this.mCount)
+                        {
+                            len = MemoryHelper.ReadByte((void*)handle, pos);
+                            mStringCach.Add(new string((sbyte*)handle, pos + 1, len, Encoding.Unicode));
+                            pos += len + 1;
+                            cc++;
+                        }
+                        re = mStringCach[index];
+                    }
                     break;
                 case 12:
                     var x = MemoryHelper.ReadInt32((void*)handle, index * 8);
@@ -975,19 +983,26 @@ namespace Cdy.Tag
                     break;
                 case 11:
 
-                    int cc = 0;
-                    int pos = 0;
-                    while(true)
+                    if (mStringCach != null)
                     {
-                        if(cc>=index)
-                        {
-                            break;
-                        }
-                        //pos += (mDataBuffer[pos]+1);
-                        pos += MemoryHelper.ReadByte((void*)handle, pos) + 1;
-                        cc++;
+                         re = mStringCach[index];
                     }
-                    re = new string((char*)handle, pos+1, MemoryHelper.ReadByte((void*)handle, pos));
+                    else
+                    {
+                        mStringCach = new List<string>(mCount);
+                        int cc = 0;
+                        int pos = 0;
+                        int len = 0;
+                        while (cc < this.mCount)
+                        {
+                            len = MemoryHelper.ReadByte((void*)handle, pos);
+                            mStringCach.Add(new string((sbyte*)handle, pos + 1, len, Encoding.Unicode));
+                            pos += len + 1;
+                            cc++;
+                        }
+                        re = mStringCach[index];
+                    }
+
                     break;
                 case 12:
                     var x = MemoryHelper.ReadInt32((void*)handle, index * 8);

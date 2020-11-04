@@ -1206,6 +1206,22 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="offset"></param>
+        /// <param name="encoding"></param>
+        /// <returns></returns>
+        public string ReadStringByFixSize(long offset, Encoding encoding);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public List<string> ReadStringsByFixSize(long offset, int count);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
         /// <returns></returns>
         public string ReadString(long offset);
 

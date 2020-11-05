@@ -1370,9 +1370,9 @@ namespace Cdy.Tag
                     re.Add(MemoryHelper.ReadDateTime(BitConverter.GetBytes(vv)));
                     for (int i = 1; i < count; i++)
                     {
-                        var vss = (ulong)memory.ReadSInt64();
-                        re.Add(MemoryHelper.ReadDateTime(BitConverter.GetBytes((ulong)(vv + vss))));
-                        vv = vss;
+                        var vss = memory.ReadSInt64();
+                        vv = (ulong)((long)vv + vss);
+                        re.Add(MemoryHelper.ReadDateTime(BitConverter.GetBytes(vv)));
                     }
                 }
                 return re as List<T>;

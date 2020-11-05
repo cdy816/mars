@@ -3686,6 +3686,7 @@ namespace Cdy.Tag
                         if (ltmp.X != Convert.ToInt64(values[0]) || ltmp.Y != Convert.ToInt64(values[1]))
                         {
                             SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt64(values[0]), Convert.ToInt64(values[1]), quality, time);
+                            NotifyValueChangedToConsumer(tag.Id);
                         }
                         else
                         {

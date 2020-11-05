@@ -1428,13 +1428,14 @@ namespace Cdy.Tag
                     var vv = (int)memory.ReadInt32();
                     var vv2 = (int)memory.ReadInt32();
                     re.Add(new IntPointData(vv,vv2));
-                    for (int i = 2; i < count-1; i=i+2)
+                    for (int i = 1; i < count; i++)
                     {
                         var vss = (int)memory.ReadSInt32();
                         var vss2 = (int)memory.ReadSInt32();
-                        re.Add(new IntPointData((int)(vv + vss), (int)(vv2 + vss2)));
-                        vv = vss;
-                        vv2 = vss2;
+                        vv = (vv + vss);
+                        vv2 = (vv2 + vss2);
+                        re.Add(new IntPointData((int)vv, (int)vv2));
+                        
                     }
                 }
                 return re as List<T>;
@@ -1447,13 +1448,13 @@ namespace Cdy.Tag
                     var vv = (int)memory.ReadInt32();
                     var vv2 = (int)memory.ReadInt32();
                     re.Add(new UIntPointData((uint)vv, (uint)vv2));
-                    for (int i = 2; i < count - 1; i = i + 2)
+                    for (int i = 1; i < count; i++)
                     {
                         var vss = (int)memory.ReadSInt32();
                         var vss2 = (int)memory.ReadSInt32();
-                        re.Add(new UIntPointData((uint)(vv + vss), (uint)(vv2 + vss2)));
-                        vv = vss;
-                        vv2 = vss2;
+                        vv = (vv + vss);
+                        vv2 = (vv2 + vss2);
+                        re.Add(new UIntPointData((uint)vv, (uint)vv2));
                     }
                 }
                 return re as List<T>;
@@ -1466,13 +1467,14 @@ namespace Cdy.Tag
                     var vv = (long)memory.ReadInt64();
                     var vv2 = (long)memory.ReadInt64();
                     re.Add(new LongPointData(vv, vv2));
-                    for (int i = 2; i < count - 1; i = i + 2)
+                    for (int i = 1; i < count; i++)
                     {
                         var vss = memory.ReadSInt64();
                         var vss2 = memory.ReadSInt64();
-                        re.Add(new LongPointData((vv + vss), (vv2 + vss2)));
-                        vv = vss;
-                        vv2 = vss2;
+                        vv = (vv + vss);
+                        vv2 = (vv2 + vss2);
+                        re.Add(new LongPointData(vv, vv2));
+                       
                     }
                 }
                 return re as List<T>;
@@ -1485,13 +1487,14 @@ namespace Cdy.Tag
                     var vv = memory.ReadInt64();
                     var vv2 = memory.ReadInt64();
                     re.Add(new ULongPointData((ulong)vv, (ulong)vv2));
-                    for (int i = 2; i < count - 1; i = i + 2)
+                    for (int i = 1; i < count; i++)
                     {
                         var vss = memory.ReadSInt64();
                         var vss2 = memory.ReadSInt64();
-                        re.Add(new ULongPointData((ulong)(vv + vss), (ulong)(vv2 + vss2)));
-                        vv = vss;
-                        vv2 = vss2;
+                        vv = (vv + vss);
+                        vv2 = (vv2 + vss2);
+                        re.Add(new ULongPointData((ulong)vv, (ulong)vv2));
+                        
                     }
                 }
                 return re as List<T>;
@@ -1505,15 +1508,18 @@ namespace Cdy.Tag
                     var vv2 = (int)memory.ReadInt32();
                     var vv3 = (int)memory.ReadInt32();
                     re.Add(new IntPoint3Data(vv, vv2,vv3));
-                    for (int i = 3; i < count - 2; i = i + 3)
+                    for (int i = 1; i < count; i++)
                     {
                         var vss = (int)memory.ReadSInt32();
                         var vss2 = (int)memory.ReadSInt32();
                         var vss3 = (int)memory.ReadSInt32();
-                        re.Add(new IntPoint3Data((int)(vv + vss), (int)(vv2 + vss2), (int)(vv3 + vss3)));
-                        vv = vss;
-                        vv2 = vss2;
-                        vv3 = vss3;
+
+                        vv = (vv + vss);
+                        vv2 = (vv2 + vss2);
+                        vv3 = (vv3 + vss3);
+
+                        re.Add(new IntPoint3Data((int)vv, (int)vv2, (int)vv3));
+                       
                     }
                 }
                 return re as List<T>;
@@ -1527,15 +1533,18 @@ namespace Cdy.Tag
                     var vv2 = (int)memory.ReadInt32();
                     var vv3 = (int)memory.ReadInt32();
                     re.Add(new UIntPoint3Data((uint)vv, (uint)vv2, (uint)vv3));
-                    for (int i = 3; i < count - 2; i = i + 3)
+                    for (int i = 1; i < count; i++)
                     {
                         var vss = (int)memory.ReadSInt32();
                         var vss2 = (int)memory.ReadSInt32();
                         var vss3 = (int)memory.ReadSInt32();
-                        re.Add(new UIntPoint3Data((uint)(vv + vss), (uint)(vv2 + vss2), (uint)(vv3 + vss3)));
-                        vv = vss;
-                        vv2 = vss2;
-                        vv3 = vss3;
+
+                        vv = (vv + vss);
+                        vv2 = (vv2 + vss2);
+                        vv3 = (vv3 + vss3);
+
+                        re.Add(new UIntPoint3Data((uint)vv, (uint)vv2, (uint)vv3));
+                       
                     }
                 }
                 return re as List<T>;
@@ -1549,15 +1558,19 @@ namespace Cdy.Tag
                     var vv2 = (long)memory.ReadInt64();
                     var vv3 = (long)memory.ReadInt64();
                     re.Add(new LongPoint3Data((long)vv, (long)vv2, (long)vv3));
-                    for (int i = 3; i < count - 2; i = i + 3)
+                    for (int i = 1; i < count; i++)
                     {
                         var vss = memory.ReadInt64();
                         var vss2 = memory.ReadInt64();
                         var vss3 = memory.ReadInt64();
-                        re.Add(new LongPoint3Data((long)(vv + vss), (long)(vv2 + vss2), (long)(vv3 + vss3)));
-                        vv = vss;
-                        vv2 = vss2;
-                        vv3 = vss3;
+                        vv = (vv + vss);
+                        vv2 = (vv2 + vss2);
+                        vv3 = (vv3 + vss3);
+
+                        re.Add(new LongPoint3Data((long)vv, (long)vv2, (long)vv3));
+                        //vv = vss;
+                        //vv2 = vss2;
+                        //vv3 = vss3;
                     }
                 }
                 return re as List<T>;
@@ -1571,15 +1584,18 @@ namespace Cdy.Tag
                     var vv2 = (long)memory.ReadInt64();
                     var vv3 = (long)memory.ReadInt64();
                     re.Add(new ULongPoint3Data((ulong)vv, (ulong)vv2, (ulong)vv3));
-                    for (int i = 3; i < count - 2; i = i + 3)
+                    for (int i = 1; i < count; i++)
                     {
                         var vss = memory.ReadInt64();
                         var vss2 = memory.ReadInt64();
                         var vss3 = memory.ReadInt64();
-                        re.Add(new ULongPoint3Data((ulong)(vv + vss), (ulong)(vv2 + vss2), (ulong)(vv3 + vss3)));
-                        vv = vss;
-                        vv2 = vss2;
-                        vv3 = vss3;
+                        vv = (vv + vss);
+                        vv2 = (vv2 + vss2);
+                        vv3 = (vv3 + vss3);
+                        re.Add(new ULongPoint3Data((ulong)vv, (ulong)vv2, (ulong)vv3));
+                        //vv = vss;
+                        //vv2 = vss2;
+                        //vv3 = vss3;
                     }
                 }
                 return re as List<T>;

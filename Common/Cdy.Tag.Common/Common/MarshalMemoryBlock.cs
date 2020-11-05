@@ -1632,6 +1632,28 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="offset"></param>
+        /// <param name="encoding"></param>
+        /// <returns></returns>
+        public string ReadStringbyFixSize(long offset, Encoding encoding)
+        {
+            var len = ReadByte(offset);
+            mPosition = offset + Const.StringSize;
+            if (IsCrossDataBuffer(offset + 1, len))
+            {
+                return encoding.GetString(ReadBytesInner(offset + 1, len));
+            }
+            else
+            {
+                long ost;
+                var hd = RelocationAddress(offset, out ost);
+                return new string((sbyte*)hd, (int)ost + 1, len, encoding);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
         /// <returns></returns>
         public string ReadString(long offset)
         {
@@ -1983,6 +2005,15 @@ namespace Cdy.Tag
         public string ReadString()
         {
             return ReadString(mPosition, Encoding.Unicode);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public string ReadStringbyFixSize()
+        {
+            return ReadStringbyFixSize(mPosition, Encoding.Unicode);
         }
 
         /// <summary>

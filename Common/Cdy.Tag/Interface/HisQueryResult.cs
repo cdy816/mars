@@ -45,6 +45,8 @@ namespace Cdy.Tag
 
         private int mSize;
 
+        private List<string> mStringCach;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -223,6 +225,9 @@ namespace Cdy.Tag
             switch(mDataType)
             {
                 case 0:
+                    Marshal.WriteByte(handle + mPosition, (byte)(((bool)value)?1:0));
+                    mPosition++;
+                    break;
                 case 1:
                     Marshal.WriteByte(handle+mPosition, (byte)value);
                     //mDataBuffer[mPosition] = (byte)value;
@@ -883,19 +888,25 @@ namespace Cdy.Tag
                     break;
                 case 11:
 
-                    int cc = 0;
-                    int pos = 0;
-                    while (true)
+                    if(mStringCach!=null)
                     {
-                        if (cc >= index)
-                        {
-                            break;
-                        }
-                        //pos += (mDataBuffer[pos]+1);
-                        pos += MemoryHelper.ReadByte((void*)handle, pos) + 1;
-                        cc++;
+                        re =mStringCach[index];
                     }
-                    re = new string((char*)handle, pos + 1, MemoryHelper.ReadByte((void*)handle, pos));
+                    else
+                    {
+                        mStringCach = new List<string>(mCount);
+                        int cc = 0;
+                        int pos = 0;
+                        int len = 0;
+                        while (cc<this.mCount)
+                        {
+                            len = MemoryHelper.ReadByte((void*)handle, pos);
+                            mStringCach.Add(new string((sbyte*)handle, pos + 1, len, Encoding.Unicode));
+                            pos += len + 1;
+                            cc++;
+                        }
+                        re = mStringCach[index];
+                    }
                     break;
                 case 12:
                     var x = MemoryHelper.ReadInt32((void*)handle, index * 8);
@@ -947,7 +958,7 @@ namespace Cdy.Tag
                     re = MemoryHelper.ReadShort((void*)handle, index*2);
                     break;
                 case 3:
-                    re = MemoryHelper.ReadShort((void*)handle, index * 2);
+                    re = MemoryHelper.ReadUShort((void*)handle, index * 2);
                     break;
                 case 4:
                     re = MemoryHelper.ReadInt32((void*)handle, index * 4);
@@ -972,19 +983,26 @@ namespace Cdy.Tag
                     break;
                 case 11:
 
-                    int cc = 0;
-                    int pos = 0;
-                    while(true)
+                    if (mStringCach != null)
                     {
-                        if(cc>=index)
-                        {
-                            break;
-                        }
-                        //pos += (mDataBuffer[pos]+1);
-                        pos += MemoryHelper.ReadByte((void*)handle, pos) + 1;
-                        cc++;
+                         re = mStringCach[index];
                     }
-                    re = new string((char*)handle, pos+1, MemoryHelper.ReadByte((void*)handle, pos));
+                    else
+                    {
+                        mStringCach = new List<string>(mCount);
+                        int cc = 0;
+                        int pos = 0;
+                        int len = 0;
+                        while (cc < this.mCount)
+                        {
+                            len = MemoryHelper.ReadByte((void*)handle, pos);
+                            mStringCach.Add(new string((sbyte*)handle, pos + 1, len, Encoding.Unicode));
+                            pos += len + 1;
+                            cc++;
+                        }
+                        re = mStringCach[index];
+                    }
+
                     break;
                 case 12:
                     var x = MemoryHelper.ReadInt32((void*)handle, index * 8);

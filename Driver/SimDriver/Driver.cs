@@ -80,7 +80,7 @@ namespace SimDriver
         {
             get
             {
-                return new string[] { "cos", "sin", "step","steppoint", "square" };
+                return new string[] { "cos", "sin", "step","steppoint", "square","datetime" };
             }
         }
 
@@ -104,7 +104,7 @@ namespace SimDriver
         /// <param name="tagQuery"></param>
         private void InitTagCach(IRealTagProduct tagQuery)
         {
-            mTagIdCach = tagQuery.GetTagsByLinkAddress(new List<string>() { "Sim:cos", "Sim:sin", "Sim:step", "Sim:steppoint", "Sim:square" });
+            mTagIdCach = tagQuery.GetTagsByLinkAddress(new List<string>() { "Sim:cos", "Sim:sin", "Sim:step", "Sim:steppoint", "Sim:square","Sim:datetime" });
 
             mTagHisValueService = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
 
@@ -191,6 +191,10 @@ namespace SimDriver
                     else if (vv.Key == "Sim:square")
                     {
                         mTagService.SetTagValue(vv.Value, mBoolNumber);
+                    }
+                    else if (vv.Key == "Sim:datetime")
+                    {
+                        mTagService.SetTagValue(vv.Value, DateTime.Now);
                     }
                 });
                 mTagService.SubmiteNotifyChanged();

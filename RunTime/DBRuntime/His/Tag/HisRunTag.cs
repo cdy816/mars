@@ -209,6 +209,15 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        public virtual bool CheckValueChangeToLastRecordValue(void* startMemory,long offset)
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="count"></param>
         /// <param name="tim"></param>
         public virtual void UpdateValue2(int count, int tim)
@@ -237,6 +246,17 @@ namespace Cdy.Tag
             Count = ++Count > MaxCount ? MaxCount : Count;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tim"></param>
+        public void UpdateChangedValue(int tim)
+        {
+            if (CheckValueChangeToLastRecordValue((void*)RealMemoryPtr , RealValueAddr))
+            {
+                UpdateValue2(tim);
+            }
+        }
         
 
         #endregion ...Methods...

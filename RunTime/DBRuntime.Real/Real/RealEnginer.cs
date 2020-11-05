@@ -140,6 +140,7 @@ namespace Cdy.Tag
                     case TagType.Long:
                     case TagType.ULong:
                     case TagType.Double:
+                    case TagType.DateTime:
                         msize += 17;
                         break;
                     case TagType.IntPoint:
@@ -400,6 +401,31 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="addr"></param>
+        /// <param name="value"></param>
+        public void SetValueByAddr(long addr, ushort value)
+        {
+            MemoryHelper.WriteUShort(mMHandle, addr, value);
+            MemoryHelper.WriteByte(mMHandle, addr + 10, 0);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        public void SetValueByAddr(long addr, ushort value, byte quality, DateTime time)
+        {
+            MemoryHelper.WriteUShort(mMHandle, addr, value);
+            MemoryHelper.WriteDateTime(mMHandle, addr + 2, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 10, quality);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
         /// <param name="time"></param>
         public void UpdateShortValueTimeByAddr(long addr, DateTime time)
         {
@@ -427,6 +453,31 @@ namespace Cdy.Tag
         public void SetValueByAddr(long addr, int value, byte quality, DateTime time)
         {
             MemoryHelper.WriteInt32(mMHandle, addr, value);
+            MemoryHelper.WriteDateTime(mMHandle, addr + 4, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 12, quality); ;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="value"></param>
+        public void SetValueByAddr(long addr, uint value)
+        {
+            MemoryHelper.WriteUInt32(mMHandle, addr, value);
+            MemoryHelper.WriteByte(mMHandle, addr + 12, 0);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        public void SetValueByAddr(long addr, uint value, byte quality, DateTime time)
+        {
+            MemoryHelper.WriteUInt32(mMHandle, addr, value);
             MemoryHelper.WriteDateTime(mMHandle, addr + 4, time);
             MemoryHelper.WriteByte(mMHandle, addr + 12, quality); ;
         }
@@ -476,7 +527,30 @@ namespace Cdy.Tag
             MemoryHelper.WriteByte(mMHandle, addr + 16, quality);
         }
 
- 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="value"></param>
+        public void SetValueByAddr(long addr, ulong value)
+        {
+            MemoryHelper.WriteUInt64(mMHandle, addr, value);
+            MemoryHelper.WriteByte(mMHandle, addr + 16, 0);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        public void SetValueByAddr(long addr, ulong value, byte quality, DateTime time)
+        {
+            MemoryHelper.WriteUInt64(mMHandle, addr, value);
+            MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 16, quality);
+        }
 
         /// <summary>
         /// 
@@ -591,10 +665,10 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void SetValueByAddr(long addr, string value)
         {
-            var sval = Encoding.Unicode.GetBytes(value);
             //字符串存储内容：长度+内容
-            MemoryHelper.WriteByte(mMHandle, addr, (byte)sval.Length);
-            System.Buffer.BlockCopy(sval, 0, mMemory, (int)addr+1, sval.Length);
+            var val = Encoding.Unicode.GetBytes(value);
+            MemoryHelper.WriteByte(mMHandle, addr, (byte)val.Length);
+            System.Buffer.BlockCopy(value.ToCharArray(), 0, mMemory, (int)addr+1, value.Length);
             MemoryHelper.WriteByte(mMHandle, addr+Const.StringSize + 8, 0);
         }
 
@@ -617,9 +691,9 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public void SetValueByAddr(long addr, string value, byte quality, DateTime time)
         {
-            var sval = Encoding.Unicode.GetBytes(value);
-            MemoryHelper.WriteByte(mMHandle, addr, (byte)sval.Length);
-            System.Buffer.BlockCopy(sval, 0, mMemory, (int)addr+1, sval.Length);
+            var val = Encoding.Unicode.GetBytes(value);
+            MemoryHelper.WriteByte(mMHandle, addr, (byte)val.Length);
+            System.Buffer.BlockCopy(val, 0, mMemory, (int)addr+1, val.Length);
             MemoryHelper.WriteDateTime(mMHandle, addr+ Const.StringSize, time);
             MemoryHelper.WriteByte(mMHandle, addr+Const.StringSize + 8, quality); 
         }
@@ -1727,10 +1801,10 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        public string ReadStringValueByAddr(long addr, Encoding encoding,out DateTime time, out byte quality)
+        public string ReadStringValueByAddr(long addr,out DateTime time, out byte quality)
         {
             int len = MemoryHelper.ReadByte((sbyte*)mMHandle, addr);
-            var re = new string((sbyte*)mMHandle, (int)addr+1, len, encoding);
+            var re = new string((sbyte*)mMHandle, (int)addr+1, len, Encoding.Unicode);
             time = MemoryHelper.ReadDateTime(mMHandle, addr+ Const.StringSize);
             quality = MemoryHelper.ReadByte(mMHandle, addr + Const.StringSize + 8);
             return re;
@@ -2116,11 +2190,6 @@ namespace Cdy.Tag
             return new UIntPoint3Data(MemoryHelper.ReadUInt32(mMHandle, addr), MemoryHelper.ReadUInt32(mMHandle, addr + 4), MemoryHelper.ReadUInt32(mMHandle, addr + 8));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="addr"></param>
-        /// <returns></returns>
         public UIntPoint3Data ReadUIntPoint3ValueByAddr(long addr)
         {
             return new UIntPoint3Data(MemoryHelper.ReadUInt32(mMHandle, addr), MemoryHelper.ReadUInt32(mMHandle, addr + 4), MemoryHelper.ReadUInt32(mMHandle, addr + 8));
@@ -2239,11 +2308,7 @@ namespace Cdy.Tag
             return new LongPoint3Data(MemoryHelper.ReadInt64(mMHandle, addr), MemoryHelper.ReadInt64(mMHandle, addr + 8), MemoryHelper.ReadInt64(mMHandle, addr + 16));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="addr"></param>
-        /// <returns></returns>
+
         public LongPoint3Data ReadLongPoint3ValueByAddr(long addr)
         {
             return new LongPoint3Data(MemoryHelper.ReadInt64(mMHandle, addr), MemoryHelper.ReadInt64(mMHandle, addr + 8), MemoryHelper.ReadInt64(mMHandle, addr + 16));
@@ -2539,7 +2604,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public string ReadStringValue(int id,Encoding encoding)
+        public string ReadStringValue(int id)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
@@ -2555,11 +2620,11 @@ namespace Cdy.Tag
         /// <param name="quality"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public string ReadStringValue(int id, Encoding encoding, out byte quality, out DateTime time)
+        public string ReadStringValue(int id, out byte quality, out DateTime time)
         {
             if (mIdAndAddr.ContainsKey(id))
             {
-                return ReadStringValueByAddr(mIdAndAddr[id],encoding, out time, out quality);
+                return ReadStringValueByAddr(mIdAndAddr[id], out time, out quality);
             }
             quality = byte.MaxValue;
             time = DateTime.MinValue;
@@ -3009,26 +3074,32 @@ namespace Cdy.Tag
         public void SetBoolTagValue(Tagbase tag,object value,byte qulity,DateTime time)
         {
             Take();
-            bool btmp = false;
-            if(tag.Conveter!=null)
+            try
             {
-                btmp = Convert.ToBoolean(tag.Conveter.ConvertTo(value));
-            }
-            else
-            {
-                btmp = Convert.ToBoolean(value);
-            }
+                bool btmp = false;
+                if (tag.Conveter != null)
+                {
+                    btmp = Convert.ToBoolean(tag.Conveter.ConvertTo(value));
+                }
+                else
+                {
+                    btmp = Convert.ToBoolean(value);
+                }
 
-            if(ReadByteValueByAddr(tag.ValueAddress) != (btmp ? (byte)1 : (byte)0))
-            {
-                SetValueByAddr(tag.ValueAddress, btmp ? (byte)1 : (byte)0, qulity, time);
-                NotifyValueChangedToConsumer(tag.Id);
+                if (ReadByteValueByAddr(tag.ValueAddress) != (btmp ? (byte)1 : (byte)0))
+                {
+                    SetValueByAddr(tag.ValueAddress, btmp ? (byte)1 : (byte)0, qulity, time);
+                    NotifyValueChangedToConsumer(tag.Id);
+                }
+                else
+                {
+                    UpdateByteValueTimeByAddr(tag.ValueAddress, time);
+                }
             }
-            else
+            catch(Exception ex)
             {
-                UpdateByteValueTimeByAddr(tag.ValueAddress, time);
+                LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + ex.Message);
             }
-            
         }
 
         /// <summary>
@@ -3041,31 +3112,38 @@ namespace Cdy.Tag
         public void SetByteTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
-            var vtag = tag as NumberTagBase;
-            
-            byte btmp = 0;
-            if (tag.Conveter != null)
+
+            try
             {
-                
-                btmp = Convert.ToByte(tag.Conveter.ConvertTo(value));
-            }
-            else
-            {
-                btmp = Convert.ToByte(value);
-            }
-            if (vtag != null)
-            {
-                if (ReadByteValueByAddr(tag.ValueAddress) != btmp)
+                var vtag = tag as NumberTagBase;
+
+                byte btmp = 0;
+
+                if (tag.Conveter != null)
                 {
-                    SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
-                    NotifyValueChangedToConsumer(tag.Id);
+
+                    btmp = Convert.ToByte(tag.Conveter.ConvertTo(value));
                 }
                 else
                 {
-                    UpdateByteValueTimeByAddr(tag.ValueAddress, time);
+                    btmp = Convert.ToByte(value);
                 }
-
-               
+                if (vtag != null)
+                {
+                    if (ReadByteValueByAddr(tag.ValueAddress) != btmp)
+                    {
+                        SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateByteValueTimeByAddr(tag.ValueAddress, time);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName+" at value "+value.ToString()+" "+ex.Message);
             }
         }
 
@@ -3079,29 +3157,36 @@ namespace Cdy.Tag
         public void SetShortTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
-            var vtag = tag as NumberTagBase;
+            try
+            {
+                var vtag = tag as NumberTagBase;
 
-            short btmp = 0;
-            if (tag.Conveter != null)
-            {
-
-                btmp = Convert.ToInt16(tag.Conveter.ConvertTo(value));
-            }
-            else
-            {
-                btmp = Convert.ToInt16(value);
-            }
-            if (vtag != null)
-            {
-                if (ReadShortValueByAddr(tag.ValueAddress) != btmp)
+                short btmp = 0;
+                if (tag.Conveter != null)
                 {
-                    SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
-                    NotifyValueChangedToConsumer(tag.Id);
+
+                    btmp = Convert.ToInt16(tag.Conveter.ConvertTo(value));
                 }
                 else
                 {
-                    UpdateShortValueTimeByAddr(tag.ValueAddress, time);
+                    btmp = Convert.ToInt16(value);
                 }
+                if (vtag != null)
+                {
+                    if (ReadShortValueByAddr(tag.ValueAddress) != btmp)
+                    {
+                        SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateShortValueTimeByAddr(tag.ValueAddress, time);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + ex.Message);
             }
         }
 
@@ -3115,29 +3200,36 @@ namespace Cdy.Tag
         public void SetUShortTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
-            var vtag = tag as NumberTagBase;
+            try
+            {
+                var vtag = tag as NumberTagBase;
 
-            ushort btmp = 0;
-            if (tag.Conveter != null)
-            {
-
-                btmp = Convert.ToUInt16(tag.Conveter.ConvertTo(value));
-            }
-            else
-            {
-                btmp = Convert.ToUInt16(value);
-            }
-            if (vtag != null)
-            {
-                if (ReadUShortValueByAddr(tag.ValueAddress) != btmp)
+                ushort btmp = 0;
+                if (tag.Conveter != null)
                 {
-                    SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
-                    NotifyValueChangedToConsumer(tag.Id);
+
+                    btmp = Convert.ToUInt16(tag.Conveter.ConvertTo(value));
                 }
                 else
                 {
-                    UpdateShortValueTimeByAddr(tag.ValueAddress, time);
+                    btmp = Convert.ToUInt16(value);
                 }
+                if (vtag != null)
+                {
+                    if (ReadUShortValueByAddr(tag.ValueAddress) != btmp)
+                    {
+                        SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateShortValueTimeByAddr(tag.ValueAddress, time);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + ex.Message);
             }
         }
 
@@ -3151,29 +3243,36 @@ namespace Cdy.Tag
         public void SetIntTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
-            var vtag = tag as NumberTagBase;
+            try
+            {
+                var vtag = tag as NumberTagBase;
 
-            int btmp = 0;
-            if (tag.Conveter != null)
-            {
-
-                btmp = Convert.ToInt32(tag.Conveter.ConvertTo(value));
-            }
-            else
-            {
-                btmp = Convert.ToInt32(value);
-            }
-            if (vtag != null)
-            {
-                if (ReadIntValueByAddr(tag.ValueAddress) != btmp)
+                int btmp = 0;
+                if (tag.Conveter != null)
                 {
-                    SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
-                    NotifyValueChangedToConsumer(tag.Id);
+
+                    btmp = Convert.ToInt32(tag.Conveter.ConvertTo(value));
                 }
                 else
                 {
-                    UpdateIntValueTimeByAddr(tag.ValueAddress, time);
+                    btmp = Convert.ToInt32(value);
                 }
+                if (vtag != null)
+                {
+                    if (ReadIntValueByAddr(tag.ValueAddress) != btmp)
+                    {
+                        SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateIntValueTimeByAddr(tag.ValueAddress, time);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + ex.Message);
             }
         }
 
@@ -3187,29 +3286,36 @@ namespace Cdy.Tag
         public void SetUIntTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
-            var vtag = tag as NumberTagBase;
+            try
+            {
+                var vtag = tag as NumberTagBase;
 
-            uint btmp = 0;
-            if (tag.Conveter != null)
-            {
-
-                btmp = Convert.ToUInt32(tag.Conveter.ConvertTo(value));
-            }
-            else
-            {
-                btmp = Convert.ToUInt32(value);
-            }
-            if (vtag != null)
-            {
-                if (ReadUIntValueByAddr(tag.ValueAddress) != btmp)
+                uint btmp = 0;
+                if (tag.Conveter != null)
                 {
-                    SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
-                    NotifyValueChangedToConsumer(tag.Id);
+
+                    btmp = Convert.ToUInt32(tag.Conveter.ConvertTo(value));
                 }
                 else
                 {
-                    UpdateIntValueTimeByAddr(tag.ValueAddress, time);
+                    btmp = Convert.ToUInt32(value);
                 }
+                if (vtag != null)
+                {
+                    if (ReadUIntValueByAddr(tag.ValueAddress) != btmp)
+                    {
+                        SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateIntValueTimeByAddr(tag.ValueAddress, time);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + ex.Message);
             }
         }
 
@@ -3223,29 +3329,36 @@ namespace Cdy.Tag
         public void SetLongTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
-            var vtag = tag as NumberTagBase;
+            try
+            {
+                var vtag = tag as NumberTagBase;
 
-            long btmp = 0;
-            if (tag.Conveter != null)
-            {
-
-                btmp = Convert.ToInt64(tag.Conveter.ConvertTo(value));
-            }
-            else
-            {
-                btmp = Convert.ToInt64(value);
-            }
-            if (vtag != null)
-            {
-                if (ReadInt64ValueByAddr(tag.ValueAddress) != btmp)
+                long btmp = 0;
+                if (tag.Conveter != null)
                 {
-                    SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
-                    NotifyValueChangedToConsumer(tag.Id);
+
+                    btmp = Convert.ToInt64(tag.Conveter.ConvertTo(value));
                 }
                 else
                 {
-                    UpdateLongValueTimeByAddr(tag.ValueAddress, time);
+                    btmp = Convert.ToInt64(value);
                 }
+                if (vtag != null)
+                {
+                    if (ReadInt64ValueByAddr(tag.ValueAddress) != btmp)
+                    {
+                        SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateLongValueTimeByAddr(tag.ValueAddress, time);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + ex.Message);
             }
         }
 
@@ -3259,29 +3372,36 @@ namespace Cdy.Tag
         public void SetULongTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
-            var vtag = tag as NumberTagBase;
+            try
+            {
+                var vtag = tag as NumberTagBase;
 
-            ulong btmp = 0;
-            if (tag.Conveter != null)
-            {
-
-                btmp = Convert.ToUInt64(tag.Conveter.ConvertTo(value));
-            }
-            else
-            {
-                btmp = Convert.ToUInt64(value);
-            }
-            if (vtag != null)
-            {
-                if (ReadUInt64ValueByAddr(tag.ValueAddress) != btmp)
+                ulong btmp = 0;
+                if (tag.Conveter != null)
                 {
-                    SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
-                    NotifyValueChangedToConsumer(tag.Id);
+
+                    btmp = Convert.ToUInt64(tag.Conveter.ConvertTo(value));
                 }
                 else
                 {
-                    UpdateLongValueTimeByAddr(tag.ValueAddress, time);
+                    btmp = Convert.ToUInt64(value);
                 }
+                if (vtag != null)
+                {
+                    if (ReadUInt64ValueByAddr(tag.ValueAddress) != btmp)
+                    {
+                        SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateLongValueTimeByAddr(tag.ValueAddress, time);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + ex.Message);
             }
         }
 
@@ -3295,29 +3415,36 @@ namespace Cdy.Tag
         public void SetDoubleTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
-            var vtag = tag as FloatingTagBase;
+            try
+            {
+                var vtag = tag as FloatingTagBase;
 
-            double btmp = 0;
-            if (tag.Conveter != null)
-            {
-
-                btmp = Math.Round(Convert.ToDouble(tag.Conveter.ConvertTo(value)),vtag.Precision);
-            }
-            else
-            {
-                btmp = Math.Round(Convert.ToDouble(value),vtag.Precision);
-            }
-            if (vtag != null)
-            {
-                if (ReadDoubleValueByAddr(tag.ValueAddress) != btmp)
+                double btmp = 0;
+                if (tag.Conveter != null)
                 {
-                    SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
-                    NotifyValueChangedToConsumer(tag.Id);
+
+                    btmp = Math.Round(Convert.ToDouble(tag.Conveter.ConvertTo(value)), vtag.Precision);
                 }
                 else
                 {
-                    UpdateDoubleValueTimeByAddr(tag.ValueAddress, time);
+                    btmp = Math.Round(Convert.ToDouble(value), vtag.Precision);
                 }
+                if (vtag != null)
+                {
+                    if (ReadDoubleValueByAddr(tag.ValueAddress) != btmp)
+                    {
+                        SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateDoubleValueTimeByAddr(tag.ValueAddress, time);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + ex.Message);
             }
         }
 
@@ -3331,29 +3458,36 @@ namespace Cdy.Tag
         public void SetFloatTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
-            var vtag = tag as FloatingTagBase;
+            try
+            {
+                var vtag = tag as FloatingTagBase;
 
-            float btmp = 0;
-            if (tag.Conveter != null)
-            {
-
-                btmp = (float)Math.Round(Convert.ToSingle(tag.Conveter.ConvertTo(value)), vtag.Precision);
-            }
-            else
-            {
-                btmp = (float)Math.Round(Convert.ToSingle(value), vtag.Precision);
-            }
-            if (vtag != null)
-            {
-                if (ReadFloatValueByAddr(tag.ValueAddress) != btmp)
+                float btmp = 0;
+                if (tag.Conveter != null)
                 {
-                    SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
-                    NotifyValueChangedToConsumer(tag.Id);
+
+                    btmp = (float)Math.Round(Convert.ToSingle(tag.Conveter.ConvertTo(value)), vtag.Precision);
                 }
                 else
                 {
-                    UpdatefloatValueTimeByAddr(tag.ValueAddress, time);
+                    btmp = (float)Math.Round(Convert.ToSingle(value), vtag.Precision);
                 }
+                if (vtag != null)
+                {
+                    if (ReadFloatValueByAddr(tag.ValueAddress) != btmp)
+                    {
+                        SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdatefloatValueTimeByAddr(tag.ValueAddress, time);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + ex.Message);
             }
         }
 
@@ -3367,24 +3501,31 @@ namespace Cdy.Tag
         public void SetSrtingTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
-            string btmp = "";
-            if (tag.Conveter != null)
+            try
             {
-                btmp = Convert.ToString(tag.Conveter.ConvertTo(value));
-            }
-            else
-            {
-                btmp = Convert.ToString(value);
-            }
+                string btmp = "";
+                if (tag.Conveter != null)
+                {
+                    btmp = Convert.ToString(tag.Conveter.ConvertTo(value));
+                }
+                else
+                {
+                    btmp = Convert.ToString(value);
+                }
 
-            if (ReadStringValueByAddr(tag.ValueAddress) != btmp)
-            {
-                SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
-                NotifyValueChangedToConsumer(tag.Id);
+                if (ReadStringValueByAddr(tag.ValueAddress) != btmp)
+                {
+                    SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
+                    NotifyValueChangedToConsumer(tag.Id);
+                }
+                else
+                {
+                    UpdateStringValueTimeByAddr(tag.ValueAddress, time);
+                }
             }
-            else
+            catch(Exception ex)
             {
-                UpdateStringValueTimeByAddr(tag.ValueAddress, time);
+                LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + ex.Message);
             }
         }
 
@@ -3398,28 +3539,33 @@ namespace Cdy.Tag
         public void SetDateTimeTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
-
-            if (value is DateTime || value is long|| value is ulong)
+            try
             {
-                DateTime btmp;
-                if (tag.Conveter != null)
+                if (value is DateTime || value is long)
                 {
-                    btmp = Convert.ToDateTime(tag.Conveter.ConvertTo(value));
+                    DateTime btmp;
+                    if (tag.Conveter != null)
+                    {
+                        btmp = Convert.ToDateTime(tag.Conveter.ConvertTo(value));
+                    }
+                    else
+                    {
+                        btmp = Convert.ToDateTime(value);
+                    }
+                    if (ReadDateTimeValueByAddr(tag.ValueAddress) != btmp)
+                    {
+                        SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
+                        NotifyValueChangedToConsumer(tag.Id);
+                    }
+                    else
+                    {
+                        UpdateDatetimeValueTimeByAddr(tag.ValueAddress, time);
+                    }
                 }
-                else
-                {
-
-                    btmp = Convert.ToDateTime(value);
-                }
-                if (ReadDateTimeValueByAddr(tag.ValueAddress) != btmp)
-                {
-                    SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
-                    NotifyValueChangedToConsumer(tag.Id);
-                }
-                else
-                {
-                    UpdateDatetimeValueTimeByAddr(tag.ValueAddress, time);
-                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + ex.Message);
             }
         }
 
@@ -3482,107 +3628,115 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetPointValue(Tagbase tag, byte quality, DateTime time, params object[] values)
         {
-            if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-            switch (tag.Type)
+            try
             {
-                case TagType.IntPoint:
-                    var tmp = ReadIntPointValueByAddr(mIdAndAddr[tag.Id]);
-                    if (tmp.X != Convert.ToInt32(values[0]) || tmp.Y != Convert.ToInt32(values[1]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt32(values[0]), Convert.ToInt32(values[1]), quality, time);
-                        NotifyValueChangedToConsumer(tag.Id);
-                    }
-                    else
-                    {
-                        UpdateIntPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
-                case TagType.UIntPoint:
-                    var utmp = ReadUIntPointValueByAddr(mIdAndAddr[tag.Id]);
-                    if (utmp.X != Convert.ToUInt32(values[0]) || utmp.Y != Convert.ToUInt32(values[1]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt32(values[0]), Convert.ToUInt32(values[1]), quality, time);
-                        NotifyValueChangedToConsumer(tag.Id);
-                    }
-                    else
-                    {
-                        UpdateIntPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
-                case TagType.IntPoint3:
-                    var tmp3 = ReadIntPoint3ValueByAddr(mIdAndAddr[tag.Id]);
-                    if (tmp3.X != Convert.ToInt32(values[0]) || tmp3.Y != Convert.ToInt32(values[1]) || tmp3.Y != Convert.ToInt32(values[2]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt32(values[0]), Convert.ToInt32(values[1]), Convert.ToInt32(values[2]), quality, time);
-                        NotifyValueChangedToConsumer(tag.Id);
-                    }
-                    else
-                    {
-                        UpdateIntPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
-                case TagType.UIntPoint3:
-                    var utmp3 = ReadUIntPoint3ValueByAddr(mIdAndAddr[tag.Id]);
-                    if (utmp3.X != Convert.ToUInt32(values[0]) || utmp3.Y != Convert.ToUInt32(values[1]) || utmp3.Y != Convert.ToUInt32(values[2]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt32(values[0]), Convert.ToUInt32(values[1]), Convert.ToUInt32(values[2]), quality, time);
-                        NotifyValueChangedToConsumer(tag.Id);
-                    }
-                    else
-                    {
-                        UpdateIntPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
-                case TagType.LongPoint:
-                    var ltmp = ReadLongPointValueByAddr(mIdAndAddr[tag.Id]);
-                    if (ltmp.X != Convert.ToInt64(values[0]) || ltmp.Y != Convert.ToInt64(values[1]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt64(values[0]), Convert.ToInt64(values[1]), quality, time);
-                    }
-                    else
-                    {
-                        UpdateLongPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
-                case TagType.ULongPoint:
-                    var ultmp = ReadULongPointValueByAddr(mIdAndAddr[tag.Id]);
-                    if (ultmp.X != Convert.ToUInt64(values[0]) || ultmp.Y != Convert.ToUInt64(values[1]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt64(values[0]), Convert.ToUInt64(values[1]), quality, time);
-                        NotifyValueChangedToConsumer(tag.Id);
-                    }
-                    else
-                    {
-                        UpdateLongPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
-                case TagType.LongPoint3:
-                    var ltmp3 = ReadLongPoint3ValueByAddr(mIdAndAddr[tag.Id]);
-                    if (ltmp3.X != Convert.ToInt64(values[0]) || ltmp3.Y != Convert.ToInt64(values[1]) || ltmp3.Z != Convert.ToInt64(values[2]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt64(values[0]), Convert.ToInt64(values[1]), Convert.ToInt64(values[2]), quality, time);
-                        NotifyValueChangedToConsumer(tag.Id);
-                    }
-                    else
-                    {
-                        UpdateLongPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                switch (tag.Type)
+                {
+                    case TagType.IntPoint:
+                        var tmp = ReadIntPointValueByAddr(mIdAndAddr[tag.Id]);
+                        if (tmp.X != Convert.ToInt32(values[0]) || tmp.Y != Convert.ToInt32(values[1]))
+                        {
+                            SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt32(values[0]), Convert.ToInt32(values[1]), quality, time);
+                            NotifyValueChangedToConsumer(tag.Id);
+                        }
+                        else
+                        {
+                            UpdateIntPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                        }
+                        break;
+                    case TagType.UIntPoint:
+                        var utmp = ReadUIntPointValueByAddr(mIdAndAddr[tag.Id]);
+                        if (utmp.X != Convert.ToUInt32(values[0]) || utmp.Y != Convert.ToUInt32(values[1]))
+                        {
+                            SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt32(values[0]), Convert.ToUInt32(values[1]), quality, time);
+                            NotifyValueChangedToConsumer(tag.Id);
+                        }
+                        else
+                        {
+                            UpdateIntPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                        }
+                        break;
+                    case TagType.IntPoint3:
+                        var tmp3 = ReadIntPoint3ValueByAddr(mIdAndAddr[tag.Id]);
+                        if (tmp3.X != Convert.ToInt32(values[0]) || tmp3.Y != Convert.ToInt32(values[1]) || tmp3.Y != Convert.ToInt32(values[2]))
+                        {
+                            SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt32(values[0]), Convert.ToInt32(values[1]), Convert.ToInt32(values[2]), quality, time);
+                            NotifyValueChangedToConsumer(tag.Id);
+                        }
+                        else
+                        {
+                            UpdateIntPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                        }
+                        break;
+                    case TagType.UIntPoint3:
+                        var utmp3 = ReadUIntPoint3ValueByAddr(mIdAndAddr[tag.Id]);
+                        if (utmp3.X != Convert.ToUInt32(values[0]) || utmp3.Y != Convert.ToUInt32(values[1]) || utmp3.Y != Convert.ToUInt32(values[2]))
+                        {
+                            SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt32(values[0]), Convert.ToUInt32(values[1]), Convert.ToUInt32(values[2]), quality, time);
+                            NotifyValueChangedToConsumer(tag.Id);
+                        }
+                        else
+                        {
+                            UpdateIntPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                        }
+                        break;
+                    case TagType.LongPoint:
+                        var ltmp = ReadLongPointValueByAddr(mIdAndAddr[tag.Id]);
+                        if (ltmp.X != Convert.ToInt64(values[0]) || ltmp.Y != Convert.ToInt64(values[1]))
+                        {
+                            SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt64(values[0]), Convert.ToInt64(values[1]), quality, time);
+                        }
+                        else
+                        {
+                            UpdateLongPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                        }
+                        break;
+                    case TagType.ULongPoint:
+                        var ultmp = ReadULongPointValueByAddr(mIdAndAddr[tag.Id]);
+                        if (ultmp.X != Convert.ToUInt64(values[0]) || ultmp.Y != Convert.ToUInt64(values[1]))
+                        {
+                            SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt64(values[0]), Convert.ToUInt64(values[1]), quality, time);
+                            NotifyValueChangedToConsumer(tag.Id);
+                        }
+                        else
+                        {
+                            UpdateLongPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                        }
+                        break;
+                    case TagType.LongPoint3:
+                        var ltmp3 = ReadLongPoint3ValueByAddr(mIdAndAddr[tag.Id]);
+                        if (ltmp3.X != Convert.ToInt64(values[0]) || ltmp3.Y != Convert.ToInt64(values[1]) || ltmp3.Z != Convert.ToInt64(values[2]))
+                        {
+                            SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt64(values[0]), Convert.ToInt64(values[1]), Convert.ToInt64(values[2]), quality, time);
+                            NotifyValueChangedToConsumer(tag.Id);
+                        }
+                        else
+                        {
+                            UpdateLongPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                        }
+                        break;
 
-                case TagType.ULongPoint3:
-                    var ultmp3 = ReadULongPoint3ValueByAddr(mIdAndAddr[tag.Id]);
-                    if (ultmp3.X != Convert.ToUInt64(values[0]) || ultmp3.Y != Convert.ToUInt64(values[1]) || ultmp3.Z != Convert.ToUInt64(values[2]))
-                    {
-                        SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt64(values[0]), Convert.ToUInt64(values[1]), Convert.ToUInt64(values[2]), quality, time);
-                        NotifyValueChangedToConsumer(tag.Id);
-                    }
-                    else
-                    {
-                        UpdateLongPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
-                    }
-                    break;
+                    case TagType.ULongPoint3:
+                        var ultmp3 = ReadULongPoint3ValueByAddr(mIdAndAddr[tag.Id]);
+                        if (ultmp3.X != Convert.ToUInt64(values[0]) || ultmp3.Y != Convert.ToUInt64(values[1]) || ultmp3.Z != Convert.ToUInt64(values[2]))
+                        {
+                            SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt64(values[0]), Convert.ToUInt64(values[1]), Convert.ToUInt64(values[2]), quality, time);
+                            NotifyValueChangedToConsumer(tag.Id);
+                        }
+                        else
+                        {
+                            UpdateLongPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                        }
+                        break;
+                }
+                return true;
             }
-            return true;
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + values.ToString() + " " + ex.Message);
+                return false;
+            }
         }
 
         /// <summary>
@@ -3605,10 +3759,10 @@ namespace Cdy.Tag
         /// <param name="quality"></param>
         /// <param name="values"></param>
         /// <returns></returns>
-        public bool SetPointValue(Tagbase tag, byte quality, params object[] values)
+        public bool SetPointValueAndQuality(Tagbase tag, byte quality, params object[] values)
         {
             DateTime time = DateTime.Now;
-            return SetPointValue(tag, (byte)QualityConst.Good, time, values);
+            return SetPointValue(tag, quality, time, values);
         }
 
         /// <summary>
@@ -3991,7 +4145,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetPointValue(Tagbase tag, params object[] values)
         {
-            return SetPointValue(tag, QualityConst.Good, values);
+            return SetPointValueAndQuality(tag, (byte)QualityConst.Good, values);
         }
 
         /// <summary>
@@ -4232,7 +4386,7 @@ namespace Cdy.Tag
                     case TagType.Short:
                         return ReadShortValueByAddr(tag.ValueAddress, out time, out quality);
                     case TagType.String:
-                        return ReadStringValueByAddr(tag.ValueAddress, Encoding.Unicode, out time, out quality);
+                        return ReadStringValueByAddr(tag.ValueAddress,out time, out quality);
                     case TagType.UInt:
                         return (uint)ReadIntValueByAddr(tag.ValueAddress, out time, out quality);
                     case TagType.ULong:

@@ -510,7 +510,7 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         /// <param name="encoding"></param>
         /// <returns></returns>
-        string ReadStringValue(int id, Encoding encoding);
+        string ReadStringValue(int id);
 
         /// <summary>
         /// 
@@ -520,7 +520,7 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        string ReadStringValue(int id, Encoding encoding, out byte qulity, out DateTime time);
+        string ReadStringValue(int id, out byte qulity, out DateTime time);
 
         /// <summary>
         /// 

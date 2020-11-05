@@ -819,6 +819,19 @@ namespace Cdy.Tag
             return new string((sbyte*)mHandles, (int)offset + 1, len, encoding);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="encoding"></param>
+        /// <returns></returns>
+        public virtual string ReadStringByFixSize(long offset,Encoding encoding)
+        {
+            var len = ReadByte(offset);
+            mPosition = offset + Const.StringSize;
+            return new string((sbyte*)mHandles, (int)offset + 1, len, encoding);
+        }
+
 
         /// <summary>
         /// 
@@ -1010,6 +1023,28 @@ namespace Cdy.Tag
             for (int i = 0; i < count; i++)
             {
                 re.Add(ReadString());
+            }
+            return re;
+        }
+
+        public string ReadStringByFixSize()
+        {
+            return ReadStringByFixSize(mPosition, Encoding.Unicode);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public List<string> ReadStringsByFixSize(long offset, int count)
+        {
+            mPosition = (int)offset;
+            List<string> re = new List<string>(count);
+            for (int i = 0; i < count; i++)
+            {
+                re.Add(ReadStringByFixSize());
             }
             return re;
         }

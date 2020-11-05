@@ -607,7 +607,7 @@ namespace Cdy.Tag
             source.Position = valaddr;
             for (int ic=0;ic< valuecount; ic++)
             {
-                vals.Add(source.ReadString());
+                vals.Add(source.ReadStringbyFixSize());
             }
 
             var qq = source.ReadBytes(valuecount);

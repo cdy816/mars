@@ -948,6 +948,18 @@ namespace Cdy.Tag
             return re;
         }
 
+
+        public static List<byte> ToByteList(this MemorySpan memory)
+        {
+            List<byte> re = new List<byte>((int)(memory.Length));
+            memory.Position = 0;
+            while (memory.Position < memory.Length)
+            {
+                re.Add(memory.ReadByte());
+            }
+            return re;
+        }
+
         /// <summary>
         /// 
         /// </summary>

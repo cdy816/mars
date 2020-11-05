@@ -18,40 +18,31 @@ namespace Cdy.Tag
     /// </summary>
     public class DoubleHisRunTag:HisRunTag
     {
+        private double mLastValue = double.MinValue;
         /// <summary>
         /// 
         /// </summary>
         public override byte SizeOfValue => 8;
 
-        //private double mLastValue = -1;
-        //private DateTime mHisTime;
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="count"></param>
-        ///// <param name="tim"></param>
-        //public unsafe override void UpdateValue2(int count, int tim)
-        //{
-        //    base.UpdateValue2(count, tim);
-        //    if (this.Id == 1)
-        //    {
-        //        double dtmp = MemoryHelper.ReadDouble((void*)(RealMemoryPtr), RealValueAddr);
-        //        var mQuality = RealMemoryAddr[RealValueAddr + SizeOfValue + 8];
-        //        if (mLastValue != dtmp)
-        //        {
-        //            mLastValue = dtmp;
-        //            LoggerService.Service.Info("DoubleHisTag", mLastValue + "last time:" + mHisTime.ToString("yyyy-MM-dd HH:mm:ss.fff"), ConsoleColor.Green);
-        //        }
-        //        else
-        //        {
-        //            var dt = DateTime.Now;
-        //            LoggerService.Service.Info("DoubleHisTag", dtmp + " = " + mLastValue + "last time:" + mHisTime.ToString("yyyy-MM-dd HH:mm:ss.fff"), ConsoleColor.Red);
-        //        }
-
-        //        mHisTime = DateTime.Now;
-        //    }
-        //}
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="startMemory"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
+        {
+            var val = MemoryHelper.ReadDouble(startMemory, offset);
+            if (val != mLastValue || mLastValue == double.MinValue)
+            {
+                mLastValue = val;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
     }
 }

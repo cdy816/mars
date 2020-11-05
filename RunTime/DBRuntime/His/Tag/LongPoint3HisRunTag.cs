@@ -17,6 +17,29 @@ namespace Cdy.Tag
     /// </summary>
     public class LongPoint3HisRunTag:HisRunTag
     {
+        private long x = long.MinValue, y = long.MinValue, z = long.MinValue;
         public override byte SizeOfValue => 24;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="startMemory"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
+        {
+            long xx = MemoryHelper.ReadInt64(startMemory, offset), yy = MemoryHelper.ReadInt64(startMemory, offset + 8), zz = MemoryHelper.ReadInt64(startMemory, offset + 16);
+            if (xx != x || yy != y || zz != z || xx == long.MinValue)
+            {
+                x = xx;
+                y = yy;
+                z = zz;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }

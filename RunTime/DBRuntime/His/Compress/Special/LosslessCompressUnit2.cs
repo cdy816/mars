@@ -91,6 +91,8 @@ namespace Cdy.Tag
                     return Compress<long>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Double:
                      return Compress<double>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.DateTime:
+                    return Compress<DateTime>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Float:
                     return Compress<float>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.String:
@@ -371,6 +373,31 @@ namespace Cdy.Tag
                             {
                                 mVarintMemory.WriteSInt64((long)(id - ulsval));
                                 ulsval = id;
+                            }
+                        }
+                        else
+                        {
+                            ig = emptyIds.ReadIndex <= emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
+                        }
+                    }
+                    break;
+                case TagType.DateTime:
+                    ulong udlsval = 0;
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (i != ig)
+                        {
+                            var id = source.ReadULong((int)offset + i * 8);
+                            if (isFirst)
+                            {
+                                mVarintMemory.WriteInt64(id);
+                                isFirst = false;
+                                udlsval = id;
+                            }
+                            else
+                            {
+                                mVarintMemory.WriteSInt64((long)(id - udlsval));
+                                udlsval = id;
                             }
                         }
                         else
@@ -794,30 +821,30 @@ namespace Cdy.Tag
         /// <returns></returns>
         protected Memory<byte> CompressBoolValues(IMemoryFixedBlock source, long offset, int totalcount, CustomQueue<int> emptyIds)
         {
-            List<short> re = new List<short>(totalcount);
+            List<byte> re = new List<byte>(totalcount);
             byte bval = source.ReadByte((int)offset);
-            short scount = 1;
+            byte scount = 1;
             int ig = -1;
             ig = emptyIds.ReadIndex <= emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
             //emptyIds.TryDequeue(out ig);
 
-            short sval = (short)(bval << 15);
+            byte sval = (byte)(bval << 7);
             for(int i=0;i< totalcount; i++)
             {
                 if (i != ig)
                 {
                     var btmp = source.ReadByte((int)(offset + i));
-                    if(btmp == bval)
+                    if(btmp == bval && scount<127)
                     {
                         scount++;
                     }
                     else
                     {
-                        sval = (short)(sval | scount);
+                        sval = (byte)(sval | scount);
                         re.Add(sval);
                         scount = 1;
                         bval = btmp;
-                        sval = (short)(bval << 15);
+                        sval = (byte)(bval << 7);
                     }
                 }
                 else
@@ -826,7 +853,7 @@ namespace Cdy.Tag
                     //   emptyIds.TryDequeue(out ig);
                 }
             }
-            sval = (short)(sval | scount);
+            sval = (byte)(sval | scount);
             re.Add(sval);
 
             mMarshalMemory.Position = 0;
@@ -1044,7 +1071,7 @@ namespace Cdy.Tag
                     rsize += cqus.Length;
                     break;
                 case TagType.String:
-                    var vals = source.ReadStrings(count * tlen + (int)sourceAddr, count);
+                    var vals = source.ReadStringsByFixSize(count * tlen + (int)sourceAddr, count);
                     var qus = source.ReadBytes(count);
                     var sres = CompressValues(vals, emptys);
                     target.Write(sres.Length);
@@ -1237,13 +1264,14 @@ namespace Cdy.Tag
                 List<short> re = new List<short>();
                 using (ProtoMemory memory = new ProtoMemory(value))
                 {
-                    var vv = (short)memory.ReadInt32();
+                    var vv = (short)memory.ReadSInt32();
                     re.Add(vv);
                     for (int i = 1; i < count; i++)
                     {
                         var vss = (short)memory.ReadSInt32();
-                        re.Add((short)(vv + vss));
-                        vv = vss;
+                        vv = (short)(vv + vss);
+                        re.Add((short)(vv));
+                       
                     }
                 }
                 return re as List<T>;
@@ -1254,13 +1282,14 @@ namespace Cdy.Tag
                 List<ushort> re = new List<ushort>();
                 using (ProtoMemory memory = new ProtoMemory(value))
                 {
-                    var vv = (short)memory.ReadInt32();
+                    var vv = (ushort)memory.ReadSInt32();
                     re.Add((ushort)vv);
                     for (int i = 1; i < count; i++)
                     {
                         var vss = (short)memory.ReadSInt32();
-                        re.Add((ushort)(vv + vss));
-                        vv = vss;
+                        vv = (ushort)(vv + vss);
+                        re.Add((ushort)(vv));
+                       
                     }
                 }
                 return re as List<T>;
@@ -1276,8 +1305,9 @@ namespace Cdy.Tag
                     for (int i = 1; i < count; i++)
                     {
                         var vss = (int)memory.ReadSInt32();
-                        re.Add((int)(vv + vss));
-                        vv = vss;
+                        vv= (int)(vv + vss);
+                        re.Add(vv);
+                  
                     }
                 }
                 return re as List<T>;
@@ -1287,13 +1317,13 @@ namespace Cdy.Tag
                 List<uint> re = new List<uint>();
                 using (ProtoMemory memory = new ProtoMemory(value))
                 {
-                    var vv = memory.ReadInt32();
+                    var vv = (uint)memory.ReadInt32();
                     re.Add((uint)vv);
                     for (int i = 1; i < count; i++)
                     {
                         var vss = memory.ReadSInt32();
-                        re.Add((uint)((uint)vv + vss));
-                        vv = vss;
+                        vv = (uint)(vv + vss);
+                        re.Add(vv);
                     }
                 }
                 return re as List<T>;
@@ -1308,8 +1338,9 @@ namespace Cdy.Tag
                     for (int i = 1; i < count; i++)
                     {
                         var vss = (long)memory.ReadSInt64();
-                        re.Add((long)(vv + vss));
-                        vv = vss;
+                        vv = (long)(vv + vss);
+                        re.Add(vv);
+                       
                     }
                 }
                 return re as List<T>;
@@ -1319,13 +1350,13 @@ namespace Cdy.Tag
                 List<ulong> re = new List<ulong>();
                 using (ProtoMemory memory = new ProtoMemory(value))
                 {
-                    var vv = memory.ReadInt64();
-                    re.Add((ulong)vv);
+                    var vv = (ulong)memory.ReadInt64();
+                    re.Add(vv);
                     for (int i = 1; i < count; i++)
                     {
                         var vss = memory.ReadSInt64();
-                        re.Add((ulong)(vv + vss));
-                        vv = vss;
+                        vv = (ulong)((long)vv + vss);
+                        re.Add(vv);
                     }
                 }
                 return re as List<T>;
@@ -1375,12 +1406,12 @@ namespace Cdy.Tag
                 using (MemorySpan block = new MemorySpan(value))
                 {
                     List<bool> re = new List<bool>();
-                    var rtmp = block.ToShortList();
+                    var rtmp = block.ToByteList();
 
                     foreach (var vv in rtmp)
                     {
-                        bool bval = (vv >> 15) > 0;
-                        short bcount = (short)(vv & 0x7FFF);
+                        bool bval = ((vv & 0x80) >> 7) > 0;
+                        byte bcount = (byte)(vv & 0x7F);
                         for (int i = 0; i < bcount; i++)
                         {
                             re.Add(bval);
@@ -1576,7 +1607,13 @@ namespace Cdy.Tag
             Dictionary<int, DateTime> re = new Dictionary<int, DateTime>();
             var count = source.ReadInt();
             var datasize = source.ReadInt();
-                       
+
+            if (datasize <= 0)
+            {
+                valueCount = 0;
+                return re;
+            }
+            
             byte[] datas = source.ReadBytes(datasize);
             var timers = DeCompressTimers(datas, count);
 

@@ -1397,6 +1397,45 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="encoding"></param>
+        /// <returns></returns>
+        public string ReadStringByFixSize(long offset, Encoding encoding)
+        {
+            var len = ReadByte(offset);
+            mPosition = offset + Const.StringSize;
+            return encoding.GetString(ReadBytesInner(offset + 1, len));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public string ReadStringByFixSize()
+        {
+            return ReadStringByFixSize(mPosition, Encoding.Unicode);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public List<string> ReadStringsByFixSize(long offset, int count)
+        {
+            mPosition = offset;
+            List<string> re = new List<string>(count);
+            for (int i = 0; i < count; i++)
+            {
+                re.Add(ReadStringByFixSize());
+            }
+            return re;
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

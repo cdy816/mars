@@ -668,7 +668,7 @@ namespace Cdy.Tag
             //字符串存储内容：长度+内容
             var val = Encoding.Unicode.GetBytes(value);
             MemoryHelper.WriteByte(mMHandle, addr, (byte)val.Length);
-            System.Buffer.BlockCopy(value.ToCharArray(), 0, mMemory, (int)addr+1, value.Length);
+            System.Buffer.BlockCopy(val, 0, mMemory, (int)addr+1, val.Length);
             MemoryHelper.WriteByte(mMHandle, addr+Const.StringSize + 8, 0);
         }
 

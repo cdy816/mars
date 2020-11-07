@@ -18,13 +18,13 @@ namespace Cdy.Tag
 
         #region ... Variables  ...
 
-        string debugFormate = "Debug {0} {1} {2}";
+        string debugFormate = "Debug  {0,-16} {1,-26} {2}";
 
-        string infoFormate = "Info {0} {1} {2}";
+        string infoFormate  = "Info   {0,-16} {1,-26} {2}";
 
-        string erroFormate = "Erro {0} {1} {2}";
+        string erroFormate  = "Erro   {0,-16} {1,-26} {2}";
 
-        string warnFormate = "Warn {0} {1} {2}";
+        string warnFormate  = "Warn   {0,-16} {1,-26} {2}";
 
         #endregion ...Variables...
 
@@ -49,13 +49,13 @@ namespace Cdy.Tag
         /// <param name="msg"></param>
         public void Debug(string name, string msg)
         {
-            Console.WriteLine(string.Format(debugFormate, DateTime.Now.ToString(), name, msg));
+            Console.WriteLine(string.Format(debugFormate, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), name, msg));
         }
 
         public void Debug(string name, string msg, object parameter)
         {
             Console.ForegroundColor = (ConsoleColor)(parameter);
-            Console.WriteLine(string.Format(debugFormate, DateTime.Now.ToString(), name, msg));
+            Console.WriteLine(string.Format(debugFormate, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), name, msg));
             Console.ResetColor();
         }
 
@@ -67,7 +67,7 @@ namespace Cdy.Tag
         public void Erro(string name, string msg)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(string.Format(erroFormate, DateTime.Now.ToString(), name, msg));
+            Console.WriteLine(string.Format(erroFormate, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), name, msg));
             Console.ResetColor();
         }
 
@@ -102,7 +102,7 @@ namespace Cdy.Tag
         public void Warn(string name, string msg)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine(string.Format(warnFormate, DateTime.Now.ToString(), name, msg));
+            Console.WriteLine(string.Format(warnFormate, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), name, msg));
             Console.ResetColor();
         }
 

@@ -616,22 +616,24 @@ namespace DBStudio
         /// <returns></returns>
         private static string GetDbManagerHelpString()
         {
+            string str = "{0,-10} {1,-50} {2}";
             StringBuilder re = new StringBuilder();
             re.AppendLine();
-            re.AppendLine("save                                                 // save database ");
-            re.AppendLine("start                                                 // start database ");
-            re.AppendLine("restart                                                 // restart database ");
-            re.AppendLine("stop                                                 // stop database ");
-            re.AppendLine("add       [tagtype] [tagname] [linkaddress] [repeat] // add numbers tag to database ");
-            re.AppendLine("remove    [tagname]                                  // remove a tag");
-            re.AppendLine("clear                                                // clear all tags in database");
-            re.AppendLine("update    [tagname] [propertyname] [propertyvalue]   // update value of a poperty in a tag");
-            re.AppendLine("updatehis [tagname] [propertyname] [propertyvalue]   // update value of a poperty in a tag's his config");
-            re.AppendLine("import    [filename]                                 //import tags from a csvfile");
-            re.AppendLine("export    [filename]                                 //export tags to a csvfile");
-            re.AppendLine("list      [tagtype]                                  //the sumery info of specical type tags or all tags");
-            re.AppendLine("sp        [recordType] [compressType] [enable sim address][double tag number] [float tag number] [long tag number] [int tag number] [bool tag number] [intpoint tag number]   //Quickly generate a specified number of tags for test purposes");
-            re.AppendLine("exit                                                 //exit and back to parent");
+            re.AppendLine(string.Format(str, "save","","// save database "));
+            re.AppendLine(string.Format(str, "start","","// start database "));
+            re.AppendLine(string.Format(str, "restart","","// restart database "));
+            re.AppendLine(string.Format(str, "stop","","// stop database "));
+            re.AppendLine(string.Format(str, "add","[tagtype] [tagname] [linkaddress] [repeat]","// add numbers tag to database "));
+            re.AppendLine(string.Format(str, "remove","[tagname]","// remove a tag"));
+            re.AppendLine(string.Format(str, "clear","","// clear all tags in database"));
+            re.AppendLine(string.Format(str, "update","[tagname] [propertyname] [propertyvalue]","// update value of a poperty in a tag"));
+            re.AppendLine(string.Format(str, "updatehis","[tagname] [propertyname] [propertyvalue]","// update value of a poperty in a tag's his config"));
+            re.AppendLine(string.Format(str, "import","[filename]","// import tags from a csvfile"));
+            re.AppendLine(string.Format(str, "export","[filename]","// export tags to a csvfile"));
+            re.AppendLine(string.Format(str, "list","[tagtype]","// the sumery info of specical type tags or all tags"));
+            re.AppendLine(string.Format(str, "exit", "", "// exit and back to parent"));
+            re.AppendLine(string.Format(str, "sp","[recordType] [compressType] [enable sim address][double tag number] [float tag number] [long tag number] [int tag number] [bool tag number] [intpoint tag number]"," //Quickly generate the specified number of tags for test purposes"));
+            
 
             return re.ToString();
         }
@@ -1331,12 +1333,13 @@ namespace DBStudio
         /// <returns></returns>
         private static string GetHelpString()
         {
+            string str = "{0,-10} {1,-16} {2}";
             StringBuilder re = new StringBuilder();
             re.AppendLine();
-            re.AppendLine("db    [databasename]  // " + Res.Get("GDMsg"));
-            re.AppendLine("list                  // List all exist database");
-            re.AppendLine("exit                  // " + Res.Get("Exit"));
-            re.AppendLine("h                     // " + Res.Get("HMsg"));
+            re.AppendLine( string.Format(str, "db","[databasename]",@"// " + Res.Get("GDMsg")));
+            re.AppendLine(string.Format(str, "list","","// List all exist database"));
+            re.AppendLine(string.Format(str, "exit","","// " + Res.Get("Exit")));
+            re.AppendLine(string.Format(str, "h","","// " + Res.Get("HMsg")));
             return re.ToString();
         }
 

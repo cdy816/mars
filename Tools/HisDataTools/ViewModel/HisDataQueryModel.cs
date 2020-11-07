@@ -468,7 +468,7 @@ namespace HisDataTools.ViewModel
             //    skey = rg.Match(skey).Value;
             //}
 
-            TagList = query.Where(e => e.StartsWith(skey)).Take(10);
+            TagList = query.Where(e => e.StartsWith(skey)).Take(50);
         }
 
         /// <summary>

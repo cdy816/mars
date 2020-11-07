@@ -152,6 +152,11 @@ namespace SimDriver
                     mNumber++;
                     mNumber = mNumber >= (short)360 ? (short)0 : mNumber;
                     mIsSecond = true;
+
+                    if (mNumber % 60 == 0)
+                    {
+                        mBoolNumber = !mBoolNumber;
+                    }
                 }
                 else
                 {
@@ -159,7 +164,7 @@ namespace SimDriver
                 }
 
 
-                if (mNumber % 100 == 0) mBoolNumber = !mBoolNumber;
+               
 
                 double fval = Math.Cos(mNumber / 180.0 * Math.PI);
                 double sval = Math.Sin(mNumber / 180.0 * Math.PI);

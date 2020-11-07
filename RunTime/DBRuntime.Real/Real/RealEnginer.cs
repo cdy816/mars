@@ -376,6 +376,18 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="addr"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void UpdateByteValueTimeAndQualityByAddr(long addr, DateTime time,byte quality)
+        {
+            MemoryHelper.WriteDateTime(mMHandle, addr + 1, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 9, quality);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
         /// <param name="value"></param>
         public void SetValueByAddr(long addr, short value)
         {
@@ -430,6 +442,18 @@ namespace Cdy.Tag
         public void UpdateShortValueTimeByAddr(long addr, DateTime time)
         {
             MemoryHelper.WriteDateTime(mMHandle, addr + 2, time);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void UpdateShortValueTimeAndQualityByAddr(long addr, DateTime time,byte quality)
+        {
+            MemoryHelper.WriteDateTime(mMHandle, addr + 2, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 2+8, quality);
         }
 
         /// <summary>
@@ -496,6 +520,18 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="addr"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void UpdateIntValueTimeAndQualityByAddr(long addr, DateTime time, byte quality)
+        {
+            MemoryHelper.WriteDateTime(mMHandle, addr + 4, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 4 + 8, quality);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
         /// <param name="value"></param>
         public void SetValueByAddr(long addr, long value)
         {
@@ -511,6 +547,18 @@ namespace Cdy.Tag
         public void UpdateLongValueTimeByAddr(long addr, DateTime time)
         {
             MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void UpdateLongValueTimeAndQualityByAddr(long addr, DateTime time, byte quality)
+        {
+            MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 8 + 8, quality);
         }
 
         /// <summary>
@@ -587,6 +635,12 @@ namespace Cdy.Tag
             MemoryHelper.WriteDateTime(mMHandle, addr + 4, time);
         }
 
+        public void UpdatefloatValueTimeAndQualityByAddr(long addr, DateTime time, byte quality)
+        {
+            MemoryHelper.WriteDateTime(mMHandle, addr + 4, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 4 + 8, quality);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -621,6 +675,18 @@ namespace Cdy.Tag
         public void UpdateDoubleValueTimeByAddr(long addr, DateTime time)
         {
             MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void UpdateDoubleValueTimeAndQualityByAddr(long addr, DateTime time, byte quality)
+        {
+            MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 8 + 8, quality);
         }
 
         /// <summary>
@@ -662,6 +728,18 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="addr"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void UpdateDatetimeValueTimeAndQualityByAddr(long addr, DateTime time, byte quality)
+        {
+            MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 8 + 8, quality);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
         /// <param name="value"></param>
         public void SetValueByAddr(long addr, string value)
         {
@@ -680,6 +758,18 @@ namespace Cdy.Tag
         public void UpdateStringValueTimeByAddr(long addr, DateTime time)
         {
             MemoryHelper.WriteDateTime(mMHandle, addr + Const.StringSize, time);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void UpdateStringValueTimeAndQualityByAddr(long addr, DateTime time, byte quality)
+        {
+            MemoryHelper.WriteDateTime(mMHandle, addr + Const.StringSize, time);
+            MemoryHelper.WriteByte(mMHandle, addr + Const.StringSize + 8, quality);
         }
 
         /// <summary>
@@ -729,6 +819,18 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="addr"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void UpdateIntPointValueTimeAndQualityByAddr(long addr, DateTime time, byte quality)
+        {
+            MemoryHelper.WriteDateTime(mMHandle, addr + 8, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 8 + 8, quality);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
         /// <param name="value1"></param>
         /// <param name="value2"></param>
         /// <param name="quality"></param>
@@ -767,6 +869,18 @@ namespace Cdy.Tag
         public void UpdateIntPoint3ValueTimeByAddr(long addr, DateTime time)
         {
             MemoryHelper.WriteDateTime(mMHandle, addr + 12, time);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void UpdateIntPoint3ValueTimeAndQualityByAddr(long addr, DateTime time, byte quality)
+        {
+            MemoryHelper.WriteDateTime(mMHandle, addr + 12, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 12 + 8, quality);
         }
 
         /// <summary>
@@ -818,6 +932,18 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="addr"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void UpdateLongPointValueTimeAndQualityByAddr(long addr, DateTime time, byte quality)
+        {
+            MemoryHelper.WriteDateTime(mMHandle, addr + 16, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 16 + 8, quality);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
         /// <param name="value1"></param>
         /// <param name="value2"></param>
         /// <param name="quality"></param>
@@ -856,6 +982,18 @@ namespace Cdy.Tag
         public void UpdateLongPoint3ValueTimeByAddr(long addr, DateTime time)
         {
             MemoryHelper.WriteDateTime(mMHandle, addr + 24, time);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        public void UpdateLongPoint3ValueTimeAndQualityByAddr(long addr, DateTime time, byte quality)
+        {
+            MemoryHelper.WriteDateTime(mMHandle, addr + 24, time);
+            MemoryHelper.WriteByte(mMHandle, addr + 24 + 8, quality);
         }
 
         /// <summary>
@@ -3093,7 +3231,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    UpdateByteValueTimeByAddr(tag.ValueAddress, time);
+                    UpdateByteValueTimeAndQualityByAddr(tag.ValueAddress, time, qulity);
                 }
             }
             catch(Exception ex)
@@ -3137,7 +3275,7 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        UpdateByteValueTimeByAddr(tag.ValueAddress, time);
+                        UpdateByteValueTimeAndQualityByAddr(tag.ValueAddress, time,qulity);
                     }
                 }
             }
@@ -3180,7 +3318,7 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        UpdateShortValueTimeByAddr(tag.ValueAddress, time);
+                        UpdateShortValueTimeAndQualityByAddr(tag.ValueAddress, time,qulity);
                     }
                 }
             }
@@ -3223,7 +3361,7 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        UpdateShortValueTimeByAddr(tag.ValueAddress, time);
+                        UpdateShortValueTimeAndQualityByAddr(tag.ValueAddress, time,qulity);
                     }
                 }
             }
@@ -3266,7 +3404,7 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        UpdateIntValueTimeByAddr(tag.ValueAddress, time);
+                        UpdateIntValueTimeAndQualityByAddr(tag.ValueAddress, time,qulity);
                     }
                 }
             }
@@ -3309,7 +3447,7 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        UpdateIntValueTimeByAddr(tag.ValueAddress, time);
+                        UpdateIntValueTimeAndQualityByAddr(tag.ValueAddress, time,qulity);
                     }
                 }
             }
@@ -3352,7 +3490,7 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        UpdateLongValueTimeByAddr(tag.ValueAddress, time);
+                        UpdateLongValueTimeAndQualityByAddr(tag.ValueAddress, time,qulity);
                     }
                 }
             }
@@ -3395,7 +3533,7 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        UpdateLongValueTimeByAddr(tag.ValueAddress, time);
+                        UpdateLongValueTimeAndQualityByAddr(tag.ValueAddress, time,qulity);
                     }
                 }
             }
@@ -3438,7 +3576,7 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        UpdateDoubleValueTimeByAddr(tag.ValueAddress, time);
+                        UpdateDoubleValueTimeAndQualityByAddr(tag.ValueAddress, time,qulity);
                     }
                 }
             }
@@ -3481,7 +3619,7 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        UpdatefloatValueTimeByAddr(tag.ValueAddress, time);
+                        UpdatefloatValueTimeAndQualityByAddr(tag.ValueAddress, time,qulity);
                     }
                 }
             }
@@ -3520,7 +3658,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    UpdateStringValueTimeByAddr(tag.ValueAddress, time);
+                    UpdateStringValueTimeAndQualityByAddr(tag.ValueAddress, time,qulity);
                 }
             }
             catch(Exception ex)
@@ -3559,7 +3697,7 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        UpdateDatetimeValueTimeByAddr(tag.ValueAddress, time);
+                        UpdateDatetimeValueTimeAndQualityByAddr(tag.ValueAddress, time,qulity);
                     }
                 }
             }
@@ -3642,7 +3780,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateIntPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                            UpdateIntPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
                         }
                         break;
                     case TagType.UIntPoint:
@@ -3654,7 +3792,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateIntPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                            UpdateIntPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
                         }
                         break;
                     case TagType.IntPoint3:
@@ -3666,7 +3804,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateIntPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                            UpdateIntPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
                         }
                         break;
                     case TagType.UIntPoint3:
@@ -3678,7 +3816,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateIntPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                            UpdateIntPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
                         }
                         break;
                     case TagType.LongPoint:
@@ -3690,7 +3828,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateLongPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                            UpdateLongPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
                         }
                         break;
                     case TagType.ULongPoint:
@@ -3702,7 +3840,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateLongPointValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                            UpdateLongPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
                         }
                         break;
                     case TagType.LongPoint3:
@@ -3714,7 +3852,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateLongPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                            UpdateLongPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
                         }
                         break;
 
@@ -3727,7 +3865,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateLongPoint3ValueTimeByAddr(mIdAndAddr[tag.Id], time);
+                            UpdateLongPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
                         }
                         break;
                 }

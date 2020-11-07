@@ -829,13 +829,14 @@ namespace Cdy.Tag
                                 if (qus >= 100)
                                 {
                                     mVarintMemory.WriteSInt32(id);
+                                    ssval = id;
                                     continue;
                                 }
                             }
 
                             if (isFirst)
                             {
-                                mVarintMemory.WriteSInt32(id);
+                                mVarintMemory.WriteSInt32(id- ssval);
                                 isFirst = false;
                                 ssval = id;
                             }
@@ -876,13 +877,14 @@ namespace Cdy.Tag
                                 if (qus >= 100)
                                 {
                                     mVarintMemory.WriteSInt32(id);
+                                    ussval = id;
                                     continue;
                                 }
                             }
 
                             if (isFirst)
                             {
-                                mVarintMemory.WriteSInt32(id);
+                                mVarintMemory.WriteSInt32(id - ussval);
                                 isFirst = false;
                                 ussval = id;
                             }
@@ -897,6 +899,7 @@ namespace Cdy.Tag
                                 {
                                     emptys2.Insert(i);
                                 }
+
                             }
                         }
                         else
@@ -909,6 +912,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.Int:
                     int isval = 0;
+                    bool hasdata = false;
                     for (int i = 0; i < count; i++)
                     {
                         if (i != ig)
@@ -923,13 +927,20 @@ namespace Cdy.Tag
                                 if (qus >= 100)
                                 {
                                     mVarintMemory.WriteInt32(id);
+                                    isval = id;
+                                    hasdata = true;
                                     continue;
                                 }
                             }
 
                             if (isFirst)
                             {
-                                mVarintMemory.WriteInt32(id);
+                                if(hasdata)
+                                mVarintMemory.WriteSInt32(id - isval);
+                                else
+                                {
+                                    mVarintMemory.WriteInt32(id);
+                                }
                                 isFirst = false;
                                 isval = id;
                             }
@@ -955,6 +966,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.UInt:
                     uint usval = 0;
+                    hasdata = false;
                     for (int i = 0; i < count; i++)
                     {
                         if (i != ig)
@@ -969,13 +981,22 @@ namespace Cdy.Tag
                                 if (qus >= 100)
                                 {
                                     mVarintMemory.WriteInt32(id);
+                                    usval = id;
+                                    hasdata = true;
                                     continue;
                                 }
                             }
 
                             if (isFirst)
                             {
-                                mVarintMemory.WriteInt32(id);
+                                if (hasdata)
+                                {
+                                    mVarintMemory.WriteSInt32((int)(id - usval));
+                                }
+                                else
+                                {
+                                    mVarintMemory.WriteInt32(id);
+                                }
                                 isFirst = false;
                                 usval = id;
                             }
@@ -1001,6 +1022,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.Long:
                     long lsval = 0;
+                    hasdata = false;
                     for (int i = 0; i < count; i++)
                     {
                         if (i != ig)
@@ -1014,13 +1036,22 @@ namespace Cdy.Tag
                                 if (qus >= 100)
                                 {
                                     mVarintMemory.WriteInt64(id);
+                                    hasdata = true;
+                                    lsval = id;
                                     continue;
                                 }
                             }
 
                             if (isFirst)
                             {
-                                mVarintMemory.WriteInt64(id);
+                                if (hasdata)
+                                {
+                                    mVarintMemory.WriteSInt64((id - lsval));
+                                }
+                                else
+                                {
+                                    mVarintMemory.WriteInt64(id);
+                                }
                                 isFirst = false;
                                 lsval = id;
                             }
@@ -1046,6 +1077,7 @@ namespace Cdy.Tag
                     break;
                 case TagType.ULong:
                     ulong ulsval = 0;
+                    hasdata = false;
                     for (int i = 0; i < count; i++)
                     {
                         if (i != ig)
@@ -1060,13 +1092,22 @@ namespace Cdy.Tag
                                 if (qus >= 100)
                                 {
                                     mVarintMemory.WriteInt64(id);
+                                    hasdata = true;
+                                    ulsval = id;
                                     continue;
                                 }
                             }
 
                             if (isFirst)
                             {
-                                mVarintMemory.WriteInt64(id);
+                                if (hasdata)
+                                {
+                                    mVarintMemory.WriteSInt64((long)(id - ulsval));
+                                }
+                                else
+                                {
+                                    mVarintMemory.WriteInt64(id);
+                                }
                                 isFirst = false;
                                 ulsval = id;
                             }
@@ -1094,7 +1135,6 @@ namespace Cdy.Tag
                     double dsval = 0;
                     mDCompress.Reset();
                     mDCompress.Precision = this.Precision;
-                    //dvals.Clear();
 
                     for (int i = 0; i < count; i++)
                     {
@@ -1110,6 +1150,7 @@ namespace Cdy.Tag
                                 if (qus >= 100)
                                 {
                                     mDCompress.Append(id);
+                                    dsval = id;
                                     continue;
                                 }
                             }
@@ -1119,16 +1160,13 @@ namespace Cdy.Tag
                                 mDCompress.Append(id);
                                 isFirst = false;
                                 dsval = id;
-                                //dvals.Add(i, id);
                             }
                             else
                             {
                                 if (CheckIsNeedRecord(dsval, id, deadArea, deadType))
                                 {
                                     mDCompress.Append(id);
-                                    // mMarshalMemory.Write(id);
                                     dsval = id;
-                                    //dvals.Add(i, id);
                                 }
                                 else
                                 {
@@ -1162,10 +1200,10 @@ namespace Cdy.Tag
                                 if (qus >= 100)
                                 {
                                     mFCompress.Append(id);
+                                    fsval = id;
                                     continue;
                                 }
                             }
-
                             if (isFirst)
                             {
                                 mFCompress.Append(id);

@@ -870,7 +870,6 @@ namespace DBInStudio.Desktop
         private void ChangeTagType(Cdy.Tag.TagType tagType)
         {
             Cdy.Tag.Tagbase ntag = null;
-            if (mHisTagMode == null) return;
             switch (tagType)
             {
                 case Cdy.Tag.TagType.Bool:

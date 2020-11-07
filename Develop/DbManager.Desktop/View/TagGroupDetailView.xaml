@@ -11,6 +11,8 @@
         <BooleanToVisibilityConverter x:Key="btv" />
         <local:BoolInvertConvert x:Key="biv" />
         <local:DoubleValueConvert x:Key="dvc" />
+        <local:MutiNumberValueConvert x:Key="mvc" />
+        
         <ContextMenu x:Key="ctxmenu">
             <MenuItem Header="{local:ResMarker Add}" Command="{Binding AddCommand}" />
             <MenuItem Header="{local:ResMarker Remove}" Command="{Binding RemoveCommand}" />
@@ -202,7 +204,14 @@
                 <DataGridTemplateColumn Header="{local:ResMarker MaxValue}" MinWidth="100"  IsReadOnly="{Binding IsNumberTag,Converter={StaticResource biv}}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}" Text="{Binding MaxValue,Converter={StaticResource dvc}}" IsEnabled="{Binding IsNumberTag}" VerticalAlignment="Center" />
+                            <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  IsEnabled="{Binding IsNumberTag}" VerticalAlignment="Center" >
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource mvc}">
+                                        <Binding Path="MaxValue" />
+                                        <Binding />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
@@ -215,7 +224,14 @@
                 <DataGridTemplateColumn Header="{local:ResMarker MinValue}" MinWidth="100" IsReadOnly="{Binding IsNumberTag,Converter={StaticResource biv}}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  IsEnabled="{Binding IsNumberTag}" Text="{Binding MinValue,Converter={StaticResource dvc}}" VerticalAlignment="Center" />
+                            <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  IsEnabled="{Binding IsNumberTag}"  VerticalAlignment="Center" >
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource mvc}">
+                                        <Binding Path="MinValue" />
+                                        <Binding />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>

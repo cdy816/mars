@@ -153,4 +153,115 @@ namespace DBInStudio.Desktop
         }
     }
 
+
+    public class MutiNumberValueConvert : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values != null)
+            {
+                double dtmp = (double)(values[0]);
+
+                var tm = values[1] as TagViewModel;
+
+                if (tm.RealTagMode.Type == Cdy.Tag.TagType.Double)
+                {
+                    if (dtmp == double.MaxValue)
+                    {
+                        return "Max";
+                    }
+                    else if (dtmp == double.MinValue)
+                    {
+                        return "Min";
+                    }
+                    else
+                    {
+                        return dtmp.ToString();
+                    }
+                }
+                else if(tm.RealTagMode.Type == Cdy.Tag.TagType.Float)
+                {
+                    if (dtmp == float.MaxValue)
+                    {
+                        return "Max";
+                    }
+                    else if (dtmp == float.MinValue)
+                    {
+                        return "Min";
+                    }
+                    else
+                    {
+                        return dtmp.ToString();
+                    }
+                }
+                else if (tm.RealTagMode.Type == Cdy.Tag.TagType.Long)
+                {
+
+                    if (dtmp == long.MaxValue)
+                    {
+                        return "Max";
+                    }
+                    else if (dtmp == long.MinValue)
+                    {
+                        return "Min";
+                    }
+                    else
+                    {
+                        return dtmp.ToString();
+                    }
+                }
+                else if (tm.RealTagMode.Type == Cdy.Tag.TagType.ULong)
+                {
+                    if (dtmp == ulong.MaxValue)
+                    {
+                        return "Max";
+                    }
+                    else
+                    {
+                        return dtmp.ToString();
+                    }
+                }
+                else if (tm.RealTagMode.Type == Cdy.Tag.TagType.Int)
+                {
+                    if (dtmp == int.MaxValue)
+                    {
+                        return "Max";
+                    }
+                    else if (dtmp == int.MinValue)
+                    {
+                        return "Min";
+                    }
+                    else
+                    {
+                        return dtmp.ToString();
+                    }
+                }
+                else if (tm.RealTagMode.Type == Cdy.Tag.TagType.UInt)
+                {
+                    if (dtmp == uint.MaxValue)
+                    {
+                        return "Max";
+                    }
+                    else if (dtmp == uint.MinValue)
+                    {
+                        return "Min";
+                    }
+                    else
+                    {
+                        return dtmp.ToString();
+                    }
+                }
+
+                return dtmp.ToString();
+
+            }
+            return "";
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 }

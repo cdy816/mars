@@ -15,6 +15,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Cdy.Tag
 {
@@ -294,7 +295,7 @@ namespace Cdy.Tag
                                 Thread.Sleep(500);
                             }
 
-                            System.Threading.Tasks.Parallel.ForEach(mTargetMemorys, (mm) =>
+                            System.Threading.Tasks.Parallel.ForEach(mTargetMemorys,new ParallelOptions() { MaxDegreeOfParallelism = CPUAssignHelper.Helper.CPUArray2.Length }, (mm) =>
                             {
                                 ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
                                 mm.Value.Compress(sm);
@@ -305,7 +306,7 @@ namespace Cdy.Tag
                             sm.MakeMemoryNoBusy();
 
 
-                            System.Threading.Tasks.Parallel.ForEach(mTargetMemorys.Where(e => e.Value.HasManualCompressItems), (mm) =>
+                            System.Threading.Tasks.Parallel.ForEach(mTargetMemorys.Where(e => e.Value.HasManualCompressItems),new ParallelOptions() { MaxDegreeOfParallelism = CPUAssignHelper.Helper.CPUArray2.Length },(mm) =>
                             {
                                 ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
                                 mm.Value.ManualCompress();

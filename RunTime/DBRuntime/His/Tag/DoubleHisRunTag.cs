@@ -18,7 +18,15 @@ namespace Cdy.Tag
     /// </summary>
     public class DoubleHisRunTag:HisRunTag
     {
+        /// <summary>
+        /// 
+        /// </summary>
         private double mLastValue = double.MinValue;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private double mTmpValue = 0;
         /// <summary>
         /// 
         /// </summary>
@@ -32,10 +40,10 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
         {
-            var val = MemoryHelper.ReadDouble(startMemory, offset);
-            if (val != mLastValue || mLastValue == double.MinValue)
+            mTmpValue = MemoryHelper.ReadDouble(startMemory, offset);
+            if (mTmpValue != mLastValue || mLastValue == double.MinValue)
             {
-                mLastValue = val;
+                mLastValue = mTmpValue;
                 return true;
             }
             else

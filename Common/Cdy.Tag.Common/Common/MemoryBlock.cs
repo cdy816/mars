@@ -302,7 +302,7 @@ namespace Cdy.Tag
             //    mHandles.Add(System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mBuffers[i], 0));
             //}
             Init(size);
-            GC.Collect();
+            //GC.Collect();
         }
 
         /// <summary>
@@ -340,7 +340,7 @@ namespace Cdy.Tag
             {
                 mHandles.Add(System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mBuffers[i], 0));
             }
-            GC.Collect();
+            //GC.Collect();
         }
 
         /// <summary>

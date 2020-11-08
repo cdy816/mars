@@ -18,6 +18,7 @@ namespace Cdy.Tag
     public class IntHisRunTag:HisRunTag
     {
         private int mLastValue = int.MinValue;
+        private int mTmpValue = 0;
         /// <summary>
         /// 
         /// </summary>
@@ -25,10 +26,10 @@ namespace Cdy.Tag
 
         public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
         {
-            var val = MemoryHelper.ReadInt32(startMemory, offset);
-            if (val != mLastValue || mLastValue == int.MinValue)
+            mTmpValue = MemoryHelper.ReadInt32(startMemory, offset);
+            if (mTmpValue != mLastValue || mLastValue == int.MinValue)
             {
-                mLastValue = val;
+                mLastValue = mTmpValue;
                 return true;
             }
             else

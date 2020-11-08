@@ -23,7 +23,7 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         /// <param name="valueChanged"></param>
         /// <param name="tagRegistor"></param>
-        void SubscribeValueChangedForConsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelegate valueChanged,ValueChangedNotifyProcesser.BlockChangedDelegate blockChanged,Action BlockChangedNotify, Func<List<int>> tagRegistor);
+        void SubscribeValueChangedForConsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelegate valueChanged,ValueChangedNotifyProcesser.BlockChangedDelegate blockChanged,Action BlockChangedNotify, Func<IEnumerable<int>> tagRegistor);
 
         /// <summary>
         /// 取消订购

@@ -58,7 +58,7 @@ namespace Cdy.Tag.Tests
         //    Assert.IsTrue(memory.ReadULong() == 20);
 
         //    memory.CopyTo(mm, ltmp, 0, 1024);
-           
+
         //    mm.Position = 0;
 
         //    Assert.IsTrue(mm.ReadByte() == 20);
@@ -75,38 +75,38 @@ namespace Cdy.Tag.Tests
 
         //}
 
-        //[TestMethod()]
-        //public void TimeTest()
-        //{
-        //    MarshalFixedMemoryBlock memory = new MarshalFixedMemoryBlock((long)(1024 * 1024 * 1024)*4);
+        [TestMethod()]
+        public void TimeTest()
+        {
+            MarshalFixedMemoryBlock memory = new MarshalFixedMemoryBlock((long)(1024 * 1024 * 1024) * 4);
 
-        //    DateTime dt = DateTime.Now;
-        //    long ltmp = (long)(1024 * 1024 *1024)*1;
-        //    memory.WriteByte(ltmp, (byte)20);
-        //    memory.WriteDatetime(memory.Position, dt);
-        //    memory.WriteDouble(memory.Position, 20.5);
-        //    memory.WriteFloat(memory.Position, 20.5f);
-        //    memory.WriteString(memory.Position, dt.ToString(), Encoding.Unicode);
-        //    memory.WriteInt(memory.Position, 20);
-        //    memory.WriteLong(memory.Position, 20);
-        //    memory.WriteShort(memory.Position, (short)20);
-        //    memory.WriteUShort(memory.Position, (ushort)20);
-        //    memory.WriteUInt(memory.Position, 20);
-        //    memory.WriteULong(memory.Position, 20);
+            DateTime dt = DateTime.Now;
+            long ltmp = (long)(1024 * 1024 * 1024) * 1;
+            memory.WriteByte(ltmp, (byte)20);
+            memory.WriteDatetime(memory.Position, dt);
+            memory.WriteDouble(memory.Position, 20.5);
+            memory.WriteFloat(memory.Position, 20.5f);
+            memory.WriteString(memory.Position, dt.ToString(), Encoding.Unicode);
+            memory.WriteInt(memory.Position, 20);
+            memory.WriteLong(memory.Position, 20);
+            memory.WriteShort(memory.Position, (short)20);
+            memory.WriteUShort(memory.Position, (ushort)20);
+            memory.WriteUInt(memory.Position, 20);
+            memory.WriteULong(memory.Position, 20);
 
-        //    MarshalFixedMemoryBlock mm = new MarshalFixedMemoryBlock(1024);
+            MarshalFixedMemoryBlock mm = new MarshalFixedMemoryBlock(1024);
 
-        //    Stopwatch sw = new Stopwatch();
-        //    sw.Start();
-        //    for (int i=0; i<1000000;i++)
-        //    {
-        //        mm.WriteBytesDirect(500,mm.StartMemory, (int)ltmp, 50);
-        //        memory.WriteUShortDirect(550, 50);
-        //        memory.WriteByte(550, 1);
-        //    }
-        //    sw.Stop();
-        //    Debug.Print("10000000:" + sw.ElapsedMilliseconds);
-        //}
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            for (int i = 0; i < 1000000; i++)
+            {
+                mm.WriteBytesDirect(500, mm.StartMemory, (int)ltmp, 50);
+                memory.WriteUShortDirect(550, 50);
+                memory.WriteByte(550, 1);
+            }
+            sw.Stop();
+            Debug.Print("10000000:" + sw.ElapsedMilliseconds);
+        }
 
         [TestMethod()]
         public void TimeTest2()

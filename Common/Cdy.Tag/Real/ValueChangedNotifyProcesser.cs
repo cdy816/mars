@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Buffers;
 
 namespace Cdy.Tag
 {
@@ -38,6 +39,73 @@ namespace Cdy.Tag
         public bool IsDirty { get; set; }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    public class Databuffer
+    {
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Length { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int[] Buffer { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="size"></param>
+        public Databuffer(int size)
+        {
+            Buffer = new int[size];
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Databuffer():this(1024)
+        {
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="len"></param>
+        public void ReSize(int len)
+        {
+            if (len > Buffer.Length)
+            {
+                int[] ltmp = new int[len];
+                Array.Copy(Buffer, 0, ltmp, 0, Buffer.Length);
+                Buffer = ltmp;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public void AppendValue(int value)
+        {
+            if(Length<Buffer.Length-1)
+            {
+                Buffer[Length++] = value;
+            }
+            else
+            {
+                ReSize((int)(Buffer.Length * 1.2));
+                Buffer[Length++] = value;
+            }
+        }
+
+    }
+
+
 
     /// <summary>
     /// 变量值改变通知处理
@@ -57,7 +125,19 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        private int[] mChangedIds = null;
+        private Databuffer mChangedIds = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private Databuffer mChangedId1 = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private Databuffer mChangedId2 = null;
+
+
 
         /// <summary>
         /// 
@@ -73,7 +153,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="tagIds"></param>
-        public delegate void ValueChangedDelegate(int[] tagIds);
+        public delegate void ValueChangedDelegate(int[] tagIds,int len);
 
         /// <summary>
         /// 
@@ -144,11 +224,15 @@ namespace Cdy.Tag
         {
             if (mIsAll)
             {
-                mChangedIds = new int[1024];
+                mChangedId2 = new Databuffer();
+                mChangedId1 = new Databuffer();
+                mChangedIds = mChangedId1;
             }
             else
             {
-                mChangedIds = new int[(int)(mRegistorTagIds.Count * 1.2)];
+                mChangedId1 = new Databuffer((int)(mRegistorTagIds.Count * 1.2));
+                mChangedId2 = new Databuffer((int)(mRegistorTagIds.Count * 1.2));
+                mChangedIds = mChangedId1;
             }
             mProcessThread = new Thread(ThreadProcess);
             mProcessThread.IsBackground = true;
@@ -170,41 +254,25 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         public void UpdateValue(int id)
         {
-            if (mIsAll || mRegistorTagIds.ContainsKey(id))
+            if (mIsAll)
+            {
+                lock (mBlockChangeds)
+                {
+                    int idd = id / BlockSize;
+                    if (mBlockChangeds.ContainsKey(idd))
+                        mBlockChangeds[idd].IsDirty = true;
+                }
+            }
+            else if (mRegistorTagIds.ContainsKey(id))
             {
                 lock (mLockObject)
                 {
-                    if (mIsAll)
-                    {
-                        lock (mBlockChangeds)
-                        {
-                            int idd = id / BlockSize;
-                            if(mBlockChangeds.ContainsKey(idd))
-                            mBlockChangeds[idd].IsDirty = true;
-                        }
-                    }
-                    else
-                    {
-                        mChangedIds[mLenght++] = id;
-                        if (mLenght >= mChangedIds.Length)
-                        {
-                            ReAllocMemory((int)(mLenght * 1.2));
-                        }
-                    }
+                    mChangedIds.AppendValue(id);
                 }
+                
             }
         }
 
-        /// <summary>
-        /// 重新分配内存块
-        /// </summary>
-        /// <param name="len"></param>
-        private void ReAllocMemory(int len)
-        {
-            int[] ltmp = new int[len];
-            Array.Copy(mChangedIds, 0, ltmp, 0, mChangedIds.Length);
-            mChangedIds = ltmp;
-        }
 
         /// <summary>
         /// 
@@ -212,21 +280,20 @@ namespace Cdy.Tag
         /// <param name="ids"></param>
         public void UpdateValue(IEnumerable<int> ids)
         {
-            if (!mIsAll)
+            lock (mLockObject)
             {
-                if ((mLenght + ids.Count()) > mChangedIds.Length)
+                if (!mIsAll)
                 {
-                    ReAllocMemory((int)((mLenght + ids.Count()) * 1.2));
-                }
-            }
-
-            foreach (var id in ids)
-            {
-                if (mIsAll || mRegistorTagIds.ContainsKey(id))
-                {
-                    lock (mChangedIds)
+                    if ((mChangedIds.Buffer.Length + ids.Count()) > mChangedIds.Length)
                     {
-                        //int blockid = id / BlockSize;
+                        mChangedIds.ReSize((int)((mLenght + ids.Count()) * 1.2));
+                    }
+                }
+
+                foreach (var id in ids)
+                {
+                    if (mIsAll || mRegistorTagIds.ContainsKey(id))
+                    {
                         if (mIsAll)
                         {
                             lock (mBlockChangeds)
@@ -234,8 +301,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            mChangedIds[mLenght++] = id;
-                            mLenght = mLenght >= mChangedIds.Length ? mChangedIds.Length - 1 : mLenght;
+                            mChangedIds.AppendValue(id);
                         }
                     }
                 }
@@ -266,7 +332,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="ids"></param>
-        public void Registor(List<int> ids)
+        public void Registor(IEnumerable<int> ids)
         {
             foreach(var id in ids)
             {
@@ -294,16 +360,22 @@ namespace Cdy.Tag
                 if (mIsClosed) break;
 
                 resetEvent.Reset();
-                if (ValueChanged!=null && mLenght > 0)
+                if (ValueChanged!=null && mChangedIds.Length > 0)
                 {
-                    int[] vtmp = null;
-                    lock (mLockObject)
+                    var vids = mChangedIds;
+                    lock(mLockObject)
                     {
-                        vtmp = new int[mLenght];
-                        Array.Copy(mChangedIds, 0, vtmp, 0, mLenght);
-                        mLenght = 0;
+                        if(mChangedIds == mChangedId1)
+                        {
+                            mChangedIds = mChangedId2;
+                        }
+                        else
+                        {
+                            mChangedIds = mChangedId1;
+                        }
                     }
-                    ValueChanged?.Invoke(vtmp);
+                    ValueChanged?.Invoke(vids.Buffer, vids.Length);
+                    vids.Length = 0;
                 }
                 if (BlockChanged != null)
                 {

@@ -32,7 +32,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        private Dictionary<long, long> mCount = new Dictionary<long, long>();
+        private Dictionary<long, DateTime> mCount = new Dictionary<long, DateTime>();
 
         public static int MaxTagCount = 100000;
 
@@ -95,6 +95,11 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
+        public void UpdateLastUpdateDatetime(DateTime time)
+        {
+            mLastUpdateTime = time;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -123,7 +128,9 @@ namespace Cdy.Tag
         {
             mRecordThread = new Thread(ThreadProcess);
             mRecordThread.IsBackground=true;
+            mRecordThread.Priority = ThreadPriority.Highest;
             mRecordThread.Start();
+            mLastUpdateTime = DateTime.Now;
             mIsStarted = true;
         }
 
@@ -155,7 +162,7 @@ namespace Cdy.Tag
                 else
                 {
                     mTimerTags.Add(cc, new List<HisRunTag>() { tag });
-                    mCount.Add(cc, 0);
+                    mCount.Add(cc, DateTime.Now);
                 }
                 mCurrentCount++;
                 return true;
@@ -185,7 +192,12 @@ namespace Cdy.Tag
             ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray1);
             closedEvent.Reset();
             var vkeys = mCount.Keys.ToArray();
-            //int ctmp = 0;
+            var vdd = DateTime.Now;
+            foreach(var vv in vkeys)
+            {
+                mCount[vv] = vdd.AddMilliseconds(vv);
+            }
+
             while (!mIsClosed)
             {
                 resetEvent.WaitOne();
@@ -194,14 +206,19 @@ namespace Cdy.Tag
                 try
                 {
                     mIsBusy = true;
-                    
+                    var vdata = mLastUpdateTime;
                     foreach (var vv in vkeys)
                     {
-                        mCount[vv] += HisEnginer.MemoryTimeTick;
-                        if (mCount[vv] >= vv)
+                        if (vdata >= mCount[vv])
                         {
-                            mCount[vv] = 0;
+                            do
+                            {
+                                mCount[vv] = mCount[vv].AddMilliseconds(vv);
+                            }
+                            while (mCount[vv] <= vdata);
+
                             ProcessTags(mTimerTags[vv]);
+                            //LoggerService.Service.Info("TimerMemoryCacheProcesser", Id + " 开始处理" + vdata);
                         }
                     }
                     

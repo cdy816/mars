@@ -406,6 +406,9 @@ namespace Cdy.Tag
 
             DBRuntime.Api.DataService.Service.Start(pt);
 
+            GC.Collect();
+            GC.WaitForFullGCComplete();
+
             if (RDDCManager.Manager.CurrentState == WorkState.Primary)
             {
                 seriseEnginer.Start();

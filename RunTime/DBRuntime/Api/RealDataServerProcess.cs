@@ -8,6 +8,7 @@
 //==============================================================
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -79,9 +80,7 @@ namespace DBRuntime.Api
 
         private Dictionary<string, bool> mBlockCallBackRegistorIds = new Dictionary<string, bool>();
 
-        // private SortedDictionary<int, bool> mChangedTags = new SortedDictionary<int, bool>();
-
-        private Queue<int[]> mChangedTags = new Queue<int[]>(10);
+        private Queue<Tuple<int[],int>> mChangedTags = new Queue<Tuple<int[], int>>(10);
 
         private Queue<BlockItem> mChangedBlocks = new Queue<BlockItem>();
 
@@ -109,10 +108,12 @@ namespace DBRuntime.Api
             mTagManager = ServiceLocator.Locator.Resolve<ITagManager>();
             mTagConsumer = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
             
-            ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeValueChangedForConsumer("RealDataServerProcess", new ValueChangedNotifyProcesser.ValueChangedDelegate((ids) => {
+            ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeValueChangedForConsumer("RealDataServerProcess", new ValueChangedNotifyProcesser.ValueChangedDelegate((ids,len) => {
                 lock (mChangedTags)
                 {
-                    mChangedTags.Enqueue(ids);
+                    int[] vtmp = ArrayPool<int>.Shared.Rent(len);
+                    Array.Copy(ids, 0, vtmp, 0, len);
+                    mChangedTags.Enqueue(new Tuple<int[], int>(vtmp,len));
                 }
                 if(!mIsClosed)
                 resetEvent.Set();
@@ -129,7 +130,7 @@ namespace DBRuntime.Api
                 {
                     resetEvent.Set();
                 }
-            }, new Func<List<int>>(() => { return null; }));
+            }, new Func<IEnumerable<int>>(() => { return null; }));
             
         }
 
@@ -587,7 +588,6 @@ namespace DBRuntime.Api
                 }
                 else
                 {
-
                     for (int i = minid; i <= maxid; i++)
                     {
                         ids.Add(i);
@@ -780,29 +780,31 @@ namespace DBRuntime.Api
 
                     HashSet<int> hval = new HashSet<int>();
 
-                    int[] changtags;
+                    Tuple<int[],int> changtags;
 
                     while (mChangedTags.Count > 0)
                     {
 
                         changtags = mChangedTags.Dequeue();
 
-                        if (mCallBackRegistorIds.Count == 0) break;
+                        if (mCallBackRegistorIds.Count == 0)
+                        {
+                            ArrayPool<int>.Shared.Return(changtags.Item1);
+                            break;
+                        }
 
                         var clients = mCallBackRegistorIds.ToArray();
 
-                        //Stopwatch sw = new Stopwatch();
-                        //sw.Start();
                         foreach (var cb in clients)
                         {
-                            var buffer = BufferManager.Manager.Allocate(Api.ApiFunConst.RealDataPushFun, changtags.Length * 64+5);
+                            var buffer = BufferManager.Manager.Allocate(Api.ApiFunConst.RealDataPushFun, changtags.Item2 * 64+5);
                             buffer.WriteByte(RealDataPush);
                             buffer.WriteInt(0);
                             buffers.Add(cb.Key, buffer);
                             mDataCounts[cb.Key]= 0;
                         }
 
-                        foreach (var vv in changtags)
+                        foreach (var vv in changtags.Item1)
                         {
                             foreach (var vvc in clients)
                             {
@@ -824,8 +826,8 @@ namespace DBRuntime.Api
                             Parent.PushRealDatatoClient(cb.Key, cb.Value);
                         }
                         buffers.Clear();
-                        //sw.Stop();
-                        //LoggerService.Service.Erro("RealDataServerProcess", "推送数据耗时"+sw.ElapsedMilliseconds+" 大小:"+ changtags.Length);
+
+                        ArrayPool<int>.Shared.Return(changtags.Item1);
                     }
 
                     if(mBlockCallBackRegistorIds.Count>0)

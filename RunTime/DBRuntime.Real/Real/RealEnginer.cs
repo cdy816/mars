@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Cdy.Tag.Driver;
 using System.Threading;
 using System.Security.Cryptography;
+using System.Diagnostics;
 
 namespace Cdy.Tag
 {
@@ -51,7 +52,10 @@ namespace Cdy.Tag
         /// </summary>
         private void* mMHandle;
 
-        private ManualResetEvent mLockEvent;
+        //private ManualResetEvent mLockEvent;
+
+
+        private bool mIsLocked = false;
 
         #endregion ...Variables...
 
@@ -66,7 +70,7 @@ namespace Cdy.Tag
         /// </summary>
         public RealEnginer()
         {
-            mLockEvent = new ManualResetEvent(true);
+            //mLockEvent = new ManualResetEvent(true);
         }
 
         /// <summary>
@@ -291,7 +295,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Lock()
         {
-            mLockEvent.Reset();
+            mIsLocked = true;
         }
 
         /// <summary>
@@ -299,7 +303,7 @@ namespace Cdy.Tag
         /// </summary>
         public void UnLock()
         {
-            mLockEvent.Set();
+            mIsLocked = false ;
         }
 
         /// <summary>
@@ -307,7 +311,7 @@ namespace Cdy.Tag
         /// </summary>
         private void Take()
         {
-            mLockEvent.WaitOne();
+            while (mIsLocked);
         }
 
         /// <summary>
@@ -3558,15 +3562,9 @@ namespace Cdy.Tag
                 var vtag = tag as FloatingTagBase;
 
                 double btmp = 0;
-                if (tag.Conveter != null)
-                {
+                
+                btmp = tag.Conveter!=null ? Math.Round(Convert.ToDouble(tag.Conveter.ConvertTo(value)), vtag.Precision): Math.Round(Convert.ToDouble(value), vtag.Precision);
 
-                    btmp = Math.Round(Convert.ToDouble(tag.Conveter.ConvertTo(value)), vtag.Precision);
-                }
-                else
-                {
-                    btmp = Math.Round(Convert.ToDouble(value), vtag.Precision);
-                }
                 if (vtag != null)
                 {
                     if (ReadDoubleValueByAddr(tag.ValueAddress) != btmp)
@@ -4044,6 +4042,14 @@ namespace Cdy.Tag
             return SetTagValue(tag, value, DateTime.Now, quality);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
         public bool SetTagValue(Tagbase tag, object value, DateTime time, byte quality)
         {
             try
@@ -4229,12 +4235,18 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetTagValue(List<Tagbase> ids, object value)
         {
-            Take();
+            //Take();
             bool re = true;
+
+            //Stopwatch sw = new Stopwatch();
+            //sw.Start();
             foreach (var vv in ids)
             {
                 re &= SetTagValue(vv, value);
             }
+            //sw.Stop();
+            //if(sw.ElapsedMilliseconds>900)
+            //LoggerService.Service.Info("RealEnginer", "SetTagValue count:"+ ids.Count +" 耗时：" + sw.ElapsedMilliseconds.ToString(),ConsoleColor.Red);
             return re;
         }
 
@@ -4246,14 +4258,12 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetTagValue(List<int> ids, object value)
         {
-            Take();
+            //Take();
             bool re = true;
-            //Parallel.ForEach(ids, (vv) =>
             foreach (var vv in ids)
             {
                 re &= SetTagValue(vv, value);
             }
-            //});
             return re;
         }
 
@@ -4266,7 +4276,7 @@ namespace Cdy.Tag
         public bool SetPointValue(List<int> ids, params object[] values)
         {
             bool re = true;
-            Take();
+            //Take();
             //Parallel.ForEach(ids, (vv) =>
             foreach (var vv in ids)
             {
@@ -4296,7 +4306,7 @@ namespace Cdy.Tag
         public bool SetPointValue(List<Tagbase> tags, params object[] values)
         {
             bool re = true;
-            Take();
+            //Take();
             //Parallel.ForEach(ids, (vv) =>
             foreach (var vv in tags)
             {
@@ -4453,7 +4463,7 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         /// <param name="valueChanged"></param>
         /// <param name="tagRegistor"></param>
-        public void SubscribeValueChangedForConsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelegate valueChanged, ValueChangedNotifyProcesser.BlockChangedDelegate blockchanged,Action BlockChangedNotify, Func<List<int>> tagRegistor)
+        public void SubscribeValueChangedForConsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelegate valueChanged, ValueChangedNotifyProcesser.BlockChangedDelegate blockchanged,Action BlockChangedNotify, Func<IEnumerable<int>> tagRegistor)
         {
             var re = ComsumerValueChangedNotifyManager.Manager.GetNotifier(name);
             if (tagRegistor != null)
@@ -5358,7 +5368,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public List<string> GetTagGroups(List<int> ids)
         {
-            List<string> ltmp = new List<string>();
+            //List<string> ltmp = new List<string>();
             return mConfigDatabase.Tags.Where(e => ids.Contains(e.Key)).Select(e => e.Value.Group).ToList();
         }
 

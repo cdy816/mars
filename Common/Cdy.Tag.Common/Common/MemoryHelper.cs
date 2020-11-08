@@ -111,20 +111,20 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                //if ((unchecked((int)addr) & 0x3) == 0)
+                if ((unchecked((int)addr) & 0x3) == 0)
                 {
                     // aligned write
                     *((int*)addr) = val;
                 }
-                //else
-                //{
-                //    // unaligned write
-                //    byte* valPtr = (byte*)&val;
-                //    addr[0] = valPtr[0];
-                //    addr[1] = valPtr[1];
-                //    addr[2] = valPtr[2];
-                //    addr[3] = valPtr[3];
-                //}
+                else
+                {
+                    // unaligned write
+                    byte* valPtr = (byte*)&val;
+                    addr[0] = valPtr[0];
+                    addr[1] = valPtr[1];
+                    addr[2] = valPtr[2];
+                    addr[3] = valPtr[3];
+                }
             }
             catch (NullReferenceException)
             {
@@ -177,20 +177,20 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                //if ((unchecked((int)addr) & 0x3) == 0)
+                if ((unchecked((int)addr) & 0x3) == 0)
                 {
                     // aligned write
                     *((int*)addr) = *(int*)(&val);
                 }
-                //else
-                //{
-                //    // unaligned write
-                //    byte* valPtr = (byte*)&val;
-                //    addr[0] = valPtr[0];
-                //    addr[1] = valPtr[1];
-                //    addr[2] = valPtr[2];
-                //    addr[3] = valPtr[3];
-                //}
+                else
+                {
+                    // unaligned write
+                    byte* valPtr = (byte*)&val;
+                    addr[0] = valPtr[0];
+                    addr[1] = valPtr[1];
+                    addr[2] = valPtr[2];
+                    addr[3] = valPtr[3];
+                }
             }
             catch (NullReferenceException)
             {
@@ -210,24 +210,24 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                //if ((unchecked((int)addr) & 0x7) == 0)
+                if ((unchecked((int)addr) & 0x7) == 0)
                 {
                     // aligned write
                     *((Int64*)addr) = val;
                 }
-                //else
-                //{
-                //    // unaligned write
-                //    byte* valPtr = (byte*)&val;
-                //    addr[0] = valPtr[0];
-                //    addr[1] = valPtr[1];
-                //    addr[2] = valPtr[2];
-                //    addr[3] = valPtr[3];
-                //    addr[4] = valPtr[4];
-                //    addr[5] = valPtr[5];
-                //    addr[6] = valPtr[6];
-                //    addr[7] = valPtr[7];
-                //}
+                else
+                {
+                    // unaligned write
+                    byte* valPtr = (byte*)&val;
+                    addr[0] = valPtr[0];
+                    addr[1] = valPtr[1];
+                    addr[2] = valPtr[2];
+                    addr[3] = valPtr[3];
+                    addr[4] = valPtr[4];
+                    addr[5] = valPtr[5];
+                    addr[6] = valPtr[6];
+                    addr[7] = valPtr[7];
+                }
             }
             catch (NullReferenceException)
             {
@@ -384,22 +384,22 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                //if ((unchecked((int)addr) & 0x3) == 0)
+                if ((unchecked((int)addr) & 0x3) == 0)
                 {
                     //aligned read
                     return *((int*)addr);
                 }
-                //else
-                //{
-                //    // unaligned read
-                //    int val;
-                //    byte* valPtr = (byte*)&val;
-                //    valPtr[0] = addr[0];
-                //    valPtr[1] = addr[1];
-                //    valPtr[2] = addr[2];
-                //    valPtr[3] = addr[3];
-                //    return val;
-                //}
+                else
+                {
+                    // unaligned read
+                    int val;
+                    byte* valPtr = (byte*)&val;
+                    valPtr[0] = addr[0];
+                    valPtr[1] = addr[1];
+                    valPtr[2] = addr[2];
+                    valPtr[3] = addr[3];
+                    return val;
+                }
             }
             catch (NullReferenceException)
             {
@@ -589,28 +589,28 @@ namespace Cdy.Tag
             try
             {
                 byte* addr = (byte*)ptr + ofs;
-                //if ((unchecked((int)addr) & 0x7) == 0)
+                if ((unchecked((int)addr) & 0x7) == 0)
                 {
                     //aligned read
                     return *((long*)addr);
                 }
-                //else
-                //{
-                //    // unaligned read
-                //    long val;
-                //    byte* valPtr = (byte*)&val;
-                //    valPtr[0] = addr[0];
-                //    valPtr[1] = addr[1];
-                //    valPtr[2] = addr[2];
-                //    valPtr[3] = addr[3];
+                else
+                {
+                    // unaligned read
+                    long val;
+                    byte* valPtr = (byte*)&val;
+                    valPtr[0] = addr[0];
+                    valPtr[1] = addr[1];
+                    valPtr[2] = addr[2];
+                    valPtr[3] = addr[3];
 
-                //    valPtr[4] = addr[4];
-                //    valPtr[5] = addr[5];
-                //    valPtr[6] = addr[6];
-                //    valPtr[7] = addr[7];
+                    valPtr[4] = addr[4];
+                    valPtr[5] = addr[5];
+                    valPtr[6] = addr[6];
+                    valPtr[7] = addr[7];
 
-                //    return val;
-                //}
+                    return val;
+                }
             }
             catch (NullReferenceException)
             {

@@ -18,6 +18,7 @@ namespace Cdy.Tag
     public class IntPointHisRunTag:HisRunTag
     {
         private int x = int.MinValue, y = int.MinValue;
+        private int xx = 0, yy;
         /// <summary>
         /// 
         /// </summary>
@@ -31,7 +32,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
         {
-            int xx = MemoryHelper.ReadInt32(startMemory, offset), yy = MemoryHelper.ReadInt32(startMemory, offset + 4);
+            xx = MemoryHelper.ReadInt32(startMemory, offset); yy = MemoryHelper.ReadInt32(startMemory, offset + 4);
             if (xx != x || yy != y || xx == int.MinValue)
             {
                 x = xx;

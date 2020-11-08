@@ -6,6 +6,8 @@
     <ApplicationIcon>mrdbr.ico</ApplicationIcon>
     <StartupObject>DBInRun.Program</StartupObject>
     <Authors>Chongdaoyang</Authors>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
 
   <ItemGroup>

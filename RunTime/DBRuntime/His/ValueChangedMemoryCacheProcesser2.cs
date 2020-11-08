@@ -123,19 +123,14 @@ namespace Cdy.Tag
         public void Start()
         {
             //注册值改变处理
-            ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeValueChangedForConsumer(this.Name, new ValueChangedNotifyProcesser.ValueChangedDelegate((ids) => {
-                foreach(var vv in ids)
+            ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeValueChangedForConsumer(this.Name, new ValueChangedNotifyProcesser.ValueChangedDelegate((ids,len) => {
+                for(int i=0;i<len;i++)
                 {
                     lock(mLockObj)
-                    mChangedTags[vv] = true;
-
-                    //if (vv == 1)
-                    //{
-                    //    LoggerService.Service.Info("ValueChangedMemoryCacheProcesser", "tag " + vv + " Notify changed", ConsoleColor.Red);
-                    //}
+                    mChangedTags[ids[i]] = true;
                 }
                 //LoggerService.Service.Info("TagChanged", "变化变量数:"+ids.Length);
-            }),null,null, new Func<List<int>>(() => { return  mTags.Keys.ToList(); }));
+            }),null,null, new Func<IEnumerable<int>>(() => { return  mTags.Keys; }));
 
             foreach(var vv in mTags.Keys)
             {
@@ -145,6 +140,7 @@ namespace Cdy.Tag
 
             mRecordThread = new Thread(ThreadProcess);
             mRecordThread.IsBackground=true;
+            mRecordThread.Priority = ThreadPriority.Highest;
             mRecordThread.Start();
 
             mIsStarted = true;

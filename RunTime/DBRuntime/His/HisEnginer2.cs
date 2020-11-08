@@ -117,7 +117,7 @@ namespace Cdy.Tag
         /// </summary>
         private ValueChangedMemoryCacheProcesser2 mLastValueChangedProcesser = new ValueChangedMemoryCacheProcesser2() { Name = "ValueChanged0" };
 
-        private System.Timers.Timer mRecordTimer;
+        //private System.Timers.Timer mRecordTimer;
 
         private DateTime mLastProcessTime;
 
@@ -148,6 +148,8 @@ namespace Cdy.Tag
         private int mStartMergeCount = 0;
 
         private Dictionary<long,SortedDictionary<DateTime, ManualHisDataMemoryBlock>> mManualHisDataCach = new Dictionary<long, SortedDictionary<DateTime, ManualHisDataMemoryBlock>>();
+
+        private bool mIsPaused = false;
 
         #endregion ...Variables...
 
@@ -376,7 +378,8 @@ namespace Cdy.Tag
         /// </summary>
         public void Pause()
         {
-            mRecordTimer.Stop();
+            mIsPaused = true;
+            //mRecordTimer.Stop();
         }
 
         /// <summary>
@@ -384,7 +387,8 @@ namespace Cdy.Tag
         /// </summary>
         public void Resume()
         {
-            mRecordTimer.Start();
+            mIsPaused = false;
+            //mRecordTimer.Start();
         }
 
         /// <summary>
@@ -396,7 +400,6 @@ namespace Cdy.Tag
         {
             UpdatePerProcesserMaxTagCount(mManager.HisTags.Count+tags.Count());
 
-            mRecordTimer.Stop();
             var realbaseaddr = this.mRealEnginer.Memory;
             IntPtr realHandle = mRealEnginer.MemoryHandle;
             HisRunTag mHisTag = null;
@@ -548,7 +551,6 @@ namespace Cdy.Tag
 
             SwitchMemoryCach(mCurrentMemory.Id);
 
-            mRecordTimer.Start();
         }
 
         /// <summary>
@@ -743,7 +745,15 @@ namespace Cdy.Tag
             }
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagType"></param>
+        /// <param name="headSize"></param>
+        /// <param name="valueCount"></param>
+        /// <param name="dataOffset"></param>
+        /// <param name="qulityOffset"></param>
+        /// <returns></returns>
         private int CalCachDatablockSizeForManualRecord(Cdy.Tag.TagType tagType, int headSize, int valueCount, out int dataOffset, out int qulityOffset)
         {
             //单个数据块内容包括：时间戳(2)+数值+质量戳(1)
@@ -907,6 +917,8 @@ namespace Cdy.Tag
             }
         }
 
+        private Thread mScanThread;
+
         /// <summary>
         /// 
         /// </summary>
@@ -959,9 +971,14 @@ namespace Cdy.Tag
             mStartMergeCount = (int)((mLastProcessTime - new DateTime(mLastProcessTime.Year, mLastProcessTime.Month, mLastProcessTime.Day, ((mLastProcessTime.Hour / mManager.Setting.FileDataDuration) * mManager.Setting.FileDataDuration), 0, 0)).TotalMinutes % (MergeMemoryTime / CachMemoryTime));
             mMergeCount = mStartMergeCount;
 
-            mRecordTimer = new System.Timers.Timer(MemoryTimeTick);
-            mRecordTimer.Elapsed += MRecordTimer_Elapsed;
-            mRecordTimer.Start();
+            //mRecordTimer = new System.Timers.Timer(MemoryTimeTick);
+            //mRecordTimer.Elapsed += MRecordTimer_Elapsed;
+            //mRecordTimer.Start();
+
+            mScanThread = new Thread(ScanProcess);
+            mScanThread.Priority = ThreadPriority.Highest;
+            //mScanThread.IsBackground = true;
+            mScanThread.Start();
 
             mMergeThread = new Thread(MergerMemoryProcess);
             mMergeThread.IsBackground=true;
@@ -1253,9 +1270,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MRecordTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void ScanProcess()
         {
             //内存块的分配，严格按照绝对的时间来执行。例如5分钟一个内存缓冲，而从0点开始每隔5分钟，切换一下内存块;
             //哪怕自启动时间以来，到一个5分钟节点间不足5分钟。
@@ -1263,64 +1278,155 @@ namespace Cdy.Tag
             //对于值改变的情况，同样按照固定的频路定时更新质量戳（没有值），对于值改变的情况，记录实际时间戳、数值和质量戳。由此可以值改变的频路不能够大于我们最大的频率。
 
             //LoggerService.Service.Info("HisEnginer", "Thread id:"+Thread.CurrentThread.ManagedThreadId);
-            if (mIsBusy)
-            {
-                mBlockCount++;
-                LoggerService.Service.Warn("HisEnginer", "RecordTimer 出现阻塞" + mBlockCount);
-                return;
-            }
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray1);
 
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-
-            mIsBusy = true;
-            mBlockCount = 0;
-            DateTime dt = DateTime.Now;
-            //var mm = (dt.Hour * 24 + dt.Minute * 60 + dt.Second) / CachMemoryTime;
-            var mm = dt.Minute;
-            if (mm!=mLastProcessTick )
+            while (!mIsClosed)
             {
-                ///处理第一次运行的情况，停止到一秒的开始部分
-                if (mLastProcessTick == -1 && dt.Millisecond > 400)
+
+                while (mIsPaused)
                 {
-                    mIsBusy = false;
-                    return;
+                    if (mIsClosed) return;
+                    Thread.Sleep(10);
                 }
 
-                LoggerService.Service.Info("HisEnginer", "RecordTimer 准备新的内存，提交内存 " + CurrentMemory.Name+ " 到压缩 线程ID:"+ Thread.CurrentThread.ManagedThreadId+" CPU ID:"+ ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Green);
-                if (mLastProcessTick != -1)
+                //var tick = (DateTime.Now - mdatetime).Milliseconds;
+
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                mBlockCount = 0;
+                DateTime dt = DateTime.Now;
+                var mm = dt.Minute;
+                if (mm != mLastProcessTick)
                 {
-                    mLastProcessTime = dt;
-                   
-                    //将之前的Memory提交到合并流程中
-                    SubmiteMemory(dt);
+                    ///处理第一次运行的情况，停止到一秒的开始部分
+                    if (mLastProcessTick == -1 && dt.Millisecond > 400)
+                    {
+                        foreach (var vv in mRecordTimerProcesser)
+                        {
+                            vv.UpdateLastUpdateDatetime(dt);
+                        }
+                        continue;
+                    }
+
+                    LoggerService.Service.Info("HisEnginer", "RecordTimer 准备新的内存，提交内存 " + CurrentMemory.Name + " 到压缩 线程ID:" + Thread.CurrentThread.ManagedThreadId + " CPU ID:" + ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Green);
+                    if (mLastProcessTick != -1)
+                    {
+                        mLastProcessTime = dt;
+
+                        //将之前的Memory提交到合并流程中
+                        SubmiteMemory(dt);
+                    }
+                    mLastProcessTick = mm;
+
                 }
-                mLastProcessTick = mm;
+                foreach (var vv in mRecordTimerProcesser)
+                {
+                    vv.Notify(dt);
+                }
+                //值改变的变量,也受内部定时逻辑处理。这样值改变频路高于MemoryTimeTick 的值时，无效。
+                foreach (var vv in mValueChangedProcesser)
+                {
+                    vv.Notify(dt);
+                }
+                sw.Stop();
 
+                
+                if(sw.ElapsedMilliseconds>500)
+                {
+                    LoggerService.Service.Debug("HisEnginer", "ScanProcess 执行周期过程" + sw.ElapsedMilliseconds, ConsoleColor.Yellow);
+                }
+
+                if (sw.ElapsedMilliseconds >= 100)
+                    Thread.Sleep(1);
+                else
+                    Thread.Sleep(100-(int)sw.ElapsedMilliseconds);
             }
-
-            long ltmp1 = sw.ElapsedMilliseconds;
-
-            foreach (var vv in mRecordTimerProcesser)
-            {
-                vv.Notify(dt);
-            }
-
-            long ltmp2 = sw.ElapsedMilliseconds;
-
-            //值改变的变量,也受内部定时逻辑处理。这样值改变频路高于MemoryTimeTick 的值时，无效。
-            foreach (var vv in mValueChangedProcesser)
-            {
-                vv.Notify(dt);
-            }
-
-            long ltmp3 = sw.ElapsedMilliseconds;
-
-            if(ltmp3>0)
-            LoggerService.Service.Debug("HisEnginer", "MRecordTimer_Elapsed:" + ltmp1 + "," + ltmp2 + "," + ltmp3);
-
-            mIsBusy = false;
         }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="sender"></param>
+        ///// <param name="e"></param>
+        //private void MRecordTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        //{
+        //    //内存块的分配，严格按照绝对的时间来执行。例如5分钟一个内存缓冲，而从0点开始每隔5分钟，切换一下内存块;
+        //    //哪怕自启动时间以来，到一个5分钟节点间不足5分钟。
+        //    //这里以最快的固定频率触发事件处理每个内存块；对于定时记录情况，对于没有定时到的情况，不记录，对于定时到的情况，更新实际的时间戳、数值和质量戳。
+        //    //对于值改变的情况，同样按照固定的频路定时更新质量戳（没有值），对于值改变的情况，记录实际时间戳、数值和质量戳。由此可以值改变的频路不能够大于我们最大的频率。
+
+        //    //LoggerService.Service.Info("HisEnginer", "Thread id:"+Thread.CurrentThread.ManagedThreadId);
+
+        //    var tick = (DateTime.Now - mdatetime).Milliseconds;
+
+        //    if (mIsBusy)
+        //    {
+        //        mBlockCount++;
+        //        LoggerService.Service.Warn("HisEnginer", "RecordTimer 出现阻塞" + mBlockCount);
+        //        return;
+        //    }
+
+        //    Stopwatch sw = new Stopwatch();
+        //    sw.Start();
+
+        //    mIsBusy = true;
+        //    mBlockCount = 0;
+        //    DateTime dt = DateTime.Now;
+        //    //var mm = (dt.Hour * 24 + dt.Minute * 60 + dt.Second) / CachMemoryTime;
+        //    var mm = dt.Minute;
+        //    if (mm!=mLastProcessTick )
+        //    {
+        //        ///处理第一次运行的情况，停止到一秒的开始部分
+        //        if (mLastProcessTick == -1 && dt.Millisecond > 400)
+        //        {
+        //            mIsBusy = false;
+        //            return;
+        //        }
+
+        //        LoggerService.Service.Info("HisEnginer", "RecordTimer 准备新的内存，提交内存 " + CurrentMemory.Name+ " 到压缩 线程ID:"+ Thread.CurrentThread.ManagedThreadId+" CPU ID:"+ ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Green);
+        //        if (mLastProcessTick != -1)
+        //        {
+        //            mLastProcessTime = dt;
+                   
+        //            //将之前的Memory提交到合并流程中
+        //            SubmiteMemory(dt);
+        //        }
+        //        mLastProcessTick = mm;
+
+        //    }
+
+        //    long ltmp1 = sw.ElapsedMilliseconds;
+
+        //    foreach (var vv in mRecordTimerProcesser)
+        //    {
+        //        vv.Notify(dt);
+        //    }
+
+        //    long ltmp2 = sw.ElapsedMilliseconds;
+
+        //    //值改变的变量,也受内部定时逻辑处理。这样值改变频路高于MemoryTimeTick 的值时，无效。
+        //    foreach (var vv in mValueChangedProcesser)
+        //    {
+        //        vv.Notify(dt);
+        //    }
+
+        //    long ltmp3 = sw.ElapsedMilliseconds;
+
+        //    sw.Stop();
+
+        //    if (ltmp3>0)
+        //    LoggerService.Service.Debug("HisEnginer", "MRecordTimer_Elapsed:" + ltmp1 + "," + ltmp2 + "," + ltmp3);
+
+        //    var dtmp = (DateTime.Now - mdatetime).TotalMilliseconds;
+        //    if (dtmp>150)
+        //    {
+        //        LoggerService.Service.Debug("HisEnginer", "MRecordTimer_Elapsed 定时器超时！，定时间隔："+dtmp +" 定时精度： "+ tick, ConsoleColor.Red);
+        //    }
+
+        //    mdatetime = DateTime.Now;
+
+        //    mIsBusy = false;
+        //}
 
 
         /// <summary>
@@ -1360,22 +1466,26 @@ namespace Cdy.Tag
         public void Stop()
         {
             LoggerService.Service.Info("HisEnginer", "开始停止");
-            if(mRecordTimer!=null)
-            {
-                mRecordTimer.Stop();
-                mRecordTimer.Elapsed -= MRecordTimer_Elapsed;
-                mRecordTimer.Dispose();
-                mRecordTimer = null;
-            }
+            //if(mRecordTimer!=null)
+            //{
+            //    mRecordTimer.Stop();
+            //    mRecordTimer.Elapsed -= MRecordTimer_Elapsed;
+            //    mRecordTimer.Dispose();
+            //    mRecordTimer = null;
+            //}
+
             foreach (var vv in mRecordTimerProcesser)
             {
                 vv.Stop();
             }
+
             foreach (var vv in mValueChangedProcesser)
             {
                 vv.Stop();
             }
+            
             SubmitLastDataToSave();
+
             if (LogManager != null) LogManager.Stop();
             
             mLastProcessTick = -1;

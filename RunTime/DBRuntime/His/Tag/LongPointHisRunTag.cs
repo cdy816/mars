@@ -21,6 +21,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         private long x = long.MinValue, y = long.MinValue;
+        private long xx = 0, yy;
 
         /// <summary>
         /// 
@@ -35,7 +36,8 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
         {
-            long xx = MemoryHelper.ReadInt64(startMemory, offset), yy = MemoryHelper.ReadInt64(startMemory, offset + 8);
+            xx = MemoryHelper.ReadInt64(startMemory, offset);
+            yy = MemoryHelper.ReadInt64(startMemory, offset + 8);
             if (xx != x || yy != y || xx == long.MinValue)
             {
                 x = xx;

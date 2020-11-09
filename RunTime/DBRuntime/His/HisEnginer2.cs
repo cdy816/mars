@@ -1765,9 +1765,9 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        private bool ManualRecordHisValues(long id, Cdy.Tag.TagValue value)
+        private bool ManualRecordHisValues(long id, Cdy.Tag.TagValue value, out bool isNeedSubmite)
         {
-            return ManualRecordHisValues(id, value.Time, value.Value, value.Quality);
+            return ManualRecordHisValues(id, value.Time, value.Value, value.Quality,out isNeedSubmite);
         }
 
         /// <summary>
@@ -1778,16 +1778,20 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        private bool ManualRecordHisValues(long id,DateTime datetime ,object value,byte quality=0)
+        private bool ManualRecordHisValues(long id,DateTime datetime ,object value,byte quality,out bool isNeedSubmite)
         {
-            if (mIsClosed) return false;
-
+            if (mIsClosed)
+            {
+                isNeedSubmite = false;
+                return false;
+            }
+            isNeedSubmite = false;
             int valueOffset, qulityOffset = 0;
 
-            DateTime mLastTime = DateTime.MinValue;
+            //DateTime mLastTime = DateTime.MinValue;
 
             SortedDictionary<DateTime, ManualHisDataMemoryBlock> datacach;
-
+           
             if (mHisTags.ContainsKey(id) && mHisTags[id].Type == RecordType.Driver)
             {
                 var tag = mHisTags[id];
@@ -1827,9 +1831,16 @@ namespace Cdy.Tag
                     hb.Id = (int)id;
                     hb.CurrentCount = 0;
 
+                    while(datacach.Count>0)
+                    {
+                        isNeedSubmite = true;
+                        var vdd = datacach.First();
+                        ServiceLocator.Locator.Resolve<IDataCompress2>().RequestManualToCompress(vdd.Value);
+                        datacach.Remove(vdd.Key);
+                    }
                     datacach.Add(time, hb);
                 }
-                mLastTime = time;
+                //mLastTime = time;
 
                 if (hb.CurrentCount < hb.MaxCount && datetime > hb.EndTime)
                 {
@@ -1925,24 +1936,22 @@ namespace Cdy.Tag
                     hb.EndTime = datetime;
                     hb.CurrentCount++;
                     hb.Relase();
-
                     HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
-
                 }
 
-                bool isNeedSubmite = false;
+                
 
-                foreach (var vv in datacach.ToArray())
-                {
-                    if (vv.Key < mLastTime)
-                    {
-                        ServiceLocator.Locator.Resolve<IDataCompress2>().RequestManualToCompress(vv.Value);
-                        datacach.Remove(vv.Key);
-                        isNeedSubmite = true;
-                    }
-                }
-                if (isNeedSubmite)
-                    ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
+                //foreach (var vv in datacach.ToArray())
+                //{
+                //    if (vv.Key < time)
+                //    {
+                //        ServiceLocator.Locator.Resolve<IDataCompress2>().RequestManualToCompress(vv.Value);
+                //        datacach.Remove(vv.Key);
+                //        isNeedSubmite = true;
+                //    }
+                //}
+                //if (isNeedSubmite)
+                //    ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
 
                 return true;
             }
@@ -1961,10 +1970,14 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetTagHisValue(Dictionary<int,TagValue> values)
         {
+            bool needsubmite = false,ntmp;
             foreach(var vv in values)
             {
-                ManualRecordHisValues(vv.Key, vv.Value);
+                ManualRecordHisValues(vv.Key, vv.Value,out ntmp);
+                needsubmite |= ntmp;
             }
+            if (needsubmite)
+                ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
             return true;
         }
 
@@ -1977,7 +1990,16 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetTagHisValue(int id, TagValue value)
         {
-            return ManualRecordHisValues(id, value);
+            bool needsubmite = false;
+            try
+            {
+                return ManualRecordHisValues(id, value, out needsubmite);
+            }
+            finally
+            {
+                if (needsubmite)
+                    ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
+            }
         }
 
         /// <summary>
@@ -1991,7 +2013,16 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetTagHisValue(int id, DateTime time, object value, byte quality)
         {
-            return ManualRecordHisValues(id, time, value, quality);
+            bool needsubmite = false;
+            try
+            {
+                return ManualRecordHisValues(id, time, value, quality, out needsubmite);
+            }
+            finally
+            {
+                if (needsubmite)
+                    ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
+            }
         }
 
         /// <summary>
@@ -2038,10 +2069,14 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetTagHisValues(Dictionary<int, TagValue> values)
         {
+            bool needsubmite = false, ntmp;
             foreach (var vv in values)
             {
-                ManualRecordHisValues(vv.Key, vv.Value);
+                ManualRecordHisValues(vv.Key, vv.Value,out ntmp);
+                needsubmite |= ntmp;
             }
+            if (needsubmite)
+                ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
             return true;
         }
 

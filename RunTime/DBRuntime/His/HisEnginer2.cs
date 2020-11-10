@@ -1725,7 +1725,7 @@ namespace Cdy.Tag
                                 hb.WriteLongDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue + 24, lidata3.Z);
                                 break;
                         }
-                        hb.WriteInt(hb.QualityAddress + hb.CurrentCount, vv.Quality);
+                        hb.WriteByte(hb.QualityAddress + hb.CurrentCount, vv.Quality);
                         hb.EndTime = vv.Time;
                         hb.CurrentCount++;
                         hb.Relase();
@@ -1788,8 +1788,6 @@ namespace Cdy.Tag
             isNeedSubmite = false;
             int valueOffset, qulityOffset = 0;
 
-            //DateTime mLastTime = DateTime.MinValue;
-
             SortedDictionary<DateTime, ManualHisDataMemoryBlock> datacach;
            
             if (mHisTags.ContainsKey(id) && mHisTags[id].Type == RecordType.Driver)
@@ -1840,7 +1838,6 @@ namespace Cdy.Tag
                     }
                     datacach.Add(time, hb);
                 }
-                //mLastTime = time;
 
                 if (hb.CurrentCount < hb.MaxCount && datetime > hb.EndTime)
                 {
@@ -1932,26 +1929,12 @@ namespace Cdy.Tag
                             hb.WriteLongDirect(hb.ValueAddress + hb.CurrentCount * tag.SizeOfValue + 24, lidata3.Z);
                             break;
                     }
-                    hb.WriteInt(hb.QualityAddress + hb.CurrentCount, quality);
+                    hb.WriteByte(hb.QualityAddress + hb.CurrentCount, quality);
                     hb.EndTime = datetime;
                     hb.CurrentCount++;
                     hb.Relase();
                     HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
                 }
-
-                
-
-                //foreach (var vv in datacach.ToArray())
-                //{
-                //    if (vv.Key < time)
-                //    {
-                //        ServiceLocator.Locator.Resolve<IDataCompress2>().RequestManualToCompress(vv.Value);
-                //        datacach.Remove(vv.Key);
-                //        isNeedSubmite = true;
-                //    }
-                //}
-                //if (isNeedSubmite)
-                //    ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
 
                 return true;
             }

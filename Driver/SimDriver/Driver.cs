@@ -206,38 +206,56 @@ namespace SimDriver
 
                 long llsw = sw.ElapsedMilliseconds;
                 if (!mIsSecond)
-                    foreach (var vv in mManualRecordTagCach)
-                    {
+                    //foreach (var vv in mManualRecordTagCach)
+                        System.Threading.Tasks.Parallel.ForEach(mManualRecordTagCach, (vv) =>
+                        {
                         if (vv.Key == "Sim:cos")
                         {
                             TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = fval };
-                            mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
+                                foreach(var vvv in vv.Value)
+                                {
+                                    mTagHisValueService.SetTagHisValue(vvv, tv);
+                                }
+                            //mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
                         }
                         else if (vv.Key == "Sim:sin")
                         {
                             TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = sval };
-                            mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
-                            //mTagService.SetTagValue(vv.Value, sval);
-                        }
+                                foreach (var vvv in vv.Value)
+                                {
+                                    mTagHisValueService.SetTagHisValue(vvv, tv);
+                                }
+                                //mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
+                            }
                         else if (vv.Key == "Sim:step")
                         {
                             TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = mNumber };
-                            mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
-                            //mTagService.SetTagValue(vv.Value, mNumber);
-                        }
+                                foreach (var vvv in vv.Value)
+                                {
+                                    mTagHisValueService.SetTagHisValue(vvv, tv);
+                                }
+                                //mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
+                            }
                         else if (vv.Key == "Sim:steppoint")
                         {
                             TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = fval };
-                            mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
-                            // mTagService.SetPointValue(vv.Value, mNumber, mNumber, mNumber);
-                        }
+                                foreach (var vvv in vv.Value)
+                                {
+                                    mTagHisValueService.SetTagHisValue(vvv, tv);
+                                }
+                                //mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
+                            }
                         else if (vv.Key == "Sim:square")
                         {
                             TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = mBoolNumber };
-                            mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
-                            //mTagService.SetTagValue(vv.Value, mBoolNumber);
-                        }
-                    }
+                                foreach (var vvv in vv.Value)
+                                {
+                                    mTagHisValueService.SetTagHisValue(vvv, tv);
+                                }
+                                //mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
+                            }
+                        });
+                //}
 
 
                 int delay = (int)(500 - (DateTime.Now - mLastProcessTime).TotalMilliseconds);
@@ -245,11 +263,11 @@ namespace SimDriver
                 {
                     delay = 1;
                 }
-#if DEBUG
+//#if DEBUG
                 sw.Stop();
                 if (mNumber%10 == 0 || sw.ElapsedMilliseconds>=1000)
-                LoggerService.Service.Debug("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds+", set his value elapsed:"+(sw.ElapsedMilliseconds-llsw));
-#endif
+                LoggerService.Service.Info("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds+", set his value elapsed:"+(sw.ElapsedMilliseconds-llsw));
+//#endif
                 Thread.Sleep(delay);
             }
         }

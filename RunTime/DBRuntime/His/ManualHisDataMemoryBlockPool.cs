@@ -120,7 +120,9 @@ namespace DBRuntime.His
         /// <returns></returns>
         private ManualHisDataMemoryBlock NewBlock(int size)
         {
-            return new ManualHisDataMemoryBlock(size);
+            var re = new ManualHisDataMemoryBlock(size);
+            re.Clear();
+            return re;
         }
 
         /// <summary>

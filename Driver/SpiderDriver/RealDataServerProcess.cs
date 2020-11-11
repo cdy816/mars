@@ -535,9 +535,7 @@ namespace SpiderDriver
                     var clients = mCallBackRegistorIds.ToArray();
                     foreach (var cb in clients)
                     {
-                        //var buffer = BufferManager.Manager.Allocate(APIConst.RealValueFun, changtags.Count * 64 + 5);
                         var buffer = BufferManager.Manager.Allocate(APIConst.PushDataChangedFun, changtags.Count * 64 + 5);
-                        //buffer.WriteByte(APIConst.PushDataChangedFun);
                         buffer.WriteInt(0);
                         buffers.Add(cb.Key, buffer);
                         mDataCounts[cb.Key] = 0;

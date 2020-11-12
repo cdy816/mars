@@ -628,6 +628,7 @@ namespace SpiderDriver
         {
             if(mCallBackRegistorIds.ContainsKey(id))
             {
+                mCallBackRegistorIds[id].Dispose();
                 mCallBackRegistorIds.Remove(id);
             }
             base.OnClientDisconnected(id);

@@ -1111,8 +1111,7 @@ namespace SpiderDriver.ClientApi
                             int tcount = vdata.ReadInt();
                             for (int i = 0; i < tcount; i++)
                             {
-                                var id = vdata.ReadInt();
-                                re.Add(id>0);
+                                re.Add(vdata.ReadByte() > 0);
                             }
 
                             lock (mInfoRequreData)

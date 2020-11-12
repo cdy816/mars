@@ -212,6 +212,8 @@ namespace SpiderDriverDemo
             {
                 //to do hear
             }
+
+            var vvd = driverProxy.CheckRecordTypeByTagId(new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
         }
 
         private void ProcessSetTagValue()

@@ -76,7 +76,7 @@ namespace Cdy.Tag.Common
             {
                 int dindex = id % bufferSize;
                 byte bval = MemoryHelper.ReadByte((void*)mBuffers[idd], dindex / 8);
-                bval = (byte)(bval & (byte)(0x01 << (dindex % 8)));
+                bval = (byte)(bval | (byte)(0x01 << (dindex % 8)));
                 MemoryHelper.WriteByte((void*)mBuffers[idd], dindex / 8, bval);
             }
         }

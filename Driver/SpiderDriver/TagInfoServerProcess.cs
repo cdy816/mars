@@ -147,7 +147,7 @@ namespace SpiderDriver
                         int icount = data.ReadInt();
 
                         IByteBuffer re = BufferManager.Manager.Allocate(APIConst.TagInfoRequestFun, icount + 5);
-                        re.WriteByte(GetDriverRecordTypeTagIds);
+                        re.WriteByte(GetDriverRecordTypeTagIds2);
                         re.WriteInt(icount);
                         for (int i = 0; i < icount; i++)
                         {

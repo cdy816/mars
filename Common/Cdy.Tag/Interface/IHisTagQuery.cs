@@ -17,12 +17,23 @@ namespace Cdy.Tag
     /// </summary>
     public interface IHisTagQuery
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         IEnumerable<HisTag> ListAllTags();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<HisTag> ListAllDriverRecordTags();
         /// <summary>
         /// 
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
         HisTag GetHisTagById(int id);
+
     }
 }

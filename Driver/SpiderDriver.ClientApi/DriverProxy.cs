@@ -1081,11 +1081,11 @@ namespace SpiderDriver.ClientApi
         /// <param name="ids"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public List<int> GetDriverRecordTypeTagIds(List<int> ids,int timeout = 5000)
+        public List<bool> CheckRecordTypeByTagId(List<int> ids,int timeout = 5000)
         {
             lock (mTagInfoLockObj)
             {
-                List<int> re = new List<int>();
+                List<bool> re = new List<bool>();
                 CheckLogin();
                 var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8+4+ids.Count*4);
                 mb.WriteByte(ApiFunConst.GetDriverRecordTypeTagIds2);
@@ -1104,44 +1104,19 @@ namespace SpiderDriver.ClientApi
                 {
                     if (infoRequreEvent.WaitOne(timeout) && mInfoRequreData.Count > 0)
                     {
-                        while (true)
+                        var vdata = mInfoRequreData.Peek();
+                        var cmd = vdata.ReadByte();
+                        if (cmd == ApiFunConst.GetDriverRecordTypeTagIds2)
                         {
-                            if (mInfoRequreData.Count > 0)
+                            int tcount = vdata.ReadInt();
+                            for (int i = 0; i < tcount; i++)
                             {
-                                var vdata = mInfoRequreData.Peek();
-                                var cmd = vdata.ReadByte();
-                                if (cmd == ApiFunConst.GetDriverRecordTypeTagIds2)
-                                {
-                                    int total = vdata.ReadShort();
-                                    int icount = vdata.ReadShort();
-                                    int tcount = vdata.ReadInt();
-                                    for (int i = 0; i < tcount; i++)
-                                    {
-                                        var id = vdata.ReadInt();
-                                        re.Add(id);
-                                    }
-
-                                    lock (mInfoRequreData)
-                                        mInfoRequreData.Dequeue();
-
-                                    if (icount >= (total - 1)) break;
-                                }
-                                else
-                                {
-                                    break;
-                                }
+                                var id = vdata.ReadInt();
+                                re.Add(id>0);
                             }
-                            else
-                            {
-                                if ((DateTime.Now - dt).TotalSeconds > timeout)
-                                {
-                                    break;
-                                }
-                                else
-                                {
-                                    Thread.Sleep(100);
-                                }
-                            }
+
+                            lock (mInfoRequreData)
+                                mInfoRequreData.Dequeue();
                         }
 
                     }

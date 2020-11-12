@@ -8,6 +8,7 @@
 //==============================================================
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Cdy.Tag
@@ -111,6 +112,15 @@ namespace Cdy.Tag
         public HisTag GetHisTagById(int id)
         {
             return HisTags.ContainsKey(id) ? HisTags[id] : null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<HisTag> ListAllDriverRecordTags()
+        {
+            return HisTags.Values.Where(e=>e.Type == RecordType.Driver);
         }
     }
 }

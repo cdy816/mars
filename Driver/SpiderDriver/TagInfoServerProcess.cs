@@ -120,7 +120,7 @@ namespace SpiderDriver
 
                         var vserver = ServiceLocator.Locator.Resolve<IHisTagQuery>();
 
-                        var vtags = vserver.ListAllTags().Where(e=>e.Type == RecordType.Driver);
+                        var vtags = vserver.ListAllDriverRecordTags();
                         int tcount = vtags.Count() / psize;
                         tcount += (vtags.Count() % psize > 0 ? 1 : 0);
                         for (int i = 0; i < tcount; i++)
@@ -142,31 +142,25 @@ namespace SpiderDriver
                     loginId = data.ReadLong();
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
-                        int psize = 100000;
+                    
                         var vserver = ServiceLocator.Locator.Resolve<IHisTagQuery>();
                         int icount = data.ReadInt();
-                        List<HisTag> ids = new List<HisTag>();
-                        for(int i=0;i<icount;i++)
-                        {
-                            ids.Add(vserver.GetHisTagById(data.ReadInt()));
-                        }
 
-                        var vtags = ids.Where(e => e.Type == RecordType.Driver);
-                        int tcount = vtags.Count() / psize;
-                        tcount += (vtags.Count() % psize > 0 ? 1 : 0);
-                        for (int i = 0; i < tcount; i++)
+                        IByteBuffer re = BufferManager.Manager.Allocate(APIConst.TagInfoRequestFun, icount + 5);
+                        re.WriteByte(GetDriverRecordTypeTagIds);
+                        re.WriteInt(icount);
+                        for (int i = 0; i < icount; i++)
                         {
-                            if ((i + 1) * psize > vtags.Count())
+                            if(vserver.GetHisTagById(data.ReadInt()).Type == RecordType.Driver)
                             {
-                                var vv = vtags.Skip(i * psize).Take(vtags.Count() % psize);
-                                Parent.AsyncCallback(client, GetRecordTypeBuffer(vv, (short)i, (short)tcount));
+                                re.WriteByte(1);
                             }
                             else
                             {
-                                var vv = vtags.Skip(i * psize).Take(psize);
-                                Parent.AsyncCallback(client, GetRecordTypeBuffer(vv, (short)i, (short)tcount));
+                                re.WriteByte(0);
                             }
                         }
+                        Parent.AsyncCallback(client, re);
                     }
                     break;
                 case Login:

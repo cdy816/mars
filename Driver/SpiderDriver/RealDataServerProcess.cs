@@ -8,6 +8,7 @@
 //==============================================================
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -15,6 +16,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Cdy.Tag;
+using Cdy.Tag.Common;
 using Cdy.Tag.Driver;
 using DotNetty.Buffers;
 
@@ -29,7 +31,7 @@ namespace SpiderDriver
         #region ... Variables  ...
         
 
-        private Dictionary<string, HashSet<int>> mCallBackRegistorIds = new Dictionary<string, HashSet<int>>();
+        private Dictionary<string, IdBuffer> mCallBackRegistorIds = new Dictionary<string, IdBuffer>();
 
 
         private Queue<KeyValuePair<int,object>> mChangedTags = new Queue<KeyValuePair<int, object>>(10);
@@ -336,8 +338,7 @@ namespace SpiderDriver
                     for (int i = 0; i < minid; i++)
                     {
                         var ival = block.ReadInt();
-                        if(itmp.Contains(ival))
-                            itmp.Remove(ival);
+                        itmp.ClearId(ival);
                     }
                 }
                 Parent.AsyncCallback(clientId, ToByteBuffer(APIConst.RealValueFun, (byte)1));
@@ -357,29 +358,27 @@ namespace SpiderDriver
             try
             {
                 int minid = block.ReadInt();
-                HashSet<int> ids = new HashSet<int>();
+                
                 for (int i = 0; i < minid; i++)
                 {
                     var vv = block.ReadInt();
                     if (AllowTagIds.Contains(vv))
-                        ids.Add(vv);
-                }
-
-                if (mCallBackRegistorIds.ContainsKey(clientId))
-                {
-                    var itmp = mCallBackRegistorIds[clientId];
-                    foreach(var vv in ids)
                     {
-                        if(!itmp.Contains(vv))
+                        if (mCallBackRegistorIds.ContainsKey(clientId))
                         {
-                            itmp.Add(vv);
+                            var itmp = mCallBackRegistorIds[clientId];
+                            itmp.SetId(vv);
+                        }
+                        else
+                        {
+                            IdBuffer ids = new IdBuffer();
+                            mCallBackRegistorIds.Add(clientId, ids);
+                            ids.SetId(vv);
                         }
                     }
                 }
-                else
-                {
-                    mCallBackRegistorIds.Add(clientId, ids);
-                }
+
+                
 
                 if (!mDataCounts.ContainsKey(clientId))
                 {
@@ -547,7 +546,7 @@ namespace SpiderDriver
                         {
                             try
                             {
-                                if (vvc.Value.Contains(vv.Key))
+                                if (vvc.Value.CheckId(vv.Key))
                                 {
                                     byte tp = (byte)mTagManager.GetTagById(vv.Key).Type;
                                     ProcessTagPush(buffers[vvc.Key], vv.Key, tp, vv.Value);
@@ -615,7 +614,7 @@ namespace SpiderDriver
         {
             if(!mCallBackRegistorIds.ContainsKey(id))
             {
-                mCallBackRegistorIds.Add(id, new HashSet<int>());
+                mCallBackRegistorIds.Add(id,new IdBuffer());
             }
             base.OnClientConnected(id);
         }

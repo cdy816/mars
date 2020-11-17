@@ -633,17 +633,19 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  bool? DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  bool? DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
         {
-            HisQueryResult<bool> re = new HisQueryResult<bool>(1);
-            var count = DeCompressBoolValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re);
-            if (count > 0)
+            using (HisQueryResult<bool> re = new HisQueryResult<bool>(1))
             {
-                return re.GetValue(0);
-            }
-            else
-            {
-                return null;
+                var count = DeCompressBoolValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                if (count > 0)
+                {
+                    return re.GetValue(0);
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
@@ -657,7 +659,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result)
+        public  int DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result, Func<byte, object> ReadOtherDatablockAction)
         {
             DateTime stime;
             int valuecount = 0;
@@ -676,7 +678,66 @@ namespace Cdy.Tag
             int count = 0;
             int icount = 0;
             int icount1 = 0;
-            foreach (var time1 in time)
+
+            var findex = FindFirstAvaiableIndex(vv);
+            var flast = FindLastAvaiableIndex(vv);
+
+            var lowfirst = time.Where(e => e < vv[findex].Value.Item1);
+            var greatlast = time.Where(e => e > vv[flast].Value.Item1);
+            var times = time.Where(e => e >= vv[findex].Value.Item1 && e <= vv[flast].Value.Item1);
+
+            if (lowfirst.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<bool>)ReadOtherDatablockAction(0);
+                var valtmp = source.ReadByte(valaddr + findex) > 0;
+                foreach (var vtime in lowfirst)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(valtmp, vtime, qq[findex]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var ppval = (vtime - val.Time).TotalMilliseconds;
+                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (ppval < ffval)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            count++;
+
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - val.Time).TotalMilliseconds;
+                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
+
+            foreach (var time1 in times)
             {
                 while (icount < vv.Length - 1)
                 {
@@ -755,6 +816,58 @@ namespace Cdy.Tag
 
                 }
             }
+
+            if (greatlast.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<bool>)ReadOtherDatablockAction(1);
+                var valtmp = source.ReadByte(valaddr + flast) > 0;
+                foreach (var vtime in greatlast)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(valtmp, vtime, qq[flast]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var ppval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                            var ffval = (val.Time - vtime).TotalMilliseconds;
+
+                            if (ppval < ffval)
+                            {
+                                result.Add(valtmp, vtime, qq[flast]);
+                            }
+                            else
+                            {
+
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                            var fval = (val.Time - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(valtmp, vtime, qq[flast]);
+                            }
+                            else
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
+
             return count;
         }
 
@@ -768,17 +881,19 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  byte? DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  byte? DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
         {
-            HisQueryResult<byte> re = new HisQueryResult<byte>(1);
-            var count = DeCompressByteValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re);
-            if (count > 0)
+            using (HisQueryResult<byte> re = new HisQueryResult<byte>(1))
             {
-                return re.GetValue(0);
-            }
-            else
-            {
-                return null;
+                var count = DeCompressByteValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                if (count > 0)
+                {
+                    return re.GetValue(0);
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
         /// <summary>
@@ -791,7 +906,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result)
+        public  int DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result, Func<byte, object> ReadOtherDatablockAction)
         {
             DateTime stime;
             int valuecount = 0;
@@ -808,7 +923,82 @@ namespace Cdy.Tag
             int count = 0;
             int icount = 0;
             int icount1 = 0;
-            foreach (var time1 in time)
+
+            var findex = FindFirstAvaiableIndex(vv);
+            var flast = FindLastAvaiableIndex(vv);
+
+            var lowfirst = time.Where(e => e < vv[findex].Value.Item1);
+            var greatlast = time.Where(e => e > vv[flast].Value.Item1);
+            var times = time.Where(e => e >= vv[findex].Value.Item1 && e <= vv[flast].Value.Item1);
+
+            if (lowfirst.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<byte>)ReadOtherDatablockAction(0);
+                var valtmp = source.ReadByte(valaddr + findex);
+                foreach (var vtime in lowfirst)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(valtmp, vtime, qq[findex]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var ppval = (vtime - val.Time).TotalMilliseconds;
+                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (qq[findex] < 20 && val.Quality < 20)
+                            {
+                                var pval1 = (vtime - val.Time).TotalMilliseconds;
+                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
+                                var sval1 = val.Value;
+                                var sval2 = valtmp;
+
+                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                result.Add((object)val1, vtime, 0);
+                            }
+                            else if (qq[findex] < 20)
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            else if (val.Quality < 20)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(0, vtime, (byte)QualityConst.Null);
+                            }
+
+                            count++;
+
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - val.Time).TotalMilliseconds;
+                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
+
+            foreach (var time1 in times)
             {
                 //for (int i = 0; i < vv.Length - 1; i++)
                 while (icount < vv.Length - 1)
@@ -888,6 +1078,53 @@ namespace Cdy.Tag
 
                 }
             }
+
+            if (greatlast.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<byte>)ReadOtherDatablockAction(1);
+                var valtmp = source.ReadByte(valaddr + flast);
+                foreach (var vtime in greatlast)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(valtmp, vtime, qq[flast]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var pval1 = (val.Time - vtime).TotalMilliseconds;
+                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                            var sval1 = valtmp;
+                            var sval2 = val.Value;
+
+                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                            result.Add((object)val1, vtime, 0);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                            var fval = (val.Time - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(valtmp, vtime, qq[flast]);
+                            }
+                            else
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
             return count;
         }
 
@@ -900,17 +1137,19 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  DateTime? DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  DateTime? DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
         {
-            HisQueryResult<DateTime> re = new HisQueryResult<DateTime>(1);
-            var count = DeCompressDateTimeValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re);
-            if (count > 0)
+            using (HisQueryResult<DateTime> re = new HisQueryResult<DateTime>(1))
             {
-                return re.GetValue(0);
-            }
-            else
-            {
-                return null;
+                var count = DeCompressDateTimeValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                if (count > 0)
+                {
+                    return re.GetValue(0);
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
         /// <summary>
@@ -923,7 +1162,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result)
+        public  int DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result, Func<byte, object> ReadOtherDatablockAction)
         {
             DateTime stime;
             int valuecount = 0;
@@ -942,7 +1181,66 @@ namespace Cdy.Tag
             int count = 0;
             int icount = 0;
             int icount1 = 0;
-            foreach (var time1 in time)
+
+            var findex = FindFirstAvaiableIndex(vv);
+            var flast = FindLastAvaiableIndex(vv);
+
+            var lowfirst = time.Where(e => e < vv[findex].Value.Item1);
+            var greatlast = time.Where(e => e > vv[flast].Value.Item1);
+            var times = time.Where(e => e >= vv[findex].Value.Item1 && e <= vv[flast].Value.Item1);
+
+            if (lowfirst.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<DateTime>)ReadOtherDatablockAction(0);
+                var valtmp = source.ReadDateTime(valaddr + findex * 8);
+                foreach (var vtime in lowfirst)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(valtmp, vtime, qq[findex]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var ppval = (vtime - val.Time).TotalMilliseconds;
+                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (ppval < ffval)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            count++;
+
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - val.Time).TotalMilliseconds;
+                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
+
+            foreach (var time1 in times)
             {
                 // for (int i = 0; i < vv.Length - 1; i++)
                 while (icount < vv.Length - 1)
@@ -1022,6 +1320,57 @@ namespace Cdy.Tag
 
                 }
             }
+
+            if (greatlast.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<DateTime>)ReadOtherDatablockAction(1);
+                var valtmp = source.ReadDateTime(valaddr + flast * 8);
+                foreach (var vtime in greatlast)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(valtmp, vtime, qq[flast]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var ppval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                            var ffval = (val.Time - vtime).TotalMilliseconds;
+
+                            if (ppval < ffval)
+                            {
+                                result.Add(valtmp, vtime, qq[flast]);
+                            }
+                            else
+                            {
+
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                            var fval = (val.Time - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(valtmp, vtime, qq[flast]);
+                            }
+                            else
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
             return count;
         }
 
@@ -1035,17 +1384,19 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  double? DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  double? DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
         {
-            HisQueryResult<double> re = new HisQueryResult<double>(1);
-            var count = DeCompressDoubleValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re);
-            if (count > 0)
+            using (HisQueryResult<double> re = new HisQueryResult<double>(1))
             {
-                return re.GetValue(0);
-            }
-            else
-            {
-                return null;
+                var count = DeCompressDoubleValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                if (count > 0)
+                {
+                    return re.GetValue(0);
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
@@ -1059,7 +1410,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<double> result)
+        public  int DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<double> result, Func<byte, object> ReadOtherDatablockAction)
         {
             DateTime stime;
             int valuecount = 0;
@@ -1080,7 +1431,81 @@ namespace Cdy.Tag
             int icount = 0;
             int icount1 = 0;
 
-            foreach (var time1 in time)
+            var findex = FindFirstAvaiableIndex(vv);
+            var flast = FindLastAvaiableIndex(vv);
+
+            var lowfirst = time.Where(e => e < vv[findex].Value.Item1);
+            var greatlast = time.Where(e => e > vv[flast].Value.Item1);
+            var times = time.Where(e => e >= vv[findex].Value.Item1 && e <= vv[flast].Value.Item1);
+
+            if (lowfirst.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<double>)ReadOtherDatablockAction(0);
+                var valtmp = source.ReadDouble(valaddr + findex * 8);
+                foreach (var vtime in lowfirst)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(valtmp, vtime, qq[findex]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var ppval = (vtime - val.Time).TotalMilliseconds;
+                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (qq[findex] < 20 && val.Quality < 20)
+                            {
+                                var pval1 = (vtime - val.Time).TotalMilliseconds;
+                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
+                                var sval1 = val.Value;
+                                var sval2 = valtmp;
+
+                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                result.Add((object)val1, vtime, 0);
+                            }
+                            else if (qq[findex] < 20)
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            else if (val.Quality < 20)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(0, vtime, (byte)QualityConst.Null);
+                            }
+
+                            count++;
+
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - val.Time).TotalMilliseconds;
+                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
+
+            foreach (var time1 in times)
             {
                 //for (int i = 0; i < vv.Length - 1; i++)
                 while(icount<vv.Length-1)
@@ -1183,21 +1608,79 @@ namespace Cdy.Tag
                     icount = icount1;
                 }
             }
+
+            if (greatlast.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<double>)ReadOtherDatablockAction(1);
+                var valtmp = source.ReadDouble(valaddr + flast * 8);
+                foreach (var vtime in greatlast)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(valtmp, vtime, qq[flast]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var pval1 = (val.Time - vtime).TotalMilliseconds;
+                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                            var sval1 = valtmp;
+                            var sval2 = val.Value;
+
+                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                            result.Add((object)val1, vtime, 0);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                            var fval = (val.Time - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(valtmp, vtime, qq[flast]);
+                            }
+                            else
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
             return count;
         }
 
-
-        public  float? DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="time"></param>
+        /// <param name="timeTick"></param>
+        /// <param name="type"></param>
+        /// <param name="ReadOtherDatablockAction"></param>
+        /// <returns></returns>
+        public  float? DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
         {
-            HisQueryResult<float> re = new HisQueryResult<float>(1);
-            var count = DeCompressFloatValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re);
-            if(count>0)
+            using (HisQueryResult<float> re = new HisQueryResult<float>(1))
             {
-                return re.GetValue(0);
-            }
-            else
-            {
-                return null;
+                var count = DeCompressFloatValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                if (count > 0)
+                {
+                    return re.GetValue(0);
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
@@ -1211,7 +1694,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<float> result)
+        public  int DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<float> result, Func<byte, object> ReadOtherDatablockAction)
         {
             DateTime stime;
             int valuecount = 0;
@@ -1228,7 +1711,81 @@ namespace Cdy.Tag
             int count = 0;
             int icount = 0;
             int icount1 = 0;
-            foreach (var time1 in time)
+            var findex = FindFirstAvaiableIndex(vv);
+            var flast = FindLastAvaiableIndex(vv);
+
+            var lowfirst = time.Where(e => e < vv[findex].Value.Item1);
+            var greatlast = time.Where(e => e > vv[flast].Value.Item1);
+            var times = time.Where(e => e >= vv[findex].Value.Item1 && e <= vv[flast].Value.Item1);
+
+            if (lowfirst.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<float>)ReadOtherDatablockAction(0);
+                var valtmp = source.ReadFloat(valaddr + findex * 4);
+                foreach (var vtime in lowfirst)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(valtmp, vtime, qq[findex]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var ppval = (vtime - val.Time).TotalMilliseconds;
+                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (qq[findex] < 20 && val.Quality < 20)
+                            {
+                                var pval1 = (vtime - val.Time).TotalMilliseconds;
+                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
+                                var sval1 = val.Value;
+                                var sval2 = valtmp;
+
+                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                result.Add((object)val1, vtime, 0);
+                            }
+                            else if (qq[findex] < 20)
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            else if (val.Quality < 20)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(0, vtime, (byte)QualityConst.Null);
+                            }
+
+                            count++;
+
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - val.Time).TotalMilliseconds;
+                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
+
+            foreach (var time1 in times)
             {
                 while (icount < vv.Length - 1)
                 {
@@ -1330,7 +1887,52 @@ namespace Cdy.Tag
                     icount = icount1;
                 }
             }
-            
+            if (greatlast.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<float>)ReadOtherDatablockAction(1);
+                var valtmp = source.ReadFloat(valaddr + flast * 4);
+                foreach (var vtime in greatlast)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(valtmp, vtime, qq[flast]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var pval1 = (val.Time - vtime).TotalMilliseconds;
+                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                            var sval1 = valtmp;
+                            var sval2 = val.Value;
+
+                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                            result.Add((object)val1, vtime, 0);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                            var fval = (val.Time - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(valtmp, vtime, qq[flast]);
+                            }
+                            else
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
             return count;
         }
 
@@ -1343,17 +1945,19 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  int? DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  int? DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
         {
-            HisQueryResult<int> re = new HisQueryResult<int>(1);
-            var count = DeCompressIntValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re);
-            if (count > 0)
+            using (HisQueryResult<int> re = new HisQueryResult<int>(1))
             {
-                return re.GetValue(0);
-            }
-            else
-            {
-                return null;
+                var count = DeCompressIntValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                if (count > 0)
+                {
+                    return re.GetValue(0);
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
@@ -1367,7 +1971,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<int> result)
+        public  int DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<int> result, Func<byte, object> ReadOtherDatablockAction)
         {
             DateTime stime;
             int valuecount = 0;
@@ -1382,7 +1986,82 @@ namespace Cdy.Tag
             int count = 0;
             int icount = 0;
             int icount1 = 0;
-            foreach (var time1 in time)
+
+            var findex = FindFirstAvaiableIndex(vv);
+            var flast = FindLastAvaiableIndex(vv);
+
+            var lowfirst = time.Where(e => e < vv[findex].Value.Item1);
+            var greatlast = time.Where(e => e > vv[flast].Value.Item1);
+            var times = time.Where(e => e >= vv[findex].Value.Item1 && e <= vv[flast].Value.Item1);
+
+            if (lowfirst.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<int>)ReadOtherDatablockAction(0);
+                var valtmp = source.ReadInt(valaddr + findex * 4);
+                foreach (var vtime in lowfirst)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(valtmp, vtime, qq[findex]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var ppval = (vtime - val.Time).TotalMilliseconds;
+                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (qq[findex] < 20 && val.Quality < 20)
+                            {
+                                var pval1 = (vtime - val.Time).TotalMilliseconds;
+                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
+                                var sval1 = val.Value;
+                                var sval2 = valtmp;
+
+                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                result.Add((object)val1, vtime, 0);
+                            }
+                            else if (qq[findex] < 20)
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            else if (val.Quality < 20)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(0, vtime, (byte)QualityConst.Null);
+                            }
+
+                            count++;
+
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - val.Time).TotalMilliseconds;
+                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
+
+            foreach (var time1 in times)
             {
                 while (icount < vv.Length - 1)
                 {
@@ -1484,6 +2163,53 @@ namespace Cdy.Tag
                     icount = icount1;
                 }
             }
+
+            if (greatlast.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<int>)ReadOtherDatablockAction(1);
+                var valtmp = source.ReadInt(valaddr + flast * 4);
+                foreach (var vtime in greatlast)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(valtmp, vtime, qq[flast]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var pval1 = (val.Time - vtime).TotalMilliseconds;
+                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                            var sval1 = valtmp;
+                            var sval2 = val.Value;
+
+                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                            result.Add((object)val1, vtime, 0);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                            var fval = (val.Time - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(valtmp, vtime, qq[flast]);
+                            }
+                            else
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
             return count;
         }
 
@@ -1496,17 +2222,19 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  long? DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  long? DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
         {
-            HisQueryResult<long> re = new HisQueryResult<long>(1);
-            var count = DeCompressLongValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re);
-            if (count > 0)
+            using (HisQueryResult<long> re = new HisQueryResult<long>(1))
             {
-                return re.GetValue(0);
-            }
-            else
-            {
-                return null;
+                var count = DeCompressLongValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                if (count > 0)
+                {
+                    return re.GetValue(0);
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
@@ -1520,7 +2248,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<long> result)
+        public  int DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<long> result, Func<byte, object> ReadOtherDatablockAction)
         {
             DateTime stime;
             int valuecount = 0;
@@ -1536,7 +2264,82 @@ namespace Cdy.Tag
             int count = 0;
             int icount = 0;
             int icount1 = 0;
-            foreach (var time1 in time)
+
+            var findex = FindFirstAvaiableIndex(vv);
+            var flast = FindLastAvaiableIndex(vv);
+
+            var lowfirst = time.Where(e => e < vv[findex].Value.Item1);
+            var greatlast = time.Where(e => e > vv[flast].Value.Item1);
+            var times = time.Where(e => e >= vv[findex].Value.Item1 && e <= vv[flast].Value.Item1);
+
+            if (lowfirst.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<long>)ReadOtherDatablockAction(0);
+                var valtmp = source.ReadLong(valaddr + findex * 8);
+                foreach (var vtime in lowfirst)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(valtmp, vtime, qq[findex]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var ppval = (vtime - val.Time).TotalMilliseconds;
+                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (qq[findex] < 20 && val.Quality < 20)
+                            {
+                                var pval1 = (vtime - val.Time).TotalMilliseconds;
+                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
+                                var sval1 = val.Value;
+                                var sval2 = valtmp;
+
+                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                result.Add((object)val1, vtime, 0);
+                            }
+                            else if (qq[findex] < 20)
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            else if (val.Quality < 20)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(0, vtime, (byte)QualityConst.Null);
+                            }
+
+                            count++;
+
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - val.Time).TotalMilliseconds;
+                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
+
+            foreach (var time1 in times)
             {
                 //for (int i = 0; i < vv.Length - 1; i++)
                 while (icount < vv.Length - 1)
@@ -1639,6 +2442,53 @@ namespace Cdy.Tag
                     icount = icount1;
                 }
             }
+
+            if (greatlast.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<long>)ReadOtherDatablockAction(1);
+                var valtmp = source.ReadLong(valaddr + flast * 8);
+                foreach (var vtime in greatlast)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(valtmp, vtime, qq[flast]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var pval1 = (val.Time - vtime).TotalMilliseconds;
+                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                            var sval1 = valtmp;
+                            var sval2 = val.Value;
+
+                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                            result.Add((object)val1, vtime, 0);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                            var fval = (val.Time - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(valtmp, vtime, qq[flast]);
+                            }
+                            else
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
             return count;
         }
 
@@ -1651,18 +2501,47 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  short? DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  short? DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
         {
-            HisQueryResult<short> re = new HisQueryResult<short>(1);
-            var count = DeCompressShortValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re);
-            if (count > 0)
+            using (HisQueryResult<short> re = new HisQueryResult<short>(1))
             {
-                return re.GetValue(0);
+                var count = DeCompressShortValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                if (count > 0)
+                {
+                    return re.GetValue(0);
+                }
+                else
+                {
+                    return null;
+                }
             }
-            else
+        }
+
+        private int FindFirstAvaiableIndex(KeyValuePair<int, Tuple<DateTime, bool>>[] times)
+        {
+            int i = 0;
+            foreach(var vv in times)
             {
-                return null;
+                if(vv.Value.Item2)
+                {
+                    return i;
+                }
+                i++;
             }
+            return -1;
+        }
+
+        private int FindLastAvaiableIndex(KeyValuePair<int,Tuple<DateTime,bool>>[] times)
+        {
+            int i = 0;
+            for(i=times.Length-1;i>=0;i--)
+            {
+                if(times[i].Value.Item2)
+                {
+                    return i;
+                }
+            }
+            return -1;
         }
 
         /// <summary>
@@ -1675,7 +2554,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<short> result)
+        public  int DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<short> result, Func<byte, object> ReadOtherDatablockAction)
         {
 
             DateTime stime;
@@ -1691,7 +2570,82 @@ namespace Cdy.Tag
             int count = 0;
             int icount = 0;
             int icount1 = 0;
-            foreach (var time1 in time)
+
+            var findex = FindFirstAvaiableIndex(vv);
+            var flast = FindLastAvaiableIndex(vv);
+
+            var lowfirst = time.Where(e => e < vv[findex].Value.Item1);
+            var greatlast = time.Where(e => e > vv[flast].Value.Item1);
+            var times = time.Where(e => e >= vv[findex].Value.Item1 && e <= vv[flast].Value.Item1);
+
+            if (lowfirst.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<short>)ReadOtherDatablockAction(0);
+                var valtmp = source.ReadShort(valaddr + findex * 2);
+                foreach (var vtime in lowfirst)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(valtmp, vtime, qq[findex]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var ppval = (vtime - val.Time).TotalMilliseconds;
+                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (qq[findex] < 20 && val.Quality < 20)
+                            {
+                                var pval1 = (vtime - val.Time).TotalMilliseconds;
+                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
+                                var sval1 = val.Value;
+                                var sval2 = valtmp;
+
+                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                result.Add((object)val1, vtime, 0);
+                            }
+                            else if (qq[findex] < 20)
+                            {
+                                result.Add(valtmp, vtime,qq[findex]);
+                            }
+                            else if (val.Quality < 20)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(0, vtime, (byte)QualityConst.Null);
+                            }
+
+                            count++;
+
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - val.Time).TotalMilliseconds;
+                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
+
+            foreach (var time1 in times)
             {
                 //for (int i = 0; i < vv.Length - 1; i++)
                 while (icount < vv.Length - 1)
@@ -1794,95 +2748,55 @@ namespace Cdy.Tag
                     icount = icount1;
                 }
             }
+
+            if (greatlast.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<short>)ReadOtherDatablockAction(1);
+                var valtmp = source.ReadShort(valaddr + flast * 2);
+                foreach (var vtime in greatlast)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(valtmp, vtime, qq[flast]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var pval1 = (val.Time - vtime).TotalMilliseconds;
+                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                            var sval1 = valtmp;
+                            var sval2 = val.Value;
+
+                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                            result.Add((object)val1, vtime, 0);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                            var fval = (val.Time - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(valtmp, vtime, qq[flast]);
+                            }
+                            else
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
             return count;
-            //int count = 0;
-            //foreach (var time1 in time)
-            //{
-            //    for (int i = 0; i < vv.Length - 1; i++)
-            //    {
-            //        var skey = vv[i];
-
-            //        var snext = vv[i + 1];
-
-            //        if (time1 == skey.Value.Item1)
-            //        {
-            //            var val = source.ReadShort(valaddr + i*2);
-            //            result.Add(val, time1, qq[skey.Key]);
-            //            count++;
-            //            break;
-            //        }
-            //        else if (time1 > skey.Value.Item1 && time1 < snext.Value.Item1)
-            //        {
-
-            //            switch (type)
-            //            {
-            //                case QueryValueMatchType.Previous:
-            //                    var val = source.ReadShort(valaddr + i * 2);
-            //                    result.Add(val, time1, qq[skey.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.After:
-            //                    val = source.ReadShort(valaddr + (i + 1) * 2);
-            //                    result.Add(val, time1, qq[snext.Key]);
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.Linear:
-            //                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
-            //                    {
-            //                        var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
-            //                        var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-            //                        var sval1 = source.ReadShort(valaddr + i * 2);
-            //                        var sval2 = source.ReadShort(valaddr + (i + 1) * 2);
-            //                        var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
-            //                        result.Add((short)val1, time1, 0);
-            //                    }
-            //                    else if (qq[skey.Key] < 20)
-            //                    {
-            //                        val = source.ReadShort(valaddr + i * 2);
-            //                        result.Add(val, time1, qq[skey.Key]);
-            //                    }
-            //                    else if (qq[snext.Key] < 20)
-            //                    {
-            //                        val = source.ReadShort(valaddr + (i + 1) * 2);
-            //                        result.Add(val, time1, qq[snext.Key]);
-            //                    }
-            //                    else
-            //                    {
-            //                        result.Add(0, time1, (byte)QualityConst.Null);
-            //                    }
-            //                    count++;
-            //                    break;
-            //                case QueryValueMatchType.Closed:
-            //                    var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
-            //                    var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
-
-            //                    if (pval < fval)
-            //                    {
-            //                        val = source.ReadShort(valaddr + i * 2);
-            //                        result.Add(val, time1, qq[skey.Key]);
-            //                    }
-            //                    else
-            //                    {
-            //                        val = source.ReadShort(valaddr + (i + 1) * 2);
-            //                        result.Add(val, time1, qq[snext.Key]);
-            //                    }
-            //                    count++;
-            //                    break;
-            //            }
-
-            //            break;
-            //        }
-            //        else if (time1 == snext.Value.Item1)
-            //        {
-            //            var val = source.ReadShort(valaddr + (i + 1) * 2);
-            //            result.Add(val, time1, qq[snext.Key]);
-            //            count++;
-            //            break;
-            //        }
-
-            //    }
-            //}
-            //return count;
+            
 
 
         }
@@ -1896,17 +2810,19 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  string DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  string DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
         {
-            HisQueryResult<string> re = new HisQueryResult<string>(1);
-            var count = DeCompressStringValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re);
-            if (count > 0)
+            using (HisQueryResult<string> re = new HisQueryResult<string>(1))
             {
-                return re.GetValue(0);
-            }
-            else
-            {
-                return null;
+                var count = DeCompressStringValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                if (count > 0)
+                {
+                    return re.GetValue(0);
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
@@ -1920,7 +2836,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<string> result)
+        public  int DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<string> result, Func<byte, object> ReadOtherDatablockAction)
         {
 
             DateTime stime;
@@ -1946,7 +2862,66 @@ namespace Cdy.Tag
             int count = 0;
             int icount = 0;
             int icount1 = 0;
-            foreach (var time1 in time)
+
+            var findex = FindFirstAvaiableIndex(vv);
+            var flast = FindLastAvaiableIndex(vv);
+
+            var lowfirst = time.Where(e => e < vv[findex].Value.Item1);
+            var greatlast = time.Where(e => e > vv[flast].Value.Item1);
+            var times = time.Where(e => e >= vv[findex].Value.Item1 && e <= vv[flast].Value.Item1);
+
+            if (lowfirst.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<string>)ReadOtherDatablockAction(0);
+                var valtmp = dtmp[findex];
+                foreach (var vtime in lowfirst)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(valtmp, vtime, qq[findex]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var ppval = (vtime - val.Time).TotalMilliseconds;
+                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (ppval < ffval)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            count++;
+
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - val.Time).TotalMilliseconds;
+                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
+
+            foreach (var time1 in times)
             {
                 //for (int i = 0; i < vv.Length - 1; i++)
                 while (icount < vv.Length - 1)
@@ -2026,6 +3001,57 @@ namespace Cdy.Tag
                     icount = icount1;
                 }
             }
+
+            if (greatlast.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<string>)ReadOtherDatablockAction(1);
+                var valtmp = dtmp[flast];
+                foreach (var vtime in greatlast)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(valtmp, vtime, qq[flast]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var ppval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                            var ffval = (val.Time - vtime).TotalMilliseconds;
+
+                            if (ppval < ffval)
+                            {
+                                result.Add(valtmp, vtime, qq[flast]);
+                            }
+                            else
+                            {
+
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                            var fval = (val.Time - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(valtmp, vtime, qq[flast]);
+                            }
+                            else
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
             return count;
             
         }
@@ -2040,19 +3066,20 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  uint? DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  uint? DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
         {
-            HisQueryResult<uint> re = new HisQueryResult<uint>(1);
-            var count = DeCompressUIntValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re);
-            if (count > 0)
+            using (HisQueryResult<uint> re = new HisQueryResult<uint>(1))
             {
-                return re.GetValue(0);
+                var count = DeCompressUIntValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                if (count > 0)
+                {
+                    return re.GetValue(0);
+                }
+                else
+                {
+                    return null;
+                }
             }
-            else
-            {
-                return null;
-            }
-
         }
 
         /// <summary>
@@ -2065,7 +3092,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result)
+        public  int DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result, Func<byte, object> ReadOtherDatablockAction)
         {
             DateTime stime;
             int valuecount = 0;
@@ -2080,7 +3107,82 @@ namespace Cdy.Tag
             int count = 0;
             int icount = 0;
             int icount1 = 0;
-            foreach (var time1 in time)
+
+            var findex = FindFirstAvaiableIndex(vv);
+            var flast = FindLastAvaiableIndex(vv);
+
+            var lowfirst = time.Where(e => e < vv[findex].Value.Item1);
+            var greatlast = time.Where(e => e > vv[flast].Value.Item1);
+            var times = time.Where(e => e >= vv[findex].Value.Item1 && e <= vv[flast].Value.Item1);
+
+            if (lowfirst.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<uint>)ReadOtherDatablockAction(0);
+                var valtmp = source.ReadUInt(valaddr + findex * 4);
+                foreach (var vtime in lowfirst)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(valtmp, vtime, qq[findex]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var ppval = (vtime - val.Time).TotalMilliseconds;
+                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (qq[findex] < 20 && val.Quality < 20)
+                            {
+                                var pval1 = (vtime - val.Time).TotalMilliseconds;
+                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
+                                var sval1 = val.Value;
+                                var sval2 = valtmp;
+
+                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                result.Add((object)val1, vtime, 0);
+                            }
+                            else if (qq[findex] < 20)
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            else if (val.Quality < 20)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(0, vtime, (byte)QualityConst.Null);
+                            }
+
+                            count++;
+
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - val.Time).TotalMilliseconds;
+                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
+
+            foreach (var time1 in times)
             {
                 while (icount < vv.Length - 1)
                 {
@@ -2182,6 +3284,54 @@ namespace Cdy.Tag
                     icount = icount1;
                 }
             }
+
+            if (greatlast.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<uint>)ReadOtherDatablockAction(1);
+                var valtmp = source.ReadUInt(valaddr + flast * 4);
+                foreach (var vtime in greatlast)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(valtmp, vtime, qq[flast]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var pval1 = (val.Time - vtime).TotalMilliseconds;
+                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                            var sval1 = valtmp;
+                            var sval2 = val.Value;
+
+                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                            result.Add((object)val1, vtime, 0);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                            var fval = (val.Time - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(valtmp, vtime, qq[flast]);
+                            }
+                            else
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
+
             return count;
             
         }
@@ -2195,20 +3345,20 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  ulong? DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  ulong? DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
         {
-            HisQueryResult<ulong> re = new HisQueryResult<ulong>(1);
-            var count = DeCompressULongValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re);
-            if (count > 0)
+            using (HisQueryResult<ulong> re = new HisQueryResult<ulong>(1))
             {
-                return re.GetValue(0);
+                var count = DeCompressULongValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                if (count > 0)
+                {
+                    return re.GetValue(0);
+                }
+                else
+                {
+                    return null;
+                }
             }
-            else
-            {
-                return null;
-            }
-
-
         }
 
         /// <summary>
@@ -2221,7 +3371,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result)
+        public  int DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result, Func<byte, object> ReadOtherDatablockAction)
         {
             DateTime stime;
             int valuecount = 0;
@@ -2236,7 +3386,82 @@ namespace Cdy.Tag
             int count = 0;
             int icount = 0;
             int icount1 = 0;
-            foreach (var time1 in time)
+
+            var findex = FindFirstAvaiableIndex(vv);
+            var flast = FindLastAvaiableIndex(vv);
+
+            var lowfirst = time.Where(e => e < vv[findex].Value.Item1);
+            var greatlast = time.Where(e => e > vv[flast].Value.Item1);
+            var times = time.Where(e => e >= vv[findex].Value.Item1 && e <= vv[flast].Value.Item1);
+
+            if (lowfirst.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<ulong>)ReadOtherDatablockAction(0);
+                var valtmp = source.ReadULong(valaddr + findex * 8);
+                foreach (var vtime in lowfirst)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(valtmp, vtime, qq[findex]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var ppval = (vtime - val.Time).TotalMilliseconds;
+                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (qq[findex] < 20 && val.Quality < 20)
+                            {
+                                var pval1 = (vtime - val.Time).TotalMilliseconds;
+                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
+                                var sval1 = val.Value;
+                                var sval2 = valtmp;
+
+                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                result.Add((object)val1, vtime, 0);
+                            }
+                            else if (qq[findex] < 20)
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            else if (val.Quality < 20)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(0, vtime, (byte)QualityConst.Null);
+                            }
+
+                            count++;
+
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - val.Time).TotalMilliseconds;
+                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
+
+            foreach (var time1 in times)
             {
                 //for (int i = 0; i < vv.Length - 1; i++)
                 while (icount < vv.Length - 1)
@@ -2339,6 +3564,53 @@ namespace Cdy.Tag
                     icount = icount1;
                 }
             }
+
+            if (greatlast.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<ulong>)ReadOtherDatablockAction(1);
+                var valtmp = source.ReadULong(valaddr + flast * 8);
+                foreach (var vtime in greatlast)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(valtmp, vtime, qq[flast]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var pval1 = (val.Time - vtime).TotalMilliseconds;
+                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                            var sval1 = valtmp;
+                            var sval2 = val.Value;
+
+                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                            result.Add((object)val1, vtime, 0);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                            var fval = (val.Time - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(valtmp, vtime, qq[flast]);
+                            }
+                            else
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
             return count;
             
         }
@@ -2352,19 +3624,20 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  ushort? DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  ushort? DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
         {
-            HisQueryResult<ushort> re = new HisQueryResult<ushort>(1);
-            var count = DeCompressUShortValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re);
-            if (count > 0)
+            using (HisQueryResult<ushort> re = new HisQueryResult<ushort>(1))
             {
-                return re.GetValue(0);
+                var count = DeCompressUShortValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                if (count > 0)
+                {
+                    return re.GetValue(0);
+                }
+                else
+                {
+                    return null;
+                }
             }
-            else
-            {
-                return null;
-            }
-
 
         }
 
@@ -2378,7 +3651,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result)
+        public  int DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result, Func<byte, object> ReadOtherDatablockAction)
         {
             DateTime stime;
             int valuecount = 0;
@@ -2393,7 +3666,82 @@ namespace Cdy.Tag
             int count = 0;
             int icount = 0;
             int icount1 = 0;
-            foreach (var time1 in time)
+
+            var findex = FindFirstAvaiableIndex(vv);
+            var flast = FindLastAvaiableIndex(vv);
+
+            var lowfirst = time.Where(e => e < vv[findex].Value.Item1);
+            var greatlast = time.Where(e => e > vv[flast].Value.Item1);
+            var times = time.Where(e => e >= vv[findex].Value.Item1 && e <= vv[flast].Value.Item1);
+
+            if (lowfirst.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<ushort>)ReadOtherDatablockAction(0);
+                var valtmp = source.ReadUShort(valaddr + findex * 2);
+                foreach (var vtime in lowfirst)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(valtmp, vtime, qq[findex]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var ppval = (vtime - val.Time).TotalMilliseconds;
+                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (qq[findex] < 20 && val.Quality < 20)
+                            {
+                                var pval1 = (vtime - val.Time).TotalMilliseconds;
+                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
+                                var sval1 = val.Value;
+                                var sval2 = valtmp;
+
+                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                result.Add((object)val1, vtime, 0);
+                            }
+                            else if (qq[findex] < 20)
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            else if (val.Quality < 20)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(0, vtime, (byte)QualityConst.Null);
+                            }
+
+                            count++;
+
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - val.Time).TotalMilliseconds;
+                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            else
+                            {
+                                result.Add(valtmp, vtime, qq[findex]);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
+
+            foreach (var time1 in times)
             {
                 while (icount < vv.Length - 1)
                 {
@@ -2495,6 +3843,53 @@ namespace Cdy.Tag
                     icount = icount1;
                 }
             }
+
+            if (greatlast.Count() > 0)
+            {
+                //如果读取的时间小于，当前数据段的起始时间
+
+                var val = (TagHisValue<ushort>)ReadOtherDatablockAction(1);
+                var valtmp = source.ReadUShort(valaddr + flast * 2);
+                foreach (var vtime in greatlast)
+                {
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            result.Add(valtmp, vtime, qq[flast]);
+                            count++;
+                            break;
+                        case QueryValueMatchType.After:
+                            result.Add(val.Value, vtime, val.Quality);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            var pval1 = (val.Time - vtime).TotalMilliseconds;
+                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                            var sval1 = valtmp;
+                            var sval2 = val.Value;
+
+                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                            result.Add((object)val1, vtime, 0);
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                            var fval = (val.Time - vtime).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                result.Add(valtmp, vtime, qq[flast]);
+                            }
+                            else
+                            {
+                                result.Add(val.Value, vtime, val.Quality);
+                            }
+                            count++;
+                            break;
+                    }
+                }
+            }
             return count;
             
         }
@@ -2569,6 +3964,685 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="tp"></param>
+        /// <returns></returns>
+        public override TagHisValue<T> DeCompressRawValue<T>(MarshalMemoryBlock source, int sourceAddr, byte tp)
+        {
+            DateTime time;
+
+            int valuecount = 0;
+
+            byte timelen = 0;
+
+            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time, out timelen);
+            if (typeof(T) == typeof(bool))
+            {
+                #region bool
+                //读取质量戳,时间戳2/4个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 1) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadBytes(valaddr, valuecount);
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i--)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<bool>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i]>0 });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i++)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<bool>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i]>0 });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if(typeof(T) == typeof(byte))
+            {
+                #region byte
+                //读取质量戳,时间戳2/4个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 1) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadBytes(valaddr, valuecount);
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i--)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<byte>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i++)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<byte>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(short))
+            {
+                #region short
+                //读取质量戳,时间戳2/4个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 2) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadShorts(valaddr, valuecount);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i--)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<short>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i++)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<short>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(ushort))
+            {
+                #region ushort
+                //读取质量戳,时间戳2/4个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 2) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadUShorts(valaddr, valuecount);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i--)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<ushort>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i++)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<ushort>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(int))
+            {
+                #region int
+                //读取质量戳,时间戳2/4个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 4) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadInts(valaddr, valuecount);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i--)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<int>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i++)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<int>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(uint))
+            {
+                #region unit
+                //读取质量戳,时间戳2/4个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 4) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadUInts(valaddr, valuecount);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i--)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<uint>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i++)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<uint>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(long))
+            {
+                #region long
+                //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 8) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadLongs(valaddr, valuecount);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i--)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<long>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i++)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<long>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(ulong))
+            {
+                #region ulong
+                //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 8) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadULongs(valaddr, valuecount);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i--)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<ulong>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i++)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<ulong>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(DateTime))
+            {
+                #region datetime
+                //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 8) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadDateTimes(valaddr, valuecount);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i--)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<DateTime>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i++)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<DateTime>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(double))
+            {
+                #region double
+                //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 8) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadDoubleByMemory(valaddr, valuecount);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i--)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<double>() { Quality = qq[i], Time = qs[i].Item1, Value = vals.Span[i] });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i++)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<double>() { Quality = qq[i], Time = qs[i].Item1, Value = vals.Span[i] });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                #region float
+                //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 4) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadFloats(valaddr, valuecount);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i--)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<double>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i++)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<double>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(string))
+            {
+                #region string
+                //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
+                var valaddr = qs.Count * timelen + 17 + sourceAddr;
+
+                List<string> vals = new List<string>();
+
+                source.Position = valaddr;
+                for (int ic = 0; ic < valuecount; ic++)
+                {
+                    vals.Add(source.ReadStringbyFixSize());
+                }
+
+                var qq = source.ReadBytes(valuecount);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i--)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<string>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i++)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<string>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(IntPointData))
+            {
+                #region IntPointData
+                //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 8) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadInts(valaddr, valuecount * 2);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i=i-2)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<IntPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new IntPointData(vals[i-1], vals[i])});
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i=i+2)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<IntPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new IntPointData(vals[i], vals[i + 1]) });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(UIntPointData))
+            {
+                #region UIntPointData
+                //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 8) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadUInts(valaddr, valuecount * 2);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i = i - 2)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<UIntPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new UIntPointData(vals[i - 1], vals[i]) });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i = i + 2)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<UIntPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new UIntPointData(vals[i], vals[i + 1]) });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(IntPoint3Data))
+            {
+                #region IntPoint3Data
+                //读取质量戳,时间戳2个字节，值12个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 12) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadInts(valaddr, valuecount * 3);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i = i - 3)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<IntPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new IntPoint3Data(vals[i - 2], vals[i - 1], vals[i]) });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i = i + 3)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<IntPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new IntPoint3Data(vals[i], vals[i + 1], vals[i + 2]) });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(UIntPoint3Data))
+            {
+                #region UIntPoint3Data
+                //读取质量戳,时间戳2个字节，值12个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 12) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadUInts(valaddr, valuecount * 3);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i = i - 3)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<UIntPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new UIntPoint3Data(vals[i - 2], vals[i - 1], vals[i]) });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i = i + 3)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<UIntPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new UIntPoint3Data(vals[i], vals[i + 1], vals[i + 2]) });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(LongPointData))
+            {
+                #region LongPointData
+                //读取质量戳,时间戳2个字节，值16个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 16) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadLongs(valaddr, valuecount * 2);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i = i - 2)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<LongPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new LongPointData(vals[i - 1], vals[i]) });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i = i + 2)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<LongPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new LongPointData(vals[i], vals[i + 1]) });
+                        }
+                    }
+                }
+                #endregion
+            }
+            else if (typeof(T) == typeof(ULongPointData))
+            {
+                //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 16) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadULongs(valaddr, valuecount * 2);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i = i - 2)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<ULongPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new ULongPointData(vals[i - 1], vals[i]) });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i = i + 2)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<ULongPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new ULongPointData(vals[i], vals[i + 1]) });
+                        }
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(LongPoint3Data))
+            {
+                //读取质量戳,时间戳2个字节，值24个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 24) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadLongs(valaddr, valuecount * 3);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i = i - 3)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<LongPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new LongPoint3Data(vals[i - 2], vals[i - 1], vals[i]) });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i = i + 3)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<LongPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new LongPoint3Data(vals[i], vals[i + 1], vals[i + 2]) });
+                        }
+                    }
+                }
+            }
+            else if (typeof(T) == typeof(ULongPoint3Data))
+            {
+                //读取质量戳,时间戳2个字节，值8个字节，质量戳1个字节
+                var qq = source.ReadBytes(valuecount * (timelen + 24) + 17 + sourceAddr, valuecount);
+
+                var valaddr = valuecount * timelen + 17 + sourceAddr;
+
+                var vals = source.ReadULongs(valaddr, valuecount * 3);
+
+                if (tp == 0)
+                {
+                    //读最后一个
+                    for (int i = valuecount - 1; i >= 0; i = i - 3)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<ULongPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new ULongPoint3Data(vals[i - 2], vals[i - 1], vals[i]) });
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < valuecount; i = i + 3)
+                    {
+                        if (qs[i].Item2)
+                        {
+                            return (TagHisValue<T>)((object)new TagHisValue<ULongPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new ULongPoint3Data(vals[i], vals[i + 1], vals[i + 2]) });
+                        }
+                    }
+                }
+            }
+
+
+            return TagHisValue<T>.Empty;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source"></param>
         /// <param name="sourceAddr"></param>
@@ -2576,59 +4650,67 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override object DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public override object DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
         {
             if (typeof(T) == typeof(bool))
             {
-                return ((object)DeCompressBoolValue(source, sourceAddr, time, timeTick, type));
+                return ((object)DeCompressBoolValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
             }
             else if (typeof(T) == typeof(byte))
             {
-                return ((object)DeCompressByteValue(source, sourceAddr, time, timeTick, type));
+                return ((object)DeCompressByteValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
 
             }
             else if (typeof(T) == typeof(short))
             {
-                return ((object)DeCompressShortValue(source, sourceAddr, time, timeTick, type));
+                return ((object)DeCompressShortValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
 
             }
             else if (typeof(T) == typeof(ushort))
             {
-                return ((object)DeCompressUShortValue(source, sourceAddr, time, timeTick, type));
+                return ((object)DeCompressUShortValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
 
             }
             else if (typeof(T) == typeof(int))
             {
-                return ((object)DeCompressIntValue(source, sourceAddr, time, timeTick, type));
+                return ((object)DeCompressIntValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
 
             }
             else if (typeof(T) == typeof(uint))
             {
-                return ((object)DeCompressUIntValue(source, sourceAddr, time, timeTick, type));
+                return ((object)DeCompressUIntValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
 
             }
             else if (typeof(T) == typeof(long))
             {
-                return ((object)DeCompressLongValue(source, sourceAddr, time, timeTick, type));
+                return ((object)DeCompressLongValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
 
             }
             else if (typeof(T) == typeof(ulong))
             {
-                return ((object)DeCompressULongValue(source, sourceAddr, time, timeTick, type));
+                return ((object)DeCompressULongValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
 
+            }
+            else if (typeof(T) == typeof(double))
+            {
+                return DeCompressDoubleValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction);
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                return DeCompressFloatValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction);
             }
             else if (typeof(T) == typeof(DateTime))
             {
-                return ((object)DeCompressDateTimeValue(source, sourceAddr, time, timeTick, type));
+                return ((object)DeCompressDateTimeValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
 
             }
             else if (typeof(T) == typeof(string))
             {
-                return ((object)DeCompressStringValue(source, sourceAddr, time, timeTick, type));
+                return ((object)DeCompressStringValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
             }
             else
             {
-                return DeCompressPointValue<T>(source, sourceAddr, time, timeTick, type);
+                return DeCompressPointValue<T>(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction);
             }
         }
 
@@ -2643,67 +4725,67 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
+        public override int DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result, Func<byte, object> ReadOtherDatablockAction)
         {
             if (typeof(T) == typeof(bool))
             {
-                return DeCompressBoolValue(source, sourceAddr, time, timeTick,type, result as HisQueryResult<bool>);
+                return DeCompressBoolValue(source, sourceAddr, time, timeTick,type, result as HisQueryResult<bool>, ReadOtherDatablockAction);
             }
             else if (typeof(T) == typeof(byte))
             {
-                return DeCompressByteValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<byte>);
+                return DeCompressByteValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<byte>, ReadOtherDatablockAction);
 
             }
             else if (typeof(T) == typeof(short))
             {
-                return DeCompressShortValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<short>);
+                return DeCompressShortValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<short>, ReadOtherDatablockAction);
 
             }
             else if (typeof(T) == typeof(ushort))
             {
-                return DeCompressUShortValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<ushort>);
+                return DeCompressUShortValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<ushort>, ReadOtherDatablockAction);
 
             }
             else if (typeof(T) == typeof(int))
             {
-                return DeCompressIntValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<int>);
+                return DeCompressIntValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<int>, ReadOtherDatablockAction);
 
             }
             else if (typeof(T) == typeof(uint))
             {
-                return DeCompressUIntValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<uint>);
+                return DeCompressUIntValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<uint>, ReadOtherDatablockAction);
 
             }
             else if (typeof(T) == typeof(long))
             {
-                return DeCompressLongValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<long>);
+                return DeCompressLongValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<long>, ReadOtherDatablockAction);
 
             }
             else if (typeof(T) == typeof(ulong))
             {
-                return DeCompressULongValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<ulong>);
+                return DeCompressULongValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<ulong>, ReadOtherDatablockAction);
 
             }
             else if (typeof(T) == typeof(DateTime))
             {
-                return DeCompressDateTimeValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<DateTime>);
+                return DeCompressDateTimeValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<DateTime>, ReadOtherDatablockAction);
 
             }
             else if (typeof(T) == typeof(string))
             {
-                return DeCompressStringValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<string>);
+                return DeCompressStringValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<string>, ReadOtherDatablockAction);
             }
             else if (typeof(T) == typeof(double))
             {
-                return DeCompressDoubleValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<double>);
+                return DeCompressDoubleValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<double>, ReadOtherDatablockAction);
             }
             else if (typeof(T) == typeof(float))
             {
-                return DeCompressFloatValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<float>);
+                return DeCompressFloatValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<float>, ReadOtherDatablockAction);
             }
             else
             {
-                return DeCompressPointValue(source, sourceAddr, time,timeTick,type, result);
+                return DeCompressPointValue(source, sourceAddr, time,timeTick,type, result, ReadOtherDatablockAction);
             }
 
         }
@@ -2899,602 +4981,20 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  T DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type)
+        public  T DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
         {
-            DateTime time1;
-            int valuecount = 0;
-            object reval = null;
-            byte timelen = 0;
-
-            var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out time1, out timelen);
-            var vv = qs.ToArray();
-
-            if (typeof(T) == typeof(IntPointData))
+            using (HisQueryResult<T> re = new HisQueryResult<T>(1))
             {
-
-                var qq = source.ReadBytes(qs.Count * (timelen+8) + 17 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * timelen + 17 + sourceAddr;
-
-                for (int i = 0; i < vv.Length - 1; i = i + 2)
+                var count = DeCompressPointValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                if (count > 0)
                 {
-                    var skey = vv[i];
-
-                    var snext = vv[i + 1];
-
-                    if (time == skey.Value.Item1)
-                    {
-                        reval = new IntPointData(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4));
-                        break;
-                    }
-                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                reval = new IntPointData(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4));
-                                break;
-                            case QueryValueMatchType.After:
-                                reval = new IntPointData(source.ReadInt(valaddr + (i + 2) * 4), source.ReadInt(valaddr + (i + 3) * 4));
-                                break;
-                            case QueryValueMatchType.Linear:
-
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
-                                {
-                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
-                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-                                    var sval1 = source.ReadInt(valaddr + i * 4);
-                                    var sval12 = source.ReadInt(valaddr + (i + 1) * 4);
-                                    var sval2 = source.ReadInt(valaddr + (i + 2) * 4);
-                                    var sval22 = source.ReadInt(valaddr + (i + 3) * 4);
-                                    var x1 = (int)(pval1 / tval1 * (sval2 - sval1) + sval1);
-                                    var x2 = (int)(pval1 / tval1 * (sval22 - sval12) + sval12);
-                                    reval = new IntPointData(x1, x2);
-                                }
-                                else if (qq[skey.Key] < 20)
-                                {
-                                    reval = new IntPointData(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4));
-                                }
-                                else if (qq[snext.Key] < 20)
-                                {
-                                    reval = new IntPointData(source.ReadInt(valaddr + (i + 2) * 4), source.ReadInt(valaddr + (i + 3) * 4));
-                                }
-                                break;
-
-                            case QueryValueMatchType.Closed:
-                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
-                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
-                                if (pval < fval)
-                                {
-                                    reval = new IntPointData(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4));
-                                }
-                                else
-                                {
-                                    reval = new IntPointData(source.ReadInt(valaddr + (i + 2) * 4), source.ReadInt(valaddr + (i + 3) * 4));
-                                }
-                                break;
-                        }
-                    }
-                    else if (time == snext.Value.Item1)
-                    {
-                        reval = new IntPointData(source.ReadInt(valaddr + (i + 2) * 4), source.ReadInt(valaddr + (i + 3) * 4));
-                    }
+                    return re.GetValue(0);
+                }
+                else
+                {
+                    return default(T);
                 }
             }
-            else if (typeof(T) == typeof(UIntPointData))
-            {
-
-                var qq = source.ReadBytes(qs.Count * (timelen + 8) + 17 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * timelen + 17 + sourceAddr;
-
-                for (int i = 0; i < vv.Length - 1; i = i + 2)
-                {
-                    var skey = vv[i];
-
-                    var snext = vv[i + 1];
-
-                    if (time == skey.Value.Item1)
-                    {
-                        reval = new UIntPointData(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4));
-                        break;
-                    }
-                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                reval = new UIntPointData(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4));
-                                break;
-                            case QueryValueMatchType.After:
-                                reval = new UIntPointData(source.ReadUInt(valaddr + (i + 2) * 4), source.ReadUInt(valaddr + (i + 3) * 4));
-                                break;
-                            case QueryValueMatchType.Linear:
-
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
-                                {
-                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
-                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-                                    var sval1 = source.ReadUInt(valaddr + i * 4);
-                                    var sval12 = source.ReadUInt(valaddr + (i + 1) * 4);
-                                    var sval2 = source.ReadUInt(valaddr + (i + 2) * 4);
-                                    var sval22 = source.ReadUInt(valaddr + (i + 3) * 4);
-                                    var x1 = (uint)(pval1 / tval1 * (sval2 - sval1) + sval1);
-                                    var x2 = (uint)(pval1 / tval1 * (sval22 - sval12) + sval12);
-                                    reval = new UIntPointData(x1, x2);
-                                }
-                                else if (qq[skey.Key] < 20)
-                                {
-                                    reval = new UIntPointData(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4));
-                                }
-                                else if (qq[snext.Key] < 20)
-                                {
-                                    reval = new UIntPointData(source.ReadUInt(valaddr + (i + 2) * 4), source.ReadUInt(valaddr + (i + 3) * 4));
-                                }
-                                break;
-
-                            case QueryValueMatchType.Closed:
-                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
-                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
-                                if (pval < fval)
-                                {
-                                    reval = new UIntPointData(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4));
-                                }
-                                else
-                                {
-                                    reval = new UIntPointData(source.ReadUInt(valaddr + (i + 2) * 4), source.ReadUInt(valaddr + (i + 3) * 4));
-                                }
-                                break;
-                        }
-                    }
-                    else if (time == snext.Value.Item1)
-                    {
-                        reval = new UIntPointData(source.ReadUInt(valaddr + (i + 2) * 4), source.ReadUInt(valaddr + (i + 3) * 4));
-                    }
-                }
-            }
-            else if (typeof(T) == typeof(LongPointData))
-            {
-
-                var qq = source.ReadBytes(qs.Count * (timelen + 16) + 17 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * timelen + 17 + sourceAddr;
-
-                for (int i = 0; i < vv.Length - 1; i = i + 2)
-                {
-                    var skey = vv[i];
-
-                    var snext = vv[i + 1];
-
-                    if (time == skey.Value.Item1)
-                    {
-                        reval = new LongPointData(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8));
-                        break;
-                    }
-                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                reval = new LongPointData(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8));
-                                break;
-                            case QueryValueMatchType.After:
-                                reval = new LongPointData(source.ReadLong(valaddr + (i + 2) * 8), source.ReadLong(valaddr + (i + 3) * 8));
-                                break;
-                            case QueryValueMatchType.Linear:
-
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
-                                {
-                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
-                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-                                    var sval1 = source.ReadLong(valaddr + i * 8);
-                                    var sval12 = source.ReadLong(valaddr + (i + 1) * 8);
-                                    var sval2 = source.ReadLong(valaddr + (i + 2) * 8);
-                                    var sval22 = source.ReadLong(valaddr + (i + 3) * 8);
-                                    var x1 = (long)(pval1 / tval1 * (sval2 - sval1) + sval1);
-                                    var x2 = (long)(pval1 / tval1 * (sval22 - sval12) + sval12);
-                                    reval = new LongPointData(x1, x2);
-                                }
-                                else if (qq[skey.Key] < 20)
-                                {
-                                    reval = new LongPointData(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8));
-                                }
-                                else if (qq[snext.Key] < 20)
-                                {
-                                    reval = new LongPointData(source.ReadLong(valaddr + (i + 2) * 8), source.ReadLong(valaddr + (i + 3) * 8));
-                                }
-                                break;
-
-                            case QueryValueMatchType.Closed:
-                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
-                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
-                                if (pval < fval)
-                                {
-                                    reval = new LongPointData(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8));
-                                }
-                                else
-                                {
-                                    reval = new LongPointData(source.ReadLong(valaddr + (i + 2) * 8), source.ReadLong(valaddr + (i + 3) * 8));
-                                }
-                                break;
-                        }
-                    }
-                    else if (time == snext.Value.Item1)
-                    {
-                        reval = new LongPointData(source.ReadLong(valaddr + (i + 2) * 8), source.ReadLong(valaddr + (i + 3) * 8));
-                    }
-                }
-            }
-            else if (typeof(T) == typeof(ULongPointData))
-            {
-
-                var qq = source.ReadBytes(qs.Count * (timelen + 16) + 17 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * timelen + 17 + sourceAddr;
-
-                for (int i = 0; i < vv.Length - 1; i = i + 2)
-                {
-                    var skey = vv[i];
-
-                    var snext = vv[i + 1];
-
-                    if (time == skey.Value.Item1)
-                    {
-                        reval = new ULongPointData(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8));
-                        break;
-                    }
-                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                reval = new ULongPointData(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8));
-                                break;
-                            case QueryValueMatchType.After:
-                                reval = new ULongPointData(source.ReadULong(valaddr + (i + 2) * 8), source.ReadULong(valaddr + (i + 3) * 8));
-                                break;
-                            case QueryValueMatchType.Linear:
-
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
-                                {
-                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
-                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-                                    var sval1 = source.ReadLong(valaddr + i * 8);
-                                    var sval12 = source.ReadLong(valaddr + (i + 1) * 8);
-                                    var sval2 = source.ReadLong(valaddr + (i + 2) * 8);
-                                    var sval22 = source.ReadLong(valaddr + (i + 3) * 8);
-                                    var x1 = (ulong)(pval1 / tval1 * (sval2 - sval1) + sval1);
-                                    var x2 = (ulong)(pval1 / tval1 * (sval22 - sval12) + sval12);
-                                    reval = new ULongPointData(x1, x2);
-                                }
-                                else if (qq[skey.Key] < 20)
-                                {
-                                    reval = new ULongPointData(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8));
-                                }
-                                else if (qq[snext.Key] < 20)
-                                {
-                                    reval = new ULongPointData(source.ReadULong(valaddr + (i + 2) * 8), source.ReadULong(valaddr + (i + 3) * 8));
-                                }
-                                break;
-
-                            case QueryValueMatchType.Closed:
-                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
-                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
-                                if (pval < fval)
-                                {
-                                    reval = new ULongPointData(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8));
-                                }
-                                else
-                                {
-                                    reval = new ULongPointData(source.ReadULong(valaddr + (i + 2) * 8), source.ReadULong(valaddr + (i + 3) * 8));
-                                }
-                                break;
-                        }
-                    }
-                    else if (time == snext.Value.Item1)
-                    {
-                        reval = new ULongPointData(source.ReadULong(valaddr + (i + 2) * 8), source.ReadULong(valaddr + (i + 3) * 8));
-                    }
-                }
-            }
-            else if (typeof(T) == typeof(IntPoint3Data))
-            {
-
-                var qq = source.ReadBytes(qs.Count * (timelen + 12) + 17 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * timelen + 17 + sourceAddr;
-
-                for (int i = 0; i < vv.Length - 1; i = i + 3)
-                {
-                    var skey = vv[i];
-
-                    var snext = vv[i + 1];
-
-                    if (time == skey.Value.Item1)
-                    {
-                        reval = new IntPoint3Data(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4), source.ReadInt(valaddr + (i + 2) * 4));
-                        break;
-                    }
-                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                reval = new IntPoint3Data(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4), source.ReadInt(valaddr + (i + 2) * 4));
-                                break;
-                            case QueryValueMatchType.After:
-                                reval = new IntPoint3Data(source.ReadInt(valaddr + (i + 3) * 4), source.ReadInt(valaddr + (i + 4) * 4), source.ReadInt(valaddr + (i + 5) * 4));
-                                break;
-                            case QueryValueMatchType.Linear:
-
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
-                                {
-                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
-                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-                                    var sval1 = source.ReadInt(valaddr + i * 4);
-                                    var sval12 = source.ReadInt(valaddr + (i + 1) * 4);
-                                    var sval13 = source.ReadInt(valaddr + (i + 2) * 4);
-
-                                    var sval2 = source.ReadInt(valaddr + (i + 3) * 4);
-                                    var sval22 = source.ReadInt(valaddr + (i + 4) * 4);
-                                    var sval23 = source.ReadInt(valaddr + (i + 5) * 4);
-                                    var x1 = (int)(pval1 / tval1 * (sval2 - sval1) + sval1);
-                                    var x2 = (int)(pval1 / tval1 * (sval22 - sval12) + sval12);
-                                    var x3 = (int)(pval1 / tval1 * (sval23 - sval13) + sval13);
-                                    reval = new IntPoint3Data(x1, x2, x3);
-                                }
-                                else if (qq[skey.Key] < 20)
-                                {
-                                    reval = new IntPoint3Data(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4), source.ReadInt(valaddr + (i + 2) * 4));
-                                }
-                                else if (qq[snext.Key] < 20)
-                                {
-                                    reval = new IntPoint3Data(source.ReadInt(valaddr + (i + 3) * 4), source.ReadInt(valaddr + (i + 4) * 4), source.ReadInt(valaddr + (i + 5) * 4));
-                                }
-                                break;
-
-                            case QueryValueMatchType.Closed:
-                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
-                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
-                                if (pval < fval)
-                                {
-                                    reval = new IntPoint3Data(source.ReadInt(valaddr + i * 4), source.ReadInt(valaddr + (i + 1) * 4), source.ReadInt(valaddr + (i + 2) * 4));
-                                }
-                                else
-                                {
-                                    reval = new IntPoint3Data(source.ReadInt(valaddr + (i + 3) * 4), source.ReadInt(valaddr + (i + 4) * 4), source.ReadInt(valaddr + (i + 5) * 4));
-                                }
-                                break;
-                        }
-                    }
-                    else if (time == snext.Value.Item1)
-                    {
-                        reval = new IntPoint3Data(source.ReadInt(valaddr + (i + 3) * 4), source.ReadInt(valaddr + (i + 4) * 4), source.ReadInt(valaddr + (i + 5) * 4));
-                    }
-                }
-            }
-            else if (typeof(T) == typeof(LongPoint3Data))
-            {
-
-                var qq = source.ReadBytes(qs.Count * (timelen + 24) + 17 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * timelen + 17 + sourceAddr;
-
-                for (int i = 0; i < vv.Length - 1; i = i + 3)
-                {
-                    var skey = vv[i];
-
-                    var snext = vv[i + 1];
-
-                    if (time == skey.Value.Item1)
-                    {
-                        reval = new LongPoint3Data(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8), source.ReadLong(valaddr + (i + 2) * 8));
-                        break;
-                    }
-                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                reval = new LongPoint3Data(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8), source.ReadLong(valaddr + (i + 2) * 8));
-                                break;
-                            case QueryValueMatchType.After:
-                                reval = new LongPoint3Data(source.ReadLong(valaddr + (i + 3) * 8), source.ReadLong(valaddr + (i + 4) * 8), source.ReadLong(valaddr + (i + 5) * 8));
-                                break;
-                            case QueryValueMatchType.Linear:
-
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
-                                {
-                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
-                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-                                    var sval1 = source.ReadLong(valaddr + i * 8);
-                                    var sval12 = source.ReadLong(valaddr + (i + 1) * 8);
-                                    var sval13 = source.ReadLong(valaddr + (i + 2) * 8);
-
-                                    var sval2 = source.ReadLong(valaddr + (i + 3) * 8);
-                                    var sval22 = source.ReadLong(valaddr + (i + 4) * 8);
-                                    var sval23 = source.ReadLong(valaddr + (i + 5) * 8);
-                                    var x1 = (long)(pval1 / tval1 * (sval2 - sval1) + sval1);
-                                    var x2 = (long)(pval1 / tval1 * (sval22 - sval12) + sval12);
-                                    var x3 = (long)(pval1 / tval1 * (sval23 - sval13) + sval13);
-                                    reval = new LongPoint3Data(x1, x2, x3);
-                                }
-                                else if (qq[skey.Key] < 20)
-                                {
-                                    reval = new LongPoint3Data(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8), source.ReadLong(valaddr + (i + 2) * 8));
-                                }
-                                else if (qq[snext.Key] < 20)
-                                {
-                                    reval = new LongPoint3Data(source.ReadLong(valaddr + (i + 3) * 8), source.ReadLong(valaddr + (i + 4) * 8), source.ReadLong(valaddr + (i + 5) * 8));
-                                }
-                                break;
-
-                            case QueryValueMatchType.Closed:
-                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
-                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
-                                if (pval < fval)
-                                {
-                                    reval = new LongPoint3Data(source.ReadLong(valaddr + i * 8), source.ReadLong(valaddr + (i + 1) * 8), source.ReadLong(valaddr + (i + 2) * 8));
-                                }
-                                else
-                                {
-                                    reval = new LongPoint3Data(source.ReadLong(valaddr + (i + 3) * 8), source.ReadLong(valaddr + (i + 4) * 8), source.ReadLong(valaddr + (i + 5) * 8));
-                                }
-                                break;
-                        }
-                    }
-                    else if (time == snext.Value.Item1)
-                    {
-                        reval = new LongPoint3Data(source.ReadLong(valaddr + (i + 3) * 8), source.ReadLong(valaddr + (i + 4) * 8), source.ReadLong(valaddr + (i + 5) * 8));
-                    }
-                }
-            }
-            else if (typeof(T) == typeof(UIntPoint3Data))
-            {
-
-                var qq = source.ReadBytes(qs.Count * (timelen + 12) + 17 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * timelen + 17 + sourceAddr;
-
-                for (int i = 0; i < vv.Length - 1; i = i + 3)
-                {
-                    var skey = vv[i];
-
-                    var snext = vv[i + 1];
-
-                    if (time == skey.Value.Item1)
-                    {
-                        reval = new UIntPoint3Data(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4), source.ReadUInt(valaddr + (i + 2) * 4));
-                        break;
-                    }
-                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                reval = new UIntPoint3Data(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4), source.ReadUInt(valaddr + (i + 2) * 4));
-                                break;
-                            case QueryValueMatchType.After:
-                                reval = new UIntPoint3Data(source.ReadUInt(valaddr + (i + 3) * 4), source.ReadUInt(valaddr + (i + 4) * 4), source.ReadUInt(valaddr + (i + 5) * 4));
-                                break;
-                            case QueryValueMatchType.Linear:
-
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
-                                {
-                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
-                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-                                    var sval1 = source.ReadUInt(valaddr + i * 4);
-                                    var sval12 = source.ReadUInt(valaddr + (i + 1) * 4);
-                                    var sval13 = source.ReadUInt(valaddr + (i + 2) * 4);
-
-                                    var sval2 = source.ReadUInt(valaddr + (i + 3) * 4);
-                                    var sval22 = source.ReadUInt(valaddr + (i + 4) * 4);
-                                    var sval23 = source.ReadUInt(valaddr + (i + 5) * 4);
-                                    var x1 = (uint)(pval1 / tval1 * (sval2 - sval1) + sval1);
-                                    var x2 = (uint)(pval1 / tval1 * (sval22 - sval12) + sval12);
-                                    var x3 = (uint)(pval1 / tval1 * (sval23 - sval13) + sval13);
-                                    reval = new UIntPoint3Data(x1, x2, x3);
-                                }
-                                else if (qq[skey.Key] < 20)
-                                {
-                                    reval = new UIntPoint3Data(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4), source.ReadUInt(valaddr + (i + 2) * 4));
-                                }
-                                else if (qq[snext.Key] < 20)
-                                {
-                                    reval = new UIntPoint3Data(source.ReadUInt(valaddr + (i + 3) * 4), source.ReadUInt(valaddr + (i + 4) * 4), source.ReadUInt(valaddr + (i + 5) * 4));
-                                }
-                                break;
-
-                            case QueryValueMatchType.Closed:
-                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
-                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
-                                if (pval < fval)
-                                {
-                                    reval = new UIntPoint3Data(source.ReadUInt(valaddr + i * 4), source.ReadUInt(valaddr + (i + 1) * 4), source.ReadUInt(valaddr + (i + 2) * 4));
-                                }
-                                else
-                                {
-                                    reval = new UIntPoint3Data(source.ReadUInt(valaddr + (i + 3) * 4), source.ReadUInt(valaddr + (i + 4) * 4), source.ReadUInt(valaddr + (i + 5) * 4));
-                                }
-                                break;
-                        }
-                    }
-                    else if (time == snext.Value.Item1)
-                    {
-                        reval = new UIntPoint3Data(source.ReadUInt(valaddr + (i + 3) * 4), source.ReadUInt(valaddr + (i + 4) * 4), source.ReadUInt(valaddr + (i + 5) * 4));
-                    }
-                }
-            }
-            else if (typeof(T) == typeof(ULongPoint3Data))
-            {
-
-                var qq = source.ReadBytes(qs.Count * (timelen + 24) + 17 + sourceAddr, qs.Count);
-                var valaddr = qs.Count * timelen + 17 + sourceAddr;
-
-                for (int i = 0; i < vv.Length - 1; i = i + 3)
-                {
-                    var skey = vv[i];
-
-                    var snext = vv[i + 1];
-
-                    if (time == skey.Value.Item1)
-                    {
-                        reval = new ULongPoint3Data(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8), source.ReadULong(valaddr + (i + 2) * 8));
-                        break;
-                    }
-                    else if (time > skey.Value.Item1 && time < snext.Value.Item1)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                reval = new ULongPoint3Data(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8), source.ReadULong(valaddr + (i + 2) * 8));
-                                break;
-                            case QueryValueMatchType.After:
-                                reval = new ULongPoint3Data(source.ReadULong(valaddr + (i + 3) * 8), source.ReadULong(valaddr + (i + 4) * 8), source.ReadULong(valaddr + (i + 5) * 8));
-                                break;
-                            case QueryValueMatchType.Linear:
-
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
-                                {
-                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
-                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-                                    var sval1 = source.ReadULong(valaddr + i * 8);
-                                    var sval12 = source.ReadULong(valaddr + (i + 1) * 8);
-                                    var sval13 = source.ReadULong(valaddr + (i + 2) * 8);
-
-                                    var sval2 = source.ReadULong(valaddr + (i + 3) * 8);
-                                    var sval22 = source.ReadULong(valaddr + (i + 4) * 8);
-                                    var sval23 = source.ReadULong(valaddr + (i + 5) * 8);
-                                    var x1 = (ulong)(pval1 / tval1 * (sval2 - sval1) + sval1);
-                                    var x2 = (ulong)(pval1 / tval1 * (sval22 - sval12) + sval12);
-                                    var x3 = (ulong)(pval1 / tval1 * (sval23 - sval13) + sval13);
-                                    reval = new ULongPoint3Data(x1, x2, x3);
-                                }
-                                else if (qq[skey.Key] < 20)
-                                {
-                                    reval = new ULongPoint3Data(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8), source.ReadULong(valaddr + (i + 2) * 8));
-                                }
-                                else if (qq[snext.Key] < 20)
-                                {
-                                    reval = new ULongPoint3Data(source.ReadULong(valaddr + (i + 3) * 8), source.ReadULong(valaddr + (i + 4) * 8), source.ReadULong(valaddr + (i + 5) * 8));
-                                }
-                                break;
-
-                            case QueryValueMatchType.Closed:
-                                var pval = (time - skey.Value.Item1).TotalMilliseconds;
-                                var fval = (snext.Value.Item1 - time).TotalMilliseconds;
-                                if (pval < fval)
-                                {
-                                    reval = new ULongPoint3Data(source.ReadULong(valaddr + i * 8), source.ReadULong(valaddr + (i + 1) * 8), source.ReadULong(valaddr + (i + 2) * 8));
-                                }
-                                else
-                                {
-                                    reval = new ULongPoint3Data(source.ReadULong(valaddr + (i + 3) * 8), source.ReadULong(valaddr + (i + 4) * 8), source.ReadULong(valaddr + (i + 5) * 8));
-                                }
-                                break;
-                        }
-                    }
-                    else if (time == snext.Value.Item1)
-                    {
-                        reval = new ULongPoint3Data(source.ReadULong(valaddr + (i + 3) * 8), source.ReadULong(valaddr + (i + 4) * 8), source.ReadULong(valaddr + (i + 5) * 8));
-                    }
-                }
-            }
-
-            return (T)reval;
         }
 
         /// <summary>
@@ -3508,7 +5008,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
+        public  int DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result, Func<byte, object> ReadOtherDatablockAction)
         {
             DateTime stime;
             int valuecount = 0;
@@ -3522,11 +5022,70 @@ namespace Cdy.Tag
 
             int count = 0;
 
+            var findex = FindFirstAvaiableIndex(vv);
+            var flast = FindLastAvaiableIndex(vv);
+
+            var lowfirst = time.Where(e => e < vv[findex].Value.Item1);
+            var greatlast = time.Where(e => e > vv[flast].Value.Item1);
+            var times = time.Where(e => e >= vv[findex].Value.Item1 && e <= vv[flast].Value.Item1);
+
             if (typeof(T) == typeof(IntPointData))
             {
                 var qq = source.ReadBytes(qs.Count * (timelen+8) + 17 + sourceAddr, qs.Count);
+                if (lowfirst.Count() > 0)
+                {
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
 
-                foreach (var time1 in time)
+                    var valtmp = new IntPointData(source.ReadInt(valaddr + findex * 4), source.ReadInt(valaddr + (findex + 1) * 4));
+                    foreach (var time1 in lowfirst)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(valtmp, time1, qq[findex]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[findex] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - val.Time).TotalMilliseconds;
+                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
+                foreach (var time1 in times)
                 {
                     for (int i = 0; i < vv.Length - 1; i++)
                     {
@@ -3622,12 +5181,119 @@ namespace Cdy.Tag
                         }
                     }
                 }
+
+                if (greatlast.Count() > 0)
+                {
+                    //如果读取的时间小于，当前数据段的起始时间
+
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var valtmp = new IntPointData(source.ReadInt(valaddr + flast * 4), source.ReadInt(valaddr + (flast + 1) * 4));
+                    foreach (var time1 in greatlast)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(valtmp, time1, qq[flast]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[flast] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(qs[flast].Item1,val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                var fval = (val.Time - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
             }
             else if (typeof(T) == typeof(IntPoint3Data))
             {
                 var qq = source.ReadBytes(qs.Count * (timelen + 12) + 17 + sourceAddr, qs.Count);
+                if (lowfirst.Count() > 0)
+                {
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
 
-                foreach (var time1 in time)
+                    var valtmp = new IntPoint3Data(source.ReadInt(valaddr + findex * 4), source.ReadInt(valaddr + (findex + 1) * 4), source.ReadInt(valaddr + (findex + 2) * 4));
+                    foreach (var time1 in lowfirst)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(valtmp, time1, qq[findex]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[findex] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - val.Time).TotalMilliseconds;
+                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
+                foreach (var time1 in times)
                 {
                     for (int i = 0; i < vv.Length - 1; i++)
                     {
@@ -3737,12 +5403,119 @@ namespace Cdy.Tag
                         }
                     }
                 }
+
+                if (greatlast.Count() > 0)
+                {
+                    //如果读取的时间小于，当前数据段的起始时间
+
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var valtmp = new IntPoint3Data(source.ReadInt(valaddr + flast * 4), source.ReadInt(valaddr + (flast + 1) * 4), source.ReadInt(valaddr + (flast + 2) * 4));
+                    foreach (var time1 in greatlast)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(valtmp, time1, qq[flast]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[flast] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(qs[flast].Item1, val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                var fval = (val.Time - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
             }
             else if (typeof(T) == typeof(UIntPoint3Data))
             {
                 var qq = source.ReadBytes(qs.Count * (timelen + 12) + 17 + sourceAddr, qs.Count);
+                if (lowfirst.Count() > 0)
+                {
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
 
-                foreach (var time1 in time)
+                    var valtmp = new UIntPoint3Data(source.ReadUInt(valaddr + findex * 4), source.ReadUInt(valaddr + (findex + 1) * 4), source.ReadUInt(valaddr + (findex + 2) * 4));
+                    foreach (var time1 in lowfirst)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(valtmp, time1, qq[findex]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[findex] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - val.Time).TotalMilliseconds;
+                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
+                foreach (var time1 in times)
                 {
                     for (int i = 0; i < vv.Length - 1; i++)
                     {
@@ -3852,12 +5625,119 @@ namespace Cdy.Tag
                         }
                     }
                 }
+
+                if (greatlast.Count() > 0)
+                {
+                    //如果读取的时间小于，当前数据段的起始时间
+
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var valtmp = new UIntPoint3Data(source.ReadUInt(valaddr + flast * 4), source.ReadUInt(valaddr + (flast + 1) * 4), source.ReadUInt(valaddr + (flast + 2) * 4));
+                    foreach (var time1 in greatlast)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(valtmp, time1, qq[flast]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[flast] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(qs[flast].Item1, val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                var fval = (val.Time - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
             }
             else if (typeof(T) == typeof(UIntPointData))
             {
                 var qq = source.ReadBytes(qs.Count * (timelen + 8) + 17 + sourceAddr, qs.Count);
+                if (lowfirst.Count() > 0)
+                {
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
 
-                foreach (var time1 in time)
+                    var valtmp = new UIntPointData(source.ReadUInt(valaddr + findex * 4), source.ReadUInt(valaddr + (findex + 1) * 4));
+                    foreach (var time1 in lowfirst)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(valtmp, time1, qq[findex]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[findex] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - val.Time).TotalMilliseconds;
+                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
+                foreach (var time1 in times)
                 {
                     for (int i = 0; i < vv.Length - 1; i++)
                     {
@@ -3953,12 +5833,119 @@ namespace Cdy.Tag
                         }
                     }
                 }
+
+                if (greatlast.Count() > 0)
+                {
+                    //如果读取的时间小于，当前数据段的起始时间
+
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var valtmp = new UIntPointData(source.ReadUInt(valaddr + flast * 4), source.ReadUInt(valaddr + (flast + 1) * 4));
+                    foreach (var time1 in greatlast)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(valtmp, time1, qq[flast]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[flast] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(qs[flast].Item1, val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                var fval = (val.Time - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
             }
             else if (typeof(T) == typeof(LongPointData))
             {
                 var qq = source.ReadBytes(qs.Count * (timelen + 16) + 17 + sourceAddr, qs.Count);
+                if (lowfirst.Count() > 0)
+                {
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
 
-                foreach (var time1 in time)
+                    var valtmp = new LongPointData(source.ReadLong(valaddr + findex * 8), source.ReadLong(valaddr + (findex + 1) * 8));
+                    foreach (var time1 in lowfirst)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(valtmp, time1, qq[findex]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[findex] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - val.Time).TotalMilliseconds;
+                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
+                foreach (var time1 in times)
                 {
                     for (int i = 0; i < vv.Length - 1; i++)
                     {
@@ -4054,12 +6041,119 @@ namespace Cdy.Tag
                         }
                     }
                 }
+
+                if (greatlast.Count() > 0)
+                {
+                    //如果读取的时间小于，当前数据段的起始时间
+
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var valtmp = new LongPointData(source.ReadLong(valaddr + flast * 8), source.ReadLong(valaddr + (flast + 1) * 8));
+                    foreach (var time1 in greatlast)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(valtmp, time1, qq[flast]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[flast] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(qs[flast].Item1, val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                var fval = (val.Time - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
             }
             else if (typeof(T) == typeof(ULongPointData))
             {
                 var qq = source.ReadBytes(qs.Count * (timelen + 16) + 17 + sourceAddr, qs.Count);
+                if (lowfirst.Count() > 0)
+                {
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
 
-                foreach (var time1 in time)
+                    var valtmp = new ULongPointData(source.ReadULong(valaddr + findex * 8), source.ReadULong(valaddr + (findex + 1) * 8));
+                    foreach (var time1 in lowfirst)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(valtmp, time1, qq[findex]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[findex] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - val.Time).TotalMilliseconds;
+                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
+                foreach (var time1 in times)
                 {
                     for (int i = 0; i < vv.Length - 1; i++)
                     {
@@ -4155,12 +6249,118 @@ namespace Cdy.Tag
                         }
                     }
                 }
+                if (greatlast.Count() > 0)
+                {
+                    //如果读取的时间小于，当前数据段的起始时间
+
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var valtmp = new ULongPointData(source.ReadULong(valaddr + flast * 8), source.ReadULong(valaddr + (flast + 1) * 8));
+                    foreach (var time1 in greatlast)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(valtmp, time1, qq[flast]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[flast] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(qs[flast].Item1, val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                var fval = (val.Time - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
             }
             else if (typeof(T) == typeof(LongPoint3Data))
             {
                 var qq = source.ReadBytes(qs.Count * (timelen + 24) + 17 + sourceAddr, qs.Count);
+                if (lowfirst.Count() > 0)
+                {
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
 
-                foreach (var time1 in time)
+                    var valtmp = new LongPoint3Data(source.ReadLong(valaddr + findex * 8), source.ReadLong(valaddr + (findex + 1) * 8), source.ReadLong(valaddr + (findex + 2) * 8));
+                    foreach (var time1 in lowfirst)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(valtmp, time1, qq[findex]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[findex] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - val.Time).TotalMilliseconds;
+                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
+                foreach (var time1 in times)
                 {
                     for (int i = 0; i < vv.Length - 1; i++)
                     {
@@ -4270,12 +6470,118 @@ namespace Cdy.Tag
                         }
                     }
                 }
+                if (greatlast.Count() > 0)
+                {
+                    //如果读取的时间小于，当前数据段的起始时间
+
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var valtmp = new LongPoint3Data(source.ReadLong(valaddr + flast * 8), source.ReadLong(valaddr + (flast + 1) * 8), source.ReadLong(valaddr + (flast + 2) * 8));
+                    foreach (var time1 in greatlast)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(valtmp, time1, qq[flast]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[flast] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(qs[flast].Item1, val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                var fval = (val.Time - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
             }
             else if (typeof(T) == typeof(ULongPoint3Data))
             {
                 var qq = source.ReadBytes(qs.Count * (timelen + 24) + 17 + sourceAddr, qs.Count);
+                if (lowfirst.Count() > 0)
+                {
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
 
-                foreach (var time1 in time)
+                    var valtmp = new ULongPoint3Data(source.ReadULong(valaddr + findex * 8), source.ReadULong(valaddr + (findex + 1) * 8), source.ReadULong(valaddr + (findex + 2) * 8));
+                    foreach (var time1 in lowfirst)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(valtmp, time1, qq[findex]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[findex] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - val.Time).TotalMilliseconds;
+                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, time1, qq[findex]);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
+                foreach (var time1 in times)
                 {
                     for (int i = 0; i < vv.Length - 1; i++)
                     {
@@ -4385,8 +6691,149 @@ namespace Cdy.Tag
                         }
                     }
                 }
+                if (greatlast.Count() > 0)
+                {
+                    //如果读取的时间小于，当前数据段的起始时间
+
+                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var valtmp = new ULongPoint3Data(source.ReadULong(valaddr + flast * 8), source.ReadULong(valaddr + (flast + 1) * 8), source.ReadULong(valaddr + (flast + 2) * 8));
+                    foreach (var time1 in greatlast)
+                    {
+                        switch (type)
+                        {
+                            case QueryValueMatchType.Previous:
+                                result.Add(valtmp, time1, qq[flast]);
+                                count++;
+                                break;
+                            case QueryValueMatchType.After:
+                                result.Add(val.Value, time1, val.Quality);
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (qq[flast] < 20 && val.Quality < 20)
+                                {
+                                    result.Add(LinerValue(qs[flast].Item1, val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
+                                }
+                                else if (val.Quality < 20)
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Closed:
+                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                var fval = (val.Time - time1).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, time1, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value, time1, val.Quality);
+                                }
+                                count++;
+                                break;
+                        }
+                    }
+                }
             }
             return count;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="time"></param>
+        /// <param name="value1"></param>
+        /// <param name="value2"></param>
+        /// <returns></returns>
+        private object LinerValue<T>(DateTime startTime, DateTime endTime, DateTime time, T value1, T value2)
+        {
+            var pval1 = (time - startTime).TotalMilliseconds;
+            var tval1 = (endTime - startTime).TotalMilliseconds;
+
+            if (typeof(T) == typeof(IntPointData))
+            {
+                var sval1 = (IntPointData)((object)value1);
+                var sval2 = (IntPointData)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                return new IntPointData((int)val1, (int)val2);
+            }
+            else if (typeof(T) == typeof(UIntPointData))
+            {
+                var sval1 = (UIntPointData)((object)value1);
+                var sval2 = (UIntPointData)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                return new UIntPointData((uint)val1, (uint)val2);
+            }
+            else if (typeof(T) == typeof(LongPointData))
+            {
+                var sval1 = (LongPointData)((object)value1);
+                var sval2 = (LongPointData)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                return new LongPointData((long)val1, (long)val2);
+            }
+            else if (typeof(T) == typeof(ULongPointData))
+            {
+                var sval1 = (ULongPointData)((object)value1);
+                var sval2 = (ULongPointData)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                return new ULongPointData((ulong)val1, (ulong)val2);
+            }
+            else if (typeof(T) == typeof(IntPoint3Data))
+            {
+                var sval1 = (IntPoint3Data)((object)value1);
+                var sval2 = (IntPoint3Data)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
+                return new IntPoint3Data((int)val1, (int)val2, (int)val3);
+            }
+            else if (typeof(T) == typeof(UIntPoint3Data))
+            {
+                var sval1 = (UIntPoint3Data)((object)value1);
+                var sval2 = (UIntPoint3Data)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
+                return new UIntPoint3Data((uint)val1, (uint)val2, (uint)val3);
+            }
+            else if (typeof(T) == typeof(LongPoint3Data))
+            {
+                var sval1 = (LongPoint3Data)((object)value1);
+                var sval2 = (LongPoint3Data)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
+                return new LongPoint3Data((long)val1, (long)val2, (long)val3);
+            }
+            else if (typeof(T) == typeof(ULongPoint3Data))
+            {
+                var sval1 = (ULongPoint3Data)((object)value1);
+                var sval2 = (ULongPoint3Data)((object)value2);
+                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
+                return new ULongPoint3Data((ulong)val1, (ulong)val2, (ulong)val3);
+            }
+
+            return default(T);
         }
     }
 }

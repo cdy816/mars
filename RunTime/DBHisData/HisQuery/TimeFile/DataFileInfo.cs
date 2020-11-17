@@ -472,7 +472,40 @@ namespace Cdy.Tag
             var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
             foreach (var vv in data)
             {
-                DeCompressDataBlockValue<T>(vv.Key, vv.Value, timetick, type, res);
+                var index = vv.Value.Item2;
+                DeCompressDataBlockValue<T>(vv.Key, vv.Value.Item1, timetick, type, res,new Func<byte, object>((tp)=> {
+
+                    object oval = null;
+                    int ttick = 0;
+                    int dindex = index;
+                    if (tp == 0)
+                    {
+                        //往前读最后一个有效值
+                        do
+                        {
+                            dindex--;
+                            if (dindex < 0) return null;
+                            var datas = datafile.ReadTagDataBlock(tid, offset, dindex, out ttick);
+                            if (datas == null) return null;
+                            oval = DeCompressDataBlockRawValue<T>(datas, 0);
+                        }
+                        while (oval == null);
+                    }
+                    else
+                    {
+                        //往后读第一个有效值
+                        do
+                        {
+                            dindex++;
+                            var datas = datafile.ReadTagDataBlock(tid, offset, dindex, out ttick);
+                            if (datas == null) return null;
+                            oval = DeCompressDataBlockRawValue<T>(datas, 1);
+                        }
+                        while (oval == null);
+                    }
+                    return oval;
+
+                }));
             }
             foreach (var vv in data)
             {
@@ -494,9 +527,40 @@ namespace Cdy.Tag
         public static object Read<T>(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
         {
             int timetick = 0;
-            using (var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick))
+            int index = 0;
+            using (var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick,out index))
             {
-                return DeCompressDataBlockValue<T>(data, dataTime, timetick, type);
+                return DeCompressDataBlockValue<T>(data, dataTime, timetick, type,new Func<byte, object>((tp)=> {
+                    TagHisValue<T> oval = TagHisValue<T>.Empty;
+                    int ttick = 0;
+                    int dindex = index;
+                    if (tp==0)
+                    {
+                        //往前读最后一个有效值
+                        do
+                        {
+                            dindex--;
+                            if (dindex < 0) return null;
+                            var datas = datafile.ReadTagDataBlock(tid, offset, dindex, out ttick);
+                            if (datas == null) return null;
+                            oval = DeCompressDataBlockRawValue<T>(datas, 0);
+                        }
+                        while (oval.IsEmpty());
+                    }
+                    else
+                    {
+                        //往后读第一个有效值
+                        do
+                        {
+                            dindex++;
+                            var datas = datafile.ReadTagDataBlock(tid, offset, dindex, out ttick);
+                            if (datas == null) return null;
+                            oval = DeCompressDataBlockRawValue<T>(datas, 1);
+                        }
+                        while (oval.IsEmpty());
+                    }
+                    return oval;
+                }));
             }
         }
 
@@ -541,7 +605,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        private static object DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type)
+        private static object DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type,Func<byte,object> ReadOtherDatablockAction)
         {
             //MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
@@ -549,7 +613,7 @@ namespace Cdy.Tag
             var tp = CompressUnitManager2.Manager.GetCompress(ctype);
             if (tp != null)
             {
-                return tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type);
+                return tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type,ReadOtherDatablockAction);
             }
             return null;
         }
@@ -563,7 +627,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<T> result)
+        private static void DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<T> result, Func<byte, object> ReadOtherDatablockAction)
         {
             //MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
@@ -571,8 +635,25 @@ namespace Cdy.Tag
             var tp = CompressUnitManager2.Manager.GetCompress(ctype);
             if (tp != null)
             {
-                tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type, result);
+                tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type, result, ReadOtherDatablockAction);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <param name="readValueType"></param>
+        /// <returns></returns>
+        private static TagHisValue<T> DeCompressDataBlockRawValue<T>(MarshalMemoryBlock memory,byte readValueType)
+        {
+            var ctype = memory.ReadByte();
+            var tp = CompressUnitManager2.Manager.GetCompress(ctype);
+            if (tp != null)
+            {
+               return  tp.DeCompressRawValue<T>(memory,1 ,readValueType);
+            }
+            return TagHisValue<T>.Empty;
         }
 
 
@@ -751,7 +832,7 @@ namespace Cdy.Tag
         /// <param name="dataTime"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static MarshalMemoryBlock ReadTagDataBlock(this DataFileSeriserbase datafile, int tid, long offset, DateTime dataTime, out int timetick)
+        public static MarshalMemoryBlock ReadTagDataBlock(this DataFileSeriserbase datafile, int tid, long offset, DateTime dataTime, out int timetick,out int index)
         {
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
@@ -773,6 +854,31 @@ namespace Cdy.Tag
             {
                 throw new Exception("DataPointer index is out of total block number");
             }
+            index = dindex;
+            var dataPointer = datafile.ReadLong(blockIndex * 8 + dindex * tagCount * 8); //读取DataBlock的地址
+
+            var datasize = datafile.ReadInt(dataPointer); //读取DataBlock 的大小
+
+            return datafile.Read(dataPointer + 4, datasize);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="datafile"></param>
+        /// <param name="tid"></param>
+        /// <param name="offset"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public static MarshalMemoryBlock ReadTagDataBlock(this DataFileSeriserbase datafile,int tid,long offset,int index, out int timetick)
+        {
+            int fileDuration, blockDuration = 0;
+            int tagCount = 0;
+            DateTime time;
+            long blockpointer = 0;
+
+            var blockIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
+            int dindex = index;
 
             var dataPointer = datafile.ReadLong(blockIndex * 8 + dindex * tagCount * 8); //读取DataBlock的地址
 
@@ -846,7 +952,7 @@ namespace Cdy.Tag
         /// <param name="dataTimes"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static Dictionary<MarshalMemoryBlock, List<DateTime>> ReadTagDataBlock2(this DataFileSeriserbase datafile, int tid, long offset, List<DateTime> dataTimes, out int timetick)
+        public static Dictionary<MarshalMemoryBlock, Tuple<List<DateTime>, int>> ReadTagDataBlock2(this DataFileSeriserbase datafile, int tid, long offset, List<DateTime> dataTimes, out int timetick)
         {
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
@@ -856,7 +962,7 @@ namespace Cdy.Tag
 
             Dictionary<long, MarshalMemoryBlock> rtmp = new Dictionary<long, MarshalMemoryBlock>();
 
-            Dictionary<MarshalMemoryBlock, List<DateTime>> re = new Dictionary<MarshalMemoryBlock, List<DateTime>>();
+            Dictionary<MarshalMemoryBlock, Tuple<List<DateTime>,int>> re = new Dictionary<MarshalMemoryBlock, Tuple<List<DateTime>, int>>();
 
             if (tagCount == 0) return re;
 
@@ -896,11 +1002,11 @@ namespace Cdy.Tag
                             var rmm = datafile.Read(dataPointer + 4, datasize);
                             if (!re.ContainsKey(rmm))
                             {
-                                re.Add(rmm, new List<DateTime>() { vdd });
+                                re.Add(rmm, new Tuple<List<DateTime>, int>(new List<DateTime>() { vdd },blockindex));
                             }
                             else
                             {
-                                re[rmm].Add(vdd);
+                                re[rmm].Item1.Add(vdd);
                             }
                             rtmp.Add(dataPointer, rmm);
                         }
@@ -909,11 +1015,11 @@ namespace Cdy.Tag
                             var rmm = rtmp[dataPointer];
                             if (!re.ContainsKey(rmm))
                             {
-                                re.Add(rmm, new List<DateTime>() { vdd });
+                                re.Add(rmm,new Tuple<List<DateTime>, int>(new List<DateTime>() { vdd },blockindex));
                             }
                             else
                             {
-                                re[rmm].Add(vdd);
+                                re[rmm].Item1.Add(vdd);
                             }
                         }
                     }

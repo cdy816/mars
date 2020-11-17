@@ -118,6 +118,15 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="tp"></param>
+        /// <returns></returns>
+        public abstract TagHisValue<T> DeCompressRawValue<T>(MarshalMemoryBlock source, int sourceAddr, byte tp);
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source"></param>
         /// <param name="sourceAddr"></param>
@@ -126,7 +135,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public abstract int DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result);
+        public abstract int DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result, Func<byte, object> ReadOtherDatablockAction);
 
         /// <summary>
         /// 
@@ -138,7 +147,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public abstract object DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type);
+        public abstract object DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction);
 
 
         public abstract CompressUnitbase2 Clone();

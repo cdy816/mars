@@ -211,7 +211,7 @@ namespace SimDriver
                         {
                         if (vv.Key == "Sim:cos")
                         {
-                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = fval };
+                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = fval };
                                 foreach(var vvv in vv.Value)
                                 {
                                     mTagHisValueService.SetTagHisValue(vvv, tv);
@@ -220,7 +220,7 @@ namespace SimDriver
                         }
                         else if (vv.Key == "Sim:sin")
                         {
-                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = sval };
+                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = sval };
                                 foreach (var vvv in vv.Value)
                                 {
                                     mTagHisValueService.SetTagHisValue(vvv, tv);
@@ -229,7 +229,7 @@ namespace SimDriver
                             }
                         else if (vv.Key == "Sim:step")
                         {
-                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = mNumber };
+                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = mNumber };
                                 foreach (var vvv in vv.Value)
                                 {
                                     mTagHisValueService.SetTagHisValue(vvv, tv);
@@ -238,7 +238,7 @@ namespace SimDriver
                             }
                         else if (vv.Key == "Sim:steppoint")
                         {
-                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = fval };
+                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = fval };
                                 foreach (var vvv in vv.Value)
                                 {
                                     mTagHisValueService.SetTagHisValue(vvv, tv);
@@ -247,7 +247,7 @@ namespace SimDriver
                             }
                         else if (vv.Key == "Sim:square")
                         {
-                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.Now, Value = mBoolNumber };
+                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = mBoolNumber };
                                 foreach (var vvv in vv.Value)
                                 {
                                     mTagHisValueService.SetTagHisValue(vvv, tv);

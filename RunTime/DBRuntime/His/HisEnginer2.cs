@@ -949,7 +949,7 @@ namespace Cdy.Tag
                 vv.Start();
             }
 
-            mLastProcessTime = DateTime.Now;
+            mLastProcessTime = DateTime.UtcNow;
             HisRunTag.StartTime = mLastProcessTime;
             CurrentMemory = mCachMemory1;
             CurrentMemory.CurrentDatetime = mLastProcessTime;
@@ -1294,7 +1294,7 @@ namespace Cdy.Tag
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
                 mBlockCount = 0;
-                DateTime dt = DateTime.Now;
+                DateTime dt = DateTime.UtcNow;
                 var mm = dt.Minute;
                 if (mm != mLastProcessTick)
                 {
@@ -1438,7 +1438,7 @@ namespace Cdy.Tag
             mForceSubmiteToCompress = true;
             mIsClosed = true;
 
-            SubmiteMemory(DateTime.Now);
+            SubmiteMemory(DateTime.UtcNow);
             while (!mMegerProcessIsClosed) Thread.Sleep(1);
 
             SaveManualCachData();
@@ -1606,8 +1606,16 @@ namespace Cdy.Tag
                 }
                
                 ManualHisDataMemoryBlock hb = null;
+                DateTime utcnow = DateTime.UtcNow;
+
                 foreach (var vv in values)
                 {
+                    if (vv.Time < tag.LastUpdateTime || vv.Time>utcnow)
+                    {
+                        continue;
+                    }
+                    tag.LastUpdateTime = vv.Time;
+
                     var vdata = vv.Time.Date;
                     var mms = (int)(vv.Time.Subtract(vdata).TotalSeconds / MergeMemoryTime);
                     var time = vdata.AddSeconds(mms * MergeMemoryTime);
@@ -1793,6 +1801,12 @@ namespace Cdy.Tag
             if (mHisTags.ContainsKey(id) && mHisTags[id].Type == RecordType.Driver)
             {
                 var tag = mHisTags[id];
+                DateTime utcnow = DateTime.UtcNow;
+                if (datetime<tag.LastUpdateTime || datetime>utcnow)
+                {
+                    return false;
+                }
+                tag.LastUpdateTime = datetime;
                 ManualHisDataMemoryBlock hb = null;
 
                 lock (mManualHisDataCach)
@@ -2017,7 +2031,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetTagHisValue(int id, object value)
         {
-            return SetTagHisValue(id, DateTime.Now, value, 0);
+            return SetTagHisValue(id, DateTime.UtcNow, value, 0);
         }
         /// <summary>
         /// 

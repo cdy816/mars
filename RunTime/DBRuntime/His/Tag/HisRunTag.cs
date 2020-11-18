@@ -143,6 +143,11 @@ namespace Cdy.Tag
         /// </summary>
         public int Precision { get; set; }
 
+        /// <summary>
+        /// 最后更新时间
+        /// </summary>
+        public DateTime LastUpdateTime { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...

@@ -77,7 +77,7 @@ namespace Cdy.Tag
         /// </summary>
         static Runner()
         {
-            RDDCManager.Manager.StartTime = DateTime.Now;
+            RDDCManager.Manager.StartTime = DateTime.UtcNow;
         }
 
         /// <summary>

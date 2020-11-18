@@ -224,7 +224,7 @@ namespace SpiderDriverDemo
             double cos = Math.Cos(mCount / 180.0 * Math.PI);
             bool bval = mCount % 300 == 0;
             byte btmp = (byte)(mCount % 256);
-            DateTime dnow = DateTime.Now;
+            DateTime dnow = DateTime.UtcNow;
 
             CountValue = mCount.ToString();
             SimValue = sin.ToString("f4");
@@ -324,7 +324,7 @@ namespace SpiderDriverDemo
 
             }
             driverProxy.SetTagValue(values);
-            driverProxy.SetTagHisValue(hisvalus,  5000);
+            //driverProxy.SetTagHisValue(hisvalus,  5000);
         }
 
         /// <summary>
@@ -335,15 +335,15 @@ namespace SpiderDriverDemo
         private void hisDataWrite_Click(object sender, RoutedEventArgs e)
         {
             List<TagValue> vals = new List<TagValue>();
-            DateTime dt = DateTime.Now.AddSeconds(-300);
+            DateTime dt = DateTime.UtcNow.AddSeconds(-300);
             Random rd = new Random((int)dt.Ticks);
             double dval = rd.NextDouble();
             for(int i=0;i<300;i++)
             {
                 vals.Add(new TagValue() { Quality = 0, Time = dt.AddSeconds(i), Value = dval+i*1.0/10 });
             }
-
-            driverProxy.SetTagHisValue(0, TagType.Double, vals);
+            for(int i=0;i<10;i++)
+            driverProxy.SetTagHisValue(i, TagType.Double, vals);
         }
     }
 }

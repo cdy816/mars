@@ -151,7 +151,7 @@ namespace SpiderDriver
                         re.WriteInt(icount);
                         for (int i = 0; i < icount; i++)
                         {
-                            if(vserver.GetHisTagById(data.ReadInt()).Type == RecordType.Driver)
+                            if(vserver.GetHisTagById(data.ReadInt())?.Type == RecordType.Driver)
                             {
                                 re.WriteByte(1);
                             }

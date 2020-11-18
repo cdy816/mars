@@ -130,7 +130,7 @@ namespace Cdy.Tag
             mRecordThread.IsBackground=true;
             mRecordThread.Priority = ThreadPriority.Highest;
             mRecordThread.Start();
-            mLastUpdateTime = DateTime.Now;
+            mLastUpdateTime = DateTime.UtcNow;
             mIsStarted = true;
         }
 
@@ -162,7 +162,7 @@ namespace Cdy.Tag
                 else
                 {
                     mTimerTags.Add(cc, new List<HisRunTag>() { tag });
-                    mCount.Add(cc, DateTime.Now);
+                    mCount.Add(cc, DateTime.UtcNow);
                 }
                 mCurrentCount++;
                 return true;
@@ -192,7 +192,7 @@ namespace Cdy.Tag
             ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray1);
             closedEvent.Reset();
             var vkeys = mCount.Keys.ToArray();
-            var vdd = DateTime.Now;
+            var vdd = DateTime.UtcNow;
             foreach(var vv in vkeys)
             {
                 mCount[vv] = vdd.AddMilliseconds(vv);

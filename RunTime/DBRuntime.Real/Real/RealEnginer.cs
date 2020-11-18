@@ -3885,7 +3885,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetPointValue(int id, byte quality, params object[] values)
         {
-            DateTime time = DateTime.Now;
+            DateTime time = DateTime.UtcNow;
             return SetPointValue(id, (byte)QualityConst.Good, time, values);
         }
 
@@ -3898,7 +3898,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetPointValueAndQuality(Tagbase tag, byte quality, params object[] values)
         {
-            DateTime time = DateTime.Now;
+            DateTime time = DateTime.UtcNow;
             return SetPointValue(tag, quality, time, values);
         }
 
@@ -3924,7 +3924,7 @@ namespace Cdy.Tag
         {
             Take();
             var vatg = mConfigDatabase.GetTagsByGroup(group);
-            DateTime time = DateTime.Now;
+            DateTime time = DateTime.UtcNow;
             for(int i=0;i<values.Length;i++)
             {
                 var tag = vatg[i];
@@ -4027,7 +4027,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetTagValue(int id, object value, byte quality)
         {
-            return SetTagValue(id, value, DateTime.Now, quality);
+            return SetTagValue(id, value, DateTime.UtcNow, quality);
         }
 
         /// <summary>
@@ -4039,7 +4039,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetTagValue(Tagbase tag, object value, byte quality)
         {
-            return SetTagValue(tag, value, DateTime.Now, quality);
+            return SetTagValue(tag, value, DateTime.UtcNow, quality);
         }
 
         /// <summary>
@@ -4116,7 +4116,7 @@ namespace Cdy.Tag
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
-                DateTime time = DateTime.Now;
+                DateTime time = DateTime.UtcNow;
                 switch (mConfigDatabase.Tags[id].Type)
                 {
                     case TagType.Bool:
@@ -4179,7 +4179,7 @@ namespace Cdy.Tag
 
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.Now;
+                DateTime time = DateTime.UtcNow;
                 switch (tag.Type)
                 {
                     case TagType.Bool:
@@ -4564,7 +4564,7 @@ namespace Cdy.Tag
             {
 
             }
-            time = DateTime.Now;
+            time = DateTime.UtcNow;
             quality = (byte)QualityConst.Null;
             return null;
         }
@@ -4699,7 +4699,7 @@ namespace Cdy.Tag
             var tag = mConfigDatabase.GetTagById(id);
             if (tag == null)
             {
-                time = DateTime.Now;
+                time = DateTime.UtcNow;
                 quality = (byte)QualityConst.Null;
                 valueType = byte.MaxValue;
                 return null;
@@ -4727,7 +4727,7 @@ namespace Cdy.Tag
                 return GetTagValue(tag, out quality, out time);
             }
             quality = (byte)QualityConst.Null;
-            time = DateTime.Now;
+            time = DateTime.UtcNow;
             valueType = byte.MaxValue;
             return null;
         }
@@ -4745,7 +4745,7 @@ namespace Cdy.Tag
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
-                DateTime time = DateTime.Now;
+                DateTime time = DateTime.UtcNow;
                 switch (tag.Type)
                 {
                     case TagType.Bool:

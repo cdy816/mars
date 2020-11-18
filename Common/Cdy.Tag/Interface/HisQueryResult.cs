@@ -309,6 +309,18 @@ namespace Cdy.Tag
         }
 
         /// <summary>
+        /// 将UTC时间转换成本地时间
+        /// </summary>
+        public HisQueryResult<T> ConvertUTCTimeToLocal()
+        {
+            for(int i=0;i<mCount;i++)
+            {
+                MemoryHelper.WriteDateTime((void*)handle, i * 8 + mTimeAddr, MemoryHelper.ReadDateTime((void*)handle,i*8+mTimeAddr).ToLocalTime());
+            }
+            return this;
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="value"></param>

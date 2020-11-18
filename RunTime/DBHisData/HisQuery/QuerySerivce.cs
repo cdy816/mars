@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace Cdy.Tag
 {
@@ -65,7 +66,21 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        public void ReadValue<T>(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
+        public void ReadValue<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
+        {
+            ReadValueByUTCTime<T>(id, times.Select(e => e.ToUniversalTime()), type, result);
+            result.ConvertUTCTimeToLocal();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        public void ReadValueByUTCTime<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
         {
             List<DateTime> ltmp = new List<DateTime>();
             List<DateTime> mMemoryTimes = new List<DateTime>();
@@ -241,6 +256,19 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadAllValue<T>(int id, DateTime startTime, DateTime endTime, HisQueryResult<T> result)
         {
+            ReadAllValueByUTCTime<T>(id, startTime.ToUniversalTime(), endTime.ToUniversalTime(), result);
+            result.ConvertUTCTimeToLocal();
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="result"></param>
+        public void ReadAllValueByUTCTime<T>(int id, DateTime startTime, DateTime endTime, HisQueryResult<T> result)
+        {
             try
             {
 
@@ -294,7 +322,6 @@ namespace Cdy.Tag
             }
         }
 
-
         /// <summary>
         /// 
         /// </summary>
@@ -305,9 +332,21 @@ namespace Cdy.Tag
         /// <returns></returns>
         public HisQueryResult<T> ReadAllValue<T>(int id, DateTime startTime, DateTime endTime)
         {
+            return ReadAllValueByUTCTime<T>(id, startTime.ToUniversalTime(), endTime.ToUniversalTime()).ConvertUTCTimeToLocal();
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <returns></returns>
+        public HisQueryResult<T> ReadAllValueByUTCTime<T>(int id, DateTime startTime, DateTime endTime)
+        {
             int valueCount = (int)(endTime - startTime).TotalSeconds;
             var result = new HisQueryResult<T>(valueCount);
-            ReadAllValue(id, startTime, endTime, result);
+            ReadAllValueByUTCTime(id, startTime, endTime, result);
             return result as HisQueryResult<T>;
         }
 
@@ -319,12 +358,24 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public HisQueryResult<T> ReadValue<T>(int id, List<DateTime> times, QueryValueMatchType type)
+        public HisQueryResult<T> ReadValue<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type)
         {
-            int valueCount = times.Count;
+            return ReadValueByUTCTime<T>(id, times.Select(e => e.ToUniversalTime()), type).ConvertUTCTimeToLocal();
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public HisQueryResult<T> ReadValueByUTCTime<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type)
+        {
+            int valueCount = times.Count();
 
             var result = new HisQueryResult<T>(valueCount);
-            ReadValue(id, times, type, result);
+            ReadValueByUTCTime(id, times, type, result);
             return result; 
         }
     }

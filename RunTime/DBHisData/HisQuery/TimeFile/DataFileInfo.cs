@@ -882,9 +882,22 @@ namespace Cdy.Tag
 
             var dataPointer = datafile.ReadLong(blockIndex * 8 + dindex * tagCount * 8); //读取DataBlock的地址
 
-            var datasize = datafile.ReadInt(dataPointer); //读取DataBlock 的大小
-
-            return datafile.Read(dataPointer + 4, datasize);
+            if (dataPointer > 0)
+            {
+                var datasize = datafile.ReadInt(dataPointer); //读取DataBlock 的大小
+                if (datasize > 0)
+                {
+                    return datafile.Read(dataPointer + 4, datasize);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>

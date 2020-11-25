@@ -1055,6 +1055,16 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public byte GetQuality(int index)
+        {
+            return MemoryHelper.ReadByte((void*)handle, mQulityAddr + index);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public void Resize(int count)
         {
 

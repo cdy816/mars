@@ -20,7 +20,7 @@
 2. 基于数据采集端的下接口 [Spider ](https://github.com/cdy816/Spider) ([Gitee地址](https://gitee.com/chongdaoyang/Spider))
 
 ## 运行环境
-系统采用.net core 3.1 平台开发,依赖于.net core 的跨平台性，可部署在window、Linux等操作系统中,也可以部署在Docker中。 
+系统采用.net 5 平台开发,依赖于.net 5 的跨平台性，可部署在window、Linux等操作系统中,也可以部署在Docker中。 
 
 ## 沟通交流
 QQ 群:950906131

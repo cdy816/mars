@@ -117,9 +117,9 @@ namespace DbInRunWebApi.Controllers
         public RealDataSetResponse Post([FromBody] RealDataSetRequest request)
         {
             HashSet<string> grps = new HashSet<string>();
-            foreach(var vv in request.Values.Keys)
+            foreach(var vv in request.Values)
             {
-                var str = GetGroupName(vv);
+                var str = GetGroupName(vv.Key);
                 if (!string.IsNullOrEmpty(str))
                     grps.Add(str);
                 else
@@ -133,17 +133,22 @@ namespace DbInRunWebApi.Controllers
                 {
                     re &= DbInRunWebApi.SecurityManager.Manager.CheckWritePermission(request.Token, vv);
                 }
-                if(!re) return new RealDataSetResponse() { Result = false };
+                if(!re) return new RealDataSetResponse() { Result = false,ErroMessage= "permission denied" };
 
                 var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
 
                 re = true;
+                Dictionary<string, bool> res = new Dictionary<string, bool>();
                 foreach (var vv in request.Values)
-                    re &= service.SetTagValueForConsumer(vv.Key, vv.Value);
+                {
+                    var rr = service.SetTagValueForConsumer(vv.Key, vv.Value);
+                    re &= rr;
+                    res.Add(vv.Key, rr);
+                }
 
-                return new RealDataSetResponse() { Result = re };
+                return new RealDataSetResponse() { Result = re,SetResults=res };
             }
-            return new RealDataSetResponse() { Result = false };
+            return new RealDataSetResponse() { Result = false,ErroMessage="not login" };
         }
     }
 }

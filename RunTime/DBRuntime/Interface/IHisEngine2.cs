@@ -31,6 +31,11 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        public HisDataMemoryBlockCollection CurrentMergeMemory { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
         public HisRunTag GetHisTag(int id);

@@ -293,6 +293,14 @@ namespace Cdy.Tag
         /// <param name="size"></param>
         public void ReAlloc(long size)
         {
+            if(mHandles!=null && mHandles.Count>0)
+            {
+                foreach (var vv in mHandles)
+                {
+                    Marshal.FreeHGlobal(vv);
+                }
+                mHandles.Clear();
+            }
             Init(size);
         }
 

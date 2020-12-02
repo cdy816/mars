@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using Cdy.Tag;
 using DotNetty.Buffers;
+using System.Linq;
 
 namespace SpiderDriver.ClientApi
 {
@@ -196,7 +197,7 @@ namespace SpiderDriver.ClientApi
         }
 
         /// <summary>
-        /// 
+        /// 登录
         /// </summary>
         /// <param name="username"></param>
         /// <param name="password"></param>
@@ -586,10 +587,10 @@ namespace SpiderDriver.ClientApi
 
 
         /// <summary>
-        /// 
+        /// 设置一组变量的实时值
         /// </summary>
-        /// <param name="ids"></param>
-        /// <param name="timeout"></param>
+        /// <param name="ids">ID，值类型，值</param>
+        /// <param name="timeout">超时</param>
         /// <returns></returns>
         public bool SetTagValue(Dictionary<int, Tuple<TagType, object>> ids, int timeout = 5000)
         {
@@ -623,9 +624,9 @@ namespace SpiderDriver.ClientApi
 
 
         /// <summary>
-        /// 
+        /// 设置一组变量的实时值
         /// </summary>
-        /// <param name="values"></param>
+        /// <param name="values">ID，值类型，值，质量</param>
         /// <param name="timeout"></param>
         /// <returns></returns>
         public bool SetTagValue(Dictionary<int, Tuple<TagType, object,byte>> values, int timeout = 5000)
@@ -659,18 +660,18 @@ namespace SpiderDriver.ClientApi
         }
 
         /// <summary>
-        /// 
+        /// 订购指定变量的值改变通知信息
         /// </summary>
         /// <param name="ids"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool AppendRegistorDataChangedCallBack(List<int> ids,int timeout=5000)
+        public bool AppendRegistorDataChangedCallBack(IEnumerable<int> ids,int timeout=5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + ids.Count * 4);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + ids.Count() * 4);
             mb.WriteByte(ApiFunConst.RegistorTag);
             mb.WriteLong(this.mLoginId);
-            mb.WriteInt(ids.Count);
+            mb.WriteInt(ids.Count());
             foreach (var vv in ids)
             {
                 mb.WriteInt(vv);
@@ -693,18 +694,18 @@ namespace SpiderDriver.ClientApi
         }
 
         /// <summary>
-        /// 
+        /// 取消订购指定变量的值改变通知信息
         /// </summary>
         /// <param name="ids"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool UnRegistorDataChangedCallBack(List<int> ids, int timeout = 5000)
+        public bool UnRegistorDataChangedCallBack(IEnumerable<int> ids, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + ids.Count * 4);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + ids.Count() * 4);
             mb.WriteByte(ApiFunConst.UnRegistorTag);
             mb.WriteLong(this.mLoginId);
-            mb.WriteInt(ids.Count);
+            mb.WriteInt(ids.Count());
             foreach (var vv in ids)
             {
                 mb.WriteInt(vv);
@@ -727,7 +728,7 @@ namespace SpiderDriver.ClientApi
         }
 
         /// <summary>
-        /// 
+        /// 取消所有值改变订购信息
         /// </summary>
         /// <param name="timeout"></param>
         /// <returns></returns>
@@ -756,7 +757,7 @@ namespace SpiderDriver.ClientApi
 
 
         /// <summary>
-        /// 
+        /// 设置变量的一组历史值
         /// </summary>
         /// <param name="id"></param>
         /// <param name="type"></param>
@@ -764,14 +765,14 @@ namespace SpiderDriver.ClientApi
         /// <param name="timeUnit"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetTagHisValue(int id, TagType type, List<TagValue> values, int timeout = 5000)
+        public bool SetTagHisValue(int id, TagType type, IEnumerable<TagValue> values, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 22 + values.Count * 33);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 22 + values.Count() * 33);
             mb.WriteByte(ApiFunConst.SetTagHisValue);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(id);
-            mb.WriteInt(values.Count);
+            mb.WriteInt(values.Count());
             mb.WriteByte((byte)type);
             
 
@@ -799,7 +800,7 @@ namespace SpiderDriver.ClientApi
         }
 
         /// <summary>
-        /// 
+        /// 设置一组变量的历史值
         /// </summary>
         /// <param name="idvalues"></param>
         /// <param name="timeUnit"></param>
@@ -841,7 +842,7 @@ namespace SpiderDriver.ClientApi
         }
 
         /// <summary>
-        /// 
+        /// 设置变量的历史值
         /// </summary>
         /// <param name="id"></param>
         /// <param name="values"></param>
@@ -879,21 +880,21 @@ namespace SpiderDriver.ClientApi
         }
 
         /// <summary>
-        /// 
+        /// 获取变量的ID
         /// </summary>
         /// <param name="tags"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public List<int> QueryTagId(List<string> tags,int timeout = 5000)
+        public List<int> QueryTagId(IEnumerable<string> tags,int timeout = 5000)
         {
             lock (mTagInfoLockObj)
             {
                 List<int> re = new List<int>();
                 CheckLogin();
-                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8 + tags.Count * 256);
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8 + tags.Count() * 256);
                 mb.WriteByte(ApiFunConst.GetTagIdByNameFun);
                 mb.WriteLong(this.mLoginId);
-                mb.WriteInt(tags.Count);
+                mb.WriteInt(tags.Count());
                 foreach (var vv in tags)
                 {
                     mb.WriteString(vv);
@@ -925,7 +926,7 @@ namespace SpiderDriver.ClientApi
         }
 
         /// <summary>
-        /// 
+        /// 该驱动对应的获取所有变量的ID，名称，类型
         /// </summary>
         /// <param name="timeout"></param>
         /// <returns></returns>
@@ -1076,21 +1077,21 @@ namespace SpiderDriver.ClientApi
         }
 
         /// <summary>
-        /// 
+        /// 检查变量的记录类型是否为驱动自主更细类型
         /// </summary>
         /// <param name="ids"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public List<bool> CheckRecordTypeByTagId(List<int> ids,int timeout = 5000)
+        public List<bool> CheckRecordTypeByTagId(IEnumerable<int> ids,int timeout = 5000)
         {
             lock (mTagInfoLockObj)
             {
                 List<bool> re = new List<bool>();
                 CheckLogin();
-                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8+4+ids.Count*4);
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8+4+ids.Count()*4);
                 mb.WriteByte(ApiFunConst.GetDriverRecordTypeTagIds2);
                 mb.WriteLong(this.mLoginId);
-                mb.WriteInt(ids.Count);
+                mb.WriteInt(ids.Count());
                 foreach(var vv in ids)
                 {
                     mb.WriteInt(vv);

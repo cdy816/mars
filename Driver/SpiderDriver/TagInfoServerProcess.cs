@@ -74,8 +74,8 @@ namespace SpiderDriver
                             re.WriteInt(count);
                             for (int i = 0; i < count; i++)
                             {
-                                string stag = data.ReadString();
-                                var ival = mm.GetTagIdByName(stag);
+                               // string stag = data.ReadString();
+                                var ival = mm.GetTagIdByName(data.ReadString());
                                 if (ival.HasValue)
                                 {
                                     re.WriteInt(ival.Value);
@@ -94,7 +94,7 @@ namespace SpiderDriver
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
                         int psize = 100000;
-                        var vtags = mm.ListAllTags();
+                        var vtags = mm.ListAllTags().Where(e=>e.LinkAddress.StartsWith("Spider"));
                         int tcount = vtags.Count() / psize;
                         tcount += (vtags.Count() % psize > 0 ? 1 : 0);
                         for(int i=0;i<tcount;i++)

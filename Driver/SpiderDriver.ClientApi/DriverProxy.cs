@@ -50,12 +50,12 @@ namespace SpiderDriver.ClientApi
         #region ... Properties ...
 
         /// <summary>
-        /// 
+        /// 是否登录
         /// </summary>
         public bool IsLogin { get { return mLoginId > 0; } }
 
         /// <summary>
-        /// 
+        /// 变量的值改变回调
         /// </summary>
         public ProcessDataPushDelegate ValueChanged { get; set; }
 
@@ -202,7 +202,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="username"></param>
         /// <param name="password"></param>
         /// <param name="timeount"></param>
-        /// <returns></returns>
+        /// <returns>是否成功</returns>
         public bool Login(string username, string password, int timeount = 5000)
         {
              mUser = username;
@@ -662,7 +662,7 @@ namespace SpiderDriver.ClientApi
         /// <summary>
         /// 订购指定变量的值改变通知信息
         /// </summary>
-        /// <param name="ids"></param>
+        /// <param name="ids">Id集合</param>
         /// <param name="timeout"></param>
         /// <returns></returns>
         public bool AppendRegistorDataChangedCallBack(IEnumerable<int> ids,int timeout=5000)
@@ -759,11 +759,10 @@ namespace SpiderDriver.ClientApi
         /// <summary>
         /// 设置变量的一组历史值
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="type"></param>
-        /// <param name="values"></param>
-        /// <param name="timeUnit"></param>
-        /// <param name="timeout"></param>
+        /// <param name="id">Id</param>
+        /// <param name="type">值类型</param>
+        /// <param name="values">值集合</param>
+        /// <param name="timeout">超时</param>
         /// <returns></returns>
         public bool SetTagHisValue(int id, TagType type, IEnumerable<TagValue> values, int timeout = 5000)
         {
@@ -802,8 +801,7 @@ namespace SpiderDriver.ClientApi
         /// <summary>
         /// 设置一组变量的历史值
         /// </summary>
-        /// <param name="idvalues"></param>
-        /// <param name="timeUnit"></param>
+        /// <param name="idvalues">ID，值集合</param>
         /// <param name="timeout"></param>
         /// <returns></returns>
         public bool SetTagHisValue(Dictionary<int,TagValueAndType> idvalues,int timeout=5000)
@@ -844,10 +842,9 @@ namespace SpiderDriver.ClientApi
         /// <summary>
         /// 设置变量的历史值
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="values"></param>
-        /// <param name="timeUnit"></param>
-        /// <param name="timeout"></param>
+        /// <param name="id">Id</param>
+        /// <param name="values">值</param>
+        /// <param name="timeout">超时</param>
         /// <returns></returns>
         public bool SetTagHisValue(int id, TagValueAndType values,  int timeout = 5000)
         {
@@ -884,7 +881,7 @@ namespace SpiderDriver.ClientApi
         /// </summary>
         /// <param name="tags"></param>
         /// <param name="timeout"></param>
-        /// <returns></returns>
+        /// <returns>ID 集合</returns>
         public List<int> QueryTagId(IEnumerable<string> tags,int timeout = 5000)
         {
             lock (mTagInfoLockObj)
@@ -929,7 +926,7 @@ namespace SpiderDriver.ClientApi
         /// 该驱动对应的获取所有变量的ID，名称，类型
         /// </summary>
         /// <param name="timeout"></param>
-        /// <returns></returns>
+        /// <returns>ID、名称、类型集合</returns>
         public Dictionary<int, Tuple<string, byte>> QueryAllTagIdAndNames(int timeout = 5000)
         {
             lock (mTagInfoLockObj)
@@ -1007,7 +1004,7 @@ namespace SpiderDriver.ClientApi
         /// 获取所有驱动更新的历史记录的变量的ID
         /// </summary>
         /// <param name="timeout"></param>
-        /// <returns></returns>
+        /// <returns>变量ID集合</returns>
         public List<int> GetDriverRecordTypeTagIds(int timeout = 5000)
         {
             lock (mTagInfoLockObj)
@@ -1077,7 +1074,7 @@ namespace SpiderDriver.ClientApi
         }
 
         /// <summary>
-        /// 检查变量的记录类型是否为驱动自主更细类型
+        /// 检查变量的记录类型是否为驱动自主更新类型
         /// </summary>
         /// <param name="ids"></param>
         /// <param name="timeout"></param>

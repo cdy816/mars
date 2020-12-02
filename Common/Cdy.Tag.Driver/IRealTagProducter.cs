@@ -39,14 +39,14 @@ namespace Cdy.Tag.Driver
         #region ... Methods    ...
 
         /// <summary>
-        /// 
+        /// 通过变量ID获取变量的值
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
         object GetTagValueForProductor(int id);
 
         /// <summary>
-        /// 
+        /// 通过变量组设置值
         /// </summary>
         /// <param name="group"></param>
         /// <param name="values"></param>
@@ -54,57 +54,57 @@ namespace Cdy.Tag.Driver
         bool SetTagByGroup(string group, params object[] values);
 
         /// <summary>
-        /// 
+        /// 设置变量的值
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
+        /// <param name="id">Id</param>
+        /// <param name="value">值</param>
         /// <returns></returns>
         bool SetTagValue(int id, object value);
 
         /// <summary>
-        /// 
+        /// 设置变量的值
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="time"></param>
-        /// <param name="quality"></param>
+        /// <param name="id">Id</param>
+        /// <param name="value">值</param>
+        /// <param name="time">时间</param>
+        /// <param name="quality">质量</param>
         /// <returns></returns>
         bool SetTagValue(int id, object value,DateTime time,byte quality);
 
 
         /// <summary>
-        /// 
+        /// 设置变量的值
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="quality"></param>
+        /// <param name="id">Id</param>
+        /// <param name="value">值</param>
+        /// <param name="quality">质量</param>
         /// <returns></returns>
         bool SetTagValue(int id, object value, byte quality);
 
         /// <summary>
-        /// 
+        /// 设置变量的值
         /// </summary>
-        /// <param name="tag"></param>
-        /// <param name="value"></param>
+        /// <param name="tag">变量实例</param>
+        /// <param name="value">值</param>
         /// <returns></returns>
         bool SetTagValue(Tagbase tag, object value);
 
         /// <summary>
-        /// 
+        /// 设置变量的值
         /// </summary>
-        /// <param name="tag"></param>
-        /// <param name="value"></param>
-        /// <param name="time"></param>
-        /// <param name="quality"></param>
+        /// <param name="tag">变量实例</param>
+        /// <param name="value">值</param>
+        /// <param name="time">时间</param>
+        /// <param name="quality">质量</param>
         /// <returns></returns>
         bool SetTagValue(Tagbase tag, object value, DateTime time, byte quality);
 
         /// <summary>
-        /// 
+        /// 设置变量的值
         /// </summary>
-        /// <param name="tag"></param>
-        /// <param name="value"></param>
-        /// <param name="quality"></param>
+        /// <param name="tag">变量实例</param>
+        /// <param name="value">值</param>
+        /// <param name="quality">质量</param>
         /// <returns></returns>
         bool SetTagValue(Tagbase tag, object value, byte quality);
 
@@ -117,65 +117,65 @@ namespace Cdy.Tag.Driver
         bool SetTagValue(List<Tagbase> tag, object value);
 
         /// <summary>
-        /// 
+        /// 将一组变量设置成一个值
         /// </summary>
-        /// <param name="ids"></param>
-        /// <param name="value"></param>
+        /// <param name="ids">变量Id集合</param>
+        /// <param name="value">值</param>
         /// <returns></returns>
         bool SetTagValue(List<int> ids, object value);
 
 
 
         /// <summary>
-        /// 
+        /// 设置Point类型的变量的值
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="values"></param>
+        /// <param name="id">Id</param>
+        /// <param name="values">值列表</param>
         /// <returns></returns>
         bool SetPointValue(int id, params object[] values);
 
         /// <summary>
-        /// 
+        /// 设置Point类型的变量的值
         /// </summary>
-        /// <param name="tag"></param>
-        /// <param name="values"></param>
+        /// <param name="tag">变量实例</param>
+        /// <param name="values">值列表</param>
         /// <returns></returns>
         bool SetPointValue(Tagbase tag, params object[] values);
 
 
         /// <summary>
-        /// 
+        /// 设置一组Point类型的变量的值为同一个值
         /// </summary>
-        /// <param name="ids"></param>
-        /// <param name="values"></param>
+        /// <param name="ids">Id集合</param>
+        /// <param name="values">值列表</param>
         /// <returns></returns>
 
         bool SetPointValue(List<int> ids, params object[] values);
 
         /// <summary>
-        /// 
+        /// 设置一组Point类型的变量的值为同一个值
         /// </summary>
-        /// <param name="tags"></param>
-        /// <param name="values"></param>
+        /// <param name="tags">变量实例集合</param>
+        /// <param name="values">值列表</param>
         /// <returns></returns>
         bool SetPointValue(List<Tagbase> tags, params object[] values);
 
         /// <summary>
-        /// 
+        /// 通过变量的连接地址获取变量实例
         /// </summary>
-        /// <param name="address"></param>
+        /// <param name="address">连接地址</param>
         /// <returns></returns>
         List<Tagbase> GetTagByLinkAddress(string address);
 
         /// <summary>
-        /// 
+        /// 通过变量的连接地址获取变量Id
         /// </summary>
-        /// <param name="address"></param>
+        /// <param name="address">连接地址</param>
         /// <returns></returns>
         List<int> GetTagIdsByLinkAddress(string address);
 
         /// <summary>
-        /// 
+        /// 通过变量ID获取变量实例
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -196,7 +196,7 @@ namespace Cdy.Tag.Driver
         Dictionary<string, List<Tagbase>> GetTagsByLinkAddress(List<string> address);
 
         /// <summary>
-        /// 
+        /// 订购值改变通知
         /// </summary>
         /// <param name="name"></param>
         /// <param name="valueChanged"></param>
@@ -204,13 +204,13 @@ namespace Cdy.Tag.Driver
         void SubscribeValueChangedForProducter(string name, ProducterValueChangedNotifyProcesser.ValueChangedDelagete valueChanged, Func<List<int>> tagRegistor);
 
         /// <summary>
-        /// 
+        /// 取消订购值改变通知
         /// </summary>
         /// <param name="name"></param>
         void UnSubscribeValueChangedForProducter(string name);
 
         /// <summary>
-        /// 通知值发生了改变
+        /// 提交值
         /// </summary>
         void SubmiteNotifyChanged();
         #endregion ...Methods...

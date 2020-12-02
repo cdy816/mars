@@ -50,68 +50,62 @@ namespace Cdy.Tag.Driver
         Dictionary<int, RecordType> GetTagRecordType(List<int> id);
 
         /// <summary>
-        /// 设置变量的历史值
+        /// 设置变量的一组历史值
         /// </summary>
         /// <param name="id"></param>
         /// <param name="values"></param>
-        /// <param name="timeUnit"></param>
         /// <returns></returns>
         bool SetTagHisValue(int id, List<TagValue> values);
 
 
         /// <summary>
-        /// 
+        /// 设置变量的历史值
         /// </summary>
         /// <param name="id"></param>
         /// <param name="value"></param>
-        /// <param name="timeUnit"></param>
         /// <returns></returns>
         bool SetTagHisValue(int id, TagValue value);
 
         /// <summary>
-        /// 
+        /// 设置变量的历史值
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="time"></param>
-        /// <param name="value"></param>
-        /// <param name="quality"></param>
-        /// <param name="timeUnit"></param>
+        /// <param name="id">Id</param>
+        /// <param name="time">时间</param>
+        /// <param name="value">值</param>
+        /// <param name="quality">质量</param>
         /// <returns></returns>
         bool SetTagHisValue(int id, DateTime time, object value, byte quality);
 
         /// <summary>
-        /// 
+        /// 设置变量的历史值
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        /// <param name="timeUnit"></param>
+        /// <param name="id">Id</param>
+        /// <param name="value">值</param>
         /// <returns></returns>
         bool SetTagHisValue(int id, object value);
 
         /// <summary>
-        /// 设置变量的历史值
+        /// 设置一组变量的一组历史值
         /// </summary>
-        /// <param name="values"></param>
-        /// <param name="timeUnit"></param>
+        /// <param name="values">值</param>
         /// <returns></returns>
         bool SetTagHisValues(Dictionary<int, List<TagValue>> values);
 
 
         /// <summary>
-        /// 
+        /// 设置一组变量的历史值
         /// </summary>
         /// <param name="values"></param>
-        /// <param name="timeUnit"></param>
         /// <returns></returns>
         bool SetTagHisValues(Dictionary<int, TagValue> values);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="values"></param>
-        /// <param name="timeUnit"></param>
-        /// <returns></returns>
-        bool SetTagHisValue(Dictionary<int, TagValue> values);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="values"></param>
+        ///// <param name="timeUnit"></param>
+        ///// <returns></returns>
+        //bool SetTagHisValue(Dictionary<int, TagValue> values);
 
         #endregion ...Methods...
 

@@ -883,7 +883,7 @@ namespace Cdy.Tag
             LoggerService.Service.Info("HisEnginer", "Cal CachMemoryBlock memory size:" + (cachHeadSize / 1024.0 / 1024 *2) + "M", ConsoleColor.Cyan);
 
             CurrentMemory = mCachMemory1;
-
+            mCurrentMergeMemory = mMergeMemory1;
             
 
         }

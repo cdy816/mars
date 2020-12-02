@@ -17,8 +17,15 @@ namespace DbInRunWebApi.Controllers
         public LoginResponse Login([FromBody] LoginUser user)
         {
             var service = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>();
-            string Token = service.Login(user.UserName, user.Password);
-            return new LoginResponse() { Token = Token, Result = !string.IsNullOrEmpty(Token), LoginTime =  DateTime.UtcNow.ToBinary(),TimeOut = service.TimeOut };
+            if (service != null)
+            {
+                string Token = service.Login(user.UserName, user.Password);
+                return new LoginResponse() { Token = Token, Result = !string.IsNullOrEmpty(Token), LoginTime = DateTime.UtcNow.ToBinary(), TimeOut = service.TimeOut};
+            }
+            else
+            {
+                return new LoginResponse() { Result = false };
+            }
         }
 
         /// <summary>

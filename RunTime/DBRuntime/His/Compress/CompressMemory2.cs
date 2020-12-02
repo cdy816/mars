@@ -236,10 +236,10 @@ namespace Cdy.Tag
             {
                 mTagIds.Add(vv.Key);
                 dtmp.Add(vv.Key, 0);
-                lsize += vv.Value.Length;
+                lsize += (vv.Value.Length+24);
             }
 
-            this.ReAlloc(HeadSize + (long)(lsize*1.2));
+            this.ReAlloc(HeadSize + (long)(lsize));
             this.Clear();
         }
 
@@ -367,7 +367,7 @@ namespace Cdy.Tag
 
             var comtype = histag.CompressType;//压缩类型
 
-          //  this.CheckAndResize(targetPosition + len);
+            this.CheckAndResize(targetPosition + 5 + len);
 
             //写入压缩类型
             this.WriteByte(targetPosition + 4, (byte)comtype);

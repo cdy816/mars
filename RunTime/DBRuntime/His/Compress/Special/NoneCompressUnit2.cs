@@ -633,12 +633,12 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  bool? DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public bool? DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
         {
             using (HisQueryResult<bool> re = new HisQueryResult<bool>(1))
             {
                 var count = DeCompressBoolValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
-                if (count > 0)
+                if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
                 }
@@ -690,46 +690,70 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<bool>)ReadOtherDatablockAction(0);
+                //var val = (TagHisValue<bool>)ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0);
+                TagHisValue<bool>? val = vtmp != null ? (TagHisValue<bool>)vtmp : null;
+
                 var valtmp = source.ReadByte(valaddr + findex) > 0;
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            result.Add(val.Value, vtime, val.Quality);
-                            count++;
+                            if (val.HasValue)
+                            {
+                                result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                count++;
+                            }
+                            else
+                            {
+                                result.Add(false, vtime, (byte)QualityConst.Null);
+                            }
                             break;
                         case QueryValueMatchType.After:
                             result.Add(valtmp, vtime, qq[findex]);
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var ppval = (vtime - val.Time).TotalMilliseconds;
-                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (ppval < ffval)
+                            if (val.HasValue)
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                var ppval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                                if (ppval < ffval)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
                             }
                             else
                             {
-                                result.Add(valtmp, vtime, qq[findex]);
+                                result.Add(false, vtime, (byte)QualityConst.Null);
                             }
                             count++;
 
                             break;
                         case QueryValueMatchType.Closed:
-                            var pval = (vtime - val.Time).TotalMilliseconds;
-                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                var pval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
                             }
                             else
                             {
-                                result.Add(valtmp, vtime, qq[findex]);
+                                result.Add(false, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -821,7 +845,10 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<bool>)ReadOtherDatablockAction(1);
+                //var val = (TagHisValue<bool>)ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1);
+                TagHisValue<bool>? val = vtmp != null ? (TagHisValue<bool>)vtmp : null;
+
                 var valtmp = source.ReadByte(valaddr + flast) > 0;
                 foreach (var vtime in greatlast)
                 {
@@ -832,35 +859,56 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.After:
-                            result.Add(val.Value, vtime, val.Quality);
-                            count++;
-                            break;
-                        case QueryValueMatchType.Linear:
-                            var ppval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
-                            var ffval = (val.Time - vtime).TotalMilliseconds;
-
-                            if (ppval < ffval)
+                            if (val.HasValue)
                             {
-                                result.Add(valtmp, vtime, qq[flast]);
+                                result.Add(val.Value.Value, vtime, val.Value.Quality);
                             }
                             else
                             {
+                                result.Add(false, vtime, (byte)QualityConst.Null);
+                            }
+                            count++;
+                            break;
+                        case QueryValueMatchType.Linear:
+                            if (val.HasValue)
+                            {
+                                var ppval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                var ffval = (val.Value.Time - vtime).TotalMilliseconds;
 
-                                result.Add(val.Value, vtime, val.Quality);
+                                if (ppval < ffval)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else
+                                {
+
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                            }
+                            else
+                            {
+                                result.Add(false, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
                         case QueryValueMatchType.Closed:
-                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
-                            var fval = (val.Time - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(valtmp, vtime, qq[flast]);
+                                var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                var fval = (val.Value.Time - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
                             }
                             else
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                result.Add(false, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -886,7 +934,7 @@ namespace Cdy.Tag
             using (HisQueryResult<byte> re = new HisQueryResult<byte>(1))
             {
                 var count = DeCompressByteValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
-                if (count > 0)
+                if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
                 }
@@ -935,14 +983,23 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<byte>)ReadOtherDatablockAction(0);
+                //var val = (TagHisValue<byte>)ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0);
+                TagHisValue<byte>? val = vtmp != null ? (TagHisValue<byte>)vtmp : null;
                 var valtmp = source.ReadByte(valaddr + findex);
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if (val.HasValue)
+                            {
+                                result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            }
+                            else
+                            {
+                                result.Add(0, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.After:
@@ -950,47 +1007,57 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var ppval = (vtime - val.Time).TotalMilliseconds;
-                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (qq[findex] < 20 && val.Quality < 20)
+                            if (val.HasValue)
                             {
-                                var pval1 = (vtime - val.Time).TotalMilliseconds;
-                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
-                                var sval1 = val.Value;
-                                var sval2 = valtmp;
+                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
+                                    var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
 
-                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
 
-                                result.Add((object)val1, vtime, 0);
-                            }
-                            else if (qq[findex] < 20)
-                            {
-                                result.Add(valtmp, vtime, qq[findex]);
-                            }
-                            else if (val.Quality < 20)
-                            {
-                                result.Add(val.Value, vtime, val.Quality);
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(0, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
                                 result.Add(0, vtime, (byte)QualityConst.Null);
                             }
-
                             count++;
 
                             break;
                         case QueryValueMatchType.Closed:
-                            var pval = (vtime - val.Time).TotalMilliseconds;
-                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                var pval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
                             }
                             else
                             {
-                                result.Add(valtmp, vtime, qq[findex]);
+                                result.Add(0, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -1047,7 +1114,30 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-
+                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                {
+                                    var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
+                                    var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
+                                    var sval1 = source.ReadByte(valaddr + icount);
+                                    var sval2 = source.ReadByte(valaddr + icount1);
+                                    var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
+                                    result.Add(val1, time1, 0);
+                                }
+                                else if (qq[skey.Key] < 20)
+                                {
+                                    val = source.ReadByte(valaddr + icount * 8);
+                                    result.Add(val, time1, qq[skey.Key]);
+                                }
+                                else if (qq[snext.Key] < 20)
+                                {
+                                    val = source.ReadByte(valaddr + icount1 * 8);
+                                    result.Add(val, time1, qq[snext.Key]);
+                                }
+                                else
+                                {
+                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                }
+                                break;
                             case QueryValueMatchType.Closed:
                                 var pval = (time1 - skey.Value.Item1).TotalMilliseconds;
                                 var fval = (snext.Value.Item1 - time1).TotalMilliseconds;
@@ -1083,7 +1173,9 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<byte>)ReadOtherDatablockAction(1);
+                //var val = (TagHisValue<byte>)ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1);
+                TagHisValue<byte>? val = vtmp != null ? (TagHisValue<byte>)vtmp : null;
                 var valtmp = source.ReadByte(valaddr + flast);
                 foreach (var vtime in greatlast)
                 {
@@ -1094,31 +1186,65 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.After:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if(val.HasValue)
+                            result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(0, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var pval1 = (val.Time - vtime).TotalMilliseconds;
-                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
-                            var sval1 = valtmp;
-                            var sval2 = val.Value;
-
-                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-
-                            result.Add((object)val1, vtime, 0);
-                            count++;
-                            break;
-                        case QueryValueMatchType.Closed:
-                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
-                            var fval = (val.Time - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(valtmp, vtime, qq[flast]);
+                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var tval1 = (val.Value.Time-vv[flast].Value.Item1).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
+
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval1) - Convert.ToDouble(sval2)) + Convert.ToDouble(sval2);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(0, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                result.Add(0, vtime, (byte)QualityConst.Null);
+                            }
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            if (val.HasValue)
+                            {
+                                var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                var fval = (val.Value.Time - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                            }
+                            else
+                            {
+                                result.Add(0, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -1142,7 +1268,7 @@ namespace Cdy.Tag
             using (HisQueryResult<DateTime> re = new HisQueryResult<DateTime>(1))
             {
                 var count = DeCompressDateTimeValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
-                if (count > 0)
+                if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
                 }
@@ -1193,14 +1319,24 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<DateTime>)ReadOtherDatablockAction(0);
+                //var val = (TagHisValue<DateTime>)ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0);
+                TagHisValue<DateTime>? val = vtmp != null ? (TagHisValue<DateTime>)vtmp : null;
+
                 var valtmp = source.ReadDateTime(valaddr + findex * 8);
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if (val.HasValue)
+                            {
+                                result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            }
+                            else
+                            {
+                                result.Add(DateTime.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.After:
@@ -1208,31 +1344,45 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var ppval = (vtime - val.Time).TotalMilliseconds;
-                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (ppval < ffval)
+                            if (val.HasValue)
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                var ppval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                                if (ppval < ffval)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
                             }
                             else
                             {
-                                result.Add(valtmp, vtime, qq[findex]);
+                                result.Add(DateTime.MinValue, vtime, (byte)QualityConst.Null);
                             }
                             count++;
 
                             break;
                         case QueryValueMatchType.Closed:
-                            var pval = (vtime - val.Time).TotalMilliseconds;
-                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                var pval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
                             }
                             else
                             {
-                                result.Add(valtmp, vtime, qq[findex]);
+                                result.Add(DateTime.MinValue, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -1325,7 +1475,9 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<DateTime>)ReadOtherDatablockAction(1);
+                //var val = (TagHisValue<DateTime>)ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1);
+                TagHisValue<DateTime>? val = vtmp != null ? (TagHisValue<DateTime>)vtmp : null;
                 var valtmp = source.ReadDateTime(valaddr + flast * 8);
                 foreach (var vtime in greatlast)
                 {
@@ -1336,35 +1488,54 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.After:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if(val.HasValue)
+                            result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(DateTime.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var ppval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
-                            var ffval = (val.Time - vtime).TotalMilliseconds;
-
-                            if (ppval < ffval)
+                            if (val.HasValue)
                             {
-                                result.Add(valtmp, vtime, qq[flast]);
+                                var ppval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                var ffval = (val.Value.Time - vtime).TotalMilliseconds;
+
+                                if (ppval < ffval)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else
+                                {
+
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
                             }
                             else
                             {
-
-                                result.Add(val.Value, vtime, val.Quality);
+                                result.Add(DateTime.MinValue, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
                         case QueryValueMatchType.Closed:
-                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
-                            var fval = (val.Time - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(valtmp, vtime, qq[flast]);
+                                var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                var fval = (val.Value.Time - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
                             }
                             else
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                result.Add(DateTime.MinValue, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -1389,7 +1560,7 @@ namespace Cdy.Tag
             using (HisQueryResult<double> re = new HisQueryResult<double>(1))
             {
                 var count = DeCompressDoubleValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
-                if (count > 0)
+                if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
                 }
@@ -1442,14 +1613,24 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<double>)ReadOtherDatablockAction(0);
+                //var val = (TagHisValue<double>)ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0);
+                TagHisValue<double>? val = vtmp != null ? (TagHisValue<double>)vtmp : null;
+
                 var valtmp = source.ReadDouble(valaddr + findex * 8);
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if (val.HasValue)
+                            {
+                                result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            }
+                            else
+                            {
+                                result.Add(double.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.After:
@@ -1457,47 +1638,61 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var ppval = (vtime - val.Time).TotalMilliseconds;
-                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (qq[findex] < 20 && val.Quality < 20)
+                            if (val.HasValue)
                             {
-                                var pval1 = (vtime - val.Time).TotalMilliseconds;
-                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
-                                var sval1 = val.Value;
-                                var sval2 = valtmp;
+                                var ppval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
 
-                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
+                                    var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
+                                    var sval1 = val.Value;
+                                    var sval2 = valtmp;
 
-                                result.Add((object)val1, vtime, 0);
-                            }
-                            else if (qq[findex] < 20)
-                            {
-                                result.Add(valtmp, vtime, qq[findex]);
-                            }
-                            else if (val.Quality < 20)
-                            {
-                                result.Add(val.Value, vtime, val.Quality);
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(0, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(0, vtime, (byte)QualityConst.Null);
+                                result.Add(double.MinValue, vtime, (byte)QualityConst.Null);
                             }
 
                             count++;
 
                             break;
                         case QueryValueMatchType.Closed:
-                            var pval = (vtime - val.Time).TotalMilliseconds;
-                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                var pval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
                             }
                             else
                             {
-                                result.Add(valtmp, vtime, qq[findex]);
+                                result.Add(double.MinValue, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -1613,7 +1808,9 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<double>)ReadOtherDatablockAction(1);
+                //var val = (TagHisValue<double>)ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1);
+                TagHisValue<double>? val = vtmp != null ? (TagHisValue<double>)vtmp : null;
                 var valtmp = source.ReadDouble(valaddr + flast * 8);
                 foreach (var vtime in greatlast)
                 {
@@ -1624,31 +1821,65 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.After:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if(val.HasValue)
+                            result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(double.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var pval1 = (val.Time - vtime).TotalMilliseconds;
-                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
-                            var sval1 = valtmp;
-                            var sval2 = val.Value;
-
-                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-
-                            result.Add((object)val1, vtime, 0);
-                            count++;
-                            break;
-                        case QueryValueMatchType.Closed:
-                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
-                            var fval = (val.Time - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(valtmp, vtime, qq[flast]);
+                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
+
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval1) - Convert.ToDouble(sval2)) + Convert.ToDouble(sval2);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(double.MinValue, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                result.Add(double.MinValue, vtime, (byte)QualityConst.Null);
+                            }
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            if (val.HasValue)
+                            {
+                                var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                var fval = (val.Value.Time - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                            }
+                            else
+                            {
+                                result.Add(double.MinValue, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -1673,7 +1904,7 @@ namespace Cdy.Tag
             using (HisQueryResult<float> re = new HisQueryResult<float>(1))
             {
                 var count = DeCompressFloatValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
-                if (count > 0)
+                if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
                 }
@@ -1722,14 +1953,22 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<float>)ReadOtherDatablockAction(0);
+                //var val = (TagHisValue<float>)ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0);
+                TagHisValue<float>? val = vtmp != null ? (TagHisValue<float>)vtmp : null;
+
                 var valtmp = source.ReadFloat(valaddr + findex * 4);
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if(val.HasValue)
+                            result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(float.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.After:
@@ -1737,47 +1976,61 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var ppval = (vtime - val.Time).TotalMilliseconds;
-                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (qq[findex] < 20 && val.Quality < 20)
+                            if (val.HasValue)
                             {
-                                var pval1 = (vtime - val.Time).TotalMilliseconds;
-                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
-                                var sval1 = val.Value;
-                                var sval2 = valtmp;
+                                var ppval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
 
-                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
+                                    var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
 
-                                result.Add((object)val1, vtime, 0);
-                            }
-                            else if (qq[findex] < 20)
-                            {
-                                result.Add(valtmp, vtime, qq[findex]);
-                            }
-                            else if (val.Quality < 20)
-                            {
-                                result.Add(val.Value, vtime, val.Quality);
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(float.MinValue, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(0, vtime, (byte)QualityConst.Null);
+                                result.Add(float.MinValue, vtime, (byte)QualityConst.Null);
                             }
 
                             count++;
 
                             break;
                         case QueryValueMatchType.Closed:
-                            var pval = (vtime - val.Time).TotalMilliseconds;
-                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                var pval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
                             }
                             else
                             {
-                                result.Add(valtmp, vtime, qq[findex]);
+                                result.Add(float.MinValue, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -1891,7 +2144,8 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<float>)ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1);
+                TagHisValue<float>? val = vtmp != null ? (TagHisValue<float>)vtmp : null;
                 var valtmp = source.ReadFloat(valaddr + flast * 4);
                 foreach (var vtime in greatlast)
                 {
@@ -1902,31 +2156,65 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.After:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if(val.HasValue)
+                            result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(float.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var pval1 = (val.Time - vtime).TotalMilliseconds;
-                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
-                            var sval1 = valtmp;
-                            var sval2 = val.Value;
-
-                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-
-                            result.Add((object)val1, vtime, 0);
-                            count++;
-                            break;
-                        case QueryValueMatchType.Closed:
-                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
-                            var fval = (val.Time - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(valtmp, vtime, qq[flast]);
+                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
+
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval1) - Convert.ToDouble(sval2)) + Convert.ToDouble(sval2);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(float.MinValue, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                result.Add(float.MinValue, vtime, (byte)QualityConst.Null);
+                            }
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            if (val.HasValue)
+                            {
+                                var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                var fval = (val.Value.Time - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                            }
+                            else
+                            {
+                                result.Add(float.MinValue, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -1950,7 +2238,7 @@ namespace Cdy.Tag
             using (HisQueryResult<int> re = new HisQueryResult<int>(1))
             {
                 var count = DeCompressIntValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
-                if (count > 0)
+                if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
                 }
@@ -1998,14 +2286,20 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<int>)ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0);
+                TagHisValue<int>? val = vtmp != null ? (TagHisValue<int>)vtmp : null;
                 var valtmp = source.ReadInt(valaddr + findex * 4);
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if(val.HasValue)
+                            result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(int.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.After:
@@ -2013,47 +2307,61 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var ppval = (vtime - val.Time).TotalMilliseconds;
-                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (qq[findex] < 20 && val.Quality < 20)
+                            if (val.HasValue)
                             {
-                                var pval1 = (vtime - val.Time).TotalMilliseconds;
-                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
-                                var sval1 = val.Value;
-                                var sval2 = valtmp;
+                                var ppval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
 
-                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
+                                    var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
 
-                                result.Add((object)val1, vtime, 0);
-                            }
-                            else if (qq[findex] < 20)
-                            {
-                                result.Add(valtmp, vtime, qq[findex]);
-                            }
-                            else if (val.Quality < 20)
-                            {
-                                result.Add(val.Value, vtime, val.Quality);
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(int.MinValue, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(0, vtime, (byte)QualityConst.Null);
+                                result.Add(int.MinValue, vtime, (byte)QualityConst.Null);
                             }
 
                             count++;
 
                             break;
                         case QueryValueMatchType.Closed:
-                            var pval = (vtime - val.Time).TotalMilliseconds;
-                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                var pval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
                             }
                             else
                             {
-                                result.Add(valtmp, vtime, qq[findex]);
+                                result.Add(int.MinValue, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -2168,7 +2476,8 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<int>)ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1);
+                TagHisValue<int>? val = vtmp != null ? (TagHisValue<int>)vtmp : null;
                 var valtmp = source.ReadInt(valaddr + flast * 4);
                 foreach (var vtime in greatlast)
                 {
@@ -2179,31 +2488,65 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.After:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if(val.HasValue)
+                            result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(int.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var pval1 = (val.Time - vtime).TotalMilliseconds;
-                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
-                            var sval1 = valtmp;
-                            var sval2 = val.Value;
-
-                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-
-                            result.Add((object)val1, vtime, 0);
-                            count++;
-                            break;
-                        case QueryValueMatchType.Closed:
-                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
-                            var fval = (val.Time - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(valtmp, vtime, qq[flast]);
+                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
+
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval1) - Convert.ToDouble(sval2)) + Convert.ToDouble(sval2);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(int.MinValue, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                result.Add(int.MinValue, vtime, (byte)QualityConst.Null);
+                            }
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            if (val.HasValue)
+                            {
+                                var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                var fval = (val.Value.Time - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                            }
+                            else
+                            {
+                                result.Add(int.MinValue, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -2227,7 +2570,7 @@ namespace Cdy.Tag
             using (HisQueryResult<long> re = new HisQueryResult<long>(1))
             {
                 var count = DeCompressLongValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
-                if (count > 0)
+                if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
                 }
@@ -2276,14 +2619,21 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<long>)ReadOtherDatablockAction(0);
+                //var val = (TagHisValue<long>)ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0);
+                TagHisValue<long>? val = vtmp != null ? (TagHisValue<long>)vtmp : null;
                 var valtmp = source.ReadLong(valaddr + findex * 8);
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if(val.HasValue)
+                            result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(long.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.After:
@@ -2291,27 +2641,34 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var ppval = (vtime - val.Time).TotalMilliseconds;
-                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (qq[findex] < 20 && val.Quality < 20)
+                            if (val.HasValue)
                             {
-                                var pval1 = (vtime - val.Time).TotalMilliseconds;
-                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
-                                var sval1 = val.Value;
-                                var sval2 = valtmp;
+                                var ppval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
 
-                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
+                                    var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
 
-                                result.Add((object)val1, vtime, 0);
-                            }
-                            else if (qq[findex] < 20)
-                            {
-                                result.Add(valtmp, vtime, qq[findex]);
-                            }
-                            else if (val.Quality < 20)
-                            {
-                                result.Add(val.Value, vtime, val.Quality);
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(0, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
@@ -2322,17 +2679,25 @@ namespace Cdy.Tag
 
                             break;
                         case QueryValueMatchType.Closed:
-                            var pval = (vtime - val.Time).TotalMilliseconds;
-                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                var pval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
                             }
                             else
                             {
-                                result.Add(valtmp, vtime, qq[findex]);
+                                result.Add(0, vtime, (byte)QualityConst.Null);
                             }
+
                             count++;
                             break;
                     }
@@ -2447,7 +2812,8 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<long>)ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1);
+                TagHisValue<long>? val = vtmp != null ? (TagHisValue<long>)vtmp : null;
                 var valtmp = source.ReadLong(valaddr + flast * 8);
                 foreach (var vtime in greatlast)
                 {
@@ -2458,31 +2824,65 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.After:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if(val.HasValue)
+                            result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(long.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var pval1 = (val.Time - vtime).TotalMilliseconds;
-                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
-                            var sval1 = valtmp;
-                            var sval2 = val.Value;
-
-                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-
-                            result.Add((object)val1, vtime, 0);
-                            count++;
-                            break;
-                        case QueryValueMatchType.Closed:
-                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
-                            var fval = (val.Time - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(valtmp, vtime, qq[flast]);
+                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
+
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval1) - Convert.ToDouble(sval2)) + Convert.ToDouble(sval2);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(long.MinValue, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                result.Add(long.MinValue, vtime, (byte)QualityConst.Null);
+                            }
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            if (val.HasValue)
+                            {
+                                var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                var fval = (val.Value.Time - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                            }
+                            else
+                            {
+                                result.Add(long.MinValue, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -2506,7 +2906,7 @@ namespace Cdy.Tag
             using (HisQueryResult<short> re = new HisQueryResult<short>(1))
             {
                 var count = DeCompressShortValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
-                if (count > 0)
+                if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
                 }
@@ -2554,7 +2954,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<short> result, Func<byte, object> ReadOtherDatablockAction)
+        public int DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<short> result, Func<byte, object> ReadOtherDatablockAction)
         {
 
             DateTime stime;
@@ -2562,7 +2962,7 @@ namespace Cdy.Tag
             byte timelen = 0;
 
             var qs = ReadTimeQulity(source, sourceAddr, out valuecount, out stime, out timelen);
-            var qq = source.ReadBytes(qs.Count * (timelen+2) + 17 + sourceAddr, qs.Count);
+            var qq = source.ReadBytes(qs.Count * (timelen + 2) + 17 + sourceAddr, qs.Count);
 
             var vv = qs.ToArray();
 
@@ -2582,14 +2982,20 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<short>)ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0);
+                TagHisValue<short>? val = vtmp != null ? (TagHisValue<short>)vtmp : null;
                 var valtmp = source.ReadShort(valaddr + findex * 2);
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if (val.HasValue)
+                                result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(short.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.After:
@@ -2597,48 +3003,63 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var ppval = (vtime - val.Time).TotalMilliseconds;
-                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (qq[findex] < 20 && val.Quality < 20)
+                            if (val.HasValue)
                             {
-                                var pval1 = (vtime - val.Time).TotalMilliseconds;
-                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
-                                var sval1 = val.Value;
-                                var sval2 = valtmp;
+                                var ppval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
 
-                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
+                                    var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
 
-                                result.Add((object)val1, vtime, 0);
-                            }
-                            else if (qq[findex] < 20)
-                            {
-                                result.Add(valtmp, vtime,qq[findex]);
-                            }
-                            else if (val.Quality < 20)
-                            {
-                                result.Add(val.Value, vtime, val.Quality);
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(short.MinValue, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(0, vtime, (byte)QualityConst.Null);
+                                result.Add(short.MinValue, vtime, (byte)QualityConst.Null);
                             }
 
                             count++;
 
                             break;
                         case QueryValueMatchType.Closed:
-                            var pval = (vtime - val.Time).TotalMilliseconds;
-                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                var pval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
                             }
                             else
                             {
-                                result.Add(valtmp, vtime, qq[findex]);
+                                result.Add(short.MinValue, vtime, (byte)QualityConst.Null);
                             }
+
                             count++;
                             break;
                     }
@@ -2753,7 +3174,8 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<short>)ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1);
+                TagHisValue<short>? val = vtmp != null ? (TagHisValue<short>)vtmp : null;
                 var valtmp = source.ReadShort(valaddr + flast * 2);
                 foreach (var vtime in greatlast)
                 {
@@ -2764,31 +3186,65 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.After:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if (val.HasValue)
+                                result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(short.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var pval1 = (val.Time - vtime).TotalMilliseconds;
-                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
-                            var sval1 = valtmp;
-                            var sval2 = val.Value;
-
-                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-
-                            result.Add((object)val1, vtime, 0);
-                            count++;
-                            break;
-                        case QueryValueMatchType.Closed:
-                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
-                            var fval = (val.Time - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(valtmp, vtime, qq[flast]);
+                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
+
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval1) - Convert.ToDouble(sval2)) + Convert.ToDouble(sval2);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(short.MinValue, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                result.Add(short.MinValue, vtime, (byte)QualityConst.Null);
+                            }
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            if (val.HasValue)
+                            {
+                                var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                var fval = (val.Value.Time - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                            }
+                            else
+                            {
+                                result.Add(short.MinValue, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -2796,7 +3252,7 @@ namespace Cdy.Tag
                 }
             }
             return count;
-            
+
 
 
         }
@@ -2815,7 +3271,7 @@ namespace Cdy.Tag
             using (HisQueryResult<string> re = new HisQueryResult<string>(1))
             {
                 var count = DeCompressStringValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
-                if (count > 0)
+                if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
                 }
@@ -2874,14 +3330,21 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<string>)ReadOtherDatablockAction(0);
+                //var val = (TagHisValue<string>)ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0);
+                TagHisValue<string>? val = vtmp != null ? (TagHisValue<string>)vtmp : null;
                 var valtmp = dtmp[findex];
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if(val.HasValue)
+                            result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add("", vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.After:
@@ -2889,31 +3352,45 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var ppval = (vtime - val.Time).TotalMilliseconds;
-                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (ppval < ffval)
+                            if (val.HasValue)
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                var ppval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                                if (ppval < ffval)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
                             }
                             else
                             {
-                                result.Add(valtmp, vtime, qq[findex]);
+                                result.Add("", vtime, (byte)QualityConst.Null);
                             }
                             count++;
 
                             break;
                         case QueryValueMatchType.Closed:
-                            var pval = (vtime - val.Time).TotalMilliseconds;
-                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                var pval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
                             }
                             else
                             {
-                                result.Add(valtmp, vtime, qq[findex]);
+                                result.Add("", vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -3006,7 +3483,8 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<string>)ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1);
+                TagHisValue<string>? val = vtmp != null ? (TagHisValue<string>)vtmp : null;
                 var valtmp = dtmp[flast];
                 foreach (var vtime in greatlast)
                 {
@@ -3017,35 +3495,54 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.After:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if(val.HasValue)
+                            result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add("", vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var ppval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
-                            var ffval = (val.Time - vtime).TotalMilliseconds;
-
-                            if (ppval < ffval)
+                            if (val.HasValue)
                             {
-                                result.Add(valtmp, vtime, qq[flast]);
+                                var ppval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                var ffval = (val.Value.Time - vtime).TotalMilliseconds;
+
+                                if (ppval < ffval)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else
+                                {
+
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
                             }
                             else
                             {
-
-                                result.Add(val.Value, vtime, val.Quality);
+                                result.Add("", vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
                         case QueryValueMatchType.Closed:
-                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
-                            var fval = (val.Time - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(valtmp, vtime, qq[flast]);
+                                var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                var fval = (val.Value.Time - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
                             }
                             else
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                result.Add("", vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -3071,7 +3568,7 @@ namespace Cdy.Tag
             using (HisQueryResult<uint> re = new HisQueryResult<uint>(1))
             {
                 var count = DeCompressUIntValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
-                if (count > 0)
+                if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
                 }
@@ -3119,14 +3616,20 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<uint>)ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0);
+                TagHisValue<uint>? val = vtmp != null ? (TagHisValue<uint>)vtmp : null;
                 var valtmp = source.ReadUInt(valaddr + findex * 4);
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if (val.HasValue)
+                                result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(uint.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.After:
@@ -3134,48 +3637,63 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var ppval = (vtime - val.Time).TotalMilliseconds;
-                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (qq[findex] < 20 && val.Quality < 20)
+                            if (val.HasValue)
                             {
-                                var pval1 = (vtime - val.Time).TotalMilliseconds;
-                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
-                                var sval1 = val.Value;
-                                var sval2 = valtmp;
+                                var ppval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
 
-                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
+                                    var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
 
-                                result.Add((object)val1, vtime, 0);
-                            }
-                            else if (qq[findex] < 20)
-                            {
-                                result.Add(valtmp, vtime, qq[findex]);
-                            }
-                            else if (val.Quality < 20)
-                            {
-                                result.Add(val.Value, vtime, val.Quality);
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(uint.MinValue, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(0, vtime, (byte)QualityConst.Null);
+                                result.Add(uint.MinValue, vtime, (byte)QualityConst.Null);
                             }
 
                             count++;
 
                             break;
                         case QueryValueMatchType.Closed:
-                            var pval = (vtime - val.Time).TotalMilliseconds;
-                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                var pval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
                             }
                             else
                             {
-                                result.Add(valtmp, vtime, qq[findex]);
+                                result.Add(uint.MinValue, vtime, (byte)QualityConst.Null);
                             }
+
                             count++;
                             break;
                     }
@@ -3289,7 +3807,8 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<uint>)ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1);
+                TagHisValue<uint>? val = vtmp != null ? (TagHisValue<uint>)vtmp : null;
                 var valtmp = source.ReadUInt(valaddr + flast * 4);
                 foreach (var vtime in greatlast)
                 {
@@ -3300,31 +3819,65 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.After:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if (val.HasValue)
+                                result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(uint.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var pval1 = (val.Time - vtime).TotalMilliseconds;
-                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
-                            var sval1 = valtmp;
-                            var sval2 = val.Value;
-
-                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-
-                            result.Add((object)val1, vtime, 0);
-                            count++;
-                            break;
-                        case QueryValueMatchType.Closed:
-                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
-                            var fval = (val.Time - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(valtmp, vtime, qq[flast]);
+                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
+
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval1) - Convert.ToDouble(sval2)) + Convert.ToDouble(sval2);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(uint.MinValue, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                result.Add(uint.MinValue, vtime, (byte)QualityConst.Null);
+                            }
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            if (val.HasValue)
+                            {
+                                var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                var fval = (val.Value.Time - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                            }
+                            else
+                            {
+                                result.Add(uint.MinValue, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -3350,7 +3903,7 @@ namespace Cdy.Tag
             using (HisQueryResult<ulong> re = new HisQueryResult<ulong>(1))
             {
                 var count = DeCompressULongValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
-                if (count > 0)
+                if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
                 }
@@ -3398,14 +3951,21 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<ulong>)ReadOtherDatablockAction(0);
+                //var val = (TagHisValue<long>)ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0);
+                TagHisValue<ulong>? val = vtmp != null ? (TagHisValue<ulong>)vtmp : null;
                 var valtmp = source.ReadULong(valaddr + findex * 8);
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if (val.HasValue)
+                                result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(ulong.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.After:
@@ -3413,48 +3973,63 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var ppval = (vtime - val.Time).TotalMilliseconds;
-                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (qq[findex] < 20 && val.Quality < 20)
+                            if (val.HasValue)
                             {
-                                var pval1 = (vtime - val.Time).TotalMilliseconds;
-                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
-                                var sval1 = val.Value;
-                                var sval2 = valtmp;
+                                var ppval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
 
-                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
+                                    var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
 
-                                result.Add((object)val1, vtime, 0);
-                            }
-                            else if (qq[findex] < 20)
-                            {
-                                result.Add(valtmp, vtime, qq[findex]);
-                            }
-                            else if (val.Quality < 20)
-                            {
-                                result.Add(val.Value, vtime, val.Quality);
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(ulong.MinValue, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(0, vtime, (byte)QualityConst.Null);
+                                result.Add(ulong.MinValue, vtime, (byte)QualityConst.Null);
                             }
 
                             count++;
 
                             break;
                         case QueryValueMatchType.Closed:
-                            var pval = (vtime - val.Time).TotalMilliseconds;
-                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                var pval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
                             }
                             else
                             {
-                                result.Add(valtmp, vtime, qq[findex]);
+                                result.Add(ulong.MinValue, vtime, (byte)QualityConst.Null);
                             }
+
                             count++;
                             break;
                     }
@@ -3569,7 +4144,8 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<ulong>)ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1);
+                TagHisValue<ulong>? val = vtmp != null ? (TagHisValue<ulong>)vtmp : null;
                 var valtmp = source.ReadULong(valaddr + flast * 8);
                 foreach (var vtime in greatlast)
                 {
@@ -3580,31 +4156,65 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.After:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if (val.HasValue)
+                                result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(ulong.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var pval1 = (val.Time - vtime).TotalMilliseconds;
-                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
-                            var sval1 = valtmp;
-                            var sval2 = val.Value;
-
-                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-
-                            result.Add((object)val1, vtime, 0);
-                            count++;
-                            break;
-                        case QueryValueMatchType.Closed:
-                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
-                            var fval = (val.Time - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(valtmp, vtime, qq[flast]);
+                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
+
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval1) - Convert.ToDouble(sval2)) + Convert.ToDouble(sval2);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(ulong.MinValue, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                result.Add(ulong.MinValue, vtime, (byte)QualityConst.Null);
+                            }
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            if (val.HasValue)
+                            {
+                                var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                var fval = (val.Value.Time - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                            }
+                            else
+                            {
+                                result.Add(ulong.MinValue, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -3629,7 +4239,7 @@ namespace Cdy.Tag
             using (HisQueryResult<ushort> re = new HisQueryResult<ushort>(1))
             {
                 var count = DeCompressUShortValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
-                if (count > 0)
+                if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
                 }
@@ -3678,14 +4288,20 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<ushort>)ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0);
+                TagHisValue<ushort>? val = vtmp != null ? (TagHisValue<ushort>)vtmp : null;
                 var valtmp = source.ReadUShort(valaddr + findex * 2);
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if (val.HasValue)
+                                result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(ushort.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.After:
@@ -3693,48 +4309,63 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var ppval = (vtime - val.Time).TotalMilliseconds;
-                            var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (qq[findex] < 20 && val.Quality < 20)
+                            if (val.HasValue)
                             {
-                                var pval1 = (vtime - val.Time).TotalMilliseconds;
-                                var tval1 = (vv[findex].Value.Item1 - val.Time).TotalMilliseconds;
-                                var sval1 = val.Value;
-                                var sval2 = valtmp;
+                                var ppval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
 
-                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
+                                    var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
 
-                                result.Add((object)val1, vtime, 0);
-                            }
-                            else if (qq[findex] < 20)
-                            {
-                                result.Add(valtmp, vtime, qq[findex]);
-                            }
-                            else if (val.Quality < 20)
-                            {
-                                result.Add(val.Value, vtime, val.Quality);
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[findex] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(ushort.MinValue, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(0, vtime, (byte)QualityConst.Null);
+                                result.Add(ushort.MinValue, vtime, (byte)QualityConst.Null);
                             }
 
                             count++;
 
                             break;
                         case QueryValueMatchType.Closed:
-                            var pval = (vtime - val.Time).TotalMilliseconds;
-                            var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                var pval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var fval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(valtmp, vtime, qq[findex]);
+                                }
                             }
                             else
                             {
-                                result.Add(valtmp, vtime, qq[findex]);
+                                result.Add(ushort.MinValue, vtime, (byte)QualityConst.Null);
                             }
+
                             count++;
                             break;
                     }
@@ -3848,7 +4479,8 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var val = (TagHisValue<ushort>)ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1);
+                TagHisValue<ushort>? val = vtmp != null ? (TagHisValue<ushort>)vtmp : null;
                 var valtmp = source.ReadUShort(valaddr + flast * 2);
                 foreach (var vtime in greatlast)
                 {
@@ -3859,31 +4491,65 @@ namespace Cdy.Tag
                             count++;
                             break;
                         case QueryValueMatchType.After:
-                            result.Add(val.Value, vtime, val.Quality);
+                            if (val.HasValue)
+                                result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            else
+                            {
+                                result.Add(short.MinValue, vtime, (byte)QualityConst.Null);
+                            }
                             count++;
                             break;
                         case QueryValueMatchType.Linear:
-                            var pval1 = (val.Time - vtime).TotalMilliseconds;
-                            var tval1 = (val.Time - vv[flast].Value.Item1).TotalMilliseconds;
-                            var sval1 = valtmp;
-                            var sval2 = val.Value;
-
-                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-
-                            result.Add((object)val1, vtime, 0);
-                            count++;
-                            break;
-                        case QueryValueMatchType.Closed:
-                            var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
-                            var fval = (val.Time - vtime).TotalMilliseconds;
-
-                            if (pval < fval)
+                            if (val.HasValue)
                             {
-                                result.Add(valtmp, vtime, qq[flast]);
+                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                {
+                                    var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = valtmp;
+
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval1) - Convert.ToDouble(sval2)) + Convert.ToDouble(sval2);
+
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else if (qq[flast] < 20)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else if (val.Value.Quality < 20)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(short.MinValue, vtime, (byte)QualityConst.Null);
+                                }
                             }
                             else
                             {
-                                result.Add(val.Value, vtime, val.Quality);
+                                result.Add(short.MinValue, vtime, (byte)QualityConst.Null);
+                            }
+                            count++;
+                            break;
+                        case QueryValueMatchType.Closed:
+                            if (val.HasValue)
+                            {
+                                var pval = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
+                                var fval = (val.Value.Time - vtime).TotalMilliseconds;
+
+                                if (pval < fval)
+                                {
+                                    result.Add(valtmp, vtime, qq[flast]);
+                                }
+                                else
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                            }
+                            else
+                            {
+                                result.Add(short.MinValue, vtime, (byte)QualityConst.Null);
                             }
                             count++;
                             break;
@@ -4986,7 +5652,7 @@ namespace Cdy.Tag
             using (HisQueryResult<T> re = new HisQueryResult<T>(1))
             {
                 var count = DeCompressPointValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
-                if (count > 0)
+                if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
                 }
@@ -5034,15 +5700,21 @@ namespace Cdy.Tag
                 var qq = source.ReadBytes(qs.Count * (timelen+8) + 17 + sourceAddr, qs.Count);
                 if (lowfirst.Count() > 0)
                 {
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
-
+                    //var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new IntPointData(source.ReadInt(valaddr + findex * 4), source.ReadInt(valaddr + (findex + 1) * 4));
                     foreach (var time1 in lowfirst)
                     {
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                result.Add(val.Value, time1, val.Quality);
+                                if(val.HasValue)
+                                result.Add(val.Value.Value, time1, val.Value.Quality);
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
@@ -5050,35 +5722,49 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[findex] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[findex] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[findex] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - val.Time).TotalMilliseconds;
-                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    var pval = (time1 - val.Value.Time).TotalMilliseconds;
+                                    var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
@@ -5186,7 +5872,8 @@ namespace Cdy.Tag
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new IntPointData(source.ReadInt(valaddr + flast * 4), source.ReadInt(valaddr + (flast + 1) * 4));
                     foreach (var time1 in greatlast)
                     {
@@ -5197,39 +5884,60 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                result.Add(val.Value, time1, val.Quality);
-                                count++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qq[flast] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(qs[flast].Item1,val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[flast] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    result.Add(val.Value.Value, time1, val.Value.Quality);
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (val.HasValue)
+                                {
+                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[flast] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                }
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
-                                var fval = (val.Time - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                    var fval = (val.Value.Time - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
@@ -5242,7 +5950,8 @@ namespace Cdy.Tag
                 var qq = source.ReadBytes(qs.Count * (timelen + 12) + 17 + sourceAddr, qs.Count);
                 if (lowfirst.Count() > 0)
                 {
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new IntPoint3Data(source.ReadInt(valaddr + findex * 4), source.ReadInt(valaddr + (findex + 1) * 4), source.ReadInt(valaddr + (findex + 2) * 4));
                     foreach (var time1 in lowfirst)
@@ -5250,7 +5959,12 @@ namespace Cdy.Tag
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                result.Add(val.Value, time1, val.Quality);
+                                if (val.HasValue)
+                                    result.Add(val.Value.Value, time1, val.Value.Quality);
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
@@ -5258,35 +5972,49 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[findex] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[findex] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[findex] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - val.Time).TotalMilliseconds;
-                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    var pval = (time1 - val.Value.Time).TotalMilliseconds;
+                                    var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
@@ -5408,7 +6136,8 @@ namespace Cdy.Tag
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new IntPoint3Data(source.ReadInt(valaddr + flast * 4), source.ReadInt(valaddr + (flast + 1) * 4), source.ReadInt(valaddr + (flast + 2) * 4));
                     foreach (var time1 in greatlast)
                     {
@@ -5419,39 +6148,60 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                result.Add(val.Value, time1, val.Quality);
-                                count++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qq[flast] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(qs[flast].Item1, val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[flast] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    result.Add(val.Value.Value, time1, val.Value.Quality);
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (val.HasValue)
+                                {
+                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[flast] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                }
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
-                                var fval = (val.Time - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                    var fval = (val.Value.Time - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
@@ -5464,7 +6214,8 @@ namespace Cdy.Tag
                 var qq = source.ReadBytes(qs.Count * (timelen + 12) + 17 + sourceAddr, qs.Count);
                 if (lowfirst.Count() > 0)
                 {
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new UIntPoint3Data(source.ReadUInt(valaddr + findex * 4), source.ReadUInt(valaddr + (findex + 1) * 4), source.ReadUInt(valaddr + (findex + 2) * 4));
                     foreach (var time1 in lowfirst)
@@ -5472,7 +6223,12 @@ namespace Cdy.Tag
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                result.Add(val.Value, time1, val.Quality);
+                                if (val.HasValue)
+                                    result.Add(val.Value.Value, time1, val.Value.Quality);
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
@@ -5480,35 +6236,49 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[findex] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[findex] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[findex] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - val.Time).TotalMilliseconds;
-                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    var pval = (time1 - val.Value.Time).TotalMilliseconds;
+                                    var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
@@ -5630,7 +6400,8 @@ namespace Cdy.Tag
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new UIntPoint3Data(source.ReadUInt(valaddr + flast * 4), source.ReadUInt(valaddr + (flast + 1) * 4), source.ReadUInt(valaddr + (flast + 2) * 4));
                     foreach (var time1 in greatlast)
                     {
@@ -5641,39 +6412,60 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                result.Add(val.Value, time1, val.Quality);
-                                count++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qq[flast] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(qs[flast].Item1, val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[flast] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    result.Add(val.Value.Value, time1, val.Value.Quality);
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (val.HasValue)
+                                {
+                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[flast] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                }
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
-                                var fval = (val.Time - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                    var fval = (val.Value.Time - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
@@ -5686,7 +6478,8 @@ namespace Cdy.Tag
                 var qq = source.ReadBytes(qs.Count * (timelen + 8) + 17 + sourceAddr, qs.Count);
                 if (lowfirst.Count() > 0)
                 {
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new UIntPointData(source.ReadUInt(valaddr + findex * 4), source.ReadUInt(valaddr + (findex + 1) * 4));
                     foreach (var time1 in lowfirst)
@@ -5694,7 +6487,12 @@ namespace Cdy.Tag
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                result.Add(val.Value, time1, val.Quality);
+                                if (val.HasValue)
+                                    result.Add(val.Value.Value, time1, val.Value.Quality);
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
@@ -5702,35 +6500,49 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[findex] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[findex] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[findex] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - val.Time).TotalMilliseconds;
-                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    var pval = (time1 - val.Value.Time).TotalMilliseconds;
+                                    var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
@@ -5838,7 +6650,8 @@ namespace Cdy.Tag
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new UIntPointData(source.ReadUInt(valaddr + flast * 4), source.ReadUInt(valaddr + (flast + 1) * 4));
                     foreach (var time1 in greatlast)
                     {
@@ -5849,39 +6662,60 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                result.Add(val.Value, time1, val.Quality);
-                                count++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qq[flast] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(qs[flast].Item1, val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[flast] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    result.Add(val.Value.Value, time1, val.Value.Quality);
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (val.HasValue)
+                                {
+                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[flast] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                }
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
-                                var fval = (val.Time - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                    var fval = (val.Value.Time - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
@@ -5894,7 +6728,8 @@ namespace Cdy.Tag
                 var qq = source.ReadBytes(qs.Count * (timelen + 16) + 17 + sourceAddr, qs.Count);
                 if (lowfirst.Count() > 0)
                 {
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new LongPointData(source.ReadLong(valaddr + findex * 8), source.ReadLong(valaddr + (findex + 1) * 8));
                     foreach (var time1 in lowfirst)
@@ -5902,7 +6737,12 @@ namespace Cdy.Tag
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                result.Add(val.Value, time1, val.Quality);
+                                if (val.HasValue)
+                                    result.Add(val.Value.Value, time1, val.Value.Quality);
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
@@ -5910,35 +6750,49 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[findex] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[findex] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[findex] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - val.Time).TotalMilliseconds;
-                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    var pval = (time1 - val.Value.Time).TotalMilliseconds;
+                                    var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
@@ -6046,7 +6900,8 @@ namespace Cdy.Tag
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new LongPointData(source.ReadLong(valaddr + flast * 8), source.ReadLong(valaddr + (flast + 1) * 8));
                     foreach (var time1 in greatlast)
                     {
@@ -6057,39 +6912,60 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                result.Add(val.Value, time1, val.Quality);
-                                count++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qq[flast] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(qs[flast].Item1, val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[flast] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    result.Add(val.Value.Value, time1, val.Value.Quality);
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (val.HasValue)
+                                {
+                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[flast] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                }
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
-                                var fval = (val.Time - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                    var fval = (val.Value.Time - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
@@ -6102,7 +6978,8 @@ namespace Cdy.Tag
                 var qq = source.ReadBytes(qs.Count * (timelen + 16) + 17 + sourceAddr, qs.Count);
                 if (lowfirst.Count() > 0)
                 {
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new ULongPointData(source.ReadULong(valaddr + findex * 8), source.ReadULong(valaddr + (findex + 1) * 8));
                     foreach (var time1 in lowfirst)
@@ -6110,7 +6987,12 @@ namespace Cdy.Tag
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                result.Add(val.Value, time1, val.Quality);
+                                if (val.HasValue)
+                                    result.Add(val.Value.Value, time1, val.Value.Quality);
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
@@ -6118,35 +7000,49 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[findex] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[findex] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[findex] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - val.Time).TotalMilliseconds;
-                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    var pval = (time1 - val.Value.Time).TotalMilliseconds;
+                                    var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
@@ -6253,7 +7149,8 @@ namespace Cdy.Tag
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new ULongPointData(source.ReadULong(valaddr + flast * 8), source.ReadULong(valaddr + (flast + 1) * 8));
                     foreach (var time1 in greatlast)
                     {
@@ -6264,39 +7161,60 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                result.Add(val.Value, time1, val.Quality);
-                                count++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qq[flast] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(qs[flast].Item1, val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[flast] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    result.Add(val.Value.Value, time1, val.Value.Quality);
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (val.HasValue)
+                                {
+                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[flast] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                }
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
-                                var fval = (val.Time - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                    var fval = (val.Value.Time - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
@@ -6309,7 +7227,8 @@ namespace Cdy.Tag
                 var qq = source.ReadBytes(qs.Count * (timelen + 24) + 17 + sourceAddr, qs.Count);
                 if (lowfirst.Count() > 0)
                 {
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new LongPoint3Data(source.ReadLong(valaddr + findex * 8), source.ReadLong(valaddr + (findex + 1) * 8), source.ReadLong(valaddr + (findex + 2) * 8));
                     foreach (var time1 in lowfirst)
@@ -6317,7 +7236,12 @@ namespace Cdy.Tag
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                result.Add(val.Value, time1, val.Quality);
+                                if (val.HasValue)
+                                    result.Add(val.Value.Value, time1, val.Value.Quality);
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
@@ -6325,35 +7249,49 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[findex] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[findex] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[findex] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - val.Time).TotalMilliseconds;
-                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    var pval = (time1 - val.Value.Time).TotalMilliseconds;
+                                    var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
@@ -6474,7 +7412,8 @@ namespace Cdy.Tag
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new LongPoint3Data(source.ReadLong(valaddr + flast * 8), source.ReadLong(valaddr + (flast + 1) * 8), source.ReadLong(valaddr + (flast + 2) * 8));
                     foreach (var time1 in greatlast)
                     {
@@ -6485,39 +7424,60 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                result.Add(val.Value, time1, val.Quality);
-                                count++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qq[flast] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(qs[flast].Item1, val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[flast] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    result.Add(val.Value.Value, time1, val.Value.Quality);
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (val.HasValue)
+                                {
+                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[flast] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                }
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
-                                var fval = (val.Time - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                    var fval = (val.Value.Time - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
@@ -6530,7 +7490,8 @@ namespace Cdy.Tag
                 var qq = source.ReadBytes(qs.Count * (timelen + 24) + 17 + sourceAddr, qs.Count);
                 if (lowfirst.Count() > 0)
                 {
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new ULongPoint3Data(source.ReadULong(valaddr + findex * 8), source.ReadULong(valaddr + (findex + 1) * 8), source.ReadULong(valaddr + (findex + 2) * 8));
                     foreach (var time1 in lowfirst)
@@ -6538,7 +7499,12 @@ namespace Cdy.Tag
                         switch (type)
                         {
                             case QueryValueMatchType.Previous:
-                                result.Add(val.Value, time1, val.Quality);
+                                if (val.HasValue)
+                                    result.Add(val.Value.Value, time1, val.Value.Quality);
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
@@ -6546,35 +7512,49 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[findex] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(val.Time, qs[findex].Item1, time1, val.Value, (T)((object)valtmp)), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[findex] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[findex] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - val.Time).TotalMilliseconds;
-                                var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    var pval = (time1 - val.Value.Time).TotalMilliseconds;
+                                    var fval = (qs[findex].Item1 - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(valtmp, time1, qq[findex]);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(valtmp, time1, qq[findex]);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
@@ -6695,7 +7675,8 @@ namespace Cdy.Tag
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new ULongPoint3Data(source.ReadULong(valaddr + flast * 8), source.ReadULong(valaddr + (flast + 1) * 8), source.ReadULong(valaddr + (flast + 2) * 8));
                     foreach (var time1 in greatlast)
                     {
@@ -6706,39 +7687,60 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.After:
-                                result.Add(val.Value, time1, val.Quality);
-                                count++;
-                                break;
-                            case QueryValueMatchType.Linear:
-                                if (qq[flast] < 20 && val.Quality < 20)
+                                if (val.HasValue)
                                 {
-                                    result.Add(LinerValue(qs[flast].Item1, val.Time, time1, (T)((object)valtmp), val.Value), time1, 0);
-                                }
-                                else if (val.Quality < 20)
-                                {
-                                    result.Add(val.Value, time1, val.Quality);
-                                }
-                                else if (qq[flast] < 20)
-                                {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    result.Add(val.Value.Value, time1, val.Value.Quality);
                                 }
                                 else
                                 {
-                                    result.Add(0, time1, (byte)QualityConst.Null);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
+                                }
+                                count++;
+                                break;
+                            case QueryValueMatchType.Linear:
+                                if (val.HasValue)
+                                {
+                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    {
+                                        result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
+                                    }
+                                    else if (val.Value.Quality < 20)
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
+                                    else if (qq[flast] < 20)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(0, time1, (byte)QualityConst.Null);
+                                    }
+                                }
+                                else
+                                {
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;
                             case QueryValueMatchType.Closed:
-                                var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
-                                var fval = (val.Time - time1).TotalMilliseconds;
-
-                                if (pval < fval)
+                                if (val.HasValue)
                                 {
-                                    result.Add(valtmp, time1, qq[flast]);
+                                    var pval = (time1 - qs[flast].Item1).TotalMilliseconds;
+                                    var fval = (val.Value.Time - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        result.Add(valtmp, time1, qq[flast]);
+                                    }
+                                    else
+                                    {
+                                        result.Add(val.Value.Value, time1, val.Value.Quality);
+                                    }
                                 }
                                 else
                                 {
-                                    result.Add(val.Value, time1, val.Quality);
+                                    result.Add(default(T), time1, (byte)QualityConst.Null);
                                 }
                                 count++;
                                 break;

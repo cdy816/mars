@@ -117,7 +117,7 @@ namespace Cdy.Tag
 
             foreach (var vv in mTargetMemorys)
             {
-                vv.Value.Init(ServiceLocator.Locator.Resolve<IHisEngine2>().CurrentMemory);
+                vv.Value.Init(ServiceLocator.Locator.Resolve<IHisEngine2>().CurrentMergeMemory);
                 LoggerService.Service.Info("CompressEnginer", "Cal CompressMemory memory size:" + vv.Value.Length / 1024.0 / 1024 + "M", ConsoleColor.Cyan);
             }
         }
@@ -146,7 +146,7 @@ namespace Cdy.Tag
 
             foreach (var vv in ctmp)
             {
-                vv.ReInit(ServiceLocator.Locator.Resolve<IHisEngine2>().CurrentMemory);
+                vv.ReInit(ServiceLocator.Locator.Resolve<IHisEngine2>().CurrentMergeMemory);
             }
         }
 

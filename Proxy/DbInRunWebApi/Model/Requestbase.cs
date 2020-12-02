@@ -197,7 +197,6 @@ namespace DbInRunWebApi.Model
         #endregion ...Interfaces...
     }
 
-
     /// <summary>
     /// 
     /// </summary>

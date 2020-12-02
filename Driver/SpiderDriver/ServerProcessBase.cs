@@ -31,6 +31,8 @@ namespace SpiderDriver
 
         private bool mIsClosed = false;
 
+        private List<string> mClients = new List<string>();
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -112,7 +114,11 @@ namespace SpiderDriver
             {
                 var vq = new Queue<IByteBuffer>();
                 vq.Enqueue(data);
-                mDatasCach.Add(client, vq);
+
+                lock (mDatasCach)
+                    mDatasCach.Add(client, vq);
+                lock (mClients)
+                    mClients.Add(client);
             }
             resetEvent.Set();
         }
@@ -120,19 +126,67 @@ namespace SpiderDriver
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="client"></param>
+        public void RemoveClient(string client)
+        {
+            lock (mClients)
+            {
+                if (mClients.Contains(client))
+                {
+                    mClients.Remove(client);
+                }
+            }
+
+            lock (mDatasCach)
+            {
+                if (mDatasCach.ContainsKey(client))
+                {
+                    mDatasCach.Remove(client);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private void DataProcess()
         {
+            string sname="";
+            Queue<IByteBuffer> datas = null;
             while (!mIsClosed)
             {
                 resetEvent.WaitOne();
                 if (mIsClosed) return;
                 resetEvent.Reset();
-                foreach (var vv in mDatasCach)
+
+                for (int i = 0; i < mClients.Count; i++)
                 {
-                    while(vv.Value.Count>0)
+                    sname = "";
+                    datas = null;
+                    lock (mClients)
                     {
-                        var dd = vv.Value.Dequeue();
-                        ProcessSingleData(vv.Key, dd);
+                        if (i < mClients.Count)
+                        {
+                            sname = mClients[i];
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(sname))
+                    {
+                        lock (mDatasCach)
+                        {
+                            if (mDatasCach.ContainsKey(sname))
+                            {
+                                datas = mDatasCach[sname];
+                            }
+                        }
+                        if (datas != null)
+                        {
+                            while (datas.Count > 0)
+                            {
+                                ProcessSingleData(sname, datas.Dequeue());
+                            }
+                        }
                     }
                 }
             }
@@ -192,7 +246,7 @@ namespace SpiderDriver
         /// <param name="id"></param>
         public virtual void OnClientDisconnected(string id)
         {
-
+            RemoveClient(id);
         }
 
         #endregion ...Methods...

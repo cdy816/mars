@@ -15,8 +15,10 @@ namespace Cdy.Tag.Common
 
         #region ... Variables  ...
 
-        private IntPtr[] mBuffers = new IntPtr[1024];
+        private IntPtr[] mBuffers;
         public const int bufferSize = 1024 * 1024 * 8 * 8;
+        private object mLocker = new object();
+        private bool mIsDisposed = false;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -31,6 +33,7 @@ namespace Cdy.Tag.Common
         public IdBuffer()
         {
             mBuffers = ArrayPool<IntPtr>.Shared.Rent(1024);
+            mBuffers.AsSpan().Clear();
         }
 
         #endregion ...Constructor...
@@ -48,6 +51,7 @@ namespace Cdy.Tag.Common
         private void ReSizeBuffer(int size)
         {
             var newbuffer = ArrayPool<IntPtr>.Shared.Rent(size);
+            newbuffer.AsSpan().Clear();
             mBuffers.CopyTo(newbuffer, 0);
             ArrayPool<IntPtr>.Shared.Return(mBuffers);
             mBuffers = newbuffer;
@@ -121,14 +125,37 @@ namespace Cdy.Tag.Common
         /// </summary>
         public virtual void Dispose()
         {
-            foreach(var vv in mBuffers)
+            lock (mLocker)
             {
-                if(vv!=IntPtr.Zero)
+                if (mIsDisposed) return;
+                mIsDisposed = true;
+                try
                 {
-                    Marshal.FreeHGlobal(vv);
+                    if (mBuffers != null)
+                    {
+                        foreach (var vv in mBuffers)
+                        {
+                            try
+                            {
+                                if (vv != IntPtr.Zero)
+                                {
+                                    Marshal.FreeHGlobal(vv);
+                                }
+                            }
+                            catch
+                            {
+
+                            }
+
+                        }
+                        ArrayPool<IntPtr>.Shared.Return(mBuffers);
+                    }
+                }
+                catch(Exception ex)
+                {
+                    LoggerService.Service.Erro("IdBuffer", ex.Message);
                 }
             }
-            ArrayPool<IntPtr>.Shared.Return(mBuffers);
         }
 
         #endregion ...Methods...

@@ -67,9 +67,9 @@ namespace SpiderDriver
         /// <param name="id"></param>
         protected override void OnClientConnected(string id)
         {
-            mRealProcess.OnClientConnected(id);
-            mInfoProcess.OnClientConnected(id);
-            mHisProcess.OnClientConnected(id);
+            mRealProcess?.OnClientConnected(id);
+            mInfoProcess?.OnClientConnected(id);
+            mHisProcess?.OnClientConnected(id);
             base.OnClientConnected(id);
         }
 
@@ -79,9 +79,9 @@ namespace SpiderDriver
         /// <param name="id"></param>
         protected override void OnClientDisConnected(string id)
         {
-            mRealProcess.OnClientDisconnected(id);
-            mInfoProcess.OnClientDisconnected(id);
-            mHisProcess.OnClientDisconnected(id);
+            mRealProcess?.OnClientDisconnected(id);
+            mInfoProcess?.OnClientDisconnected(id);
+            mHisProcess?.OnClientDisconnected(id);
             base.OnClientDisConnected(id);
         }
 

@@ -73,7 +73,7 @@ namespace SpiderDriverDemo
                 {
                     ProcessSetTagValue();
                 }
-                Thread.Sleep(1000);
+                Thread.Sleep(500);
             }
         }
 
@@ -232,6 +232,10 @@ namespace SpiderDriverDemo
             BoolValue = bval.ToString();
             DateTimeValue = dnow.ToString();
 
+            
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
             var values = new Dictionary<int, Tuple<Cdy.Tag.TagType, object>>();
 
             var hisvalus = new Dictionary<int, TagValueAndType>();
@@ -323,7 +327,12 @@ namespace SpiderDriverDemo
                 }
 
             }
+            long ltmp = sw.ElapsedMilliseconds;
             driverProxy.SetTagValue(values);
+            sw.Stop();
+            
+            Debug.Print("发送耗时:" + ltmp + "," + (sw.ElapsedMilliseconds - ltmp));
+            
             //driverProxy.SetTagHisValue(hisvalus,  5000);
         }
 

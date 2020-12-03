@@ -456,7 +456,7 @@ namespace SpiderDriver.ClientApi
                     re.WriteString(sval, Encoding.Unicode);
                     break;
                 case TagType.DateTime:
-                    re.WriteLong(((DateTime)value).Ticks);
+                    re.WriteLong(((DateTime)value).ToBinary());
                     break;
                 case TagType.IntPoint:
                     re.WriteInt(((IntPointData)value).X);
@@ -543,7 +543,7 @@ namespace SpiderDriver.ClientApi
                     re.WriteString(sval, Encoding.Unicode);
                     break;
                 case TagType.DateTime:
-                    re.WriteLong(((DateTime)value).Ticks);
+                    re.WriteLong(((DateTime)value).ToBinary());
                     break;
                 case TagType.IntPoint:
                     re.WriteInt(((IntPointData)value).X);
@@ -583,6 +583,77 @@ namespace SpiderDriver.ClientApi
                     break;
             }
             re.WriteByte(quality);
+        }
+
+
+        /// <summary>
+        /// 设置一组变量的实时值
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool SetTagValue(RealDataBuffer data, int timeout = 5000)
+        {
+            CheckLogin();
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + (int)data.Position);
+            mb.WriteByte(ApiFunConst.SetTagValueFun);
+            mb.WriteLong(this.mLoginId);
+            mb.WriteInt(data.ValueCount);
+
+            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.WriterIndex, (int)data.Position);
+            mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
+            
+            realRequreEvent.Reset();
+            Send(mb);
+
+            try
+            {
+                if (realRequreEvent.WaitOne(timeout))
+                {
+                    return mRealRequreData != null && mRealRequreData.ReadableBytes > 1;
+                }
+            }
+            catch
+            {
+
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool SetTagValueAndQuality(RealDataBuffer data, int timeout = 5000)
+        {
+            CheckLogin();
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + (int)data.Position);
+            mb.WriteByte(ApiFunConst.SetTagValueAndQualityFun);
+            mb.WriteLong(this.mLoginId);
+            mb.WriteInt(data.ValueCount);
+
+            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.WriterIndex, (int)data.Position);
+            mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
+
+            realRequreEvent.Reset();
+            Send(mb);
+
+            try
+            {
+                if (realRequreEvent.WaitOne(timeout))
+                {
+                    return mRealRequreData != null && mRealRequreData.ReadableBytes > 1;
+                }
+            }
+            catch
+            {
+
+            }
+
+            return false;
         }
 
 
@@ -629,7 +700,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="values">ID，值类型，值，质量</param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetTagValue(Dictionary<int, Tuple<TagType, object,byte>> values, int timeout = 5000)
+        public bool SetTagValueAndQuality(Dictionary<int, Tuple<TagType, object,byte>> values, int timeout = 5000)
         {
             CheckLogin();
             var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + values.Count * 32);
@@ -798,13 +869,43 @@ namespace SpiderDriver.ClientApi
             return false;
         }
 
+        public bool SetTagHisValue(int id, TagType type, HisDataBuffer data, int timeout = 5000)
+        {
+            CheckLogin();
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 22 + (int)data.Position);
+            mb.WriteByte(ApiFunConst.SetTagHisValue);
+            mb.WriteLong(this.mLoginId);
+            mb.WriteInt(id);
+            mb.WriteInt(data.ValueCount);
+            mb.WriteByte((byte)type);
+
+            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.WriterIndex, (int)data.Position);
+            mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
+            hisRequreEvent.Reset();
+            Send(mb);
+
+            try
+            {
+                if (this.hisRequreEvent.WaitOne(timeout))
+                {
+                    return mHisRequreData != null && mHisRequreData.ReadableBytes > 1;
+                }
+            }
+            catch
+            {
+
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// 设置一组变量的历史值
         /// </summary>
         /// <param name="idvalues">ID，值集合</param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetTagHisValue(Dictionary<int,TagValueAndType> idvalues,int timeout=5000)
+        public bool SetMutiTagHisValue(Dictionary<int,TagValueAndType> idvalues,int timeout=5000)
         {
             if (idvalues == null && idvalues.Count == 0) return false;
 
@@ -821,6 +922,42 @@ namespace SpiderDriver.ClientApi
                 mb.WriteByte((byte)vv.Value.ValueType);
                 SetTagValueToBuffer2(vv.Value.ValueType, vv.Value.Value, vv.Value.Quality, mb);
             }
+
+            hisRequreEvent.Reset();
+            Send(mb);
+
+            try
+            {
+                if (this.hisRequreEvent.WaitOne(timeout))
+                {
+                    return mHisRequreData != null && mHisRequreData.ReadableBytes > 1;
+                }
+            }
+            catch
+            {
+
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 设置一组变量的历史值
+        /// </summary>
+        /// <param name="idvalues">ID，值集合</param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool SetMutiTagHisValue(HisDataBuffer data, int timeout = 5000)
+        {
+            if (data == null && data.ValueCount == 0) return false;
+
+            CheckLogin();
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 17 + (int)data.Position);
+            mb.WriteByte(ApiFunConst.SetTagHisValue2);
+            mb.WriteLong(this.mLoginId);
+            mb.WriteInt(data.ValueCount);
+
+            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.WriterIndex, (int)data.Position);
+            mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
 
             hisRequreEvent.Reset();
             Send(mb);

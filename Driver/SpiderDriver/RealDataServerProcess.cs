@@ -226,8 +226,8 @@ namespace SpiderDriver
                         value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                         break;
                 }
-                if(AllowTagIds.Contains(id))
-               service.SetTagValue(id, value);
+                if (AllowTagIds.Contains(id))
+                    service.SetTagValue(id, value);
             }
             service.SubmiteNotifyChanged();
             Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));

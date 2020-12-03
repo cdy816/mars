@@ -75,6 +75,29 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        public static unsafe void WriteShortReverse(void* ptr, long ofs, short val)
+        {
+            try
+            {
+                byte* addr = (byte*)ptr + ofs;
+                // unaligned write
+                byte* valPtr = (byte*)&val;
+                addr[1] = valPtr[0];
+                addr[0] = valPtr[1];
+            }
+            catch (NullReferenceException)
+            {
+                // this method is documented to throw AccessViolationException on any AV
+                throw new AccessViolationException();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="ofs"></param>
+        /// <param name="val"></param>
         public static unsafe void WriteUShort(void* ptr, long ofs, ushort val)
         {
             try
@@ -92,6 +115,29 @@ namespace Cdy.Tag
                     addr[0] = valPtr[0];
                     addr[1] = valPtr[1];
                 }
+            }
+            catch (NullReferenceException)
+            {
+                // this method is documented to throw AccessViolationException on any AV
+                throw new AccessViolationException();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="ofs"></param>
+        /// <param name="val"></param>
+        public static unsafe void WriteUShortReverse(void* ptr, long ofs, ushort val)
+        {
+            try
+            {
+                byte* addr = (byte*)ptr + ofs;
+                // unaligned write
+                byte* valPtr = (byte*)&val;
+                addr[1] = valPtr[0];
+                addr[0] = valPtr[1];
             }
             catch (NullReferenceException)
             {
@@ -139,6 +185,31 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        public static unsafe void WriteInt32Reverse(void* ptr, long ofs, int val)
+        {
+            try
+            {
+                byte* addr = (byte*)ptr + ofs;
+                // unaligned write
+                byte* valPtr = (byte*)&val;
+                addr[3] = valPtr[0];
+                addr[2] = valPtr[1];
+                addr[1] = valPtr[2];
+                addr[0] = valPtr[3];
+            }
+            catch (NullReferenceException)
+            {
+                // this method is documented to throw AccessViolationException on any AV
+                throw new AccessViolationException();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="ofs"></param>
+        /// <param name="val"></param>
         public static unsafe void WriteUInt32(void* ptr, long ofs, uint val)
         {
             try
@@ -172,6 +243,31 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        public static unsafe void WriteUInt32Reverse(void* ptr, long ofs, uint val)
+        {
+            try
+            {
+                byte* addr = (byte*)ptr + ofs;
+                // unaligned write
+                byte* valPtr = (byte*)&val;
+                addr[3] = valPtr[0];
+                addr[2] = valPtr[1];
+                addr[1] = valPtr[2];
+                addr[0] = valPtr[3];
+            }
+            catch (NullReferenceException)
+            {
+                // this method is documented to throw AccessViolationException on any AV
+                throw new AccessViolationException();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="ofs"></param>
+        /// <param name="val"></param>
         public static unsafe void WriteFloat(void* ptr, long ofs, float val)
         {
             try
@@ -191,6 +287,30 @@ namespace Cdy.Tag
                     addr[2] = valPtr[2];
                     addr[3] = valPtr[3];
                 }
+            }
+            catch (NullReferenceException)
+            {
+                // this method is documented to throw AccessViolationException on any AV
+                throw new AccessViolationException();
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="ofs"></param>
+        /// <param name="val"></param>
+        public static unsafe void WriteFloatReverse(void* ptr, long ofs, float val)
+        {
+            try
+            {
+                byte* addr = (byte*)ptr + ofs;
+                // unaligned write
+                byte* valPtr = (byte*)&val;
+                addr[3] = valPtr[0];
+                addr[2] = valPtr[1];
+                addr[1] = valPtr[2];
+                addr[0] = valPtr[3];
             }
             catch (NullReferenceException)
             {
@@ -242,6 +362,35 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        public static unsafe void WriteInt64Reverse(void* ptr, long ofs, Int64 val)
+        {
+            try
+            {
+                byte* addr = (byte*)ptr + ofs;
+                // unaligned write
+                byte* valPtr = (byte*)&val;
+                addr[7] = valPtr[0];
+                addr[6] = valPtr[1];
+                addr[5] = valPtr[2];
+                addr[4] = valPtr[3];
+                addr[3] = valPtr[4];
+                addr[2] = valPtr[5];
+                addr[1] = valPtr[6];
+                addr[0] = valPtr[7];
+            }
+            catch (NullReferenceException)
+            {
+                // this method is documented to throw AccessViolationException on any AV
+                throw new AccessViolationException();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="ofs"></param>
+        /// <param name="val"></param>
         public static unsafe void WriteUInt64(void* ptr, long ofs, UInt64 val)
         {
             try
@@ -279,6 +428,35 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        public static unsafe void WriteUInt64Reverse(void* ptr, long ofs, UInt64 val)
+        {
+            try
+            {
+                byte* addr = (byte*)ptr + ofs;
+                // unaligned write
+                byte* valPtr = (byte*)&val;
+                addr[7] = valPtr[0];
+                addr[6] = valPtr[1];
+                addr[5] = valPtr[2];
+                addr[4] = valPtr[3];
+                addr[3] = valPtr[4];
+                addr[2] = valPtr[5];
+                addr[1] = valPtr[6];
+                addr[0] = valPtr[7];
+            }
+            catch (NullReferenceException)
+            {
+                // this method is documented to throw AccessViolationException on any AV
+                throw new AccessViolationException();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="ofs"></param>
+        /// <param name="val"></param>
         public static unsafe void WriteDouble(void* ptr, long ofs, double val)
         {
             try
@@ -302,6 +480,35 @@ namespace Cdy.Tag
                     addr[6] = valPtr[6];
                     addr[7] = valPtr[7];
                 }
+            }
+            catch (NullReferenceException)
+            {
+                // this method is documented to throw AccessViolationException on any AV
+                throw new AccessViolationException();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="ofs"></param>
+        /// <param name="val"></param>
+        public static unsafe void WriteDoubleReverse(void* ptr, long ofs, double val)
+        {
+            try
+            {
+                byte* addr = (byte*)ptr + ofs;
+                // unaligned write
+                byte* valPtr = (byte*)&val;
+                addr[7] = valPtr[0];
+                addr[6] = valPtr[1];
+                addr[5] = valPtr[2];
+                addr[4] = valPtr[3];
+                addr[3] = valPtr[4];
+                addr[2] = valPtr[5];
+                addr[1] = valPtr[6];
+                addr[0] = valPtr[7];
             }
             catch (NullReferenceException)
             {
@@ -365,6 +572,35 @@ namespace Cdy.Tag
                     addr[6] = valPtr[6];
                     addr[7] = valPtr[7];
                 }
+            }
+            catch (NullReferenceException)
+            {
+                // this method is documented to throw AccessViolationException on any AV
+                throw new AccessViolationException();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="ofs"></param>
+        /// <param name="val"></param>
+        public static unsafe void WriteDateTimeReverse(void* ptr, long ofs, DateTime val)
+        {
+            try
+            {
+                byte* addr = (byte*)ptr + ofs;
+                // unaligned write
+                byte* valPtr = (byte*)&val;
+                addr[7] = valPtr[0];
+                addr[6] = valPtr[1];
+                addr[5] = valPtr[2];
+                addr[4] = valPtr[3];
+                addr[3] = valPtr[4];
+                addr[2] = valPtr[5];
+                addr[1] = valPtr[6];
+                addr[0] = valPtr[7];
             }
             catch (NullReferenceException)
             {

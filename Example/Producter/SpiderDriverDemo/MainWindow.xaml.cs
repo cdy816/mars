@@ -26,6 +26,9 @@ namespace SpiderDriverDemo
     {
         private SpiderDriver.ClientApi.DriverProxy driverProxy = new SpiderDriver.ClientApi.DriverProxy();
         private Dictionary<int,Tuple<string,byte>> mAllId = new Dictionary<int, Tuple<string, byte>>();
+
+        private SpiderDriver.ClientApi.RealDataBuffer rdb;
+
         private Thread mScanThread;
         private int mCount = 0;
 
@@ -205,6 +208,8 @@ namespace SpiderDriverDemo
                 {
                     //test
                 }
+
+                rdb = new SpiderDriver.ClientApi.RealDataBuffer(mAllId.Count * 32);
             }
 
             var driverrecordTags = driverProxy.GetDriverRecordTypeTagIds();
@@ -231,8 +236,10 @@ namespace SpiderDriverDemo
             CosValue = cos.ToString("f4");
             BoolValue = bval.ToString();
             DateTimeValue = dnow.ToString();
+            if (rdb == null) return;
 
-            
+            rdb.Clear();
+
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
@@ -245,90 +252,105 @@ namespace SpiderDriverDemo
                 switch ((TagType)vv.Value.Item2)
                 {
                     case TagType.Double:
-                        
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, sin));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = sin, ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key,sin);
+                       
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, sin));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = sin, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Bool:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, bval));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = bval, ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key, bval);
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, bval));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = bval, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Byte:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, btmp));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = btmp, ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key, btmp);
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, btmp));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = btmp, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.DateTime:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, dnow));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = dnow, ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key, dnow);
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, dnow));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = dnow, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Float:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, cos));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = cos, ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key, (float)cos);
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, cos));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = cos, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Int:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key, mCount);
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Long:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key, (long)mCount);
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.UInt:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key, (uint)mCount);
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.ULong:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key, (ulong)mCount);
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.UShort:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key, (ushort)mCount);
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Short:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key, (short)mCount);
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.IntPoint:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new IntPointData( mCount,mCount)));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new IntPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key, new IntPointData(mCount, mCount));
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new IntPointData( mCount,mCount)));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new IntPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.UIntPoint:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new UIntPointData(mCount, mCount)));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new UIntPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key, new UIntPointData(mCount, mCount));
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new UIntPointData(mCount, mCount)));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new UIntPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.IntPoint3:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new IntPoint3Data(mCount, mCount, mCount)));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new IntPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key, new IntPoint3Data(mCount, mCount, mCount));
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new IntPoint3Data(mCount, mCount, mCount)));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new IntPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.UIntPoint3:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new UIntPoint3Data(mCount, mCount, mCount)));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new UIntPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key, new UIntPoint3Data(mCount, mCount, mCount));
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new UIntPoint3Data(mCount, mCount, mCount)));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new UIntPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.LongPoint:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new LongPointData(mCount, mCount)));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new LongPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new LongPointData(mCount, mCount)));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new LongPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
 
                         break;
                     case TagType.ULongPoint:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new ULongPointData(mCount, mCount)));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new ULongPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new ULongPointData(mCount, mCount)));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new ULongPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
 
                         break;
                     case TagType.LongPoint3:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new LongPoint3Data(mCount, mCount, mCount)));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new LongPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new LongPoint3Data(mCount, mCount, mCount)));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new LongPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.ULongPoint3:
-                        values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new ULongPoint3Data(mCount, mCount, mCount)));
-                        hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new ULongPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
+                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new ULongPoint3Data(mCount, mCount, mCount)));
+                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new ULongPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
 
                         break;
                 }
 
             }
             long ltmp = sw.ElapsedMilliseconds;
-            driverProxy.SetTagValue(values);
+            driverProxy.SetTagValue(rdb);
             sw.Stop();
             
             Debug.Print("发送耗时:" + ltmp + "," + (sw.ElapsedMilliseconds - ltmp));

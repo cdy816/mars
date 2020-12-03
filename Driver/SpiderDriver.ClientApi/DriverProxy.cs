@@ -595,7 +595,7 @@ namespace SpiderDriver.ClientApi
         public bool SetTagValue(RealDataBuffer data, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + (int)data.Position);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + (int)data.Position);
             mb.WriteByte(ApiFunConst.SetTagValueFun);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(data.ValueCount);
@@ -630,7 +630,7 @@ namespace SpiderDriver.ClientApi
         public bool SetTagValueAndQuality(RealDataBuffer data, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + (int)data.Position);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + (int)data.Position);
             mb.WriteByte(ApiFunConst.SetTagValueAndQualityFun);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(data.ValueCount);

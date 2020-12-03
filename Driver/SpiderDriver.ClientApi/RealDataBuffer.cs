@@ -287,7 +287,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteLong(long offset, long value)
         {
-            MemoryHelper.WriteInt64((void*)mHandle, offset, value);
+            MemoryHelper.WriteInt64Reverse((void*)mHandle, offset, value);
             Position = offset + 8;
         }
 
@@ -298,7 +298,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteLongDirect(long offset, long value)
         {
-            MemoryHelper.WriteInt64((void*)mHandle, offset, value);
+            MemoryHelper.WriteInt64Reverse((void*)mHandle, offset, value);
         }
 
         /// <summary>
@@ -308,7 +308,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteULong(long offset, ulong value)
         {
-            MemoryHelper.WriteUInt64((void*)mHandle, offset, value);
+            MemoryHelper.WriteUInt64Reverse((void*)mHandle, offset, value);
             Position = offset + 8;
         }
 
@@ -319,7 +319,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteFloat(long offset, float value)
         {
-            MemoryHelper.WriteFloat((void*)mHandle, offset, value);
+            MemoryHelper.WriteFloatReverse((void*)mHandle, offset, value);
             Position = offset + 4;
 
         }
@@ -331,7 +331,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteDouble(long offset, double value)
         {
-            MemoryHelper.WriteDouble((void*)mHandle, offset, value);
+            MemoryHelper.WriteDoubleReverse((void*)mHandle, offset, value);
             Position = offset + 8;
         }
 
@@ -382,6 +382,7 @@ namespace SpiderDriver.ClientApi
         {
             Clear(mHandle, 0, (int)this.mAllocSize);
             ValueCount = 0;
+            Position = 0;
         }
 
         /// <summary>
@@ -492,7 +493,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteDatetime(long offset, DateTime value)
         {
-            MemoryHelper.WriteDateTime((void*)mHandle, offset, value);
+            MemoryHelper.WriteDateTimeReverse((void*)mHandle, offset, value);
             Position = offset + 8;
         }
         /// <summary>
@@ -502,7 +503,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteInt(long offset, int value)
         {
-            MemoryHelper.WriteInt32((void*)mHandle, offset, value);
+            MemoryHelper.WriteInt32Reverse((void*)mHandle, offset, value);
             Position = offset + 4;
         }
 
@@ -513,7 +514,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteIntDirect(long offset, int value)
         {
-            MemoryHelper.WriteInt32((void*)mHandle, offset, value);
+            MemoryHelper.WriteInt32Reverse((void*)mHandle, offset, value);
         }
 
         /// <summary>
@@ -523,7 +524,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteUInt(long offset, uint value)
         {
-            MemoryHelper.WriteUInt32((void*)mHandle, offset, value);
+            MemoryHelper.WriteUInt32Reverse((void*)mHandle, offset, value);
             Position = offset + 4;
         }
 
@@ -534,7 +535,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteUIntDirect(long offset, uint value)
         {
-            MemoryHelper.WriteUInt32((void*)mHandle, offset, value);
+            MemoryHelper.WriteUInt32Reverse((void*)mHandle, offset, value);
         }
 
         /// <summary>
@@ -544,7 +545,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteShort(long offset, short value)
         {
-            MemoryHelper.WriteShort((void*)mHandle, offset, value);
+            MemoryHelper.WriteShortReverse((void*)mHandle, offset, value);
             Position = offset + 2;
         }
 
@@ -555,7 +556,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteShortDirect(long offset, short value)
         {
-            MemoryHelper.WriteShort((void*)mHandle, offset, value);
+            MemoryHelper.WriteShortReverse((void*)mHandle, offset, value);
         }
 
         /// <summary>
@@ -565,7 +566,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteUShort(long offset, ushort value)
         {
-            MemoryHelper.WriteUShort((void*)mHandle, offset, value);
+            MemoryHelper.WriteUShortReverse((void*)mHandle, offset, value);
             Position = offset + 2;
         }
 
@@ -576,7 +577,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteUShortDirect(long offset, ushort value)
         {
-            MemoryHelper.WriteUShort((void*)mHandle, offset, value);
+            MemoryHelper.WriteUShortReverse((void*)mHandle, offset, value);
         }
 
         /// <summary>
@@ -1060,6 +1061,49 @@ namespace SpiderDriver.ClientApi
 
 
         #endregion
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public RealDataBuffer AppendValue(bool value)
+        {
+            ValueCount++;
+            this.WriteByte(Position, (byte)TagType.Bool);
+            this.WriteByte(Position, value?(byte)1: (byte)0);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public RealDataBuffer AppendValue(int id, bool value)
+        {
+            ValueCount++;
+            this.WriteInt(Position, id);
+            this.WriteByte(Position, (byte)TagType.Bool);
+            this.WriteByte(Position, value ? (byte)1 : (byte)0);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(int id, bool value, byte quality)
+        {
+            ValueCount++;
+            this.WriteInt(Position, id);
+            this.WriteByte(Position, (byte)TagType.Bool);
+            this.WriteByte(Position, value ? (byte)1 : (byte)0);
+            this.WriteByte(Position, quality);
+            return this;
+        }
 
         /// <summary>
         /// 

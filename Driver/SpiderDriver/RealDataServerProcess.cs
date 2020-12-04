@@ -156,78 +156,249 @@ namespace SpiderDriver
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
             int count = block.ReadInt();
+            int id = 0;
+            byte typ;
+            //object value = null;
             for (int i = 0; i < count; i++)
             {
-                var id = block.ReadInt();
-
-                byte typ = block.ReadByte();
-                object value = null;
+                id = block.ReadInt();
+                typ = block.ReadByte();
+               
                 switch (typ)
                 {
                     case (byte)TagType.Bool:
-                        value = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, block.ReadByte(), 0);
+                        }
+                        else
+                        {
+                            block.ReadByte();
+                        }
                         break;
                     case (byte)TagType.Byte:
-                        value = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, block.ReadByte(), 0);
+                        }
+                        else
+                        {
+                            block.ReadByte();
+                        }
                         break;
                     case (byte)TagType.Short:
-                        value = block.ReadShort();
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, block.ReadShort(), 0);
+                        }
+                        else
+                        {
+                            block.ReadShort();
+                        }
+                        //value = block.ReadShort();
                         break;
                     case (byte)TagType.UShort:
-                        value = (ushort)block.ReadShort();
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, (ushort)block.ReadShort(), 0);
+                        }
+                        else
+                        {
+                            block.ReadShort();
+                        }
+                        //value = (ushort)block.ReadShort();
                         break;
                     case (byte)TagType.Int:
-                        value = block.ReadInt();
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, block.ReadInt(), 0);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                        }
+                        //value = block.ReadInt();
                         break;
                     case (byte)TagType.UInt:
-                        value = (uint)block.ReadInt();
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, (uint)block.ReadInt(), 0);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                        }
+                        //value = (uint)block.ReadInt();
                         break;
                     case (byte)TagType.Long:
-                        value = block.ReadLong();
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, block.ReadLong(), 0);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                        }
+                        //value = block.ReadLong();
                         break;
                     case (byte)TagType.ULong:
-                        value = (ulong)block.ReadLong();
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, (ulong)block.ReadLong(), 0);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                        }
+                        //value = (ulong)block.ReadLong();
                         break;
                     case (byte)TagType.Float:
-                        value = block.ReadFloat();
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, block.ReadFloat(), 0);
+                        }
+                        else
+                        {
+                            block.ReadFloat();
+                        }
+                       // value = block.ReadFloat();
                         break;
                     case (byte)TagType.Double:
-                        value = block.ReadDouble();
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, block.ReadDouble(), 0);
+                        }
+                        else
+                        {
+                            block.ReadDouble();
+                        }
+                       // block.ReadDouble();
                         break;
                     case (byte)TagType.String:
-                        value = block.ReadString();
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, block.ReadString(), 0);
+                        }
+                        else
+                        {
+                            block.ReadString();
+                        }
+                        //value = block.ReadString();
                         break;
                     case (byte)TagType.DateTime:
-                        var tick = block.ReadLong();
-                        value = new DateTime(tick);
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, DateTime.FromBinary(block.ReadLong()), 0);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                        }
+                        //value = DateTime.FromBinary(block.ReadLong());
                         break;
                     case (byte)TagType.IntPoint:
-                        value = new IntPointData(block.ReadInt(), block.ReadInt());
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, new IntPointData(block.ReadInt(), block.ReadInt()), 0);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                        }
+                        //value = new IntPointData(block.ReadInt(), block.ReadInt());
                         break;
                     case (byte)TagType.UIntPoint:
-                        value = new UIntPointData(block.ReadInt(), block.ReadInt());
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, new UIntPointData(block.ReadInt(), block.ReadInt()), 0);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                        }
+                        //value = new UIntPointData(block.ReadInt(), block.ReadInt());
                         break;
                     case (byte)TagType.IntPoint3:
-                        value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt()), 0);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                            block.ReadInt();
+                        }
+                        //value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
                         break;
                     case (byte)TagType.UIntPoint3:
-                        value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt()), 0);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                            block.ReadInt();
+                        }
+                        //value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
                         break;
                     case (byte)TagType.LongPoint:
-                        value = new LongPointData(block.ReadLong(), block.ReadLong());
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, new LongPointData(block.ReadLong(), block.ReadLong()), 0);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                        }
+                        //value = new LongPointData(block.ReadLong(), block.ReadLong());
                         break;
                     case (byte)TagType.ULongPoint:
-                        value = new ULongPointData(block.ReadLong(), block.ReadLong());
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, new ULongPointData(block.ReadLong(), block.ReadLong()), 0);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                        }
+                        //value = new ULongPointData(block.ReadLong(), block.ReadLong());
                         break;
                     case (byte)TagType.LongPoint3:
-                        value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong()), 0);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                            block.ReadLong();
+                        }
+                        //value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                         break;
                     case (byte)TagType.ULongPoint3:
-                        value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        if (AllowTagIds.Contains(id))
+                        {
+                            service.SetTagValue(id, new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong()), 0);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                            block.ReadLong();
+                        }
+                        //value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                         break;
                 }
-                if (AllowTagIds.Contains(id))
-                    service.SetTagValue(id, value);
+                //if (AllowTagIds.Contains(id))
+                //    service.SetTagValue(id, value);
             }
             service.SubmiteNotifyChanged();
             Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
@@ -314,8 +485,8 @@ namespace SpiderDriver
                 }
                 var qua = block.ReadByte();
 
-                if (AllowTagIds.Contains(id))
-                    service.SetTagValue(id, value,qua);
+                //if (AllowTagIds.Contains(id))
+                //    service.SetTagValue(id, value,qua);
             }
             service.SubmiteNotifyChanged();
             Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));

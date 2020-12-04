@@ -3382,7 +3382,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="qulity"></param>
         /// <param name="time"></param>
-        public void SetIntTagValue(Tagbase tag, object value, byte qulity, DateTime time)
+        public void SetIntTagValue(Tagbase tag, int value, byte qulity, DateTime time)
         {
             Take();
             try
@@ -3754,15 +3754,129 @@ namespace Cdy.Tag
             return true;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="tag"></param>
-        /// <param name="quality"></param>
-        /// <param name="time"></param>
-        /// <param name="values"></param>
-        /// <returns></returns>
-        public bool SetPointValue(Tagbase tag, byte quality, DateTime time, params object[] values)
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="tag"></param>
+        ///// <param name="quality"></param>
+        ///// <param name="time"></param>
+        ///// <param name="values"></param>
+        ///// <returns></returns>
+        //public bool SetPointValue(Tagbase tag, byte quality, DateTime time, params object[] values)
+        //{
+        //    try
+        //    {
+        //        if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+        //        switch (tag.Type)
+        //        {
+        //            case TagType.IntPoint:
+        //                var tmp = ReadIntPointValueByAddr(mIdAndAddr[tag.Id]);
+        //                if (tmp.X != Convert.ToInt32(values[0]) || tmp.Y != Convert.ToInt32(values[1]))
+        //                {
+        //                    SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt32(values[0]), Convert.ToInt32(values[1]), quality, time);
+        //                    NotifyValueChangedToConsumer(tag.Id);
+        //                }
+        //                else
+        //                {
+        //                    UpdateIntPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+        //                }
+        //                break;
+        //            case TagType.UIntPoint:
+        //                var utmp = ReadUIntPointValueByAddr(mIdAndAddr[tag.Id]);
+        //                if (utmp.X != Convert.ToUInt32(values[0]) || utmp.Y != Convert.ToUInt32(values[1]))
+        //                {
+        //                    SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt32(values[0]), Convert.ToUInt32(values[1]), quality, time);
+        //                    NotifyValueChangedToConsumer(tag.Id);
+        //                }
+        //                else
+        //                {
+        //                    UpdateIntPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+        //                }
+        //                break;
+        //            case TagType.IntPoint3:
+        //                var tmp3 = ReadIntPoint3ValueByAddr(mIdAndAddr[tag.Id]);
+        //                if (tmp3.X != Convert.ToInt32(values[0]) || tmp3.Y != Convert.ToInt32(values[1]) || tmp3.Y != Convert.ToInt32(values[2]))
+        //                {
+        //                    SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt32(values[0]), Convert.ToInt32(values[1]), Convert.ToInt32(values[2]), quality, time);
+        //                    NotifyValueChangedToConsumer(tag.Id);
+        //                }
+        //                else
+        //                {
+        //                    UpdateIntPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+        //                }
+        //                break;
+        //            case TagType.UIntPoint3:
+        //                var utmp3 = ReadUIntPoint3ValueByAddr(mIdAndAddr[tag.Id]);
+        //                if (utmp3.X != Convert.ToUInt32(values[0]) || utmp3.Y != Convert.ToUInt32(values[1]) || utmp3.Y != Convert.ToUInt32(values[2]))
+        //                {
+        //                    SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt32(values[0]), Convert.ToUInt32(values[1]), Convert.ToUInt32(values[2]), quality, time);
+        //                    NotifyValueChangedToConsumer(tag.Id);
+        //                }
+        //                else
+        //                {
+        //                    UpdateIntPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+        //                }
+        //                break;
+        //            case TagType.LongPoint:
+        //                var ltmp = ReadLongPointValueByAddr(mIdAndAddr[tag.Id]);
+        //                if (ltmp.X != Convert.ToInt64(values[0]) || ltmp.Y != Convert.ToInt64(values[1]))
+        //                {
+        //                    SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt64(values[0]), Convert.ToInt64(values[1]), quality, time);
+        //                    NotifyValueChangedToConsumer(tag.Id);
+        //                }
+        //                else
+        //                {
+        //                    UpdateLongPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+        //                }
+        //                break;
+        //            case TagType.ULongPoint:
+        //                var ultmp = ReadULongPointValueByAddr(mIdAndAddr[tag.Id]);
+        //                if (ultmp.X != Convert.ToUInt64(values[0]) || ultmp.Y != Convert.ToUInt64(values[1]))
+        //                {
+        //                    SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt64(values[0]), Convert.ToUInt64(values[1]), quality, time);
+        //                    NotifyValueChangedToConsumer(tag.Id);
+        //                }
+        //                else
+        //                {
+        //                    UpdateLongPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+        //                }
+        //                break;
+        //            case TagType.LongPoint3:
+        //                var ltmp3 = ReadLongPoint3ValueByAddr(mIdAndAddr[tag.Id]);
+        //                if (ltmp3.X != Convert.ToInt64(values[0]) || ltmp3.Y != Convert.ToInt64(values[1]) || ltmp3.Z != Convert.ToInt64(values[2]))
+        //                {
+        //                    SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToInt64(values[0]), Convert.ToInt64(values[1]), Convert.ToInt64(values[2]), quality, time);
+        //                    NotifyValueChangedToConsumer(tag.Id);
+        //                }
+        //                else
+        //                {
+        //                    UpdateLongPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+        //                }
+        //                break;
+
+        //            case TagType.ULongPoint3:
+        //                var ultmp3 = ReadULongPoint3ValueByAddr(mIdAndAddr[tag.Id]);
+        //                if (ultmp3.X != Convert.ToUInt64(values[0]) || ultmp3.Y != Convert.ToUInt64(values[1]) || ultmp3.Z != Convert.ToUInt64(values[2]))
+        //                {
+        //                    SetPointValueByAddr(mIdAndAddr[tag.Id], Convert.ToUInt64(values[0]), Convert.ToUInt64(values[1]), Convert.ToUInt64(values[2]), quality, time);
+        //                    NotifyValueChangedToConsumer(tag.Id);
+        //                }
+        //                else
+        //                {
+        //                    UpdateLongPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+        //                }
+        //                break;
+        //        }
+        //        return true;
+        //    }
+        //    catch(Exception ex)
+        //    {
+        //        LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + values.ToString() + " " + ex.Message);
+        //        return false;
+        //    }
+        //}
+
+        public bool SetPointValue<T>(Tagbase tag, byte quality, DateTime time, params T[] values)
         {
             try
             {
@@ -3778,7 +3892,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateIntPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+                            UpdateIntPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time, quality);
                         }
                         break;
                     case TagType.UIntPoint:
@@ -3790,7 +3904,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateIntPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+                            UpdateIntPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time, quality);
                         }
                         break;
                     case TagType.IntPoint3:
@@ -3802,7 +3916,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateIntPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+                            UpdateIntPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time, quality);
                         }
                         break;
                     case TagType.UIntPoint3:
@@ -3814,7 +3928,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateIntPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+                            UpdateIntPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time, quality);
                         }
                         break;
                     case TagType.LongPoint:
@@ -3826,7 +3940,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateLongPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+                            UpdateLongPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time, quality);
                         }
                         break;
                     case TagType.ULongPoint:
@@ -3838,7 +3952,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateLongPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+                            UpdateLongPointValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time, quality);
                         }
                         break;
                     case TagType.LongPoint3:
@@ -3850,7 +3964,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateLongPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+                            UpdateLongPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time, quality);
                         }
                         break;
 
@@ -3863,13 +3977,13 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            UpdateLongPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time,quality);
+                            UpdateLongPoint3ValueTimeAndQualityByAddr(mIdAndAddr[tag.Id], time, quality);
                         }
                         break;
                 }
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + values.ToString() + " " + ex.Message);
                 return false;
@@ -3946,7 +4060,7 @@ namespace Cdy.Tag
                         SetFloatTagValue(tag, values[i], (byte)QualityConst.Good, time);
                         break;
                     case TagType.Int:
-                        SetIntTagValue(tag, values[i], (byte)QualityConst.Good, time);
+                        SetIntTagValue(tag, Convert.ToInt32(values[i]), (byte)QualityConst.Good, time);
                         break;
                     case TagType.Long:
                         SetLongTagValue(tag, values[i], (byte)QualityConst.Good, time);
@@ -4075,7 +4189,7 @@ namespace Cdy.Tag
                         SetFloatTagValue(tag, value, quality, time);
                         break;
                     case TagType.Int:
-                        SetIntTagValue(tag, value, quality, time);
+                        SetIntTagValue(tag, Convert.ToInt32(value), quality, time);
                         break;
                     case TagType.Long:
                         SetLongTagValue(tag, value, quality, time);
@@ -4198,7 +4312,7 @@ namespace Cdy.Tag
                         SetFloatTagValue(tag, value, (byte)QualityConst.Good, time);
                         break;
                     case TagType.Int:
-                        SetIntTagValue(tag, value, (byte)QualityConst.Good, time);
+                        SetIntTagValue(tag, Convert.ToInt32(value), (byte)QualityConst.Good, time);
                         break;
                     case TagType.Long:
                         SetLongTagValue(tag, value, (byte)QualityConst.Good, time);
@@ -5370,6 +5484,772 @@ namespace Cdy.Tag
         {
             //List<string> ltmp = new List<string>();
             return mConfigDatabase.Tags.Where(e => ids.Contains(e.Key)).Select(e => e.Value.Group).ToList();
+        }
+
+        public bool SetTagValue(int id, bool value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, byte value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, short value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, ushort value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, int value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, uint value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, long value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, ulong value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, float value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, double value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, string value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, DateTime value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, IntPointData value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, UIntPointData value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, IntPoint3Data value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, UIntPoint3Data value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, LongPointData value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, ULongPointData value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, LongPoint3Data value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool SetTagValue(int id, ULongPoint3Data value, byte quality)
+        {
+            try
+            {
+                Take();
+                var tag = mConfigDatabase.Tags[id];
+
+                SetTagValue(tag, value, quality);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, bool value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetBoolTagValue(tag, value, quality, time);
+               
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, byte value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetByteTagValue(tag, value, quality, time);
+
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, short value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetShortTagValue(tag, value, quality, time);
+
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, ushort value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetUShortTagValue(tag, value, quality, time);
+
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, int value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetIntTagValue(tag, value, quality, time);
+
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, uint value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetUIntTagValue(tag, value, quality, time);
+
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+
+        public bool SetTagValue(Tagbase tag, long value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetLongTagValue(tag, value, quality, time);
+
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, ulong value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetULongTagValue(tag, value, quality, time);
+
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, float value,byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetFloatTagValue(tag, value, quality, time);
+
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, double value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetDoubleTagValue(tag, value, quality, time);
+
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, DateTime value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetDateTimeTagValue(tag, value, quality, time);
+
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, string value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetSrtingTagValue(tag, value, quality, time);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, IntPointData value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetPointValue<int>(tag, quality, time, value.X, value.Y);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, IntPoint3Data value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetPointValue<int>(tag, quality, time, value.X, value.Y,value.Z);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, UIntPointData value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetPointValue<uint>(tag, quality, time, value.X, value.Y);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, UIntPoint3Data value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetPointValue<uint>(tag, quality, time, value.X, value.Y,value.Z);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, LongPointData value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetPointValue<long>(tag, quality, time, value.X, value.Y);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, LongPoint3Data value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetPointValue<long>(tag, quality, time, value.X, value.Y,value.Z);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, ULongPointData value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetPointValue<ulong>(tag, quality, time, value.X, value.Y);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagValue(Tagbase tag, ULongPoint3Data value, byte quality)
+        {
+            try
+            {
+                Take();
+                if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+                DateTime time = DateTime.UtcNow;
+                SetPointValue<ulong>(tag, quality, time, value.X, value.Y,value.Z);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
         }
 
         #endregion ...Interfaces...

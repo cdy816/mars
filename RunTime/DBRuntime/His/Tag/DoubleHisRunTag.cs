@@ -23,10 +23,7 @@ namespace Cdy.Tag
         /// </summary>
         private double mLastValue = double.MinValue;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        private double mTmpValue = 0;
+
         /// <summary>
         /// 
         /// </summary>
@@ -40,7 +37,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
         {
-            mTmpValue = MemoryHelper.ReadDouble(startMemory, offset);
+            double mTmpValue = MemoryHelper.ReadDouble(startMemory, offset);
             if (mTmpValue != mLastValue || mLastValue == double.MinValue)
             {
                 mLastValue = mTmpValue;

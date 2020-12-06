@@ -495,6 +495,17 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
+        public void WriteULongDirect(long offset, ulong value)
+        {
+            MemoryHelper.WriteUInt64((void*)mHandles, offset, value);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="value"></param>
         public void WriteULong(long offset, ulong value)
         {
             MemoryHelper.WriteUInt64((void*)mHandles, offset, value);
@@ -513,6 +524,11 @@ namespace Cdy.Tag
 
         }
 
+        public void WriteFloatDirect(long offset, float value)
+        {
+            MemoryHelper.WriteFloat((void*)mHandles, offset, value);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -522,6 +538,16 @@ namespace Cdy.Tag
         {
             MemoryHelper.WriteDouble((void*)mHandles, offset, value);
             Position = offset + 8;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="value"></param>
+        public void WriteDoubleDirect(long offset, double value)
+        {
+            MemoryHelper.WriteDouble((void*)mHandles, offset, value);
         }
 
         /// <summary>
@@ -1235,7 +1261,7 @@ namespace Cdy.Tag
         public virtual void Dispose()
         {
             Marshal.FreeHGlobal(mHandles);
-            LoggerService.Service.Info("MarshalFixedMemoryBlock", Name +" Disposed ",ConsoleColor.Red );
+            //LoggerService.Service.Info("MarshalFixedMemoryBlock", Name +" Disposed ",ConsoleColor.Red );
             //GC.Collect();
         }
 
@@ -1691,12 +1717,10 @@ namespace Cdy.Tag
 
             var bvals = ArrayPool<byte>.Shared.Rent(ltmp);
             Array.Clear(bvals, 0, bvals.Length);
-            while (ltmp > 0)
-            {
-                int ctmp = Math.Min(bvals.Length, ltmp);
-                Marshal.Copy(source, bvals, 0, ctmp);
-                stream.Write(bvals, 0, ctmp);
-            }
+
+            int ctmp = Math.Min(bvals.Length, ltmp);
+            Marshal.Copy(source, bvals, 0, ctmp);
+            stream.Write(bvals, 0, ctmp);
             ArrayPool<byte>.Shared.Return(bvals);
         }
 

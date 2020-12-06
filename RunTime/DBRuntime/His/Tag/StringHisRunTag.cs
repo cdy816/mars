@@ -19,7 +19,6 @@ namespace Cdy.Tag
     public class StirngHisRunTag:HisRunTag
     {
         private string mLastValue = string.Empty;
-        private string mTmpValue = "";
 
         /// <summary>
         /// 
@@ -35,7 +34,7 @@ namespace Cdy.Tag
         public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
         {
             var len = MemoryHelper.ReadByte(startMemory, offset + 1);
-            mTmpValue = new string((char*)startMemory, (int)(offset + 1), len);
+            var mTmpValue = new string((char*)startMemory, (int)(offset + 1), len);
             if (mTmpValue != mLastValue)
             {
                 mLastValue = mTmpValue;

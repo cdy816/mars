@@ -22,7 +22,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         private float mLastValue = float.MinValue;
-        private float mTmpValue = 0;
+    
 
         /// <summary>
         /// 
@@ -37,7 +37,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
         {
-            mTmpValue = MemoryHelper.ReadFloat(startMemory, offset);
+            var mTmpValue = MemoryHelper.ReadFloat(startMemory, offset);
             if(mTmpValue != mLastValue || mLastValue == float.MinValue)
             {
                 mLastValue = mTmpValue;

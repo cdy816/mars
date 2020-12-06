@@ -214,18 +214,21 @@ namespace Cdy.Tag
                 try
                 {
                     int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
-                    foreach (var vv in mChangedTags)
+                    if (mChangedTags.Count > 0)
                     {
-                        if (vv.Value)
+                        foreach (var vv in mChangedTags)
                         {
-                            lock (mLockObj)
+                            if (vv.Value)
                             {
-                                mTags[vv.Key].UpdateChangedValue(tim);
-                                mChangedTags[vv.Key] = false;
-                                //if (vv.Key==1)
-                                //{
-                                //    LoggerService.Service.Info("ValueChangedMemoryCacheProcesser", "tag "+ vv.Key+" is changed",ConsoleColor.Yellow);
-                                //}
+                                lock (mLockObj)
+                                {
+                                    mTags[vv.Key].UpdateChangedValue(tim);
+                                    mChangedTags[vv.Key] = false;
+                                    //if (vv.Key==1)
+                                    //{
+                                    //    LoggerService.Service.Info("ValueChangedMemoryCacheProcesser", "tag "+ vv.Key+" is changed",ConsoleColor.Yellow);
+                                    //}
+                                }
                             }
                         }
                     }

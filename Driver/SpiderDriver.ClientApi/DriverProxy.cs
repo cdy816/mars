@@ -627,6 +627,25 @@ namespace SpiderDriver.ClientApi
         /// <param name="data"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
+        public bool SetTagValueAsync(RealDataBuffer data, int timeout = 5000)
+        {
+            CheckLogin();
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + (int)data.Position);
+            mb.WriteByte(ApiFunConst.SetTagValueFun);
+            mb.WriteLong(this.mLoginId);
+            mb.WriteInt(data.ValueCount);
+            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
+            mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
+            Send(mb);
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
         public bool SetTagValueAndQuality(RealDataBuffer data, int timeout = 5000)
         {
             CheckLogin();

@@ -52,6 +52,11 @@ namespace Cdy.Tag
 
         #region ... Constructor...
 
+        static SocketServer()
+        {
+            
+        }
+
         #endregion ...Constructor...
 
         #region ... Properties ...

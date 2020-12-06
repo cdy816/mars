@@ -79,7 +79,7 @@ namespace DotNetty.Buffers
 
             // 32 kb is the default maximum capacity of the cached buffer. Similar to what is explained in
             // 'Scalable memory allocation using jemalloc'
-            DefaultMaxCachedBufferCapacity = SystemPropertyUtil.GetInt("io.netty.allocator.maxCachedBufferCapacity", 32 * 1024);
+            DefaultMaxCachedBufferCapacity = SystemPropertyUtil.GetInt("io.netty.allocator.maxCachedBufferCapacity", 16 * 1024 * 1024);
 
             // the number of threshold of allocations when cached entries will be freed up if not frequently used
             DefaultCacheTrimInterval = SystemPropertyUtil.GetInt(

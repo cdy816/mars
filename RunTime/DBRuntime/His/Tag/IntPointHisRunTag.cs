@@ -32,7 +32,8 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
         {
-            xx = MemoryHelper.ReadInt32(startMemory, offset); yy = MemoryHelper.ReadInt32(startMemory, offset + 4);
+            var xx = MemoryHelper.ReadInt32(startMemory, offset); 
+            var yy = MemoryHelper.ReadInt32(startMemory, offset + 4);
             if (xx != x || yy != y || xx == int.MinValue)
             {
                 x = xx;

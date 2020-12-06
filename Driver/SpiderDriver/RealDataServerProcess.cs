@@ -158,7 +158,6 @@ namespace SpiderDriver
             int count = block.ReadInt();
             int id = 0;
             byte typ;
-            //object value = null;
             for (int i = 0; i < count; i++)
             {
                 id = block.ReadInt();

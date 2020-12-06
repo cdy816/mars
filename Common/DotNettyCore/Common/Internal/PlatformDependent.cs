@@ -23,7 +23,7 @@ namespace DotNetty.Common.Internal
 
         static PlatformDependent()
         {
-            UseDirectBuffer = !SystemPropertyUtil.GetBoolean("io.netty.noPreferDirect", true);
+            UseDirectBuffer = !SystemPropertyUtil.GetBoolean("io.netty.noPreferDirect", false);
             //if (//Logger.DebugEnabled)
             //{
             //    //Logger.Debug("-Dio.netty.noPreferDirect: {}", !UseDirectBuffer);

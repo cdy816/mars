@@ -770,17 +770,14 @@ namespace DBRuntime.Api
         /// </summary>
         private void SendThreadPro()
         {
-            while(!mIsClosed)
+            Tuple<int[], int> changtags;
+            while (!mIsClosed)
             {
                 try
                 {
                     resetEvent.WaitOne();
                     if (mIsClosed) return;
                     resetEvent.Reset();
-
-                    HashSet<int> hval = new HashSet<int>();
-
-                    Tuple<int[],int> changtags;
 
                     while (mChangedTags.Count > 0)
                     {
@@ -832,8 +829,8 @@ namespace DBRuntime.Api
 
                     if(mBlockCallBackRegistorIds.Count>0)
                     {
-                        Stopwatch sw = new Stopwatch();
-                        sw.Start();
+                        //Stopwatch sw = new Stopwatch();
+                        //sw.Start();
                         int count = 0;
                         while (mChangedBlocks.Count>0)
                         {
@@ -853,8 +850,8 @@ namespace DBRuntime.Api
                             count++;
                         }
                         Thread.Sleep(10);
-                        sw.Stop();
-                        LoggerService.Service.Erro("RealDataServerProcess", "推送数据耗时" + sw.ElapsedMilliseconds + " 大小:" + count);
+                        //sw.Stop();
+                        //LoggerService.Service.Erro("RealDataServerProcess", "推送数据耗时" + sw.ElapsedMilliseconds + " 大小:" + count);
                     }
                     else
                     {

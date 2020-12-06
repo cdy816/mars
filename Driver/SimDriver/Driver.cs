@@ -45,6 +45,13 @@ namespace SimDriver
 
         private bool mIsClosed = false;
 
+        private ManualResetEvent mCosEvent;
+        private ManualResetEvent mSinEvent;
+        private ManualResetEvent mStepEvent;
+        private ManualResetEvent mSteppointEvent;
+        private ManualResetEvent mSquareEvent;
+        private ManualResetEvent mDatetimeEvent;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -59,7 +66,16 @@ namespace SimDriver
         {
             var vfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), DateTime.Now.ToString("yyyyMMddHHmmss") + ".log");
             mWriter = new StreamWriter(  System.IO.File.Open(vfile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite));
-            
+
+            mCosEvent = new ManualResetEvent(false);
+            mSinEvent = new ManualResetEvent(false);
+            mStepEvent = new ManualResetEvent(false);
+            mSquareEvent = new ManualResetEvent(false);
+            mDatetimeEvent = new ManualResetEvent(false);
+            mSteppointEvent = new ManualResetEvent(false);
+
+            CPUAssignHelper.Helper.Init();
+
         }
 
 
@@ -115,6 +131,13 @@ namespace SimDriver
 
         }
 
+        private Thread mCosThread;
+        private Thread mSinThread;
+        private Thread mStepThread;
+        private Thread mStepPointThread;
+        private Thread mSquareThread;
+        private Thread mDatetimeThread;
+
         /// <summary>
         /// 
         /// </summary>
@@ -132,18 +155,227 @@ namespace SimDriver
             //mScanTimer = new System.Timers.Timer(100);
             //mScanTimer.Elapsed += MScanTimer_Elapsed;
             //mScanTimer.Start();
+            mCosThread = new Thread(CosThreadPro);
+            mCosThread.IsBackground = true;
+            mCosThread.Start();
+
+            mSinThread = new Thread(SinThreadPro);
+            mSinThread.IsBackground = true;
+            mSinThread.Start();
+
+
+            mStepThread = new Thread(StepThreadPro);
+            mStepThread.IsBackground = true;
+            mStepThread.Start();
+
+            mStepPointThread = new Thread(StepPointThreadPro);
+            mStepPointThread.IsBackground = true;
+            mStepPointThread.Start();
+
+            mSquareThread = new Thread(SquareThreadPro);
+            mSquareThread.IsBackground = true;
+            mSquareThread.Start();
+
+
+            mDatetimeThread = new Thread(DateTimeThreadPro);
+            mDatetimeThread.IsBackground = true;
+            mDatetimeThread.Start();
+
             return true;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private void CosThreadPro()
+        {
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+            List<Tagbase> vv = mTagIdCach.ContainsKey("Sim:cos") ? mTagIdCach["Sim:cos"] : null;
+            List<int> vvr = mManualRecordTagCach.ContainsKey("Sim:cos") ? mManualRecordTagCach["Sim:cos"] : null;
+            while (!mIsClosed)
+            {
+                mCosEvent.WaitOne();
+                mCosEvent.Reset();
+                double fval = Math.Cos(mNumber / 180.0 * Math.PI);
+                if (vv!=null)
+                {
+                    mTagService.SetTagValue<double>(vv, fval, 0);
+                    mTagService.SubmiteNotifyChanged();
+                }
+
+                if (vvr != null && !mIsSecond)
+                {
+                    TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = fval };
+                    foreach (var vvv in vvr)
+                    {
+                        mTagHisValueService.SetTagHisValue(vvv, tv);
+                    }
+                    
+                }
+
+                mLastProcessTime = DateTime.Now;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void SinThreadPro()
+        {
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+            List<Tagbase> vv = mTagIdCach.ContainsKey("Sim:sin") ? mTagIdCach["Sim:sin"] : null;
+            List<int> vvr = mManualRecordTagCach.ContainsKey("Sim:sin") ? mManualRecordTagCach["Sim:sin"] : null;
+            while (!mIsClosed)
+            {
+                mSinEvent.WaitOne();
+                mSinEvent.Reset();
+                double fval = Math.Sin(mNumber / 180.0 * Math.PI);
+                if (vv != null)
+                {
+                    mTagService.SetTagValue<double>(vv, fval, 0);
+                    mTagService.SubmiteNotifyChanged();
+                }
+
+                if (vvr != null && !mIsSecond)
+                {
+                    TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = fval };
+                    foreach (var vvv in vvr)
+                    {
+                        mTagHisValueService.SetTagHisValue(vvv, tv);
+                    }
+                   
+                }
+
+                mLastProcessTime = DateTime.Now;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void StepThreadPro()
+        {
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+            List<Tagbase> vv = mTagIdCach.ContainsKey("Sim:step") ? mTagIdCach["Sim:step"] : null;
+            List<int> vvr = mManualRecordTagCach.ContainsKey("Sim:step") ? mManualRecordTagCach["Sim:step"] : null;
+            while (!mIsClosed)
+            {
+                mStepEvent.WaitOne();
+                mStepEvent.Reset();
+                if (vv != null)
+                {
+                    mTagService.SetTagValue(vv, mNumber, 0);
+                    mTagService.SubmiteNotifyChanged();
+                }
+
+                if (vvr != null && !mIsSecond)
+                {
+                    TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = mNumber };
+                    foreach (var vvv in vvr)
+                    {
+                        mTagHisValueService.SetTagHisValue(vvv, tv);
+                    }
+                }
+
+                mLastProcessTime = DateTime.Now;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void StepPointThreadPro()
+        {
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+            List<Tagbase> vv = mTagIdCach.ContainsKey("Sim:steppoint") ? mTagIdCach["Sim:steppoint"] : null;
+            List<int> vvr = mManualRecordTagCach.ContainsKey("Sim:steppoint") ? mManualRecordTagCach["Sim:steppoint"] : null;
+            while (!mIsClosed)
+            {
+                mSteppointEvent.WaitOne();
+                mSteppointEvent.Reset();
+                if (vv != null)
+                {
+                    mTagService.SetTagValue(vv, new IntPoint3Data(mNumber, mNumber, mNumber), 0);
+                    mTagService.SubmiteNotifyChanged();
+                }
+
+                if (vvr != null && !mIsSecond)
+                {
+                    TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = new IntPoint3Data(mNumber, mNumber, mNumber) };
+                    foreach (var vvv in vvr)
+                    {
+                        mTagHisValueService.SetTagHisValue(vvv, tv);
+                    }
+                }
+
+                mLastProcessTime = DateTime.Now;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void SquareThreadPro()
+        {
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+            List<Tagbase> vv = mTagIdCach.ContainsKey("Sim:square") ? mTagIdCach["Sim:square"] : null;
+            List<int> vvr = mManualRecordTagCach.ContainsKey("Sim:square") ? mManualRecordTagCach["Sim:square"] : null;
+            while (!mIsClosed)
+            {
+                mSquareEvent.WaitOne();
+                mSquareEvent.Reset();
+                if (vv != null)
+                {
+                    mTagService.SetTagValue(vv, mBoolNumber, 0);
+                    mTagService.SubmiteNotifyChanged();
+                }
+
+                if (vvr != null && !mIsSecond)
+                {
+                    TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = mBoolNumber };
+                    foreach (var vvv in vvr)
+                    {
+                        mTagHisValueService.SetTagHisValue(vvv, tv);
+                    }
+                }
+
+                mLastProcessTime = DateTime.Now;
+            }
+        }
+
+
+        private void DateTimeThreadPro()
+        {
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+            List<Tagbase> vv = mTagIdCach.ContainsKey("Sim:datetime") ? mTagIdCach["Sim:datetime"] : null;
+            while (!mIsClosed)
+            {
+                mSquareEvent.WaitOne();
+                mSquareEvent.Reset();
+                if (vv != null)
+                {
+                    mTagService.SetTagValue(vv, DateTime.Now, 0);
+                    mTagService.SubmiteNotifyChanged();
+                }
+                mLastProcessTime = DateTime.Now;
+            }
+        }
+
+     
         private void ScanThreadPro()
         {
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
             while (!mIsClosed)
             {
                 DateTime time = DateTime.Now;
-
-                if ((mLastProcessTime-time).TotalSeconds>1000)
+                var dtime = (time - mLastProcessTime).TotalMilliseconds;
+                if (dtime > 1000)
                 {
                     LoggerService.Service.Warn("Sim Driver", "出现阻塞");
+                }
+                else if (mNumber % 10 == 0 || dtime > 1000)
+                {
+                    LoggerService.Service.Debug("Sim Driver", "距离上次更新时间差:"+ dtime);
                 }
 
                 mLastProcessTime = time;
@@ -163,112 +395,16 @@ namespace SimDriver
                     mIsSecond = false;
                 }
 
+                mSinEvent.Set();
+                mCosEvent.Set();
+                mSquareEvent.Set();
+                mDatetimeEvent.Set();
+                mStepEvent.Set();
+                mSteppointEvent.Set();
 
-               
+                Thread.Sleep(500);
 
-                double fval = Math.Cos(mNumber / 180.0 * Math.PI);
-                double sval = Math.Sin(mNumber / 180.0 * Math.PI);
-
-//#if DEBUG
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-//#endif
-
-
-                System.Threading.Tasks.Parallel.ForEach(mTagIdCach, (vv) =>
-                {
-                    if (vv.Key == "Sim:cos")
-                    {
-                        mTagService.SetTagValue(vv.Value, fval);
-                    }
-                    else if (vv.Key == "Sim:sin")
-                    {
-                        mTagService.SetTagValue(vv.Value, sval);
-                    }
-                    else if (vv.Key == "Sim:step")
-                    {
-                        mTagService.SetTagValue(vv.Value, mNumber);
-                    }
-                    else if (vv.Key == "Sim:steppoint")
-                    {
-                        mTagService.SetPointValue(vv.Value, mNumber, mNumber, mNumber);
-                    }
-                    else if (vv.Key == "Sim:square")
-                    {
-                        mTagService.SetTagValue(vv.Value, mBoolNumber);
-                    }
-                    else if (vv.Key == "Sim:datetime")
-                    {
-                        mTagService.SetTagValue(vv.Value, DateTime.Now);
-                    }
-                });
-                mTagService.SubmiteNotifyChanged();
-
-                long llsw = sw.ElapsedMilliseconds;
-                if (!mIsSecond)
-                    //foreach (var vv in mManualRecordTagCach)
-                        System.Threading.Tasks.Parallel.ForEach(mManualRecordTagCach, (vv) =>
-                        {
-                        if (vv.Key == "Sim:cos")
-                        {
-                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = fval };
-                                foreach(var vvv in vv.Value)
-                                {
-                                    mTagHisValueService.SetTagHisValue(vvv, tv);
-                                }
-                            //mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
-                        }
-                        else if (vv.Key == "Sim:sin")
-                        {
-                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = sval };
-                                foreach (var vvv in vv.Value)
-                                {
-                                    mTagHisValueService.SetTagHisValue(vvv, tv);
-                                }
-                                //mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
-                            }
-                        else if (vv.Key == "Sim:step")
-                        {
-                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = mNumber };
-                                foreach (var vvv in vv.Value)
-                                {
-                                    mTagHisValueService.SetTagHisValue(vvv, tv);
-                                }
-                                //mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
-                            }
-                        else if (vv.Key == "Sim:steppoint")
-                        {
-                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = fval };
-                                foreach (var vvv in vv.Value)
-                                {
-                                    mTagHisValueService.SetTagHisValue(vvv, tv);
-                                }
-                                //mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
-                            }
-                        else if (vv.Key == "Sim:square")
-                        {
-                            TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = mBoolNumber };
-                                foreach (var vvv in vv.Value)
-                                {
-                                    mTagHisValueService.SetTagHisValue(vvv, tv);
-                                }
-                                //mTagHisValueService.SetTagHisValues(vv.Value.ToDictionary(e => e, e => tv));
-                            }
-                        });
-                //}
-
-
-                int delay = (int)(500 - (DateTime.Now - mLastProcessTime).TotalMilliseconds);
-                if(delay < 0)
-                {
-                    delay = 1;
-                }
-//#if DEBUG
-                sw.Stop();
-                if (mNumber%10 == 0 || sw.ElapsedMilliseconds>=1000)
-                LoggerService.Service.Info("Sim Driver", "set value elapsed:" + sw.ElapsedMilliseconds+", set his value elapsed:"+(sw.ElapsedMilliseconds-llsw));
-//#endif
-                Thread.Sleep(delay);
+                
             }
         }
 

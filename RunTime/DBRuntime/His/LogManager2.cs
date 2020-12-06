@@ -214,7 +214,8 @@ namespace Cdy.Tag
         /// </summary>
         private void SaveProcess()
         {
-            while(!mIsExit)
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+            while (!mIsExit)
             {
                 resetEvent.WaitOne();
                 resetEvent.Reset();

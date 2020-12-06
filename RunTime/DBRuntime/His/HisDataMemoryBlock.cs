@@ -17,7 +17,8 @@ namespace DBRuntime.His
     /// <summary>
     /// 
     /// </summary>
-    public class HisDataMemoryBlock: FixedMemoryBlock
+    //public class HisDataMemoryBlock: FixedMemoryBlock
+    public class HisDataMemoryBlock : MarshalFixedMemoryBlock
     {
 
         #region ... Variables  ...

@@ -247,6 +247,7 @@ namespace SpiderDriverDemo
 
             var hisvalus = new Dictionary<int, TagValueAndType>();
 
+            int i = 0;
             foreach(var vv in mAllId)
             {
                 switch ((TagType)vv.Value.Item2)
@@ -347,10 +348,15 @@ namespace SpiderDriverDemo
 
                         break;
                 }
-
+                i++;
+                //if(i%1000000 ==0)
+                //{
+                //    driverProxy.SetTagValueAsync(rdb);
+                //    rdb.Clear();
+                //}
             }
             long ltmp = sw.ElapsedMilliseconds;
-            driverProxy.SetTagValue(rdb);
+            driverProxy.SetTagValueAsync(rdb);
             sw.Stop();
             
             Debug.Print("发送耗时:" + ltmp + "," + (sw.ElapsedMilliseconds - ltmp));

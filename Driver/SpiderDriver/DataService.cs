@@ -40,6 +40,7 @@ namespace SpiderDriver
         public DataService()
         {
             RegistorInit();
+          
         }
         #endregion ...Constructor...
 

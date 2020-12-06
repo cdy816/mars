@@ -18,7 +18,6 @@ namespace Cdy.Tag
     public class ShortHisRunTag:HisRunTag
     {
         private short mLastValue = short.MinValue;
-        private short mTmpValue = 0;
 
         /// <summary>
         /// 
@@ -33,7 +32,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
         {
-            mTmpValue = MemoryHelper.ReadShort(startMemory, offset);
+            var mTmpValue = MemoryHelper.ReadShort(startMemory, offset);
             if (mTmpValue != mLastValue || mLastValue == short.MinValue)
             {
                 mLastValue = mTmpValue;

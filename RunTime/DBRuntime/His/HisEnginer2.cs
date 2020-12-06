@@ -1270,6 +1270,10 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        private Stopwatch sw = new Stopwatch();
+        /// <summary>
+        /// 
+        /// </summary>
         private void ScanProcess()
         {
             //内存块的分配，严格按照绝对的时间来执行。例如5分钟一个内存缓冲，而从0点开始每隔5分钟，切换一下内存块;
@@ -1288,10 +1292,7 @@ namespace Cdy.Tag
                     if (mIsClosed) return;
                     Thread.Sleep(10);
                 }
-
-                //var tick = (DateTime.Now - mdatetime).Milliseconds;
-
-                Stopwatch sw = new Stopwatch();
+               
                 sw.Start();
                 mBlockCount = 0;
                 DateTime dt = DateTime.UtcNow;
@@ -1329,7 +1330,6 @@ namespace Cdy.Tag
                     vv.Notify(dt);
                 }
                 sw.Stop();
-
                 
                 if(sw.ElapsedMilliseconds>500)
                 {
@@ -1340,6 +1340,8 @@ namespace Cdy.Tag
                     Thread.Sleep(1);
                 else
                     Thread.Sleep(100-(int)sw.ElapsedMilliseconds);
+
+                sw.Reset();
             }
         }
 

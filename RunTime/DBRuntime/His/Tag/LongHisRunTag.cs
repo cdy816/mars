@@ -18,13 +18,12 @@ namespace Cdy.Tag
     public class LongHisRunTag:HisRunTag
     {
         private long mLastValue = long.MinValue;
-        private long mTmpValue = 0;
 
         public override byte SizeOfValue => 8;
 
         public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
         {
-            mTmpValue = MemoryHelper.ReadInt64(startMemory, offset);
+            var mTmpValue = MemoryHelper.ReadInt64(startMemory, offset);
             if (mTmpValue != mLastValue || mLastValue == long.MinValue)
             {
                 mLastValue = mTmpValue;

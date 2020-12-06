@@ -18,7 +18,6 @@ namespace Cdy.Tag
     public class DateTimeHisRunTag:HisRunTag
     {
         private DateTime mLastValue = DateTime.MinValue;
-        private DateTime mTmpValue = DateTime.MinValue;
 
         /// <summary>
         /// 
@@ -33,7 +32,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
         {
-            mTmpValue = MemoryHelper.ReadDateTime(startMemory, offset);
+           var  mTmpValue = MemoryHelper.ReadDateTime(startMemory, offset);
             if (mTmpValue != mLastValue || mLastValue == DateTime.MinValue)
             {
                 mLastValue = mTmpValue;

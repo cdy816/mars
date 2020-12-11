@@ -3,7 +3,6 @@
 
 namespace DotNetty.Buffers
 {
-    using System;
     using System.Diagnostics;
     using System.Diagnostics.Contracts;
     using System.Runtime.CompilerServices;
@@ -84,7 +83,6 @@ namespace DotNetty.Buffers
 
         internal readonly PoolArena<T> Arena;
         internal readonly T Memory;
-        internal readonly IntPtr mMemoryPointer;
         internal readonly bool Unpooled;
         internal readonly int Offset;
 
@@ -111,14 +109,13 @@ namespace DotNetty.Buffers
         // TODO: Test if adding padding helps under contention
         //private long pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;
 
-        internal PoolChunk(PoolArena<T> arena, T memory, int pageSize, int maxOrder, int pageShifts, int chunkSize, int offset,IntPtr memoryPointer)
+        internal PoolChunk(PoolArena<T> arena, T memory, int pageSize, int maxOrder, int pageShifts, int chunkSize, int offset)
         {
             Contract.Requires(maxOrder < 30, "maxOrder should be < 30, but is: " + maxOrder);
 
             this.Unpooled = false;
             this.Arena = arena;
             this.Memory = memory;
-            this.mMemoryPointer = memoryPointer;
             this.pageSize = pageSize;
             this.pageShifts = pageShifts;
             this.maxOrder = maxOrder;
@@ -154,12 +151,11 @@ namespace DotNetty.Buffers
 
         /** Creates a special chunk that is not pooled. */
 
-        internal PoolChunk(PoolArena<T> arena, T memory, int size, int offset, IntPtr memoryPointer)
+        internal PoolChunk(PoolArena<T> arena, T memory, int size, int offset)
         {
             this.Unpooled = true;
             this.Arena = arena;
             this.Memory = memory;
-            this.mMemoryPointer = memoryPointer;
             this.Offset = offset;
             this.memoryMap = null;
             this.depthMap = null;

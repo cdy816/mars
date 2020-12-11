@@ -413,8 +413,6 @@ namespace DotNetty.Buffers
             long oldHandle = buf.Handle;
             T oldMemory = buf.Memory;
             int oldOffset = buf.Offset;
-            IntPtr oldpointer = buf.MemoryPointer;
-
             int oldMaxLength = buf.MaxLength;
             int readerIndex = buf.ReaderIndex;
             int writerIndex = buf.WriterIndex;
@@ -422,18 +420,9 @@ namespace DotNetty.Buffers
             this.Allocate(this.Parent.ThreadCache<T>(), buf, newCapacity);
             if (newCapacity > oldCapacity)
             {
-                if (oldMemory != null)
-                {
-                    this.MemoryCopy(
-                        oldMemory, oldOffset,
-                        buf.Memory, buf.Offset, oldCapacity);
-                }
-                else
-                {
-                    this.MemoryCopy(
-                       oldpointer, oldOffset,
-                       buf.MemoryPointer, buf.Offset, oldCapacity);
-                }
+                this.MemoryCopy(
+                    oldMemory, oldOffset,
+                    buf.Memory, buf.Offset, oldCapacity);
             }
             else if (newCapacity < oldCapacity)
             {
@@ -443,19 +432,9 @@ namespace DotNetty.Buffers
                     {
                         writerIndex = newCapacity;
                     }
-                    if (oldMemory != null)
-                    {
-                        this.MemoryCopy(
+                    this.MemoryCopy(
                         oldMemory, oldOffset + readerIndex,
                         buf.Memory, buf.Offset + readerIndex, writerIndex - readerIndex);
-                    }
-                    else
-                    {
-
-                        this.MemoryCopy(
-                        oldpointer, oldOffset + readerIndex,
-                        buf.MemoryPointer, buf.Offset + readerIndex, writerIndex - readerIndex);
-                    }
                 }
                 else
                 {
@@ -616,8 +595,6 @@ namespace DotNetty.Buffers
 
         protected abstract void MemoryCopy(T src, int srcOffset, T dst, int dstOffset, int length);
 
-        protected abstract void MemoryCopy(IntPtr src, int srcOffset, IntPtr dst, int dstOffset, int length);
-
         protected internal abstract void DestroyChunk(PoolChunk<T> chunk);
 
         public override string ToString()
@@ -719,10 +696,10 @@ namespace DotNetty.Buffers
         internal override bool IsDirect => false;
 
         protected override PoolChunk<byte[]> NewChunk(int pageSize, int maxOrder, int pageShifts, int chunkSize) =>
-            new PoolChunk<byte[]>(this, NewByteArray(chunkSize), pageSize, maxOrder, pageShifts, chunkSize, 0,IntPtr.Zero);
+            new PoolChunk<byte[]>(this, NewByteArray(chunkSize), pageSize, maxOrder, pageShifts, chunkSize, 0);
 
         protected override PoolChunk<byte[]> NewUnpooledChunk(int capacity) =>
-            new PoolChunk<byte[]>(this, NewByteArray(capacity), capacity, 0, IntPtr.Zero);
+            new PoolChunk<byte[]>(this, NewByteArray(capacity), capacity, 0);
 
         protected internal override void DestroyChunk(PoolChunk<byte[]> chunk)
         {
@@ -740,19 +717,6 @@ namespace DotNetty.Buffers
             }
 
             PlatformDependent.CopyMemory(src, srcOffset, dst, dstOffset, length);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="src"></param>
-        /// <param name="srcOffset"></param>
-        /// <param name="dst"></param>
-        /// <param name="dstOffset"></param>
-        /// <param name="length"></param>
-        protected override void MemoryCopy(IntPtr src, int srcOffset, IntPtr dst, int dstOffset, int length)
-        {
-            throw new NotImplementedException();
         }
     }
 
@@ -775,7 +739,7 @@ namespace DotNetty.Buffers
         {
             MemoryChunk memoryChunk = NewMemoryChunk(chunkSize);
             this.memoryChunks.Add(memoryChunk);
-            var chunk = new PoolChunk<byte[]>(this, memoryChunk.Bytes, pageSize, maxOrder, pageShifts, chunkSize, 0,memoryChunk.mMemoryPointer);
+            var chunk = new PoolChunk<byte[]>(this, memoryChunk.Bytes, pageSize, maxOrder, pageShifts, chunkSize, 0);
             return chunk;
         }
 
@@ -783,7 +747,7 @@ namespace DotNetty.Buffers
         {
             MemoryChunk memoryChunk = NewMemoryChunk(capacity);
             this.memoryChunks.Add(memoryChunk);
-            var chunk = new PoolChunk<byte[]>(this, memoryChunk.Bytes, capacity, 0, memoryChunk.mMemoryPointer);
+            var chunk = new PoolChunk<byte[]>(this, memoryChunk.Bytes, capacity, 0);
             return chunk;
         }
 
@@ -792,19 +756,6 @@ namespace DotNetty.Buffers
 
         protected override unsafe void MemoryCopy(byte[] src, int srcOffset, byte[] dst, int dstOffset, int length) =>
                 PlatformDependent.CopyMemory((byte*)Unsafe.AsPointer(ref src[srcOffset]), (byte*)Unsafe.AsPointer(ref dst[dstOffset]), length);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="src"></param>
-        /// <param name="srcOffset"></param>
-        /// <param name="dst"></param>
-        /// <param name="dstOffset"></param>
-        /// <param name="length"></param>
-        protected override unsafe void MemoryCopy(IntPtr src, int srcOffset, IntPtr dst, int dstOffset, int length)
-        {
-            PlatformDependent.CopyMemory((byte*)(src+srcOffset), (byte*)(dst+dstOffset), length);
-        }
 
         protected internal override void DestroyChunk(PoolChunk<byte[]> chunk)
         {
@@ -823,38 +774,27 @@ namespace DotNetty.Buffers
         sealed class MemoryChunk : IDisposable
         {
             internal byte[] Bytes;
-            internal IntPtr mMemoryPointer;
-            //GCHandle handle;
+            GCHandle handle;
 
             internal MemoryChunk(int size)
             {
-                //this.Bytes = new byte[size];
-                //this.handle = GCHandle.Alloc(this.Bytes, GCHandleType.Pinned);
-
-                mMemoryPointer = Marshal.AllocHGlobal(size);
+                this.Bytes = new byte[size];
+                this.handle = GCHandle.Alloc(this.Bytes, GCHandleType.Pinned);
             }
 
             void Release()
             {
-                //if (this.handle.IsAllocated)
-                //{
-                //    try
-                //    {
-                //        this.handle.Free();
-                //    }
-                //    catch (InvalidOperationException)
-                //    {
-                //        // Free is not thread safe
-                //    }
-                //}
-
-                if(this.mMemoryPointer!=IntPtr.Zero)
+                if (this.handle.IsAllocated)
                 {
-                    Marshal.Release(mMemoryPointer);
-                    mMemoryPointer = IntPtr.Zero;
+                    try
+                    {
+                        this.handle.Free();
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Free is not thread safe
+                    }
                 }
-
-
                 this.Bytes = null;
             }
 

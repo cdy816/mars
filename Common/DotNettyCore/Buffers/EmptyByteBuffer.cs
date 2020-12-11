@@ -433,8 +433,6 @@ namespace DotNetty.Buffers
 
         public byte[] Array => ArrayExtensions.ZeroBytes;
 
-        public Span<byte> ArraySpan => Array;
-
         public byte[] ToArray() => ArrayExtensions.ZeroBytes;
 
         public int ArrayOffset => 0;

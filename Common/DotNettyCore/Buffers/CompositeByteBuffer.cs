@@ -640,24 +640,6 @@ namespace DotNetty.Buffers
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public override Span<byte> ArraySpan {
-            get
-            {
-                switch (this.components.Count)
-                {
-                    case 0:
-                        return null;
-                    case 1:
-                        return this.components[0].Buffer.Array;
-                    default:
-                        throw new NotSupportedException();
-                }
-            }
-        }
-
         public override int ArrayOffset
         {
             get

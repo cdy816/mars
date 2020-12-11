@@ -116,11 +116,7 @@ namespace DotNetty.Buffers
                 return this.array;
             }
         }
-        public override Span<byte> ArraySpan => new Span<byte>(this.array,ArrayOffset,Capacity);
 
-        /// <summary>
-        /// 
-        /// </summary>
         public override int ArrayOffset => 0;
 
         public override bool HasMemoryAddress => true;

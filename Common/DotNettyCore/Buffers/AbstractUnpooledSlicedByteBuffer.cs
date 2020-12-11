@@ -56,11 +56,6 @@ namespace DotNetty.Buffers
 
         public override int ArrayOffset => this.Idx(this.Unwrap().ArrayOffset);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public override Span<byte> ArraySpan => new Span<byte>(Array, ArrayOffset, Length);
-
         public override bool HasMemoryAddress => this.Unwrap().HasMemoryAddress;
 
         public override ref byte GetPinnableMemoryAddress() => ref Unsafe.Add(ref this.Unwrap().GetPinnableMemoryAddress(), this.adjustment);

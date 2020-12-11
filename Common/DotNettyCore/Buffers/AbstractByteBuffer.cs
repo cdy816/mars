@@ -1507,11 +1507,6 @@ namespace DotNetty.Buffers
 
         public abstract byte[] Array { get; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public abstract Span<byte> ArraySpan { get; }
-
         public abstract int ArrayOffset { get; }
 
         public abstract bool HasMemoryAddress { get; }

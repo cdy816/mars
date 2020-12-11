@@ -63,14 +63,21 @@ namespace DBDevelopService
         public async void StartAsync(string ip, int port)
         {
             string sip = ip;
-            if (!sip.StartsWith("http://"))
+            try
             {
-                sip = "http://" + ip;
+                if (!sip.StartsWith("http://"))
+                {
+                    sip = "http://" + ip;
+                }
+                sip += ":" + port;
+                mhost = CreateHostBuilder(sip).Build();
+                LoggerService.Service.Info("WebAPIDBService", "启动服务:" + sip);
+                await mhost.StartAsync();
             }
-            sip += ":" + port;
-            mhost = CreateHostBuilder(sip).Build();
-            LoggerService.Service.Info("WebAPIDBService", "启动服务:"+ sip);
-            await mhost.StartAsync();
+            catch(Exception ex)
+            {
+                LoggerService.Service.Info("WebAPIDBService", ex.Message);
+            }
         }
 
         /// <summary>

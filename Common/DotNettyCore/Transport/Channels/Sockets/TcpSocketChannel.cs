@@ -197,7 +197,9 @@ namespace DotNetty.Transport.Channels.Sockets
                 return -1; // prevents ObjectDisposedException from being thrown in case connection has been lost in the meantime
             }
 
-            int received = this.Socket.Receive(byteBuf.Array, byteBuf.ArrayOffset + byteBuf.WriterIndex, byteBuf.WritableBytes, SocketFlags.None, out SocketError errorCode);
+            SocketError errorCode = SocketError.Success;
+
+            int received =  !byteBuf.IsDirect ? this.Socket.Receive(byteBuf.Array, byteBuf.ArrayOffset + byteBuf.WriterIndex, byteBuf.WritableBytes, SocketFlags.None, out  errorCode) : this.Socket.Receive(byteBuf.ArraySpan.Slice(byteBuf.WriterIndex, byteBuf.WritableBytes), SocketFlags.None, out errorCode);
 
             switch (errorCode)
             {

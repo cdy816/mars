@@ -81,6 +81,8 @@ namespace DotNetty.Buffers
 
         public override byte[] Array => this.Unwrap().Array;
 
+        public override Span<byte> ArraySpan => this.Unwrap().ArraySpan;
+
         public override bool HasMemoryAddress => this.Unwrap().HasMemoryAddress;
 
         public sealed override int IoBufferCount => this.Unwrap().IoBufferCount;

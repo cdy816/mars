@@ -27,19 +27,37 @@ namespace DotNetty.Buffers
             PoolThreadCache<byte[]> cache)
         {
             base.Init(chunk, handle, offset, length, maxLength, cache);
-            this.InitMemoryAddress();
+            if (chunk.Memory == null || chunk.mMemoryPointer != IntPtr.Zero)
+            {
+                this.memoryAddress = (byte*)(chunk.mMemoryPointer + this.Offset);
+            }
+            else
+            {
+                this.memoryAddress = (byte*)Unsafe.AsPointer(ref this.Memory[this.Offset]);
+            }
+            this.MemoryPointer = (IntPtr)this.memoryAddress;
+            // this.InitMemoryAddress();
         }
 
         internal override void InitUnpooled(PoolChunk<byte[]> chunk, int length)
         {
             base.InitUnpooled(chunk, length);
-            this.InitMemoryAddress();
+            if (chunk.Memory == null || chunk.mMemoryPointer != IntPtr.Zero)
+            {
+                this.memoryAddress = (byte*)(chunk.mMemoryPointer + this.Offset);
+            }
+            else
+            {
+                this.memoryAddress = (byte*)Unsafe.AsPointer(ref this.Memory[this.Offset]);
+            }
+            this.MemoryPointer = (IntPtr)this.memoryAddress;
+            //this.InitMemoryAddress();
         }
 
-        void InitMemoryAddress()
-        {
-            this.memoryAddress = (byte*)Unsafe.AsPointer(ref this.Memory[this.Offset]);
-        }
+        //void InitMemoryAddress()
+        //{
+        //    this.memoryAddress = (byte*)Unsafe.AsPointer(ref this.Memory[this.Offset]);
+        //}
 
         public override bool IsDirect => true;
 
@@ -155,6 +173,11 @@ namespace DotNetty.Buffers
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public override Span<byte> ArraySpan => new Span<byte>((void*)(MemoryPointer+Offset),Length);
+
         public override int ArrayOffset => this.Offset;
 
         public override bool HasMemoryAddress => true;
@@ -162,7 +185,8 @@ namespace DotNetty.Buffers
         public override ref byte GetPinnableMemoryAddress()
         {
             this.EnsureAccessible();
-            return ref this.Memory[this.Offset];
+            return ref *(byte*)(MemoryPointer + Offset);
+           // return ref this.Memory[this.Offset];
         }
 
         public override IntPtr AddressOfPinnedMemory() => (IntPtr)this.memoryAddress;

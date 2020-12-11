@@ -13,6 +13,7 @@ namespace DotNetty.Buffers
         protected internal PoolChunk<T> Chunk;
         protected internal long Handle;
         protected internal T Memory;
+        protected internal IntPtr MemoryPointer;
         protected internal int Offset;
         protected internal int Length;
         internal int MaxLength;
@@ -52,6 +53,8 @@ namespace DotNetty.Buffers
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => this.Length;
         }
+
+        public override Span<byte> ArraySpan => new Span<byte>(Array, Offset, Length);
 
         public sealed override IByteBuffer AdjustCapacity(int newCapacity)
         {

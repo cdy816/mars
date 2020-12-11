@@ -3,6 +3,7 @@
 
 namespace DotNetty.Buffers
 {
+    using System;
     using System.Threading;
     using DotNetty.Common.Internal;
     using DotNetty.Common.Utilities;
@@ -100,19 +101,30 @@ namespace DotNetty.Buffers
                 ((UnpooledByteBufferAllocator)this.Allocator).IncrementDirect(initialCapacity);
             }
 
-            protected override byte[] AllocateDirect(int initialCapacity)
+            protected override IntPtr AllocateDirect(int initialCapacity)
             {
-                byte[] bytes = base.AllocateDirect(initialCapacity);
-                ((UnpooledByteBufferAllocator)this.Allocator).IncrementDirect(bytes.Length);
+                var bytes = base.AllocateDirect(initialCapacity);
+                ((UnpooledByteBufferAllocator)this.Allocator).IncrementDirect(initialCapacity);
                 return bytes;
             }
 
-            protected override void FreeDirect(byte[] array)
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="ptr"></param>
+            /// <param name="capacity"></param>
+            protected override void FreeDirect(IntPtr ptr, int capacity)
             {
-                int capacity = array.Length;
-                base.FreeDirect(array);
+                base.FreeDirect(ptr, capacity);
                 ((UnpooledByteBufferAllocator)this.Allocator).DecrementDirect(capacity);
             }
+
+            //protected override void FreeDirect(byte[] array)
+            //{
+            //    int capacity = array.Length;
+            //    base.FreeDirect(array);
+            //    ((UnpooledByteBufferAllocator)this.Allocator).DecrementDirect(capacity);
+            //}
         }
 
         sealed class UnpooledByteBufferAllocatorMetric : IByteBufferAllocatorMetric

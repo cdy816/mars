@@ -1134,6 +1134,11 @@ namespace DotNetty.Buffers
         byte[] Array { get; }
 
         /// <summary>
+        /// 
+        /// </summary>
+        Span<byte> ArraySpan { get; }
+
+        /// <summary>
         /// Returns {@code true} if and only if this buffer has a reference to the low-level memory address that points
         /// to the backing data.
         /// </summary>

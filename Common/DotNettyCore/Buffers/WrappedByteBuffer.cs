@@ -634,6 +634,11 @@ namespace DotNetty.Buffers
 
         public byte[] Array => this.Buf.Array;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public Span<byte> ArraySpan => this.Buf.ArraySpan;
+
         public virtual string ToString(Encoding encoding) => this.Buf.ToString(encoding);
 
         public virtual string ToString(int index, int length, Encoding encoding) => this.Buf.ToString(index, length, encoding);

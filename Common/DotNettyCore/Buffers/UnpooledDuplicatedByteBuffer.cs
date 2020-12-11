@@ -58,6 +58,11 @@ namespace DotNetty.Buffers
 
         public override byte[] Array => this.Unwrap().Array;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public override Span<byte> ArraySpan => this.Unwrap().ArraySpan;
+
         public override int ArrayOffset => this.Unwrap().ArrayOffset;
 
         public override bool HasMemoryAddress => this.Unwrap().HasMemoryAddress;

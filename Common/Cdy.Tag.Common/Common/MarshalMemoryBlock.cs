@@ -10,7 +10,6 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -64,7 +63,7 @@ namespace Cdy.Tag
 
         public const int BufferSize1 = 1024 * 1024 * 1;
 
-        //public static byte[] zoreData = new byte[1024 * 10];
+        public static byte[] zoreData = new byte[1024 * 10];
 
         private int mRefCount = 0;
 
@@ -395,18 +394,16 @@ namespace Cdy.Tag
                 foreach (var vv in mHandles)
                 {
                     if (mIsDisposed) break;
-                    //for (int i = 0; i < mBufferItemSize / zoreData.Length; i++)
-                    //{
-                    //    if (mIsDisposed) break;
-                    //    Marshal.Copy(zoreData, 0, vv + i * zoreData.Length, zoreData.Length);
-                    //}
+                    for (int i = 0; i < mBufferItemSize / zoreData.Length; i++)
+                    {
+                        if (mIsDisposed) break;
+                        Marshal.Copy(zoreData, 0, vv + i * zoreData.Length, zoreData.Length);
+                    }
 
-                    //if(mBufferItemSize % zoreData.Length >0)
-                    //{
-                    //    Marshal.Copy(zoreData, 0, vv + (mBufferItemSize > zoreData.Length ? mBufferItemSize - zoreData.Length : 0), mBufferItemSize > zoreData.Length ? zoreData.Length : mBufferItemSize);
-                    //}
-
-                    Unsafe.InitBlock((void*)vv, 0, (uint)mBufferItemSize);
+                    if(mBufferItemSize % zoreData.Length >0)
+                    {
+                        Marshal.Copy(zoreData, 0, vv + (mBufferItemSize > zoreData.Length ? mBufferItemSize - zoreData.Length : 0), mBufferItemSize > zoreData.Length ? zoreData.Length : mBufferItemSize);
+                    }
 
                 }
             }
@@ -431,17 +428,15 @@ namespace Cdy.Tag
             int i = 0;
             try
             {
-                //for (i = 0; i < len / zoreData.Length; i++)
-                //{
-                //    Marshal.Copy(zoreData, 0, target + start + i * zoreData.Length, zoreData.Length);
-                //}
-                //int zz = len % zoreData.Length;
-                //if (zz > 0)
-                //{
-                //    Marshal.Copy(zoreData, 0, target + start + i * zoreData.Length, zz);
-                //}
-
-                Unsafe.InitBlock((void*)(target+start), 0, (uint)len);
+                for (i = 0; i < len / zoreData.Length; i++)
+                {
+                    Marshal.Copy(zoreData, 0, target + start + i * zoreData.Length, zoreData.Length);
+                }
+                int zz = len % zoreData.Length;
+                if (zz > 0)
+                {
+                    Marshal.Copy(zoreData, 0, target + start + i * zoreData.Length, zz);
+                }
             }
             catch
             {

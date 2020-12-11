@@ -11,7 +11,6 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -49,7 +48,7 @@ namespace Cdy.Tag
 
         public const int BufferItemSize = 1024 * 4;
 
-        //public static byte[] zoreData = new byte[BufferItemSize];
+        public static byte[] zoreData = new byte[BufferItemSize];
 
         private int mRefCount = 0;
 
@@ -267,7 +266,6 @@ namespace Cdy.Tag
         public void ReAlloc(long size)
         {
             Init(size);
-            
             //GC.Collect();
         }
 
@@ -280,17 +278,15 @@ namespace Cdy.Tag
         /// </summary>
         public IMemoryFixedBlock Clear()
         {
-            //long i = 0;
-            //for (i = 0; i < mSize / zoreData.Length; i++)
-            //{
-            //    Marshal.Copy(zoreData, 0, new IntPtr(mHandleValue + (i * zoreData.Length)), zoreData.Length);
-            //}
+            long i = 0;
+            for (i = 0; i < mSize / zoreData.Length; i++)
+            {
+                Marshal.Copy(zoreData, 0, new IntPtr(mHandleValue + (i * zoreData.Length)), zoreData.Length);
+            }
 
-            //int cc = (int)(mSize % zoreData.Length);
-            //if (cc > 0)
-            //    Marshal.Copy(zoreData, 0, new IntPtr(mHandleValue + (i * zoreData.Length)), cc);
-
-            Unsafe.InitBlock((void*)mHandles, 0, (uint)mSize);
+            int cc = (int)(mSize % zoreData.Length);
+            if (cc > 0)
+                Marshal.Copy(zoreData, 0, new IntPtr(mHandleValue + (i * zoreData.Length)), cc);
 
             //mUsedSize = 0;
             mPosition = 0;
@@ -316,17 +312,16 @@ namespace Cdy.Tag
         /// <param name="len"></param>
         private void Clear(IntPtr target, long start, long len)
         {
-            //int i = 0;
-            //for (i = 0; i < len / zoreData.Length; i++)
-            //{
-            //    Marshal.Copy(zoreData, 0, new IntPtr(target.ToInt64()+ start + i * zoreData.Length), zoreData.Length);
-            //}
-            //long zz = len % zoreData.Length;
-            //if (zz > 0)
-            //{
-            //    Marshal.Copy(zoreData, 0, new IntPtr(target.ToInt64() + start + i * zoreData.Length), (int)zz);
-            //}
-            Unsafe.InitBlock((void*)(target + (int)start), 0, (uint)len);
+            int i = 0;
+            for (i = 0; i < len / zoreData.Length; i++)
+            {
+                Marshal.Copy(zoreData, 0, new IntPtr(target.ToInt64()+ start + i * zoreData.Length), zoreData.Length);
+            }
+            long zz = len % zoreData.Length;
+            if (zz > 0)
+            {
+                Marshal.Copy(zoreData, 0, new IntPtr(target.ToInt64() + start + i * zoreData.Length), (int)zz);
+            }
         }
 
         #region ReadAndWrite
@@ -592,6 +587,7 @@ namespace Cdy.Tag
         /// <param name="len"></param>
         public void Clear(long offset,long len)
         {
+
             Clear(mHandles, offset, (int)len);
         }
 

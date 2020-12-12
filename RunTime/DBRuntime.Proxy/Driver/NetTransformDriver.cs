@@ -261,7 +261,7 @@ namespace DBRuntime.Proxy
                 }
                 var time = new DateTime(block.ReadLong());
                 var qua = block.ReadByte();
-                mServier.SetTagValue(vid, value, time, qua);
+                mServier.SetTagValue(vid,ref value, time, qua);
             }
             block.Release();
         }

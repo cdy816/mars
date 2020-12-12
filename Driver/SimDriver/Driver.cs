@@ -199,7 +199,7 @@ namespace SimDriver
                 double fval = Math.Cos(mNumber / 180.0 * Math.PI);
                 if (vv!=null)
                 {
-                    mTagService.SetTagValue<double>(vv, fval, 0);
+                    mTagService.SetTagValue<double>(vv,ref fval, 0);
                     mTagService.SubmiteNotifyChanged();
                 }
 
@@ -232,7 +232,7 @@ namespace SimDriver
                 double fval = Math.Sin(mNumber / 180.0 * Math.PI);
                 if (vv != null)
                 {
-                    mTagService.SetTagValue<double>(vv, fval, 0);
+                    mTagService.SetTagValue<double>(vv,ref fval, 0);
                     mTagService.SubmiteNotifyChanged();
                 }
 
@@ -264,7 +264,7 @@ namespace SimDriver
                 mStepEvent.Reset();
                 if (vv != null)
                 {
-                    mTagService.SetTagValue(vv, mNumber, 0);
+                    mTagService.SetTagValue(vv,ref mNumber, 0);
                     mTagService.SubmiteNotifyChanged();
                 }
 
@@ -293,9 +293,10 @@ namespace SimDriver
             {
                 mSteppointEvent.WaitOne();
                 mSteppointEvent.Reset();
+                var vpp = new IntPoint3Data(mNumber, mNumber, mNumber);
                 if (vv != null)
                 {
-                    mTagService.SetTagValue(vv, new IntPoint3Data(mNumber, mNumber, mNumber), 0);
+                    mTagService.SetTagValue(vv ,ref vpp, 0);
                     mTagService.SubmiteNotifyChanged();
                 }
 
@@ -326,7 +327,7 @@ namespace SimDriver
                 mSquareEvent.Reset();
                 if (vv != null)
                 {
-                    mTagService.SetTagValue(vv, mBoolNumber, 0);
+                    mTagService.SetTagValue(vv,ref mBoolNumber, 0);
                     mTagService.SubmiteNotifyChanged();
                 }
 

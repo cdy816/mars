@@ -1351,6 +1351,10 @@ namespace Cdy.Tag
             return new DateTime(time.Year, time.Month, time.Day, time.Hour, time.Minute, 0);
         }
 
+        //Dictionary<int, long> mHeadValues = new Dictionary<int, long>();
+
+        MarshalFixedMemoryBlock mHeadValues;
+
         /// <summary>
         /// 执行存储到磁盘
         /// </summary>
@@ -1403,11 +1407,21 @@ namespace Cdy.Tag
 
                     var dataAddr = this.mFileWriter.GoToEnd().CurrentPostion;
 
+                    if(mHeadValues==null)
+                    {
+                        mHeadValues = new MarshalFixedMemoryBlock(count * 12);
+                    }
+                    else
+                    {
+                        mHeadValues.CheckAndResize(count * 12);
+                    }
+                    mHeadValues.Clear();
+
                     //mBlockPointMemory.CheckAndResize(mTagCount * 8);
                     //mBlockPointMemory.Clear();
 
 
-                    Dictionary<int, long> mHeadValues = new Dictionary<int, long>();
+
 
                     //var vtime = FormateTime(time);
                     //Dictionary<int, long> timecach;
@@ -1442,8 +1456,9 @@ namespace Cdy.Tag
                             //{
                             //mBlockPointMemory.WriteLong(i * 8, addr);
                             //}
-
-                            mHeadValues.Add(id, addr);
+                            mHeadValues.Write(id);
+                            mHeadValues.Write(addr);
+                            //mHeadValues.Add(id, addr);
                         }
                     }
 
@@ -1476,9 +1491,15 @@ namespace Cdy.Tag
                     //写入指针头部区域
                     // mFileWriter.Write(mBlockPointMemory.Buffers, pointAddr, 0, (int)mBlockPointMemory.AllocSize);
 
-                    foreach (var vv in mHeadValues)
+                    //foreach (var vv in mHeadValues)
+                    int key = 0;
+                    long data = 0;
+                    mHeadValues.Position = 0;
+                    for(int i=0;i<count;i++)
                     {
-                        mFileWriter.Write(vv.Value, pointAddr + mTagIndexCach[vv.Key] * 8);
+                        key = mHeadValues.ReadInt();
+                        data = mHeadValues.ReadLong();
+                        mFileWriter.Write(data, pointAddr + mTagIndexCach[key] * 8);
                     }
 
                     Flush();

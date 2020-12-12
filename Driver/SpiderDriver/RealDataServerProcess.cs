@@ -168,7 +168,8 @@ namespace SpiderDriver
                     case (byte)TagType.Bool:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, block.ReadByte(), 0);
+                            var bval = block.ReadByte();
+                            service.SetTagValue(id,ref bval, 0);
                         }
                         else
                         {
@@ -178,7 +179,8 @@ namespace SpiderDriver
                     case (byte)TagType.Byte:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, block.ReadByte(), 0);
+                            var bval = block.ReadByte();
+                            service.SetTagValue(id,ref bval, 0);
                         }
                         else
                         {
@@ -188,7 +190,8 @@ namespace SpiderDriver
                     case (byte)TagType.Short:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, block.ReadShort(), 0);
+                            var bval = block.ReadShort();
+                            service.SetTagValue(id,ref bval, 0);
                         }
                         else
                         {
@@ -199,7 +202,8 @@ namespace SpiderDriver
                     case (byte)TagType.UShort:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, (ushort)block.ReadShort(), 0);
+                            var bval = (ushort)block.ReadShort();
+                            service.SetTagValue(id,ref bval, 0);
                         }
                         else
                         {
@@ -210,7 +214,8 @@ namespace SpiderDriver
                     case (byte)TagType.Int:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, block.ReadInt(), 0);
+                            var bval = (ushort)block.ReadInt();
+                            service.SetTagValue(id, ref bval, 0);
                         }
                         else
                         {
@@ -221,7 +226,8 @@ namespace SpiderDriver
                     case (byte)TagType.UInt:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, (uint)block.ReadInt(), 0);
+                            var bval = (ushort)block.ReadInt();
+                            service.SetTagValue(id, ref bval, 0);
                         }
                         else
                         {
@@ -232,7 +238,8 @@ namespace SpiderDriver
                     case (byte)TagType.Long:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, block.ReadLong(), 0);
+                            var bval = (ushort)block.ReadLong();
+                            service.SetTagValue(id, ref bval, 0);
                         }
                         else
                         {
@@ -243,7 +250,8 @@ namespace SpiderDriver
                     case (byte)TagType.ULong:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, (ulong)block.ReadLong(), 0);
+                            var bval = (ushort)block.ReadLong();
+                            service.SetTagValue(id, ref bval, 0);
                         }
                         else
                         {
@@ -254,7 +262,8 @@ namespace SpiderDriver
                     case (byte)TagType.Float:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, block.ReadFloat(), 0);
+                            var bval = (ushort)block.ReadFloat();
+                            service.SetTagValue(id, ref bval, 0);
                         }
                         else
                         {
@@ -265,7 +274,8 @@ namespace SpiderDriver
                     case (byte)TagType.Double:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, block.ReadDouble(), 0);
+                            var bval = (ushort)block.ReadDouble();
+                            service.SetTagValue(id, ref bval, 0);
                         }
                         else
                         {
@@ -287,7 +297,8 @@ namespace SpiderDriver
                     case (byte)TagType.DateTime:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, DateTime.FromBinary(block.ReadLong()), 0);
+                            var bval = DateTime.FromBinary(block.ReadLong());
+                            service.SetTagValue(id,ref bval, 0);
                         }
                         else
                         {
@@ -298,7 +309,8 @@ namespace SpiderDriver
                     case (byte)TagType.IntPoint:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, new IntPointData(block.ReadInt(), block.ReadInt()), 0);
+                            var bval = new IntPointData(block.ReadInt(), block.ReadInt());
+                            service.SetTagValue(id, ref bval, 0);
                         }
                         else
                         {
@@ -310,7 +322,8 @@ namespace SpiderDriver
                     case (byte)TagType.UIntPoint:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, new UIntPointData(block.ReadInt(), block.ReadInt()), 0);
+                            var bval = new UIntPointData(block.ReadInt(), block.ReadInt());
+                            service.SetTagValue(id, ref bval, 0);
                         }
                         else
                         {
@@ -322,7 +335,8 @@ namespace SpiderDriver
                     case (byte)TagType.IntPoint3:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt()), 0);
+                            var bval = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                            service.SetTagValue(id, ref bval, 0);
                         }
                         else
                         {
@@ -335,7 +349,8 @@ namespace SpiderDriver
                     case (byte)TagType.UIntPoint3:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt()), 0);
+                            var bval = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                            service.SetTagValue(id, ref bval, 0);
                         }
                         else
                         {
@@ -348,7 +363,8 @@ namespace SpiderDriver
                     case (byte)TagType.LongPoint:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, new LongPointData(block.ReadLong(), block.ReadLong()), 0);
+                            var bval = new LongPointData(block.ReadLong(), block.ReadLong());
+                            service.SetTagValue(id,ref bval, 0);
                         }
                         else
                         {
@@ -360,7 +376,8 @@ namespace SpiderDriver
                     case (byte)TagType.ULongPoint:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, new ULongPointData(block.ReadLong(), block.ReadLong()), 0);
+                            var bval = new ULongPointData(block.ReadLong(), block.ReadLong());
+                            service.SetTagValue(id, ref bval, 0);
                         }
                         else
                         {
@@ -372,7 +389,8 @@ namespace SpiderDriver
                     case (byte)TagType.LongPoint3:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong()), 0);
+                            var bval = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                            service.SetTagValue(id, ref bval, 0);
                         }
                         else
                         {
@@ -385,7 +403,8 @@ namespace SpiderDriver
                     case (byte)TagType.ULongPoint3:
                         if (AllowTagIds.Contains(id))
                         {
-                            service.SetTagValue(id, new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong()), 0);
+                            var bval = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                            service.SetTagValue(id, ref bval, 0);
                         }
                         else
                         {

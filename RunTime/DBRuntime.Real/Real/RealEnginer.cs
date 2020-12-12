@@ -15,6 +15,7 @@ using Cdy.Tag.Driver;
 using System.Threading;
 using System.Security.Cryptography;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Cdy.Tag
 {
@@ -51,6 +52,8 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         private void* mMHandle;
+
+        private GCHandle mGCHandle;
 
         //private ManualResetEvent mLockEvent;
 
@@ -117,7 +120,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public void Init()
+        public unsafe void Init()
         {
             long msize = 0;
             byte unknowQuality = (byte)QualityConst.Init;
@@ -172,7 +175,9 @@ namespace Cdy.Tag
             mUsedSize = msize;
             var fsize = ((long)(msize * 1.5 / 1024) + 1) * 1024;
             mMemory = new byte[fsize];
-            mMHandle = mMemory.AsMemory().Pin().Pointer;
+            mGCHandle = GCHandle.Alloc(mMemory, GCHandleType.Pinned);
+            
+            mMHandle = (void*)mGCHandle.AddrOfPinnedObject();
             mMemory.AsSpan().Clear();
 
             LoggerService.Service.Info("RealEnginer","Cal memory size:"+ fsize / 1024.0/1024+"M",ConsoleColor.Cyan);
@@ -278,11 +283,16 @@ namespace Cdy.Tag
             if ((mUsedSize + msize) > mMemory.Length)
             {
                 var men = new byte[fsize];
-                var hmen = mMemory.AsMemory().Pin().Pointer;
+                var gch = GCHandle.Alloc(men, GCHandleType.Pinned);
+                var hmen = (void*)gch.AddrOfPinnedObject();
                 men.AsSpan().Clear();
+
                 Array.Copy(mMemory, men,mMemory.Length);
+                
+                mGCHandle.Free();
 
                 mMemory = men;
+                mGCHandle = gch;
                 mMHandle = hmen;
             }
             mUsedSize = fsize;
@@ -3961,14 +3971,14 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        public bool SetTagValue<T>(int id, T value, DateTime time, byte quality)
+        public bool SetTagValue<T>(int id,ref T value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value,  time,  quality);
+                SetTagValue(tag,ref value,  time,  quality);
             }
             catch
             {
@@ -3984,9 +3994,9 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        public bool SetTagValue<T>(int id, T value, byte quality)
+        public bool SetTagValue<T>(int id,ref T value, byte quality)
         {
-            return SetTagValue(id, value, DateTime.UtcNow, quality);
+            return SetTagValue(id,ref value, DateTime.UtcNow, quality);
         }
 
         /// <summary>
@@ -3998,7 +4008,34 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetTagValue<T>(Tagbase tag, T value, byte quality)
         {
-            return SetTagValue(tag, value, DateTime.UtcNow, quality);
+            return SetTagValue(tag,ref value, DateTime.UtcNow, quality);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue<T>(Tagbase tag,ref T value, byte quality)
+        {
+            return SetTagValue(tag, ref value, DateTime.UtcNow, quality);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue<T>(Tagbase tag, T value, DateTime time, byte quality)
+        {
+            return SetTagValue<T>(tag, ref value, time, quality);
         }
 
         /// <summary>
@@ -4009,7 +4046,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        public bool SetTagValue<T>(Tagbase tag, T value, DateTime time, byte quality)
+        public bool SetTagValue<T>(Tagbase tag,ref T value,DateTime time, byte quality)
         {
             try
             {
@@ -4185,7 +4222,7 @@ namespace Cdy.Tag
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
                 DateTime time = DateTime.UtcNow;
-                SetTagValue<T>(tag, value, time, (byte)QualityConst.Good);
+                SetTagValue<T>(tag,ref value, time, (byte)QualityConst.Good);
                 
             }
             catch
@@ -4221,6 +4258,26 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue<T>(List<Tagbase> ids,ref T value, byte quality)
+        {
+            bool re = true;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, value, quality);
+            }
+            return re;
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="ids"></param>
         /// <param name="value"></param>
         /// <returns></returns>
@@ -4230,7 +4287,7 @@ namespace Cdy.Tag
             bool re = true;
             foreach (var vv in ids)
             {
-                re &= SetTagValue(vv, value,quality);
+                re &= SetTagValue(vv,ref value,quality);
             }
             return re;
         }
@@ -5269,6 +5326,7 @@ namespace Cdy.Tag
 
         public void Dispose()
         {
+            mGCHandle.Free();
             mMemory = null;
             mMHandle = (void*)IntPtr.Zero;
             mIdAndAddr.Clear();
@@ -5287,14 +5345,14 @@ namespace Cdy.Tag
             return mConfigDatabase.Tags.Where(e => ids.Contains(e.Key)).Select(e => e.Value.Group).ToList();
         }
 
-        public bool SetTagValue(int id, bool value, byte quality)
+        public bool SetTagValue(int id,ref bool value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag,ref value, quality);
             }
             catch
             {
@@ -5303,14 +5361,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, byte value, byte quality)
+        public bool SetTagValue(int id,ref byte value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag,ref value, quality);
             }
             catch
             {
@@ -5319,14 +5377,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, short value, byte quality)
+        public bool SetTagValue(int id,ref short value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5335,14 +5393,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, ushort value, byte quality)
+        public bool SetTagValue(int id,ref ushort value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5351,14 +5409,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, int value, byte quality)
+        public bool SetTagValue(int id,ref int value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5367,14 +5425,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, uint value, byte quality)
+        public bool SetTagValue(int id,ref uint value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5383,14 +5441,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, long value, byte quality)
+        public bool SetTagValue(int id,ref long value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5399,14 +5457,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, ulong value, byte quality)
+        public bool SetTagValue(int id,ref ulong value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5415,14 +5473,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, float value, byte quality)
+        public bool SetTagValue(int id,ref float value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5431,14 +5489,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, double value, byte quality)
+        public bool SetTagValue(int id,ref double value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag,ref value, quality);
             }
             catch
             {
@@ -5454,7 +5512,7 @@ namespace Cdy.Tag
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5463,14 +5521,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, DateTime value, byte quality)
+        public bool SetTagValue(int id,ref DateTime value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5479,14 +5537,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, IntPointData value, byte quality)
+        public bool SetTagValue(int id, ref IntPointData value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5495,14 +5553,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, UIntPointData value, byte quality)
+        public bool SetTagValue(int id, ref UIntPointData value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5511,14 +5569,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, IntPoint3Data value, byte quality)
+        public bool SetTagValue(int id, ref IntPoint3Data value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5527,14 +5585,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, UIntPoint3Data value, byte quality)
+        public bool SetTagValue(int id, ref UIntPoint3Data value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5543,14 +5601,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, LongPointData value, byte quality)
+        public bool SetTagValue(int id, ref LongPointData value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5559,14 +5617,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, ULongPointData value, byte quality)
+        public bool SetTagValue(int id, ref ULongPointData value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5575,14 +5633,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, LongPoint3Data value, byte quality)
+        public bool SetTagValue(int id, ref LongPoint3Data value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5591,14 +5649,14 @@ namespace Cdy.Tag
             return true;
         }
 
-        public bool SetTagValue(int id, ULongPoint3Data value, byte quality)
+        public bool SetTagValue(int id, ref ULongPoint3Data value, byte quality)
         {
             try
             {
                 Take();
                 var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag, value, quality);
+                SetTagValue(tag, ref value, quality);
             }
             catch
             {
@@ -5613,7 +5671,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, bool value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref bool value, byte quality)
         {
             try
             {
@@ -5675,7 +5733,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, byte value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref byte value, byte quality)
         {
             try
             {
@@ -5736,7 +5794,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, short value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref short value, byte quality)
         {
             try
             {
@@ -5797,7 +5855,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ushort value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref ushort value, byte quality)
         {
             try
             {
@@ -5858,7 +5916,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, int value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref int value, byte quality)
         {
             try
             {
@@ -5919,7 +5977,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, uint value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref uint value, byte quality)
         {
             try
             {
@@ -5981,7 +6039,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, long value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref long value, byte quality)
         {
             try
             {
@@ -6042,7 +6100,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ulong value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref ulong value, byte quality)
         {
             try
             {
@@ -6103,7 +6161,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, float value,byte quality)
+        public bool SetTagValue(Tagbase tag, ref float value,byte quality)
         {
             try
             {
@@ -6163,7 +6221,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, double value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref double value, byte quality)
         {
             try
             {
@@ -6181,7 +6239,8 @@ namespace Cdy.Tag
                     case TagType.DateTime:
                         return false;
                     case TagType.Double:
-                        SetDoubleTagValue(tag, Convert.ToDouble(value), quality, time);
+                        SetDoubleTagValue(tag, value, quality, time);
+
                         break;
                     case TagType.Float:
                         SetFloatTagValue(tag, Convert.ToSingle(value), quality, time);
@@ -6223,7 +6282,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, DateTime value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref DateTime value, byte quality)
         {
             try
             {
@@ -6336,7 +6395,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, IntPointData value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref IntPointData value, byte quality)
         {
             try
             {
@@ -6358,7 +6417,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, IntPoint3Data value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref IntPoint3Data value, byte quality)
         {
             try
             {
@@ -6380,7 +6439,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, UIntPointData value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref UIntPointData value, byte quality)
         {
             try
             {
@@ -6402,7 +6461,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, UIntPoint3Data value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref UIntPoint3Data value, byte quality)
         {
             try
             {
@@ -6424,7 +6483,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, LongPointData value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref LongPointData value, byte quality)
         {
             try
             {
@@ -6446,7 +6505,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, LongPoint3Data value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref LongPoint3Data value, byte quality)
         {
             try
             {
@@ -6468,7 +6527,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ULongPointData value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref ULongPointData value, byte quality)
         {
             try
             {
@@ -6490,7 +6549,7 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ULongPoint3Data value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref ULongPoint3Data value, byte quality)
         {
             try
             {
@@ -6505,6 +6564,8 @@ namespace Cdy.Tag
             }
             return true;
         }
+
+
 
         #endregion ...Interfaces...
     }

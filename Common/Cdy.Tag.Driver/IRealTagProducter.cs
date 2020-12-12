@@ -67,7 +67,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, bool value, byte quality);
+        bool SetTagValue(int id, ref bool value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -75,7 +75,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, byte value, byte quality);
+        bool SetTagValue(int id,ref byte value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -83,7 +83,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, short value, byte quality);
+        bool SetTagValue(int id, ref short value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -91,7 +91,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, ushort value, byte quality);
+        bool SetTagValue(int id, ref ushort value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -99,7 +99,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, int value, byte quality);
+        bool SetTagValue(int id, ref int value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -107,7 +107,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, uint value, byte quality);
+        bool SetTagValue(int id, ref uint value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -115,7 +115,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, long value, byte quality);
+        bool SetTagValue(int id, ref long value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -123,7 +123,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, ulong value, byte quality);
+        bool SetTagValue(int id, ref ulong value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -131,7 +131,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, float value, byte quality);
+        bool SetTagValue(int id, ref float value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -139,7 +139,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, double value, byte quality);
+        bool SetTagValue(int id, ref double value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -155,7 +155,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, DateTime value, byte quality);
+        bool SetTagValue(int id, ref DateTime value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -163,7 +163,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, IntPointData value, byte quality);
+        bool SetTagValue(int id, ref IntPointData value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -171,7 +171,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, UIntPointData value, byte quality);
+        bool SetTagValue(int id, ref UIntPointData value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -179,7 +179,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, IntPoint3Data value, byte quality);
+        bool SetTagValue(int id, ref IntPoint3Data value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -187,7 +187,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, UIntPoint3Data value, byte quality);
+        bool SetTagValue(int id, ref UIntPoint3Data value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -195,7 +195,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, LongPointData value, byte quality);
+        bool SetTagValue(int id, ref LongPointData value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -203,7 +203,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, ULongPointData value, byte quality);
+        bool SetTagValue(int id, ref ULongPointData value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -211,7 +211,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, LongPoint3Data value, byte quality);
+        bool SetTagValue(int id, ref LongPoint3Data value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -219,7 +219,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(int id, ULongPoint3Data value, byte quality);
+        bool SetTagValue(int id, ref ULongPoint3Data value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -229,25 +229,7 @@ namespace Cdy.Tag.Driver
         /// <param name="time">时间</param>
         /// <param name="quality">质量</param>
         /// <returns></returns>
-        bool SetTagValue<T>(int id, T value,DateTime time,byte quality);
-
-
-        ///// <summary>
-        ///// 设置变量的值
-        ///// </summary>
-        ///// <param name="id">Id</param>
-        ///// <param name="value">值</param>
-        ///// <param name="quality">质量</param>
-        ///// <returns></returns>
-        //bool SetTagValue(int id, object value, byte quality);
-
-        ///// <summary>
-        ///// 设置变量的值
-        ///// </summary>
-        ///// <param name="tag">变量实例</param>
-        ///// <param name="value">值</param>
-        ///// <returns></returns>
-        //bool SetTagValue(Tagbase tag, object value);
+        bool SetTagValue<T>(int id,ref T value,DateTime time,byte quality);
 
 
         /// <summary>
@@ -258,7 +240,7 @@ namespace Cdy.Tag.Driver
         /// <param name="time">时间</param>
         /// <param name="quality">质量</param>
         /// <returns></returns>
-        bool SetTagValue<T>(Tagbase tag, T value, DateTime time, byte quality);
+        bool SetTagValue<T>(Tagbase tag,ref T value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -267,7 +249,7 @@ namespace Cdy.Tag.Driver
         /// <param name="value">值</param>
         /// <param name="quality">质量</param>
         /// <returns></returns>
-        bool SetTagValue<T>(Tagbase tag, T value, byte quality);
+        bool SetTagValue<T>(Tagbase tag,ref T value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -275,7 +257,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, bool value, byte quality);
+        bool SetTagValue(Tagbase tag,ref bool value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -283,7 +265,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, byte value, byte quality);
+        bool SetTagValue(Tagbase tag,ref byte value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -291,7 +273,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, short value, byte quality);
+        bool SetTagValue(Tagbase tag,ref short value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -299,7 +281,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, ushort value, byte quality);
+        bool SetTagValue(Tagbase tag,ref ushort value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -307,7 +289,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, int value, byte quality);
+        bool SetTagValue(Tagbase tag,ref int value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -315,7 +297,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, uint value, byte quality);
+        bool SetTagValue(Tagbase tag,ref uint value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -323,7 +305,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, long value, byte quality);
+        bool SetTagValue(Tagbase tag,ref long value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -331,7 +313,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, ulong value, byte quality);
+        bool SetTagValue(Tagbase tag,ref ulong value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -339,7 +321,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, float value, byte quality);
+        bool SetTagValue(Tagbase tag,ref float value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -347,7 +329,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, double value, byte quality);
+        bool SetTagValue(Tagbase tag,ref double value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -363,7 +345,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, DateTime value, byte quality);
+        bool SetTagValue(Tagbase tag,ref DateTime value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -371,7 +353,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, IntPointData value, byte quality);
+        bool SetTagValue(Tagbase tag,ref IntPointData value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -379,7 +361,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, UIntPointData value, byte quality);
+        bool SetTagValue(Tagbase tag,ref UIntPointData value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -387,7 +369,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, IntPoint3Data value, byte quality);
+        bool SetTagValue(Tagbase tag,ref IntPoint3Data value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -395,7 +377,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, UIntPoint3Data value, byte quality);
+        bool SetTagValue(Tagbase tag,ref UIntPoint3Data value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -403,7 +385,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, LongPointData value, byte quality);
+        bool SetTagValue(Tagbase tag,ref LongPointData value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -411,7 +393,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, ULongPointData value, byte quality);
+        bool SetTagValue(Tagbase tag,ref ULongPointData value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -419,7 +401,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, LongPoint3Data value, byte quality);
+        bool SetTagValue(Tagbase tag,ref LongPoint3Data value, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -427,7 +409,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, ULongPoint3Data value, byte quality);
+        bool SetTagValue(Tagbase tag,ref ULongPoint3Data value, byte quality);
 
 
         /// <summary>
@@ -435,6 +417,16 @@ namespace Cdy.Tag.Driver
         /// </summary>
         /// <param name="tag"></param>
         /// <param name="value"></param>
+        /// <returns></returns>
+        bool SetTagValue<T>(List<Tagbase> tag,ref T value, byte quality);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
         /// <returns></returns>
         bool SetTagValue<T>(List<Tagbase> tag, T value, byte quality);
 

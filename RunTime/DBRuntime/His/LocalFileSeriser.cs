@@ -11,6 +11,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -212,17 +213,19 @@ namespace Cdy.Tag
         {
             mStream.Position = mStream.Length;
             int size = 1024 * 128;
-            byte[] bvals = new byte[size];
+            //byte[] bvals = new byte[size];
+
+            var bvals = ArrayPool<byte>.Shared.Rent(size);
 
             //var bvals = ArrayPool<byte>.Shared.Rent(size);
             Array.Clear(bvals, 0, bvals.Length);
             try
             {
-                for (int i = 0; i < (len / bvals.Length); i++)
+                for (int i = 0; i < (len / size); i++)
                 {
-                    mStream.Write(bvals, 0, bvals.Length);
+                    mStream.Write(bvals, 0, size);
                 }
-                int csize = len % bvals.Length;
+                int csize = len % size;
                 if (csize > 0)
                 {
                     mStream.Write(bvals, 0, csize);
@@ -232,7 +235,7 @@ namespace Cdy.Tag
             {
 
             }
-            //ArrayPool<byte>.Shared.Return(bvals);
+            ArrayPool<byte>.Shared.Return(bvals);
             return this;
         }
 
@@ -362,9 +365,17 @@ namespace Cdy.Tag
         public override short ReadShort(long start)
         {
             mStream.Position = start;
-            byte[] re = new byte[2];
-            mStream.Read(re, 0, re.Length);
-            return BitConverter.ToInt16(re, 0);
+            //byte[] re = new byte[2];
+            var re = ArrayPool<byte>.Shared.Rent(2);
+            try
+            {
+                mStream.Read(re, 0, 2);
+                return BitConverter.ToInt16(re, 0);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(re);
+            }
         }
 
         /// <summary>
@@ -386,7 +397,15 @@ namespace Cdy.Tag
         public override DataFileSeriserbase Write(DateTime value, long start)
         {
             mStream.Position = start;
-            mStream.Write(MemoryHelper.GetBytes(value), 0, 8);
+            //mStream.Write(MemoryHelper.GetBytes(value), 0, 8);
+            // Write(value.ToBinary(), start);
+
+            byte[] re = ArrayPool<byte>.Shared.Rent(8);
+            Unsafe.As<byte, DateTime>(ref re[0]) = value;
+            //var re = BitConverter.GetBytes(value);
+            mStream.Write(re, 0, 8);
+            ArrayPool<byte>.Shared.Return(re);
+
             return this;
         }
 
@@ -398,8 +417,12 @@ namespace Cdy.Tag
         public override DataFileSeriserbase Write(long value, long start)
         {
             mStream.Position = start;
-            var re = BitConverter.GetBytes(value);
-            mStream.Write(re, 0, re.Length);
+
+            byte[] re = ArrayPool<byte>.Shared.Rent(8);
+            Unsafe.As<byte, long>(ref re[0]) = value;
+            //var re = BitConverter.GetBytes(value);
+            mStream.Write(re, 0, 8);
+            ArrayPool<byte>.Shared.Return(re);
             return this;
         }
 
@@ -411,8 +434,11 @@ namespace Cdy.Tag
         public override DataFileSeriserbase Write(int value, long start)
         {
             mStream.Position = start;
-            var re = BitConverter.GetBytes(value);
-            mStream.Write(re, 0, re.Length);
+            byte[] re = ArrayPool<byte>.Shared.Rent(4);
+            Unsafe.As<byte, long>(ref re[0]) = value;
+            //var re = BitConverter.GetBytes(value);
+            mStream.Write(re, 0, 4);
+            ArrayPool<byte>.Shared.Return(re);
             return this;
         }
 
@@ -424,8 +450,11 @@ namespace Cdy.Tag
         public override DataFileSeriserbase Write(short value, long start)
         {
             mStream.Position = start;
-            var re = BitConverter.GetBytes(value);
-            mStream.Write(re, 0, re.Length);
+            byte[] re = ArrayPool<byte>.Shared.Rent(2);
+            Unsafe.As<byte, long>(ref re[0]) = value;
+            //var re = BitConverter.GetBytes(value);
+            mStream.Write(re, 0, 2);
+            ArrayPool<byte>.Shared.Return(re);
             return this;
         }
 

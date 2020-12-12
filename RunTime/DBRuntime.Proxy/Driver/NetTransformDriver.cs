@@ -404,6 +404,7 @@ namespace DBRuntime.Proxy
                         Buffer.BlockCopy(vv.Array, vv.ArrayOffset + vv.ReaderIndex, realenginer.Memory, i, size);
                         vv.SetReaderIndex(vv.ReaderIndex + size);
                         i += size;
+                        vv.ReleaseBuffer();
                     }
                     else
                     {
@@ -456,7 +457,7 @@ namespace DBRuntime.Proxy
                 block.SetReaderIndex(block.ReaderIndex + tag.ValueSize);
                 targetbaseoffset = block.ArrayOffset + block.ReaderIndex;
             }
-            block.Release();
+            block.ReleaseBuffer();
         }
     }
 

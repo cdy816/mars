@@ -214,7 +214,7 @@ namespace SpiderDriver
                     case (byte)TagType.Int:
                         if (AllowTagIds.Contains(id))
                         {
-                            var bval = (ushort)block.ReadInt();
+                            var bval = block.ReadInt();
                             service.SetTagValue(id, ref bval, 0);
                         }
                         else
@@ -226,7 +226,7 @@ namespace SpiderDriver
                     case (byte)TagType.UInt:
                         if (AllowTagIds.Contains(id))
                         {
-                            var bval = (ushort)block.ReadInt();
+                            var bval = (uint)block.ReadInt();
                             service.SetTagValue(id, ref bval, 0);
                         }
                         else
@@ -238,7 +238,7 @@ namespace SpiderDriver
                     case (byte)TagType.Long:
                         if (AllowTagIds.Contains(id))
                         {
-                            var bval = (ushort)block.ReadLong();
+                            var bval = block.ReadLong();
                             service.SetTagValue(id, ref bval, 0);
                         }
                         else
@@ -250,7 +250,7 @@ namespace SpiderDriver
                     case (byte)TagType.ULong:
                         if (AllowTagIds.Contains(id))
                         {
-                            var bval = (ushort)block.ReadLong();
+                            var bval = (ulong)block.ReadLong();
                             service.SetTagValue(id, ref bval, 0);
                         }
                         else
@@ -262,7 +262,7 @@ namespace SpiderDriver
                     case (byte)TagType.Float:
                         if (AllowTagIds.Contains(id))
                         {
-                            var bval = (ushort)block.ReadFloat();
+                            var bval = block.ReadFloat();
                             service.SetTagValue(id, ref bval, 0);
                         }
                         else
@@ -274,7 +274,7 @@ namespace SpiderDriver
                     case (byte)TagType.Double:
                         if (AllowTagIds.Contains(id))
                         {
-                            var bval = (ushort)block.ReadDouble();
+                            var bval = block.ReadDouble();
                             service.SetTagValue(id, ref bval, 0);
                         }
                         else

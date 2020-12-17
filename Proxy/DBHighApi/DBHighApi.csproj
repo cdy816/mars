@@ -5,6 +5,8 @@
     <TargetFramework>net5.0</TargetFramework>
     <ApplicationIcon>mrdbi.ico</ApplicationIcon>
     <Authors>Chongdaoyang</Authors>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

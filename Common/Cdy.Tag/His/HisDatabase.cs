@@ -16,7 +16,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class HisDatabase: IHisTagQuery
+    public class HisDatabase
     {
 
         /// <summary>
@@ -93,6 +93,18 @@ namespace Cdy.Tag
                 HisTags[tag.Id] = tag;
             }
             IsDirty = true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Freedatabase()
+        {
+            foreach(var vv in HisTags)
+            {
+                vv.Value.Parameters = null;
+            }
+            this.HisTags.Clear();
         }
 
         /// <summary>

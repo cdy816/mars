@@ -16,7 +16,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public unsafe abstract class HisRunTag : HisTag
+    public unsafe abstract class HisRunTag : HisTag,IDisposable
     {
 
         #region ... Variables  ...
@@ -35,7 +35,8 @@ namespace Cdy.Tag
             /// </summary>
         public HisRunTag()
         {
-            ValueSnape = new byte[SizeOfValue];
+            //ValueSnape = new byte[SizeOfValue];
+            ValueSnape = GC.AllocateArray<byte>(SizeOfValue, true);
         }
 
         #endregion ...Constructor...
@@ -262,7 +263,12 @@ namespace Cdy.Tag
                 UpdateValue2(tim);
             }
         }
-        
+
+        public void Dispose()
+        {
+            
+        }
+
 
         #endregion ...Methods...
 

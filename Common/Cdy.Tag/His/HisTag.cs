@@ -53,6 +53,8 @@ namespace Cdy.Tag
         /// 一秒内可记录的数据的数量
         /// </summary>
         public short MaxValueCountPerSecond { get; set; } = 1;
+
+        
     }
 
     /// <summary>
@@ -60,6 +62,14 @@ namespace Cdy.Tag
     /// </summary>
     public static class HisTagExtends
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        public static void RemoveParameters(this HisTag tag)
+        {
+            tag.Parameters = null;
+        }
         /// <summary>
         /// 
         /// </summary>

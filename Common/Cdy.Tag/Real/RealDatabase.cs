@@ -23,7 +23,7 @@ namespace Cdy.Tag
         /// </summary>
         public RealDatabase()
         {
-            Tags = new SortedDictionary<int, Tagbase>();
+            Tags = new Dictionary<int, Tagbase>();
             NamedTags = new Dictionary<string, Tagbase>();
             Groups = new Dictionary<string, TagGroup>();
         }
@@ -56,7 +56,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public SortedDictionary<int,Tagbase> Tags { get; set; }
+        public Dictionary<int,Tagbase> Tags { get; set; }
 
         /// <summary>
         /// 

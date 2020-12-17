@@ -22,7 +22,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 历史数据引擎2
     /// </summary>
-    public class HisEnginer2 : IHisEngine2, ITagHisValueProduct, IDisposable
+    public class HisEnginer2 : IHisEngine2, ITagHisValueProduct, IDisposable, IHisTagQuery
     {
 
         #region ... Variables  ...
@@ -368,6 +368,8 @@ namespace Cdy.Tag
             {
                 LogManager.InitHeadData();
             }
+
+            mManager.Freedatabase();
 
             sw.Stop();
             LoggerService.Service.Info("HisEnginer", "生成对象耗时:"+ltmp+" 内存分配耗时:"+(sw.ElapsedMilliseconds-ltmp));
@@ -2085,7 +2087,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public List<int> GetManualRecordTagId()
         {
-            return mManager.HisTags.Where(e => e.Value.Type == RecordType.Driver).Select(e=>e.Value.Id).ToList();
+            return this.mHisTags.Where(e => e.Value.Type == RecordType.Driver).Select(e=>e.Value.Id).ToList();
         }
 
         /// <summary>
@@ -2098,12 +2100,40 @@ namespace Cdy.Tag
             Dictionary<int, RecordType> re = new Dictionary<int, RecordType>();
             foreach(var vv in id)
             {
-                if(mManager.HisTags.ContainsKey(vv))
+                if(mHisTags.ContainsKey(vv))
                 {
-                    re.Add(vv,mManager.HisTags[vv].Type);
+                    re.Add(vv, mHisTags[vv].Type);
                 }
             }
             return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<HisTag> IHisTagQuery.ListAllTags()
+        {
+            return this.mHisTags.Values;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<HisTag> ListAllDriverRecordTags()
+        {
+            return mHisTags.Values.Where(e => e.Type == RecordType.Driver);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public HisTag GetHisTagById(int id)
+        {
+            return mHisTags.ContainsKey(id) ? mHisTags[id] : null;
         }
 
         #endregion ...Methods...

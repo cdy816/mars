@@ -45,7 +45,7 @@ namespace Cdy.Tag
 
         private long mAllocSize = 0;
 
-        private object mUserSizeLock = new object();
+        //private object mUserSizeLock = new object();
 
         private int mRefCount = 0;
 
@@ -171,7 +171,7 @@ namespace Cdy.Tag
         /// </summary>
         public void IncRef()
         {
-            lock (mUserSizeLock)
+            lock (this)
             {
                 mRefCount++;
             }
@@ -182,7 +182,7 @@ namespace Cdy.Tag
         /// </summary>
         public void DecRef()
         {
-            lock (mUserSizeLock)
+            lock (this)
                 mRefCount = mRefCount > 0 ? mRefCount - 1 : mRefCount;
         }
 

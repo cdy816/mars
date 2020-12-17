@@ -247,7 +247,7 @@ namespace Cdy.Tag
         /// </summary>
         public void IncRef()
         {
-            lock (mUserSizeLock)
+            lock (this)
                 Interlocked.Increment(ref mRefCount);
         }
 
@@ -256,7 +256,7 @@ namespace Cdy.Tag
         /// </summary>
         public void DecRef()
         {
-            lock (mUserSizeLock)
+            lock (this)
                 mRefCount = mRefCount > 0 ? mRefCount - 1 : mRefCount;
         }
 

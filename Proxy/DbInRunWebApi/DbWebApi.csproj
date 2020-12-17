@@ -8,6 +8,8 @@
     <RootNamespace>DbWebApi</RootNamespace>
     <ApplicationIcon>mrdbw.ico</ApplicationIcon>
     <Authors>Chongdaoyang</Authors>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
 
   <ItemGroup>

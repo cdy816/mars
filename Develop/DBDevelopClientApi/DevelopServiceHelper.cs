@@ -90,6 +90,20 @@ namespace DBDevelopClientApi
         /// </summary>
         /// <param name="database"></param>
         /// <returns></returns>
+        public bool CheckOpenDatabase(string database)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.CheckOpenDatabase(new DBDevelopService.DatabasesRequest() { Database = database, LoginId = mLoginId }).Result;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
         public bool StartDatabase(string database)
         {
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))

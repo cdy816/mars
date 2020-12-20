@@ -813,7 +813,6 @@ namespace DBInStudio.Desktop
             {
                 if(Database!=ldm.SelectDatabase.Name)
                 {
-
                     if (ContentViewModel is IModeSwitch)
                     {
                         (ContentViewModel as IModeSwitch).DeActive();
@@ -916,6 +915,9 @@ namespace DBInStudio.Desktop
                 ListDatabaseViewModel ldm = new ListDatabaseViewModel();
                 if (ldm.ShowDialog().Value)
                 {
+
+                   
+
                     this.TagGroup.Clear();
                     
                     CurrentUserManager.Manager.UserName = login.UserName;

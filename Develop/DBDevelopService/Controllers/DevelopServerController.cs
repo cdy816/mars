@@ -128,6 +128,30 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
+        /// 检查数据库是否打开
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object CheckOpenDatabase([FromBody] WebApiDatabaseRequest request)
+        {
+            if (!CheckLoginId(request.Id))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if(db!=null)
+            {
+                DbManager.Instance.CheckAndContinueLoadDatabase(db);
+                return new ResultResponse() { Result = true};
+            }
+            else
+            {
+                return new ResultResponse() { Result = false, ErroMsg = "数据库不存在", HasErro = true};
+            }          
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="request"></param>
@@ -200,7 +224,14 @@ namespace DBDevelopService.Controllers
                 return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
             }
             var db = DbManager.Instance.GetDatabase(request.Database);
-            return new ResultResponse() { Result = db.IsDirty };
+            if (db != null)
+            {
+                return new ResultResponse() { Result = db.IsDirty };
+            }
+            else
+            {
+                return new ResultResponse() { Result = false,ErroMsg="数据库不存在" };
+            }
         }
 
 
@@ -224,6 +255,7 @@ namespace DBDevelopService.Controllers
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     foreach (var vv in db.RealDatabase.Groups)
                     {
                         re.Add(new TagGroup() { Name = vv.Key, Parent = vv.Value.Parent != null ? vv.Value.Parent.FullName : "" });
@@ -254,6 +286,7 @@ namespace DBDevelopService.Controllers
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     var vtg = db.RealDatabase.Groups.ContainsKey(request.ParentName) ? db.RealDatabase.Groups[request.ParentName] : null;
 
                     int i = 1;
@@ -293,7 +326,10 @@ namespace DBDevelopService.Controllers
             if (db != null)
             {
                 lock (db)
+                {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     db.RealDatabase.RemoveGroup(request.FullName);
+                }
                 return new ResultResponse() { Result=true };
             }
             return new ResultResponse() { ErroMsg = "数据库不存在", HasErro = true };
@@ -316,6 +352,7 @@ namespace DBDevelopService.Controllers
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     var re = db.RealDatabase.ChangeGroupName(request.OldFullName, request.Name);
                     return new ResultResponse() { Result = re };
                 }
@@ -339,7 +376,10 @@ namespace DBDevelopService.Controllers
             if (db != null)
             {
                 lock (db)
+                {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     db.RealDatabase.ChangeGroupParent(request.Name, request.OldParentName, request.NewParentName);
+                }
                 return new ResultResponse() { Result = true };
             }
             return new ResultResponse() { ErroMsg = "数据库不存在", HasErro = true };
@@ -447,6 +487,7 @@ namespace DBDevelopService.Controllers
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     int from = request.Index * PageCount;
                     var res = db.RealDatabase.ListAllTags().Where(e => e.Group == request.GroupName);
 
@@ -500,6 +541,7 @@ namespace DBDevelopService.Controllers
 
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     foreach (var vv in request.TagIds)
                     {
                         db.HisDatabase.RemoveHisTag(vv);
@@ -531,7 +573,8 @@ namespace DBDevelopService.Controllers
                 {
                     lock (db)
                     {
-                        foreach(var vv in request.Tags)
+                        DbManager.Instance.CheckAndContinueLoadDatabase(db);
+                        foreach (var vv in request.Tags)
                         {
                             if (vv.RealTag.Id < 0)
                             {
@@ -579,6 +622,7 @@ namespace DBDevelopService.Controllers
                 {
                     lock (db)
                     {
+                        DbManager.Instance.CheckAndContinueLoadDatabase(db);
                         db.HisDatabase.AddOrUpdate(request.Tag.HisTag);
                     }
                 }
@@ -612,6 +656,7 @@ namespace DBDevelopService.Controllers
                 {
                     lock (db)
                     {
+                        DbManager.Instance.CheckAndContinueLoadDatabase(db);
                         var vtag = tag.ConvertToTagbase();
                         if (db.RealDatabase.Tags.ContainsKey(tag.Id) && tag.Id > -1)
                         {
@@ -652,11 +697,11 @@ namespace DBDevelopService.Controllers
                     return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
                 }
                 var db = DbManager.Instance.GetDatabase(request.Database);
-
                 if (db != null)
                 {
                     lock (db)
                     {
+                        DbManager.Instance.CheckAndContinueLoadDatabase(db);
                         Cdy.Tag.Tagbase tag = request.Tag.RealTag.ConvertToTagbase();
                         var vtag = request.Tag.HisTag;
                         if (request.Mode == 0)
@@ -737,6 +782,7 @@ namespace DBDevelopService.Controllers
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     Cdy.Tag.DatabaseSerise serise = new Cdy.Tag.DatabaseSerise() { Dbase = db };
                     serise.Save();
                 }

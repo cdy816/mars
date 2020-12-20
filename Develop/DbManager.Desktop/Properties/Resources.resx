@@ -269,6 +269,9 @@
   <data name="OK" xml:space="preserve">
     <value>OK</value>
   </data>
+  <data name="opendatabasefailed" xml:space="preserve">
+    <value>Open database {0} failed!</value>
+  </data>
   <data name="Password" xml:space="preserve">
     <value>Password</value>
   </data>

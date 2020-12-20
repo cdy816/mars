@@ -233,7 +233,7 @@ namespace DBStudio
         private static void ListDatabase()
         {
             if (!DBDevelopService.DbManager.Instance.IsLoaded)
-                DBDevelopService.DbManager.Instance.Load();
+                DBDevelopService.DbManager.Instance.PartLoad();
 
             StringBuilder sb = new StringBuilder();
             foreach (var vdd in DBDevelopService.DbManager.Instance.ListDatabase())
@@ -294,13 +294,17 @@ namespace DBStudio
         private static void ProcessDatabaseCreate(string name)
         {
             if (!DBDevelopService.DbManager.Instance.IsLoaded)
-                DBDevelopService.DbManager.Instance.Load();
+                DBDevelopService.DbManager.Instance.PartLoad();
 
             Database db = DBDevelopService.DbManager.Instance.GetDatabase(name);
 
             if (db == null)
             {
                 db = Database.New(name);
+            }
+            else
+            {
+                DBDevelopService.DbManager.Instance.CheckAndContinueLoadDatabase(db);
             }
 
             OutByLine(name, Res.Get("HelpMsg"));
@@ -315,6 +319,7 @@ namespace DBStudio
                     if (cmsg == "save")
                     {
                         new DatabaseSerise() { Dbase = db }.Save();
+                        DBDevelopService.DbManager.Instance.AddDatabase(db.Name, db);
                     }
                     else if (cmsg == "add")
                     {

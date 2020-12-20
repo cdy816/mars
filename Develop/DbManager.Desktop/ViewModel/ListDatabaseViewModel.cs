@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows;
 using System.Windows.Input;
 
 namespace DBInStudio.Desktop.ViewModel
@@ -126,6 +127,20 @@ namespace DBInStudio.Desktop.ViewModel
         protected override bool CanOKCommandProcess()
         {
             return mSelectDatabase != null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override bool OKCommandProcess()
+        {
+            if (!DevelopServiceHelper.Helper.CheckOpenDatabase(SelectDatabase.Name))
+            {
+                MessageBox.Show(string.Format(Res.Get("opendatabasefailed"), SelectDatabase.Name));
+                return false;
+            }
+            return base.OKCommandProcess();
         }
 
         #endregion ...Methods...

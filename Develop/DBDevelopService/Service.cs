@@ -53,7 +53,7 @@ namespace DBDevelopService
             try
             {
                 LoggerService.Service.Info("Service", "Ready to start....");
-                DbManager.Instance.Load();
+                DbManager.Instance.PartLoad();
                 if (isEnableGrpc)
                     grpcDBService.Start(grpcPort);
 

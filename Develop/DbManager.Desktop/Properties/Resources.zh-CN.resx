@@ -269,6 +269,9 @@
   <data name="OK" xml:space="preserve">
     <value>确定</value>
   </data>
+  <data name="opendatabasefailed" xml:space="preserve">
+    <value>打开数据库 {0} 失败!</value>
+  </data>
   <data name="Password" xml:space="preserve">
     <value>密码</value>
   </data>

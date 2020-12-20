@@ -176,6 +176,9 @@ service DevelopServer {
   //Logout
    rpc Logout(LogoutRequest) returns (BoolResultReplay);
 
+      //打开数据库
+   rpc CheckOpenDatabase(DatabasesRequest) returns (BoolResultReplay);
+
    //启动数据库
    rpc Start(DatabasesRequest) returns (BoolResultReplay);
 

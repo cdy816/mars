@@ -64,6 +64,64 @@ namespace DBDevelopService
         }
 
         /// <summary>
+        /// 局部加载
+        /// </summary>
+        public void PartLoad()
+        {
+            string databasePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Data");
+
+            if (System.IO.Directory.Exists(databasePath))
+            {
+                foreach (var vv in System.IO.Directory.EnumerateDirectories(databasePath))
+                {
+                    string sname = new System.IO.DirectoryInfo(vv).Name;
+
+                    Cdy.Tag.Database db = new Cdy.Tag.DatabaseSerise().PartLoad(sname);
+                    if (!mDatabase.ContainsKey(db.Name))
+                        mDatabase.Add(db.Name, db);
+                    else
+                    {
+                        mDatabase[db.Name] = db;
+                    }
+                }
+            }
+            IsLoaded = true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="db"></param>
+        public void CheckAndContinueLoadDatabase(Database db)
+        {
+            if(db.RealDatabase==null)
+            {
+                new Cdy.Tag.DatabaseSerise() { Dbase = db }.ContinuePartLoad(db.Name);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void QuickReload()
+        {
+            string databasePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Data");
+
+            if (System.IO.Directory.Exists(databasePath))
+            {
+                foreach (var vv in System.IO.Directory.EnumerateDirectories(databasePath))
+                {
+                    string sname = new System.IO.DirectoryInfo(vv).Name;
+                    if (!mDatabase.ContainsKey(sname))
+                    {
+                        Cdy.Tag.Database db = new Cdy.Tag.DatabaseSerise().Load(sname);
+                        mDatabase.Add(db.Name, db);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="database"></param>
@@ -89,6 +147,19 @@ namespace DBDevelopService
                         break;
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="db"></param>
+        public void AddDatabase(string name,Database db)
+        {
+            if(!mDatabase.ContainsKey(name))
+            {
+                mDatabase[name] = db;
             }
         }
 

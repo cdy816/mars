@@ -349,17 +349,18 @@ namespace SpiderDriverDemo
                         break;
                 }
                 i++;
-                //if(i%1000000 ==0)
-                //{
-                //    driverProxy.SetTagValueAsync(rdb);
-                //    rdb.Clear();
-                //}
+                if (i % 500000 == 0)
+                {
+                    driverProxy.SetTagValueAsync(rdb);
+                    rdb.Clear();
+                }
             }
-            long ltmp = sw.ElapsedMilliseconds;
+            //long ltmp = sw.ElapsedMilliseconds;
+            if(i % 500000 != 0)
             driverProxy.SetTagValueAsync(rdb);
             sw.Stop();
             
-            Debug.Print("发送耗时:" + ltmp + "," + (sw.ElapsedMilliseconds - ltmp));
+            Debug.Print("发送耗时:" + sw.ElapsedMilliseconds);
             
             //driverProxy.SetTagHisValue(hisvalus,  5000);
         }

@@ -66,6 +66,30 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
+        public Database PartLoad(string name)
+        {
+            Dbase = LoadDatabaseSelf(PathHelper.helper.GetDataPath(name, name + ".db"));
+            Dbase.Security = new SecuritySerise().LoadByName(name);
+            Dbase.RealDatabase = null;
+            Dbase.HisDatabase = null;
+            return Dbase;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        public void ContinuePartLoad(string name)
+        {
+            Dbase.RealDatabase = new RealDatabaseSerise().LoadByName(name);
+            Dbase.HisDatabase = new HisDatabaseSerise().LoadByName(name);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public Database LoadRealDatabase(string name)
         {
             Dbase = LoadDatabaseSelf(PathHelper.helper.GetDataPath(name, name + ".db"));

@@ -74,7 +74,18 @@ namespace Cdy.Tag.Driver
         /// <param name="value">值</param>
         /// <param name="quality">质量</param>
         /// <returns></returns>
-        bool SetTagHisValue(int id, DateTime time, object value, byte quality);
+        bool SetTagHisValue<T>(int id, DateTime time, T value, byte quality);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        bool SetTagHisValue<T>(int id, DateTime time, byte quality, params T[] value);
 
         /// <summary>
         /// 设置变量的历史值
@@ -82,7 +93,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id">Id</param>
         /// <param name="value">值</param>
         /// <returns></returns>
-        bool SetTagHisValue(int id, object value);
+        bool SetTagHisValue<T>(int id, T value);
 
         /// <summary>
         /// 设置一组变量的一组历史值

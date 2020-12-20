@@ -654,6 +654,26 @@ namespace DBDevelopService
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
+        public override Task<BoolResultReplay> CheckOpenDatabase(DatabasesRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, request.Database))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if(db!=null)
+            {
+                DbManager.Instance.CheckAndContinueLoadDatabase(db);
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public override Task<BoolResultReplay> NewDatabase(NewDatabaseRequest request, ServerCallContext context)
         {
             if (!IsAdmin(request.LoginId) && !HasNewDatabasePermission(request.LoginId))
@@ -775,7 +795,15 @@ namespace DBDevelopService
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
             var db = DbManager.Instance.GetDatabase(request.Database);
-            return Task.FromResult(new BoolResultReplay() { Result = db.IsDirty });
+            if (db != null)
+            {
+                DbManager.Instance.CheckAndContinueLoadDatabase(db);
+                return Task.FromResult(new BoolResultReplay() { Result = db.IsDirty });
+            }
+            else
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
         }
 
         #endregion
@@ -799,6 +827,7 @@ namespace DBDevelopService
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     var vtg = db.RealDatabase.Groups.ContainsKey(request.ParentName) ? db.RealDatabase.Groups[request.ParentName] : null;
 
                     int i = 1;
@@ -841,6 +870,7 @@ namespace DBDevelopService
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     var tags = db.RealDatabase.GetTagsByGroup(request.GroupFullName);
                     var vtg = db.RealDatabase.Groups.ContainsKey(request.TargetParentName) ? db.RealDatabase.Groups[request.TargetParentName] : null;
 
@@ -904,6 +934,7 @@ namespace DBDevelopService
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     var re = db.RealDatabase.ChangeGroupName(request.OldFullName, request.NewName);
                     return Task.FromResult(new BoolResultReplay() { Result = re });
                 }
@@ -928,7 +959,10 @@ namespace DBDevelopService
             if (db != null)
             {
                 lock (db)
+                {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     db.RealDatabase.RemoveGroup(request.Name);
+                }
                 return Task.FromResult(new BoolResultReplay() { Result = true });
             }
             return Task.FromResult(new BoolResultReplay() { Result = false, ErroMessage = "database not exist!" });
@@ -950,7 +984,10 @@ namespace DBDevelopService
             if (db != null)
             {
                 lock (db)
-                    db.RealDatabase.ChangeGroupParent(request.Name,request.OldParentName, request.NewParentName);
+                {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
+                    db.RealDatabase.ChangeGroupParent(request.Name, request.OldParentName, request.NewParentName);
+                }
                 return Task.FromResult(new BoolResultReplay() { Result = true });
             }
             return Task.FromResult(new BoolResultReplay() { Result = false, ErroMessage = "database not exist!" });
@@ -975,6 +1012,7 @@ namespace DBDevelopService
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     foreach (var vv in db.RealDatabase.Groups)
                     {
                         re.Group.Add(new TagGroup() { Name = vv.Key, Parent = vv.Value.Parent != null ? vv.Value.Parent.FullName : "" });
@@ -1087,6 +1125,7 @@ namespace DBDevelopService
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     int from = request.Index * PageCount;
                     var res = db.RealDatabase.ListAllTags().Where(e => e.Group == request.Group);
 
@@ -1152,6 +1191,7 @@ namespace DBDevelopService
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     int from = request.Index * PageCount;
                     var res = db.RealDatabase.ListAllTags();
                     if (request.Filters.Count > 0)
@@ -1214,6 +1254,7 @@ namespace DBDevelopService
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     foreach (var vv in db.HisDatabase.HisTags.Values)
                     {
                         var vitem = new HisTagMessage() { Id = vv.Id, Type = (uint)vv.Type, TagType = (uint)vv.TagType, CompressType = (uint)vv.CompressType, Circle = (uint)vv.Circle,MaxValueCountPerSecond=(uint)vv.MaxValueCountPerSecond };
@@ -1252,6 +1293,7 @@ namespace DBDevelopService
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     foreach (var vv in db.RealDatabase.ListAllTags())
                     {
                         re.Add(new RealTagMessage() { Id = vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0 });
@@ -1283,6 +1325,7 @@ namespace DBDevelopService
 
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     IEnumerable<Cdy.Tag.HisTag> htags = db.HisDatabase.HisTags.Values;
                     foreach (var vv in request.Conditions)
                     {
@@ -1348,6 +1391,7 @@ namespace DBDevelopService
 
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     IEnumerable<Cdy.Tag.Tagbase> htags = db.RealDatabase.Tags.Values;
                     foreach (var vv in request.Conditions)
                     {
@@ -1404,6 +1448,7 @@ namespace DBDevelopService
 
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     foreach (var vv in request.TagId)
                     {
                         db.HisDatabase.RemoveHisTag(vv);
@@ -1433,7 +1478,8 @@ namespace DBDevelopService
             {
                 lock (db)
                 {
-                    foreach(var vv in db.RealDatabase.GetTagsByGroup(request.GroupFullName))
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
+                    foreach (var vv in db.RealDatabase.GetTagsByGroup(request.GroupFullName))
                     {
                         db.HisDatabase.RemoveHisTag(vv.Id);
                         db.RealDatabase.RemoveWithoutGroupProcess(vv);
@@ -1464,6 +1510,7 @@ namespace DBDevelopService
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     db.HisDatabase.HisTags.Clear();
                     db.RealDatabase.Tags.Clear();
                     db.RealDatabase.NamedTags.Clear();
@@ -1491,6 +1538,7 @@ namespace DBDevelopService
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     foreach (var vv in request.TagId)
                     {
                         db.HisDatabase.RemoveHisTag(vv);
@@ -1521,6 +1569,7 @@ namespace DBDevelopService
                 {
                     lock (db)
                     {
+                        DbManager.Instance.CheckAndContinueLoadDatabase(db);
                         {
                             Cdy.Tag.HisTag hisTag = new Cdy.Tag.HisTag();
                             hisTag.Id = (int)vtag.Id;
@@ -1571,6 +1620,7 @@ namespace DBDevelopService
                 {
                     lock (db)
                     {
+                        DbManager.Instance.CheckAndContinueLoadDatabase(db);
                         if (db.RealDatabase.Tags.ContainsKey(tag.Id) && tag.Id > -1)
                         {
                             db.RealDatabase.UpdateById(tag.Id, tag);
@@ -1714,6 +1764,7 @@ namespace DBDevelopService
                 {
                     lock (db)
                     {
+                        DbManager.Instance.CheckAndContinueLoadDatabase(db);
                         Cdy.Tag.Tagbase tag = GetRealTag(request.RealTag);
 
                         if (tag.Id < 0)
@@ -1779,6 +1830,7 @@ namespace DBDevelopService
                 {
                     lock (db)
                     {
+                        DbManager.Instance.CheckAndContinueLoadDatabase(db);
                         Cdy.Tag.Tagbase tag = GetRealTag(request.RealTag);
 
                         if(request.Mode ==0)
@@ -1940,6 +1992,7 @@ namespace DBDevelopService
             {
                 lock (db)
                 {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     Cdy.Tag.DatabaseSerise serise = new Cdy.Tag.DatabaseSerise() { Dbase = db };
                     serise.Save();
                 }

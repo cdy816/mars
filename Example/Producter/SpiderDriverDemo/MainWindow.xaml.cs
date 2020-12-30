@@ -42,6 +42,7 @@ namespace SpiderDriverDemo
 
         private void Start_Click(object sender, RoutedEventArgs e)
         {
+            this.Start.IsEnabled = false;
             driverProxy = new SpiderDriver.ClientApi.DriverProxy();
             driverProxy.Connect(this.ipt.Text, int.Parse(portt.Text));
             driverProxy.ValueChanged = new SpiderDriver.ClientApi.DriverProxy.ProcessDataPushDelegate((values) => { 
@@ -198,7 +199,7 @@ namespace SpiderDriverDemo
         /// </summary>
         private void ReadAllIds()
         {
-            mAllId = driverProxy.QueryAllTagIdAndNames();
+            mAllId = driverProxy.QueryAllTagIdAndNames(600000);
 
             if (mAllId.Count > 0)
             {
@@ -349,14 +350,14 @@ namespace SpiderDriverDemo
                         break;
                 }
                 i++;
-                if (i % 500000 == 0)
+                if (i % 1000000 == 0)
                 {
                     driverProxy.SetTagValueAsync(rdb);
                     rdb.Clear();
                 }
             }
             //long ltmp = sw.ElapsedMilliseconds;
-            if(i % 500000 != 0)
+            if(i % 1000000 != 0)
             driverProxy.SetTagValueAsync(rdb);
             sw.Stop();
             

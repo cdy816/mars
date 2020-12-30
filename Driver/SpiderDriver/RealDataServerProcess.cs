@@ -128,6 +128,9 @@ namespace SpiderDriver
                     case APIConst.SetTagValueAndQualityFun:
                         ProcessSetRealDataAndQuality(client, data);
                         break;
+                    case APIConst.SetTagRealAndHisValueFun:
+                        ProcessSetRealAndHistData(client, data);
+                        break;
                     case APIConst.RegistorTag:
                         ProcessValueChangeNotify(client, data);
                         break;
@@ -405,6 +408,307 @@ namespace SpiderDriver
                         {
                             var bval = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                             service.SetTagValue(id, ref bval, 0);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                            block.ReadLong();
+                        }
+                        //value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                }
+                //if (AllowTagIds.Contains(id))
+                //    service.SetTagValue(id, value);
+            }
+            service.SubmiteNotifyChanged();
+            Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientid"></param>
+        /// <param name="block"></param>
+        private void ProcessSetRealAndHistData(string clientid, IByteBuffer block)
+        {
+            var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
+            var hisservice = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
+
+            int count = block.ReadInt();
+            int id = 0;
+            byte typ;
+            for (int i = 0; i < count; i++)
+            {
+                id = block.ReadInt();
+                typ = block.ReadByte();
+
+                switch (typ)
+                {
+                    case (byte)TagType.Bool:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = block.ReadByte();
+                            service.SetTagValue(id, ref bval, 0);
+
+                            hisservice.SetTagHisValue<bool>(id, bval>0);
+                        }
+                        else
+                        {
+                            block.ReadByte();
+                        }
+                        break;
+                    case (byte)TagType.Byte:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = block.ReadByte();
+                            service.SetTagValue(id, ref bval, 0);
+
+                            hisservice.SetTagHisValue<byte>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadByte();
+                        }
+                        break;
+                    case (byte)TagType.Short:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = block.ReadShort();
+                            service.SetTagValue(id, ref bval, 0);
+
+                            hisservice.SetTagHisValue<short>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadShort();
+                        }
+                        //value = block.ReadShort();
+                        break;
+                    case (byte)TagType.UShort:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = (ushort)block.ReadShort();
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<ushort>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadShort();
+                        }
+                        //value = (ushort)block.ReadShort();
+                        break;
+                    case (byte)TagType.Int:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = block.ReadInt();
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<int>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                        }
+                        //value = block.ReadInt();
+                        break;
+                    case (byte)TagType.UInt:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = (uint)block.ReadInt();
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<uint>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                        }
+                        //value = (uint)block.ReadInt();
+                        break;
+                    case (byte)TagType.Long:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = block.ReadLong();
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<long>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                        }
+                        //value = block.ReadLong();
+                        break;
+                    case (byte)TagType.ULong:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = (ulong)block.ReadLong();
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<ulong>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                        }
+                        //value = (ulong)block.ReadLong();
+                        break;
+                    case (byte)TagType.Float:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = block.ReadFloat();
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<float>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadFloat();
+                        }
+                        // value = block.ReadFloat();
+                        break;
+                    case (byte)TagType.Double:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = block.ReadDouble();
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<double>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadDouble();
+                        }
+                        // block.ReadDouble();
+                        break;
+                    case (byte)TagType.String:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bs = block.ReadString();
+                            service.SetTagValue(id, bs, 0);
+                            hisservice.SetTagHisValue<string>(id, bs);
+                        }
+                        else
+                        {
+                            block.ReadString();
+                        }
+                        //value = block.ReadString();
+                        break;
+                    case (byte)TagType.DateTime:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = DateTime.FromBinary(block.ReadLong());
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<DateTime>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                        }
+                        //value = DateTime.FromBinary(block.ReadLong());
+                        break;
+                    case (byte)TagType.IntPoint:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = new IntPointData(block.ReadInt(), block.ReadInt());
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<IntPointData>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                        }
+                        //value = new IntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = new UIntPointData(block.ReadInt(), block.ReadInt());
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<UIntPointData>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                        }
+                        //value = new UIntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.IntPoint3:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<IntPoint3Data>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                            block.ReadInt();
+                        }
+                        //value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint3:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<UIntPoint3Data>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                            block.ReadInt();
+                        }
+                        //value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.LongPoint:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = new LongPointData(block.ReadLong(), block.ReadLong());
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<LongPointData>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                        }
+                        //value = new LongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = new ULongPointData(block.ReadLong(), block.ReadLong());
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<ULongPointData>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                        }
+                        //value = new ULongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.LongPoint3:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<LongPoint3Data>(id, bval);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                            block.ReadLong();
+                        }
+                        //value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint3:
+                        if (AllowTagIds.Contains(id))
+                        {
+                            var bval = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                            service.SetTagValue(id, ref bval, 0);
+                            hisservice.SetTagHisValue<ULongPoint3Data>(id, bval);
                         }
                         else
                         {

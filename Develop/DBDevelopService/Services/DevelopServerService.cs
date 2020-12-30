@@ -716,7 +716,8 @@ namespace DBDevelopService
             {
                 if (dbs.Contains(vv)||user.IsAdmin)
                 {
-                    re.Database.Add(new KeyValueMessage() { Key = vv, Value = DbManager.Instance.GetDatabase(vv).Desc });
+                    string desc = DbManager.Instance.GetDatabase(vv).Desc;
+                    re.Database.Add(new KeyValueMessage() { Key = vv, Value = string.IsNullOrEmpty(desc) ? "" : desc });
                 }
             }
             return Task.FromResult(re);

@@ -53,6 +53,11 @@ namespace SpiderDriver
         /// <summary>
         /// 
         /// </summary>
+        public const byte SetTagRealAndHisValueFun = 13;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public const byte PushDataChangedFun = 3;
 
         /// <summary>

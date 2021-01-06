@@ -47,8 +47,8 @@ namespace DBInStudioServer.Properties {
         }
         
         /// <summary>
-        ///   重写当前线程的 CurrentUICulture 属性
-        ///   重写当前线程的 CurrentUICulture 属性。
+        ///   重写当前线程的 CurrentUICulture 属性，对
+        ///   使用此强类型资源类的所有资源查找执行重写。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
         internal static global::System.Globalization.CultureInfo Culture {
@@ -61,11 +61,47 @@ namespace DBInStudioServer.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Add tag to database 的本地化字符串。
+        /// </summary>
+        internal static string AddTagHlp {
+            get {
+                return ResourceManager.GetString("AddTagHlp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 press &apos;enter&apos; to exit. 的本地化字符串。
         /// </summary>
         internal static string AnyKeyToExit {
             get {
                 return ResourceManager.GetString("AnyKeyToExit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Exit? input &apos;y&apos; to exit,anyother char for cancel. 的本地化字符串。
+        /// </summary>
+        internal static string AppExitHlp {
+            get {
+                return ResourceManager.GetString("AppExitHlp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Clear all tags from database 的本地化字符串。
+        /// </summary>
+        internal static string ClearTagHlp {
+            get {
+                return ResourceManager.GetString("ClearTagHlp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 database &apos;{0}&apos; is already in running 的本地化字符串。
+        /// </summary>
+        internal static string databaseinrunningHlp {
+            get {
+                return ResourceManager.GetString("databaseinrunningHlp", resourceCulture);
             }
         }
         
@@ -88,11 +124,29 @@ namespace DBInStudioServer.Properties {
         }
         
         /// <summary>
-        ///   查找类似 manage a database 的本地化字符串。
+        ///   查找类似 Exit database manager and back to parent 的本地化字符串。
         /// </summary>
-        internal static string GDMsg {
+        internal static string ExitDatabaseHlp {
             get {
-                return ResourceManager.GetString("GDMsg", resourceCulture);
+                return ResourceManager.GetString("ExitDatabaseHlp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export tags to a csv file 的本地化字符串。
+        /// </summary>
+        internal static string ExportHlp {
+            get {
+                return ResourceManager.GetString("ExportHlp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 manage or create a database 的本地化字符串。
+        /// </summary>
+        internal static string GDMsgHlp {
+            get {
+                return ResourceManager.GetString("GDMsgHlp", resourceCulture);
             }
         }
         
@@ -115,11 +169,137 @@ namespace DBInStudioServer.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Import tags from a csv file 的本地化字符串。
+        /// </summary>
+        internal static string ImportHlp {
+            get {
+                return ResourceManager.GetString("ImportHlp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 List all exist database 的本地化字符串。
+        /// </summary>
+        internal static string ListDatabaseHlp {
+            get {
+                return ResourceManager.GetString("ListDatabaseHlp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 List the summary info of a specical type tags or all tags 的本地化字符串。
+        /// </summary>
+        internal static string ListTagHlp {
+            get {
+                return ResourceManager.GetString("ListTagHlp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Quickly generate the specified number of tags for test purposes 的本地化字符串。
+        /// </summary>
+        internal static string QuickGeneraterTagHlp {
+            get {
+                return ResourceManager.GetString("QuickGeneraterTagHlp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Remove a tag from database 的本地化字符串。
+        /// </summary>
+        internal static string RemoveTagHlp {
+            get {
+                return ResourceManager.GetString("RemoveTagHlp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Rerun database ‘{0}’ failed. 的本地化字符串。
+        /// </summary>
+        internal static string Rerundatabasefail {
+            get {
+                return ResourceManager.GetString("Rerundatabasefail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Rerun database ‘{0}’ sucessfull. 的本地化字符串。
+        /// </summary>
+        internal static string RerundatabaseSucessful {
+            get {
+                return ResourceManager.GetString("RerundatabaseSucessful", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Restart current database 的本地化字符串。
+        /// </summary>
+        internal static string ReStartDatabaseHlp {
+            get {
+                return ResourceManager.GetString("ReStartDatabaseHlp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Save database 的本地化字符串。
+        /// </summary>
+        internal static string SaveDatabaseHlp {
+            get {
+                return ResourceManager.GetString("SaveDatabaseHlp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Start current database 的本地化字符串。
+        /// </summary>
+        internal static string StartDatabaseHlp {
+            get {
+                return ResourceManager.GetString("StartDatabaseHlp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Stop database ‘{0}’ failed. 的本地化字符串。
+        /// </summary>
+        internal static string Stopdatabasefail {
+            get {
+                return ResourceManager.GetString("Stopdatabasefail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Stop database 的本地化字符串。
+        /// </summary>
+        internal static string StopDatabaseHlp {
+            get {
+                return ResourceManager.GetString("StopDatabaseHlp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Stop database ‘{0}’ sucessfull. 的本地化字符串。
+        /// </summary>
+        internal static string StopdatabaseSucessful {
+            get {
+                return ResourceManager.GetString("StopdatabaseSucessful", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 {0}  {1} Tag 的本地化字符串。
         /// </summary>
         internal static string TagMsg {
             get {
                 return ResourceManager.GetString("TagMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Modify the value of a property by a tag 的本地化字符串。
+        /// </summary>
+        internal static string UpdateTagHlp {
+            get {
+                return ResourceManager.GetString("UpdateTagHlp", resourceCulture);
             }
         }
     }

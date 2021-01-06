@@ -158,7 +158,7 @@ namespace DBStudio
 
                     if (cmsg == "exit")
                     {
-                        OutByLine("", "确定要退出?输入y确定,输入其他任意字符取消");
+                        OutByLine("", Res.Get("AppExitHlp"));
                         cmd = Console.ReadLine().Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
                         if (cmd.Length == 0) continue;
                         if (cmd[0].ToLower() == "y")
@@ -336,6 +336,7 @@ namespace DBStudio
                     else if (cmsg == "update")
                     {
                         UpdateTag(db, cmd[1].ToLower(), cmd[2], cmd[3]);
+                        UpdateHisTag(db, cmd[1].ToLower(), cmd[2], cmd[3]);
                     }
                     else if (cmsg == "start")
                     {
@@ -345,7 +346,7 @@ namespace DBStudio
                         }
                         else
                         {
-                            Console.WriteLine("database " + db.Name + " is in running.");
+                            Console.WriteLine(string.Format(Res.Get("databaseinrunningHlp"), db.Name));
                         }
                     }
                     else if (cmsg == "rerun")
@@ -380,10 +381,10 @@ namespace DBStudio
                     {
                         StopDatabase(db.Name);
                     }
-                    else if (cmsg == "updatehis")
-                    {
-                        UpdateHisTag(db, cmd[1].ToLower(), cmd[2], cmd[3]);
-                    }
+                    //else if (cmsg == "updatehis")
+                    //{
+                    //    UpdateHisTag(db, cmd[1].ToLower(), cmd[2], cmd[3]);
+                    //}
                     else if (cmsg == "import")
                     {
                         if (cmd.Length > 1)
@@ -624,20 +625,20 @@ namespace DBStudio
             string str = "{0,-10} {1,-50} {2}";
             StringBuilder re = new StringBuilder();
             re.AppendLine();
-            re.AppendLine(string.Format(str, "save","","// save database "));
-            re.AppendLine(string.Format(str, "start","","// start database "));
-            re.AppendLine(string.Format(str, "restart","","// restart database "));
-            re.AppendLine(string.Format(str, "stop","","// stop database "));
-            re.AppendLine(string.Format(str, "add","[tagtype] [tagname] [linkaddress] [repeat]","// add numbers tag to database "));
-            re.AppendLine(string.Format(str, "remove","[tagname]","// remove a tag"));
-            re.AppendLine(string.Format(str, "clear","","// clear all tags in database"));
-            re.AppendLine(string.Format(str, "update","[tagname] [propertyname] [propertyvalue]","// update value of a poperty in a tag"));
-            re.AppendLine(string.Format(str, "updatehis","[tagname] [propertyname] [propertyvalue]","// update value of a poperty in a tag's his config"));
-            re.AppendLine(string.Format(str, "import","[filename]","// import tags from a csvfile"));
-            re.AppendLine(string.Format(str, "export","[filename]","// export tags to a csvfile"));
-            re.AppendLine(string.Format(str, "list","[tagtype]","// the sumery info of specical type tags or all tags"));
-            re.AppendLine(string.Format(str, "exit", "", "// exit and back to parent"));
-            re.AppendLine(string.Format(str, "sp","[recordType] [compressType] [enable sim address][double tag number] [float tag number] [long tag number] [int tag number] [bool tag number] [intpoint tag number]"," //Quickly generate the specified number of tags for test purposes"));
+            re.AppendLine(string.Format(str, "save","","// "+Res.Get("SaveDatabaseHlp")));
+            re.AppendLine(string.Format(str, "start","","// " + Res.Get("StartDatabaseHlp")));
+            re.AppendLine(string.Format(str, "restart","","// " + Res.Get("ReStartDatabaseHlp")));
+            re.AppendLine(string.Format(str, "stop","","// " + Res.Get("StopDatabaseHlp")));
+            re.AppendLine(string.Format(str, "add","[tagtype] [tagname] [linkaddress] [repeat]","// ") + Res.Get("AddTagHlp"));
+            re.AppendLine(string.Format(str, "remove","[tagname]","// ") + Res.Get("AddTagHlp"));
+            re.AppendLine(string.Format(str, "clear","","// " + Res.Get("ClearTagHlp")));
+            re.AppendLine(string.Format(str, "update","[tagname] [propertyname] [propertyvalue]","// " + Res.Get("UpdateTagHlp")));
+            //re.AppendLine(string.Format(str, "updatehis","[tagname] [propertyname] [propertyvalue]","// update value of a poperty in a tag's his config"));
+            re.AppendLine(string.Format(str, "import","[filename]","// " + Res.Get("ImportHlp")));
+            re.AppendLine(string.Format(str, "export","[filename]","// " + Res.Get("ExportHlp")));
+            re.AppendLine(string.Format(str, "list","[tagtype]","// " + Res.Get("ListTagHlp")));
+            re.AppendLine(string.Format(str, "exit", "", "// " + Res.Get("ExitDatabaseHlp")));
+            re.AppendLine(string.Format(str, "sp","[recordType] [compressType] [enable sim address][double tag number] [float tag number] [long tag number] [int tag number] [bool tag number] [intpoint tag number]"," //" + Res.Get("QuickGeneraterTagHlp")));
             
 
             return re.ToString();
@@ -1341,8 +1342,8 @@ namespace DBStudio
             string str = "{0,-10} {1,-16} {2}";
             StringBuilder re = new StringBuilder();
             re.AppendLine();
-            re.AppendLine( string.Format(str, "db","[databasename]",@"// " + Res.Get("GDMsg")));
-            re.AppendLine(string.Format(str, "list","","// List all exist database"));
+            re.AppendLine( string.Format(str, "db","[databasename]",@"// " + Res.Get("GDMsgHlp")));
+            re.AppendLine(string.Format(str, "list","","// "+Res.Get("ListDatabaseHlp")));
             re.AppendLine(string.Format(str, "exit","","// " + Res.Get("Exit")));
             re.AppendLine(string.Format(str, "h","","// " + Res.Get("HMsg")));
             return re.ToString();
@@ -1360,17 +1361,34 @@ namespace DBStudio
                 {
                     client.Connect(2000);
                     client.WriteByte(0);
-                    client.WaitForPipeDrain();
-                    var res = client.ReadByte();
-                    if (res == 1)
+                    client.FlushAsync();
+
+                    if (OperatingSystem.IsWindows())
                     {
-                        Console.WriteLine("Stop database " + name + " sucessfull.");
+                        client.WaitForPipeDrain();
+                    }
+
+                    if (client.IsConnected)
+                    {
+                        var res = client.ReadByte();
+                        int count = 0;
+                        while (res == -1)
+                        {
+                            res = client.ReadByte();
+                            count++;
+                            if (count > 20) break;
+                            Thread.Sleep(100);
+                        }
+                        if (res == 1)
+                        {
+                            Console.WriteLine(string.Format(Res.Get("StopdatabaseSucessful"), name));
+                        }
                     }
                     return true;
                 }
                 catch(Exception ex)
                 {
-                    Console.WriteLine("Stop database " + name + "  failed."+ex.Message);
+                    Console.WriteLine( string.Format(Res.Get("Stopdatabasefail"),name)+ex.Message);
                 }
                 return false;
             }
@@ -1392,25 +1410,33 @@ namespace DBStudio
                         client.WriteByte(1);
                         client.FlushAsync();
 
-                        int count = 0;
-                        while (client.InBufferSize < 1)
+                        if (OperatingSystem.IsWindows())
                         {
-                            Thread.Sleep(100);
-                            count++;
-                            if (count > 20) break;
+                            client.WaitForPipeDrain();
                         }
 
+                        int count = 0;
                         var res = client.ReadByte();
+                        while (res == -1)
+                        {
+                            res = client.ReadByte();
+                            count++;
+                            if (count > 20) break;
+                            Thread.Sleep(100);
+                        }
+
+                        res = client.ReadByte();
                         if (res == 1)
                         {
-                            Console.WriteLine("Rerun database" + name + " sucessfull.");
+                            Console.WriteLine(string.Format(Res.Get("RerundatabaseSucessful"), name));
                         }
                         return true;
 
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("ReRun database " + name + "  failed. " + ex.Message + "  " + ex.StackTrace);
+                        Console.WriteLine(string.Format(Res.Get("Rerundatabasefail"), name));
+                        //Console.WriteLine("ReRun database " + name + "  failed. " + ex.Message + "  " + ex.StackTrace);
                     }
                     return false;
                 }

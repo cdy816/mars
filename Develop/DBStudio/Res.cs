@@ -17,6 +17,7 @@ namespace DBStudio
     public class Res
     {
         public static string Get(string name)
+
         {
             return DBInStudioServer.Properties.Resources.ResourceManager.GetString(name, Thread.CurrentThread.CurrentCulture);
         }

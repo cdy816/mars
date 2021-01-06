@@ -118,84 +118,84 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AddTagHlp" xml:space="preserve">
-    <value>Add tag to database</value>
+    <value>往数据库中添加变量</value>
   </data>
   <data name="AnyKeyToExit" xml:space="preserve">
-    <value>press 'enter' to exit.</value>
+    <value>按 'enter' 键 退出.</value>
   </data>
   <data name="AppExitHlp" xml:space="preserve">
-    <value>Exit? input 'y' to exit,anyother char for cancel.</value>
+    <value>确定要退出?输入 'y' 确定,输入其他任意字符取消</value>
   </data>
   <data name="ClearTagHlp" xml:space="preserve">
-    <value>Clear all tags from database</value>
+    <value>清空数据库内所有变量</value>
   </data>
   <data name="databaseinrunningHlp" xml:space="preserve">
-    <value>database '{0}' is already in running</value>
+    <value>数据库 '{0}' 已经在运行中</value>
   </data>
   <data name="ErroParameter" xml:space="preserve">
-    <value>Invailed Parameter!</value>
+    <value>无效参数!</value>
   </data>
   <data name="Exit" xml:space="preserve">
-    <value>exit</value>
+    <value>退出</value>
   </data>
   <data name="ExitDatabaseHlp" xml:space="preserve">
-    <value>Exit database manager and back to parent</value>
+    <value>退出数据库管理，返回上级</value>
   </data>
   <data name="ExportHlp" xml:space="preserve">
-    <value>Export tags to a csv file</value>
+    <value>导出变量到CSV文件</value>
   </data>
   <data name="GDMsgHlp" xml:space="preserve">
-    <value>manage or create a database</value>
+    <value>管理、创建数据库</value>
   </data>
   <data name="HelpMsg" xml:space="preserve">
-    <value>enter h for command help information</value>
+    <value>输入 'h'  获取帮助信息</value>
   </data>
   <data name="HMsg" xml:space="preserve">
-    <value>display command list</value>
+    <value>显示帮助信息</value>
   </data>
   <data name="ImportHlp" xml:space="preserve">
-    <value>Import tags from a csv file</value>
+    <value>从 csv 文件导入变量</value>
   </data>
   <data name="ListDatabaseHlp" xml:space="preserve">
-    <value>List all exist database</value>
+    <value>列出已经存在的数据库</value>
   </data>
   <data name="ListTagHlp" xml:space="preserve">
-    <value>List the summary info of a specical type tags or all tags</value>
+    <value>列出某种类型的变量或全部变量的概要信息</value>
   </data>
   <data name="QuickGeneraterTagHlp" xml:space="preserve">
-    <value>Quickly generate the specified number of tags for test purposes</value>
+    <value>快速创建一些测试变量</value>
   </data>
   <data name="RemoveTagHlp" xml:space="preserve">
-    <value>Remove a tag from database</value>
+    <value>从数据库中删除一个变量</value>
   </data>
   <data name="Rerundatabasefail" xml:space="preserve">
-    <value>Rerun database ‘{0}’ failed.</value>
+    <value>重启数据库 ‘{0}’ 失败.</value>
   </data>
   <data name="RerundatabaseSucessful" xml:space="preserve">
-    <value>Rerun database ‘{0}’ sucessfull.</value>
+    <value>重启数据库 ‘{0}’ 成功.</value>
   </data>
   <data name="ReStartDatabaseHlp" xml:space="preserve">
-    <value>Restart current database</value>
+    <value>重启当前数据库</value>
   </data>
   <data name="SaveDatabaseHlp" xml:space="preserve">
-    <value>Save database</value>
+    <value>保存数据库</value>
   </data>
   <data name="StartDatabaseHlp" xml:space="preserve">
-    <value>Start current database</value>
+    <value>启动当前数据库</value>
   </data>
   <data name="Stopdatabasefail" xml:space="preserve">
-    <value>Stop database ‘{0}’ failed.</value>
+    <value>停止数据库 ‘{0}’ 失败.</value>
   </data>
   <data name="StopDatabaseHlp" xml:space="preserve">
-    <value>Stop database</value>
+    <value>停止数据库</value>
   </data>
   <data name="StopdatabaseSucessful" xml:space="preserve">
-    <value>Stop database ‘{0}’ sucessfull.</value>
+    <value>停止数据库 ‘{0}’ 成功.</value>
   </data>
   <data name="TagMsg" xml:space="preserve">
-    <value>{0}  {1} Tag</value>
+    <value>变量 {0}  {1}</value>
   </data>
   <data name="UpdateTagHlp" xml:space="preserve">
-    <value>Modify the value of a property by a tag</value>
+    <value>更新变量的某个属性值</value>
   </data>
 </root>

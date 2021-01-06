@@ -330,20 +330,24 @@ namespace SpiderDriverDemo
                         //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new UIntPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.LongPoint:
+                        rdb.AppendValue(vv.Key, new LongPointData(mCount, mCount));
                         //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new LongPointData(mCount, mCount)));
                         //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new LongPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
 
                         break;
                     case TagType.ULongPoint:
+                        rdb.AppendValue(vv.Key, new ULongPointData(mCount, mCount));
                         //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new ULongPointData(mCount, mCount)));
                         //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new ULongPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
 
                         break;
                     case TagType.LongPoint3:
+                        rdb.AppendValue(vv.Key, new LongPoint3Data(mCount, mCount, mCount));
                         //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new LongPoint3Data(mCount, mCount, mCount)));
                         //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new LongPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.ULongPoint3:
+                        rdb.AppendValue(vv.Key, new ULongPoint3Data(mCount, mCount, mCount));
                         //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new ULongPoint3Data(mCount, mCount, mCount)));
                         //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new ULongPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
 
@@ -352,13 +356,13 @@ namespace SpiderDriverDemo
                 i++;
                 if (i % 1000000 == 0)
                 {
-                    driverProxy.SetTagValueAsync(rdb);
+                    driverProxy.SetTagRealAndHisValueAsync(rdb);
                     rdb.Clear();
                 }
             }
             //long ltmp = sw.ElapsedMilliseconds;
             if(i % 1000000 != 0)
-            driverProxy.SetTagValueAsync(rdb);
+            driverProxy.SetTagRealAndHisValue(rdb);
             sw.Stop();
             
             Debug.Print("发送耗时:" + sw.ElapsedMilliseconds);

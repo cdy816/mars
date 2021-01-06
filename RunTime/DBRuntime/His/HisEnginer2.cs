@@ -864,7 +864,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    var css = CalCachDatablockSizeForManualRecord(vv.Value.TagType, 0, MergeMemoryTime * vv.Value.MaxValueCountPerSecond , out valueOffset, out qulityOffset);
+                    var css = CalCachDatablockSizeForManualRecord(vv.Value.TagType, 0, MergeMemoryTime * vv.Value.MaxValueCountPerSecond + 2, out valueOffset, out qulityOffset);
                     ManualHisDataMemoryBlockPool.Pool.PreAlloc(css);
                     ManualHisDataMemoryBlockPool.Pool.PreAlloc(css);
                     cachHeadSize += css;
@@ -1631,7 +1631,7 @@ namespace Cdy.Tag
                     {
                         if(hb!=null)
                             HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
-                        var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * tag.MaxValueCountPerSecond, out valueOffset, out qulityOffset);
+                        var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * tag.MaxValueCountPerSecond + 2, out valueOffset, out qulityOffset);
                         hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
                         hb.Time = time;
                         hb.MaxCount = MergeMemoryTime * tag.MaxValueCountPerSecond + 2;
@@ -1835,7 +1835,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * tag.MaxValueCountPerSecond, out valueOffset, out qulityOffset);
+                    var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * tag.MaxValueCountPerSecond + 2, out valueOffset, out qulityOffset);
                     hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
                     hb.Time = time;
                     hb.MaxCount = MergeMemoryTime * tag.MaxValueCountPerSecond + 2;
@@ -1855,6 +1855,7 @@ namespace Cdy.Tag
                         datacach.Remove(vdd.Key);
                     }
                     datacach.Add(time, hb);
+                    //LoggerService.Service.Info("HisEnginer", "new cal datablock");
                 }
 
                 if (hb.CurrentCount < hb.MaxCount && datetime > hb.EndTime)
@@ -1953,6 +1954,10 @@ namespace Cdy.Tag
                     hb.Relase();
                     HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
                 }
+                else
+                {
+                    LoggerService.Service.Warn("HisEnginer", "his value count("+hb.CurrentCount+") > maxcount("+hb.MaxCount+")");
+                }
 
                 return true;
             }
@@ -1970,7 +1975,7 @@ namespace Cdy.Tag
                 return false;
             }
             isNeedSubmite = false;
-            int valueOffset, qulityOffset = 0;
+            
 
             SortedDictionary<DateTime, ManualHisDataMemoryBlock> datacach;
 
@@ -2007,7 +2012,8 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * tag.MaxValueCountPerSecond, out valueOffset, out qulityOffset);
+                    int valueOffset, qulityOffset = 0;
+                    var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * tag.MaxValueCountPerSecond + 2, out valueOffset, out qulityOffset);
                     hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
                     hb.Time = time;
                     hb.MaxCount = MergeMemoryTime * tag.MaxValueCountPerSecond + 2;
@@ -2027,6 +2033,9 @@ namespace Cdy.Tag
                         datacach.Remove(vdd.Key);
                     }
                     datacach.Add(time, hb);
+
+                    LoggerService.Service.Info("HisEnginer","new cal datablock");
+
                 }
 
                 if (hb.CurrentCount < hb.MaxCount && datetime > hb.EndTime)

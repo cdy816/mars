@@ -48,7 +48,7 @@ namespace Cdy.Tag
         /// </summary>
         private Dictionary<int, CompressMemory2> mTargetMemorys = new Dictionary<int, CompressMemory2>();
 
-        private DateTime mCurrentTime;
+        //private DateTime mCurrentTime;
 
         private IHisEngine2 mHisTagService;
 
@@ -194,10 +194,10 @@ namespace Cdy.Tag
         {
             lock(mSourceMemorys)
             mSourceMemorys.Enqueue(dataMemory);
-            mCurrentTime = dataMemory.CurrentDatetime;
+           // mCurrentTime = dataMemory.CurrentDatetime;
             foreach(var vv in mTargetMemorys)
             {
-                vv.Value.CurrentTime = mCurrentTime;
+                vv.Value.CurrentTime = dataMemory.CurrentDatetime;
                 vv.Value.EndTime = dataMemory.EndDateTime;
             }
             lock (resetEvent)

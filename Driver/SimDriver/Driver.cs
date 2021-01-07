@@ -31,7 +31,7 @@ namespace SimDriver
 
         //private bool mIsBusy = false;
 
-        private StreamWriter mWriter;
+        //private StreamWriter mWriter;
 
         private DateTime mLastProcessTime = DateTime.Now;
 
@@ -64,8 +64,8 @@ namespace SimDriver
         /// </summary>
         public Driver()
         {
-            var vfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), DateTime.Now.ToString("yyyyMMddHHmmss") + ".log");
-            mWriter = new StreamWriter(  System.IO.File.Open(vfile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite));
+            //var vfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), DateTime.Now.ToString("yyyyMMddHHmmss") + ".log");
+            //mWriter = new StreamWriter(  System.IO.File.Open(vfile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite));
 
             mCosEvent = new ManualResetEvent(false);
             mSinEvent = new ManualResetEvent(false);
@@ -104,15 +104,15 @@ namespace SimDriver
 
         #region ... Methods    ...
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sval"></param>
-        private void Log(string sval)
-        {
-            mWriter.WriteLine(sval);
-            mWriter.Flush();
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="sval"></param>
+        //private void Log(string sval)
+        //{
+        //    mWriter.WriteLine(sval);
+        //    mWriter.Flush();
+        //}
 
         /// <summary>
         /// 
@@ -184,6 +184,14 @@ namespace SimDriver
             return true;
         }
 
+        private double mMaxProcessTimeSpan = 0;
+        private double mSelfProcessTimeSpan = 0;
+        private int mFinishCount = 6;
+        private object mLockObj = new object();
+
+        private Stopwatch mCosStopwatch;
+        //private Stopwatch mSinStopwatch;
+        //private Stopwatch mStepStopwatch;
         /// <summary>
         /// 
         /// </summary>
@@ -192,28 +200,45 @@ namespace SimDriver
             ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
             List<Tagbase> vv = mTagIdCach.ContainsKey("Sim:cos") ? mTagIdCach["Sim:cos"] : null;
             List<int> vvr = mManualRecordTagCach.ContainsKey("Sim:cos") ? mManualRecordTagCach["Sim:cos"] : null;
+            mCosStopwatch = new Stopwatch();
             while (!mIsClosed)
             {
                 mCosEvent.WaitOne();
                 mCosEvent.Reset();
+                mCosStopwatch.Restart();
+                long ll = 0;
                 double fval = Math.Cos(mNumber / 180.0 * Math.PI);
                 if (vv!=null)
                 {
-                    mTagService.SetTagValue<double>(vv,ref fval, 0);
+                    mTagService.SetTagValue(vv,ref fval, 0);
+                    ll = mCosStopwatch.ElapsedMilliseconds;
                     mTagService.SubmiteNotifyChanged();
                 }
 
-                if (vvr != null && !mIsSecond)
+                if (vvr != null && vvr.Count>0 && !mIsSecond)
                 {
                     TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = fval };
                     foreach (var vvv in vvr)
                     {
                         mTagHisValueService.SetTagHisValue(vvv, tv);
                     }
-                    
                 }
 
-                mLastProcessTime = DateTime.Now;
+                mCosStopwatch.Stop();
+
+                LoggerService.Service.Info("SimDriver", "设置变量耗时:" + ll + " 其他耗时:" + (mCosStopwatch.ElapsedMilliseconds - ll));
+
+                var ts = (DateTime.Now - mLastProcessTime).TotalMilliseconds;
+                lock (mLockObj)
+                {
+                    if (ts > mMaxProcessTimeSpan)
+                    {
+                        mMaxProcessTimeSpan = ts;
+                        //mSelfProcessTimeSpan = mCosStopwatch.ElapsedMilliseconds;
+                    }
+                }
+
+                Interlocked.Increment(ref mFinishCount);
             }
         }
 
@@ -225,28 +250,39 @@ namespace SimDriver
             ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
             List<Tagbase> vv = mTagIdCach.ContainsKey("Sim:sin") ? mTagIdCach["Sim:sin"] : null;
             List<int> vvr = mManualRecordTagCach.ContainsKey("Sim:sin") ? mManualRecordTagCach["Sim:sin"] : null;
+            //mSinStopwatch = new Stopwatch();
             while (!mIsClosed)
             {
                 mSinEvent.WaitOne();
                 mSinEvent.Reset();
+                //mSinStopwatch.Restart();
                 double fval = Math.Sin(mNumber / 180.0 * Math.PI);
                 if (vv != null)
                 {
-                    mTagService.SetTagValue<double>(vv,ref fval, 0);
+                    mTagService.SetTagValue(vv,ref fval, 0);
                     mTagService.SubmiteNotifyChanged();
                 }
 
-                if (vvr != null && !mIsSecond)
+                if (vvr != null && vvr.Count > 0 && !mIsSecond)
                 {
                     TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = fval };
                     foreach (var vvv in vvr)
                     {
                         mTagHisValueService.SetTagHisValue(vvv, tv);
                     }
-                   
                 }
-
-                mLastProcessTime = DateTime.Now;
+                //mSinStopwatch.Stop();
+                var ts = (DateTime.Now - mLastProcessTime).TotalMilliseconds;
+                lock (mLockObj)
+                {
+                    if (ts > mMaxProcessTimeSpan)
+                    {
+                        mMaxProcessTimeSpan = ts;
+                        //mSelfProcessTimeSpan = mSinStopwatch.ElapsedMilliseconds;
+                    }
+                }
+               
+                Interlocked.Increment(ref mFinishCount);
             }
         }
 
@@ -258,17 +294,19 @@ namespace SimDriver
             ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
             List<Tagbase> vv = mTagIdCach.ContainsKey("Sim:step") ? mTagIdCach["Sim:step"] : null;
             List<int> vvr = mManualRecordTagCach.ContainsKey("Sim:step") ? mManualRecordTagCach["Sim:step"] : null;
+            //mStepStopwatch = new Stopwatch();
             while (!mIsClosed)
             {
                 mStepEvent.WaitOne();
                 mStepEvent.Reset();
+                //mStepStopwatch.Restart();
                 if (vv != null)
                 {
                     mTagService.SetTagValue(vv,ref mNumber, 0);
                     mTagService.SubmiteNotifyChanged();
                 }
 
-                if (vvr != null && !mIsSecond)
+                if (vvr != null && vvr.Count > 0 && !mIsSecond)
                 {
                     TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = mNumber };
                     foreach (var vvv in vvr)
@@ -276,8 +314,18 @@ namespace SimDriver
                         mTagHisValueService.SetTagHisValue(vvv, tv);
                     }
                 }
+                //mStepStopwatch.Stop();
+                var ts = (DateTime.Now - mLastProcessTime).TotalMilliseconds;
+                lock (mLockObj)
+                {
+                    if (ts > mMaxProcessTimeSpan)
+                    {
+                        mMaxProcessTimeSpan = ts;
+                        //mSelfProcessTimeSpan = mStepStopwatch.ElapsedMilliseconds;
+                    }
+                }
 
-                mLastProcessTime = DateTime.Now;
+                Interlocked.Increment(ref mFinishCount);
             }
         }
 
@@ -300,7 +348,7 @@ namespace SimDriver
                     mTagService.SubmiteNotifyChanged();
                 }
 
-                if (vvr != null && !mIsSecond)
+                if (vvr != null && vvr.Count > 0 && !mIsSecond)
                 {
                     TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = new IntPoint3Data(mNumber, mNumber, mNumber) };
                     foreach (var vvv in vvr)
@@ -309,7 +357,16 @@ namespace SimDriver
                     }
                 }
 
-                mLastProcessTime = DateTime.Now;
+                var ts = (DateTime.Now - mLastProcessTime).TotalMilliseconds;
+                lock (mLockObj)
+                {
+                    if (ts > mMaxProcessTimeSpan)
+                    {
+                        mMaxProcessTimeSpan = ts;
+                    }
+                }
+
+                Interlocked.Increment(ref mFinishCount);
             }
         }
 
@@ -331,7 +388,7 @@ namespace SimDriver
                     mTagService.SubmiteNotifyChanged();
                 }
 
-                if (vvr != null && !mIsSecond)
+                if (vvr != null && vvr.Count > 0 && !mIsSecond)
                 {
                     TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = mBoolNumber };
                     foreach (var vvv in vvr)
@@ -340,7 +397,15 @@ namespace SimDriver
                     }
                 }
 
-                mLastProcessTime = DateTime.Now;
+                var ts = (DateTime.Now - mLastProcessTime).TotalMilliseconds;
+                lock (mLockObj)
+                {
+                    if (ts > mMaxProcessTimeSpan)
+                    {
+                        mMaxProcessTimeSpan = ts;
+                    }
+                }
+                Interlocked.Increment(ref mFinishCount);
             }
         }
 
@@ -349,16 +414,37 @@ namespace SimDriver
         {
             ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
             List<Tagbase> vv = mTagIdCach.ContainsKey("Sim:datetime") ? mTagIdCach["Sim:datetime"] : null;
+            List<int> vvr = mManualRecordTagCach.ContainsKey("Sim:datetime") ? mManualRecordTagCach["Sim:datetime"] : null;
             while (!mIsClosed)
             {
-                mSquareEvent.WaitOne();
-                mSquareEvent.Reset();
+                mDatetimeEvent.WaitOne();
+                mDatetimeEvent.Reset();
                 if (vv != null)
                 {
-                    mTagService.SetTagValue(vv, DateTime.Now, 0);
+                    DateTime dnow = DateTime.Now;
+                    mTagService.SetTagValue(vv,ref dnow, 0);
                     mTagService.SubmiteNotifyChanged();
                 }
-                mLastProcessTime = DateTime.Now;
+
+                if (vvr != null && vvr.Count > 0 && !mIsSecond)
+                {
+                    TagValue tv = new TagValue() { Quality = 0, Time = DateTime.UtcNow, Value = DateTime.Now };
+                    foreach (var vvv in vvr)
+                    {
+                        mTagHisValueService.SetTagHisValue(vvv, tv);
+                    }
+                }
+
+                var ts = (DateTime.Now - mLastProcessTime).TotalMilliseconds;
+                lock (mLockObj)
+                {
+                    if (ts > mMaxProcessTimeSpan)
+                    {
+                        mMaxProcessTimeSpan = ts;
+                    }
+                }
+
+                Interlocked.Increment(ref mFinishCount);
             }
         }
 
@@ -368,24 +454,36 @@ namespace SimDriver
             ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
             while (!mIsClosed)
             {
-                DateTime time = DateTime.Now;
-                var dtime = (time - mLastProcessTime).TotalMilliseconds;
-                if (dtime > 1000)
+                //DateTime time = DateTime.Now;
+                //var dtime = (time - mLastProcessTime).TotalMilliseconds;
+
+                if(mFinishCount>5)
                 {
-                    LoggerService.Service.Warn("Sim Driver", "出现阻塞");
+                    mFinishCount = 0;
                 }
-                else if (mNumber % 10 == 0 || dtime > 1000)
+                else
                 {
-                    LoggerService.Service.Debug("Sim Driver", "距离上次更新时间差:"+ dtime);
+                    continue;
                 }
 
-                mLastProcessTime = time;
+                if (mMaxProcessTimeSpan > 1000)
+                {
+                    LoggerService.Service.Warn("Sim Driver", "出现阻塞 更新耗时:" + mMaxProcessTimeSpan + " ms");
+                }
+                else if ((mNumber % 10 == 0))
+                {
+                    LoggerService.Service.Debug("Sim Driver", "上次更新数据耗时: " + mMaxProcessTimeSpan + " ms");
+                }
+
+                mMaxProcessTimeSpan = 0;
+                //mSelfProcessTimeSpan = 0;
+
+                mLastProcessTime = DateTime.Now;
                 if (!mIsSecond)
                 {
                     mNumber++;
                     mNumber = mNumber >= (short)360 ? (short)0 : mNumber;
                     mIsSecond = true;
-
                     if (mNumber % 60 == 0)
                     {
                         mBoolNumber = !mBoolNumber;
@@ -507,7 +605,7 @@ namespace SimDriver
             //mScanTimer.Stop();
             mIsClosed = true;
            // mScanThread.Abort();
-            mWriter.Close();
+            //mWriter.Close();
             return true;
         }
 

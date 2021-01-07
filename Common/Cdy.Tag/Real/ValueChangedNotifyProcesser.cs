@@ -18,6 +18,9 @@ namespace Cdy.Tag
 {
     public class BlockItem
     {
+
+        private object mLockObj = new object();
+
         /// <summary>
         /// 
         /// </summary>
@@ -33,10 +36,12 @@ namespace Cdy.Tag
         /// </summary>
         public int EndAddress { get; set; }
 
+
         /// <summary>
         /// 
         /// </summary>
         public bool IsDirty { get; set; }
+               
     }
 
     /// <summary>
@@ -256,12 +261,7 @@ namespace Cdy.Tag
         {
             if (mIsAll)
             {
-                lock (mBlockChangeds)
-                {
-                    int idd = id / BlockSize;
-                    if (mBlockChangeds.ContainsKey(idd))
-                        mBlockChangeds[idd].IsDirty = true;
-                }
+                mBlockChangeds[id / BlockSize].IsDirty = true;
             }
             else if (mRegistorTagIds.ContainsKey(id))
             {
@@ -269,7 +269,6 @@ namespace Cdy.Tag
                 {
                     mChangedIds.AppendValue(id);
                 }
-                
             }
         }
 
@@ -296,8 +295,8 @@ namespace Cdy.Tag
                     {
                         if (mIsAll)
                         {
-                            lock (mBlockChangeds)
-                                mBlockChangeds[id / BlockSize].IsDirty = true;
+                            //lock (mBlockChangeds)
+                            mBlockChangeds[id / BlockSize].IsDirty = true;
                         }
                         else
                         {
@@ -383,11 +382,8 @@ namespace Cdy.Tag
                     {
                         if (vv.Value.IsDirty)
                         {
-                            lock (mBlockChangeds)
-                            {
-                                BlockChanged?.Invoke(vv.Value);
-                                vv.Value.IsDirty = false;
-                            }
+                            vv.Value.IsDirty = false;
+                            BlockChanged?.Invoke(vv.Value);
                         }
                     }
                     BlockChangedNotify?.Invoke();

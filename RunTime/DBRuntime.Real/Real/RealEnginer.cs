@@ -3571,12 +3571,10 @@ namespace Cdy.Tag
             {
                 var vtag = tag as FloatingTagBase;
 
-                double btmp = 0;
-                
-                btmp = tag.Conveter!=null ? Math.Round(Convert.ToDouble(tag.Conveter.ConvertTo(value)), vtag.Precision): Math.Round(value, vtag.Precision);
-
                 if (vtag != null)
                 {
+                    double btmp = tag.Conveter != null ? Math.Round(Convert.ToDouble(tag.Conveter.ConvertTo(value)), vtag.Precision) : Math.Round(value, vtag.Precision);
+                    //double btmp = value;
                     if (ReadDoubleValueByAddr(tag.ValueAddress) != btmp)
                     {
                         SetValueByAddr(tag.ValueAddress, btmp, (btmp >= vtag.MinValue && btmp <= vtag.MaxValue ? qulity : (byte)QualityConst.OutOfRang), time);
@@ -3584,7 +3582,7 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        UpdateDoubleValueTimeAndQualityByAddr(tag.ValueAddress, time,qulity);
+                        UpdateDoubleValueTimeAndQualityByAddr(tag.ValueAddress, time, qulity);
                     }
                 }
             }
@@ -3627,7 +3625,7 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        UpdatefloatValueTimeAndQualityByAddr(tag.ValueAddress, time,qulity);
+                        UpdatefloatValueTimeAndQualityByAddr(tag.ValueAddress, time, qulity);
                     }
                 }
             }
@@ -4056,40 +4054,40 @@ namespace Cdy.Tag
                 switch (tag.Type)
                 {
                     case TagType.Bool:
-                        SetBoolTagValue(tag, Convert.ToBoolean(value), (byte)QualityConst.Good, time);
+                        SetBoolTagValue(tag, Convert.ToBoolean(value), quality, time);
                         break;
                     case TagType.Byte:
-                        SetByteTagValue(tag, Convert.ToByte(value), (byte)QualityConst.Good, time);
+                        SetByteTagValue(tag, Convert.ToByte(value), quality, time);
                         break;
                     case TagType.DateTime:
-                        SetDateTimeTagValue(tag, Convert.ToDateTime(value), (byte)QualityConst.Good, time);
+                        SetDateTimeTagValue(tag, Convert.ToDateTime(value), quality, time);
                         break;
                     case TagType.Double:
-                        SetDoubleTagValue(tag, Convert.ToDouble(value), (byte)QualityConst.Good, time);
+                        SetDoubleTagValue(tag, Convert.ToDouble(value), quality, time);
                         break;
                     case TagType.Float:
-                        SetFloatTagValue(tag, Convert.ToSingle(value), (byte)QualityConst.Good, time);
+                        SetFloatTagValue(tag, Convert.ToSingle(value), quality, time);
                         break;
                     case TagType.Int:
-                        SetIntTagValue(tag, Convert.ToInt32(value), (byte)QualityConst.Good, time);
+                        SetIntTagValue(tag, Convert.ToInt32(value), quality, time);
                         break;
                     case TagType.Long:
-                        SetLongTagValue(tag, Convert.ToInt64(value), (byte)QualityConst.Good, time);
+                        SetLongTagValue(tag, Convert.ToInt64(value), quality, time);
                         break;
                     case TagType.Short:
-                        SetShortTagValue(tag, Convert.ToInt16(value), (byte)QualityConst.Good, time);
+                        SetShortTagValue(tag, Convert.ToInt16(value), quality, time);
                         break;
                     case TagType.String:
-                        SetSrtingTagValue(tag, Convert.ToString(value), (byte)QualityConst.Good, time);
+                        SetSrtingTagValue(tag, Convert.ToString(value), quality, time);
                         break;
                     case TagType.UInt:
-                        SetUIntTagValue(tag, Convert.ToUInt32(value), (byte)QualityConst.Good, time);
+                        SetUIntTagValue(tag, Convert.ToUInt32(value), quality, time);
                         break;
                     case TagType.ULong:
-                        SetULongTagValue(tag, Convert.ToUInt64(value), (byte)QualityConst.Good, time);
+                        SetULongTagValue(tag, Convert.ToUInt64(value), quality, time);
                         break;
                     case TagType.UShort:
-                        SetUShortTagValue(tag, Convert.ToUInt16(value), (byte)QualityConst.Good, time);
+                        SetUShortTagValue(tag, Convert.ToUInt16(value), quality, time);
                         break;
                     case TagType.IntPoint:
                     case TagType.UIntPoint:
@@ -4097,7 +4095,7 @@ namespace Cdy.Tag
                         {
                             SetTagValue(tag, (IntPointData)((object)value), quality);
                         }
-                        else if(value is UIntPointData)
+                        else if (value is UIntPointData)
                         {
                             SetTagValue(tag, (UIntPointData)((object)value), quality);
                         }
@@ -4135,7 +4133,7 @@ namespace Cdy.Tag
                             SetTagValue(tag, (ULongPoint3Data)((object)value), quality);
                         }
                         break;
-                    
+
                     default:
                         break;
                 }
@@ -4232,28 +4230,48 @@ namespace Cdy.Tag
             return true;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="ids"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public bool SetTagValue<T>(List<Tagbase> ids, T value, byte quality)
-        {
-            //Take();
-            bool re = true;
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="ids"></param>
+        ///// <param name="value"></param>
+        ///// <returns></returns>
+        //public bool SetTagValue<T>(List<Tagbase> ids, T value, byte quality)
+        //{
+        //    //Take();
+        //    bool re = true;
 
-            //Stopwatch sw = new Stopwatch();
-            //sw.Start();
-            foreach (var vv in ids)
-            {
-                re &= SetTagValue(vv, value,quality);
-            }
-            //sw.Stop();
-            //if(sw.ElapsedMilliseconds>900)
-            //LoggerService.Service.Info("RealEnginer", "SetTagValue count:"+ ids.Count +" 耗时：" + sw.ElapsedMilliseconds.ToString(),ConsoleColor.Red);
-            return re;
-        }
+        //    //Stopwatch sw = new Stopwatch();
+        //    //sw.Start();
+        //    DateTime dnow = DateTime.UtcNow;
+        //    foreach (var vv in ids)
+        //    {
+        //        re &= SetTagValue(vv, value,dnow,quality);
+        //    }
+        //    //sw.Stop();
+        //    //if(sw.ElapsedMilliseconds>900)
+        //    //LoggerService.Service.Info("RealEnginer", "SetTagValue count:"+ ids.Count +" 耗时：" + sw.ElapsedMilliseconds.ToString(),ConsoleColor.Red);
+        //    return re;
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="ids"></param>
+        ///// <param name="value"></param>
+        ///// <param name="quality"></param>
+        ///// <returns></returns>
+        //public bool SetTagValue<T>(List<Tagbase> ids,ref T value, byte quality)
+        //{
+        //    bool re = true;
+        //    DateTime dnow = DateTime.UtcNow;
+        //    foreach (var vv in ids)
+        //    {
+        //        re &= SetTagValue(vv, value,dnow, quality);
+        //    }
+        //    return re;
+        //}
 
         /// <summary>
         /// 
@@ -4263,17 +4281,378 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        public bool SetTagValue<T>(List<Tagbase> ids,ref T value, byte quality)
+        public bool SetTagValue(List<Tagbase> ids, ref double value, byte quality)
         {
+            Take();
             bool re = true;
+            DateTime dnow = DateTime.UtcNow;
             foreach (var vv in ids)
             {
-                re &= SetTagValue(vv, value, quality);
+                re &= SetTagValue(vv,ref value, dnow, quality);
             }
             return re;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref float value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref bool value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref byte value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref short value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref ushort value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref int value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref uint value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref long value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref ulong value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, string value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref DateTime value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref IntPointData value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref UIntPointData value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref IntPoint3Data value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref UIntPoint3Data value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref LongPointData value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref ULongPointData value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref LongPoint3Data value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagValue(List<Tagbase> ids, ref ULongPoint3Data value, byte quality)
+        {
+            Take();
+            bool re = true;
+            DateTime dnow = DateTime.UtcNow;
+            foreach (var vv in ids)
+            {
+                re &= SetTagValue(vv, ref value, dnow, quality);
+            }
+            return re;
+        }
 
         /// <summary>
         /// 
@@ -4283,11 +4662,12 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetTagValue<T>(List<int> ids, T value, byte quality)
         {
-            //Take();
+            Take();
             bool re = true;
+            DateTime dnow = DateTime.UtcNow;
             foreach (var vv in ids)
             {
-                re &= SetTagValue(vv,ref value,quality);
+                re &= SetTagValue(vv,ref value,dnow,quality);
             }
             return re;
         }
@@ -5671,13 +6051,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref bool value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref bool value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
 
                 switch (tag.Type)
                 {
@@ -5733,13 +6113,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref byte value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref byte value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
 
                 switch (tag.Type)
                 {
@@ -5794,13 +6174,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref short value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref short value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 switch (tag.Type)
                 {
                     case TagType.Bool:
@@ -5855,13 +6235,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref ushort value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref ushort value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 switch (tag.Type)
                 {
                     case TagType.Bool:
@@ -5916,13 +6296,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref int value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref int value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 switch (tag.Type)
                 {
                     case TagType.Bool:
@@ -5977,13 +6357,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref uint value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref uint value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 switch (tag.Type)
                 {
                     case TagType.Bool:
@@ -6039,13 +6419,13 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref long value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref long value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 switch (tag.Type)
                 {
                     case TagType.Bool:
@@ -6100,13 +6480,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref ulong value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref ulong value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 switch (tag.Type)
                 {
                     case TagType.Bool:
@@ -6161,13 +6541,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref float value,byte quality)
+        public bool SetTagValue(Tagbase tag, ref float value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 switch (tag.Type)
                 {
                     case TagType.Bool:
@@ -6221,13 +6601,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref double value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref double value,DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 switch (tag.Type)
                 {
                     case TagType.Bool:
@@ -6240,7 +6620,6 @@ namespace Cdy.Tag
                         return false;
                     case TagType.Double:
                         SetDoubleTagValue(tag, value, quality, time);
-
                         break;
                     case TagType.Float:
                         SetFloatTagValue(tag, Convert.ToSingle(value), quality, time);
@@ -6282,13 +6661,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref DateTime value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref DateTime value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 switch (tag.Type)
                 {
                     case TagType.Bool:
@@ -6335,13 +6714,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, string value, byte quality)
+        public bool SetTagValue(Tagbase tag, string value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 switch (tag.Type)
                 {
                     case TagType.Bool:
@@ -6395,13 +6774,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref IntPointData value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref IntPointData value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 SetPointValue<int>(tag, quality, time, value.X, value.Y);
             }
             catch
@@ -6417,13 +6796,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref IntPoint3Data value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref IntPoint3Data value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 SetPointValue<int>(tag, quality, time, value.X, value.Y,value.Z);
             }
             catch
@@ -6439,13 +6818,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref UIntPointData value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref UIntPointData value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 SetPointValue<uint>(tag, quality, time, value.X, value.Y);
             }
             catch
@@ -6461,13 +6840,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref UIntPoint3Data value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref UIntPoint3Data value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 SetPointValue<uint>(tag, quality, time, value.X, value.Y,value.Z);
             }
             catch
@@ -6483,13 +6862,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref LongPointData value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref LongPointData value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 SetPointValue<long>(tag, quality, time, value.X, value.Y);
             }
             catch
@@ -6505,13 +6884,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref LongPoint3Data value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref LongPoint3Data value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 SetPointValue<long>(tag, quality, time, value.X, value.Y,value.Z);
             }
             catch
@@ -6527,13 +6906,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref ULongPointData value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref ULongPointData value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 SetPointValue<ulong>(tag, quality, time, value.X, value.Y);
             }
             catch
@@ -6549,13 +6928,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetTagValue(Tagbase tag, ref ULongPoint3Data value, byte quality)
+        public bool SetTagValue(Tagbase tag, ref ULongPoint3Data value, DateTime time, byte quality)
         {
             try
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
-                DateTime time = DateTime.UtcNow;
+                //DateTime time = DateTime.UtcNow;
                 SetPointValue<ulong>(tag, quality, time, value.X, value.Y,value.Z);
             }
             catch
@@ -6564,8 +6943,6 @@ namespace Cdy.Tag
             }
             return true;
         }
-
-
 
         #endregion ...Interfaces...
     }

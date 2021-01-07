@@ -257,7 +257,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref bool value, byte quality);
+        bool SetTagValue(Tagbase tag,ref bool value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -265,7 +265,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref byte value, byte quality);
+        bool SetTagValue(Tagbase tag,ref byte value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -273,7 +273,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref short value, byte quality);
+        bool SetTagValue(Tagbase tag,ref short value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -281,7 +281,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref ushort value, byte quality);
+        bool SetTagValue(Tagbase tag,ref ushort value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -289,7 +289,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref int value, byte quality);
+        bool SetTagValue(Tagbase tag,ref int value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -297,7 +297,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref uint value, byte quality);
+        bool SetTagValue(Tagbase tag,ref uint value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -305,7 +305,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref long value, byte quality);
+        bool SetTagValue(Tagbase tag,ref long value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -313,7 +313,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref ulong value, byte quality);
+        bool SetTagValue(Tagbase tag,ref ulong value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -321,7 +321,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref float value, byte quality);
+        bool SetTagValue(Tagbase tag,ref float value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -329,7 +329,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref double value, byte quality);
+        bool SetTagValue(Tagbase tag,ref double value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -337,7 +337,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag, string value, byte quality);
+        bool SetTagValue(Tagbase tag, string value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -345,7 +345,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref DateTime value, byte quality);
+        bool SetTagValue(Tagbase tag,ref DateTime value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -353,7 +353,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref IntPointData value, byte quality);
+        bool SetTagValue(Tagbase tag,ref IntPointData value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -361,7 +361,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref UIntPointData value, byte quality);
+        bool SetTagValue(Tagbase tag,ref UIntPointData value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -369,7 +369,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref IntPoint3Data value, byte quality);
+        bool SetTagValue(Tagbase tag,ref IntPoint3Data value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -377,7 +377,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref UIntPoint3Data value, byte quality);
+        bool SetTagValue(Tagbase tag,ref UIntPoint3Data value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -385,7 +385,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref LongPointData value, byte quality);
+        bool SetTagValue(Tagbase tag,ref LongPointData value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -393,7 +393,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref ULongPointData value, byte quality);
+        bool SetTagValue(Tagbase tag,ref ULongPointData value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -401,7 +401,7 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref LongPoint3Data value, byte quality);
+        bool SetTagValue(Tagbase tag,ref LongPoint3Data value, DateTime time, byte quality);
 
         /// <summary>
         /// 设置变量的值
@@ -409,26 +409,221 @@ namespace Cdy.Tag.Driver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        bool SetTagValue(Tagbase tag,ref ULongPoint3Data value, byte quality);
-
+        bool SetTagValue(Tagbase tag,ref ULongPoint3Data value, DateTime time, byte quality);
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="tag"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        bool SetTagValue<T>(List<Tagbase> tag,ref T value, byte quality);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <param name="quality"></param>
         /// <returns></returns>
-        bool SetTagValue<T>(List<Tagbase> tag, T value, byte quality);
+        bool SetTagValue(List<Tagbase> tag, ref double value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref float value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref bool value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref byte value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref short value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref ushort value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref int value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref uint value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref long value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref ulong value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref DateTime value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, string value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref IntPointData value, byte quality);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref UIntPointData value, byte quality);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref UIntPoint3Data value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref IntPoint3Data value, byte quality);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref LongPointData value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref ULongPointData value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref LongPoint3Data value, byte quality);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool SetTagValue(List<Tagbase> tag, ref ULongPoint3Data value, byte quality);
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="tag"></param>
+        ///// <param name="value"></param>
+        ///// <returns></returns>
+        //bool SetTagValue<T>(List<Tagbase> tag,ref T value, byte quality);
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="tag"></param>
+        ///// <param name="value"></param>
+        ///// <param name="quality"></param>
+        ///// <returns></returns>
+        //bool SetTagValue<T>(List<Tagbase> tag, T value, byte quality);
 
         /// <summary>
         /// 将一组变量设置成一个值

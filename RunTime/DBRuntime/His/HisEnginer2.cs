@@ -139,7 +139,7 @@ namespace Cdy.Tag
 
         private bool mNeedSnapAllTag=false;
 
-        private DateTime mSnapAllTagTime = DateTime.Now;
+        private DateTime mSnapAllTagTime = DateTime.UtcNow;
 
         private bool mForceSubmiteToCompress = false;
 
@@ -1196,7 +1196,7 @@ namespace Cdy.Tag
         /// </summary>
         private void SnapeAllTag()
         {
-            mSnapAllTagTime = DateTime.Now;
+            mSnapAllTagTime = DateTime.UtcNow;
             Stopwatch sw = new Stopwatch();
             sw.Start();
             foreach(var vv in mHisTags)
@@ -1205,7 +1205,7 @@ namespace Cdy.Tag
                 vv.Value.Snape();
             }
             sw.Stop();
-            LoggerService.Service.Info("HisEnginer", "快照记录数值:" + FormateDatetime(mSnapAllTagTime) + " 耗时:" + sw.ElapsedMilliseconds, ConsoleColor.Cyan);
+            LoggerService.Service.Info("HisEnginer", "快照记录数值:" + FormateDatetime(mSnapAllTagTime.ToLocalTime()) + " 耗时:" + sw.ElapsedMilliseconds, ConsoleColor.Cyan);
         }
 
         /// <summary>

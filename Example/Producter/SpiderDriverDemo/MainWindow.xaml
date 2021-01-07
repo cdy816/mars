@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="SpiderSim" Height="353" Width="634">
     <Grid>
-        <Button x:Name="Start" Content="Start" HorizontalAlignment="Left" Margin="502,33,0,0" VerticalAlignment="Top" Width="86" Click="Start_Click"/>
+        <Button x:Name="Start" Content="实时数据" HorizontalAlignment="Left" Margin="502,33,0,0" VerticalAlignment="Top" Width="107" Click="Start_Click"/>
         <Label Content="IP:" HorizontalAlignment="Left" Margin="31,33,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="ipt" HorizontalAlignment="Left" Margin="106,38,0,0" Text="127.0.0.1" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
         <Label Content="Port:" HorizontalAlignment="Left" Margin="256,33,0,0" VerticalAlignment="Top"/>
@@ -22,7 +22,8 @@
         <Label Content="{Binding CosValue}" HorizontalAlignment="Left" Margin="102,164,0,0" VerticalAlignment="Top" Width="106"/>
         <Label Content="{Binding BoolValue}" HorizontalAlignment="Left" Margin="102,207,0,0" VerticalAlignment="Top" Width="106"/>
         <Label Content="{Binding DateTimeValue}" HorizontalAlignment="Left" Margin="102,247,0,0" VerticalAlignment="Top" Width="136"/>
-        <Button x:Name="hisDataWrite" Content="历史数据写入" HorizontalAlignment="Left" Margin="18,277,0,0" VerticalAlignment="Top" Width="86" Click="hisDataWrite_Click"/>
+        <Button x:Name="hisDataWrite" Content="手动历史数据写入" HorizontalAlignment="Left" Margin="502,111,0,0" VerticalAlignment="Top" Width="107" Click="hisDataWrite_Click"/>
+        <Button x:Name="HisStart" Content="实时历史数据" HorizontalAlignment="Left" Margin="502,71,0,0" VerticalAlignment="Top" Width="107" Click="HisStart_Click"/>
 
     </Grid>
 </Window>

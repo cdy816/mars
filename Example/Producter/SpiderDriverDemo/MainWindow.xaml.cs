@@ -24,12 +24,13 @@ namespace SpiderDriverDemo
     /// </summary>
     public partial class MainWindow : Window,INotifyPropertyChanged
     {
-        private SpiderDriver.ClientApi.DriverProxy driverProxy = new SpiderDriver.ClientApi.DriverProxy();
+        private SpiderDriver.ClientApi.DriverProxy driverProxy;
         private Dictionary<int,Tuple<string,byte>> mAllId = new Dictionary<int, Tuple<string, byte>>();
 
         private SpiderDriver.ClientApi.RealDataBuffer rdb;
 
         private Thread mScanThread;
+        private Thread mHisScanThread;
         private int mCount = 0;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -43,23 +44,48 @@ namespace SpiderDriverDemo
         private void Start_Click(object sender, RoutedEventArgs e)
         {
             this.Start.IsEnabled = false;
-            driverProxy = new SpiderDriver.ClientApi.DriverProxy();
-            driverProxy.Connect(this.ipt.Text, int.Parse(portt.Text));
-            driverProxy.ValueChanged = new SpiderDriver.ClientApi.DriverProxy.ProcessDataPushDelegate((values) => { 
-                foreach(var vv in values)
+            if (driverProxy == null)
+            {
+                driverProxy = new SpiderDriver.ClientApi.DriverProxy();
+                driverProxy.Connect(this.ipt.Text, int.Parse(portt.Text));
+                driverProxy.ValueChanged = new SpiderDriver.ClientApi.DriverProxy.ProcessDataPushDelegate((values) =>
                 {
-                    Debug.Print(vv.Key + "," + vv.Value.ToString());
-                }
-            });
-            mScanThread = new Thread(ThreadPro);
+                    foreach (var vv in values)
+                    {
+                        Debug.Print("收到数据下发指令:"+ vv.Key + "," + vv.Value.ToString());
+                    }
+                });
+            }
+
+            mScanThread = new Thread(RealValueThreadPro);
             mScanThread.IsBackground = true;
             mScanThread.Start();
+        }
+
+        private void HisStart_Click(object sender, RoutedEventArgs e)
+        {
+            this.HisStart.IsEnabled = false;
+            if (driverProxy == null)
+            {
+                driverProxy = new SpiderDriver.ClientApi.DriverProxy();
+                driverProxy.Connect(this.ipt.Text, int.Parse(portt.Text));
+                driverProxy.ValueChanged = new SpiderDriver.ClientApi.DriverProxy.ProcessDataPushDelegate((values) =>
+                {
+                    foreach (var vv in values)
+                    {
+                        Debug.Print("收到数据下发指令:" + vv.Key + "," + vv.Value.ToString());
+                    }
+                });
+            }
+            mHisScanThread = new Thread(HisValueThreadPro);
+            mHisScanThread.IsBackground = true;
+            mHisScanThread.Start();
         }
 
         /// <summary>
         /// 
         /// </summary>
-        private void ThreadPro()
+        private void RealValueThreadPro()
         {
             while(true)
             {
@@ -75,9 +101,34 @@ namespace SpiderDriverDemo
                 }
                 else
                 {
-                    ProcessSetTagValue();
+                    ProcessSetRealTagValue();
                 }
                 Thread.Sleep(500);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void HisValueThreadPro()
+        {
+            while(true)
+            {
+                if (!driverProxy.IsLogin)
+                {
+                    if (driverProxy.IsConnected)
+                        driverProxy.Login("Admin", "Admin");
+                    if (driverProxy.IsLogin)
+                    {
+                        ReadAllIds();
+                      //  driverProxy.AppendRegistorDataChangedCallBack(mAllId.Keys.ToList());
+                    }
+                }
+                else
+                {
+                    ProcessSetHisTagValue();
+                }
+                Thread.Sleep(1000);
             }
         }
 
@@ -216,13 +267,116 @@ namespace SpiderDriverDemo
             var driverrecordTags = driverProxy.GetDriverRecordTypeTagIds();
             foreach(var vv in driverrecordTags)
             {
-                //to do hear
+                //to do here
             }
 
             var vvd = driverProxy.CheckRecordTypeByTagId(new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
         }
 
-        private void ProcessSetTagValue()
+        private void ProcessSetRealTagValue()
+        {
+            mCount++;
+            if (mCount > 3600) mCount = 0;
+            double sin = Math.Sin(mCount / 180.0 * Math.PI);
+            double cos = Math.Cos(mCount / 180.0 * Math.PI);
+            bool bval = mCount % 300 == 0;
+            byte btmp = (byte)(mCount % 256);
+            DateTime dnow = DateTime.UtcNow;
+
+            CountValue = mCount.ToString();
+            SimValue = sin.ToString("f4");
+            CosValue = cos.ToString("f4");
+            BoolValue = bval.ToString();
+            DateTimeValue = dnow.ToString();
+            if (rdb == null) return;
+
+            rdb.Clear();
+
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            int i = 0;
+            foreach(var vv in mAllId)
+            {
+                switch ((TagType)vv.Value.Item2)
+                {
+                    case TagType.Double:
+                        rdb.AppendValue(vv.Key,sin);
+                      
+                        break;
+                    case TagType.Bool:
+                        rdb.AppendValue(vv.Key, bval);
+                      
+                        break;
+                    case TagType.Byte:
+                        rdb.AppendValue(vv.Key, btmp);
+                       
+                        break;
+                    case TagType.DateTime:
+                        rdb.AppendValue(vv.Key, dnow);
+                        
+                        break;
+                    case TagType.Float:
+                        rdb.AppendValue(vv.Key, (float)cos);
+                       
+                        break;
+                    case TagType.Int:
+                        rdb.AppendValue(vv.Key, mCount);
+                        break;
+                    case TagType.Long:
+                        rdb.AppendValue(vv.Key, (long)mCount);
+                        break;
+                    case TagType.UInt:
+                        rdb.AppendValue(vv.Key, (uint)mCount);
+                        break;
+                    case TagType.ULong:
+                        rdb.AppendValue(vv.Key, (ulong)mCount);
+                        break;
+                    case TagType.UShort:
+                        rdb.AppendValue(vv.Key, (ushort)mCount);
+                        break;
+                    case TagType.Short:
+                        rdb.AppendValue(vv.Key, (short)mCount);
+                        break;
+                    case TagType.IntPoint:
+                        rdb.AppendValue(vv.Key, new IntPointData(mCount, mCount));
+                        break;
+                    case TagType.UIntPoint:
+                        rdb.AppendValue(vv.Key, new UIntPointData(mCount, mCount));
+                        break;
+                    case TagType.IntPoint3:
+                        rdb.AppendValue(vv.Key, new IntPoint3Data(mCount, mCount, mCount));
+                        break;
+                    case TagType.UIntPoint3:
+                        rdb.AppendValue(vv.Key, new UIntPoint3Data(mCount, mCount, mCount));
+                        break;
+                    case TagType.LongPoint:
+                        rdb.AppendValue(vv.Key, new LongPointData(mCount, mCount));
+                        break;
+                    case TagType.ULongPoint:
+                        rdb.AppendValue(vv.Key, new ULongPointData(mCount, mCount));
+                        break;
+                    case TagType.LongPoint3:
+                        rdb.AppendValue(vv.Key, new LongPoint3Data(mCount, mCount, mCount));
+                        break;
+                    case TagType.ULongPoint3:
+                        rdb.AppendValue(vv.Key, new ULongPoint3Data(mCount, mCount, mCount));
+                        break;
+                }
+                i++;
+                if (i % 1000000 == 0)
+                {
+                    driverProxy.SetTagValueAsync(rdb);
+                    rdb.Clear();
+                }
+            }
+            if(i % 1000000 != 0)
+            driverProxy.SetTagValueAsync(rdb);
+            sw.Stop();
+            Debug.Print("发送耗时:" + sw.ElapsedMilliseconds);
+        }
+
+
+        private void ProcessSetHisTagValue()
         {
             mCount++;
             if (mCount > 3600) mCount = 0;
@@ -244,113 +398,67 @@ namespace SpiderDriverDemo
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            var values = new Dictionary<int, Tuple<Cdy.Tag.TagType, object>>();
-
-            var hisvalus = new Dictionary<int, TagValueAndType>();
-
             int i = 0;
-            foreach(var vv in mAllId)
+            foreach (var vv in mAllId)
             {
                 switch ((TagType)vv.Value.Item2)
                 {
                     case TagType.Double:
-                        rdb.AppendValue(vv.Key,sin);
-                       
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, sin));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = sin, ValueType = (TagType)vv.Value.Item2 });
+                        rdb.AppendValue(vv.Key, sin);
                         break;
                     case TagType.Bool:
                         rdb.AppendValue(vv.Key, bval);
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, bval));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = bval, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Byte:
                         rdb.AppendValue(vv.Key, btmp);
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, btmp));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = btmp, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.DateTime:
                         rdb.AppendValue(vv.Key, dnow);
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, dnow));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = dnow, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Float:
                         rdb.AppendValue(vv.Key, (float)cos);
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, cos));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = cos, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Int:
                         rdb.AppendValue(vv.Key, mCount);
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Long:
                         rdb.AppendValue(vv.Key, (long)mCount);
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.UInt:
                         rdb.AppendValue(vv.Key, (uint)mCount);
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.ULong:
                         rdb.AppendValue(vv.Key, (ulong)mCount);
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.UShort:
                         rdb.AppendValue(vv.Key, (ushort)mCount);
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.Short:
                         rdb.AppendValue(vv.Key, (short)mCount);
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, mCount));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = mCount, ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.IntPoint:
                         rdb.AppendValue(vv.Key, new IntPointData(mCount, mCount));
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new IntPointData( mCount,mCount)));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new IntPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.UIntPoint:
                         rdb.AppendValue(vv.Key, new UIntPointData(mCount, mCount));
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new UIntPointData(mCount, mCount)));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new UIntPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.IntPoint3:
                         rdb.AppendValue(vv.Key, new IntPoint3Data(mCount, mCount, mCount));
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new IntPoint3Data(mCount, mCount, mCount)));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new IntPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.UIntPoint3:
                         rdb.AppendValue(vv.Key, new UIntPoint3Data(mCount, mCount, mCount));
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new UIntPoint3Data(mCount, mCount, mCount)));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new UIntPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.LongPoint:
                         rdb.AppendValue(vv.Key, new LongPointData(mCount, mCount));
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new LongPointData(mCount, mCount)));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new LongPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
-
                         break;
                     case TagType.ULongPoint:
                         rdb.AppendValue(vv.Key, new ULongPointData(mCount, mCount));
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new ULongPointData(mCount, mCount)));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new ULongPointData(mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
-
                         break;
                     case TagType.LongPoint3:
                         rdb.AppendValue(vv.Key, new LongPoint3Data(mCount, mCount, mCount));
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new LongPoint3Data(mCount, mCount, mCount)));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new LongPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
                         break;
                     case TagType.ULongPoint3:
                         rdb.AppendValue(vv.Key, new ULongPoint3Data(mCount, mCount, mCount));
-                        //values.Add(vv.Key, new Tuple<TagType, object>((TagType)vv.Value.Item2, new ULongPoint3Data(mCount, mCount, mCount)));
-                        //hisvalus.Add(vv.Key, new TagValueAndType() { Time = dnow, Quality = 0, Value = new ULongPoint3Data(mCount, mCount, mCount), ValueType = (TagType)vv.Value.Item2 });
-
                         break;
                 }
                 i++;
@@ -360,14 +468,10 @@ namespace SpiderDriverDemo
                     rdb.Clear();
                 }
             }
-            //long ltmp = sw.ElapsedMilliseconds;
-            if(i % 1000000 != 0)
-            driverProxy.SetTagRealAndHisValue(rdb);
+            if (i % 1000000 != 0)
+                driverProxy.SetTagRealAndHisValue(rdb);
             sw.Stop();
-            
             Debug.Print("发送耗时:" + sw.ElapsedMilliseconds);
-            
-            //driverProxy.SetTagHisValue(hisvalus,  5000);
         }
 
         /// <summary>
@@ -388,5 +492,7 @@ namespace SpiderDriverDemo
             for(int i=0;i<10;i++)
             driverProxy.SetTagHisValue(i, TagType.Double, vals);
         }
+
+
     }
 }

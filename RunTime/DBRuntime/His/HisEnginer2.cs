@@ -1338,10 +1338,10 @@ namespace Cdy.Tag
                     LoggerService.Service.Debug("HisEnginer", "ScanProcess 执行周期过程" + sw.ElapsedMilliseconds, ConsoleColor.Yellow);
                 }
 
-                if (sw.ElapsedMilliseconds >= 100)
+                if (sw.ElapsedMilliseconds >= 50)
                     Thread.Sleep(1);
                 else
-                    Thread.Sleep(100-(int)sw.ElapsedMilliseconds);
+                    Thread.Sleep(50-(int)sw.ElapsedMilliseconds);
 
                 sw.Reset();
             }

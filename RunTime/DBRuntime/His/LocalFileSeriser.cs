@@ -85,7 +85,8 @@ namespace Cdy.Tag
                 {
                     System.IO.Directory.CreateDirectory(dir);
                 }
-                mStream = System.IO.File.Create(filename, 1024,FileOptions.WriteThrough);
+               // mStream = System.IO.File.Create(filename, 1024,FileOptions.WriteThrough);
+                mStream = System.IO.File.Open(filename, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
                 return true;
             }
         }

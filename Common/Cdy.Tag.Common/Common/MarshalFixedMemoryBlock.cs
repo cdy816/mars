@@ -80,6 +80,7 @@ namespace Cdy.Tag
             mHandles = handle;
             mAllocSize = size;
             mSize = size;
+            mHandleValue = mHandles.ToInt64();
         }
 
         /// <summary>
@@ -201,6 +202,20 @@ namespace Cdy.Tag
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="size"></param>
+        public void Reset(IntPtr handle,int size)
+        {
+            mPosition = 0;
+            mHandles = handle;
+            mAllocSize = size;
+            mSize = size;
+            mHandleValue = mHandles.ToInt64();
+        }
 
         public void CheckAndResize(long size)
         {

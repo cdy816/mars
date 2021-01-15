@@ -42,7 +42,7 @@ namespace Cdy.Tag
         private object mUserSizeLock = new object();
 
 
-        private int mBufferItemSize = 1024 * 1024 * 128;
+        protected int mBufferItemSize = 1024 * 1024 * 128;
 
         public const int BufferSize256 = 1024 * 1024 * 256;
 
@@ -894,7 +894,7 @@ namespace Cdy.Tag
 
             long ost = offset % mBufferItemSize;
 
-            if (len + ost < mBufferItemSize)
+            if (len + ost <= mBufferItemSize)
             {
                 Marshal.Copy(values, valueoffset, mHandles[id] + (int)ost, len);
                // Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, len);
@@ -907,7 +907,7 @@ namespace Cdy.Tag
 
                // Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, ll);
 
-                if (len - ll < mBufferItemSize)
+                if (len - ll <= mBufferItemSize)
                 {
                     id++;
                     Marshal.Copy(values, valueoffset+ll, mHandles[id], len - ll);
@@ -943,7 +943,7 @@ namespace Cdy.Tag
 
             long ost = offset % mBufferItemSize;
 
-            if (len + ost < mBufferItemSize)
+            if (len + ost <= mBufferItemSize)
             {
                 Buffer.MemoryCopy((void*)(values + valueOffset), (void*)(mHandles[id] + (int)ost), mBufferItemSize-ost,len);
 
@@ -964,7 +964,7 @@ namespace Cdy.Tag
 
                 // Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, ll);
 
-                if (len - ll < mBufferItemSize)
+                if (len - ll <= mBufferItemSize)
                 {
                     id++;
                     Buffer.MemoryCopy((void*)(values + valueOffset+ll), (void*)(mHandles[id]), mBufferItemSize,len- ll);
@@ -1009,7 +1009,7 @@ namespace Cdy.Tag
 
             long ost = offset % mBufferItemSize;
 
-            if (len + ost < mBufferItemSize)
+            if (len + ost <= mBufferItemSize)
             {
                 Marshal.Copy(values, valueoffset, mHandles[id] + (int)ost, len);
                 // Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, len);
@@ -1021,7 +1021,7 @@ namespace Cdy.Tag
                 Marshal.Copy(values, valueoffset, mHandles[id] + (int)ost, ll);
                 // Buffer.BlockCopy(values, valueoffset, mBuffers[id], (int)ost, ll);
 
-                if (len - ll < mBufferItemSize)
+                if (len - ll <= mBufferItemSize)
                 {
                     id++;
                     Marshal.Copy(values, valueoffset+ll, mHandles[id], len-ll);
@@ -2247,7 +2247,7 @@ namespace Cdy.Tag
             //计算从源数据需要读取数据块索引
             //Array Index,Start Address,Data Len
             List<Tuple<int, int,  long>> mSourceIndex = new List<Tuple<int, int, long>>();
-            if(osts+len<mBufferItemSize)
+            if(osts+len<=mBufferItemSize)
             {
                 mSourceIndex.Add(new Tuple<int, int, long>(hds, (int)osts, len));
             }
@@ -2257,7 +2257,7 @@ namespace Cdy.Tag
 
                 mSourceIndex.Add(new Tuple<int, int, long>(hds, (int)osts,  ll));
 
-                if ((len - ll) < mBufferItemSize)
+                if ((len - ll) <= mBufferItemSize)
                 {
                     hds++;
                     mSourceIndex.Add(new Tuple<int, int, long>(hds, 0,len-ll));
@@ -2287,7 +2287,7 @@ namespace Cdy.Tag
             foreach (var vv in mSourceIndex)
             {
                 var hdt = RelocationAddressToArrayIndex(targetAddr, out ostt);
-                if (ostt + vv.Item3 < mBufferItemSize)
+                if (ostt + vv.Item3 <= mBufferItemSize)
                 {
                     Buffer.MemoryCopy((void*)(this.mHandles[vv.Item1] + vv.Item2), (void*)(target.mHandles[hdt] + (int)ostt), mBufferItemSize-ostt, vv.Item3);
                 }
@@ -2316,7 +2316,7 @@ namespace Cdy.Tag
                 long osts = 0;
                 var hds = RelocationAddressToArrayIndex(offset, out osts);
 
-                if ((osts + len) < mBufferItemSize)
+                if ((osts + len) <= mBufferItemSize)
                 {
                     WriteToStream(stream, mHandles[hds], (int)osts, (int)len);
                 }
@@ -2327,7 +2327,7 @@ namespace Cdy.Tag
 
                     mSourceIndex.Add(new Tuple<int, int, long>(hds, (int)osts, ll));
 
-                    if (len - ll < mBufferItemSize)
+                    if (len - ll <= mBufferItemSize)
                     {
                         hds++;
                         mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, len - ll));

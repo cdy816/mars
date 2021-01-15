@@ -34,6 +34,14 @@ namespace DBRuntime.His
         /// <summary>
         /// 
         /// </summary>
+        public HisDataMemoryBlock():base()
+        {
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="size"></param>
         public HisDataMemoryBlock(int size):base(size)
         {

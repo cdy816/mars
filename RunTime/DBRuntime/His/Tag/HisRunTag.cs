@@ -43,10 +43,10 @@ namespace Cdy.Tag
 
         #region ... Properties ...
 
-        /// <summary>
-        /// 实时值地址
-        /// </summary>
-        public byte[] RealMemoryAddr { get; set; }
+        ///// <summary>
+        ///// 实时值地址
+        ///// </summary>
+        //public byte[] RealMemoryAddr { get; set; }
 
         /// <summary>
         /// 实时值地址指针
@@ -83,6 +83,26 @@ namespace Cdy.Tag
         /// 历史值缓存2
         /// </summary>
         public HisDataMemoryBlock HisValueMemory2 { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static HisDataMemoryBlockCollection3 CurrentDataMemory { get; set; }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        public long DataMemoryPointer1 { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public long DataMemoryPointer2 { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public long CurrentMemoryPointer { get; set; }
 
         ///// <summary>
         ///// 
@@ -178,7 +198,8 @@ namespace Cdy.Tag
         public void Snape()
         {
             System.Runtime.InteropServices.Marshal.Copy(RealMemoryPtr + RealValueAddr, ValueSnape, 0, SizeOfValue);
-            QulitySnape = RealMemoryAddr[RealValueAddr + SizeOfValue + 8];
+            // QulitySnape = RealMemoryAddr[RealValueAddr + SizeOfValue + 8];
+            QulitySnape = MemoryHelper.ReadByte((void*)(RealMemoryPtr), RealValueAddr + SizeOfValue + 8);
         }
 
         /// <summary>
@@ -199,7 +220,8 @@ namespace Cdy.Tag
             HisAddr.WriteBytesDirect(HisValueStartAddr + vcount * SizeOfValue, RealMemoryPtr, RealValueAddr, SizeOfValue);
 
             //更新质量戳
-            HisAddr.WriteByteDirect(HisQulityStartAddr + vcount, RealMemoryAddr[RealValueAddr + SizeOfValue + 8]);
+            // HisAddr.WriteByteDirect(HisQulityStartAddr + vcount, RealMemoryAddr[RealValueAddr + SizeOfValue + 8]);
+            HisAddr.WriteByteDirect(HisQulityStartAddr + vcount, MemoryHelper.ReadByte((void*)(RealMemoryPtr), RealValueAddr + SizeOfValue + 8));
         }
 
         /// <summary>
@@ -237,9 +259,10 @@ namespace Cdy.Tag
 
             //写入数值
             HisValueMemoryStartAddr.WriteBytesDirect((int)(HisValueMemoryStartAddr.ValueAddress + vcount * SizeOfValue), RealMemoryPtr, RealValueAddr, SizeOfValue);
-
+                       
             //更新质量戳
-            HisValueMemoryStartAddr.WriteByteDirect((int)(HisValueMemoryStartAddr.QualityAddress + vcount), RealMemoryAddr[RealValueAddr + SizeOfValue + 8]);
+            //HisValueMemoryStartAddr.WriteByteDirect((int)(HisValueMemoryStartAddr.QualityAddress + vcount), RealMemoryAddr[RealValueAddr + SizeOfValue + 8]);
+            HisValueMemoryStartAddr.WriteByteDirect((int)(HisValueMemoryStartAddr.QualityAddress + vcount), MemoryHelper.ReadByte((void*)(RealMemoryPtr), RealValueAddr + SizeOfValue + 8));
         }
 
         /// <summary>
@@ -264,6 +287,53 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="count"></param>
+        /// <param name="tim"></param>
+        public virtual void UpdateValue3(int count, int tim)
+        {
+            var vcount = count > MaxCount ? MaxCount : count;
+            Count = vcount;
+
+            //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
+            //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
+            CurrentDataMemory.WriteUShortDirect(CurrentMemoryPointer,(int)(TimerValueStartAddr + vcount * 2), (ushort)(tim));
+
+            //写入数值
+            CurrentDataMemory.WriteBytesDirect(CurrentMemoryPointer, (int)(HisValueStartAddr + vcount * SizeOfValue), RealMemoryPtr, RealValueAddr, SizeOfValue);
+
+            //更新质量戳
+            CurrentDataMemory.WriteByteDirect(CurrentMemoryPointer, (int)(HisQulityStartAddr + vcount), MemoryHelper.ReadByte((void*)(RealMemoryPtr), RealValueAddr + SizeOfValue + 8));
+            // CurrentDataMemory.WriteByteDirect(CurrentMemoryPointer, (int)(HisQulityStartAddr + vcount), RealMemoryAddr[RealValueAddr + SizeOfValue + 8]);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tim"></param>
+        public void UpdateValue3(int tim)
+        {
+            UpdateValue3(Count, tim);
+            Count = ++Count > MaxCount ? MaxCount : Count;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tim"></param>
+        public void UpdateChangedValue3(int tim)
+        {
+            if (CheckValueChangeToLastRecordValue((void*)RealMemoryPtr, RealValueAddr))
+            {
+                UpdateValue3(tim);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public void Dispose()
         {
             

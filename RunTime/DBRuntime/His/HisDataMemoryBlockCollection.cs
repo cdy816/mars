@@ -220,7 +220,7 @@ namespace DBRuntime.His
             {
                 foreach (var vv in memory.TagAddress)
                 {
-                    vv.Value?.Dump(stream);    
+                    vv.Value?.Dump(stream);
                 }
             }
         }

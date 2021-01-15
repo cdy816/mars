@@ -170,6 +170,7 @@ namespace Cdy.Tag
             doc.SetAttributeValue("Version", Database.Version);
             doc.SetAttributeValue("Auther", "cdy");
             doc.SetAttributeValue("MaxId", Database.MaxId);
+            doc.SetAttributeValue("TagCount", Database.Tags.Count);
             XElement xe = new XElement("Tags");
             foreach(var vv in Database.Tags.Values)
             {

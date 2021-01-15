@@ -270,7 +270,8 @@ namespace DBInRun
             }
             catch(Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                LoggerService.Service.Info("Programe", ex.Message);
+                //Console.WriteLine(ex.Message);
             }
         }
 

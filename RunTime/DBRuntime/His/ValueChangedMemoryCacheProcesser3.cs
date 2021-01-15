@@ -212,7 +212,7 @@ namespace Cdy.Tag
                 
                 try
                 {
-                    int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
+                    int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
                     if (mChangedTags.Count > 0)
                     {
                         foreach (var vv in mChangedTags)

@@ -30,12 +30,11 @@ namespace Cdy.Tag
         #endregion ...Events...
 
         #region ... Constructor...
-            /// <summary>
-            /// 
-            /// </summary>
+        /// <summary>
+        /// 
+        /// </summary>
         public HisRunTag()
         {
-            //ValueSnape = new byte[SizeOfValue];
             ValueSnape = GC.AllocateArray<byte>(SizeOfValue, true);
         }
 
@@ -72,16 +71,19 @@ namespace Cdy.Tag
         /// <summary>
         /// 历史值起始地址
         /// </summary>
+        [Obsolete]
         public HisDataMemoryBlock HisValueMemoryStartAddr { get; set; }
 
         /// <summary>
         /// 历史值缓存1
         /// </summary>
+        [Obsolete]
         public HisDataMemoryBlock HisValueMemory1 { get; set; }
 
         /// <summary>
         /// 历史值缓存2
         /// </summary>
+        [Obsolete]
         public HisDataMemoryBlock HisValueMemory2 { get; set; }
 
         /// <summary>

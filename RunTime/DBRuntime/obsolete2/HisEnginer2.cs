@@ -22,6 +22,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 历史数据引擎2
     /// </summary>
+    [Obsolete]
     public class HisEnginer2 : IHisEngine2, ITagHisValueProduct, IDisposable, IHisTagQuery
     {
 

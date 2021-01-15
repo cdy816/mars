@@ -16,6 +16,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
+    [Obsolete]
     public interface IHisEngine2
     {
         /// <summary>

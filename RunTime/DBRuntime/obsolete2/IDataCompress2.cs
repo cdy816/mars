@@ -6,6 +6,7 @@
 //  Version 1.0
 //  种道洋
 //==============================================================
+using DBRuntime.His;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,7 +16,8 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public interface IDataSerialize2
+    [Obsolete]
+    public interface IDataCompress2
     {
 
         #region ... Variables  ...
@@ -35,26 +37,24 @@ namespace Cdy.Tag
         #endregion ...Properties...
 
         #region ... Methods    ...
+        
         /// <summary>
-        /// 请求序列化文件
+        /// 
         /// </summary>
         /// <param name="dataMemory"></param>
-        /// <param name="date"></param>
-        void RequestToSeriseFile(CompressMemory2 dataMemory);
+        void RequestToCompress(HisDataMemoryBlockCollection dataMemory);
 
         /// <summary>
-        /// 手动更新历史数据
+        /// 请求手动压缩数据
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="time"></param>
         /// <param name="data"></param>
-        /// <param name="size"></param>
-        void ManualRequestToSeriseFile(IMemoryBlock data);
+        void RequestManualToCompress(ManualHisDataMemoryBlock data);
 
         /// <summary>
         /// 
         /// </summary>
-        void RequestToSave();
+        void SubmitManualToCompress();
+
 
         #endregion ...Methods...
 

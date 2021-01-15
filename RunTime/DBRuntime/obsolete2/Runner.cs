@@ -21,6 +21,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
+    [Obsolete]
     public class Runner
     {
 

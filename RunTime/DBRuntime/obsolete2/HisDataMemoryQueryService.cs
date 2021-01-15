@@ -22,6 +22,7 @@ namespace DBRuntime.His
     /// <summary>
     /// 
     /// </summary>
+    [Obsolete]
     public class HisDataMemoryQueryService : IHisQueryFromMemory
     {
 
@@ -971,6 +972,7 @@ namespace DBRuntime.His
     /// <summary>
     /// 
     /// </summary>
+    [Obsolete]
     public class ManualTimeSpanMemory : DateTimeSpan
     {
 
@@ -983,6 +985,7 @@ namespace DBRuntime.His
     /// <summary>
     /// 
     /// </summary>
+    [Obsolete]
     public class TimeSpanMemory : DateTimeSpan
     {
 

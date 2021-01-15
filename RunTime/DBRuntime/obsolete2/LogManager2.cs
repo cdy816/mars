@@ -22,6 +22,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 日志管理系统
     /// </summary>
+    [Obsolete]
     public class LogManager2
     {
 

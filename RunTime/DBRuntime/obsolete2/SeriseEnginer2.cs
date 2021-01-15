@@ -42,6 +42,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 序列话引擎
     /// </summary>
+    [Obsolete]
     public class SeriseEnginer2 : IDataSerialize2, IDisposable
     {
 
@@ -370,6 +371,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
+    [Obsolete]
     public class SeriseFileItem2 : IDisposable
     {
         #region ... Variables  ...

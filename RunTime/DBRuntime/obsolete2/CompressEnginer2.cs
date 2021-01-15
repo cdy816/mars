@@ -22,6 +22,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
+    [Obsolete]
     public class CompressEnginer2 : IDataCompress2,IDisposable
     {
 

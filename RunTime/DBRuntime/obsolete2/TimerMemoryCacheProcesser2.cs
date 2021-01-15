@@ -11,16 +11,15 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Linq;
-using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace Cdy.Tag
 {
     /// <summary>
-    /// 值改变记录，记录周期同定时记录的周期的一样1s
-    /// 每隔1s毫秒检查一次变量是否改变，如果改变则记录。
-    /// 变化周期超过1s的情况，则会被忽略
+    /// 定时记录处理
     /// </summary>
-    public class ValueChangedMemoryCacheProcesser2:IDisposable
+    [Obsolete]
+    public class TimerMemoryCacheProcesser2:IDisposable
     {
 
         #region ... Variables  ...
@@ -29,14 +28,14 @@ namespace Cdy.Tag
         /// <summary>
         /// 定时记录对象集合
         /// </summary>
-        private Dictionary<int, HisRunTag> mTags = new Dictionary<int, HisRunTag>();
+        private Dictionary<long, List<HisRunTag>> mTimerTags = new Dictionary<long, List<HisRunTag>>();
 
         /// <summary>
         /// 
         /// </summary>
-        private ConcurrentDictionary<int, bool> mChangedTags = new ConcurrentDictionary<int, bool>();
+        private Dictionary<long, DateTime> mCount = new Dictionary<long, DateTime>();
 
-        public static  int MaxTagCount = 100000;
+        public static int MaxTagCount = 100000;
 
         private int mCurrentCount = 0;
 
@@ -48,9 +47,13 @@ namespace Cdy.Tag
 
         private Thread mRecordThread;
 
-        private bool mIsStarted = false;
+        private DateTime mLastUpdateTime;
 
-        private object mLockObj = new object();
+        private bool mIsBusy = false;
+
+        private int mBusyCount = 0;
+
+        private bool mIsStarted = false;
 
         #endregion ...Variables...
 
@@ -62,7 +65,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public ValueChangedMemoryCacheProcesser2()
+        public TimerMemoryCacheProcesser2()
         {
             resetEvent = new ManualResetEvent(false);
             closedEvent = new ManualResetEvent(false);
@@ -74,7 +77,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public Action<HisRunTag>    PreProcess { get; set; }
+        public Action<HisRunTag>  PreProcess { get; set; }
 
 
         /// <summary>
@@ -85,23 +88,18 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public string Name { get; set; }
+        public int Id { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        private DateTime mLastUpdateTime;
-
-        private int mLastUpdateSecond = -1;
-
-        /// <summary>
-        /// 
-        /// </summary>
         public bool IsStarted { get { return mIsStarted; } }
 
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        public void UpdateLastUpdateDatetime(DateTime time)
+        {
+            mLastUpdateTime = time;
+        }
 
         /// <summary>
         /// 
@@ -109,12 +107,19 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public void Notify(DateTime time)
         {
+            if (mIsBusy)
+            {
+                mBusyCount++;
+                //if(Id==0)
+                if(mBusyCount>4)
+                LoggerService.Service.Warn("Record", "TimerMemoryCacheProcesser"+Id+" 出现阻塞:"+mBusyCount);
+            }
+            else
+            {
+                mBusyCount = 0;
+            }
             mLastUpdateTime = time;
-            //if(mLastUpdateTime.Second!=mLastUpdateSecond)
-            //{
-                mLastUpdateSecond = mLastUpdateTime.Second;
-                resetEvent.Set();
-            //}
+            resetEvent.Set();
         }
 
         /// <summary>
@@ -122,27 +127,11 @@ namespace Cdy.Tag
         /// </summary>
         public void Start()
         {
-            //注册值改变处理
-            ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeValueChangedForConsumer(this.Name, new ValueChangedNotifyProcesser.ValueChangedDelegate((ids,len) => {
-                for(int i=0;i<len;i++)
-                {
-                    lock(mLockObj)
-                    mChangedTags[ids[i]] = true;
-                }
-                //LoggerService.Service.Info("TagChanged", "变化变量数:"+ids.Length);
-            }),null,null, new Func<IEnumerable<int>>(() => { return  mTags.Keys; }));
-
-            foreach(var vv in mTags.Keys)
-            {
-                mChangedTags.TryAdd(vv, false);
-            }
-
-
             mRecordThread = new Thread(ThreadProcess);
             mRecordThread.IsBackground=true;
             mRecordThread.Priority = ThreadPriority.Highest;
             mRecordThread.Start();
-
+            mLastUpdateTime = DateTime.UtcNow;
             mIsStarted = true;
         }
 
@@ -152,17 +141,9 @@ namespace Cdy.Tag
         public void Stop()
         {
             mIsClosed = true;
-            try{
-                resetEvent.Set();
-                closedEvent.WaitOne();
-                Clear();
-                mIsStarted = false;
-            }
-            catch
-            {
-
-            }
-            ServiceLocator.Locator.Resolve<IRealDataNotify>().UnSubscribeValueChangedForConsumer(this.Name);
+            resetEvent.Set();
+            closedEvent.WaitOne();
+            mIsStarted = false;
         }
 
         /// <summary>
@@ -174,7 +155,16 @@ namespace Cdy.Tag
         {
             if (mCurrentCount < MaxTagCount)
             {
-                mTags.Add(tag.Id,tag);
+                var cc = tag.Circle;
+                if (mTimerTags.ContainsKey(cc))
+                {
+                    mTimerTags[cc].Add(tag);
+                }
+                else
+                {
+                    mTimerTags.Add(cc, new List<HisRunTag>() { tag });
+                    mCount.Add(cc, DateTime.UtcNow);
+                }
                 mCurrentCount++;
                 return true;
             }
@@ -189,12 +179,11 @@ namespace Cdy.Tag
         /// </summary>
         public void Clear()
         {
-            mTags.Clear();
-            mChangedTags.Clear();
+            mTimerTags.Clear();
+            mCount.Clear();
             mCurrentCount = 0;
         }
 
-        
 
         /// <summary>
         /// 
@@ -202,45 +191,63 @@ namespace Cdy.Tag
         private void ThreadProcess()
         {
             ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray1);
-
             closedEvent.Reset();
+            var vkeys = mCount.Keys.ToArray();
+            var vdd = DateTime.UtcNow;
+            foreach(var vv in vkeys)
+            {
+                mCount[vv] = vdd.AddMilliseconds(vv);
+            }
+
             while (!mIsClosed)
             {
                 resetEvent.WaitOne();
                 resetEvent.Reset();
-                if (mIsClosed) break;
-
-                //LoggerService.Service.Info("ValueChangedMemoryCacheProcesser", Name + " 执行！");
+                if (mIsClosed) break;               
                 try
                 {
-                    int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer.MemoryTimeTick);
-                    if (mChangedTags.Count > 0)
+                    mIsBusy = true;
+                    var vdata = mLastUpdateTime;
+                    foreach (var vv in vkeys)
                     {
-                        foreach (var vv in mChangedTags)
+                        if (vdata >= mCount[vv])
                         {
-                            if (vv.Value)
+                            do
                             {
-                                lock (mLockObj)
-                                {
-                                    mTags[vv.Key].UpdateChangedValue(tim);
-                                    mChangedTags[vv.Key] = false;
-                                    //if (vv.Key==1)
-                                    //{
-                                    //    LoggerService.Service.Info("ValueChangedMemoryCacheProcesser", "tag "+ vv.Key+" is changed",ConsoleColor.Yellow);
-                                    //}
-                                }
+                                mCount[vv] = mCount[vv].AddMilliseconds(vv);
                             }
+                            while (mCount[vv] <= vdata);
+
+                            ProcessTags(mTimerTags[vv]);
+                            //LoggerService.Service.Info("TimerMemoryCacheProcesser", Id + " 开始处理" + vdata);
                         }
                     }
+                    
+                    mIsBusy = false;
                 }
-                catch(Exception ex)
+                catch
                 {
-                    LoggerService.Service.Erro("ValueChangedMemoryCacheProcesser", ex.Message);
+
                 }
                 resetEvent.Reset();
             }
             closedEvent.Set();
-            LoggerService.Service.Info("ValueChangedMemoryCacheProcesser", Name + " 退出");
+            LoggerService.Service.Info("TimerMemoryCacheProcesser",  Id + " 退出");
+
+        }
+
+
+        /// <summary>
+        /// 记录一组变量
+        /// </summary>
+        /// <param name="tags"></param>
+        private void ProcessTags(List<HisRunTag> tags)
+        {            
+            int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer2.MemoryTimeTick);
+            foreach (var vv in tags)
+            {
+                vv.UpdateValue2(tim);
+            }
         }
 
         /// <summary>
@@ -250,8 +257,6 @@ namespace Cdy.Tag
         {
             resetEvent.Close();
             closedEvent.Close();
-            mChangedTags.Clear();
-            mTags.Clear();
         }
 
         #endregion ...Methods...
@@ -260,4 +265,6 @@ namespace Cdy.Tag
 
         #endregion ...Interfaces...
     }
+
+    
 }

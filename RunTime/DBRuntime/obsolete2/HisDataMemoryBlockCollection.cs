@@ -21,6 +21,7 @@ namespace DBRuntime.His
     /// <summary>
     /// 
     /// </summary>
+    [Obsolete]
     public class HisDataMemoryBlockCollection : IDisposable
     {
 

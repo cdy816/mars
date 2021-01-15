@@ -21,8 +21,12 @@ namespace DBRuntime.His
     {
 
         #region ... Variables  ...
-        private object mLockObj = new object();
-        public static int Count = 0;
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //private object mLockObj = new object();
+        //public static int Count = 0;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -37,7 +41,7 @@ namespace DBRuntime.His
         /// <param name="size"></param>
         public ManualHisDataMemoryBlock(int size):base(size)
         {
-            Count++;
+            //Count++;
         }
 
         #endregion ...Constructor...
@@ -72,13 +76,13 @@ namespace DBRuntime.His
         #endregion ...Properties...
 
         #region ... Methods    ...
-        
+
         /// <summary>
         /// 
         /// </summary>
         public void Lock()
         {
-            Monitor.Enter(mLockObj);
+            Monitor.Enter(this);
         }
 
         /// <summary>
@@ -86,7 +90,7 @@ namespace DBRuntime.His
         /// </summary>
         public void Relase()
         {
-            Monitor.Exit(mLockObj);
+            Monitor.Exit(this);
         }
 
         #endregion ...Methods...

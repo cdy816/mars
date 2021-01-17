@@ -575,20 +575,25 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public static void ReadAllValue<T>(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<T> result)
         {
-            int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
-            foreach (var vv in data)
-            {
-                DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
-            }
-            // System.Threading.Tasks.Parallel.ForEach(data, (vv) => { DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result); });
+            //int timetick = 0;
 
-            foreach (var vv in data)
+            foreach(var vv in datafile.ReadTagDataBlock2(tid, offset, startTime, endTime))
             {
-                vv.Key.Dispose();
-
+                DeCompressDataBlockAllValue(vv.Item1, vv.Item2, vv.Item3, vv.Item4, result);
+                vv.Item1.Dispose();
             }
-            data.Clear();
+
+            //var data = datafile.ReadTagDataBlock2(tid, offset, startTime, endTime, out timetick);
+            //foreach (var vv in data)
+            //{
+            //    DeCompressDataBlockAllValue(vv.Key, vv.Value.Item1, vv.Value.Item2, timetick, result);
+            //}
+            //foreach (var vv in data)
+            //{
+            //    vv.Key.Dispose();
+
+            //}
+            //data.Clear();
         }
 
 
@@ -759,7 +764,7 @@ namespace Cdy.Tag
                         }
                         TagHeadOffsetManager.manager.Add(idsum, count, dtmp, blockPointer);
 
-
+                        dd.Dispose();
                     }
                     return dtmp;
                 }
@@ -1054,11 +1059,12 @@ namespace Cdy.Tag
         /// <param name="end"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static Dictionary<MarshalMemoryBlock, Tuple<DateTime, DateTime>> ReadTagDataBlock2(this DataFileSeriserbase datafile, int tid, long offset, DateTime start, DateTime end, out int timetick)
+        public static IEnumerable<Tuple<MarshalMemoryBlock,DateTime, DateTime,int>> ReadTagDataBlock2(this DataFileSeriserbase datafile, int tid, long offset, DateTime start, DateTime end)
         {
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
             long blockpointer = 0;
+            int timetick = 0;
             DateTime time;
             var tagIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
             int blockcount = fileDuration * 60 / blockDuration;
@@ -1103,15 +1109,20 @@ namespace Cdy.Tag
                     if (datasize > 0)
                     {
                         var rmm = datafile.Read(dataPointer + 4, (int)datasize);
-                        if (!re.ContainsKey(rmm))
-                        {
-                            re.Add(rmm, new Tuple<DateTime, DateTime>(sstart, send));
-                        }
+                        yield return new Tuple<MarshalMemoryBlock, DateTime, DateTime, int>(rmm, sstart, send,timetick);
+                        //if (!re.ContainsKey(rmm))
+                        //{
+                        //    re.Add(rmm, new Tuple<DateTime, DateTime>(sstart, send));
+                        //}
+                        //else
+                        //{
+                        //    Console.WriteLine("already exist!");
+                        //}
                     }
                 }
                 sstart = send;
             }
-            return re;
+            //return re;
         }
         #endregion
     }

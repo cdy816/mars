@@ -15,6 +15,7 @@ using System.Text;
 using System.Linq;
 using System.Diagnostics;
 using System.Threading;
+using System.Runtime.InteropServices;
 
 namespace Cdy.Tag
 {
@@ -203,7 +204,7 @@ namespace Cdy.Tag
             ServiceLocator.Locator.Resolve<IDataSerialize3>().ManualRequestToSeriseFile(cdata);
             data.MakeMemoryNoBusy();
 
-            HisDataMemoryQueryService.Service.ClearManualMemoryTime(data.Id, data.Time);
+            HisDataMemoryQueryService3.Service.ClearManualMemoryTime(data.Id, data.Time);
             ManualHisDataMemoryBlockPool.Pool.Release(data);
         }
 
@@ -241,8 +242,11 @@ namespace Cdy.Tag
                 lsize += (sourceM.ReadDataSize(vv.Value)+24);
             }
 
-            this.ReAlloc(HeadSize + (long)(lsize));
+            this.ReAlloc2(HeadSize + (long)(lsize));
             this.Clear();
+
+            mCompressedDataHandle = Marshal.AllocHGlobal((int)this.AllocSize);
+
         }
 
         /// <summary>
@@ -341,6 +345,7 @@ namespace Cdy.Tag
                     sw.Stop();
                     LoggerService.Service.Info("CompressEnginer", Id + "压缩完成 耗时:" + sw.ElapsedMilliseconds + " ltmp1:" + ltmp1 + " ltmp2:" + (ltmp2 - ltmp1) + " ltmp3:" + (ltmp3 - ltmp2) + " CPU Id:" + ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Blue);
 
+                    ZipCompress(Offset);
                 }
                 catch (Exception ex)
                 {
@@ -452,6 +457,18 @@ namespace Cdy.Tag
             mTagIds = null;
             //mIsDisposed = true;
             base.Dispose();
+        }
+
+        private IntPtr mCompressedDataHandle;
+
+        public unsafe void ZipCompress(long len)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            int datasize = 0;
+            System.IO.Compression.BrotliEncoder.TryCompress(new ReadOnlySpan<byte>((void*)this.Handles[0], (int)len), new Span<byte>((void*)mCompressedDataHandle, (int)this.AllocSize), out datasize);
+            sw.Stop();
+            Console.WriteLine(this.Name + " ZipCompress 耗时："+sw.ElapsedMilliseconds +" old size:"+len + " new size:"+datasize,ConsoleColor.Red);
         }
 
         #endregion ...Methods...

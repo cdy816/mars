@@ -147,19 +147,9 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override MarshalMemoryBlock Read(long start, int len)
         {
-            //var vtmp = len / 1024 * 100;
-            //vtmp = len % (1024 * 100) > 0 ? vtmp + 1 : vtmp;
-
-            MarshalMemoryBlock re = new MarshalMemoryBlock(len, 1024 * 100);
+            MarshalMemoryBlock re = new MarshalMemoryBlock(len, Math.Min(len,1024 * 100));
             mStream.Position = start;
-
-            //byte[] bval = new byte[len];
-            //mStream.Read(bval, 0, len);
-            //re.WriteBytesDirect(0, bval);
-
             re.ReadFromStream(mStream, len);
-
-            //mStream.Write(re.StartMemory, 0, len);
             return re;
         }
 

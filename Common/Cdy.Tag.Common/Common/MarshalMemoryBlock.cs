@@ -309,6 +309,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="size"></param>
+        public void ReAlloc2(long size)
+        {
+            mBufferItemSize = (int)size;
+            ReAlloc(size);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="size"></param>
         public void Resize(long size)
         {
             int count = (int)(size / mBufferItemSize) + 1;
@@ -2414,7 +2424,7 @@ namespace Cdy.Tag
 
         public void ReadFromStream(Stream stream,int len)
         {
-            var buffer = ArrayPool<byte>.Shared.Rent(1024 * 16);
+            var buffer = ArrayPool<byte>.Shared.Rent(81920);
             Array.Clear(buffer, 0, buffer.Length);
             int count = len / mBufferItemSize;
             int size = 0;
@@ -2428,7 +2438,6 @@ namespace Cdy.Tag
                     while (size < mBufferItemSize)
                     {
                         tsize = mBufferItemSize - size > bsize ? bsize : mBufferItemSize - size;
-
                         size += tsize;
 
                         stream.Read(buffer, 0, tsize);
@@ -2448,11 +2457,9 @@ namespace Cdy.Tag
                         tsize = isize - size > bsize ? bsize : isize - size;
 
                         size += tsize;
-
                         stream.Read(buffer, 0, tsize);
                         stream1.Write(buffer, 0, tsize);
                     }
-
                 }
             }
             ArrayPool<byte>.Shared.Return(buffer);

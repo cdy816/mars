@@ -9,6 +9,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -1857,6 +1858,21 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="address"></param>
+        /// <param name="start"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public MarshalMemoryBlock ReadBytes(IntPtr address,int start,int size)
+        {
+            MarshalMemoryBlock mmb = new MarshalMemoryBlock(size, size);
+            Buffer.MemoryCopy((void*)(address + start), (void*)mmb.Handles[0], size, size);
+
+            return mmb;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
         public byte ReadByte()
         {
@@ -2379,30 +2395,26 @@ namespace Cdy.Tag
         /// <param name="source"></param>
         /// <param name="start"></param>
         /// <param name="len"></param>
-        private void WriteToStream(Stream stream,IntPtr source,int start,int len)
+        public void WriteToStream(Stream stream,IntPtr source,int start,int len)
         {
-           // byte[] bvals = new byte[1024*1024*4];
-
-            //byte[] bvals = ArrayPool<byte>.Shared.Rent(1024 * 1024 * 4);
-
-            //int stmp = start;
-            //int ltmp = len;
-           
-            //while(ltmp>0)
-            //{
-            //    int ctmp = Math.Min(bvals.Length, ltmp);
-            //    Marshal.Copy(source + stmp, bvals, 0, ctmp);
-            //    stream.Write(bvals, 0, ctmp);
-            //    stmp += ctmp;
-            //    ltmp -= ctmp;
-            //}
-
             using (System.IO.UnmanagedMemoryStream stream1 = new UnmanagedMemoryStream((byte*)(source + start), len))
             {
                 stream1.CopyTo(stream);
             }
+        }
 
-            //ArrayPool<byte>.Shared.Return(bvals);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="source"></param>
+        /// <param name="len"></param>
+        public void WriteToStream(Stream stream,IntPtr source,int len)
+        {
+            using (System.IO.UnmanagedMemoryStream stream1 = new UnmanagedMemoryStream((byte*)(source), len))
+            {
+                stream1.CopyTo(stream);
+            }
         }
 
        
@@ -2424,45 +2436,49 @@ namespace Cdy.Tag
 
         public void ReadFromStream(Stream stream,int len)
         {
-            var buffer = ArrayPool<byte>.Shared.Rent(81920);
-            Array.Clear(buffer, 0, buffer.Length);
+            //var buffer = ArrayPool<byte>.Shared.Rent(81920);
+            //Array.Clear(buffer, 0, buffer.Length);
             int count = len / mBufferItemSize;
-            int size = 0;
-            int tsize = 0;
-            var bsize = buffer.Length;
+            //int size = 0;
+            //int tsize = 0;
+            //var bsize = buffer.Length;
             for(int i=0;i<count;i++)
             {
-                using (System.IO.UnmanagedMemoryStream stream1 = new UnmanagedMemoryStream((byte*)this.Buffers[i], mBufferItemSize,mBufferItemSize,FileAccess.Write))
-                {
-                    size = 0;
-                    while (size < mBufferItemSize)
-                    {
-                        tsize = mBufferItemSize - size > bsize ? bsize : mBufferItemSize - size;
-                        size += tsize;
+                //using (System.IO.UnmanagedMemoryStream stream1 = new UnmanagedMemoryStream((byte*)this.Buffers[i], mBufferItemSize,mBufferItemSize,FileAccess.Write))
+                //{
+                //    size = 0;
+                //    while (size < mBufferItemSize)
+                //    {
+                //        tsize = mBufferItemSize - size > bsize ? bsize : mBufferItemSize - size;
+                //        size += tsize;
+                //        stream.Read(buffer, 0, tsize);
+                //        stream1.Write(buffer, 0, tsize);
+                //    }
+                //}
 
-                        stream.Read(buffer, 0, tsize);
-                        stream1.Write(buffer, 0, tsize);
-                    }
-                }
+                stream.Read(new Span<byte>((void*)this.Buffers[i], mBufferItemSize));
             }
 
             if(len%mBufferItemSize>0)
             {
-                size = 0;
+                //size = 0;
                 int isize = len % mBufferItemSize;
-                using (System.IO.UnmanagedMemoryStream stream1 = new UnmanagedMemoryStream((byte*)this.Buffers[count], isize,isize,FileAccess.Write))
-                {
-                    while (size < isize)
-                    {
-                        tsize = isize - size > bsize ? bsize : isize - size;
 
-                        size += tsize;
-                        stream.Read(buffer, 0, tsize);
-                        stream1.Write(buffer, 0, tsize);
-                    }
-                }
+                stream.Read(new Span<byte>((void*)this.Buffers[count], isize));
+
+                //using (System.IO.UnmanagedMemoryStream stream1 = new UnmanagedMemoryStream((byte*)this.Buffers[count], isize,isize,FileAccess.Write))
+                //{
+                //    while (size < isize)
+                //    {
+                //        tsize = isize - size > bsize ? bsize : isize - size;
+
+                //        size += tsize;
+                //        stream.Read(buffer, 0, tsize);
+                //        stream1.Write(buffer, 0, tsize);
+                //    }
+                //}
             }
-            ArrayPool<byte>.Shared.Return(buffer);
+            //ArrayPool<byte>.Shared.Return(buffer);
         }
 
         /// <summary>
@@ -2628,10 +2644,6 @@ namespace Cdy.Tag
         public static void MakeMemoryBusy(this MarshalMemoryBlock memory)
         {
             memory.IncRef();
-            //LoggerService.Service.Info("MemoryBlock","make "+ memory.Name + " is busy.....");
-            //memory.IsBusy = true;
-            
-            //memory.StartMemory[0] = 1;
         }
 
         /// <summary>
@@ -2641,9 +2653,6 @@ namespace Cdy.Tag
         public static void MakeMemoryNoBusy(this MarshalMemoryBlock memory)
         {
             memory.DecRef();
-            //LoggerService.Service.Info("MemoryBlock", "make " + memory.Name+ " is ready !");
-            
-            //memory.StartMemory[0] = 0;
         }
 
         /// <summary>
@@ -2695,6 +2704,11 @@ namespace Cdy.Tag
                 stream.Flush();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memory"></param>
+        /// <param name="time"></param>
         public static void Dump(this MarshalMemoryBlock memory,DateTime time)
         {
             string fileName = memory.Name + "_" + time.ToString("yyyy_MM_dd_HH_mm_ss") + ".dmp";
@@ -2702,58 +2716,67 @@ namespace Cdy.Tag
             Dump(memory, fileName);
         }
 
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="memory"></param>
+        //public static void Dump(this MarshalMemoryBlock memory)
+        //{
+        //    string fileName = memory.Name + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss")+".dmp";
+        //    fileName = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(MarshalMemoryBlock).Assembly.Location), fileName);
+        //    Dump(memory, fileName);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="file"></param>
+        ///// <returns></returns>
+        //public static MarshalMemoryBlock LoadDumpFromFile(this string file)
+        //{
+        //    if(System.IO.File.Exists(file))
+        //    {
+        //        using (var stream = System.IO.File.OpenRead(file))
+        //        {
+        //            MarshalMemoryBlock block = new MarshalMemoryBlock(stream.Length);
+        //            byte[] bvals = new byte[1024 * 64];
+        //            int len = 0;
+        //            do
+        //            {
+        //                len = stream.Read(bvals, 0, bvals.Length);
+        //                block.WriteBytes(block.Position, bvals, 0, len);
+        //            }
+        //            while (len > 0);
+        //        }
+        //    }
+        //    return null;
+        //}
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="memory"></param>
-        public static void Dump(this MarshalMemoryBlock memory)
-        {
-            string fileName = memory.Name + "_" + DateTime.Now.ToString("yyyy_MM_dd_HH_mm_ss")+".dmp";
-            fileName = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(MarshalMemoryBlock).Assembly.Location), fileName);
-            Dump(memory, fileName);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="file"></param>
-        /// <returns></returns>
-        public static MarshalMemoryBlock LoadDumpFromFile(this string file)
-        {
-            if(System.IO.File.Exists(file))
-            {
-                using (var stream = System.IO.File.OpenRead(file))
-                {
-                    MarshalMemoryBlock block = new MarshalMemoryBlock(stream.Length);
-                    byte[] bvals = new byte[1024 * 64];
-                    int len = 0;
-                    do
-                    {
-                        len = stream.Read(bvals, 0, bvals.Length);
-                        block.WriteBytes(block.Position, bvals, 0, len);
-                    }
-                    while (len > 0);
-                }
-            }
-            return null;
-        }
-
+        /// <param name="fileName"></param>
         public static void SaveToFile(this MarshalMemoryBlock memory, string fileName)
         {
-            var stream = System.IO.File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
-            stream.Write(BitConverter.GetBytes(memory.Buffers.Count),0,4);
-            stream.Write(BitConverter.GetBytes(memory.BufferItemSize), 0, 4);
-            byte[] bvals = new byte[1024];
-            foreach(var vv in memory.Buffers)
+
+            string sd = System.IO.Path.GetDirectoryName(fileName);
+            if(!System.IO.Directory.Exists(sd))
             {
-                for(int i=0;i<memory.BufferItemSize/1024;i++)
-                {
-                    Marshal.Copy(vv + i * 1024, bvals, 0, 1024);
-                    stream.Write(bvals, 0, 1024);
-                }
+                System.IO.Directory.CreateDirectory(sd);
+            }
+
+            var stream = System.IO.File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+          
+            stream.Write(BitConverter.GetBytes(memory.Buffers.Count), 0, 4);
+            stream.Write(BitConverter.GetBytes(memory.BufferItemSize), 0, 4);
+            foreach (var vv in memory.Buffers)
+            {
+                memory.WriteToStream(stream, vv, memory.BufferItemSize);
             }
             stream.Flush();
             stream.Close();
+            
         }
 
         /// <summary>
@@ -2761,29 +2784,28 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="memory"></param>
         /// <param name="fileName"></param>
-        public static MarshalMemoryBlock LoadFileToMarshalMemory(this string fileName)
+        public static unsafe MarshalMemoryBlock LoadFileToMarshalMemory(this string fileName)
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             var stream = (System.IO.File.Open(fileName, FileMode.Open, FileAccess.Read));
             byte[] bb = new byte[4];
             stream.Read(bb, 0, 4);
             int mbcount = BitConverter.ToInt32(bb,0);
             stream.Read(bb, 0, 4);
             int bufferItemSize = BitConverter.ToInt32(bb, 0);
+            //byte[] byt = new byte[bufferItemSize];
+            MarshalMemoryBlock memory = new MarshalMemoryBlock(bufferItemSize * mbcount,bufferItemSize);
 
-            MarshalMemoryBlock memory = new MarshalMemoryBlock(bufferItemSize * mbcount);
             for (int i = 0; i < mbcount; i++)
             {
-                long size = Math.Min(memory.BufferItemSize, stream.Length - stream.Position);
-                byte[] bvals = new byte[1024 * 64];
-                int len = 0;
-                do
-                {
-                    len = stream.Read(bvals, 0, bvals.Length);
-                    memory.WriteBytes(memory.Position, bvals, 0, len);
-                }
-                while (len > 0);
+                stream.Read(new Span<byte>((void*)memory.Buffers[i],bufferItemSize));
+                //stream.Read(new Span<byte>(byt));
             }
             stream.Close();
+            sw.Stop();
+
+            Debug.Print("加载文件 "+ fileName +" 耗时:" + sw.ElapsedMilliseconds);
             return memory;
         }
     }

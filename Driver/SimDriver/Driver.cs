@@ -226,7 +226,7 @@ namespace SimDriver
 
                 mCosStopwatch.Stop();
 
-                LoggerService.Service.Info("SimDriver", "设置变量耗时:" + ll + " 其他耗时:" + (mCosStopwatch.ElapsedMilliseconds - ll) + " count:" + vv.Count);
+                //LoggerService.Service.Info("SimDriver", "设置变量耗时:" + ll + " 其他耗时:" + (mCosStopwatch.ElapsedMilliseconds - ll) + " count:" + vv.Count);
 
                 var ts = (DateTime.Now - mLastProcessTime).TotalMilliseconds;
                 lock (mLockObj)

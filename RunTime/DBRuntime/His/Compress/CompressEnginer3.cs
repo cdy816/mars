@@ -301,7 +301,7 @@ namespace Cdy.Tag
                                 mm.Value.Compress(sm);
                             });
 
-                            HisDataMemoryQueryService.Service.ClearMemoryTime(sm.CurrentDatetime);
+                            HisDataMemoryQueryService3.Service.ClearMemoryTime(sm.CurrentDatetime);
                             sm.Clear();
                             sm.MakeMemoryNoBusy();
 

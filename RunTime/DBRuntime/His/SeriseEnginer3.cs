@@ -617,9 +617,9 @@ namespace Cdy.Tag
         {
             //Stopwatch sw = new Stopwatch();
             //sw.Start();
-            //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+tagcount(4)+ tagid sum(8) +file duration(4)+ block duration(4)+Time tick duration(4)+ { len + [tag id]}+ [data blockpoint(8)]
+            //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+tagcount(4)+ tagid sum(8) +file duration(4)+ block duration(4)+Time tick duration(4)+ { len + [tag id]}+ [data blockpoint(8+4)]
             int blockcount = FileDuration * 60 / BlockDuration;
-            int len = GetDataRegionHeaderLength() + 4 + mTagIdMemoryCach.Position + mTagCount * (blockcount * 8);
+            int len = GetDataRegionHeaderLength() + 4 + mTagIdMemoryCach.Position + mTagCount * (blockcount * 12);
 
             totallenght = len;
 
@@ -1153,7 +1153,8 @@ namespace Cdy.Tag
                 var vpointer = mwriter.CurrentPostion;
 
                 datablock.WriteToStream(mFileWriter.GetStream(), 28, size-28);//直接拷贝数据块
-                mFileWriter.Write(vpointer, heads);
+                mFileWriter.Write(0, heads);//写入相对地址
+                mFileWriter.Write(vpointer, heads+4); //写入基地址
 
                 LoggerService.Service.Debug("SeriseEnginer3", "单数据块更新 变量:"+ id +" 头指针:"+heads+"  数据区指针:"+vpointer, ConsoleColor.Cyan);
 
@@ -1358,7 +1359,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 执行存储到磁盘
         /// </summary>
-        public void SaveToFile(MarshalMemoryBlock mProcessMemory, long dataOffset, DateTime time,DateTime endTime)
+        public void SaveToFileB(MarshalMemoryBlock mProcessMemory, long dataOffset, DateTime time,DateTime endTime)
         {
             /*
              1. 检查变量ID是否变动，如果变动则重新记录变量的ID列表
@@ -1415,29 +1416,8 @@ namespace Cdy.Tag
                     {
                         mHeadValues.CheckAndResize(count * 12);
                     }
+
                     mHeadValues.Clear();
-
-                    //mBlockPointMemory.CheckAndResize(mTagCount * 8);
-                    //mBlockPointMemory.Clear();
-
-
-
-
-                    //var vtime = FormateTime(time);
-                    //Dictionary<int, long> timecach;
-
-                    //lock (mPointerCach)
-                    //{
-                    //    if (mPointerCach.ContainsKey(time))
-                    //    {
-                    //        timecach = mPointerCach[time];
-                    //    }
-                    //    else
-                    //    {
-                    //        timecach = new Dictionary<int, long>();
-                    //    }
-                    //}
-
                     //更新数据块指针
                     for (int i = 0; i < count; i++)
                     {
@@ -1447,51 +1427,25 @@ namespace Cdy.Tag
                         offset += 8;
                         if (id > -1)
                         {
-                            ////如果之前通过，手动记录已经更新了，则需要同步指针
-                            //if (timecach.ContainsKey(id))
-                            //{
-                            //    mBlockPointMemory.WriteLong(i * 8, timecach[id]);
-                            //}
-                            //else
-                            //{
-                            //mBlockPointMemory.WriteLong(i * 8, addr);
-                            //}
                             mHeadValues.Write(id);
                             mHeadValues.Write(addr);
-                            //mHeadValues.Add(id, addr);
                         }
                     }
-
-                    //lock (mPointerCach)
-                    //{
-                    //    foreach (var vv in mPointerCach.Keys.ToArray())
-                    //    {
-                    //        if (vv <= mCurrentTime)
-                    //        {
-                    //            mPointerCach.Remove(vv);
-                    //        }
-                    //    }
-                    //}
-
 
                     //计算本次更新对应的指针区域的起始地址
                     FileStartHour = (time.Hour / FileDuration) * FileDuration;
                     int bid = ((time.Hour - FileStartHour) * 60 + time.Minute) / BlockDuration;
 
                     //计算出本次更新的头地址地址
-                     var pointAddr = mBlockPointOffset + mTagCount * 8 * bid;
+                    var pointAddr = mBlockPointOffset + mTagCount * 8 * bid;
 
                     var ltmp3 = sw.ElapsedMilliseconds;
 
                     mFileWriter.GoToEnd();
-                    //long lpp = mFileWriter.CurrentPostion;
 
                     mProcessMemory.WriteToStream(mFileWriter.GetStream(), start, datasize);//直接拷贝数据块
 
                     //写入指针头部区域
-                    // mFileWriter.Write(mBlockPointMemory.Buffers, pointAddr, 0, (int)mBlockPointMemory.AllocSize);
-
-                    //foreach (var vv in mHeadValues)
                     int key = 0;
                     long data = 0;
                     mHeadValues.Position = 0;
@@ -1508,6 +1462,105 @@ namespace Cdy.Tag
                     sw.Stop();
 
                     LoggerService.Service.Info("SeriseFileItem" + Id, "写入数据 " + mCurrentFileName + "  数据大小：" + ((datasize) ) / 1024.0 / 1024 + " m" + "其他脚本耗时:" + ltmp + "," + (ltmp2 - ltmp) + "," + (ltmp3 - ltmp2) + "存储耗时:" + (sw.ElapsedMilliseconds - ltmp3));
+                }
+            }
+            catch (System.IO.IOException ex)
+            {
+                LoggerService.Service.Erro("SeriseEnginer" + Id, ex.Message);
+            }
+        }
+
+
+        /// <summary>
+        /// 执行存储到磁盘,
+        /// 地址指针采用12字节，基地址(8) + 偏移地址(4)
+        /// </summary>
+        public void SaveToFile(MarshalMemoryBlock mProcessMemory, long dataOffset, DateTime time, DateTime endTime)
+        {
+            /*
+             1. 检查变量ID是否变动，如果变动则重新记录变量的ID列表
+             2. 拷贝数据块
+             3. 更新数据块指针
+             */
+            //LoggerService.Service.Info("SeriseFileItem" + Id, "*********开始执行存储**********");
+            try
+            {
+                lock (mFileLocker)
+                {
+
+                    Stopwatch sw = new Stopwatch();
+                    sw.Start();
+
+                    //数据大小
+                    var datasize = mProcessMemory.ReadInt(dataOffset);
+                    var count = mProcessMemory.ReadInt(dataOffset + 4);//变量个数
+                    //mTagCount = count;
+                    mCurrentTime = time;
+
+                    var ltmp = sw.ElapsedMilliseconds;
+
+                    //打开文件
+                    if (!CheckFile(time))
+                        return;
+
+                    //更新最后写入时间
+                    var vtmp = mFileWriter.ReadDateTime(8);
+                    if (endTime > vtmp)
+                    {
+                        mFileWriter.Write(endTime, 8);
+                    }
+
+                    if (datasize == 0)
+                    {
+                        Flush();
+                        sw.Stop();
+                        return;
+                    }
+
+                    var ltmp2 = sw.ElapsedMilliseconds;
+
+                    long offset = 8 + dataOffset;
+                    long start = count * 8 + offset;//计算出数据起始地址
+
+                    var dataAddr = this.mFileWriter.GoToEnd().CurrentPostion;
+                   
+                    //计算本次更新对应的指针区域的起始地址
+                    FileStartHour = (time.Hour / FileDuration) * FileDuration;
+                    int bid = ((time.Hour - FileStartHour) * 60 + time.Minute) / BlockDuration;
+                    //计算出本次更新的头地址地址
+                    var pointAddr = mBlockPointOffset + mTagCount * 12 * bid;
+
+                    long ctmp = 0;
+
+                    //写入指针头部区域
+                    for (int i = 0; i < count; i++)
+                    {
+                        //读取ID
+                        var id = mProcessMemory.ReadInt(offset);
+                        //读取偏移地址
+                        var addr = mProcessMemory.ReadInt(offset + 4);
+
+                        offset += 8;
+                        if (id > -1)
+                        {
+                            ctmp = pointAddr + mTagIndexCach[id] * 12;
+                            mFileWriter.Write((int)addr, ctmp); //写入偏移地址
+                            mFileWriter.Write(dataAddr,  ctmp + 4); //写入基地址
+                        }
+                    }
+
+                    var ltmp3 = sw.ElapsedMilliseconds;
+
+                    mFileWriter.GoToEnd();
+                    CompressMemory3 cm = mProcessMemory as CompressMemory3;
+                    mProcessMemory.WriteToStream(mFileWriter.GetStream(),cm.CompressedDataPointer,0, cm.CompressedDataSize+8);//直接拷贝数据块
+
+                    Flush();
+
+
+                    sw.Stop();
+
+                    LoggerService.Service.Info("SeriseFileItem" + Id, "写入数据 " + mCurrentFileName + "  数据大小：" + ((cm.CompressedDataSize+8)) / 1024.0 / 1024 + " m" + "其他脚本耗时:" + ltmp + "," + (ltmp2 - ltmp) + "," + (ltmp3 - ltmp2) + "存储耗时:" + (sw.ElapsedMilliseconds - ltmp3));
                 }
             }
             catch (System.IO.IOException ex)

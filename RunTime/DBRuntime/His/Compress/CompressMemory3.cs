@@ -45,6 +45,10 @@ namespace Cdy.Tag
 
         private HisDataMemoryBlock cachblock = new HisDataMemoryBlock();
 
+        private IntPtr mCompressedDataPointer;
+
+        private int mCompressedDataSize = 0;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -73,6 +77,29 @@ namespace Cdy.Tag
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public IntPtr CompressedDataPointer
+        {
+            get
+            {
+                return mCompressedDataPointer;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int CompressedDataSize
+        {
+            get
+            {
+                return mCompressedDataSize;
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -217,23 +244,10 @@ namespace Cdy.Tag
             mTagIds.Clear();
             long lsize = 0;
 
-            //var tagserver = ServiceLocator.Locator.Resolve<IHisEngine2>();
-            
-            //var tags = tagserver.ListAllTags().Where(e => e.Id >= Id * TagCountPerMemory && e.Id < (Id + 1) * TagCountPerMemory).OrderBy(e => e.Id);
-
             foreach(var vv in CompressUnitManager2.Manager.CompressUnit)
             {
                 mCompressCach.Add(vv.Key, vv.Value.Clone());
             }
-
-            //foreach(var vv in tags)
-            //{
-            //    var cpt = vv.CompressType;
-            //    if (!mCompressCach.ContainsKey(cpt))
-            //    {
-            //        mCompressCach.Add(cpt, CompressUnitManager2.Manager.GetCompressQuick(cpt).Clone());
-            //    }
-            //}
 
             foreach (var vv in sourceM.TagAddress.Where(e => e.Key >= Id * TagCountPerMemory && e.Key < (Id + 1) * TagCountPerMemory))
             {
@@ -245,7 +259,7 @@ namespace Cdy.Tag
             this.ReAlloc2(HeadSize + (long)(lsize));
             this.Clear();
 
-            mCompressedDataHandle = Marshal.AllocHGlobal((int)this.AllocSize);
+            mCompressedDataPointer = Marshal.AllocHGlobal((int)this.AllocSize);
 
         }
 
@@ -294,12 +308,13 @@ namespace Cdy.Tag
                     Stopwatch sw = new Stopwatch();
                     sw.Start();
 
-                    
-
                     //CheckTagAddress(source);
                     long datasize = 0;
                     int headOffset = 4 + 4;
-                    long Offset = headOffset + mTagIds.Count * 8;
+
+                    int tagheadoffset = headOffset + mTagIds.Count * 8;
+
+                    long Offset = tagheadoffset;
 
                     this.MakeMemoryBusy();
 
@@ -335,17 +350,18 @@ namespace Cdy.Tag
                     foreach (var vv in dtmp)
                     {
                         this.WriteInt(headOffset + count, (int)vv.Key);
-                        this.WriteInt(headOffset + count + 4, (int)vv.Value);
+                        this.WriteInt(headOffset + count + 4, (int)(vv.Value- tagheadoffset));
                         count += 8;
                     }
 
                     long ltmp3 = sw.ElapsedMilliseconds;
+                    ZipCompress(headOffset + mTagIds.Count * 8, (int)datasize);
 
                     ServiceLocator.Locator.Resolve<IDataSerialize3>().RequestToSeriseFile(this);
                     sw.Stop();
                     LoggerService.Service.Info("CompressEnginer", Id + "压缩完成 耗时:" + sw.ElapsedMilliseconds + " ltmp1:" + ltmp1 + " ltmp2:" + (ltmp2 - ltmp1) + " ltmp3:" + (ltmp3 - ltmp2) + " CPU Id:" + ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Blue);
 
-                    ZipCompress(Offset);
+                   
                 }
                 catch (Exception ex)
                 {
@@ -455,20 +471,48 @@ namespace Cdy.Tag
             mHisTagService = null;
             mTagIds.Clear();
             mTagIds = null;
+
+            Marshal.FreeHGlobal(mCompressedDataPointer);
+
             //mIsDisposed = true;
             base.Dispose();
         }
 
-        private IntPtr mCompressedDataHandle;
-
-        public unsafe void ZipCompress(long len)
+      
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="len"></param>
+        public unsafe void ZipCompress(int start,int size)
         {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            int datasize = 0;
-            System.IO.Compression.BrotliEncoder.TryCompress(new ReadOnlySpan<byte>((void*)this.Handles[0], (int)len), new Span<byte>((void*)mCompressedDataHandle, (int)this.AllocSize), out datasize);
-            sw.Stop();
-            Console.WriteLine(this.Name + " ZipCompress 耗时："+sw.ElapsedMilliseconds +" old size:"+len + " new size:"+datasize,ConsoleColor.Red);
+            try
+            {
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                if (System.IO.Compression.BrotliEncoder.TryCompress(new ReadOnlySpan<byte>((void*)(this.Handles[0] + start), size), new Span<byte>((void*)(mCompressedDataPointer + 8), (int)this.AllocSize - 8), out mCompressedDataSize))
+                {
+                    MemoryHelper.WriteInt32((void*)mCompressedDataPointer, 0, mCompressedDataSize);
+                    MemoryHelper.WriteInt32((void*)(mCompressedDataPointer), 4, size);
+                    
+                    //var vtmp = Marshal.AllocHGlobal(size);
+                    //int decodesize = 0;
+                    //System.IO.Compression.BrotliDecoder.TryDecompress(new ReadOnlySpan<byte>((void*)(mCompressedDataPointer + 8), (int)mCompressedDataSize), new Span<byte>((void*)vtmp, size), out decodesize);
+                    //Marshal.FreeHGlobal(vtmp);
+
+                    sw.Stop();
+                    LoggerService.Service.Info("CompressMemory", this.Name + " ZipCompress 耗时：" + sw.ElapsedMilliseconds + " old size:" + size + " new size:" + mCompressedDataSize);
+                }
+                else
+                {
+                    sw.Stop();
+                    LoggerService.Service.Warn("CompressMemory", this.Name + " ZipCompress 耗时：" + sw.ElapsedMilliseconds + " 压缩失败！");
+                }
+                
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Erro("CompressMemory", ex.Message);
+            }
         }
 
         #endregion ...Methods...

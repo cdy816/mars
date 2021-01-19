@@ -26,6 +26,8 @@ namespace Cdy.Tag
         /// </summary>
         public static DecodeMemoryCachManager Manager = new DecodeMemoryCachManager();
 
+        private Dictionary<string, bool> mBusyFiles = new Dictionary<string, bool>();
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -48,27 +50,37 @@ namespace Cdy.Tag
         /// <param name="datafile"></param>
         /// <param name="address"></param>
         /// <returns></returns>
-        public MarshalMemoryBlock GetMemory(DataFileSeriserbase datafile, long address)
+        public MarshalMemoryBlock GetMemory(DataFileSeriserbase datafile, long address,int datapointer)
         {
             string skey = System.IO.Path.GetFileNameWithoutExtension(datafile.FileName) + address;
             if(mCacheDatas.ContainsKey(skey))
-            {
-                return mCacheDatas[skey];
+            { 
+                var mh =mCacheDatas[skey];
+                var datasize = mh.ReadInt(datapointer);
+                return mh.ReadBytes(mh.Handles[0], datapointer + 4, datasize);
             }
             else
             {
-                //string sfile = System.IO.Path.Combine(GetCacheLocation(), skey);
-                //if (System.IO.File.Exists(sfile))
-                //{
-                //    return sfile.LoadFileToMarshalMemory();
-                //}
-                //else
-                //{
-                    var re = ReadAndDecompressMemory(datafile, address);
-                    mCacheDatas.Add(skey, re);
-                    //Task.Run(() => { re.SaveToFile(sfile); });
-                    return re;
-                //}
+                string sfile = System.IO.Path.Combine(GetCacheLocation(), skey);
+                if (System.IO.File.Exists(sfile) && !mBusyFiles.ContainsKey(skey))
+                {
+                    var sff = sfile.GetFileSeriser();
+                    var datasize = sff.ReadInt(datapointer+8);
+                    return sff.Read(datapointer + 8 + 4, datasize);
+                }
+                else
+                {
+                    var mh = ReadAndDecompressMemory(datafile, address);
+                    mCacheDatas.Add(skey, mh);
+                    mBusyFiles.Add(skey, true);
+                    Task.Run(() => {
+                        mh.SaveToFile(sfile);
+                        mBusyFiles.Remove(skey);
+                    });
+
+                    var datasize = mh.ReadInt(datapointer);
+                    return mh.ReadBytes(mh.Handles[0], datapointer + 4, datasize);
+                }
             }
         }
 

@@ -341,6 +341,19 @@ namespace Cdy.Tag
             return re;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public static DataFileSeriserbase GetFileSeriser(this string filename)
+        {
+            var re = DataFileSeriserManager.manager.GetDefaultFileSersie();
+            re.FileName = filename;
+            re.OpenForReadOnly(filename);
+            return re;
+        }
+
         #region 读取所有值
 
 
@@ -869,12 +882,13 @@ namespace Cdy.Tag
             var dataPointer = datafile.ReadInt(offset + blockpointer + dindex * 12 + blockIndex * tagCount * 12); //读取DataBlock的相对地址
             var dataPointerbase = datafile.ReadLong(offset + blockpointer + dindex * 12 + blockIndex * tagCount * 12 + 4); //读取DataBlock的基地址
 
-            var vmm = GetDataMemory(datafile, dataPointerbase);
-            var datasize = vmm.ReadInt(dataPointer);
+            var vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);
+            return vmm;
+            //var datasize = vmm.ReadInt(dataPointer);
 
             // var datasize = datafile.ReadInt(dataPointer); //读取DataBlock 的大小
 
-            return datafile.Read(dataPointer + 4, datasize);
+            //return datafile.Read(dataPointer + 4, datasize);
         }
 
         /// <summary>
@@ -905,16 +919,17 @@ namespace Cdy.Tag
             if (dataPointer > 0)
             {
                 //var datasize = datafile.ReadInt(dataPointer); //读取DataBlock 的大小
-                var vmm = GetDataMemory(datafile, dataPointerbase);
-                var datasize = vmm.ReadInt(dataPointer);
-                if (datasize > 0)
-                {
-                    return datafile.Read(dataPointer + 4, datasize);
-                }
-                else
-                {
-                    return null;
-                }
+                var vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);
+                return vmm;
+                //var datasize = vmm.ReadInt(dataPointer);
+                //if (datasize > 0)
+                //{
+                //    return datafile.Read(dataPointer + 4, datasize);
+                //}
+                //else
+                //{
+                //    return null;
+                //}
             }
             else
             {
@@ -1035,34 +1050,34 @@ namespace Cdy.Tag
                 if (dataPointerbase > 0 && dataPointer>-1)
                 {
                     //var datasize = datafile.ReadInt(dataPointer); //读取DataBlock 的大小
-                    var vmm = GetDataMemory(datafile, dataPointerbase);
-                    var datasize = vmm.ReadInt(dataPointer);
+                    var vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);
+                    //var datasize = vmm.ReadInt(dataPointer);
 
-                    if (datasize > 0)
+                    if (vmm !=null)
                     {
                         if (!rtmp.ContainsKey(dataPointer))
                         {
-                            var rmm = datafile.Read(dataPointer + 4, datasize);
-                            if (!re.ContainsKey(rmm))
+                            //var rmm = datafile.Read(dataPointer + 4, datasize);
+                            if (!re.ContainsKey(vmm))
                             {
-                                re.Add(rmm, new Tuple<List<DateTime>, int>(new List<DateTime>() { vdd },blockindex));
+                                re.Add(vmm, new Tuple<List<DateTime>, int>(new List<DateTime>() { vdd },blockindex));
                             }
                             else
                             {
-                                re[rmm].Item1.Add(vdd);
+                                re[vmm].Item1.Add(vdd);
                             }
-                            rtmp.Add(dataPointer, rmm);
+                            rtmp.Add(dataPointer, vmm);
                         }
                         else
                         {
-                            var rmm = rtmp[dataPointer];
-                            if (!re.ContainsKey(rmm))
+                            //var rmm = rtmp[dataPointer];
+                            if (!re.ContainsKey(vmm))
                             {
-                                re.Add(rmm,new Tuple<List<DateTime>, int>(new List<DateTime>() { vdd },blockindex));
+                                re.Add(vmm, new Tuple<List<DateTime>, int>(new List<DateTime>() { vdd },blockindex));
                             }
                             else
                             {
-                                re[rmm].Item1.Add(vdd);
+                                re[vmm].Item1.Add(vdd);
                             }
                         }
                     }
@@ -1073,10 +1088,10 @@ namespace Cdy.Tag
             return re;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        static Dictionary<string, MarshalMemoryBlock> mMemoryCach = new Dictionary<string, MarshalMemoryBlock>();
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //static Dictionary<string, MarshalMemoryBlock> mMemoryCach = new Dictionary<string, MarshalMemoryBlock>();
 
         /// <summary>
         /// 
@@ -1084,9 +1099,9 @@ namespace Cdy.Tag
         /// <param name="datafile"></param>
         /// <param name="address"></param>
         /// <returns></returns>
-        private static MarshalMemoryBlock GetDataMemory(DataFileSeriserbase datafile,long address)
+        private static MarshalMemoryBlock GetDataMemory(DataFileSeriserbase datafile,long address,int datapointer)
         {
-            return DecodeMemoryCachManager.Manager.GetMemory(datafile, address);
+            return DecodeMemoryCachManager.Manager.GetMemory(datafile, address, datapointer);
         }
 
         ///// <summary>
@@ -1179,14 +1194,9 @@ namespace Cdy.Tag
                 if (dataPointerbase > 0 && dataPointer>-1)
                 {
 
-                    var vmm = GetDataMemory(datafile, dataPointerbase);
-                    var datasize = vmm.ReadInt(dataPointer);
-
-                    if (datasize > 0)
-                    {
-                        var rmm = vmm.ReadBytes(vmm.Handles[0], dataPointer + 4, datasize);
-                        yield return new Tuple<MarshalMemoryBlock, DateTime, DateTime, int>(rmm, sstart, send,timetick);
-                    }
+                    var vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);
+                    if(vmm!=null)
+                    yield return new Tuple<MarshalMemoryBlock, DateTime, DateTime, int>(vmm, sstart, send, timetick);
                 }
                 sstart = send;
             }

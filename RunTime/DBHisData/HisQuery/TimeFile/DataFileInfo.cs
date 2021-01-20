@@ -1101,7 +1101,17 @@ namespace Cdy.Tag
         /// <returns></returns>
         private static MarshalMemoryBlock GetDataMemory(DataFileSeriserbase datafile,long address,int datapointer)
         {
-            return DecodeMemoryCachManager.Manager.GetMemory(datafile, address, datapointer);
+            if (datapointer < 0)
+            {
+                //说明数据没有采用Zip压缩，可以直接读取使用
+                var dp = address +  (datapointer & 0x7FFFFFFF);
+                var datasize = datafile.ReadInt(dp);
+                return datafile.Read(dp + 4, datasize);
+            }
+            else
+            {
+                return DecodeMemoryCachManager.Manager.GetMemory(datafile, address, datapointer);
+            }
         }
 
         ///// <summary>
@@ -1191,7 +1201,7 @@ namespace Cdy.Tag
 
                 var dataPointerbase = datafile.ReadLong(offset + blockpointer + tagIndex * 12 + blockindex * tagCount * 12+4); //读取DataBlock的基地址
 
-                if (dataPointerbase > 0 && dataPointer>-1)
+                if (dataPointerbase > 0)
                 {
 
                     var vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);

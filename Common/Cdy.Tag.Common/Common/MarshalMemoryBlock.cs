@@ -238,6 +238,11 @@ namespace Cdy.Tag
 
         }
 
+        /// <summary>
+        /// 附加信息
+        /// </summary>
+        public IntPtr AttachDataPointer { get; set; }
+
 
         #endregion ...Properties...
 
@@ -2115,27 +2120,6 @@ namespace Cdy.Tag
             //GC.Collect();
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="index"></param>
-        ///// <returns></returns>
-        //public byte this[int index]
-        //{
-        //    get
-        //    {
-        //        long ost;
-        //        var hd = RelocationAddressToArrayIndex(index, out ost);
-        //        return this.mBuffers[hd][ost];
-        //    }
-        //    set
-        //    {
-        //        long ost;
-        //        var hd = RelocationAddressToArrayIndex(index, out ost);
-        //        this.mBuffers[hd][ost] = value;
-        //    }
-        //}
-
         /// <summary>
         /// 
         /// </summary>
@@ -2331,6 +2315,66 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="target"></param>
+        /// <param name="sourceStart"></param>
+        /// <param name="targetStart"></param>
+        /// <param name="len"></param>
+        public void CopyTo(IntPtr target,long sourceStart,long targetStart,long len)
+        {
+
+            long osts;
+            var hds = RelocationAddressToArrayIndex(sourceStart, out osts);
+
+            //计算从源数据需要读取数据块索引
+            //Array Index,Start Address,Data Len
+            List<Tuple<int, int, long>> mSourceIndex = new List<Tuple<int, int, long>>();
+            if (osts + len <= mBufferItemSize)
+            {
+                mSourceIndex.Add(new Tuple<int, int, long>(hds, (int)osts, len));
+            }
+            else
+            {
+                int ll = mBufferItemSize - (int)osts;
+
+                mSourceIndex.Add(new Tuple<int, int, long>(hds, (int)osts, ll));
+
+                if ((len - ll) <= mBufferItemSize)
+                {
+                    hds++;
+                    mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, len - ll));
+                }
+                else
+                {
+                    long ltmp = len - ll;
+                    int bcount = (int)(ltmp / mBufferItemSize);
+                    int i = 0;
+                    for (i = 0; i < bcount; i++)
+                    {
+                        hds++;
+                        mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, mBufferItemSize));
+                    }
+                    int otmp = (int)(ltmp % mBufferItemSize);
+                    if (otmp > 0)
+                    {
+                        hds++;
+                        mSourceIndex.Add(new Tuple<int, int, long>(hds, 0, otmp));
+                    }
+                }
+            }
+
+            long targetAddr = targetStart;
+
+            //拷贝数据到目标数据块中
+            foreach (var vv in mSourceIndex)
+            {
+                Buffer.MemoryCopy((void*)(this.mHandles[vv.Item1] + vv.Item2), (void*)(targetAddr), vv.Item3, vv.Item3);
+                targetAddr += vv.Item3;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="stream"></param>
         /// <param name="offset"></param>
         /// <param name="len"></param>
@@ -2417,45 +2461,12 @@ namespace Cdy.Tag
             }
         }
 
-       
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="stream"></param>
-        ///// <param name="source"></param>
-        ///// <param name="start"></param>
-        ///// <param name="len"></param>
-        //private void WriteToStream2(Stream stream, IntPtr source, int start, int len)
-        //{
-        //    byte[] bvals = ArrayPool<byte>.Shared.Rent(len);
-        //    Marshal.Copy(source + start, bvals, 0, len);
-        //    stream.Write(bvals, 0, len);
-        //    ArrayPool<byte>.Shared.Return(bvals);
-        //}
 
         public void ReadFromStream(Stream stream,int len)
         {
-            //var buffer = ArrayPool<byte>.Shared.Rent(81920);
-            //Array.Clear(buffer, 0, buffer.Length);
             int count = len / mBufferItemSize;
-            //int size = 0;
-            //int tsize = 0;
-            //var bsize = buffer.Length;
             for(int i=0;i<count;i++)
             {
-                //using (System.IO.UnmanagedMemoryStream stream1 = new UnmanagedMemoryStream((byte*)this.Buffers[i], mBufferItemSize,mBufferItemSize,FileAccess.Write))
-                //{
-                //    size = 0;
-                //    while (size < mBufferItemSize)
-                //    {
-                //        tsize = mBufferItemSize - size > bsize ? bsize : mBufferItemSize - size;
-                //        size += tsize;
-                //        stream.Read(buffer, 0, tsize);
-                //        stream1.Write(buffer, 0, tsize);
-                //    }
-                //}
-
                 stream.Read(new Span<byte>((void*)this.Buffers[i], mBufferItemSize));
             }
 
@@ -2465,20 +2476,7 @@ namespace Cdy.Tag
                 int isize = len % mBufferItemSize;
 
                 stream.Read(new Span<byte>((void*)this.Buffers[count], isize));
-
-                //using (System.IO.UnmanagedMemoryStream stream1 = new UnmanagedMemoryStream((byte*)this.Buffers[count], isize,isize,FileAccess.Write))
-                //{
-                //    while (size < isize)
-                //    {
-                //        tsize = isize - size > bsize ? bsize : isize - size;
-
-                //        size += tsize;
-                //        stream.Read(buffer, 0, tsize);
-                //        stream1.Write(buffer, 0, tsize);
-                //    }
-                //}
             }
-            //ArrayPool<byte>.Shared.Return(buffer);
         }
 
         /// <summary>

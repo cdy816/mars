@@ -177,6 +177,11 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 是否需要执行无损Zip压缩
+        /// </summary>
+        public bool IsEnableCompress { get; set; } = true;
+
 
         #endregion ...Properties...
 
@@ -343,23 +348,23 @@ namespace Cdy.Tag
                     this.WriteInt(0, (int)datasize);//写入整体数据大小
                     this.Write((int)mTagIds.Count); //写入变量个数
 
-                    long ltmp2 = sw.ElapsedMilliseconds;
-
                     //写入变量、数据区对应的索引
                     int count = 0;
                     foreach (var vv in dtmp)
                     {
                         this.WriteInt(headOffset + count, (int)vv.Key);
-                        this.WriteInt(headOffset + count + 4, (int)(vv.Value- tagheadoffset));
+                        this.WriteInt(headOffset + count + 4, (int)(vv.Value - tagheadoffset));
                         count += 8;
                     }
 
-                    long ltmp3 = sw.ElapsedMilliseconds;
-                    ZipCompress(headOffset + mTagIds.Count * 8, (int)datasize);
+                    if (IsEnableCompress)
+                    {
+                        ZipCompress(headOffset + mTagIds.Count * 8, (int)datasize);
+                    }
 
                     ServiceLocator.Locator.Resolve<IDataSerialize3>().RequestToSeriseFile(this);
                     sw.Stop();
-                    LoggerService.Service.Info("CompressEnginer", Id + "压缩完成 耗时:" + sw.ElapsedMilliseconds + " ltmp1:" + ltmp1 + " ltmp2:" + (ltmp2 - ltmp1) + " ltmp3:" + (ltmp3 - ltmp2) + " CPU Id:" + ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Blue);
+                    LoggerService.Service.Info("CompressEnginer", Id + "压缩完成 耗时:" + sw.ElapsedMilliseconds  + " CPU Id:" + ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Blue);
 
                    
                 }

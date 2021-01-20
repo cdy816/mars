@@ -189,7 +189,7 @@ namespace SimDriver
         private int mFinishCount = 6;
         private object mLockObj = new object();
 
-        private Stopwatch mCosStopwatch;
+        //private Stopwatch mCosStopwatch;
         //private Stopwatch mSinStopwatch;
         //private Stopwatch mStepStopwatch;
         /// <summary>
@@ -200,18 +200,18 @@ namespace SimDriver
             ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
             List<Tagbase> vv = mTagIdCach.ContainsKey("Sim:cos") ? mTagIdCach["Sim:cos"] : null;
             List<int> vvr = mManualRecordTagCach.ContainsKey("Sim:cos") ? mManualRecordTagCach["Sim:cos"] : null;
-            mCosStopwatch = new Stopwatch();
+            //mCosStopwatch = new Stopwatch();
             while (!mIsClosed)
             {
                 mCosEvent.WaitOne();
                 mCosEvent.Reset();
-                mCosStopwatch.Restart();
-                long ll = 0;
+                //mCosStopwatch.Restart();
+                //long ll = 0;
                 double fval = Math.Cos(mNumber / 180.0 * Math.PI);
                 if (vv!=null)
                 {
                     mTagService.SetTagValue(vv,ref fval, 0);
-                    ll = mCosStopwatch.ElapsedMilliseconds;
+                    //ll = mCosStopwatch.ElapsedMilliseconds;
                     mTagService.SubmiteNotifyChanged();
                 }
 
@@ -224,7 +224,7 @@ namespace SimDriver
                     }
                 }
 
-                mCosStopwatch.Stop();
+                //mCosStopwatch.Stop();
 
                 //LoggerService.Service.Info("SimDriver", "设置变量耗时:" + ll + " 其他耗时:" + (mCosStopwatch.ElapsedMilliseconds - ll) + " count:" + vv.Count);
 

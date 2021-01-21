@@ -105,7 +105,7 @@ namespace Cdy.Tag
             DateTime stime = startTime;
             foreach (var vv in mFileMaps)
             {
-                if (vv.Key >= startTime && vv.Key < endTime)
+                if ((startTime >= vv.Key && startTime < vv.Key + vv.Value.Item1) || (endTime >= vv.Key && endTime < vv.Key + vv.Value.Item1) || (vv.Key >= startTime && (vv.Key + vv.Value.Item1) <= endTime))
                 {
                     infos.Add(vv.Value.Item2);
                 }

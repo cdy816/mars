@@ -109,9 +109,8 @@ namespace Cdy.Tag
             if (mIsBusy)
             {
                 mBusyCount++;
-                //if(Id==0)
-                if(mBusyCount>4)
-                LoggerService.Service.Warn("Record", "TimerMemoryCacheProcesser"+Id+" 出现阻塞:"+mBusyCount);
+                if (mBusyCount > 4)
+                    LoggerService.Service.Warn("Record", "TimerMemoryCacheProcesser" + Id + " 出现阻塞:" + mBusyCount);
             }
             else
             {
@@ -183,6 +182,7 @@ namespace Cdy.Tag
             mCurrentCount = 0;
         }
 
+        private DateTime mLastProcessTime;
 
         /// <summary>
         /// 
@@ -198,11 +198,24 @@ namespace Cdy.Tag
                 mCount[vv] = vdd.AddMilliseconds(vv);
             }
 
+            mLastProcessTime = DateTime.Now;
+
             while (!mIsClosed)
             {
                 resetEvent.WaitOne();
                 resetEvent.Reset();
-                if (mIsClosed) break;               
+                if (mIsClosed) 
+                    break;
+
+                var dnow = DateTime.Now;
+
+                if ((mLastProcessTime - dnow).TotalMilliseconds > 900)
+                {
+                    LoggerService.Service.Warn("TimerMemoryCacheProcesser", "定时记录超时 "+ (mLastProcessTime - dnow).TotalMilliseconds);
+                }
+
+                mLastProcessTime = dnow;
+
                 try
                 {
                     mIsBusy = true;
@@ -216,9 +229,7 @@ namespace Cdy.Tag
                                 mCount[vv] = mCount[vv].AddMilliseconds(vv);
                             }
                             while (mCount[vv] <= vdata);
-
                             ProcessTags(mTimerTags[vv]);
-                            //LoggerService.Service.Info("TimerMemoryCacheProcesser", Id + " 开始处理" + vdata);
                         }
                     }
                     

@@ -1,6 +1,7 @@
 ﻿using Cdy.Tag;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -55,46 +56,57 @@ namespace Cdy.Tag
         /// <returns></returns>
         public MarshalMemoryBlock GetMemory(DataFileSeriserbase datafile, long address,int datapointer)
         {
-            //最高位表示是否
-            int dp = datapointer & 0x7FFFFFFF;
 
-            string skey = System.IO.Path.GetFileNameWithoutExtension(datafile.FileName) + address;
-            if(mCacheDatas.ContainsKey(skey))
-            { 
-                var mh =mCacheDatas[skey];
-                var datasize = mh.ReadInt(dp);
-                return mh.ReadBytes(mh.Handles[0], dp + 4, datasize);
-            }
-            else
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            try
             {
-                string sfile = System.IO.Path.Combine(GetCacheLocation(), skey);
-                if (System.IO.File.Exists(sfile) && !mBusyFiles.ContainsKey(skey))
-                {
-                    var sff = sfile.GetFileSeriser();
-                    var datasize = sff.ReadInt(dp + 8);
-                    return sff.Read(dp + 8 + 4, datasize);
-                }
-                else
-                {
-                    var mh = ReadAndDecompressMemory(datafile, address);
-                    mCacheDatas.Add(skey, mh);
+                //最高位表示是否
+                int dp = datapointer & 0x7FFFFFFF;
 
-                    lock (mBusyFiles)
-                    {
-                        if (!mBusyFiles.ContainsKey(skey))
-                        {
-                            mBusyFiles.Add(skey, true);
-                            Task.Run(() =>
-                            {
-                                mh.SaveToFile(sfile);
-                                mBusyFiles.Remove(skey);
-                            });
-                        }
-                    }
-
+                string skey = System.IO.Path.GetFileNameWithoutExtension(datafile.FileName) + address;
+                if (mCacheDatas.ContainsKey(skey))
+                {
+                    var mh = mCacheDatas[skey];
                     var datasize = mh.ReadInt(dp);
                     return mh.ReadBytes(mh.Handles[0], dp + 4, datasize);
                 }
+                else
+                {
+                    string sfile = System.IO.Path.Combine(GetCacheLocation(), skey);
+                    if (System.IO.File.Exists(sfile) && !mBusyFiles.ContainsKey(skey))
+                    {
+                        var sff = sfile.GetFileSeriser();
+                        var datasize = sff.ReadInt(dp + 8);
+                        return sff.Read(dp + 8 + 4, datasize);
+                    }
+                    else
+                    {
+                        var mh = ReadAndDecompressMemory(datafile, address);
+                        mCacheDatas.Add(skey, mh);
+
+                        lock (mBusyFiles)
+                        {
+                            if (!mBusyFiles.ContainsKey(skey))
+                            {
+                                mBusyFiles.Add(skey, true);
+                                Task.Run(() =>
+                                {
+                                    mh.SaveToFile(sfile);
+                                    mBusyFiles.Remove(skey);
+                                });
+                            }
+                        }
+
+                        var datasize = mh.ReadInt(dp);
+                        return mh.ReadBytes(mh.Handles[0], dp + 4, datasize);
+                    }
+                }
+            }
+            finally
+            {
+                sw.Stop();
+                Debug.Print("解压耗时:" + sw.ElapsedMilliseconds);
             }
         }
 

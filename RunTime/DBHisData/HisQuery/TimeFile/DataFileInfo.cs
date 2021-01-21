@@ -256,7 +256,8 @@ namespace Cdy.Tag
             Dictionary<DateTime, Tuple<TimeSpan, long, DateTime>> re = new Dictionary<DateTime, Tuple<TimeSpan, long, DateTime>>();
             foreach (var vv in mTimeOffsets)
             {
-                if (vv.Key >= startTime && vv.Key < endTime)
+                //if (vv.Key >= startTime && vv.Key < endTime)
+                if ((startTime >= vv.Key && startTime < vv.Key + vv.Value.Item1) || (endTime >= vv.Key && endTime < vv.Key + vv.Value.Item1) || (vv.Key >= startTime && (vv.Key + vv.Value.Item1) <= endTime))
                 {
                     re.Add(vv.Key, vv.Value);
                 }
@@ -906,8 +907,8 @@ namespace Cdy.Tag
             DateTime time;
             long blockpointer = 0;
 
-            var blockIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
-            int dindex = index;
+            var dindex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
+            int blockIndex = index;
 
             //var dataPointer = datafile.ReadLong(blockIndex * 8 + dindex * tagCount * 8); //读取DataBlock的地址
 
@@ -916,7 +917,7 @@ namespace Cdy.Tag
 
           
 
-            if (dataPointer > 0)
+            if (dataPointerbase > 0)
             {
                 //var datasize = datafile.ReadInt(dataPointer); //读取DataBlock 的大小
                 var vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);
@@ -1047,7 +1048,7 @@ namespace Cdy.Tag
                 var dataPointerbase = datafile.ReadLong(offset + blockpointer + tagIndex * 12 + blockindex * tagCount * 12 + 4); //读取DataBlock的基地址
 
 
-                if (dataPointerbase > 0 && dataPointer>-1)
+                if (dataPointerbase > 0)
                 {
                     //var datasize = datafile.ReadInt(dataPointer); //读取DataBlock 的大小
                     var vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);

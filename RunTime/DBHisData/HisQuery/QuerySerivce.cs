@@ -297,7 +297,7 @@ namespace Cdy.Tag
                     vfiles.ForEach(e =>
                     {
                         DateTime sstart = e.StartTime > startTime ? e.StartTime : startTime;
-                        DateTime eend = e.EndTime > endTime ? endTime : endTime;
+                        DateTime eend = e.EndTime > endTime ? endTime : e.EndTime;
                         e.ReadAllValue(id, sstart, eend, result);
                     });
 

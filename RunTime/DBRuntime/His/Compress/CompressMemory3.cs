@@ -180,7 +180,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 是否需要执行无损Zip压缩
         /// </summary>
-        public bool IsEnableCompress { get; set; } = true;
+        public bool IsEnableCompress { get; set; } = false;
 
 
         #endregion ...Properties...
@@ -364,7 +364,7 @@ namespace Cdy.Tag
 
                     ServiceLocator.Locator.Resolve<IDataSerialize3>().RequestToSeriseFile(this);
                     sw.Stop();
-                    LoggerService.Service.Info("CompressEnginer", Id + "压缩完成 耗时:" + sw.ElapsedMilliseconds  + " CPU Id:" + ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Blue);
+                    LoggerService.Service.Info("CompressEnginer", this.Name + " 压缩完成 耗时:" + sw.ElapsedMilliseconds  + " CPU Id:" + ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Blue);
 
                    
                 }

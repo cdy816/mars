@@ -1313,10 +1313,11 @@ namespace Cdy.Tag
 
                         //将之前的Memory提交到合并流程中
                         SubmiteMemory(dt);
+                        dt = DateTime.UtcNow;
                     }
                     mLastProcessTick = mm;
-
                 }
+
                 foreach (var vv in mRecordTimerProcesser)
                 {
                     vv.Notify(dt);

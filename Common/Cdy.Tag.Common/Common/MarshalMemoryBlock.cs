@@ -95,7 +95,7 @@ namespace Cdy.Tag
         /// <param name="blockSize"></param>
         public MarshalMemoryBlock(long size, int blockSize)
         {
-            mBufferItemSize = blockSize;
+            mBufferItemSize = blockSize > 0 ? blockSize : 1;
             Init(size);
         }
 

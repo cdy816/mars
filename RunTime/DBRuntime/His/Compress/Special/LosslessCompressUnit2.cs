@@ -1857,7 +1857,7 @@ namespace Cdy.Tag
                                 }
                                 else
                                 {
-                                    if (qulityes[0] < 20 && val.Value.Quality < 20)
+                                    if ((qulityes[0] < 20 || qulityes[0] == 100) && (val.Value.Quality < 20 || val.Value.Quality==100))
                                     {
                                         var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
                                         var tval1 = (timers[0] - val.Value.Time).TotalMilliseconds;
@@ -2072,7 +2072,7 @@ namespace Cdy.Tag
                                 }
                                 else
                                 {
-                                    if (qulityes[qulityes.Count - 1] < 20 && val.Value.Quality < 20)
+                                    if ((qulityes[qulityes.Count - 1] < 20|| qulityes[qulityes.Count - 1]==100) && (val.Value.Quality < 20 || val.Value.Quality==100))
                                     {
                                         var pval1 = (val.Value.Time - vtime).TotalMilliseconds;
                                         var tval1 = (val.Value.Time - timers[timers.Count - 1]).TotalMilliseconds;

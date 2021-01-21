@@ -512,7 +512,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 是否需要执行无损Zip压缩
         /// </summary>
-        public bool IsEnableCompress { get; set; } = true;
+        public bool IsEnableCompress { get; set; } = false;
 
         /// <summary>
         /// 
@@ -1059,7 +1059,7 @@ namespace Cdy.Tag
                 var blockpointer = mwriter.CurrentPostion;
 
                 var sourceM = Marshal.AllocHGlobal(datasize);
-                var targetM = Marshal.AllocHGlobal((int)(datasize*1.2));
+               
                 var vpointer = 0;
 
                 //写入数据，同时获取数据块地址
@@ -1076,14 +1076,13 @@ namespace Cdy.Tag
                         mHeadValue.Add(id, new List<long>() { vpointer });
                     }
                     (vvv as MarshalMemoryBlock).CopyTo(sourceM, 28, vpointer, size);
-                    //vvv.WriteToStream(mwriter.GetStream(), 28, size - 28);//直接拷贝数据块
                     vpointer += (size - 28);
                 }
 
-                int csize = 0;
-
                 if (IsEnableCompress)
                 {
+                    int csize = 0;
+                    var targetM = Marshal.AllocHGlobal((int)(datasize * 1.2));
                     if (System.IO.Compression.BrotliEncoder.TryCompress(new ReadOnlySpan<byte>((void*)(sourceM), datasize), new Span<byte>((void*)(targetM + 8), (int)datasize - 8), out csize))
                     {
                         MemoryHelper.WriteInt32((void*)targetM, 0, csize);
@@ -1112,6 +1111,7 @@ namespace Cdy.Tag
                     {
                         LoggerService.Service.Erro("SeriseEnginer3", "压缩数据失败! 数据大小:" + datasize);
                     }
+                    Marshal.FreeHGlobal(targetM);
                 }
                 else
                 {
@@ -1134,7 +1134,7 @@ namespace Cdy.Tag
                 }
 
                 Marshal.FreeHGlobal(sourceM);
-                Marshal.FreeHGlobal(targetM);
+               
 
                 //更新文件的最后修改时间
                 var vtmp = mwriter.ReadDateTime(8);

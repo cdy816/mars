@@ -138,6 +138,9 @@
   <data name="RestartMsg" xml:space="preserve">
     <value>在不中断的情况下快速启动数据库</value>
   </data>
+  <data name="sethisdatapath" xml:space="preserve">
+    <value>设置历史数据存放路径</value>
+  </data>
   <data name="StartMsg" xml:space="preserve">
     <value>运行指定数据库，如果忽略数据库名称则启动默认'local'数据库</value>
   </data>

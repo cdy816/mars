@@ -34,7 +34,8 @@ using System.Runtime.InteropServices;
 
  RegionHead:          PreDataRegionPoint(8) + NextDataRegionPoint(8) + Datatime(8)+ tagcount(4)+ tagid sum(8)+file duration(4)+block duration(4)+Time tick duration(4)
  DataBlockPoint Area: [ID]+[block Point]
- [block point]:       [[tag1 point,tag2 point,....][tag1 point,tag2 point,...].....]   以时间单位对变量的数去区指针进行组织
+ [block point]:       [[tag1 point,tag2 point,....][tag1 point(12),tag2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
+ [tag point]:         offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
  DataBlock Area:      [block size + data block]
 */
 
@@ -56,9 +57,11 @@ namespace Cdy.Tag
 
         private Thread mCompressThread;
 
+        private Thread mDatabackThread;
+
         private bool mIsClosed = false;
 
-        //private DateTime mCurrentTime;
+        private bool mIsBackupFinished = false;
 
         private Dictionary<int, CompressMemory3> mWaitForProcessMemory = new Dictionary<int, CompressMemory3>();
 
@@ -67,7 +70,10 @@ namespace Cdy.Tag
         /// </summary>
         private Dictionary<int, SeriseFileItem3> mSeriserFiles = new Dictionary<int, SeriseFileItem3>();
 
-        //private int mManualRequestSaveCount = 0;
+        /// <summary>
+        /// 
+        /// </summary>
+        private int mLastBackupDay=-1;
 
         #endregion ...Variables...
 
@@ -121,22 +127,35 @@ namespace Cdy.Tag
         /// <summary>
         /// 主历史记录路径
         /// </summary>
-        public string HisDataPathPrimary { get; set; }
+        public static string HisDataPathPrimary { get; set; }
 
         /// <summary>
         /// 备份历史记录路径
         /// </summary>
-        public string HisDataPathBack { get; set; }
+        public static string HisDataPathBack { get; set; }
+
 
         /// <summary>
         /// 当前工作的历史记录路径
         /// </summary>
         public static string HisDataPath { get; set; }
 
+        /// <summary>
+        /// 历史数据在主目录里保留时间
+        /// 单位天
+        /// </summary>
+        public static int HisDataKeepTimeInPrimaryPath { get; set; } = 30;
+
         #endregion ...Properties...
 
         #region ... Methods    ...
 
+        //private long GetDriverSize(string path)
+        //{
+        //    System.IO.DriveInfo driverinfo = new System.IO.DriveInfo(path);
+           
+        //    return 0;
+        //}
 
         /// <summary>
         /// 选择历史记录路径
@@ -144,21 +163,30 @@ namespace Cdy.Tag
         /// <returns></returns>
         private string SelectHisDataPath()
         {
-            if (string.IsNullOrEmpty(HisDataPathPrimary) && string.IsNullOrEmpty(HisDataPathBack))
+            if (string.IsNullOrEmpty(HisDataPathPrimary))
             {
                 return PathHelper.helper.GetDataPath(this.DatabaseName, "HisData");
             }
             else
             {
-                string sp = string.IsNullOrEmpty(HisDataPathPrimary) ? PathHelper.helper.GetDataPath(this.DatabaseName, "HisData") : System.IO.Path.IsPathRooted(HisDataPathPrimary) ? HisDataPathPrimary : PathHelper.helper.GetDataPath(this.DatabaseName, HisDataPathPrimary);
-                string spb = string.IsNullOrEmpty(HisDataPathBack) ? PathHelper.helper.GetDataPath(this.DatabaseName, "HisData") : System.IO.Path.IsPathRooted(HisDataPathBack) ? HisDataPathBack : PathHelper.helper.GetDataPath(this.DatabaseName, HisDataPathBack);
-
-                //to do select avaiable data path
-
-                return sp;
-
+                return System.IO.Path.IsPathRooted(HisDataPathPrimary) ? HisDataPathPrimary : PathHelper.helper.GetDataPath(this.DatabaseName, HisDataPathPrimary);
             }
-            //return string.Empty;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private string GetBackupDataPath()
+        {
+            if(string.IsNullOrEmpty(HisDataPathBack))
+            {
+                return string.Empty;
+            }
+            else
+            {
+                return System.IO.Path.IsPathRooted(HisDataPathBack) ? HisDataPathBack : PathHelper.helper.GetDataPath(this.DatabaseName, HisDataPathBack);
+            }
         }
 
         /// <summary>
@@ -204,6 +232,10 @@ namespace Cdy.Tag
             mCompressThread = new Thread(ThreadPro);
             mCompressThread.IsBackground = true;
             mCompressThread.Start();
+
+            mDatabackThread = new Thread(DatabackupThreadPro);
+            mDatabackThread.IsBackground = true;
+            mDatabackThread.Start();
         }
 
         /// <summary>
@@ -222,6 +254,9 @@ namespace Cdy.Tag
             {
                 vv.Value.Reset();
             }
+
+            while (!mIsBackupFinished) Thread.Sleep(1);
+            
         }
 
         /// <summary>
@@ -314,6 +349,109 @@ namespace Cdy.Tag
                 //#endif
             }
             closedEvent.Set();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="path"></param>
+        private double GetDriverUsedPercent(string path)
+        {
+            System.IO.DriveInfo dinfo = new System.IO.DriveInfo(System.IO.Path.GetPathRoot(path));
+            return dinfo.AvailableFreeSpace * 1.0 / dinfo.TotalSize;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private double GetDriverFreeSize(string path)
+        {
+            System.IO.DriveInfo dinfo = new System.IO.DriveInfo(System.IO.Path.GetPathRoot(path));
+            return dinfo.AvailableFreeSpace;
+        }
+
+        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void DatabackupThreadPro()
+        {
+            ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+
+            while (!mIsClosed)
+            {
+                var wpath = SelectHisDataPath();
+
+                var time = DateTime.Now;
+
+                if (time.Day != mLastBackupDay)
+                {
+                    mLastBackupDay = time.Day;
+
+                    try
+                    {
+                        string backpath = GetBackupDataPath();
+
+                        if (!string.IsNullOrEmpty(backpath))
+                        {
+                            if (GetDriverUsedPercent(backpath) < 0.2)
+                            {
+                                LoggerService.Service.Warn("SeriseEnginer", "free disk space is lower in backup path");
+                            }
+                        }
+
+                        foreach (var vv in new System.IO.DirectoryInfo(wpath).GetFiles())
+                        {
+                            if (mIsClosed) break;
+                            try
+                            {
+                                if ((time - vv.LastWriteTime).TotalDays >= HisDataKeepTimeInPrimaryPath)
+                                {
+
+                                    if (!string.IsNullOrEmpty(backpath))
+                                    {
+                                        if (GetDriverFreeSize(backpath) > vv.Length)
+                                        {
+                                            vv.MoveTo(System.IO.Path.Combine(backpath, vv.Name));
+
+                                            if (!string.IsNullOrEmpty(backpath))
+                                            {
+                                                if (GetDriverUsedPercent(backpath) < 0.2)
+                                                {
+                                                    LoggerService.Service.Warn("SeriseEnginer", "free disk space is lower in backup path");
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            vv.Delete();
+                                            LoggerService.Service.Erro("SeriseEnginer", "There is not enough space for backup! free size:" + (GetDriverFreeSize(backpath) / 1024.0 / 1024) + "M. required size:" + (vv.Length / 1024.0 / 1024) + " M");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        vv.Delete();
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                LoggerService.Service.Erro("SeriseEnginer", ex.Message + " " + ex.StackTrace);
+                            }
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+                }
+                Thread.Sleep(1000 * 60 * 10);
+            }
+            mIsBackupFinished = true;
         }
 
         /// <summary>
@@ -556,12 +694,10 @@ namespace Cdy.Tag
             DateTime date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
             mFileWriter.Write(date, 0);
             byte[] nameBytes = new byte[64];
-            //byte[] nameBytes = ArrayPool<byte>.Shared.Rent(64);
             Array.Clear(nameBytes, 0, nameBytes.Length);
             var ntmp = Encoding.UTF8.GetBytes(databaseName);
             Buffer.BlockCopy(ntmp, 0, nameBytes, 0, Math.Min(64, ntmp.Length));
             mFileWriter.Write(nameBytes, 20);
-            //ArrayPool<byte>.Shared.Return(nameBytes);
         }
 
         /// <summary>
@@ -1011,7 +1147,7 @@ namespace Cdy.Tag
             Dictionary<int,List<long>> mHeadAddress = new Dictionary<int, List<long>>();
             Dictionary<int, List<long>> mHeadValue = new Dictionary<int, List<long>>();
 
-            MarshalMemoryBlock mb;
+            //MarshalMemoryBlock mb;
 
             while(mManualHisDataCach.Count>0)
             {
@@ -1057,30 +1193,28 @@ namespace Cdy.Tag
                 mHeadValue.Clear();
                 mwriter.GoToEnd();
                 var blockpointer = mwriter.CurrentPostion;
-
-                var sourceM = Marshal.AllocHGlobal(datasize);
-               
                 var vpointer = 0;
-
-                //写入数据，同时获取数据块地址
-                foreach (var vvv in vv.Value)
-                {
-                    int id = vvv.ReadInt(0);
-                    int size = vvv.ReadInt(20);
-                    if(mHeadValue.ContainsKey(id))
-                    {
-                        mHeadValue[id].Add(vpointer);
-                    }
-                    else
-                    {
-                        mHeadValue.Add(id, new List<long>() { vpointer });
-                    }
-                    (vvv as MarshalMemoryBlock).CopyTo(sourceM, 28, vpointer, size);
-                    vpointer += (size - 28);
-                }
 
                 if (IsEnableCompress)
                 {
+                    var sourceM = Marshal.AllocHGlobal(datasize);
+                    //写入数据，同时获取数据块地址
+                    foreach (var vvv in vv.Value)
+                    {
+                        int id = vvv.ReadInt(0);
+                        int size = vvv.ReadInt(20);
+                        if (mHeadValue.ContainsKey(id))
+                        {
+                            mHeadValue[id].Add(vpointer);
+                        }
+                        else
+                        {
+                            mHeadValue.Add(id, new List<long>() { vpointer });
+                        }
+                        (vvv as MarshalMemoryBlock).CopyTo(sourceM, 28, vpointer, size);
+                        vpointer += (size - 28);
+                    }
+
                     int csize = 0;
                     var targetM = Marshal.AllocHGlobal((int)(datasize * 1.2));
                     if (System.IO.Compression.BrotliEncoder.TryCompress(new ReadOnlySpan<byte>((void*)(sourceM), datasize), new Span<byte>((void*)(targetM + 8), (int)datasize - 8), out csize))
@@ -1112,12 +1246,26 @@ namespace Cdy.Tag
                         LoggerService.Service.Erro("SeriseEnginer3", "压缩数据失败! 数据大小:" + datasize);
                     }
                     Marshal.FreeHGlobal(targetM);
+                    Marshal.FreeHGlobal(sourceM);
                 }
                 else
                 {
-                    using (var mm = new System.IO.UnmanagedMemoryStream((byte*)sourceM, datasize))
+                    //写入数据，同时获取数据块地址
+                    foreach (var vvv in vv.Value)
                     {
-                        mm.CopyTo(mwriter.GetStream());
+                        int id = vvv.ReadInt(0);
+                        int size = vvv.ReadInt(20);
+                        if (mHeadValue.ContainsKey(id))
+                        {
+                            mHeadValue[id].Add(vpointer);
+                        }
+                        else
+                        {
+                            mHeadValue.Add(id, new List<long>() { vpointer });
+                        }
+                        vvv.WriteToStream(mwriter.GetStream(), 28, size - 28);//直接拷贝数据块
+                        vpointer += (size - 28);
+                        datasize += (size - 28);
                     }
 
                     //更新数据块指针
@@ -1133,7 +1281,7 @@ namespace Cdy.Tag
                     LoggerService.Service.Info("SeriseEnginer3", "SeriseFileItem " + this.Id + " 完成存储,数据块:" + vv.Value.Count + " 数据量:" + datasize + " 耗时:" + sw.ElapsedMilliseconds);
                 }
 
-                Marshal.FreeHGlobal(sourceM);
+              
                
 
                 //更新文件的最后修改时间

@@ -2319,7 +2319,7 @@ namespace Cdy.Tag
         /// <param name="sourceStart"></param>
         /// <param name="targetStart"></param>
         /// <param name="len"></param>
-        public void CopyTo(IntPtr target,long sourceStart,long targetStart,long len)
+        public void CopyTo(IntPtr target, long sourceStart, long targetStart, long len)
         {
 
             long osts;
@@ -2367,7 +2367,7 @@ namespace Cdy.Tag
             //拷贝数据到目标数据块中
             foreach (var vv in mSourceIndex)
             {
-                Buffer.MemoryCopy((void*)(this.mHandles[vv.Item1] + vv.Item2), (void*)(targetAddr), vv.Item3, vv.Item3);
+                Buffer.MemoryCopy((void*)(this.mHandles[vv.Item1] + vv.Item2), (void*)(target + (int)targetAddr), vv.Item3, vv.Item3);
                 targetAddr += vv.Item3;
             }
         }

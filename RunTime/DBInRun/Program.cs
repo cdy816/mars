@@ -123,16 +123,16 @@ namespace DBInRun
                         if (cmd.Length > 1)
                         {
                             var cd = cmd[1].ToLower();
-                            if(cd == "primary")
+                            if (cd == "primary")
                             {
-                               if(!Cdy.Tag.Runner3.RunInstance.Switch(WorkState.Primary))
+                                if (!Cdy.Tag.Runner3.RunInstance.Switch(WorkState.Primary))
                                 {
-                                    LoggerService.Service.Erro("RDDCManager","Failed to switch to primary!");
+                                    LoggerService.Service.Erro("RDDCManager", "Failed to switch to primary!");
                                 }
                             }
-                            else if(cd == "standby")
+                            else if (cd == "standby")
                             {
-                                if(!Cdy.Tag.Runner3.RunInstance.Switch(WorkState.Standby))
+                                if (!Cdy.Tag.Runner3.RunInstance.Switch(WorkState.Standby))
                                 {
                                     LoggerService.Service.Erro("RDDCManager", "Failed to switch to standby!");
                                 }
@@ -147,6 +147,14 @@ namespace DBInRun
                         break;
                     case "list":
                         ListDatabase();
+                        break;
+                    case "setdatapath":
+                        if (cmd.Length > 1)
+                            SeriseEnginer3.HisDataPathPrimary = cmd[1];
+                        break;
+                    case "setdatabackuppath":
+                        if (cmd.Length > 1)
+                            SeriseEnginer3.HisDataPathBack = cmd[1];
                         break;
                     case "h":
                         Console.WriteLine(GetHelpString());
@@ -288,6 +296,8 @@ namespace DBInRun
             re.AppendLine("restart                 // " + Res.Get("RestartMsg"));
             re.AppendLine("list                    // " + Res.Get("ListMsg"));
             re.AppendLine("switch primary/standby  // " + Res.Get("RddcSwitch"));
+            re.AppendLine("setdatapath [path]      // " + Res.Get("sethisdatapath"));
+            re.AppendLine("setdatabackuppath [path]// " + Res.Get("sethisdatapath"));
             re.AppendLine("h                       // " + Res.Get("HMsg"));
             return re.ToString();
         }

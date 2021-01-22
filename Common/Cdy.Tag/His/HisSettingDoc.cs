@@ -66,6 +66,11 @@ namespace Cdy.Tag
         /// </summary>
         public string HisDataPathBack { get; set; }
 
+        /// <summary>
+        /// 历史数据在主目录里保存时间
+        /// </summary>
+        public int HisDataKeepTimeInPrimaryPath { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -92,6 +97,14 @@ namespace Cdy.Tag
             XElement xe = new XElement("HisSetting");
             xe.SetAttributeValue("FileDataDuration", doc.FileDataDuration);
             xe.SetAttributeValue("DataBlockDuration", doc.DataBlockDuration);
+
+            if (!string.IsNullOrEmpty(doc.HisDataPathPrimary))
+                xe.SetAttributeValue("HisDataPathPrimary", doc.HisDataPathPrimary);
+
+            if (!string.IsNullOrEmpty(doc.HisDataPathBack))
+                xe.SetAttributeValue("HisDataPathBack", doc.HisDataPathBack);
+            xe.SetAttributeValue("HisDataKeepTimeInPrimaryPath", doc.HisDataKeepTimeInPrimaryPath);
+
             return xe;
         }
 
@@ -111,6 +124,21 @@ namespace Cdy.Tag
             if (element.Attribute("DataBlockDuration") != null)
             {
                 re.DataBlockDuration = int.Parse(element.Attribute("DataBlockDuration").Value);
+            }
+
+            if (element.Attribute("HisDataPathPrimary") != null)
+            {
+                re.HisDataPathPrimary = element.Attribute("HisDataPathPrimary").Value;
+            }
+
+            if (element.Attribute("HisDataPathBack") != null)
+            {
+                re.HisDataPathBack = element.Attribute("HisDataPathBack").Value;
+            }
+
+            if (element.Attribute("HisDataKeepTimeInPrimaryPath") != null)
+            {
+                re.HisDataKeepTimeInPrimaryPath = int.Parse(element.Attribute("HisDataKeepTimeInPrimaryPath").Value);
             }
 
             return re;

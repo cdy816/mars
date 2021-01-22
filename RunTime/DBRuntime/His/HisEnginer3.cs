@@ -1453,9 +1453,9 @@ namespace Cdy.Tag
             {
                 foreach (var vvv in vv.Value)
                 {
-                    ServiceLocator.Locator.Resolve<IDataCompress2>().RequestManualToCompress(vvv.Value);
+                    ServiceLocator.Locator.Resolve<IDataCompress3>().RequestManualToCompress(vvv.Value);
                 }
-                ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
+                ServiceLocator.Locator.Resolve<IDataCompress3>().SubmitManualToCompress();
             }
         }
 
@@ -1626,7 +1626,7 @@ namespace Cdy.Tag
                     else
                     {
                         if(hb!=null)
-                            HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
+                            HisDataMemoryQueryService3.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
                         var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * tag.MaxValueCountPerSecond + 2, out valueOffset, out qulityOffset);
                         hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
                         hb.Time = time;
@@ -1637,7 +1637,7 @@ namespace Cdy.Tag
                         hb.ValueAddress = valueOffset;
                         hb.QualityAddress = qulityOffset;
                         hb.Id = (int)id;
-                        HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, time, hb);
+                        HisDataMemoryQueryService3.Service.RegistorManual(id, hb.Time, time, hb);
                         datacach.Add(time, hb);
 
                     }
@@ -1740,7 +1740,7 @@ namespace Cdy.Tag
                     }
                 }
                 if (hb != null)
-                    HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
+                    HisDataMemoryQueryService3.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
 
                 bool isNeedSubmite = false;
 
@@ -1750,13 +1750,13 @@ namespace Cdy.Tag
                     {
                         if (vv.Key < mLastTime)
                         {
-                            ServiceLocator.Locator.Resolve<IDataCompress2>().RequestManualToCompress(vv.Value);
+                            ServiceLocator.Locator.Resolve<IDataCompress3>().RequestManualToCompress(vv.Value);
                             datacach.Remove(vv.Key);
                             isNeedSubmite = true;
                         }
                     }
                     if (isNeedSubmite)
-                        ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
+                        ServiceLocator.Locator.Resolve<IDataCompress3>().SubmitManualToCompress();
                 }
                
                 return true;
@@ -1847,7 +1847,7 @@ namespace Cdy.Tag
                     {
                         isNeedSubmite = true;
                         var vdd = datacach.First();
-                        ServiceLocator.Locator.Resolve<IDataCompress2>().RequestManualToCompress(vdd.Value);
+                        ServiceLocator.Locator.Resolve<IDataCompress3>().RequestManualToCompress(vdd.Value);
                         datacach.Remove(vdd.Key);
                     }
                     datacach.Add(time, hb);
@@ -1948,7 +1948,7 @@ namespace Cdy.Tag
                     hb.EndTime = datetime;
                     hb.CurrentCount++;
                     hb.Relase();
-                    HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
+                    HisDataMemoryQueryService3.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
                 }
                 else
                 {
@@ -2025,7 +2025,7 @@ namespace Cdy.Tag
                     {
                         isNeedSubmite = true;
                         var vdd = datacach.First();
-                        ServiceLocator.Locator.Resolve<IDataCompress2>().RequestManualToCompress(vdd.Value);
+                        ServiceLocator.Locator.Resolve<IDataCompress3>().RequestManualToCompress(vdd.Value);
                         datacach.Remove(vdd.Key);
                     }
                     datacach.Add(time, hb);
@@ -2087,7 +2087,7 @@ namespace Cdy.Tag
                     hb.EndTime = datetime;
                     hb.CurrentCount++;
                     hb.Relase();
-                    HisDataMemoryQueryService.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
+                    HisDataMemoryQueryService3.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
                 }
 
                 return true;
@@ -2114,7 +2114,7 @@ namespace Cdy.Tag
                 needsubmite |= ntmp;
             }
             if (needsubmite)
-                ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
+                ServiceLocator.Locator.Resolve<IDataCompress3>().SubmitManualToCompress();
             return true;
         }
 
@@ -2135,7 +2135,7 @@ namespace Cdy.Tag
             finally
             {
                 if (needsubmite)
-                    ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
+                    ServiceLocator.Locator.Resolve<IDataCompress3>().SubmitManualToCompress();
             }
         }
 
@@ -2158,7 +2158,7 @@ namespace Cdy.Tag
             finally
             {
                 if (needsubmite)
-                    ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
+                    ServiceLocator.Locator.Resolve<IDataCompress3>().SubmitManualToCompress();
             }
         }
 
@@ -2181,7 +2181,7 @@ namespace Cdy.Tag
             finally
             {
                 if (needsubmite)
-                    ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
+                    ServiceLocator.Locator.Resolve<IDataCompress3>().SubmitManualToCompress();
             }
         }
 
@@ -2236,7 +2236,7 @@ namespace Cdy.Tag
                 needsubmite |= ntmp;
             }
             if (needsubmite)
-                ServiceLocator.Locator.Resolve<IDataCompress2>().SubmitManualToCompress();
+                ServiceLocator.Locator.Resolve<IDataCompress3>().SubmitManualToCompress();
             return true;
         }
 

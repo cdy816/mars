@@ -323,6 +323,10 @@ namespace Cdy.Tag
                 seriseEnginer.BlockDuration = mHisDatabase.Setting.DataBlockDuration;
                 seriseEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
                 seriseEnginer.DataSeriser = mHisDatabase.Setting.DataSeriser;
+                SeriseEnginer3.HisDataPathPrimary = mHisDatabase.Setting.HisDataPathPrimary;
+                SeriseEnginer3.HisDataPathBack = mHisDatabase.Setting.HisDataPathBack;
+                SeriseEnginer3.HisDataKeepTimeInPrimaryPath = mHisDatabase.Setting.HisDataKeepTimeInPrimaryPath;
+
                 seriseEnginer.Init();
                 ServiceLocator.Locator.Registor<IDataSerialize3>(seriseEnginer);
 

@@ -404,43 +404,46 @@ namespace Cdy.Tag
                             }
                         }
 
-                        foreach (var vv in new System.IO.DirectoryInfo(wpath).GetFiles())
+                        if (System.IO.Directory.Exists(wpath))
                         {
-                            if (mIsClosed) break;
-                            try
+                            foreach (var vv in new System.IO.DirectoryInfo(wpath).GetFiles())
                             {
-                                if ((time - vv.LastWriteTime).TotalDays >= HisDataKeepTimeInPrimaryPath)
+                                if (mIsClosed) break;
+                                try
                                 {
-
-                                    if (!string.IsNullOrEmpty(backpath))
+                                    if ((time - vv.LastWriteTime).TotalDays >= HisDataKeepTimeInPrimaryPath)
                                     {
-                                        if (GetDriverFreeSize(backpath) > vv.Length)
-                                        {
-                                            vv.MoveTo(System.IO.Path.Combine(backpath, vv.Name));
 
-                                            if (!string.IsNullOrEmpty(backpath))
+                                        if (!string.IsNullOrEmpty(backpath))
+                                        {
+                                            if (GetDriverFreeSize(backpath) > vv.Length)
                                             {
-                                                if (GetDriverUsedPercent(backpath) < 0.2)
+                                                vv.MoveTo(System.IO.Path.Combine(backpath, vv.Name));
+
+                                                if (!string.IsNullOrEmpty(backpath))
                                                 {
-                                                    LoggerService.Service.Warn("SeriseEnginer", "free disk space is lower in backup path");
+                                                    if (GetDriverUsedPercent(backpath) < 0.2)
+                                                    {
+                                                        LoggerService.Service.Warn("SeriseEnginer", "free disk space is lower in backup path");
+                                                    }
                                                 }
+                                            }
+                                            else
+                                            {
+                                                vv.Delete();
+                                                LoggerService.Service.Erro("SeriseEnginer", "There is not enough space for backup! free size:" + (GetDriverFreeSize(backpath) / 1024.0 / 1024) + "M. required size:" + (vv.Length / 1024.0 / 1024) + " M");
                                             }
                                         }
                                         else
                                         {
                                             vv.Delete();
-                                            LoggerService.Service.Erro("SeriseEnginer", "There is not enough space for backup! free size:" + (GetDriverFreeSize(backpath) / 1024.0 / 1024) + "M. required size:" + (vv.Length / 1024.0 / 1024) + " M");
                                         }
                                     }
-                                    else
-                                    {
-                                        vv.Delete();
-                                    }
                                 }
-                            }
-                            catch (Exception ex)
-                            {
-                                LoggerService.Service.Erro("SeriseEnginer", ex.Message + " " + ex.StackTrace);
+                                catch (Exception ex)
+                                {
+                                    LoggerService.Service.Erro("SeriseEnginer", ex.Message + " " + ex.StackTrace);
+                                }
                             }
                         }
                     }

@@ -9,6 +9,7 @@
 using DBRuntime.His;
 using DBRuntime.His.Compress;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -703,19 +704,19 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="timerVals"></param>
+        /// <param name="Vals"></param>
         /// <param name="emptyIds"></param>
         /// <returns></returns>
-        protected Memory<byte> CompressValues(List<string> timerVals, CustomQueue<int> emptyIds)
+        protected Memory<byte> CompressValues(List<string> Vals, CustomQueue<int> emptyIds)
         {
             mMarshalMemory.Position = 0;
             int ig = -1;
             ig = emptys.ReadIndex <= emptyIds.WriteIndex ? emptys.IncRead() : -1;
-            for (int i = 0; i < timerVals.Count; i++)
+            for (int i = 0; i < Vals.Count; i++)
             {
                 if(i != ig)
                 {
-                    var id = timerVals[i];
+                    var id = Vals[i];
                     mMarshalMemory.Write(id);
                 }
                 else
@@ -726,6 +727,74 @@ namespace Cdy.Tag
             return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="Vals"></param>
+        /// <param name="emptyIds"></param>
+        /// <returns></returns>
+        protected Memory<byte> CompressValues2(List<string> Vals, CustomQueue<int> emptyIds,out byte[] bytearray)
+        {
+            mMarshalMemory.Position = 0;
+            var bvals = ArrayPool<byte>.Shared.Rent(Vals.Count * 255);
+            int ig = -1;
+            ig = emptys.ReadIndex <= emptyIds.WriteIndex ? emptys.IncRead() : -1;
+            long size = 0;
+            var vss = new System.IO.MemoryStream(bvals);
+            using (System.IO.Compression.GZipStream gs = new System.IO.Compression.GZipStream(vss, System.IO.Compression.CompressionLevel.Optimal))
+            {
+                for (int i = 0; i < Vals.Count; i++)
+                {
+                    if (i != ig)
+                    {
+                        var id = Vals[i];
+                        var vals = Encoding.Unicode.GetBytes(Vals[i]);
+                        gs.Write(BitConverter.GetBytes(vals.Length));
+                        gs.Write(vals);
+                    }
+                    else
+                    {
+                        ig = emptys.ReadIndex <= emptyIds.WriteIndex ? emptys.IncRead() : -1;
+                    }
+                }
+                gs.Flush();
+                size = vss.Position;
+            }
+            vss.Dispose();
+            bytearray = bvals;
+            return bvals.AsMemory<byte>(0, (int)size);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="bvals"></param>
+        /// <returns></returns>
+        public List<string> DeCompressToStrings(byte[] bvals)
+        {
+            List<string> re = new List<string>();
+            byte[] btmp = System.Buffers.ArrayPool<byte>.Shared.Rent(4);
+            using (System.IO.Compression.GZipStream gs = new System.IO.Compression.GZipStream(new System.IO.MemoryStream(bvals), System.IO.Compression.CompressionMode.Decompress))
+            {
+                while (gs.Read(btmp, 0, 4)>0)
+                {
+                    int ilen = BitConverter.ToInt32(btmp, 0);
+                    if (ilen > 0)
+                    {
+                        byte[] bb = System.Buffers.ArrayPool<byte>.Shared.Rent(ilen);
+                        gs.Read(bb, 0, ilen);
+                        re.Add(Encoding.Unicode.GetString(bb, 0, ilen));
+                        System.Buffers.ArrayPool<byte>.Shared.Return(bb);
+                    }
+                    else
+                    {
+                        re.Add("");
+                    }
+                }
+            }
+            System.Buffers.ArrayPool<byte>.Shared.Return(btmp);
+            return re;
+        }
 
 
         /// <summary>
@@ -1073,9 +1142,13 @@ namespace Cdy.Tag
                 case TagType.String:
                     var vals = source.ReadStringsByFixSize(count * tlen + (int)sourceAddr, count);
                     var qus = source.ReadBytes(count);
-                    var sres = CompressValues(vals, emptys);
+                    byte[] bvals;
+                    var sres = CompressValues2(vals, emptys,out bvals);
                     target.Write(sres.Length);
                     target.Write(sres);
+
+                    ArrayPool<byte>.Shared.Return(bvals);
+
                     rsize += 4;
                     rsize += sres.Length;
                     emptys.ReadIndex = 0;
@@ -1396,10 +1469,11 @@ namespace Cdy.Tag
             }
             else if (typeof(T) == typeof(string))
             {
-                using (MemorySpan block = new MemorySpan(value))
-                {
-                    return block.ToStringList(Encoding.Unicode) as List<T>;
-                }
+                return DeCompressToStrings(value) as List<T>;
+                //using (MemorySpan block = new MemorySpan(value))
+                //{
+                //    return block.ToStringList(Encoding.Unicode) as List<T>;
+                //}
             }
             else if (typeof(T) == typeof(bool))
             {
@@ -2193,7 +2267,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            if (val.Value.Quality < 20 && qulityes[0] < 20)
+                            if ((val.Value.Quality < 20 || val.Value.Quality == 100) && (qulityes[0] < 20|| qulityes[0]==100))
                             {
                                 var pval1 = (time - val.Value.Time).TotalMilliseconds;
                                 var tval1 = (timers[0] - val.Value.Time).TotalMilliseconds;
@@ -2306,7 +2380,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            if (val.Value.Quality < 20 && qtmp < 20)
+                            if ((val.Value.Quality < 20 || val.Value.Quality ==100) && (qtmp < 20 || qtmp==100))
                             {
                                 var pval1 = (time - timetmp).TotalMilliseconds;
                                 var tval1 = (val.Value.Time - timetmp).TotalMilliseconds;
@@ -2560,7 +2634,7 @@ namespace Cdy.Tag
                     case QueryValueMatchType.Linear:
                         if (!val.HasValue) return null;
 
-                        if (qulityes[0] < 20 && val.Value.Quality < 20)
+                        if ((qulityes[0] < 20 || qulityes[0]==100) && (val.Value.Quality < 20 || val.Value.Quality==100))
                         {
                             return (T)LinerValue(val.Value.Time, timers[0], time1, val.Value.Value, value[0]);
                         }
@@ -2605,7 +2679,7 @@ namespace Cdy.Tag
                     case QueryValueMatchType.Linear:
                         if (!val.HasValue) return null;
 
-                        if (qulityes[qulityes.Count-1] < 20 && val.Value.Quality < 20)
+                        if ((qulityes[qulityes.Count-1] < 20 || qulityes[qulityes.Count - 1] ==100) && (val.Value.Quality < 20 || val.Value.Quality==100))
                         {
                             return (T)LinerValue(timers[timers.Count-1], val.Value.Time, time1, value[value.Count - 1], val.Value.Value);
                         }
@@ -2848,7 +2922,7 @@ namespace Cdy.Tag
                         case QueryValueMatchType.Linear:
                             if (val.HasValue)
                             {
-                                if (qulityes[0] < 20 && val.Value.Quality < 20)
+                                if ((qulityes[0] < 20 || qulityes[0] ==100) && (val.Value.Quality < 20 || val.Value.Quality==100))
                                 {
                                     result.Add(LinerValue(val.Value.Time, timers[0], time1, val.Value.Value, value[0]), time1, 0);
                                 }
@@ -3006,7 +3080,7 @@ namespace Cdy.Tag
                         case QueryValueMatchType.Linear:
                             if (val.HasValue)
                             {
-                                if (qulityes[0] < 20 && val.Value.Quality < 20)
+                                if ((qulityes[qulityes.Count - 1] < 20 || qulityes[qulityes.Count - 1] ==100) && (val.Value.Quality < 20 || val.Value.Quality==100))
                                 {
                                     result.Add(LinerValue(timers[timers.Count - 1], val.Value.Time, time1, value[value.Count - 1], val.Value.Value), time1, 0);
                                 }

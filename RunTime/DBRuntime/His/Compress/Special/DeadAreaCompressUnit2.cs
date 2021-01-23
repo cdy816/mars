@@ -9,6 +9,7 @@
 using DBRuntime.His;
 using DBRuntime.His.Compress;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 
@@ -529,12 +530,14 @@ namespace Cdy.Tag
                     rsize += datas.Length;
 
                     //写入数据
-
                     var vals = source.ReadStrings(count * tlen + (int)sourceAddr, count);
                     var qus = source.ReadBytes(count);
-                    var sres = CompressValues(vals, emptys);
+                    byte[] btmp;
+                    var sres = CompressValues2(vals, emptys,out btmp);
                     target.Write(sres.Length);
                     target.Write(sres);
+                    ArrayPool<byte>.Shared.Return(btmp);
+
                     rsize += 4;
                     rsize += sres.Length;
                     emptys.ReadIndex = 0;

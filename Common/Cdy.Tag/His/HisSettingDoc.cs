@@ -69,7 +69,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 历史数据在主目录里保存时间
         /// </summary>
-        public int HisDataKeepTimeInPrimaryPath { get; set; }
+        public int HisDataKeepTimeInPrimaryPath { get; set; } = 360;
 
         #endregion ...Properties...
 

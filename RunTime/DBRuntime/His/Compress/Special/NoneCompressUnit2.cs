@@ -695,6 +695,13 @@ namespace Cdy.Tag
                 TagHisValue<bool>? val = vtmp != null ? (TagHisValue<bool>)vtmp : null;
 
                 var valtmp = source.ReadByte(valaddr + findex) > 0;
+
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<bool>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) };
+                }
+
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
@@ -987,6 +994,13 @@ namespace Cdy.Tag
                 var vtmp = ReadOtherDatablockAction(0);
                 TagHisValue<byte>? val = vtmp != null ? (TagHisValue<byte>)vtmp : null;
                 var valtmp = source.ReadByte(valaddr + findex);
+
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<byte>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) };
+                }
+
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
@@ -1324,6 +1338,13 @@ namespace Cdy.Tag
                 TagHisValue<DateTime>? val = vtmp != null ? (TagHisValue<DateTime>)vtmp : null;
 
                 var valtmp = source.ReadDateTime(valaddr + findex * 8);
+
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<DateTime>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) };
+                }
+
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
@@ -1618,6 +1639,13 @@ namespace Cdy.Tag
                 TagHisValue<double>? val = vtmp != null ? (TagHisValue<double>)vtmp : null;
 
                 var valtmp = source.ReadDouble(valaddr + findex * 8);
+
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<double>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) };
+                }
+
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
@@ -1958,6 +1986,13 @@ namespace Cdy.Tag
                 TagHisValue<float>? val = vtmp != null ? (TagHisValue<float>)vtmp : null;
 
                 var valtmp = source.ReadFloat(valaddr + findex * 4);
+
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<float>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) };
+                }
+
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
@@ -2289,6 +2324,12 @@ namespace Cdy.Tag
                 var vtmp = ReadOtherDatablockAction(0);
                 TagHisValue<int>? val = vtmp != null ? (TagHisValue<int>)vtmp : null;
                 var valtmp = source.ReadInt(valaddr + findex * 4);
+
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<int>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) };
+                }
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
@@ -2623,6 +2664,13 @@ namespace Cdy.Tag
                 var vtmp = ReadOtherDatablockAction(0);
                 TagHisValue<long>? val = vtmp != null ? (TagHisValue<long>)vtmp : null;
                 var valtmp = source.ReadLong(valaddr + findex * 8);
+
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<long>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) };
+                }
+
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
@@ -2985,6 +3033,13 @@ namespace Cdy.Tag
                 var vtmp = ReadOtherDatablockAction(0);
                 TagHisValue<short>? val = vtmp != null ? (TagHisValue<short>)vtmp : null;
                 var valtmp = source.ReadShort(valaddr + findex * 2);
+
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<short>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) };
+                }
+
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
@@ -3333,7 +3388,14 @@ namespace Cdy.Tag
                 //var val = (TagHisValue<string>)ReadOtherDatablockAction(0);
                 var vtmp = ReadOtherDatablockAction(0);
                 TagHisValue<string>? val = vtmp != null ? (TagHisValue<string>)vtmp : null;
+
                 var valtmp = dtmp[findex];
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<string>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) };
+                }
+
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
@@ -3619,6 +3681,11 @@ namespace Cdy.Tag
                 var vtmp = ReadOtherDatablockAction(0);
                 TagHisValue<uint>? val = vtmp != null ? (TagHisValue<uint>)vtmp : null;
                 var valtmp = source.ReadUInt(valaddr + findex * 4);
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<uint>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) };
+                }
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
@@ -3955,6 +4022,13 @@ namespace Cdy.Tag
                 var vtmp = ReadOtherDatablockAction(0);
                 TagHisValue<ulong>? val = vtmp != null ? (TagHisValue<ulong>)vtmp : null;
                 var valtmp = source.ReadULong(valaddr + findex * 8);
+
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<ulong>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) };
+                }
+
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
@@ -4291,6 +4365,11 @@ namespace Cdy.Tag
                 var vtmp = ReadOtherDatablockAction(0);
                 TagHisValue<ushort>? val = vtmp != null ? (TagHisValue<ushort>)vtmp : null;
                 var valtmp = source.ReadUShort(valaddr + findex * 2);
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<ushort>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) };
+                }
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
@@ -5704,6 +5783,13 @@ namespace Cdy.Tag
                     var vtmp = ReadOtherDatablockAction(0);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new IntPointData(source.ReadInt(valaddr + findex * 4), source.ReadInt(valaddr + (findex + 1) * 4));
+
+                    //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                    if (val.HasValue && val.Value.IsEmpty())
+                    {
+                        val = (TagHisValue<T>)((object)new TagHisValue<IntPointData>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) });
+                    }
+
                     foreach (var time1 in lowfirst)
                     {
                         switch (type)
@@ -5875,6 +5961,7 @@ namespace Cdy.Tag
                     var vtmp = ReadOtherDatablockAction(1);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new IntPointData(source.ReadInt(valaddr + flast * 4), source.ReadInt(valaddr + (flast + 1) * 4));
+
                     foreach (var time1 in greatlast)
                     {
                         switch (type)
@@ -5954,6 +6041,13 @@ namespace Cdy.Tag
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new IntPoint3Data(source.ReadInt(valaddr + findex * 4), source.ReadInt(valaddr + (findex + 1) * 4), source.ReadInt(valaddr + (findex + 2) * 4));
+
+                    //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                    if (val.HasValue && val.Value.IsEmpty())
+                    {
+                        val = (TagHisValue<T>)((object)new TagHisValue<IntPoint3Data>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) });
+                    }
+
                     foreach (var time1 in lowfirst)
                     {
                         switch (type)
@@ -6218,6 +6312,12 @@ namespace Cdy.Tag
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new UIntPoint3Data(source.ReadUInt(valaddr + findex * 4), source.ReadUInt(valaddr + (findex + 1) * 4), source.ReadUInt(valaddr + (findex + 2) * 4));
+
+                    //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                    if (val.HasValue && val.Value.IsEmpty())
+                    {
+                        val = (TagHisValue<T>)((object)new TagHisValue<UIntPoint3Data>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) });
+                    }
                     foreach (var time1 in lowfirst)
                     {
                         switch (type)
@@ -6482,6 +6582,13 @@ namespace Cdy.Tag
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new UIntPointData(source.ReadUInt(valaddr + findex * 4), source.ReadUInt(valaddr + (findex + 1) * 4));
+
+                    //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                    if (val.HasValue && val.Value.IsEmpty())
+                    {
+                        val = (TagHisValue<T>)((object)new TagHisValue<UIntPointData>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) });
+                    }
+
                     foreach (var time1 in lowfirst)
                     {
                         switch (type)
@@ -6732,6 +6839,12 @@ namespace Cdy.Tag
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new LongPointData(source.ReadLong(valaddr + findex * 8), source.ReadLong(valaddr + (findex + 1) * 8));
+
+                    //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                    if (val.HasValue && val.Value.IsEmpty())
+                    {
+                        val = (TagHisValue<T>)((object)new TagHisValue<LongPointData>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) });
+                    }
                     foreach (var time1 in lowfirst)
                     {
                         switch (type)
@@ -6982,6 +7095,12 @@ namespace Cdy.Tag
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new ULongPointData(source.ReadULong(valaddr + findex * 8), source.ReadULong(valaddr + (findex + 1) * 8));
+
+                    //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                    if (val.HasValue && val.Value.IsEmpty())
+                    {
+                        val = (TagHisValue<T>)((object)new TagHisValue<ULongPointData>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) });
+                    }
                     foreach (var time1 in lowfirst)
                     {
                         switch (type)
@@ -7152,6 +7271,9 @@ namespace Cdy.Tag
                     var vtmp = ReadOtherDatablockAction(1);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new ULongPointData(source.ReadULong(valaddr + flast * 8), source.ReadULong(valaddr + (flast + 1) * 8));
+
+                   
+
                     foreach (var time1 in greatlast)
                     {
                         switch (type)
@@ -7231,6 +7353,12 @@ namespace Cdy.Tag
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new LongPoint3Data(source.ReadLong(valaddr + findex * 8), source.ReadLong(valaddr + (findex + 1) * 8), source.ReadLong(valaddr + (findex + 2) * 8));
+
+                    //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                    if (val.HasValue && val.Value.IsEmpty())
+                    {
+                        val = (TagHisValue<T>)((object)new TagHisValue<LongPoint3Data>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) });
+                    }
                     foreach (var time1 in lowfirst)
                     {
                         switch (type)
@@ -7494,6 +7622,12 @@ namespace Cdy.Tag
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new ULongPoint3Data(source.ReadULong(valaddr + findex * 8), source.ReadULong(valaddr + (findex + 1) * 8), source.ReadULong(valaddr + (findex + 2) * 8));
+                    //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                    if (val.HasValue && val.Value.IsEmpty())
+                    {
+                        val = (TagHisValue<T>)((object)new TagHisValue<ULongPoint3Data>() { Value = valtmp, Quality = qq[findex], Time = vv[findex].Value.Item1.AddMilliseconds(-vv[findex].Value.Item1.Millisecond) });
+                    }
+
                     foreach (var time1 in lowfirst)
                     {
                         switch (type)

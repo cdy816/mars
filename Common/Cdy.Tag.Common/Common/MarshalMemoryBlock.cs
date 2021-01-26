@@ -238,10 +238,10 @@ namespace Cdy.Tag
 
         }
 
-        /// <summary>
-        /// 附加信息
-        /// </summary>
-        public IntPtr AttachDataPointer { get; set; }
+        ///// <summary>
+        ///// 附加信息
+        ///// </summary>
+        //public IntPtr AttachDataPointer { get; set; }
 
 
         #endregion ...Properties...

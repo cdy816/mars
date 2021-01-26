@@ -1891,6 +1891,13 @@ namespace Cdy.Tag
                 var vtmp = ReadOtherDatablockAction(0);
 
                 TagHisValue<T>? val = vtmp!=null?(TagHisValue<T>)vtmp:null;
+
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if(val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = timers[0].AddMilliseconds(-timers[0].Millisecond) };
+                }
+
                 foreach (var vtime in lowfirst)
                 {
                     switch (type)
@@ -2236,6 +2243,13 @@ namespace Cdy.Tag
                 //如果读取的时间小于，当前数据段的起始时间
                 var vtmp = ReadOtherDatablockAction(0);
                 TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
+
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = timers[0].AddMilliseconds(-timers[0].Millisecond) };
+                }
+
                 //  var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
                 switch (type)
                 {
@@ -2624,6 +2638,12 @@ namespace Cdy.Tag
                 var vtmp = ReadOtherDatablockAction(0);
                 TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = timers[0].AddMilliseconds(-timers[0].Millisecond) };
+                }
+
                 switch (type)
                 {
                     case QueryValueMatchType.Previous:
@@ -2899,6 +2919,12 @@ namespace Cdy.Tag
             {
                 var vtmp = ReadOtherDatablockAction(0);
                 TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
+
+                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = timers[0].AddMilliseconds(-timers[0].Millisecond) };
+                }
 
                 foreach (var time1 in lowfirst)
                 {

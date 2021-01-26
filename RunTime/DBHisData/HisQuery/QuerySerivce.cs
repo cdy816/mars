@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System.Diagnostics;
 
 namespace Cdy.Tag
 {
@@ -271,7 +272,9 @@ namespace Cdy.Tag
         {
             try
             {
-
+                //Stopwatch sw = new Stopwatch();
+                //sw.Start();
+                //long ltmp=0,ltmp0=0, ltmp1=0, ltmp2=0;
                 DateTime etime = endTime,stime = startTime;
 
                 DateTime memoryTime = DateTime.MaxValue;
@@ -293,13 +296,23 @@ namespace Cdy.Tag
 
                     Tuple<DateTime, DateTime> mLogFileTimes;
                     var vfiles = GetFileManager().GetDataFiles(stime, etime, out mLogFileTimes, id);
+                    //ltmp0 = sw.ElapsedMilliseconds;
                     //从历史记录中读取数据
-                    vfiles.ForEach(e =>
+                    foreach(var e in vfiles)
                     {
                         DateTime sstart = e.StartTime > startTime ? e.StartTime : startTime;
                         DateTime eend = e.EndTime > endTime ? endTime : e.EndTime;
                         e.ReadAllValue(id, sstart, eend, result);
-                    });
+                    }
+
+                    //vfiles.ForEach(e =>
+                    //{
+                    //    DateTime sstart = e.StartTime > startTime ? e.StartTime : startTime;
+                    //    DateTime eend = e.EndTime > endTime ? endTime : e.EndTime;
+                    //    e.ReadAllValue(id, sstart, eend, result);
+                    //});
+
+                    //ltmp1 = sw.ElapsedMilliseconds;
 
                     //从日志文件中读取数据
                     if (mLogFileTimes.Item1 < mLogFileTimes.Item2)
@@ -312,8 +325,12 @@ namespace Cdy.Tag
                     {
                         ReadAllValueFromMemory(id, memoryTime, endTime, result);
                     }
+                    //ltmp2 = sw.ElapsedMilliseconds;
                 }
 
+                //sw.Stop();
+
+                //Debug.Print("ReadAllValueByUTCTime "+ ltmp0 +" , " +(ltmp1-ltmp0)+" , "+(ltmp2-ltmp1));
                 
             }
             catch(Exception ex)

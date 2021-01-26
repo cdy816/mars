@@ -119,6 +119,7 @@ namespace Cdy.Tag
                 if (mStream != null)
                 {
                     mStream.Close();
+                   
                 }
             }
             catch
@@ -147,7 +148,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public override MarshalMemoryBlock Read(long start, int len)
         {
-            MarshalMemoryBlock re = new MarshalMemoryBlock(len, Math.Min(len,1024 * 100));
+            MarshalMemoryBlock re = new MarshalMemoryBlock(len, len);
             mStream.Position = start;
             re.ReadFromStream(mStream, len);
             return re;
@@ -330,6 +331,11 @@ namespace Cdy.Tag
             return re;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <returns></returns>
         public override DateTime ReadDateTime(long start)
         {
             mStream.Position = start;
@@ -487,6 +493,7 @@ namespace Cdy.Tag
             Close();
             if(mStream!=null)
             {
+                mStream.DisposeAsync();
                 mStream = null;
             }
         }
@@ -537,7 +544,8 @@ namespace Cdy.Tag
             if (System.IO.File.Exists(filename))
             {
                 this.FileName = filename;
-                mStream = System.IO.File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                //mStream = System.IO.File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                mStream = new FileStream(filename, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
                 return true;
             }
             return false;

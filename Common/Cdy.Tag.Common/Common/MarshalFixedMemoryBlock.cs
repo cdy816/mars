@@ -1413,16 +1413,19 @@ namespace Cdy.Tag
         /// <returns></returns>
         public IMemoryFixedBlock WriteToStream(Stream stream,long offset,long len)
         {
-            byte[] bvals = new byte[1024 * 1024 * 4];
-            long ltmp = len;
-            IntPtr source = new IntPtr(mHandleValue + offset);
-            while (ltmp > 0)
+            using (System.IO.UnmanagedMemoryStream mstream = new UnmanagedMemoryStream((byte*)this.Handles+offset, len))
             {
-                long ctmp = Math.Min(bvals.Length, ltmp);
-                Marshal.Copy(source, bvals, 0, (int)ctmp);
-                stream.Write(bvals, 0, (int)ctmp);
-                source = new IntPtr(source.ToInt64() + ctmp);
-                ltmp -= ctmp;
+                mstream.CopyTo(stream);
+            }
+            return this;
+        }
+
+
+        public unsafe IMemoryFixedBlock WriteToStream(Stream stream)
+        {
+            using(System.IO.UnmanagedMemoryStream mstream = new UnmanagedMemoryStream((byte*)this.Handles,Length))
+            {
+                mstream.CopyTo(stream);
             }
             return this;
         }

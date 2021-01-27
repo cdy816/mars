@@ -59,9 +59,13 @@ namespace Cdy.Tag
 
         private Thread mDatabackThread;
 
+        private Thread mHisFileReArrangeThread;
+
         private bool mIsClosed = false;
 
         private bool mIsBackupFinished = false;
+
+        private bool mIsHisFileReArrangeFinish = false;
 
         private Dictionary<int, CompressMemory3> mWaitForProcessMemory = new Dictionary<int, CompressMemory3>();
 
@@ -74,6 +78,8 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         private int mLastBackupDay=-1;
+
+        private bool mIsBusy = false;
 
         #endregion ...Variables...
 
@@ -236,6 +242,10 @@ namespace Cdy.Tag
             mDatabackThread = new Thread(DatabackupThreadPro);
             mDatabackThread.IsBackground = true;
             mDatabackThread.Start();
+
+            mHisFileReArrangeThread = new Thread(DataFileReArrangeThreadPro);
+            mHisFileReArrangeThread.IsBackground = true;
+            mHisFileReArrangeThread.Start();
         }
 
         /// <summary>
@@ -256,7 +266,8 @@ namespace Cdy.Tag
             }
 
             while (!mIsBackupFinished) Thread.Sleep(1);
-            
+
+            while (!mIsHisFileReArrangeFinish) Thread.Sleep(1);
         }
 
         /// <summary>
@@ -302,6 +313,8 @@ namespace Cdy.Tag
                 }
             }
         }
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -324,6 +337,7 @@ namespace Cdy.Tag
                 lock (resetEvent)
                     resetEvent.Reset();
 
+                mIsBusy = true;
                 //#if DEBUG 
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
@@ -346,9 +360,43 @@ namespace Cdy.Tag
                 //#if DEBUG
                 sw.Stop();
                 LoggerService.Service.Info("SeriseEnginer", ">>>>>>>>>完成执行存储>>>>>>>  ElapsedMilliseconds:" + sw.ElapsedMilliseconds, ConsoleColor.Cyan);
+
+                mIsBusy = false;
                 //#endif
             }
             closedEvent.Set();
+        }
+
+        private DateTime mLastDataFileReArrangeProcessTime;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void DataFileReArrangeThreadPro()
+        {
+            while (!mIsClosed)
+            {
+                var wpath = SelectHisDataPath();
+
+                if ((DateTime.Now - mLastDataFileReArrangeProcessTime).TotalSeconds > 30)
+                {
+                    if (System.IO.Directory.Exists(wpath))
+                    {
+                        foreach (var vv in new System.IO.DirectoryInfo(wpath).GetFiles("*.dbd"))
+                        {
+                            if (mIsClosed) break;
+                            while (mIsBusy) Thread.Sleep(1000);
+
+                            if (mIsClosed) break;
+                            HisDataArrange.Arrange.CheckAndReArrangeHisFile(vv.FullName, FileDuration, false);
+                        }
+                    }
+                    mLastDataFileReArrangeProcessTime = DateTime.Now;
+                }
+                Thread.Sleep(1000);
+            }
+
+            mIsHisFileReArrangeFinish = true;
         }
 
         /// <summary>
@@ -406,7 +454,7 @@ namespace Cdy.Tag
 
                         if (System.IO.Directory.Exists(wpath))
                         {
-                            foreach (var vv in new System.IO.DirectoryInfo(wpath).GetFiles())
+                            foreach (var vv in new System.IO.DirectoryInfo(wpath).GetFiles("*.his"))
                             {
                                 if (mIsClosed) break;
                                 try

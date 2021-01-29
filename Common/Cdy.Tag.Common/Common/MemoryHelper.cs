@@ -647,6 +647,30 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="source"></param>
+        /// <param name="target"></param>
+        /// <param name="sourceoffset"></param>
+        /// <param name="targetoffset"></param>
+        /// <param name="size"></param>
+        public static unsafe void MemoryCopy(IntPtr source,int sourceoffset, IntPtr target, int targetoffset,int size)
+        {
+            Buffer.MemoryCopy((void*)(source + sourceoffset), (void*)(target+ targetoffset), size, size);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="ofs"></param>
+        /// <returns></returns>
+        public static unsafe int ReadInt32(IntPtr ptr, long ofs)
+        {
+            return ReadInt32((void*)ptr, ofs);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <returns></returns>
@@ -679,6 +703,16 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="ofs"></param>
+        /// <returns></returns>
+        public static unsafe uint ReadUInt32(IntPtr ptr, long ofs)
+        {
+            return ReadUInt32((void*)ptr, ofs);
+        }
         /// <summary>
         /// 
         /// </summary>

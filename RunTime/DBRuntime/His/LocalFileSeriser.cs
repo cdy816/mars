@@ -157,6 +157,19 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="start"></param>
+        /// <param name="len"></param>
+        /// <returns></returns>
+        public override unsafe int Read(IntPtr buffer, long start, int len)
+        {
+            mStream.Position = start;
+            return mStream.Read(new Span<byte>((void*)buffer, len));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="source"></param>
         /// <param name="start"></param>
         /// <param name="len"></param>

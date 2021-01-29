@@ -75,6 +75,18 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="file"></param>
+        public void CheckFileExist(string file, DateTime startTime)
+        {
+            if(this.ContainsKey(startTime.Month))
+            {
+                (this[startTime.Month] as MonthTimeFile).CheckFileExist(file, startTime);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public void UpdateLastDatetime()
         {
            if(this.ContainsKey(mMaxMonth))

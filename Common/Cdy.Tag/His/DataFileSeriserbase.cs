@@ -192,6 +192,15 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="start"></param>
+        /// <param name="len"></param>
+        /// <returns></returns>
+        public abstract int Read(IntPtr buffer,long start, int len);
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="start"></param>
         /// <returns></returns>
         public abstract double ReadDouble(long start);

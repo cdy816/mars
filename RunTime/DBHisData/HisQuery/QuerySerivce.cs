@@ -119,6 +119,8 @@ namespace Cdy.Tag
                 {
                     if (mPreFile != null)
                     {
+                        if (mPreFile is HisDataFileInfo) (mPreFile as HisDataFileInfo).Read(id, mtime, type, result);
+                        else
                         mPreFile.Read<T>(id, mtime, type, result);
                         mPreFile = null;
                         mtime.Clear();
@@ -129,7 +131,9 @@ namespace Cdy.Tag
                 {
                     if (mPreFile != null)
                     {
-                        mPreFile.Read<T>(id, mtime, type, result);
+                        if (mPreFile is HisDataFileInfo) (mPreFile as HisDataFileInfo).Read(id, mtime, type, result);
+                        else
+                            mPreFile.Read<T>(id, mtime, type, result);
                     }
                     mPreFile = vv.Value;
                     mtime.Clear();
@@ -142,7 +146,9 @@ namespace Cdy.Tag
             }
             if (mPreFile != null)
             {
-                mPreFile.Read<T>(id, mtime, type, result);
+                if (mPreFile is HisDataFileInfo) (mPreFile as HisDataFileInfo).Read(id, mtime, type, result);
+                else
+                    mPreFile.Read<T>(id, mtime, type, result);
             }
 
             //从日志文件中读取数据
@@ -302,7 +308,11 @@ namespace Cdy.Tag
                     {
                         DateTime sstart = e.StartTime > startTime ? e.StartTime : startTime;
                         DateTime eend = e.EndTime > endTime ? endTime : e.EndTime;
-                        e.ReadAllValue(id, sstart, eend, result);
+                        if (e is HisDataFileInfo)
+                        {
+                            (e as HisDataFileInfo).ReadAllValue(id, startTime, endTime, result);
+                        }
+                        else { e.ReadAllValue(id, sstart, eend, result); }
                     }
 
                     //vfiles.ForEach(e =>

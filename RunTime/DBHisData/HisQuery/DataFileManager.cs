@@ -46,6 +46,8 @@ namespace Cdy.Tag
         /// </summary>
         public const string DataFileExtends = ".dbd";
 
+        public const string HisDataFileExtends = ".his";
+
         /// <summary>
         /// 
         /// </summary>
@@ -57,6 +59,8 @@ namespace Cdy.Tag
         public const int FileHeadSize = 84;
 
         private System.IO.FileSystemWatcher hisDataWatcher;
+
+        private System.IO.FileSystemWatcher backhisDataWatcher;
 
         private System.IO.FileSystemWatcher logDataWatcher;
 
@@ -141,7 +145,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         private string GetBackHisDataPath()
         {
-            return string.IsNullOrEmpty(BackHisDataPath) ? PathHelper.helper.GetDataPath(this.mDatabaseName, "HisData") : System.IO.Path.IsPathRooted(BackHisDataPath) ? BackHisDataPath : PathHelper.helper.GetDataPath(this.mDatabaseName, BackHisDataPath);
+            return string.IsNullOrEmpty(BackHisDataPath) ? "" : System.IO.Path.IsPathRooted(BackHisDataPath) ? BackHisDataPath : PathHelper.helper.GetDataPath(this.mDatabaseName, BackHisDataPath);
         }
 
 
@@ -153,11 +157,50 @@ namespace Cdy.Tag
             string datapath = GetPrimaryHisDataPath();
             
             await Scan(datapath);
+
+            string backuppath = GetBackHisDataPath();
+            if (!string.IsNullOrEmpty(backuppath))
+                await Scan(backuppath);
+
             if (System.IO.Directory.Exists(datapath))
             {
-                hisDataWatcher = new System.IO.FileSystemWatcher(GetPrimaryHisDataPath());
+                if (!System.IO.Directory.Exists(datapath))
+                {
+                    try
+                    {
+                        System.IO.Directory.CreateDirectory(datapath);
+                    }
+                    catch
+                    {
+
+                    }
+                }
+
+                hisDataWatcher = new System.IO.FileSystemWatcher(datapath);
                 hisDataWatcher.Changed += HisDataWatcher_Changed;
                 hisDataWatcher.EnableRaisingEvents = true;
+            }
+
+            if(!string.IsNullOrEmpty(backuppath))
+            {
+                if (!System.IO.Directory.Exists(backuppath))
+                {
+                    try
+                    {
+                        System.IO.Directory.CreateDirectory(backuppath);
+                    }
+                    catch
+                    {
+
+                    }
+                }
+                
+                if (System.IO.Directory.Exists(backuppath))
+                {
+                    backhisDataWatcher = new System.IO.FileSystemWatcher(datapath);
+                    backhisDataWatcher.Changed += HisDataWatcher_Changed;
+                    backhisDataWatcher.EnableRaisingEvents = true;
+                }
             }
 
             //只有在不支持内存查询的情况，才需要监视日志文件
@@ -213,6 +256,8 @@ namespace Cdy.Tag
         private void FileProcess()
         {
             List<KeyValuePair<string, WatcherChangeTypes>> ltmp = null;
+            string backupdatapath = GetBackHisDataPath();
+
             while (!mIsClosed)
             {
                 mResetEvent.WaitOne();
@@ -257,7 +302,10 @@ namespace Cdy.Tag
                         if (vv.Value == System.IO.WatcherChangeTypes.Created)
                         {
                             LoggerService.Service.Info("DataFileMananger", "HisDataFile " + vv.Key + " is Created & will be add to dataFileCach!");
-                            ParseFileName(vifno);
+                            if (vifno.Extension == DataFileExtends)
+                            {
+                                ParseFileName(vifno);
+                            }
                         }
                         else
                         {
@@ -266,11 +314,23 @@ namespace Cdy.Tag
                             var vfile = CheckAndGetDataFile(vv.Key);
                             if (vfile != null)
                             {
-                                vfile.UpdateLastDatetime();
+                                backupdatapath = GetBackHisDataPath();
+                                if (!string.IsNullOrEmpty(backupdatapath))
+                                {
+                                    if(!vfile.FileName.StartsWith(backupdatapath))
+                                    {
+                                        vfile.UpdateLastDatetime();
+                                    }
+                                }
+                                else
+                                {
+                                    vfile.UpdateLastDatetime();
+                                }
                             }
                             else
                             {
-                                ParseFileName(vifno);
+                                if (vifno.Extension == DataFileExtends)
+                                    ParseFileName(vifno);
                             }
                         }
                     }
@@ -343,6 +403,10 @@ namespace Cdy.Tag
                     }
                 }
             }
+            else if(e.ChangeType == WatcherChangeTypes.Deleted)
+            {
+                CheckRemoveOldFile(e.FullPath);
+            }
         }
 
         /// <summary>
@@ -372,14 +436,14 @@ namespace Cdy.Tag
         /// 搜索文件
         /// </summary>
         /// <param name="path"></param>
-        public async Task Scan(string path)
+        private async Task Scan(string path)
         {
             System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(path);
             if (dir.Exists)
             {
                 foreach (var vv in dir.GetFiles())
                 {
-                    if (vv.Extension == DataFileExtends)
+                    if (vv.Extension == DataFileExtends || vv.Extension == HisDataFileExtends)
                     {
                         ParseFileName(vv);
                     }
@@ -461,9 +525,88 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="fileName"></param>
+        public void UpdateFile(string fileName)
+        {
+            if (System.IO.File.Exists(fileName))
+            {
+                System.IO.FileInfo finfo = new FileInfo(fileName);
+                if (finfo != null)
+                {
+                    if (finfo.Extension == DataFileExtends || finfo.Extension == HisDataFileExtends)
+                    {
+                        ParseFileName(finfo);
+                    }
+                }
+            }
+            else
+            {
+                CheckRemoveOldFile(fileName);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filename"></param>
+        private void CheckRemoveOldFile(string filename)
+        {
+            string sname = filename.Replace(DataFileExtends, "").Replace(HisDataFileExtends, "");
+            string stime = sname.Substring(sname.Length - 12, 12);
+            int yy = 0, mm = 0, dd = 0;
+
+            int id = -1;
+            int.TryParse(sname.Substring(sname.Length - 15, 3), out id);
+
+            if (id == -1)
+                return;
+
+            if (!int.TryParse(stime.Substring(0, 4), out yy))
+            {
+                return;
+            }
+
+            if (!int.TryParse(stime.Substring(4, 2), out mm))
+            {
+                return;
+            }
+
+            if (!int.TryParse(stime.Substring(6, 2), out dd))
+            {
+                return;
+            }
+            int hhspan = int.Parse(stime.Substring(8, 2));
+
+            int hhind = int.Parse(stime.Substring(10, 2));
+
+            int hh = hhspan * hhind;
+
+
+            DateTime startTime = new DateTime(yy, mm, dd, hh, 0, 0);
+
+            YearTimeFile yt = null;
+
+            if (mTimeFileMaps.ContainsKey(id))
+            {
+                if (mTimeFileMaps[id].ContainsKey(yy))
+                {
+                    yt = mTimeFileMaps[id][yy];
+                }
+            }
+
+            if (yt != null)
+            {
+                yt.CheckFileExist(filename, startTime);
+            }
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fileName"></param>
         private void ParseFileName(System.IO.FileInfo file)
         {
-            string sname = file.Name.Replace(DataFileExtends, "");
+            string sname = file.Name.Replace(DataFileExtends, "").Replace(HisDataFileExtends, "");
             string stime = sname.Substring(sname.Length - 12, 12);
             int yy=0, mm=0, dd=0;
 
@@ -514,7 +657,15 @@ namespace Cdy.Tag
                 mTimeFileMaps.Add(id, new Dictionary<int, YearTimeFile>());
                 mTimeFileMaps[id].Add(yy, yt);
             }
-            yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new DataFileInfo() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName,FId= mDatabaseName + id });
+
+            if (file.Extension == DataFileExtends)
+            {
+                yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new DataFileInfo() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName, FId = mDatabaseName + id });
+            }
+            else if (file.Extension==HisDataFileExtends)
+            {
+                yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new HisDataFileInfo() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName, FId = mDatabaseName + id });
+            }
         }
 
         /// <summary>

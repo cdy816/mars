@@ -12,50 +12,57 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Cdy.Tag
 {
-     /*
-     * ****文件结构****
-     * 一个文件头 + 多个数据区组成 ， 一个数据区：数据区头+数据块指针区+数据块区
-     * [] 表示重复的一个或多个内容
-     * 
-     HisData File Structor
-     FileHead(84) + [HisDataRegion]
+    /*
+    * ****DBD 文件结构****
+    * 一个文件头 + 多个数据区组成 ， 一个数据区：数据区头+数据块指针区+数据块区
+    * [] 表示重复的一个或多个内容
+    * 
+    HisData File Structor
+    FileHead(84) + [HisDataRegion]
 
-     FileHead: dataTime(8)(FileTime)+dataTime(8)(LastUpdateTime)+DataRegionCount(4)+DatabaseName(64)
- 
-     HisDataRegion Structor: RegionHead + DataBlockPoint Area + DataBlock Area
+    FileHead: dataTime(8)(FileTime)+dateTime(8)(LastUpdateTime)+DataRegionCount(4)+DatabaseName(64)
 
-     RegionHead:          PreDataRegionPoint(8) + NextDataRegionPoint(8) + Datatime(8)+ tagcount(4)+ tagid sum(8)+file duration(4)+block duration(4)+Time tick duration(4)
-     DataBlockPoint Area: [ID]+[block Point]
-     [block point]:       [[tag1 point,tag2 point,....][tag1 point,tag2 point,...].....]   以时间单位对变量的数去区指针进行组织
-     DataBlock Area:      [block size + data block]
+    HisDataRegion Structor: RegionHead + DataBlockPoint Area + DataBlock Area
+
+    RegionHead:          PreDataRegionPoint(8) + NextDataRegionPoint(8) + Datatime(8)+ tagcount(4)+ tagid sum(8)+file duration(4)+block duration(4)+Time tick duration(4)
+    DataBlockPoint Area: [ID]+[block Point]
+    [block point]:       [[tag1 block1 point,tag2 block1 point,....][tag1 block2 point(12),tag2 block2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
+    [tag block point]:   offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
+    DataBlock Area:      [[tag1 block1 size + tag1 data block1][tag2 block1 size + tag2 data block1]....][[tag1 block2 size + tag1 data block2][tag2 block2 size + tag2 data block2]....]....
+   */
+
+    /*
+    * ****His 文件结构****
+    * 一个文件头 + 多个数据区组成 ， 一个数据区：数据区头+数据块指针区+数据块区
+    * [] 表示重复的一个或多个内容
+    * 
+    HisData File Structor
+    FileHead(84) + [HisDataRegion]
+
+    FileHead: dataTime(8)(FileTime)+dateTime(8)(LastUpdateTime)+DataRegionCount(4)+DatabaseName(64)
+
+    HisDataRegion Structor: RegionHead + DataBlockPoint Area + DataBlock Area
+
+    RegionHead:          PreDataRegionPoint(8) + NextDataRegionPoint(8) + Datatime(8)+ tagcount(4)+ tagid sum(8)+file duration(4)+block duration(4)+Time tick duration(4)
+    DataBlockPoint Area: [ID]+[block Point]
+    [block point]:       [[tag1 block1 point(12),tag1 block2 point(12),....][tag2 block1 point(12),tag2 block2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
+    [tag block point]:   offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
+    DataBlock Area:      [[tag1 block1 size + tag1 block1 data][tag1 block2 size + tag1 block2 data]....][[tag2 block1 size + tag2 block1 data][tag2 block2 size + tag2 block2 data]....]....
     */
+
     /// <summary>
     /// 
     /// </summary>
-    public class DataFileInfo
+    public class HisDataFileInfo:DataFileInfo
     {
 
         #region ... Variables  ...
-
-        private SortedDictionary<DateTime, Tuple<TimeSpan, long, DateTime>> mTimeOffsets = new SortedDictionary<DateTime, Tuple<TimeSpan, long, DateTime>>();
-
-        private bool mInited = false;
-
-        private static object mLockObj = new object();
-
-        private DateTime mLastTime;
-
-        private long mLastProcessOffset = -1;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private int mRegionCount = 0;
 
         #endregion ...Variables...
 
@@ -69,268 +76,9 @@ namespace Cdy.Tag
 
         #region ... Properties ...
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public DateTime LastTime
-        {
-            get
-            {
-                return mLastTime;
-            }
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string FId { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string FileName { get; set; }
-
-        /// <summary>
-        /// 开始时间
-        /// </summary>
-        public DateTime StartTime { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public DateTime EndTime
-        {
-            get
-            {
-                return StartTime + Duration;
-            }
-            set
-            {
-                Duration = value - StartTime;
-            }
-        }
-
-        /// <summary>
-        /// 时间长度
-        /// </summary>
-        public TimeSpan Duration { get; set; }
-
         #endregion ...Properties...
 
         #region ... Methods    ...
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public void UpdateLastDatetime()
-        {
-
-            lock (mLockObj)
-            {
-                mTimeOffsets.Clear();
-                GetFileLastUpdateTime();
-
-                lock (DataFileManager.CurrentDateTime)
-                {
-                    if (DataFileManager.CurrentDateTime.ContainsKey(FId))
-                    {
-                        DataFileManager.CurrentDateTime[FId] = mLastTime;
-                    }
-                    else
-                    {
-                        DataFileManager.CurrentDateTime.Add(FId, mLastTime);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private void GetFileLastUpdateTime()
-        {
-            using (var ss = DataFileSeriserManager.manager.GetDefaultFileSersie())
-            {
-                ss.OpenForReadOnly(FileName);
-                //读取最后一次更新时间
-                mLastTime = ss.ReadDateTime(8);
-                ss.Dispose();
-                mInited = false;
-            }
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public void Scan()
-        {
-            long offset = DataFileManager.FileHeadSize;
-            DateTime time, tmp;
-            using (var ss = DataFileSeriserManager.manager.GetDefaultFileSersie())
-            {
-                ss.OpenForReadOnly(FileName);
-
-                //读取文件时间
-                DateTime fileTime = ss.ReadDateTime(0);
-                //读取最后一次更新时间
-                mLastTime = ss.ReadDateTime(8);
-
-                var rcount = ss.ReadInt(16);
-                if(rcount!= mRegionCount)
-                {
-                    mRegionCount = rcount;
-                }
-                else
-                {
-                    //ss.Close();
-                    ss.Dispose();
-                    return;
-                }
-                try
-                {
-                    do
-                    {
-                        //读取数据区时间
-                        time = ss.ReadDateTime(offset + 16);
-
-                        if (time == DateTime.MinValue)
-                        {
-                            tmp = time;
-                            break;
-                        }
-
-                        long oset = offset;
-                        //读取下个区域位置
-                        offset = ss.ReadLong(offset + 8);
-
-                        if (offset > 0)
-                        {
-                            var dt2 = ss.ReadDateTime(offset + 16);
-                            mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(dt2 - time, oset, dt2));
-                            tmp = dt2;
-                        }
-                        else
-                        {
-                            var tspan = StartTime + Duration - time;
-                            if (tspan.TotalMilliseconds > 0)
-                                mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(tspan, oset, time + tspan));
-                            tmp = time + tspan;
-                        }
-                        mLastProcessOffset = oset;
-                    }
-                    while (offset > 0);
-
-                    if (mLastTime <= fileTime)
-                    {
-                        mLastTime = tmp;
-                    }
-                    //ss.Close();
-                    ss.Dispose();
-                }
-                catch
-                {
-
-                }
-
-                mInited = true;
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public long GetFileOffsets(DateTime time)
-        {
-            lock (mLockObj)
-                if (!mInited) Scan();
-
-            foreach (var vv in mTimeOffsets)
-            {
-                if (vv.Key <= time && time < (vv.Key + vv.Value.Item1))
-                {
-                    return vv.Value.Item2;
-                }
-            }
-            return -1;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <returns></returns>
-        public Dictionary<DateTime, Tuple<TimeSpan, long, DateTime>> GetFileOffsets(DateTime startTime, DateTime endTime)
-        {
-            lock (mLockObj)
-                if (!mInited) Scan();
-            Dictionary<DateTime, Tuple<TimeSpan, long, DateTime>> re = new Dictionary<DateTime, Tuple<TimeSpan, long, DateTime>>();
-            foreach (var vv in mTimeOffsets)
-            {
-                //if (vv.Key >= startTime && vv.Key < endTime)
-                if ((startTime >= vv.Key && startTime < vv.Key + vv.Value.Item1) || (endTime >= vv.Key && endTime < vv.Key + vv.Value.Item1) || (vv.Key >= startTime && (vv.Key + vv.Value.Item1) <= endTime))
-                {
-                    re.Add(vv.Key, vv.Value);
-                }
-            }
-
-            return re;
-        }
-
-
-
-        /// <summary>
-        /// 获取某个时间段内，不包括数据的时间段集合
-        /// </summary>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <returns></returns>
-        public List<Tuple<DateTime, DateTime>> GetNoValueOffsets(DateTime startTime, DateTime endTime)
-        {
-            List<Tuple<DateTime, DateTime>> re = new List<Tuple<DateTime, DateTime>>();
-            DateTime stime = startTime;
-            List<DateTimeSpan> dtmp = new List<DateTimeSpan>();
-            DateTimeSpan ddt = new DateTimeSpan() { Start = startTime, End = endTime };
-            foreach (var vv in mTimeOffsets)
-            {
-                DateTimeSpan dts = new DateTimeSpan() { Start = vv.Key, End = vv.Value.Item3 };
-                dts = dts.Cross(ddt);
-                if (!dts.IsEmpty())
-                    dtmp.Add(dts);
-            }
-
-            foreach (var vv in dtmp)
-            {
-                if (vv.Start > stime)
-                {
-                    re.Add(new Tuple<DateTime, DateTime>(stime, vv.Start));
-                }
-                stime = vv.End;
-            }
-            return re;
-        }
-
-        /// <summary>
-        /// 判断某个时间点是否有数据
-        /// </summary>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public bool HasValue(DateTime time)
-        {
-            foreach (var vv in mTimeOffsets)
-            {
-                if (vv.Key <= time && time < vv.Value.Item3)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
 
         #endregion ...Methods...
 
@@ -342,7 +90,7 @@ namespace Cdy.Tag
 
 
 
-    public static class DataFileInfoExtend
+    public static unsafe class HisDataFileInfoExtend
     {
 
         /// <summary>
@@ -350,24 +98,11 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="file"></param>
         /// <returns></returns>
-        public static DataFileSeriserbase GetFileSeriser(this DataFileInfo file)
+        public static DataFileSeriserbase GetFileSeriser(this HisDataFileInfo file)
         {
             var re = DataFileSeriserManager.manager.GetDefaultFileSersie();
             re.FileName = file.FileName;
             re.OpenForReadOnly(file.FileName);
-            return re;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
-        public static DataFileSeriserbase GetFileSeriser(this string filename)
-        {
-            var re = DataFileSeriserManager.manager.GetDefaultFileSersie();
-            re.FileName = filename;
-            re.OpenForReadOnly(filename);
             return re;
         }
 
@@ -382,7 +117,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public static void ReadAllValue<T>(this DataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<T> result)
+        public static void ReadAllValue<T>(this HisDataFileInfo file, int tid, DateTime startTime, DateTime endTime, HisQueryResult<T> result)
         {
             //long ltmp = 0, ltmp1 = 0;
             //Stopwatch sw = new Stopwatch();
@@ -396,7 +131,7 @@ namespace Cdy.Tag
             {
                 DateTime stime = vv.Key > startTime ? vv.Key : startTime;
                 DateTime etime = vv.Key + vv.Value.Item1 > endTime ? endTime : vv.Key + vv.Value.Item1;
-                vff.ReadAllValue(vv.Value.Item2, tid, stime, etime, result);
+                ReadAllValue(vff,vv.Value.Item2, tid, stime, etime, result);
             }
 
             //ltmp1 = sw.ElapsedMilliseconds;
@@ -424,12 +159,12 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static object Read<T>(this DataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
+        private static object Read<T>(HisDataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
         {
             using (var vff = file.GetFileSeriser())
             {
                 var offset = file.GetFileOffsets(time);
-                return vff.Read<T>(offset, tid, time, type);
+                return Read<T>(vff,offset, tid, time, type);
             }
         }
 
@@ -442,7 +177,7 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static HisQueryResult<T> Read<T>(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
+        private static HisQueryResult<T> Read<T>(HisDataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
         {
             HisQueryResult<T> re = new HisQueryResult<T>(times.Count);
             Read<T>(file, tid, times, type, re);
@@ -458,7 +193,7 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        public static void Read<T>(this DataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
+        private static void Read<T>(HisDataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
         {
             using (var vff = file.GetFileSeriser())
             {
@@ -478,7 +213,7 @@ namespace Cdy.Tag
                 foreach (var vf in moffs)
                 {
                     if (vf.Key > -1)
-                        vff.Read<T>(vf.Key, tid, vf.Value, type, result);
+                        Read<T>(vff,vf.Key, tid, vf.Value, type, result);
                     else
                     {
                         foreach (var vv in vf.Value)
@@ -504,10 +239,10 @@ namespace Cdy.Tag
         /// <param name="dataTimes"></param>
         /// <param name="type"></param>
         /// <param name="res"></param>
-        public static void Read<T>(this DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<T> res)
+        private static void Read<T>(DataFileSeriserbase datafile, long offset, int tid, List<DateTime> dataTimes, QueryValueMatchType type, HisQueryResult<T> res)
         {
             int timetick = 0;
-            var data = datafile.ReadTagDataBlock2(tid, offset, dataTimes, out timetick);
+            var data = ReadTagDataBlock2(datafile,tid, offset, dataTimes, out timetick);
             foreach (var vv in data)
             {
                 var index = vv.Value.Item2;
@@ -523,7 +258,7 @@ namespace Cdy.Tag
                         {
                             dindex--;
                             if (dindex < 0) return TagHisValue<T>.Empty;
-                            var datas = datafile.ReadTagDataBlock(tid, offset, dindex, out ttick);
+                            var datas = ReadTagDataBlock(datafile,tid, offset, dindex, out ttick);
                             if (datas == null) return null;
                             oval = DeCompressDataBlockRawValue<T>(datas, 0);
                         }
@@ -535,7 +270,7 @@ namespace Cdy.Tag
                         do
                         {
                             dindex++;
-                            var datas = datafile.ReadTagDataBlock(tid, offset, dindex, out ttick);
+                            var datas = ReadTagDataBlock(datafile,tid, offset, dindex, out ttick);
                             if (datas == null) return null;
                             oval = DeCompressDataBlockRawValue<T>(datas, 1);
                         }
@@ -562,11 +297,11 @@ namespace Cdy.Tag
         /// <param name="dataTime"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static object Read<T>(this DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
+        private static object Read<T>(DataFileSeriserbase datafile, long offset, int tid, DateTime dataTime, QueryValueMatchType type)
         {
             int timetick = 0;
             int index = 0;
-            using (var data = datafile.ReadTagDataBlock(tid, offset, dataTime, out timetick, out index))
+            using (var data = ReadTagDataBlock(datafile,tid, offset, dataTime, out timetick, out index))
             {
                 return DeCompressDataBlockValue<T>(data, dataTime, timetick, type, new Func<byte, object>((tp) => {
                     TagHisValue<T> oval = TagHisValue<T>.Empty;
@@ -579,7 +314,7 @@ namespace Cdy.Tag
                         {
                             dindex--;
                             if (dindex < 0) return TagHisValue<T>.Empty;
-                            var datas = datafile.ReadTagDataBlock(tid, offset, dindex, out ttick);
+                            var datas = ReadTagDataBlock(datafile,tid, offset, dindex, out ttick);
                             if (datas == null) return null;
                             oval = DeCompressDataBlockRawValue<T>(datas, 0);
                         }
@@ -591,7 +326,7 @@ namespace Cdy.Tag
                         do
                         {
                             dindex++;
-                            var datas = datafile.ReadTagDataBlock(tid, offset, dindex, out ttick);
+                            var datas = ReadTagDataBlock(datafile,tid, offset, dindex, out ttick);
                             if (datas == null) return null;
                             oval = DeCompressDataBlockRawValue<T>(datas, 1);
                         }
@@ -611,11 +346,11 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="result"></param>
-        public static void ReadAllValue<T>(this DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<T> result)
+        private static void ReadAllValue<T>(DataFileSeriserbase datafile, long offset, int tid, DateTime startTime, DateTime endTime, HisQueryResult<T> result)
         {
             //Stopwatch sw = new Stopwatch();
             //sw.Start();
-            foreach (var vv in datafile.ReadTagDataBlock2(tid, offset, startTime, endTime))
+            foreach (var vv in ReadTagDataBlock2(datafile,tid, offset, startTime, endTime))
             {
 
                 DeCompressDataBlockAllValue(vv.Item1, vv.Item2, vv.Item3, vv.Item4, result);
@@ -723,7 +458,7 @@ namespace Cdy.Tag
         /// <param name="blockDuration"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static Dictionary<int, int> CheckBlockHeadCach(this DataFileSeriserbase datafile, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick, out long blockPointer, out DateTime time)
+        private static Dictionary<int, int> CheckBlockHeadCach(DataFileSeriserbase datafile, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick, out long blockPointer, out DateTime time)
         {
             //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+tagcount(4)+ tagid sum(8) +file duration(4)+ block duration(4)+Time tick duration(4)+ { + tagid1+tagid2+...+tagidn }+ {[tag1 block point1(8) + tag2 block point1+ tag3 block point1+...] + [tag1 block point2(8) + tag2 block point2+ tag3 block point2+...]....}
             var dataoffset = offset + 16;
@@ -816,9 +551,9 @@ namespace Cdy.Tag
         /// <param name="blockDuration"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static int ReadTagIndexInDataPointer(this DataFileSeriserbase datafile, int tid, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick, out long blockpointer, out DateTime time)
+        private static int ReadTagIndexInDataPointer(DataFileSeriserbase datafile, int tid, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick, out long blockpointer, out DateTime time)
         {
-            var hfile = datafile.CheckBlockHeadCach(offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
+            var hfile = CheckBlockHeadCach(datafile,offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
             if (hfile.ContainsKey(tid))
             {
                 return hfile[tid];
@@ -836,9 +571,9 @@ namespace Cdy.Tag
         /// <param name="blockDuration"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static List<long> ReadTargetBlockAddress(this DataFileSeriserbase datafile, List<int> tid, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick, out long blockpointer, out DateTime time)
+        private static List<long> ReadTargetBlockAddress(DataFileSeriserbase datafile, List<int> tid, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick, out long blockpointer, out DateTime time)
         {
-            var hfile = datafile.CheckBlockHeadCach(offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
+            var hfile = CheckBlockHeadCach(datafile,offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
             List<long> re = new List<long>();
             foreach (var vv in tid)
             {
@@ -866,14 +601,14 @@ namespace Cdy.Tag
         /// <param name="dataTime"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static MarshalMemoryBlock ReadTagDataBlock(this DataFileSeriserbase datafile, int tid, long offset, DateTime dataTime, out int timetick,out int index)
+        private static MarshalMemoryBlock ReadTagDataBlock(DataFileSeriserbase datafile, int tid, long offset, DateTime dataTime, out int timetick,out int index)
         {
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
             DateTime time;
             long blockpointer = 0;
 
-            var blockIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
+            var blockIndex = ReadTagIndexInDataPointer(datafile,tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
             int blockcount = fileDuration * 60 / blockDuration;
 
             var startTime = datafile.ReadDateTime(16);
@@ -890,18 +625,18 @@ namespace Cdy.Tag
             }
             index = dindex;
 
-            var headdata = GetHeadBlock(datafile, offset + blockpointer, tagCount * blockcount * 12);
+            var headdata = datafile.Read(offset + blockpointer + dindex * blockcount * 12, blockcount * 12);
+            var dataPointer = headdata.ReadInt(blockIndex * 12); //读取DataBlock的相对地址
+            var dataPointerbase = headdata.ReadLong(blockIndex * 12 + 4); //读取DataBlock的基地址
 
-            ////var dataPointer = datafile.ReadLong(blockIndex * 8 + dindex * tagCount * 8); //读取DataBlock的地址
-            //var dataPointer = datafile.ReadInt(offset + blockpointer + dindex * 12 + blockIndex * tagCount * 12); //读取DataBlock的相对地址
-            //var dataPointerbase = datafile.ReadLong(offset + blockpointer + dindex * 12 + blockIndex * tagCount * 12 + 4); //读取DataBlock的基地址
-
-            var dataPointer = headdata.ReadInt(dindex * 12 + blockIndex * tagCount * 12); //读取DataBlock的相对地址
-            var dataPointerbase = headdata.ReadLong(dindex * 12 + blockIndex * tagCount * 12 + 4); //读取DataBlock的基地址
-
-
-            var vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);
-            return vmm;
+            if (dataPointer >= 0)
+                return GetDataMemory(datafile, dataPointerbase, dataPointer);
+            else
+            {
+                var dp = dataPointerbase + (dataPointer & 0x7FFFFFFF);
+                var datasize = datafile.ReadInt(dp);
+                return datafile.Read(dp + 4, datasize);
+            }
         }
 
         /// <summary>
@@ -912,32 +647,40 @@ namespace Cdy.Tag
         /// <param name="offset"></param>
         /// <param name="index"></param>
         /// <returns></returns>
-        public static MarshalMemoryBlock ReadTagDataBlock(this DataFileSeriserbase datafile,int tid,long offset,int index, out int timetick)
+        private static MarshalMemoryBlock ReadTagDataBlock(DataFileSeriserbase datafile, int tid, long offset, int index, out int timetick)
         {
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
             DateTime time;
             long blockpointer = 0;
 
-            var dindex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
+            var dindex = ReadTagIndexInDataPointer(datafile, tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
             int blockIndex = index;
 
             int blockcount = fileDuration * 60 / blockDuration;
-            var headdata = GetHeadBlock(datafile, offset + blockpointer, tagCount * blockcount * 12);
 
-            //var dataPointer = datafile.ReadLong(blockIndex * 8 + dindex * tagCount * 8); //读取DataBlock的地址
+            //var headdata = GetHeadBlock(datafile, offset + blockpointer, tagCount * blockcount * 12);
 
-            //var dataPointer = datafile.ReadInt(offset + blockpointer + dindex * 12 + blockIndex * tagCount * 12); //读取DataBlock的相对地址
-            //var dataPointerbase = datafile.ReadLong(offset + blockpointer + dindex * 12 + blockIndex * tagCount * 12 + 4); //读取DataBlock的基地址
+            //var dataPointer = headdata.ReadInt(dindex * 12 + blockIndex * tagCount * 12); //读取DataBlock的相对地址
+            //var dataPointerbase = headdata.ReadLong(dindex * 12 + blockIndex * tagCount * 12 + 4); //读取DataBlock的基地址
 
-            var dataPointer = headdata.ReadInt(dindex * 12 + blockIndex * tagCount * 12); //读取DataBlock的相对地址
-            var dataPointerbase = headdata.ReadLong(dindex * 12 + blockIndex * tagCount * 12 + 4); //读取DataBlock的基地址
+            var headdata = datafile.Read(offset + blockpointer + dindex * blockcount * 12, blockcount * 12);
+            var dataPointer = headdata.ReadInt(blockIndex * 12); //读取DataBlock的相对地址
+            var dataPointerbase = headdata.ReadLong(blockIndex * 12 + 4); //读取DataBlock的基地址
 
 
             if (dataPointerbase > 0)
             {
-                var vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);
-                return vmm;
+                if (dataPointer >= 0)
+                {
+                    return GetDataMemory(datafile, dataPointerbase, dataPointer);
+                }
+                else
+                {
+                    var dp = dataPointerbase + (dataPointer & 0x7FFFFFFF);
+                    var datasize = datafile.ReadInt(dp);
+                    return datafile.Read(dp + 4, datasize);
+                }
             }
             else
             {
@@ -945,69 +688,7 @@ namespace Cdy.Tag
             }
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="datafile"></param>
-        ///// <param name="tid"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="dataTimes"></param>
-        ///// <param name="timetick"></param>
-        ///// <returns></returns>
-        //public static Dictionary<DateTime, MarshalMemoryBlock> ReadTagDataBlock(this DataFileSeriserbase datafile, int tid, long offset, List<DateTime> dataTimes, out int timetick)
-        //{
-        //    int fileDuration, blockDuration = 0;
-        //    int tagCount = 0;
-        //    long blockpointer = 0;
-        //    DateTime time;
-        //    var blockIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
-        //    int blockcount = fileDuration * 60 / blockDuration;
 
-        //    var startTime = datafile.ReadDateTime(16);
-
-        //    Dictionary<long, MarshalMemoryBlock> rtmp = new Dictionary<long, MarshalMemoryBlock>();
-
-        //    Dictionary<DateTime, MarshalMemoryBlock> re = new Dictionary<DateTime, MarshalMemoryBlock>();
-
-        //    foreach (var vdd in dataTimes)
-        //    {
-        //        var ttmp = (vdd - startTime).TotalMinutes;
-        //        int dindex = (int)(ttmp / blockDuration);
-        //        if (ttmp % blockDuration > 0)
-        //        {
-        //            dindex++;
-        //        }
-
-        //        if (dindex > blockcount)
-        //        {
-        //            throw new Exception("DataPointer index is out of total block number");
-        //        }
-
-        //        var dataPointer = datafile.ReadInt(offset + blockpointer + dindex * 12 + blockIndex * tagCount * 12); //读取DataBlock的相对地址
-        //        var dataPointerbase = datafile.ReadLong(offset + blockpointer + dindex * 12 + blockIndex * tagCount * 12 + 4); //读取DataBlock的基地址
-
-
-        //        //var dataPointer = datafile.ReadLong(blockIndex * 8 + dindex * tagCount * 8); //读取DataBlock的地址
-
-        //        //var datasize = datafile.ReadInt(dataPointer); //读取DataBlock 的大小
-
-        //        var vmm = GetDataMomeoy(datafile, dataPointerbase);
-        //        var datasize = vmm.ReadInt(dataPointer);
-
-
-        //        if (!rtmp.ContainsKey(dataPointer))
-        //        {
-        //            var rmm = datafile.Read(dataPointer + 4, datasize);
-        //            re.Add(vdd, rmm);
-        //            rtmp.Add(dataPointer, rmm);
-        //        }
-        //        else
-        //        {
-        //            re.Add(vdd, rtmp[dataPointer]);
-        //        }
-        //    }
-        //    return re;
-        //}
 
         /// <summary>
         /// 
@@ -1018,13 +699,13 @@ namespace Cdy.Tag
         /// <param name="dataTimes"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static Dictionary<MarshalMemoryBlock, Tuple<List<DateTime>, int>> ReadTagDataBlock2(this DataFileSeriserbase datafile, int tid, long offset, List<DateTime> dataTimes, out int timetick)
+        private static Dictionary<MarshalMemoryBlock, Tuple<List<DateTime>, int>> ReadTagDataBlock2(DataFileSeriserbase datafile, int tid, long offset, List<DateTime> dataTimes, out int timetick)
         {
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
             long blockpointer = 0;
             DateTime time;
-            var tagIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
+            var tagIndex = ReadTagIndexInDataPointer(datafile,tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
 
             Dictionary<long, MarshalMemoryBlock> rtmp = new Dictionary<long, MarshalMemoryBlock>();
 
@@ -1036,7 +717,15 @@ namespace Cdy.Tag
 
             var startTime = datafile.ReadDateTime(0);
 
-            var headdata = GetHeadBlock(datafile, offset + blockpointer, tagCount * blockcount * 12);
+            int buffersize = 1024 * 1024 * 1;
+            //分配读缓存
+            IntPtr mdataBuffer = Marshal.AllocHGlobal(buffersize);
+            long mbufferadderss = 0;
+            int bufferLen = buffersize;
+
+            //  var headdata = GetHeadBlock(datafile, offset + blockpointer, tagCount * blockcount * 12);
+
+            var headdata = datafile.Read(offset + blockpointer + tagIndex * blockcount * 12, blockcount * 12);
 
             foreach (var vdd in dataTimes)
             {
@@ -1048,16 +737,47 @@ namespace Cdy.Tag
                     throw new Exception("DataPointer index is out of total block number");
                 }
 
-                //var dataPointer = datafile.ReadInt(offset + blockpointer + tagIndex * 12 + blockindex * tagCount * 12); //读取DataBlock的相对地址
-                //var dataPointerbase = datafile.ReadLong(offset + blockpointer + tagIndex * 12 + blockindex * tagCount * 12 + 4); //读取DataBlock的基地址
+                //var dataPointer = headdata.ReadInt(tagIndex * 12 + blockindex * tagCount * 12); //读取DataBlock的相对地址
+                //var dataPointerbase = headdata.ReadLong(tagIndex * 12 + blockindex * tagCount * 12 + 4); //读取DataBlock的基地址
 
-                var dataPointer = headdata.ReadInt(tagIndex * 12 + blockindex * tagCount * 12); //读取DataBlock的相对地址
-                var dataPointerbase = headdata.ReadLong(tagIndex * 12 + blockindex * tagCount * 12 + 4); //读取DataBlock的基地址
+                var dataPointer = headdata.ReadInt(blockindex * 12); //读取DataBlock的相对地址
+                var dataPointerbase = headdata.ReadLong(blockindex * 12 + 4); //读取DataBlock的基地址
 
                 if (dataPointerbase > 0)
                 {
-                    //var datasize = datafile.ReadInt(dataPointer); //读取DataBlock 的大小
-                    var vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);
+                    ////var datasize = datafile.ReadInt(dataPointer); //读取DataBlock 的大小
+                    //var vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);
+
+                    MarshalMemoryBlock vmm = null;
+                    if (dataPointer > 0)
+                    {
+                        vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);
+                    }
+                    else
+                    {
+                        //说明数据没有采用Zip压缩，可以直接读取使用
+                        var dp = dataPointerbase + (dataPointer & 0x7FFFFFFF);
+                        int datasize = 0;
+                        int dataloc = 0;
+                        if (dp >= mbufferadderss && (dp - mbufferadderss + 4) <= bufferLen && (dp - mbufferadderss + 4 + MemoryHelper.ReadInt32(mdataBuffer, dp - mbufferadderss)) <= bufferLen)
+                        {
+                            datasize = MemoryHelper.ReadInt32(mdataBuffer, dp - mbufferadderss);
+                            dataloc = (int)(dp - mbufferadderss + 4);
+                        }
+                        else
+                        {
+                            bufferLen = datafile.Read(mdataBuffer, dp, buffersize);
+                            mbufferadderss = dp;
+                            datasize = MemoryHelper.ReadInt32(mdataBuffer, 0);
+                            dataloc = (int)(dp - mbufferadderss + 4);
+                        }
+
+                        if (datasize > 0)
+                        {
+                            vmm = new MarshalMemoryBlock(datasize);
+                            MemoryHelper.MemoryCopy(mdataBuffer, +dataloc, vmm.Buffers[0], 0, datasize);
+                        }
+                    }
 
                     if (vmm !=null)
                     {
@@ -1094,10 +814,6 @@ namespace Cdy.Tag
             return re;
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //static Dictionary<string, MarshalMemoryBlock> mMemoryCach = new Dictionary<string, MarshalMemoryBlock>();
 
         /// <summary>
         /// 
@@ -1107,17 +823,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         private static MarshalMemoryBlock GetDataMemory(DataFileSeriserbase datafile,long address,int datapointer)
         {
-            if (datapointer < 0)
-            {
-                //说明数据没有采用Zip压缩，可以直接读取使用
-                var dp = address +  (datapointer & 0x7FFFFFFF);
-                var datasize = datafile.ReadInt(dp);
-                return datafile.Read(dp + 4, datasize);
-            }
-            else
-            {
-                return DecodeMemoryCachManager.Manager.GetMemory(datafile, address, datapointer);
-            }
+            return DecodeMemoryCachManager.Manager.GetMemory(datafile, address, datapointer);
         }
 
         /// <summary>
@@ -1132,39 +838,7 @@ namespace Cdy.Tag
             return HeadPointDataCachManager.Manager.GetMemory(datafile,address, len);
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="datafile"></param>
-        ///// <param name="address"></param>
-        //private static unsafe MarshalMemoryBlock DecompressMemory(DataFileSeriserbase datafile,long address)
-        //{
-        //    Stopwatch sw = new Stopwatch();
-        //    sw.Start();
-        //    var vsize = datafile.ReadInt(address);
-        //    var dsize = datafile.ReadInt(address + 4);
-        //    var datas = datafile.Read(address + 8, vsize);
-        //    int dtmp = 0;
-        //    MarshalMemoryBlock mmb = new MarshalMemoryBlock(dsize, dsize);
 
-        //    long ltmp = sw.ElapsedMilliseconds;
-
-        //    System.IO.Compression.BrotliDecoder.TryDecompress(new ReadOnlySpan<byte>((void*)datas.Handles[0], vsize), new Span<byte>((void*)mmb.Handles[0], dsize), out dtmp);
-
-        //    if(dtmp!=dsize)
-        //    {
-        //        LoggerService.Service.Warn("DataFileInfo", "解压缩数据长度不一致!"+datafile.FileName);
-        //    }
-
-        //    long ltmp2 = sw.ElapsedMilliseconds;
-
-        //    datas.Dispose();
-        //    sw.Stop();
-
-        //    Debug.Print("查询耗时 构建对象耗时:" + ltmp + ",解压耗时:" + (ltmp2 - ltmp)+", Dispose 耗时："+(sw.ElapsedMilliseconds-ltmp2));
-
-        //    return mmb;
-        //}
 
         /// <summary>
         /// 
@@ -1177,7 +851,7 @@ namespace Cdy.Tag
         /// <param name="end"></param>
         /// <param name="timetick"></param>
         /// <returns></returns>
-        public static IEnumerable<Tuple<MarshalMemoryBlock,DateTime, DateTime,int>> ReadTagDataBlock2(this DataFileSeriserbase datafile, int tid, long offset, DateTime start, DateTime end)
+        private static IEnumerable<Tuple<MarshalMemoryBlock,DateTime, DateTime,int>> ReadTagDataBlock2(DataFileSeriserbase datafile, int tid, long offset, DateTime start, DateTime end)
         {
             int fileDuration, blockDuration = 0;
             int tagCount = 0;
@@ -1185,7 +859,7 @@ namespace Cdy.Tag
             int timetick = 0;
             DateTime time;
 
-            var tagIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
+            var tagIndex = ReadTagIndexInDataPointer(datafile,tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
             int blockcount = fileDuration * 60 / blockDuration;
 
             //读取文件开始时间
@@ -1194,7 +868,15 @@ namespace Cdy.Tag
             DateTime sstart = start;
             DateTime send = end;
 
-            var headdata = GetHeadBlock(datafile, offset + blockpointer, tagCount * blockcount * 12);
+            int buffersize = 1024 * 1024 * 1;
+            //分配读缓存
+            IntPtr mdataBuffer = Marshal.AllocHGlobal(buffersize);
+            long mbufferadderss = 0;
+            int bufferLen = 0;
+
+            //var headdata = GetHeadBlock(datafile, offset + blockpointer, tagCount * blockcount * 12);
+
+            var headdata = datafile.Read(offset + blockpointer + tagIndex * blockcount * 12, blockcount * 12);
 
             while (sstart < end)
             {
@@ -1213,13 +895,42 @@ namespace Cdy.Tag
                     throw new Exception("DataPointer index is out of total block number");
                 }
 
-                var dataPointer = headdata.ReadInt(tagIndex * 12 + blockindex * tagCount * 12); //读取DataBlock的相对地址
+                var dataPointer = headdata.ReadInt(blockindex * 12); //读取DataBlock的相对地址
 
-                var dataPointerbase = headdata.ReadLong(tagIndex * 12 + blockindex * tagCount * 12 + 4); //读取DataBlock的基地址
+                var dataPointerbase = headdata.ReadLong(blockindex * 12 + 4); //读取DataBlock的基地址
 
                 if (dataPointerbase > 0)
                 {
-                    var vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);
+                    MarshalMemoryBlock vmm=null;
+                    if (dataPointer > 0)
+                    {
+                        vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);
+                    }
+                    else
+                    {
+                        //说明数据没有采用Zip压缩，可以直接读取使用
+                        var dp = dataPointerbase + (dataPointer & 0x7FFFFFFF);
+                        int datasize = 0;
+                        int dataloc = 0;
+                        if (dp >= mbufferadderss && (dp - mbufferadderss + 4) <= bufferLen && (dp - mbufferadderss + 4 + MemoryHelper.ReadInt32(mdataBuffer, dp - mbufferadderss)) <= bufferLen)
+                        {
+                            datasize = MemoryHelper.ReadInt32(mdataBuffer, dp - mbufferadderss);
+                            dataloc = (int)(dp - mbufferadderss + 4);
+                        }
+                        else
+                        {
+                            bufferLen = datafile.Read(mdataBuffer,dp,buffersize);
+                            mbufferadderss = dp;
+                            datasize = MemoryHelper.ReadInt32(mdataBuffer, 0);
+                            dataloc = (int)(dp - mbufferadderss + 4);
+                        }
+
+                        if (datasize > 0)
+                        {
+                            vmm = new MarshalMemoryBlock(datasize);
+                            MemoryHelper.MemoryCopy(mdataBuffer, + dataloc, vmm.Buffers[0], 0, datasize);
+                        }
+                    }
                     if (vmm != null)
                         yield return new Tuple<MarshalMemoryBlock, DateTime, DateTime, int>(vmm, sstart, send, timetick);
                 }

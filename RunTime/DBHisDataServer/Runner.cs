@@ -26,6 +26,8 @@ namespace DBHisDataServer
         private string mDatabaseName = "local";
         private SecurityRunner mSecurityRunner;
         private QuerySerivce querySerivce;
+        private string mPrimaryDataPath;
+        private string mBackDataPath;
 
         public static Runner Instance = new Runner();
 
@@ -88,7 +90,7 @@ namespace DBHisDataServer
 
                 DataFileSeriserManager.manager.Init();
                 CompressUnitManager2.Manager.Init();
-                HisQueryManager.Instance.Registor(mDatabaseName);
+                HisQueryManager.Instance.Registor(mDatabaseName, mPrimaryDataPath,mBackDataPath);
                 HisQueryManager.Instance.StartMonitor();
 
                 RegistorInterface();
@@ -113,7 +115,8 @@ namespace DBHisDataServer
         {
             this.mDatabase = new DatabaseSerise().Load(mDatabaseName);
             this.mRealDatabase = this.mDatabase.RealDatabase;
-       
+            mPrimaryDataPath = this.mDatabase.HisDatabase.Setting.HisDataPathPrimary;
+            mBackDataPath = this.mDatabase.HisDatabase.Setting.HisDataPathBack;
         }
 
         private void RegistorInterface()

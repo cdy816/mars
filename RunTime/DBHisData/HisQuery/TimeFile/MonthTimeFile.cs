@@ -20,7 +20,7 @@ namespace Cdy.Tag
 
         #region ... Variables  ...
 
-        private SortedDictionary<DateTime, Tuple<TimeSpan, DataFileInfo>> mFileMaps = new SortedDictionary<DateTime, Tuple<TimeSpan, DataFileInfo>>();
+        private SortedDictionary<DateTime, DayFileItem> mFileMaps = new SortedDictionary<DateTime, DayFileItem>();
 
         private DateTime mMaxTime = DateTime.MinValue;
 
@@ -50,11 +50,49 @@ namespace Cdy.Tag
         /// </summary>
         public void UpdateLastDatetime()
         {
-            if(mFileMaps.ContainsKey(mMaxTime))
+            lock (this)
             {
-                mFileMaps[mMaxTime].Item2.UpdateLastDatetime();
+                if (mFileMaps.ContainsKey(mMaxTime))
+                {
+                    mFileMaps[mMaxTime].File1?.UpdateLastDatetime();
+                    mFileMaps[mMaxTime].File2?.UpdateLastDatetime();
+                }
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="startTime"></param>
+        public void CheckFileExist(string file, DateTime startTime)
+        {
+            lock (this)
+            {
+                if (mFileMaps.ContainsKey(startTime))
+                {
+                    if (mFileMaps[startTime].File1?.FileName == file)
+                    {
+                        if (!System.IO.File.Exists(file))
+                        {
+                            var vv = mFileMaps[startTime];
+                            vv.File1 = null;
+                            mFileMaps[startTime] = vv;
+                        }
+                    }
+                    else if (mFileMaps[startTime].File2?.FileName == file)
+                    {
+                        if (!System.IO.File.Exists(file))
+                        {
+                            var vv = mFileMaps[startTime];
+                            vv.File2 = null;
+                            mFileMaps[startTime] = vv;
+                        }
+                    }
+                }
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -64,13 +102,45 @@ namespace Cdy.Tag
         /// <param name="file"></param>
         public void AddFile(DateTime startTime,TimeSpan duration, DataFileInfo file)
         {
-            if(!mFileMaps.ContainsKey(startTime))
+            lock (this)
             {
-                mFileMaps.Add(startTime, new Tuple<TimeSpan, DataFileInfo>(duration, file));
-
-                if(startTime>mMaxTime)
+                if (!mFileMaps.ContainsKey(startTime))
                 {
-                    mMaxTime = startTime;
+                    var vdd = new DayFileItem() { Duration = duration, Time = startTime };
+                    if (file is HisDataFileInfo)
+                    {
+                        vdd.File1 = file;
+                    }
+                    else
+                    {
+                        vdd.File2 = file;
+                    }
+
+                    mFileMaps.Add(startTime, vdd);
+
+                    if (startTime > mMaxTime)
+                    {
+                        mMaxTime = startTime;
+                    }
+                }
+                else
+                {
+                    var vv = mFileMaps[startTime];
+                    vv.Duration = duration;
+                    if (file is HisDataFileInfo)
+                    {
+                        vv.File1 = file;
+                    }
+                    else
+                    {
+                        vv.File2 = file;
+                    }
+                    mFileMaps[startTime] = vv;
+
+                    if (startTime > mMaxTime)
+                    {
+                        mMaxTime = startTime;
+                    }
                 }
             }
         }
@@ -82,11 +152,17 @@ namespace Cdy.Tag
         /// <returns></returns>
         public DataFileInfo GetDataFile(DateTime dateTime)
         {
-            foreach (var vv in mFileMaps)
+            lock (this)
             {
-                if (vv.Key <= dateTime && dateTime < (vv.Key + vv.Value.Item1))
+                foreach (var vv in mFileMaps)
                 {
-                    return vv.Value.Item2;
+                    if (vv.Key <= dateTime)
+                    {
+                        if (vv.Value.File1 != null && dateTime < (vv.Key + vv.Value.Duration))
+                            return vv.Value.File1;
+                        else if (vv.Value.File2 != null && dateTime < (vv.Key + vv.Value.Duration))
+                            return vv.Value.File2;
+                    }
                 }
             }
             return null;
@@ -100,17 +176,20 @@ namespace Cdy.Tag
         /// <returns></returns>
         public List<DataFileInfo> GetDataFiles(DateTime startTime,DateTime endTime)
         {
-            List<DataFileInfo> infos = new List<DataFileInfo>();
-
-            DateTime stime = startTime;
-            foreach (var vv in mFileMaps)
+            lock (this)
             {
-                if ((startTime >= vv.Key && startTime < vv.Key + vv.Value.Item1) || (endTime >= vv.Key && endTime < vv.Key + vv.Value.Item1) || (vv.Key >= startTime && (vv.Key + vv.Value.Item1) <= endTime))
+                List<DataFileInfo> infos = new List<DataFileInfo>();
+
+                DateTime stime = startTime;
+                foreach (var vv in mFileMaps)
                 {
-                    infos.Add(vv.Value.Item2);
+                    if ((startTime >= vv.Key && startTime < vv.Key + vv.Value.Duration) || (endTime >= vv.Key && endTime < vv.Key + vv.Value.Duration) || (vv.Key >= startTime && (vv.Key + vv.Value.Duration) <= endTime))
+                    {
+                        infos.Add(vv.Value.File1 != null ? vv.Value.File1 : vv.Value.File2);
+                    }
                 }
+                return infos;
             }
-            return infos;
         }
 
         /// <summary>
@@ -131,4 +210,30 @@ namespace Cdy.Tag
 
         #endregion ...Interfaces...
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public struct DayFileItem
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime Time { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public TimeSpan Duration { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public DataFileInfo File1 { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DataFileInfo File2 { get; set; }
+    }
+
 }

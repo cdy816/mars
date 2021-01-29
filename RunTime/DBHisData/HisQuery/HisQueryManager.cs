@@ -62,11 +62,11 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="name"></param>
-        public async void Registor(string name)
+        public async void Registor(string name,string primaryDataPath="",string backupDataPath="")
         {
             if (!mManagers.ContainsKey(name))
             {
-                DataFileManager dataFile = new DataFileManager(name);
+                DataFileManager dataFile = new DataFileManager(name) { PrimaryHisDataPath = primaryDataPath, BackHisDataPath = backupDataPath };
                 await dataFile.Int();
                 mManagers.Add(name, dataFile);
             }

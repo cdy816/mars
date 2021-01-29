@@ -10,12 +10,34 @@ using Cdy.Tag;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Cdy.Tag
 {
+    /*
+ * ****His 文件结构****
+ * 一个文件头 + 多个数据区组成 ， 一个数据区：数据区头+数据块指针区+数据块区
+ * [] 表示重复的一个或多个内容
+ * 
+ HisData File Structor
+ FileHead(84) + [HisDataRegion]
+
+ FileHead: dataTime(8)(FileTime)+dateTime(8)(LastUpdateTime)+DataRegionCount(4)+DatabaseName(64)
+ 
+ HisDataRegion Structor: RegionHead + DataBlockPoint Area + DataBlock Area
+
+ RegionHead:          PreDataRegionPoint(8) + NextDataRegionPoint(8) + Datatime(8)+ tagcount(4)+ tagid sum(8)+file duration(4)+block duration(4)+Time tick duration(4)
+ DataBlockPoint Area: [ID]+[block Point]
+ [block point]:       [[tag1 block1 point(12),tag1 block2 point(12),....][tag2 block1 point(12),tag2 block2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
+ [tag block point]:   offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
+ DataBlock Area:      [[tag1 block1 size + tag1 block1 data][tag1 block2 size + tag1 block2 data]....][[tag2 block1 size + tag2 block1 data][tag2 block2 size + tag2 block2 data]....]....
+*/
+
     /// <summary>
     /// 对历史数据文件格式内容进行重新整理,将一个文件内的同一个变量的数据合并在一起,提高数据查询效率
     /// </summary>
@@ -29,6 +51,9 @@ namespace Cdy.Tag
         /// </summary>
         public static HisDataArrange Arrange = new HisDataArrange();
 
+        const int bufferLenght = 2 * 1024 * 1024;
+
+        private bool mIsPaused = false;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -37,13 +62,44 @@ namespace Cdy.Tag
 
         #region ... Constructor...
 
+        public HisDataArrange()
+        {
+            
+        }
+
         #endregion ...Constructor...
 
         #region ... Properties ...
 
+
+
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Paused()
+        {
+            mIsPaused = true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Resume()
+        {
+            mIsPaused = false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void CheckPaused()
+        {
+            while (mIsPaused) Thread.Sleep(100);
+        }
 
         /// <summary>
         /// 拷贝文件头部
@@ -125,7 +181,8 @@ namespace Cdy.Tag
             int fileDuration = 0;
             int blockDuration = 0;
             int tagcount = 0;
-            
+
+            CheckPaused();
 
             //copy data region head
             byte[] bval = ArrayPool<byte>.Shared.Rent(48);
@@ -154,12 +211,14 @@ namespace Cdy.Tag
 
             long pheadpointlocation = mtarget.Position;
 
+            CheckPaused();
             var sourceheadpoint = Read(msource, msource.Position, tagcount * 12 * blockcount);
 
             MarshalFixedMemoryBlock targetheadpoint;
 
             CopyRegionData(msource, sourceheadpoint,tagcount,blockcount, mtarget,out targetheadpoint);
             long lp = mtarget.Position;
+
             //write tag data pointer
             mtarget.Position = pheadpointlocation;
             targetheadpoint.WriteToStream(mtarget);
@@ -181,23 +240,40 @@ namespace Cdy.Tag
         /// <param name="targetheadpoint">目标数据块</param>
         private unsafe void CopyRegionData(System.IO.Stream msource, MarshalFixedMemoryBlock sourceheadpoint, int tagcount, int blockcount, System.IO.Stream mtarget, out MarshalFixedMemoryBlock targetheadpoint)
         {
+            //Stopwatch sw = new Stopwatch();
+            //sw.Start();
+
             MarshalFixedMemoryBlock re = new MarshalFixedMemoryBlock(sourceheadpoint.Length);
-            MarshalFixedMemoryBlock data = new MarshalFixedMemoryBlock(blockcount * 3300 * 2);
+            MarshalFixedMemoryBlock data = new MarshalFixedMemoryBlock(blockcount * 302 * 264 * 2);
+         
+            //int bufferLenght = 2*1024 * 1024;
+            IntPtr[] databuffers = new IntPtr[blockcount];
+            long[] databufferLocations = new long[blockcount];
+            int[] databufferLens = new int[blockcount];
+
+            for(int i=0;i<blockcount;i++)
+            {
+                databuffers[i] = Marshal.AllocHGlobal(bufferLenght);
+            }
+            //sw.Stop();
+            //LoggerService.Service.Debug("HisDataArrange", "初始化分配内存 耗时:"+ ltmp1 +"," +(sw.ElapsedMilliseconds-ltmp1));
+
+            mtarget.Position += tagcount * 12 * blockcount;
+
             long mtargetposition = mtarget.Position;
             int offset = 0;
             for (int i = 0; i < tagcount; i++)
             {
+               
                 data.Clear();
                 offset = 0;
                 mtargetposition = mtarget.Position;
                 for (int j = 0; j < blockcount; j++)
                 {
-                    var dataoffset = sourceheadpoint.ReadInt(j * tagcount * 12 + i * 12);
-                    var baseaddress = sourceheadpoint.ReadLong(j * tagcount * 12 + i * 12+4);
+                    CheckPaused();
 
-                    //重新组织数据块指针的分布形式，使得一个变量的数据块指针在一起
-                    re.WriteInt(j  * 12 + i * blockcount * 12, offset);
-                    re.WriteLong(j * 12 + i * blockcount * 12 + 4, mtargetposition);
+                    var dataoffset = sourceheadpoint.ReadInt(j * tagcount * 12 + i * 12);
+                    var baseaddress = sourceheadpoint.ReadLong(j * tagcount * 12 + i * 12 + 4);
 
                     if (dataoffset < 0)
                     {
@@ -208,12 +284,47 @@ namespace Cdy.Tag
                         baseaddress = baseaddress + (dataoffset);
                     }
 
-                    var datasize = ReadInt(msource,baseaddress);
+                    if (baseaddress > 0)
+                    {
 
-                    data.WriteInt(offset, datasize);
-                    offset += 4;
-                    msource.Read(new Span<byte>((void*)(data.Buffers + offset), datasize));
-                    offset += datasize;
+                        //重新组织数据块指针的分布形式，使得一个变量的数据块指针在一起
+                        re.WriteInt(j * 12 + i * blockcount * 12, (int)(offset | 0x80000000));
+                        re.WriteLong(j * 12 + i * blockcount * 12 + 4, mtargetposition);
+
+                        int datasize = 0;
+                        int dataloc = 0;
+                        if (baseaddress >= databufferLocations[j] && (baseaddress - databufferLocations[j] + 4) <= databufferLens[j] && (baseaddress - databufferLocations[j] + 4 + MemoryHelper.ReadInt32((void*)databuffers[j], baseaddress - databufferLocations[j])) <= databufferLens[j])
+                        {
+                            datasize = MemoryHelper.ReadInt32((void*)databuffers[j], baseaddress - databufferLocations[j]);
+                            dataloc = (int)(baseaddress - databufferLocations[j] + 4);
+                        }
+                        else
+                        {
+                            int len = (int)Math.Min(bufferLenght, msource.Length - msource.Position);
+                            msource.Position = baseaddress;
+                            msource.Read(new Span<byte>((void*)databuffers[j], len));
+                            databufferLocations[j] = baseaddress;
+                            databufferLens[j] = len;
+                            datasize = MemoryHelper.ReadInt32((void*)databuffers[j], 0);
+                            dataloc = (int)(baseaddress - databufferLocations[j] + 4);
+                        }
+
+    
+                        data.CheckAndResize(data.Position + datasize + 4, 0.5);
+                        data.WriteInt(offset, datasize);
+                        offset += 4;
+
+                        Buffer.MemoryCopy((void*)(databuffers[j] + dataloc), (void*)(data.Buffers + offset), datasize, datasize);
+                        data.Position += datasize;
+                        offset += datasize;
+                    }
+                    else
+                    {
+                        //重新组织数据块指针的分布形式，使得一个变量的数据块指针在一起
+                        re.WriteInt(j * 12 + i * blockcount * 12, 0);
+                        re.WriteLong(j * 12 + i * blockcount * 12 + 4, 0);
+                    }
+
                 }
 
                 data.WriteToStream(mtarget, 0, offset);
@@ -221,8 +332,15 @@ namespace Cdy.Tag
 
             data.Dispose();
 
+            for (int i = 0; i < blockcount; i++)
+            {
+                Marshal.FreeHGlobal(databuffers[i]);
+            }
+
             targetheadpoint = re;
         }
+
+        
 
         /// <summary>
         /// 
@@ -305,7 +423,7 @@ namespace Cdy.Tag
         /// <param name="file"></param>
         /// <param name="fileDuration"></param>
         /// <param name="removeold"></param>
-        public void CheckAndReArrangeHisFile(string file,int fileDuration=4,bool removeold=true)
+        public bool CheckAndReArrangeHisFile(string file,out string targetfile,int fileDuration=4,bool removeold=true)
         {
             try
             {
@@ -316,11 +434,24 @@ namespace Cdy.Tag
                     if ((DateTime.Now - finfo.CreationTime).TotalHours > (fileDuration + 0.5))
                     {
                         string tdirect = System.IO.Path.GetDirectoryName(file);
-                        string targetfile = System.IO.Path.Combine(tdirect, System.IO.Path.GetFileNameWithoutExtension(file) + ".his");
+                        targetfile = System.IO.Path.Combine(tdirect, System.IO.Path.GetFileNameWithoutExtension(file) + ".his");
 
-                        if (ReArrange(file, targetfile) && removeold)
+                        if (!System.IO.File.Exists(targetfile))
                         {
-                            System.IO.File.Delete(file);
+                            Stopwatch sw = new Stopwatch();
+                            sw.Start();
+                            if (ReArrange(file, targetfile))
+                            {
+                                if (removeold)
+                                {
+                                    System.IO.File.Delete(file);
+                                }
+                                sw.Stop();
+                                LoggerService.Service.Info("HisDataArrange", "历史文件 " + System.IO.Path.GetDirectoryName(file) + " 内容重组织耗时:" + sw.ElapsedMilliseconds, ConsoleColor.Cyan);
+                                return true;
+                            }
+                            sw.Stop();
+                            LoggerService.Service.Info("HisDataArrange", "历史文件 "+ System.IO.Path.GetDirectoryName(file) +" 内容重组织耗时:"+sw.ElapsedMilliseconds,ConsoleColor.Cyan);
                         }
                     }
                 }
@@ -329,6 +460,8 @@ namespace Cdy.Tag
             {
 
             }
+            targetfile = string.Empty;
+            return false;
         }
 
         #endregion ...Methods...

@@ -338,7 +338,7 @@ namespace Cdy.Tag
 
                 DriverManager.Manager.Init(realEnginer, hisEnginer);
 
-                HisQueryManager.Instance.Registor(mDatabaseName);
+                HisQueryManager.Instance.Registor(mDatabaseName, mHisDatabase.Setting.HisDataPathPrimary, mHisDatabase.Setting.HisDataPathBack);
                 HisQueryManager.Instance.StartMonitor();
 
                 await task;

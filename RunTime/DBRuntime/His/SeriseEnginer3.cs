@@ -21,7 +21,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 
 /*
- * ****文件结构****
+ * ****DBD 文件结构****
  * 一个文件头 + 多个数据区组成 ， 一个数据区：数据区头+数据块指针区+数据块区
  * [] 表示重复的一个或多个内容
  * 
@@ -34,9 +34,9 @@ using System.Runtime.InteropServices;
 
  RegionHead:          PreDataRegionPoint(8) + NextDataRegionPoint(8) + Datatime(8)+ tagcount(4)+ tagid sum(8)+file duration(4)+block duration(4)+Time tick duration(4)
  DataBlockPoint Area: [ID]+[block Point]
- [block point]:       [[tag1 point,tag2 point,....][tag1 point(12),tag2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
- [tag point]:         offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
- DataBlock Area:      [block size + data block]
+ [block point]:       [[tag1 block1 point,tag2 block1 point,....][tag1 block2 point(12),tag2 block2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
+ [tag block point]:   offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
+ DataBlock Area:      [[tag1 block1 size + tag1 data block1][tag2 block1 size + tag2 data block1]....][[tag1 block2 size + tag1 data block2][tag2 block2 size + tag2 data block2]....]....
 */
 
 namespace Cdy.Tag
@@ -337,7 +337,8 @@ namespace Cdy.Tag
                 lock (resetEvent)
                     resetEvent.Reset();
 
-                mIsBusy = true;
+                HisDataArrange.Arrange.Paused();
+               mIsBusy = true;
                 //#if DEBUG 
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
@@ -362,6 +363,7 @@ namespace Cdy.Tag
                 LoggerService.Service.Info("SeriseEnginer", ">>>>>>>>>完成执行存储>>>>>>>  ElapsedMilliseconds:" + sw.ElapsedMilliseconds, ConsoleColor.Cyan);
 
                 mIsBusy = false;
+                HisDataArrange.Arrange.Resume();
                 //#endif
             }
             closedEvent.Set();
@@ -388,7 +390,14 @@ namespace Cdy.Tag
                             while (mIsBusy) Thread.Sleep(1000);
 
                             if (mIsClosed) break;
-                            HisDataArrange.Arrange.CheckAndReArrangeHisFile(vv.FullName, FileDuration, false);
+
+                            string sfile = "";
+
+                            if(HisDataArrange.Arrange.CheckAndReArrangeHisFile(vv.FullName,out sfile, FileDuration, false))
+                            {
+                                HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(sfile);
+                                HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(vv.FullName);
+                            }
                         }
                     }
                     mLastDataFileReArrangeProcessTime = DateTime.Now;
@@ -466,7 +475,9 @@ namespace Cdy.Tag
                                         {
                                             if (GetDriverFreeSize(backpath) > vv.Length)
                                             {
-                                                vv.MoveTo(System.IO.Path.Combine(backpath, vv.Name));
+                                                string filename = System.IO.Path.Combine(backpath, vv.Name);
+                                                vv.MoveTo(filename);
+                                                HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(filename);
 
                                                 if (!string.IsNullOrEmpty(backpath))
                                                 {

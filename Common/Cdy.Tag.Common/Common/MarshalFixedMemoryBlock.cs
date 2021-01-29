@@ -219,11 +219,32 @@ namespace Cdy.Tag
 
         public void CheckAndResize(long size)
         {
-            if (size > mPosition)
+            if (size > mAllocSize)
             {
                 IntPtr moldptr = mHandles;
                 long oldlen = mPosition;
                 Init(size);
+
+                Buffer.MemoryCopy((void*)moldptr, (void*)mHandles, size, oldlen);
+
+                Marshal.FreeHGlobal(moldptr);
+                LoggerService.Service.Info("CheckAndResize", "CheckAndResize " + this.Name + " " + size, ConsoleColor.Red);
+
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="size"></param>
+        /// <param name="incpercent"></param>
+        public void CheckAndResize(long size,double incpercent)
+        {
+            if (size > mAllocSize)
+            {
+                IntPtr moldptr = mHandles;
+                long oldlen = mPosition;
+                Init((int)(size*(1+ incpercent)));
 
                 Buffer.MemoryCopy((void*)moldptr, (void*)mHandles, size, oldlen);
 

@@ -7,7 +7,7 @@
        ResizeMode="CanResizeWithGrip"
         
         mc:Ignorable="d"  Foreground="{DynamicResource Window.Forground}" Background="Transparent" AllowsTransparency="True" WindowStyle="None" 
-        Title="{Binding MainwindowTitle}" Height="768" Width="1024" WindowState="Maximized" WindowStartupLocation="CenterScreen" Icon="/Image/mrdbd.ico">
+        Title="{Binding MainwindowTitle}" Height="768" Width="1024" WindowState="Maximized" WindowStartupLocation="Manual" Icon="/Image/mrdbd.ico">
     <Window.Resources>
         <local:IndexConverter x:Key="ic" />
         <BooleanToVisibilityConverter x:Key="btv" />

@@ -1293,6 +1293,45 @@ namespace DBDevelopClientApi
         /// </summary>
         /// <param name="database"></param>
         /// <returns></returns>
+        public Tuple<string,string,int> GetHisSetting(string database)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                var res = mCurrentClient.GetDatabaseHisSetting(new DBDevelopService.DatabasesRequest() { Database = database, LoginId = mLoginId });
+                return new Tuple<string, string, int>(res.DataPath,res.BackDataPath,res.KeepTime);
+            }
+            else
+            {
+                return new Tuple<string, string, int>("", "", -1);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="datapath"></param>
+        /// <param name="backdatapath"></param>
+        /// <param name="keeptime"></param>
+        /// <returns></returns>
+        public bool UpdateHisSetting(string database,string datapath,string backdatapath,int keeptime)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.UpdateDatabaseHisSetting(new DBDevelopService.UpdateDatabaseHisSettingRequest() { Database = database, LoginId = mLoginId,DataPath=database,BackDataPath=backdatapath,KeepTime=keeptime }).Result;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
         public int GetRealServerPort(string database)
         {
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))

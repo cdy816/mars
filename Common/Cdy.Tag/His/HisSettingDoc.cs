@@ -59,12 +59,12 @@ namespace Cdy.Tag
         /// <summary>
         /// 主历史记录路径
         /// </summary>
-        public string HisDataPathPrimary { get; set; }
+        public string HisDataPathPrimary { get; set; } = "";
 
         /// <summary>
         /// 备份历史记录路径
         /// </summary>
-        public string HisDataPathBack { get; set; }
+        public string HisDataPathBack { get; set; } = "";
 
         /// <summary>
         /// 历史数据在主目录里保存时间

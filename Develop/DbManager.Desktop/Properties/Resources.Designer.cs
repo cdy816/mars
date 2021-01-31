@@ -178,6 +178,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Custom 的本地化字符串。
+        /// </summary>
+        internal static string Custom {
+            get {
+                return ResourceManager.GetString("Custom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Database 的本地化字符串。
         /// </summary>
         internal static string Database {
@@ -219,6 +228,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string DeadAreaValue {
             get {
                 return ResourceManager.GetString("DeadAreaValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Default 的本地化字符串。
+        /// </summary>
+        internal static string Default {
+            get {
+                return ResourceManager.GetString("Default", resourceCulture);
             }
         }
         
@@ -286,6 +304,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Historical data retention time 的本地化字符串。
+        /// </summary>
+        internal static string HisDataKeepTime {
+            get {
+                return ResourceManager.GetString("HisDataKeepTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Rerun database 的本地化字符串。
         /// </summary>
         internal static string HotReRun_Tooltip {
@@ -336,6 +363,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string IsAdmin {
             get {
                 return ResourceManager.GetString("IsAdmin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 (Day) 的本地化字符串。
+        /// </summary>
+        internal static string KeepTimeUnit {
+            get {
+                return ResourceManager.GetString("KeepTimeUnit", resourceCulture);
             }
         }
         
@@ -781,6 +817,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 History backup path 的本地化字符串。
+        /// </summary>
+        internal static string ServerBackupDataPath {
+            get {
+                return ResourceManager.GetString("ServerBackupDataPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Server Ip 的本地化字符串。
         /// </summary>
         internal static string ServerIp {
@@ -799,11 +844,29 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 History data path 的本地化字符串。
+        /// </summary>
+        internal static string ServerPrimaryDataPath {
+            get {
+                return ResourceManager.GetString("ServerPrimaryDataPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 ServerSecurity 的本地化字符串。
         /// </summary>
         internal static string ServerSecurity {
             get {
                 return ResourceManager.GetString("ServerSecurity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Server setting 的本地化字符串。
+        /// </summary>
+        internal static string ServerSetting {
+            get {
+                return ResourceManager.GetString("ServerSetting", resourceCulture);
             }
         }
         

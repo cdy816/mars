@@ -628,6 +628,7 @@ namespace Cdy.Tag
             var headdata = datafile.Read(offset + blockpointer + dindex * blockcount * 12, blockcount * 12);
             var dataPointer = headdata.ReadInt(blockIndex * 12); //读取DataBlock的相对地址
             var dataPointerbase = headdata.ReadLong(blockIndex * 12 + 4); //读取DataBlock的基地址
+            headdata.Dispose();
 
             if (dataPointer >= 0)
                 return GetDataMemory(datafile, dataPointerbase, dataPointer);
@@ -667,7 +668,7 @@ namespace Cdy.Tag
             var headdata = datafile.Read(offset + blockpointer + dindex * blockcount * 12, blockcount * 12);
             var dataPointer = headdata.ReadInt(blockIndex * 12); //读取DataBlock的相对地址
             var dataPointerbase = headdata.ReadLong(blockIndex * 12 + 4); //读取DataBlock的基地址
-
+            headdata.Dispose();
 
             if (dataPointerbase > 0)
             {
@@ -717,13 +718,14 @@ namespace Cdy.Tag
 
             var startTime = datafile.ReadDateTime(0);
 
-            int buffersize = 1024 * 1024 * 1;
+            int buffersize = 1024 * 1024 * 2;
             //分配读缓存
             IntPtr mdataBuffer = Marshal.AllocHGlobal(buffersize);
             long mbufferadderss = 0;
             int bufferLen = buffersize;
 
-            //  var headdata = GetHeadBlock(datafile, offset + blockpointer, tagCount * blockcount * 12);
+
+            // var headdata = GetHeadBlock(datafile, offset + blockpointer, tagCount * blockcount * 12);
 
             var headdata = datafile.Read(offset + blockpointer + tagIndex * blockcount * 12, blockcount * 12);
 
@@ -737,8 +739,8 @@ namespace Cdy.Tag
                     throw new Exception("DataPointer index is out of total block number");
                 }
 
-                //var dataPointer = headdata.ReadInt(tagIndex * 12 + blockindex * tagCount * 12); //读取DataBlock的相对地址
-                //var dataPointerbase = headdata.ReadLong(tagIndex * 12 + blockindex * tagCount * 12 + 4); //读取DataBlock的基地址
+                //var dataPointer = headdata.ReadInt(tagIndex * blockcount * 12 + blockindex * 12); //读取DataBlock的相对地址
+                //var dataPointerbase = headdata.ReadLong(tagIndex * blockcount * 12 + blockindex * 12 + 4); //读取DataBlock的基地址
 
                 var dataPointer = headdata.ReadInt(blockindex * 12); //读取DataBlock的相对地址
                 var dataPointerbase = headdata.ReadLong(blockindex * 12 + 4); //读取DataBlock的基地址
@@ -810,7 +812,11 @@ namespace Cdy.Tag
 
                 }
 
+                
             }
+
+            headdata.Dispose();
+            Marshal.FreeHGlobal(mdataBuffer);
             return re;
         }
 
@@ -868,7 +874,7 @@ namespace Cdy.Tag
             DateTime sstart = start;
             DateTime send = end;
 
-            int buffersize = 1024 * 1024 * 1;
+            int buffersize = 1024 * 1024 * 2;
             //分配读缓存
             IntPtr mdataBuffer = Marshal.AllocHGlobal(buffersize);
             long mbufferadderss = 0;
@@ -890,10 +896,15 @@ namespace Cdy.Tag
                 }
                 int blockindex = (int)(ttmp / (blockDuration * 60));
                 
-                if (blockindex > blockcount)
+                if (blockindex >= blockcount)
                 {
-                    throw new Exception("DataPointer index is out of total block number");
+                    break;
+                    //throw new Exception("DataPointer index is out of total block number");
                 }
+
+                //var dataPointer = headdata.ReadInt(tagIndex* blockcount * 12 + blockindex  * 12); //读取DataBlock的相对地址
+                //var dataPointerbase = headdata.ReadLong(tagIndex * blockcount * 12 + blockindex * 12 + 4); //读取DataBlock的基地址
+
 
                 var dataPointer = headdata.ReadInt(blockindex * 12); //读取DataBlock的相对地址
 
@@ -936,7 +947,13 @@ namespace Cdy.Tag
                 }
                 sstart = send;
             }
+
+            headdata.Dispose();
+            Marshal.FreeHGlobal(mdataBuffer);
         }
+
+        
+
         #endregion
     }
 }

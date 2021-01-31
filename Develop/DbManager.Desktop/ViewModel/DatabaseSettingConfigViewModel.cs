@@ -26,6 +26,17 @@ namespace DBInStudio.Desktop.ViewModel
 
         private ObservableCollection<DriverSetViewModel> mChildren = new ObservableCollection<DriverSetViewModel>();
 
+
+        private string mDataPath;
+
+        private string mDataBackupPath;
+
+        private bool mHisDataPathIsCustom;
+
+        private bool mHisDataPathIsDefault;
+
+        private int mKeepTime;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -37,6 +48,67 @@ namespace DBInStudio.Desktop.ViewModel
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int KeepTime
+        {
+            get
+            {
+                return mKeepTime;
+            }
+            set
+            {
+                if (mKeepTime != value)
+                {
+                    mKeepTime = value;
+                    OnPropertyChanged("KeepTime");
+                }
+            }
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string DataPath
+        {
+            get
+            {
+                return mDataPath;
+            }
+            set
+            {
+                if (mDataPath != value)
+                {
+                    mDataPath = value;
+                    OnPropertyChanged("DataPath");
+                }
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public string DataBackupPath
+        {
+            get
+            {
+                return mDataBackupPath;
+            }
+            set
+            {
+                if (mDataBackupPath != value)
+                {
+                    mDataBackupPath = value;
+                    OnPropertyChanged("DataBackupPath");
+                }
+            }
+        }
+
+
 
         /// <summary>
         /// 
@@ -76,6 +148,46 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool HisDataPathIsDefault
+        {
+            get
+            {
+                return mHisDataPathIsDefault;
+            }
+            set
+            {
+                if(value)
+                {
+                    DataPath = string.Empty;
+                }
+                mHisDataPathIsDefault = value;
+                OnPropertyChanged("HisDataPathIsDefault");
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool HisDataPathIsCustom
+        {
+            get
+            {
+                return mHisDataPathIsCustom;
+            }
+            set
+            {
+                if (mHisDataPathIsCustom != value)
+                {
+                    mHisDataPathIsCustom = value;
+                }
+                OnPropertyChanged("HisDataPathIsCustom");
+            }
+        }
+
+
 
         #endregion ...Properties...
 
@@ -91,6 +203,16 @@ namespace DBInStudio.Desktop.ViewModel
 
             var dds = DevelopServiceHelper.Helper.GetRegistorDrivers(this.Database).Keys;
             mChildren.Clear();
+
+            var setting = DevelopServiceHelper.Helper.GetHisSetting(this.Database);
+
+            DataPath = setting.Item1;
+            DataBackupPath = setting.Item2;
+            HisDataPathIsDefault = string.IsNullOrEmpty(DataPath);
+            HisDataPathIsCustom = !HisDataPathIsDefault;
+
+            KeepTime = setting.Item3;
+
             foreach (var vv in dds)
             {
                 var ss = DevelopServiceHelper.Helper.GetDriverSetting(this.Database, vv);
@@ -127,6 +249,8 @@ namespace DBInStudio.Desktop.ViewModel
                 var item = vv.ToDictionary();
                 DevelopServiceHelper.Helper.UpdateDriverSetting(this.Database, vv.Name, item);
             }
+
+            DevelopServiceHelper.Helper.UpdateHisSetting(this.Database, DataPath, DataBackupPath, KeepTime);
         }
     }
 

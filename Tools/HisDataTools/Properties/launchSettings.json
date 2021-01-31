@@ -2,7 +2,7 @@
   "profiles": {
     "HisDataTools": {
       "commandName": "Executable",
-      "executablePath": "C:\\Users\\chongdaoyang\\source\\repos\\mars\\Output\\HisDataTools.exe"
+      "executablePath": "D:\\Test\\HisDataTools.exe"
     }
   }
 }

@@ -2128,5 +2128,49 @@ namespace DBDevelopService
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<GetDatabaseHisSettingReplay> GetDatabaseHisSetting(DatabasesRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, request.Database))
+            {
+                return Task.FromResult(new GetDatabaseHisSettingReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                GetDatabaseHisSettingReplay re = new GetDatabaseHisSettingReplay() { DataPath = db.HisDatabase.Setting.HisDataPathPrimary, BackDataPath = db.HisDatabase.Setting.HisDataPathBack, KeepTime = db.HisDatabase.Setting.HisDataKeepTimeInPrimaryPath };
+                return Task.FromResult(re);
+            }
+            return Task.FromResult(new GetDatabaseHisSettingReplay() { Result = false });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> UpdateDatabaseHisSetting(UpdateDatabaseHisSettingRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, request.Database))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                db.HisDatabase.Setting.HisDataPathPrimary = request.Database;
+                db.HisDatabase.Setting.HisDataPathBack = request.BackDataPath;
+                db.HisDatabase.Setting.HisDataKeepTimeInPrimaryPath = request.KeepTime;
+                return Task.FromResult(new BoolResultReplay() { Result = true });
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = false });
+        }
+
     }
 }

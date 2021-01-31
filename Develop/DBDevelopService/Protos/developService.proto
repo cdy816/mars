@@ -176,7 +176,7 @@ service DevelopServer {
   //Logout
    rpc Logout(LogoutRequest) returns (BoolResultReplay);
 
-   //打开数据库
+      //打开数据库
    rpc CheckOpenDatabase(DatabasesRequest) returns (BoolResultReplay);
 
    //启动数据库
@@ -201,6 +201,12 @@ service DevelopServer {
 
    //
    rpc UpdateDrvierSetting(UpdateDrvierSettingRequest) returns  (BoolResultReplay);
+
+   //获取历史数据存放路径
+   rpc GetDatabaseHisSetting(DatabasesRequest) returns (GetDatabaseHisSettingReplay);
+
+   //更新历史数据存放路径
+   rpc UpdateDatabaseHisSetting(UpdateDatabaseHisSettingRequest) returns (BoolResultReplay);
 
 }
 
@@ -709,7 +715,7 @@ message HisTagMessage
  uint32 TagType=3;
  uint32 CompressType=4;
  uint32 Circle=5;
- uint32  MaxValueCountPerSecond=6;
+ uint32 MaxValueCountPerSecond=6;
  repeated hisTagParameterItem Parameter=7;
 }
 
@@ -730,4 +736,24 @@ message Group
 {
     string Name=1;
     string Parent=2;
+}
+
+//获取历史数据存放路径
+message GetDatabaseHisSettingReplay
+{
+    bool Result =1;
+    string ErroMessage=2;
+    string DataPath=3;
+    string BackDataPath=4;
+    int32 KeepTime=5;
+}
+
+//更新历史数据存放路径
+message UpdateDatabaseHisSettingRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string DataPath=3;
+    string BackDataPath=4;
+    int32 KeepTime=5;
 }

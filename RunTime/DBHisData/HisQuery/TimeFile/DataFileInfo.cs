@@ -1208,9 +1208,10 @@ namespace Cdy.Tag
                 }
                 int blockindex = (int)(ttmp / (blockDuration * 60));
                 
-                if (blockindex > blockcount)
+                if (blockindex >= blockcount)
                 {
-                    throw new Exception("DataPointer index is out of total block number");
+                    break;
+                    //throw new Exception("DataPointer index is out of total block number");
                 }
 
                 var dataPointer = headdata.ReadInt(tagIndex * 12 + blockindex * tagCount * 12); //读取DataBlock的相对地址

@@ -156,6 +156,9 @@
   <data name="Copy" xml:space="preserve">
     <value>拷贝</value>
   </data>
+  <data name="Custom" xml:space="preserve">
+    <value>自定义</value>
+  </data>
   <data name="Database" xml:space="preserve">
     <value>数据库</value>
   </data>
@@ -171,6 +174,9 @@
   </data>
   <data name="DeadAreaValue" xml:space="preserve">
     <value>死区区间</value>
+  </data>
+  <data name="Default" xml:space="preserve">
+    <value>默认</value>
   </data>
   <data name="Desc" xml:space="preserve">
     <value>描述</value>
@@ -193,6 +199,9 @@
   <data name="Group" xml:space="preserve">
     <value>组</value>
   </data>
+  <data name="HisDataKeepTime" xml:space="preserve">
+    <value>历史数据保留时间:</value>
+  </data>
   <data name="HotReRun_Tooltip" xml:space="preserve">
     <value>重新运行数据库，生效修改的内容</value>
   </data>
@@ -210,6 +219,9 @@
   </data>
   <data name="IsAdmin" xml:space="preserve">
     <value>管理员</value>
+  </data>
+  <data name="KeepTimeUnit" xml:space="preserve">
+    <value>(天)</value>
   </data>
   <data name="Keyword" xml:space="preserve">
     <value>关键字</value>
@@ -360,14 +372,23 @@
   <data name="SelectGroup" xml:space="preserve">
     <value>选择组</value>
   </data>
+  <data name="ServerBackupDataPath" xml:space="preserve">
+    <value>历史数据备份路径</value>
+  </data>
   <data name="ServerIp" xml:space="preserve">
     <value>服务器IP</value>
   </data>
   <data name="ServerPort" xml:space="preserve">
     <value>服务端口</value>
   </data>
+  <data name="ServerPrimaryDataPath" xml:space="preserve">
+    <value>历史数据路径</value>
+  </data>
   <data name="ServerSecurity" xml:space="preserve">
     <value>服务器安全</value>
+  </data>
+  <data name="ServerSetting" xml:space="preserve">
+    <value>服务参数配置</value>
   </data>
   <data name="SetPasswordfail" xml:space="preserve">
     <value>设置密码失败!</value>

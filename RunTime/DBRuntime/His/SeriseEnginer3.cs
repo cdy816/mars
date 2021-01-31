@@ -384,20 +384,27 @@ namespace Cdy.Tag
                 {
                     if (System.IO.Directory.Exists(wpath))
                     {
-                        foreach (var vv in new System.IO.DirectoryInfo(wpath).GetFiles("*.dbd"))
+                        try
                         {
-                            if (mIsClosed) break;
-                            while (mIsBusy) Thread.Sleep(1000);
-
-                            if (mIsClosed) break;
-
-                            string sfile = "";
-
-                            if(HisDataArrange.Arrange.CheckAndReArrangeHisFile(vv.FullName,out sfile, FileDuration, false))
+                            foreach (var vv in new System.IO.DirectoryInfo(wpath).GetFiles("*.dbd"))
                             {
-                                HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(sfile);
-                                HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(vv.FullName);
+                                if (mIsClosed) break;
+                                while (mIsBusy) Thread.Sleep(1000);
+
+                                if (mIsClosed) break;
+
+                                string sfile = "";
+
+                                if (HisDataArrange.Arrange.CheckAndReArrangeHisFile(vv.FullName, out sfile, FileDuration, true))
+                                {
+                                    HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(sfile);
+                                    HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(vv.FullName);
+                                }
                             }
+                        }
+                        catch(Exception ex)
+                        {
+                            LoggerService.Service.Erro("SeriseEnginer3", "DataFileReArrangeThreadPro: " + ex.Message);
                         }
                     }
                     mLastDataFileReArrangeProcessTime = DateTime.Now;

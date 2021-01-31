@@ -156,6 +156,9 @@
   <data name="Copy" xml:space="preserve">
     <value>Copy</value>
   </data>
+  <data name="Custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
   <data name="Database" xml:space="preserve">
     <value>Database</value>
   </data>
@@ -171,6 +174,9 @@
   </data>
   <data name="DeadAreaValue" xml:space="preserve">
     <value>Dead zone</value>
+  </data>
+  <data name="Default" xml:space="preserve">
+    <value>Default</value>
   </data>
   <data name="Desc" xml:space="preserve">
     <value>Description</value>
@@ -193,6 +199,9 @@
   <data name="Group" xml:space="preserve">
     <value>Group</value>
   </data>
+  <data name="HisDataKeepTime" xml:space="preserve">
+    <value>Historical data retention time</value>
+  </data>
   <data name="HotReRun_Tooltip" xml:space="preserve">
     <value>Rerun database</value>
   </data>
@@ -210,6 +219,9 @@
   </data>
   <data name="IsAdmin" xml:space="preserve">
     <value>Admin</value>
+  </data>
+  <data name="KeepTimeUnit" xml:space="preserve">
+    <value>(Day)</value>
   </data>
   <data name="Keyword" xml:space="preserve">
     <value>Keyword</value>
@@ -360,14 +372,23 @@
   <data name="SelectGroup" xml:space="preserve">
     <value>Selected group</value>
   </data>
+  <data name="ServerBackupDataPath" xml:space="preserve">
+    <value>History backup path</value>
+  </data>
   <data name="ServerIp" xml:space="preserve">
     <value>Server Ip</value>
   </data>
   <data name="ServerPort" xml:space="preserve">
     <value>ServerPort</value>
   </data>
+  <data name="ServerPrimaryDataPath" xml:space="preserve">
+    <value>History data path</value>
+  </data>
   <data name="ServerSecurity" xml:space="preserve">
     <value>ServerSecurity</value>
+  </data>
+  <data name="ServerSetting" xml:space="preserve">
+    <value>Server setting</value>
   </data>
   <data name="SetPasswordfail" xml:space="preserve">
     <value>set password fail.</value>

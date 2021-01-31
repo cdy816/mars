@@ -26,10 +26,20 @@ namespace DBInStudio.Desktop
     /// </summary>
     public partial class MainWindow : Window
     {
+        private Point mLastClickLoc;
         public MainWindow()
         {
             InitializeComponent();
             this.DataContext = new MainViewModel();
+            this.StateChanged += MainWindow_StateChanged;
+        }
+
+        private void MainWindow_StateChanged(object sender, EventArgs e)
+        {
+            if(this.WindowState == WindowState.Normal)
+            {
+                
+            }
         }
 
         private void closeB_Click(object sender, RoutedEventArgs e)
@@ -61,19 +71,35 @@ namespace DBInStudio.Desktop
             }
             else
             {
+                
+                if(WindowState == WindowState.Maximized)
+                {
+                    var rec = this.RestoreBounds;
+                    var ll = e.GetPosition(this);
+                    var dx = ll.X / this.ActualWidth * rec.Width;
+                    var dy = ll.Y / this.ActualHeight * rec.Height;
+                    var pp = ll;
+
+                    this.Left = pp.X - dx-8;
+                    this.Top = pp.Y - dy-24;
+
+                    this.WindowState = WindowState.Normal;
+
+                }
+
                 this.DragMove();
             }
         }
 
         private void Grid_MouseMove(object sender, MouseEventArgs e)
         {
-            if(e.LeftButton == MouseButtonState.Pressed)
-            {
-                if(WindowState == WindowState.Maximized)
-                {
-                    WindowState = WindowState.Normal;
-                }
-            }
+            //if(e.LeftButton == MouseButtonState.Pressed)
+            //{
+            //    if(WindowState == WindowState.Maximized)
+            //    {
+            //        WindowState = WindowState.Normal;
+            //    }
+            //}
         }
 
         private void Grid_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)

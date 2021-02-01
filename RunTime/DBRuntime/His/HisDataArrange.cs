@@ -174,7 +174,7 @@ namespace Cdy.Tag
         /// <param name="msource"></param>
         /// <param name="offset"></param>
         /// <param name="mtarget"></param>
-        private void CopyDataRegion(System.IO.Stream msource,long sourceOffset,System.IO.Stream mtarget)
+        private bool CopyDataRegion(System.IO.Stream msource,long sourceOffset,System.IO.Stream mtarget)
         {
             msource.Position = sourceOffset;
 
@@ -219,14 +219,25 @@ namespace Cdy.Tag
             CopyRegionData(msource, sourceheadpoint,tagcount,blockcount, mtarget,out targetheadpoint);
             long lp = mtarget.Position;
 
-            //write tag data pointer
-            mtarget.Position = pheadpointlocation;
-            targetheadpoint.WriteToStream(mtarget);
+            if (targetheadpoint != null)
+            {
+                //write tag data pointer
+                mtarget.Position = pheadpointlocation;
+                targetheadpoint.WriteToStream(mtarget);
 
-            mtarget.Position = lp;
+                mtarget.Position = lp;
 
-            targetheadpoint.Dispose();
-            sourceheadpoint.Dispose();
+                targetheadpoint.Dispose();
+                sourceheadpoint.Dispose();
+                return true;
+            }
+            else
+            {
+                sourceheadpoint.Dispose();
+                return false;
+            }
+
+            
         }
 
         /// <summary>
@@ -314,6 +325,13 @@ namespace Cdy.Tag
                         data.WriteInt(offset, datasize);
                         offset += 4;
 
+                        
+                        if ((dataloc + datasize) > bufferLenght)
+                        {
+                            targetheadpoint = null;
+                            return;
+                        }
+
                         Buffer.MemoryCopy((void*)(databuffers[j] + dataloc), (void*)(data.Buffers + offset), datasize, datasize);
                         data.Position += datasize;
                         offset += datasize;
@@ -368,8 +386,10 @@ namespace Cdy.Tag
         /// <param name="targetFile"></param>
         public bool ReArrange(string sourceFile,string targetFile)
         {
+            bool result = true;
             try
             {
+               
                 var source = GetDataFileSerise(sourceFile);
                 var target = GetDataFileSerise(targetFile);
 
@@ -384,7 +404,7 @@ namespace Cdy.Tag
 
                 foreach (var vv in dataarealoc)
                 {
-                    CopyDataRegion(sstream, vv, tstream);
+                    result = CopyDataRegion(sstream, vv, tstream);
                     if (lastarealoc > 0)
                     {
                         //更新下个指针数据区
@@ -402,7 +422,7 @@ namespace Cdy.Tag
             {
                 return false;
             }
-            return true;
+            return result;
         }
 
         /// <summary>

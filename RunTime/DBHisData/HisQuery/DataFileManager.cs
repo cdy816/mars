@@ -204,7 +204,7 @@ namespace Cdy.Tag
             }
 
             //只有在不支持内存查询的情况，才需要监视日志文件
-            if (ServiceLocator.Locator.Resolve<IHisQueryFromMemory>() != null)
+            if (ServiceLocator.Locator.Resolve<IHisQueryFromMemory>() == null)
             {
                 string logpath = GetPrimaryLogDataPath();
                 ScanLogFile(logpath);
@@ -353,6 +353,8 @@ namespace Cdy.Tag
                 {
                     mLogFileMaps.Remove(e.FullPath);
                 }
+
+                TagHeadOffsetManager.manager.RemoveLogHead(e.FullPath);
             }
             else 
             {

@@ -142,8 +142,13 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class AddressAndSize
+    public struct AddressAndSize
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        public static AddressAndSize Empty = new AddressAndSize() { Address = 0, Size = 0 };
+
         /// <summary>
         /// 
         /// </summary>
@@ -152,6 +157,11 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public long Size { get; set; }
+
+        public bool IsEmpty()
+        {
+            return Address == 0 && Size == 0;
+        }
     }
 
 

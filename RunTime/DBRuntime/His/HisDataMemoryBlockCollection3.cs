@@ -78,7 +78,7 @@ namespace DBRuntime.His
 
         /// <summary>
         /// 变量内存地址缓存
-        /// Tuple 每项的含义：起始地址,值地址偏移,质量地址偏移,数据大小
+        /// Value  每项的含义：起始地址,时间地址偏移,值地址偏移,质量地址偏移,时间单位,数据大小,地址（备用）
         /// </summary>
         public Dictionary<int, int> TagAddress
         {
@@ -752,11 +752,30 @@ namespace DBRuntime.His
         /// </summary>
         /// <param name="memory"></param>
         /// <param name="stream"></param>
-        public static void RecordDataToLog(this HisDataMemoryBlockCollection3 memory, Stream stream)
+        public static MarshalFixedMemoryBlock RecordDataToLog(this HisDataMemoryBlockCollection3 memory, Stream stream)
         {
+            MarshalFixedMemoryBlock mfb = new MarshalFixedMemoryBlock(memory.TagAddress.Count * 12+4);
+            mfb.WriteInt(0,(int)mfb.Length);
             foreach (var vv in memory.TagAddress)
             {
+                mfb.Write(vv.Key);
+                mfb.Write(stream.Position);
                 RecordToLog2(new IntPtr(memory.ReadDataBaseAddress(vv.Value)), memory.ReadDataSize(vv.Value), stream);
+            }
+            return mfb;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="size"></param>
+        /// <param name="stream"></param>
+        public unsafe static void RecordToLog(this IntPtr address, int size, Stream stream)
+        {
+            using (System.IO.UnmanagedMemoryStream ums = new UnmanagedMemoryStream((byte*)address, size))
+            {
+                ums.CopyTo(stream);
             }
         }
 

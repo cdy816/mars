@@ -417,6 +417,40 @@ namespace Cdy.Tag
             return re;
         }
 
+        private DateTime? ParseFileNameToDateTime(System.IO.FileInfo file)
+        {
+            string sname = System.IO.Path.GetFileNameWithoutExtension(file.FullName);
+            string stime = sname.Substring(sname.Length - 12, 12);
+            int yy = 0, mm = 0, dd = 0;
+
+            int id = -1;
+            int.TryParse(sname.Substring(sname.Length - 15, 3), out id);
+
+            if (id == -1)
+                return null;
+
+            if (!int.TryParse(stime.Substring(0, 4), out yy))
+            {
+                return null;
+            }
+
+            if (!int.TryParse(stime.Substring(4, 2), out mm))
+            {
+                return null;
+            }
+
+            if (!int.TryParse(stime.Substring(6, 2), out dd))
+            {
+                return null;
+            }
+            int hhspan = int.Parse(stime.Substring(8, 2));
+
+            int hhind = int.Parse(stime.Substring(10, 2));
+
+            int hh = hhspan * hhind;
+            return new DateTime(yy, mm, dd, hh, 0, 0);
+        }
+
         /// <summary>
         /// 检查并转化历史文件内容格式
         /// </summary>
@@ -430,8 +464,18 @@ namespace Cdy.Tag
                 if (System.IO.File.Exists(file))
                 {
                     System.IO.FileInfo finfo = new System.IO.FileInfo(file);
+
+                    DateTime? dt = ParseFileNameToDateTime(finfo);
+
+                    if (!dt.HasValue)
+                    {
+                        targetfile = string.Empty;
+                        return false;
+                    }
+
+                    Debug.Print(file + ": total hours:" + (DateTime.UtcNow - dt.Value).TotalHours  +"   "+ DateTime.Now);
                     //如果文件的创建时间，到现在超过一个文件能够保存的最大时间
-                    if ((DateTime.Now - finfo.CreationTime).TotalHours > (fileDuration + 0.5))
+                    if ((DateTime.UtcNow - dt.Value).TotalHours > (fileDuration + 0.5))
                     {
                         string tdirect = System.IO.Path.GetDirectoryName(file);
                         targetfile = System.IO.Path.Combine(tdirect, System.IO.Path.GetFileNameWithoutExtension(file) + ".his");

@@ -269,15 +269,15 @@ namespace DBRuntime.His
 
                         var vmm = vv.Value.Memory.TagAddress[id];
 
-                        var stim = (int)((vss.Start - vv.Value.Memory.CurrentDatetime).TotalMilliseconds / HisEnginer2.MemoryTimeTick);
-                        var etim = (int)((vss.End - vv.Value.Memory.CurrentDatetime).TotalMilliseconds / HisEnginer2.MemoryTimeTick);
+                        var stim = (int)((vss.Start - vv.Value.Memory.CurrentDatetime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
+                        var etim = (int)((vss.End - vv.Value.Memory.CurrentDatetime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
                         var tims = ReadTimer(stim, etim, vv.Value.Memory, vmm);
 
                         var vals = ReadValueInner<T>(vv.Value.Memory, tims.Keys.ToList(), 0, vv.Value.Memory.ReadValueOffsetAddress(vmm),vv.Value.Memory.ReadDataBaseAddress(vmm));
 
                         foreach(var vvk in tims)
                         {
-                            var time = vv.Value.Memory.CurrentDatetime.AddMilliseconds(vvk.Value * HisEnginer2.MemoryTimeTick);
+                            var time = vv.Value.Memory.CurrentDatetime.AddMilliseconds(vvk.Value * HisEnginer3.MemoryTimeTick);
                             result.Add(vals[vvk.Key], time, vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddress(vmm),vvk.Key + vv.Value.Memory.ReadQualityOffsetAddress(vmm)));
                         }
 
@@ -301,15 +301,15 @@ namespace DBRuntime.His
                     {
                         var vmm = vv.Value.Memory;
 
-                        var stim = (int)((vss.Start - vv.Value.Memory.Time).TotalMilliseconds / HisEnginer2.MemoryTimeTick);
-                        var etim = (int)((vss.End - vv.Value.Memory.Time).TotalMilliseconds / HisEnginer2.MemoryTimeTick);
+                        var stim = (int)((vss.Start - vv.Value.Memory.Time).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
+                        var etim = (int)((vss.End - vv.Value.Memory.Time).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
                         var tims = ReadTimer2(stim, etim, vmm);
 
                         var vals = ReadValueInner<T>(vmm, tims.Keys.ToList(), 0, vmm.ValueAddress);
 
                         foreach (var vvk in tims)
                         {
-                            var time = vv.Value.Memory.Time.AddMilliseconds(vvk.Value * HisEnginer2.MemoryTimeTick);
+                            var time = vv.Value.Memory.Time.AddMilliseconds(vvk.Value * HisEnginer3.MemoryTimeTick);
                             result.Add(vals[vvk.Key], time, vmm.ReadByte(vvk.Key + vmm.QualityAddress));
                         }
 
@@ -866,7 +866,7 @@ namespace DBRuntime.His
                         {
                             if (vv.Value.Memory.TagAddress.ContainsKey(id))
                             {
-                                var tim = (int)((vtime - vv.Value.Memory.CurrentDatetime).TotalMilliseconds / HisEnginer2.MemoryTimeTick);
+                                var tim = (int)((vtime - vv.Value.Memory.CurrentDatetime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
                                 var vmm = vv.Value.Memory.TagAddress[id];
                                 var timeindx = ReadTimeToFit(tim, vv.Value.Memory, vmm);
                                 if (timeindx.Item1 > -1 && timeindx.Item2 > -1)
@@ -882,8 +882,8 @@ namespace DBRuntime.His
                                         var vals = ReadValueInner<T>(vv.Value.Memory, new List<int>() { timeindx.Item1, timeindx.Item2 }, 0, vv.Value.Memory.ReadValueOffsetAddress(vmm), vv.Value.Memory.ReadDataBaseAddress(vmm));
                                         var qua1 = vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddress(vmm), vv.Value.Memory.ReadQualityOffsetAddress(vmm) + timeindx.Item1);
                                         var qua2 = vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddress(vmm), vv.Value.Memory.ReadQualityOffsetAddress(vmm) + timeindx.Item2);
-                                        var time1 = vv.Value.Memory.CurrentDatetime.AddMilliseconds(vv.Value.Memory.ReadShort(vv.Value.Memory.ReadDataBaseAddress(vmm), timeindx.Item1) * HisEnginer2.MemoryTimeTick);
-                                        var time2 = vv.Value.Memory.CurrentDatetime.AddMilliseconds(vv.Value.Memory.ReadShort(vv.Value.Memory.ReadDataBaseAddress(vmm), timeindx.Item2) * HisEnginer2.MemoryTimeTick);
+                                        var time1 = vv.Value.Memory.CurrentDatetime.AddMilliseconds(vv.Value.Memory.ReadShort(vv.Value.Memory.ReadDataBaseAddress(vmm), timeindx.Item1) * HisEnginer3.MemoryTimeTick);
+                                        var time2 = vv.Value.Memory.CurrentDatetime.AddMilliseconds(vv.Value.Memory.ReadShort(vv.Value.Memory.ReadDataBaseAddress(vmm), timeindx.Item2) * HisEnginer3.MemoryTimeTick);
                                         switch (type)
                                         {
                                             case QueryValueMatchType.Previous:
@@ -978,7 +978,7 @@ namespace DBRuntime.His
                     {
                         if (vv.Value.Contains(vtime))
                         {
-                            var tim = (int)((vtime - vv.Value.Memory.Time).TotalMilliseconds / HisEnginer2.MemoryTimeTick);
+                            var tim = (int)((vtime - vv.Value.Memory.Time).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
                             var vmm = vv.Value.Memory;
                             var timeindx = ReadTimeToFit2(tim, vmm);
                             if (timeindx.Item1 > -1 && timeindx.Item2 > -1)
@@ -994,8 +994,8 @@ namespace DBRuntime.His
                                     var vals = ReadValueInner<T>(vmm, new List<int>() { timeindx.Item1, timeindx.Item2 }, 0, vmm.ValueAddress);
                                     var qua1 = vmm.ReadByte(vmm.QualityAddress + timeindx.Item1);
                                     var qua2 = vmm.ReadByte(vmm.QualityAddress + timeindx.Item2);
-                                    var time1 = vv.Value.Memory.Time.AddMilliseconds(vmm.ReadInt(timeindx.Item1) * HisEnginer2.MemoryTimeTick);
-                                    var time2 = vv.Value.Memory.Time.AddMilliseconds(vmm.ReadInt(timeindx.Item2) * HisEnginer2.MemoryTimeTick);
+                                    var time1 = vv.Value.Memory.Time.AddMilliseconds(vmm.ReadInt(timeindx.Item1) * HisEnginer3.MemoryTimeTick);
+                                    var time2 = vv.Value.Memory.Time.AddMilliseconds(vmm.ReadInt(timeindx.Item2) * HisEnginer3.MemoryTimeTick);
                                     switch (type)
                                     {
                                         case QueryValueMatchType.Previous:

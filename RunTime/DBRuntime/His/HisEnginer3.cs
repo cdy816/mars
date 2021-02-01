@@ -366,10 +366,10 @@ namespace Cdy.Tag
             long ltmp = sw.ElapsedMilliseconds;
             AllocMemory();
 
-            if (LogManager != null)
-            {
-                LogManager.InitHeadData();
-            }
+            //if (LogManager != null)
+            //{
+            //    LogManager.InitHeadData();
+            //}
 
             mManager.Freedatabase();
 
@@ -539,7 +539,7 @@ namespace Cdy.Tag
 
             foreach (var vv in mValueChangedProcesser) { if (!vv.IsStarted) vv.Start(); }
 
-            mLogManager.InitHeadData();
+            //mLogManager.InitHeadData();
 
             SwitchMemoryCach(mCurrentMemory.Id);
 
@@ -1118,6 +1118,7 @@ namespace Cdy.Tag
             sw.Start();
             int number = MergeMemoryTime / CachMemoryTime;
 
+            var basetime = HisRunTag.StartTime;
             var mcc = mCurrentMemory;
 
             mMergeCount++;
@@ -1138,6 +1139,8 @@ namespace Cdy.Tag
             }
 
             CurrentMemory.CurrentDatetime = dateTime;
+
+            
 
             long ltmp = sw.ElapsedMilliseconds;
 
@@ -1165,7 +1168,7 @@ namespace Cdy.Tag
                 //通知进行内存合并
                 resetEvent.Set();
 
-                mLogManager?.RequestToSave(mcc.CurrentDatetime,dateTime, mcc);
+                mLogManager?.RequestToSave(mcc.CurrentDatetime,dateTime, basetime, mcc);
 
             }
             long ltmp3 = sw.ElapsedMilliseconds;

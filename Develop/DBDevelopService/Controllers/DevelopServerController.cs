@@ -809,6 +809,90 @@ namespace DBDevelopService.Controllers
             return new ResultResponse() { Result = true };
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object GetRealDataServerPortRequest(WebApiDatabaseRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if(db!=null)
+            {
+                return new RealDataServerPort() { Port = db.Setting.RealDataServerPort };
+            }
+            return new ResultResponse() { Result = false };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object UpdateRealDataServerPortRequest(WebApiUpdateRealDataServerPortRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                db.Setting.RealDataServerPort = request.Port;
+                return new ResultResponse() { Result = true };
+            }
+            return new ResultResponse() { Result = false };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object GetDatabaseHisSetting(WebApiDatabaseRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                return new HisSetting() { DataPath = db.HisDatabase.Setting.HisDataPathPrimary, DataPathBackup = db.HisDatabase.Setting.HisDataPathBack, KeepTimeInDataPath = db.HisDatabase.Setting.HisDataKeepTimeInPrimaryPath };
+            }
+            return new ResultResponse() { Result = false };
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object UpdateDatabaseHisSetting(WebApiHisSettingUpdateRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                db.HisDatabase.Setting.HisDataPathPrimary = request.DataPath;
+                db.HisDatabase.Setting.HisDataPathBack = request.DataPathBackup;
+                db.HisDatabase.Setting.HisDataKeepTimeInPrimaryPath = request.KeepTimeInDataPath;
+                return new ResultResponse() { Result = true };
+            }
+            return new ResultResponse() { Result = false };
+        }
+
         #endregion
 
         #region database user

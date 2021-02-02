@@ -66,6 +66,25 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="databaseName"></param>
+        /// <returns></returns>
+        public HisSettingDoc LoadSettingOnly(string databaseName)
+        {
+            string stmp = PathHelper.helper.GetDataPath(databaseName, databaseName + ".hdb");
+            if(System.IO.File.Exists(stmp))
+            {
+                XElement xe = XElement.Load(stmp);
+                if (xe.Element("HisSetting") != null)
+                {
+                    return xe.Element("HisSetting").LoadHisSettingDocFromXML();
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="file"></param>
         /// <returns></returns>
         public HisDatabase Load(string file)
@@ -130,6 +149,7 @@ namespace Cdy.Tag
             xe.SetAttributeValue("Version", Database.Version);
             xe.SetAttributeValue("Name", Database.Name);
             xe.SetAttributeValue("Auther", "cdy");
+            xe.Add(Database.Setting.SaveToXML());
 
             XElement xx = new XElement("Tags");
 
@@ -139,7 +159,7 @@ namespace Cdy.Tag
             }
             xe.Add(xx);
 
-            xe.Add(Database.Setting.SaveToXML());
+           
 
             xe.Save(file);
             Database.IsDirty = false;

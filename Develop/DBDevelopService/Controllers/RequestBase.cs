@@ -20,6 +20,31 @@ namespace DBDevelopService.Controllers
         public string Database { get; set; }
     }
 
+
+    public class WebApiHisSettingUpdateRequest : WebApiDatabaseRequest
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public string DataPath { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string DataPathBackup { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int KeepTimeInDataPath { get; set; }
+    }
+
+
+    public class WebApiUpdateRealDataServerPortRequest : WebApiDatabaseRequest
+    {
+        public int Port { get; set; }
+    }
+
     /// <summary>
     /// 
     /// </summary>

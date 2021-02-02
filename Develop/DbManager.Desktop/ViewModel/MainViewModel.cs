@@ -495,10 +495,15 @@ namespace DBInStudio.Desktop
                 {
                     mSaveCommand = new RelayCommand(() => {
 
-                        if (ContentViewModel is TagGroupDetailViewModel)
-                        {
-                            (ContentViewModel as TagGroupDetailViewModel).UpdateAll();
-                        }
+                        CheckSaveDatabase();
+                        //if (ContentViewModel is TagGroupDetailViewModel)
+                        //{
+                        //    (ContentViewModel as TagGroupDetailViewModel).UpdateAll();
+                        //}
+                        //else
+                        //{
+
+                        //}
 
                         if (DevelopServiceHelper.Helper.Save(mDatabase))
                         {

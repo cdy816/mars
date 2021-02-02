@@ -161,6 +161,35 @@ namespace DBDevelopService.Controllers
 
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    public class HisSetting
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public string DataPath { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string DataPathBackup { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int KeepTimeInDataPath { get; set; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class RealDataServerPort
+    {
+        public int Port { get; set; }
+    }
+
 
 
 }

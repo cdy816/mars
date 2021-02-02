@@ -101,7 +101,15 @@ namespace HisDataTools
                 foreach (var vv in new System.IO.DirectoryInfo(dbpath).EnumerateDirectories())
                 {
                     bds.Add(vv.Name);
-                    HisQueryManager.Instance.Registor(vv.Name);
+                    var setting = new HisDatabaseSerise().LoadSettingOnly(vv.Name);
+                    if (setting != null)
+                    {
+                        HisQueryManager.Instance.Registor(vv.Name, setting.HisDataPathPrimary, setting.HisDataPathBack);
+                    }
+                    else
+                    {
+                        HisQueryManager.Instance.Registor(vv.Name);
+                    }
                 }
             }
             Databases = bds;

@@ -75,10 +75,10 @@ namespace DBInStudio.Desktop
                 if(WindowState == WindowState.Maximized)
                 {
                     var rec = this.RestoreBounds;
-                    var ll = e.GetPosition(this);
+                    var ll =  e.GetPosition(this);
                     var dx = ll.X / this.ActualWidth * rec.Width;
                     var dy = ll.Y / this.ActualHeight * rec.Height;
-                    var pp = ll;
+                    var pp = this.PointToScreen(ll);
 
                     this.Left = pp.X - dx-8;
                     this.Top = pp.Y - dy-24;

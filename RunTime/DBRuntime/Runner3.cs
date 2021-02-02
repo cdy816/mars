@@ -289,6 +289,9 @@ namespace Cdy.Tag
 
                 mHisFileManager = new DataFileManager(mDatabaseName);
                 mHisFileManager.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
+                mHisFileManager.PrimaryHisDataPath = mHisDatabase.Setting.HisDataPathPrimary;
+                mHisFileManager.BackHisDataPath = mHisDatabase.Setting.HisDataPathBack;
+                
 
                 var task = mHisFileManager.Int();
                 realEnginer = new RealEnginer(mRealDatabase);
@@ -338,7 +341,7 @@ namespace Cdy.Tag
 
                 DriverManager.Manager.Init(realEnginer, hisEnginer);
 
-                HisQueryManager.Instance.Registor(mDatabaseName, mHisDatabase.Setting.HisDataPathPrimary, mHisDatabase.Setting.HisDataPathBack);
+                HisQueryManager.Instance.Registor(mDatabaseName, mHisFileManager);
                 HisQueryManager.Instance.StartMonitor();
 
                 await task;

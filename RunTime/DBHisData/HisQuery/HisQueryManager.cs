@@ -75,6 +75,23 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="name"></param>
+        /// <param name="manager"></param>
+        public void Registor(string name,DataFileManager manager)
+        {
+            if (!mManagers.ContainsKey(name))
+            {
+                mManagers.Add(name, manager);
+            }
+            else
+            {
+                mManagers[name] = manager;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public void StartMonitor()
         {
             foreach(var vv in mManagers)

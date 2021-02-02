@@ -197,7 +197,7 @@ namespace Cdy.Tag
                 
                 if (System.IO.Directory.Exists(backuppath))
                 {
-                    backhisDataWatcher = new System.IO.FileSystemWatcher(datapath);
+                    backhisDataWatcher = new System.IO.FileSystemWatcher(backuppath);
                     backhisDataWatcher.Changed += HisDataWatcher_Changed;
                     backhisDataWatcher.EnableRaisingEvents = true;
                 }

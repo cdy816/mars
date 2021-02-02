@@ -496,7 +496,10 @@ namespace Cdy.Tag
                                             }
                                             else
                                             {
-                                                vv.Delete();
+                                                if (GetDriverUsedPercent(wpath) < 0.05)
+                                                {
+                                                    vv.Delete();
+                                                }
                                                 LoggerService.Service.Erro("SeriseEnginer", "There is not enough space for backup! free size:" + (GetDriverFreeSize(backpath) / 1024.0 / 1024) + "M. required size:" + (vv.Length / 1024.0 / 1024) + " M");
                                             }
                                         }

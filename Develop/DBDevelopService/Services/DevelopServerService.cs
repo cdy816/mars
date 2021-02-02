@@ -2164,7 +2164,7 @@ namespace DBDevelopService
             var db = DbManager.Instance.GetDatabase(request.Database);
             if (db != null)
             {
-                db.HisDatabase.Setting.HisDataPathPrimary = request.Database;
+                db.HisDatabase.Setting.HisDataPathPrimary = request.DataPath;
                 db.HisDatabase.Setting.HisDataPathBack = request.BackDataPath;
                 db.HisDatabase.Setting.HisDataKeepTimeInPrimaryPath = request.KeepTime;
                 return Task.FromResult(new BoolResultReplay() { Result = true });

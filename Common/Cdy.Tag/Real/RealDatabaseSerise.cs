@@ -114,18 +114,20 @@ namespace Cdy.Tag
 
                 if (xe.Element("Tags") != null)
                 {
-                    Parallel.ForEach(xe.Element("Tags").Elements(), (vv) => {
+                    //Parallel.ForEach(xe.Element("Tags").Elements(), (vv) => {
+                    //    var tag = vv.LoadTagFromXML();
+                    //    lock (db.Tags)
+                    //        db.Tags.Add(tag.Id, tag);
+                    //});
+                    foreach (var vv in xe.Element("Tags").Elements())
+                    {
                         var tag = vv.LoadTagFromXML();
-                        lock (db.Tags)
-                            db.Tags.Add(tag.Id, tag);
-                    });
+                        db.Tags.Add(tag.Id, tag);
+                    }
+
                     db.BuildNameMap();
                     db.BuildGroupMap();
-                    //foreach(var vv in xe.Element("Tags").Elements())
-                    //{
-                    //    var tag = vv.LoadTagFromXML();
-                    //    db.Tags.Add(tag.Id, tag);
-                    //}
+                    
                 }
 
                 if (xe.Attribute("MaxId") != null)

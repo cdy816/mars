@@ -182,17 +182,13 @@ namespace DBRuntime.Proxy
             Task.Run(() => {
                 if (mProxy.IsConnected)
                 {
-                    resetEvent.Set();
+                    LoggerService.Service.Info("DatabaseProxy", "Server is connected!",ConsoleColor.Cyan);
                 }
                 else
                 {
-                    if (!string.IsNullOrEmpty(mDatabaseName))
-                    {
-                        CloseDatabase();
-                    }
-                    IsReadyEvent?.Invoke(false);
-                    //IsReadyEvent?.BeginInvoke(false, null, null);
+                    LoggerService.Service.Warn("DatabaseProxy", "Server is disconnected!");
                 }
+                resetEvent.Set();
 
             });
             
@@ -206,21 +202,42 @@ namespace DBRuntime.Proxy
             while(!mIsClosed)
             {
                 resetEvent.WaitOne();
+                resetEvent.Reset();
                 if (mIsClosed) break;
-                while (!mIsClosed)
+
+                if (mProxy.IsConnected)
                 {
-                    if(mProxy.IsConnected)
+                    try
                     {
                         string sname = mProxy.GetRunnerDatabase();
-                        if(!string.IsNullOrEmpty(sname))
+                        if (!string.IsNullOrEmpty(sname))
                         {
                             CheckAndLoadDatabase(sname);
-                            break;
+                        }
+                        else
+                        {
+                            Thread.Sleep(1000);
+                            resetEvent.Set();
+                            continue;
                         }
                     }
-                    Thread.Sleep(2000);
+                    catch
+                    {
+                        Thread.Sleep(1000);
+                        resetEvent.Set();
+                        continue;
+                    }
                 }
-                resetEvent.Reset();
+                else
+                {
+                    if (!string.IsNullOrEmpty(mDatabaseName))
+                    {
+                        CloseDatabase();
+                    }
+                }
+                IsReadyEvent?.Invoke(mProxy.IsConnected);
+                Thread.Sleep(2000);
+                
             }
         }
 
@@ -229,10 +246,18 @@ namespace DBRuntime.Proxy
         /// </summary>
         private void CheckAndLoadDatabase(string database)
         {
-            string[] sbase = database.Split(new char[] { ',' });
-            Load(sbase[0], sbase[1] + sbase[2]);
+            try
+            {
+                string[] sbase = database.Split(new char[] { ',' });
+                if (!string.IsNullOrEmpty(sbase[0]) && !string.IsNullOrEmpty(sbase[1]))
+                    Load(sbase[0], sbase[1] + sbase[2]);
 
-            IsReadyEvent?.Invoke(true);
+                //IsReadyEvent?.Invoke(true);
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Erro("CheckAndLoadDatabase", ex.Message);
+            }
         }
 
         /// <summary>
@@ -311,8 +336,17 @@ namespace DBRuntime.Proxy
         /// </summary>
         public void CloseDatabase()
         {
-            realEnginer = null;
-            realEnginer.Dispose();
+            if (mDriver != null)
+            {
+                mDriver.Stop();
+                mDriver = null;
+            }
+            if (realEnginer != null)
+            {
+                realEnginer.Dispose();
+                realEnginer = null;
+            }
+            mDatabaseName = string.Empty;
         }
 
         #endregion ...Methods...

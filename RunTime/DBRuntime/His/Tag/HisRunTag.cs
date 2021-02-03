@@ -250,6 +250,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="count"></param>
         /// <param name="tim"></param>
+        [Obsolete]
         public virtual void UpdateValue2(int count, int tim)
         {
             var vcount = count > MaxCount ? MaxCount : count;
@@ -271,6 +272,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="tim"></param>
+        [Obsolete]
         public void UpdateValue2(int tim)
         {
             UpdateValue2(Count, tim);
@@ -281,6 +283,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="tim"></param>
+        [Obsolete]
         public void UpdateChangedValue(int tim)
         {
             if (CheckValueChangeToLastRecordValue((void*)RealMemoryPtr , RealValueAddr))

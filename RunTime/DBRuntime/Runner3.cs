@@ -202,8 +202,9 @@ namespace Cdy.Tag
             this.mHisDatabase = this.mDatabase.HisDatabase;
             CurrentDatabaseVersion = this.mRealDatabase.Version;
             CurrentDatabase = mRealDatabase.Name;
-       
-           sw.Stop();
+            CurrentDatabaseLastUpdateTime = mRealDatabase.UpdateTime;
+
+            sw.Stop();
             LoggerService.Service.Info("LoadDatabase", "load " +mDatabaseName +" take " + sw.ElapsedMilliseconds.ToString() +" ms");
         }
 

@@ -38,6 +38,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 序列话引擎
     /// </summary>
+    [Obsolete]
     public class SeriseEnginer : IDataSerialize
     {
 
@@ -330,6 +331,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
+    [Obsolete]
     public class SeriseFileItem:IDisposable
     {
 #region ... Variables  ...

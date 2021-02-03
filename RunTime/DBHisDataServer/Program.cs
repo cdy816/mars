@@ -148,7 +148,7 @@ namespace DBHisDataServer
                                     }
                                     mIsClosed = true;
                                     server.WriteByte(1);
-                                    server.WaitForPipeDrain();
+                                    server.FlushAsync();
                                     Console.WriteLine(Res.Get("AnyKeyToExit"));
                                     break;
                                     //退出系统

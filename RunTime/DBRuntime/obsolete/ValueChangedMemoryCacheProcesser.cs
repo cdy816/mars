@@ -20,6 +20,7 @@ namespace Cdy.Tag
     /// 每隔1s毫秒检查一次变量是否改变，如果改变则记录。
     /// 变化周期超过1s的情况，则会被忽略
     /// </summary>
+    [Obsolete]
     public class ValueChangedMemoryCacheProcesser:IDisposable
     {
 

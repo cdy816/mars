@@ -393,7 +393,7 @@ namespace DBRuntime.Proxy
             //Stopwatch sw = new Stopwatch();
             //sw.Start();
             var realenginer = (ServiceLocator.Locator.Resolve<IRealTagConsumer>() as RealEnginer);
-            if (Client != null && Client.IsConnected)
+            if (Client != null && Client.IsConnected && realenginer.Memory!=null)
             {
                 int i = 0;
                 foreach (var vv in Client.SyncRealMemory(realenginer.Memory.Length))

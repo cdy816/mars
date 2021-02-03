@@ -22,7 +22,7 @@ namespace DBRuntime.Proxy
 
         ApiClient mHisClient;
 
-        private bool mIsConnected;
+        private bool mIsConnected=false;
 
         private ManualResetEvent resetEvent;
 
@@ -82,8 +82,11 @@ namespace DBRuntime.Proxy
             }
             set
             {
-                mIsConnected = value;
-                OnPropertyChanged("IsConnected");
+                if (mIsConnected != value)
+                {
+                    mIsConnected = value;
+                    OnPropertyChanged("IsConnected");
+                }
             }
         }
 
@@ -144,6 +147,7 @@ namespace DBRuntime.Proxy
                     {
                         dbClient.Connect(mIp, mPort);
                     }
+
                     if (IsUseStandardHisDataServer)
                     {
                         if (mHisClient.IsConnected)
@@ -210,7 +214,10 @@ namespace DBRuntime.Proxy
             if(e.PropertyName== "IsConnected")
             {
                 if (!dbClient.IsConnected)
+                {
+                    IsConnected = false;
                     resetEvent.Set();
+                }
             }
         }
 

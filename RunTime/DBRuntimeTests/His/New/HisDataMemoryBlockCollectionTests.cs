@@ -21,6 +21,7 @@ namespace DBRuntime.His.Tests
     public class HisDataMemoryBlockCollectionTests
     {
         [TestMethod()]
+        [Obsolete]
         public void ClearTest()
         {
             HisDataMemoryBlockCollection hdb = new HisDataMemoryBlockCollection();

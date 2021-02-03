@@ -171,7 +171,7 @@ namespace DBRuntime.His
 
         #endregion ...Interfaces...
     }
-
+    [Obsolete]
     public static class MergeMemoryBlock2Extends
     {
 

@@ -96,7 +96,7 @@ namespace DBRuntime.Api
                     loginId = data.ReadLong();
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
-                        Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, Runner.CurrentDatabase+","+Runner.CurrentDatabaseVersion+","+Runner.CurrentDatabaseLastUpdateTime));
+                        Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, Runner3.CurrentDatabase+","+Runner3.CurrentDatabaseVersion+","+Runner3.CurrentDatabaseLastUpdateTime));
                     }
                     break;
 

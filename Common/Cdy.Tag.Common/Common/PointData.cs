@@ -105,6 +105,29 @@ namespace Cdy.Tag
             return b.X != c.X || b.Y != c.Y;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            if (obj is IntPointData)
+            {
+                return this == (IntPointData)(obj);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
 
     }
     /// <summary>
@@ -166,6 +189,29 @@ namespace Cdy.Tag
         {
             return b.X != c.X || b.Y != c.Y || b.Z != c.Z;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            if(obj is IntPoint3Data)
+            {
+                return this == (IntPoint3Data)(obj);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 
     /// <summary>
@@ -219,6 +265,30 @@ namespace Cdy.Tag
         public static bool operator !=(UIntPointData b, UIntPointData c)
         {
             return b.X != c.X || b.Y != c.Y;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            if (obj is UIntPointData)
+            {
+                return this == (UIntPointData)(obj);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
     /// <summary>
@@ -284,6 +354,29 @@ namespace Cdy.Tag
         {
             return b.X != c.X || b.Y != c.Y || b.Z != c.Z;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            if (obj is UIntPoint3Data)
+            {
+                return this == (UIntPoint3Data)(obj);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 
     /// <summary>
@@ -348,6 +441,29 @@ namespace Cdy.Tag
         public static bool operator !=(LongPointData b, LongPointData c)
         {
             return b.X != c.X || b.Y != c.Y;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            if (obj is LongPointData)
+            {
+                return this == (LongPointData)(obj);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 
@@ -423,6 +539,29 @@ namespace Cdy.Tag
         {
             return b.X != c.X || b.Y != c.Y || b.Z != c.Z;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            if (obj is LongPoint3Data)
+            {
+                return this == (LongPoint3Data)(obj);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 
     /// <summary>
@@ -493,6 +632,30 @@ namespace Cdy.Tag
         {
             return b.X != c.X || b.Y != c.Y;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            if (obj is ULongPointData)
+            {
+                return this == (ULongPointData)(obj);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
     }
 
     /// <summary>
@@ -549,6 +712,30 @@ namespace Cdy.Tag
         public static bool operator !=(ULongPoint3Data b, ULongPoint3Data c)
         {
             return b.X != c.X || b.Y != c.Y || b.Z != c.Z;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            if (obj is ULongPoint3Data)
+            {
+                return this == (ULongPoint3Data)(obj);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 

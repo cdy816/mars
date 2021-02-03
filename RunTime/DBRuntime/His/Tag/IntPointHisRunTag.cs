@@ -18,7 +18,7 @@ namespace Cdy.Tag
     public class IntPointHisRunTag:HisRunTag
     {
         private int x = int.MinValue, y = int.MinValue;
-        private int xx = 0, yy;
+        //private int xx = 0, yy;
         /// <summary>
         /// 
         /// </summary>

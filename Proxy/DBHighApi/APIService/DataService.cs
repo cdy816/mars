@@ -65,6 +65,8 @@ namespace DBHighApi.Api
         /// </summary>
         public static DataService Service = new DataService();
 
+        private bool mIsRunning = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -105,6 +107,7 @@ namespace DBHighApi.Api
             mRealProcess.Start();
             mInfoProcess.Start();
             base.StartInner(port);
+            mIsRunning = true;
         }
 
         /// <summary>
@@ -112,24 +115,27 @@ namespace DBHighApi.Api
         /// </summary>
         public override void Stop()
         {
-            base.Stop();
-            if (mHisProcess != null)
+            if (mIsRunning)
             {
-                mHisProcess.Stop();
-                mHisProcess.Dispose();
-                mHisProcess = null;
-            }
-            if (mRealProcess != null)
-            {
-                mRealProcess.Stop();
-                mRealProcess.Dispose();
-                mRealProcess = null;
-            }
-            if (mInfoProcess != null)
-            {
-                mInfoProcess.Stop();
-                mInfoProcess.Dispose();
-                mInfoProcess = null;
+                base.Stop();
+                if (mHisProcess != null)
+                {
+                    mHisProcess.Stop();
+                    mHisProcess.Dispose();
+                    mHisProcess = null;
+                }
+                if (mRealProcess != null)
+                {
+                    mRealProcess.Stop();
+                    mRealProcess.Dispose();
+                    mRealProcess = null;
+                }
+                if (mInfoProcess != null)
+                {
+                    mInfoProcess.Stop();
+                    mInfoProcess.Dispose();
+                    mInfoProcess = null;
+                }
             }
         }
 

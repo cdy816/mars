@@ -2188,7 +2188,7 @@ namespace Cdy.Tag
         {
             if (target == null) return;
 
-            long osts, ostt;
+            long osts;
 
             var hds = RelocationAddressToArrayIndex(sourceStart, out osts);
 

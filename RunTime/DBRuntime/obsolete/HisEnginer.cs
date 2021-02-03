@@ -19,6 +19,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 历史数据引擎
     /// </summary>
+    [Obsolete]
     public class HisEnginer : IHisEngine
     {
 

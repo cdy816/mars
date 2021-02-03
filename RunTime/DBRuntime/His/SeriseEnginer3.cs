@@ -857,7 +857,7 @@ namespace Cdy.Tag
 
                 mHeadMemory.Write(BitConverter.GetBytes(FileDuration));           //写入文件持续时间
                 mHeadMemory.Write(BitConverter.GetBytes(BlockDuration));          //写入数据块持续时间
-                mHeadMemory.Write(BitConverter.GetBytes(HisEnginer.MemoryTimeTick)); //写入时间间隔
+                mHeadMemory.Write(BitConverter.GetBytes(HisEnginer3.MemoryTimeTick)); //写入时间间隔
 
                 //写入变量编号列表
                 mHeadMemory.Write(BitConverter.GetBytes(mTagIdMemoryCach.Position));// mHeadMemory.Write(mTagIdMemoryCach.Position);//写入压缩后的数组的长度

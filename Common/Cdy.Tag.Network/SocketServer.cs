@@ -44,6 +44,8 @@ namespace Cdy.Tag
         /// <returns></returns>
         public delegate IByteBuffer FunCallBack(string clientId,IByteBuffer memory);
 
+        bool isRunning = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -97,8 +99,12 @@ namespace Cdy.Tag
         /// <param name="port"></param>
         public  void Start(string ip,int port)
         {
-            mIp = ip;
-            StartInner(port);
+            if (!isRunning)
+            {
+                isRunning = true;
+                mIp = ip;
+                StartInner(port);
+            }
         }
 
         /// <summary>
@@ -106,14 +112,18 @@ namespace Cdy.Tag
         /// </summary>
         public  void Start(int port)
         {
-            try
+            if (!isRunning)
             {
-                StartInner(port);
-                LoggerService.Service.Info("SocketServer", "Server " + this.Name + " start  at port " + port,ConsoleColor.Cyan);
-            }
-            catch
-            {
-                LoggerService.Service.Erro("SocketServer", "Server " + this.Name + " start at port " + port+" failed." );
+                isRunning = true;
+                try
+                {
+                    StartInner(port);
+                    LoggerService.Service.Info("SocketServer", "Server " + this.Name + " start  at port " + port, ConsoleColor.Cyan);
+                }
+                catch
+                {
+                    LoggerService.Service.Erro("SocketServer", "Server " + this.Name + " start at port " + port + " failed.");
+                }
             }
         }
 
@@ -204,9 +214,19 @@ namespace Cdy.Tag
         /// </summary>
         public virtual async void Stop()
         {
-            await boundChannel.CloseAsync();
-            workGroup.ShutdownGracefullyAsync().Wait();
-            bossGroup.ShutdownGracefullyAsync().Wait();
+            if (isRunning)
+            {
+                isRunning = false;
+                if (boundChannel != null)
+                    await boundChannel.CloseAsync();
+
+                if (workGroup != null)
+                {
+                    workGroup?.ShutdownGracefullyAsync().Wait();
+                }
+                if (bossGroup != null)
+                    bossGroup.ShutdownGracefullyAsync().Wait();
+            }
         }
 
         /// <summary>

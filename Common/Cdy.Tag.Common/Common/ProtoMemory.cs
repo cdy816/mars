@@ -23,7 +23,7 @@ namespace Cdy.Tag
         private Google.Protobuf.CodedOutputStream outputStream;
         private Google.Protobuf.CodedInputStream inputStream;
         private byte[] mDataBuffer;
-        private int position = 0;
+        //private int position = 0;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -38,7 +38,7 @@ namespace Cdy.Tag
         public ProtoMemory(int size)
         {
             mDataBuffer = new byte[size];
-            position = 0;
+            //position = 0;
             outputStream = new Google.Protobuf.CodedOutputStream(mDataBuffer);
             inputStream = new Google.Protobuf.CodedInputStream(mDataBuffer);
         }
@@ -50,7 +50,7 @@ namespace Cdy.Tag
         public ProtoMemory(byte[] data)
         {
             mDataBuffer = data;
-            position = 0;
+            //position = 0;
             outputStream = new Google.Protobuf.CodedOutputStream(mDataBuffer);
             inputStream = new Google.Protobuf.CodedInputStream(mDataBuffer);
         }

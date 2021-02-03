@@ -198,7 +198,7 @@ namespace DBHighApi.Api
         /// <param name="e"></param>
         private  void Manager_ValueUpdateEvent(object sender, EventArgs e)
         {
-            resetEvent.Set();
+            resetEvent?.Set();
         }
 
         /// <summary>
@@ -1093,6 +1093,7 @@ namespace DBHighApi.Api
             mIsClosed = true;
             resetEvent.Set();
             resetEvent.Close();
+            resetEvent = null;
             base.Stop();
         }
 

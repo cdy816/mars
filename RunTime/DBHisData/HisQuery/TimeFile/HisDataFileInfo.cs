@@ -159,7 +159,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        private static object Read<T>(HisDataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
+        public static object Read<T>(this HisDataFileInfo file, int tid, DateTime time, QueryValueMatchType type)
         {
             using (var vff = file.GetFileSeriser())
             {
@@ -177,7 +177,7 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        private static HisQueryResult<T> Read<T>(HisDataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
+        public static HisQueryResult<T> Read<T>(this HisDataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type)
         {
             HisQueryResult<T> re = new HisQueryResult<T>(times.Count);
             Read<T>(file, tid, times, type, re);
@@ -193,7 +193,7 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        private static void Read<T>(HisDataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
+        public static void Read<T>(this HisDataFileInfo file, int tid, List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
         {
             using (var vff = file.GetFileSeriser())
             {
@@ -776,7 +776,7 @@ namespace Cdy.Tag
 
                         if (datasize > 0)
                         {
-                            vmm = new MarshalMemoryBlock(datasize);
+                            vmm = new MarshalMemoryBlock(datasize,datasize);
                             MemoryHelper.MemoryCopy(mdataBuffer, +dataloc, vmm.Buffers[0], 0, datasize);
                         }
                     }

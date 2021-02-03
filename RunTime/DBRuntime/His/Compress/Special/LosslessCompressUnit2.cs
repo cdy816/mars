@@ -2112,6 +2112,14 @@ namespace Cdy.Tag
                 var vtmp = ReadOtherDatablockAction(1);
 
                 TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
+
+                //如果为空值，则说明跨数据文件了，则取第最后一个有效值用作后一个值
+                if (val.HasValue && val.Value.IsEmpty())
+                {
+                    val = new TagHisValue<T>() { Value = value[value.Count - 1], Quality = qulityes[qulityes.Count - 1], Time = timers[timers.Count-1].AddMilliseconds(-timers[timers.Count - 1].Millisecond) };
+                }
+
+              
                 foreach (var vtime in greatlast)
                 {
                     switch (type)

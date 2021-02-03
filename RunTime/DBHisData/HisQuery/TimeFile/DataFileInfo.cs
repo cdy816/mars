@@ -535,6 +535,10 @@ namespace Cdy.Tag
                         do
                         {
                             dindex++;
+                            
+                            if (dindex > 47) 
+                                return TagHisValue<T>.Empty;
+
                             var datas = datafile.ReadTagDataBlock(tid, offset, dindex, out ttick);
                             if (datas == null) return null;
                             oval = DeCompressDataBlockRawValue<T>(datas, 1);

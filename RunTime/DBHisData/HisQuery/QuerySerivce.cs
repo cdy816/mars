@@ -119,9 +119,12 @@ namespace Cdy.Tag
                 {
                     if (mPreFile != null)
                     {
-                        if (mPreFile is HisDataFileInfo) (mPreFile as HisDataFileInfo).Read(id, mtime, type, result);
+                        if (mPreFile is HisDataFileInfo)
+                        {
+                            (mPreFile as HisDataFileInfo).Read(id, mtime, type, result);
+                        }
                         else
-                        mPreFile.Read<T>(id, mtime, type, result);
+                            mPreFile.Read<T>(id, mtime, type, result);
                         mPreFile = null;
                         mtime.Clear();
                     }

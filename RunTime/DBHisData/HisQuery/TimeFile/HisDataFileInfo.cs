@@ -246,39 +246,45 @@ namespace Cdy.Tag
             foreach (var vv in data)
             {
                 var index = vv.Value.Item2;
-                DeCompressDataBlockValue<T>(vv.Key, vv.Value.Item1, timetick, type, res, new Func<byte, object>((tp) => {
 
-                    object oval = null;
-                    int ttick = 0;
-                    int dindex = index;
-                    if (tp == 0)
+                //foreach (var vtime in vv.Value.Item1)
+                //{
+                //    vv.Key.Position = 0;
+                    DeCompressDataBlockValue<T>(vv.Key, vv.Value.Item1, timetick, type, res, new Func<byte, object>((tp) =>
                     {
-                        //往前读最后一个有效值
-                        do
-                        {
-                            dindex--;
-                            if (dindex < 0) return TagHisValue<T>.Empty;
-                            var datas = ReadTagDataBlock(datafile,tid, offset, dindex, out ttick);
-                            if (datas == null) return null;
-                            oval = DeCompressDataBlockRawValue<T>(datas, 0);
-                        }
-                        while (oval == null);
-                    }
-                    else
-                    {
-                        //往后读第一个有效值
-                        do
-                        {
-                            dindex++;
-                            var datas = ReadTagDataBlock(datafile,tid, offset, dindex, out ttick);
-                            if (datas == null) return null;
-                            oval = DeCompressDataBlockRawValue<T>(datas, 1);
-                        }
-                        while (oval == null);
-                    }
-                    return oval;
 
-                }));
+                        object oval = null;
+                        int ttick = 0;
+                        int dindex = index;
+                        if (tp == 0)
+                        {
+                            //往前读最后一个有效值
+                            do
+                            {
+                                dindex--;
+                                if (dindex < 0) return TagHisValue<T>.Empty;
+                                var datas = ReadTagDataBlock(datafile, tid, offset, dindex, out ttick);
+                                if (datas == null) return null;
+                                oval = DeCompressDataBlockRawValue<T>(datas, 0);
+                            }
+                            while (oval == null);
+                        }
+                        else
+                        {
+                            //往后读第一个有效值
+                            do
+                            {
+                                dindex++;
+                                var datas = ReadTagDataBlock(datafile, tid, offset, dindex, out ttick);
+                                if (datas == null) return null;
+                                oval = DeCompressDataBlockRawValue<T>(datas, 1);
+                            }
+                            while (oval == null);
+                        }
+                        return oval;
+
+                    }));
+                //}
             }
             foreach (var vv in data)
             {
@@ -352,7 +358,6 @@ namespace Cdy.Tag
             //sw.Start();
             foreach (var vv in ReadTagDataBlock2(datafile,tid, offset, startTime, endTime))
             {
-
                 DeCompressDataBlockAllValue(vv.Item1, vv.Item2, vv.Item3, vv.Item4, result);
                 vv.Item1.Dispose();
             }
@@ -729,6 +734,10 @@ namespace Cdy.Tag
 
             var headdata = datafile.Read(offset + blockpointer + tagIndex * blockcount * 12, blockcount * 12);
 
+            long mLastBuffer=0;
+            int mLastDataLoc=0;
+            int mLastDataSize = 0;
+            MarshalMemoryBlock vmm = null;
             foreach (var vdd in dataTimes)
             {
                 var ttmp = (vdd - startTime).TotalMinutes;
@@ -750,7 +759,7 @@ namespace Cdy.Tag
                     ////var datasize = datafile.ReadInt(dataPointer); //读取DataBlock 的大小
                     //var vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);
 
-                    MarshalMemoryBlock vmm = null;
+                   
                     if (dataPointer > 0)
                     {
                         vmm = GetDataMemory(datafile, dataPointerbase, dataPointer);
@@ -774,10 +783,18 @@ namespace Cdy.Tag
                             dataloc = (int)(dp - mbufferadderss + 4);
                         }
 
-                        if (datasize > 0)
+                        if (datasize > 0 && (mLastBuffer!= mbufferadderss || mLastDataLoc!=dataloc || mLastDataSize!=datasize))
                         {
                             vmm = new MarshalMemoryBlock(datasize,datasize);
-                            MemoryHelper.MemoryCopy(mdataBuffer, +dataloc, vmm.Buffers[0], 0, datasize);
+                            MemoryHelper.MemoryCopy(mdataBuffer, dataloc, vmm.Buffers[0], 0, datasize);
+
+                            mLastBuffer = mbufferadderss;
+                            mLastDataLoc = dataloc;
+                            mLastDataSize = datasize;
+                        }
+                        else if(datasize<=0)
+                        {
+                            vmm = null;
                         }
                     }
 
@@ -938,8 +955,8 @@ namespace Cdy.Tag
 
                         if (datasize > 0)
                         {
-                            vmm = new MarshalMemoryBlock(datasize);
-                            MemoryHelper.MemoryCopy(mdataBuffer, + dataloc, vmm.Buffers[0], 0, datasize);
+                            vmm = new MarshalMemoryBlock(datasize, datasize);
+                            MemoryHelper.MemoryCopy(mdataBuffer, dataloc, vmm.Buffers[0], 0, datasize);
                         }
                     }
                     if (vmm != null)

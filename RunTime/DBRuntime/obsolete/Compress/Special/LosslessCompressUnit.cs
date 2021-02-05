@@ -2127,76 +2127,138 @@ namespace Cdy.Tag
             var pval1 = (time - startTime).TotalMilliseconds;
             var tval1 = (endTime - startTime).TotalMilliseconds;
 
-            if (typeof(T) == typeof(IntPointData))
+            string tname = typeof(T).Name;
+            switch (tname)
             {
-                var sval1 = (IntPointData)((object)value1);
-                var sval2 = (IntPointData)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                return new IntPointData((int)val1, (int)val2);
-            }
-            else if (typeof(T) == typeof(UIntPointData))
-            {
-                var sval1 = (UIntPointData)((object)value1);
-                var sval2 = (UIntPointData)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                return new UIntPointData((uint)val1, (uint)val2);
-            }
-            else if (typeof(T) == typeof(LongPointData))
-            {
-                var sval1 = (LongPointData)((object)value1);
-                var sval2 = (LongPointData)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                return new LongPointData((long)val1, (long)val2);
-            }
-            else if (typeof(T) == typeof(ULongPointData))
-            {
-                var sval1 = (ULongPointData)((object)value1);
-                var sval2 = (ULongPointData)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                return new ULongPointData((ulong)val1, (ulong)val2);
-            }
-            else if (typeof(T) == typeof(IntPoint3Data))
-            {
-                var sval1 = (IntPoint3Data)((object)value1);
-                var sval2 = (IntPoint3Data)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
-                return new IntPoint3Data((int)val1, (int)val2, (int)val3);
-            }
-            else if (typeof(T) == typeof(UIntPoint3Data))
-            {
-                var sval1 = (UIntPoint3Data)((object)value1);
-                var sval2 = (UIntPoint3Data)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
-                return new UIntPoint3Data((uint)val1, (uint)val2, (uint)val3);
-            }
-            else if (typeof(T) == typeof(LongPoint3Data))
-            {
-                var sval1 = (LongPoint3Data)((object)value1);
-                var sval2 = (LongPoint3Data)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
-                return new LongPoint3Data((long)val1, (long)val2, (long)val3);
-            }
-            else if (typeof(T) == typeof(ULongPoint3Data))
-            {
-                var sval1 = (ULongPoint3Data)((object)value1);
-                var sval2 = (ULongPoint3Data)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
-                return new ULongPoint3Data((ulong)val1, (ulong)val2, (ulong)val3);
+                case "IntPointData":
+                    var sval1 = (IntPointData)((object)value1);
+                    var sval2 = (IntPointData)((object)value2);
+                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                    var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                    return new IntPointData((int)val1, (int)val2);
+                case "UIntPointData":
+                    var usval1 = (UIntPointData)((object)value1);
+                    var usval2 = (UIntPointData)((object)value2);
+                    var uval1 = pval1 / tval1 * (Convert.ToDouble(usval2.X) - Convert.ToDouble(usval1.X)) + Convert.ToDouble(usval1.X);
+                    var uval2 = pval1 / tval1 * (Convert.ToDouble(usval2.Y) - Convert.ToDouble(usval1.Y)) + Convert.ToDouble(usval1.Y);
+                    return new UIntPointData((uint)uval1, (uint)uval2);
+                case "LongPointData":
+                    var lsval1 = (LongPointData)((object)value1);
+                    var lsval2 = (LongPointData)((object)value2);
+                    var lval1 = pval1 / tval1 * (Convert.ToDouble(lsval2.X) - Convert.ToDouble(lsval1.X)) + Convert.ToDouble(lsval1.X);
+                    var lval2 = pval1 / tval1 * (Convert.ToDouble(lsval2.Y) - Convert.ToDouble(lsval1.Y)) + Convert.ToDouble(lsval1.Y);
+                    return new LongPointData((long)lval1, (long)lval2);
+                case "ULongPointData":
+                    var ulsval1 = (ULongPointData)((object)value1);
+                    var ulsval2 = (ULongPointData)((object)value2);
+                    var ulval1 = pval1 / tval1 * (Convert.ToDouble(ulsval2.X) - Convert.ToDouble(ulsval1.X)) + Convert.ToDouble(ulsval1.X);
+                    var ulval2 = pval1 / tval1 * (Convert.ToDouble(ulsval2.Y) - Convert.ToDouble(ulsval1.Y)) + Convert.ToDouble(ulsval1.Y);
+                    return new ULongPointData((ulong)ulval1, (ulong)ulval2);
+                case "IntPoint3Data":
+                    var s3val1 = (IntPoint3Data)((object)value1);
+                    var s3val2 = (IntPoint3Data)((object)value2);
+                    var v3al1 = pval1 / tval1 * (Convert.ToDouble(s3val2.X) - Convert.ToDouble(s3val1.X)) + Convert.ToDouble(s3val1.X);
+                    var v3al2 = pval1 / tval1 * (Convert.ToDouble(s3val2.Y) - Convert.ToDouble(s3val1.Y)) + Convert.ToDouble(s3val1.Y);
+                    var v3al3 = pval1 / tval1 * (Convert.ToDouble(s3val2.Z) - Convert.ToDouble(s3val1.Z)) + Convert.ToDouble(s3val1.Z);
+                    return new IntPoint3Data((int)v3al1, (int)v3al2, (int)v3al3);
+                case "UIntPoint3Data":
+                    var us3val1 = (UIntPoint3Data)((object)value1);
+                    var us3val2 = (UIntPoint3Data)((object)value2);
+                    var uv3al1 = pval1 / tval1 * (Convert.ToDouble(us3val2.X) - Convert.ToDouble(us3val1.X)) + Convert.ToDouble(us3val1.X);
+                    var uva3l2 = pval1 / tval1 * (Convert.ToDouble(us3val2.Y) - Convert.ToDouble(us3val1.Y)) + Convert.ToDouble(us3val1.Y);
+                    var uva3l3 = pval1 / tval1 * (Convert.ToDouble(us3val2.Z) - Convert.ToDouble(us3val1.Z)) + Convert.ToDouble(us3val1.Z);
+                    return new UIntPoint3Data((uint)uv3al1, (uint)uva3l2, (uint)uva3l3);
+                case "LongPoint3Data":
+                    var lpsval1 = (LongPoint3Data)((object)value1);
+                    var lpsval2 = (LongPoint3Data)((object)value2);
+                    var lpval1 = pval1 / tval1 * (Convert.ToDouble(lpsval2.X) - Convert.ToDouble(lpsval1.X)) + Convert.ToDouble(lpsval1.X);
+                    var lpval2 = pval1 / tval1 * (Convert.ToDouble(lpsval2.Y) - Convert.ToDouble(lpsval1.Y)) + Convert.ToDouble(lpsval1.Y);
+                    var lpval3 = pval1 / tval1 * (Convert.ToDouble(lpsval2.Z) - Convert.ToDouble(lpsval1.Z)) + Convert.ToDouble(lpsval1.Z);
+                    return new LongPoint3Data((long)lpval1, (long)lpval2, (long)lpval3);
+                case "ULongPoint3Data":
+                    var ulpsval1 = (ULongPoint3Data)((object)value1);
+                    var ulpsval2 = (ULongPoint3Data)((object)value2);
+                    var ulpval1 = pval1 / tval1 * (Convert.ToDouble(ulpsval2.X) - Convert.ToDouble(ulpsval1.X)) + Convert.ToDouble(ulpsval1.X);
+                    var ulpval2 = pval1 / tval1 * (Convert.ToDouble(ulpsval2.Y) - Convert.ToDouble(ulpsval1.Y)) + Convert.ToDouble(ulpsval1.Y);
+                    var ulpval3 = pval1 / tval1 * (Convert.ToDouble(ulpsval2.Z) - Convert.ToDouble(ulpsval1.Z)) + Convert.ToDouble(ulpsval1.Z);
+                    return new ULongPoint3Data((ulong)ulpval1, (ulong)ulpval2, (ulong)ulpval3);
             }
 
             return default(T);
+
+            //var pval1 = (time - startTime).TotalMilliseconds;
+            //var tval1 = (endTime - startTime).TotalMilliseconds;
+
+            //if (typeof(T) == typeof(IntPointData))
+            //{
+            //    var sval1 = (IntPointData)((object)value1);
+            //    var sval2 = (IntPointData)((object)value2);
+            //    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+            //    var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+            //    return new IntPointData((int)val1, (int)val2);
+            //}
+            //else if (typeof(T) == typeof(UIntPointData))
+            //{
+            //    var sval1 = (UIntPointData)((object)value1);
+            //    var sval2 = (UIntPointData)((object)value2);
+            //    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+            //    var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+            //    return new UIntPointData((uint)val1, (uint)val2);
+            //}
+            //else if (typeof(T) == typeof(LongPointData))
+            //{
+            //    var sval1 = (LongPointData)((object)value1);
+            //    var sval2 = (LongPointData)((object)value2);
+            //    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+            //    var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+            //    return new LongPointData((long)val1, (long)val2);
+            //}
+            //else if (typeof(T) == typeof(ULongPointData))
+            //{
+            //    var sval1 = (ULongPointData)((object)value1);
+            //    var sval2 = (ULongPointData)((object)value2);
+            //    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+            //    var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+            //    return new ULongPointData((ulong)val1, (ulong)val2);
+            //}
+            //else if (typeof(T) == typeof(IntPoint3Data))
+            //{
+            //    var sval1 = (IntPoint3Data)((object)value1);
+            //    var sval2 = (IntPoint3Data)((object)value2);
+            //    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+            //    var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+            //    var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
+            //    return new IntPoint3Data((int)val1, (int)val2, (int)val3);
+            //}
+            //else if (typeof(T) == typeof(UIntPoint3Data))
+            //{
+            //    var sval1 = (UIntPoint3Data)((object)value1);
+            //    var sval2 = (UIntPoint3Data)((object)value2);
+            //    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+            //    var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+            //    var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
+            //    return new UIntPoint3Data((uint)val1, (uint)val2, (uint)val3);
+            //}
+            //else if (typeof(T) == typeof(LongPoint3Data))
+            //{
+            //    var sval1 = (LongPoint3Data)((object)value1);
+            //    var sval2 = (LongPoint3Data)((object)value2);
+            //    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+            //    var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+            //    var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
+            //    return new LongPoint3Data((long)val1, (long)val2, (long)val3);
+            //}
+            //else if (typeof(T) == typeof(ULongPoint3Data))
+            //{
+            //    var sval1 = (ULongPoint3Data)((object)value1);
+            //    var sval2 = (ULongPoint3Data)((object)value2);
+            //    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+            //    var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+            //    var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
+            //    return new ULongPoint3Data((ulong)val1, (ulong)val2, (ulong)val3);
+            //}
+
+            //return default(T);
         }
 
         

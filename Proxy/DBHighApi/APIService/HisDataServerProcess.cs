@@ -64,7 +64,7 @@ namespace DBHighApi.Api
         {
             if (data.ReferenceCount == 0)
             {
-                Debug.Print("invailed data buffer in HisDataServerProcess");
+               LoggerService.Service.Warn("ProcessData","invailed data buffer in HisDataServerProcess");
                 return;
             }
             byte cmd = data.ReadByte();

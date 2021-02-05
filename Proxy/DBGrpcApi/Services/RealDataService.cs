@@ -85,6 +85,12 @@ namespace DBGrpcApi
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public override Task<GetRealValueReply> GetRealValueById(GetRealValueByIdRequest request, ServerCallContext context)
         {
             if (SecurityManager.Manager.IsLogin(request.Token) && SecurityManager.Manager.CheckReaderPermission(request.Token, request.Group))

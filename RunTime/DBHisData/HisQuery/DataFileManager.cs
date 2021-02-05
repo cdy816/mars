@@ -117,6 +117,11 @@ namespace Cdy.Tag
         /// </summary>
         public string BackHisDataPath { get; set; }
 
+        /// <summary>
+        /// 最后的日志时间
+        /// </summary>
+        public DateTime LastLogTime { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -463,15 +468,15 @@ namespace Cdy.Tag
         /// <param name="file"></param>
         private void ParseLogFile(string sfileName)
         {
-
             var vname = System.IO.Path.GetFileNameWithoutExtension(sfileName);
-
             DateTime dt = new DateTime(int.Parse(vname.Substring(0, 4)), int.Parse(vname.Substring(4, 2)), int.Parse(vname.Substring(6, 2)), int.Parse(vname.Substring(8, 2)), int.Parse(vname.Substring(10, 2)), int.Parse(vname.Substring(12, 2)));
             int timelen = int.Parse(vname.Substring(14, 3));
 
             if(!mLogFileMaps.ContainsKey(sfileName))
             {
-                mLogFileMaps.Add(sfileName, new LogFileInfo() { FileName = sfileName, StartTime = dt, EndTime = dt.AddSeconds(timelen) });
+                var ddt = dt.AddSeconds(timelen);
+                mLogFileMaps.Add(sfileName, new LogFileInfo() { FileName = sfileName, StartTime = dt, EndTime = ddt });
+                LastLogTime = ddt > LastLogTime ? ddt : LastLogTime;
             }
         }
 

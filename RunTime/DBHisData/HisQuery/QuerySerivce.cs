@@ -281,11 +281,8 @@ namespace Cdy.Tag
         {
             try
             {
-                //Stopwatch sw = new Stopwatch();
-                //sw.Start();
-                //long ltmp=0,ltmp0=0, ltmp1=0, ltmp2=0;
-                DateTime etime = endTime,stime = startTime;
 
+                DateTime etime = endTime,stime = startTime;
                 DateTime memoryTime = DateTime.MaxValue;
                 if(IsCanQueryFromMemory())
                 {
@@ -298,13 +295,18 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    if(endTime>memoryTime)
+                    var fileMananger = GetFileManager();
+
+                    ////优先从日志中读取历史记录
+                    //memoryTime = fileMananger.LastLogTime > memoryTime ? fileMananger.LastLogTime : memoryTime;
+
+                    if (endTime>memoryTime)
                     {
                         etime = memoryTime;
                     }
 
                     Tuple<DateTime, DateTime> mLogFileTimes;
-                    var vfiles = GetFileManager().GetDataFiles(stime, etime, out mLogFileTimes, id);
+                    var vfiles = fileMananger.GetDataFiles(stime, etime, out mLogFileTimes, id);
                     //ltmp0 = sw.ElapsedMilliseconds;
                     //从历史记录中读取数据
                     foreach(var e in vfiles)
@@ -317,15 +319,6 @@ namespace Cdy.Tag
                         }
                         else { e.ReadAllValue(id, sstart, eend, result); }
                     }
-
-                    //vfiles.ForEach(e =>
-                    //{
-                    //    DateTime sstart = e.StartTime > startTime ? e.StartTime : startTime;
-                    //    DateTime eend = e.EndTime > endTime ? endTime : e.EndTime;
-                    //    e.ReadAllValue(id, sstart, eend, result);
-                    //});
-
-                    //ltmp1 = sw.ElapsedMilliseconds;
 
                     //从日志文件中读取数据
                     if (mLogFileTimes.Item1 < mLogFileTimes.Item2)

@@ -61,6 +61,7 @@ namespace DbInRunWebApi.Controllers
         public HisValue Get([FromBody] HisDataRequest request)
         {
             var tag  = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
+            if (tag == null) return null;
             object res;
             HisValue revals=null;
             switch (tag.Type)
@@ -161,6 +162,7 @@ namespace DbInRunWebApi.Controllers
         public HisValue GetByTimeSpan([FromBody] HisDataRequest2 request)
         {
             var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
+            if (tag == null) return null;
             object res;
             HisValue revals = null;
             switch (tag.Type)
@@ -271,6 +273,7 @@ namespace DbInRunWebApi.Controllers
         public HisValue GetAllValue([FromBody] AllHisDataRequest request)
         {
             var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
+            if (tag == null) return null;
             object res;
             HisValue revals = null;
             switch (tag.Type)

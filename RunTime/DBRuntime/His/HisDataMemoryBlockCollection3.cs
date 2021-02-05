@@ -96,6 +96,11 @@ namespace DBRuntime.His
         }
 
         /// <summary>
+        /// 相对基准时间
+        /// </summary>
+        public DateTime BaseTime { get; set; }
+
+        /// <summary>
         /// 
         /// </summary>
         public DateTime CurrentDatetime { get; set; }

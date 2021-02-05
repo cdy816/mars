@@ -106,6 +106,7 @@ namespace DBGrpcApi
                     hdp.Values.Add(new HisDataPoint() {  Time = time.ToBinary(), Value = val.ToString() });
                 }
             }
+            result.Values.Add(hdp);
         }
 
         /// <summary>
@@ -120,6 +121,7 @@ namespace DBGrpcApi
         private void ReadTagHisValue(string tag,DateTime startTime,DateTime endTime,int duration,int type, HisDataCollectionReplay result)
         {
             var tgs = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(tag);
+            if (tgs == null) return;
             object res;
             switch (tgs.Type)
             {
@@ -216,6 +218,8 @@ namespace DBGrpcApi
         private void ReadTagAllHisValue(string tag, DateTime startTime, DateTime endTime,  HisDataCollectionReplay result)
         {
             var tgs = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(tag);
+            if (tgs == null) return;
+
             object res;
             switch (tgs.Type)
             {

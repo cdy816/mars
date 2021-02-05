@@ -100,19 +100,22 @@ namespace DBHighApi.Api
         /// <param name="data"></param>
         public virtual void ProcessData(string client, IByteBuffer data)
         {
-            data.Retain();
-            if (mDatasCach.ContainsKey(client))
+            if (data != null)
             {
-                mDatasCach[client].Enqueue(data);
+                data.Retain();
+                if (mDatasCach.ContainsKey(client))
+                {
+                    mDatasCach[client].Enqueue(data);
+                }
+                else
+                {
+                    var vq = new Queue<IByteBuffer>();
+                    vq.Enqueue(data);
+                    lock (mLockObj)
+                        mDatasCach.Add(client, vq);
+                }
+                resetEvent.Set();
             }
-            else
-            {
-                var vq = new Queue<IByteBuffer>();
-                vq.Enqueue(data);
-                lock(mLockObj)
-                mDatasCach.Add(client, vq);
-            }
-            resetEvent.Set();
         }
 
         /// <summary>

@@ -1327,352 +1327,300 @@ namespace Cdy.Tag
         /// <returns></returns>
         protected virtual List<T> DeCompressValue<T>(byte[] value, int count)
         {
+            string tname = typeof(T).Name;
+            switch (tname)
+            {
+                case "Boolean":
+                    using (MemorySpan block = new MemorySpan(value))
+                    {
+                        List<bool> bre = new List<bool>();
+                        var rtmp = block.ToByteList();
 
-            if (typeof(T) == typeof(byte))
-            {
-                return value.ToList() as List<T>;
-            }
-            else if (typeof(T) == typeof(short))
-            {
-                List<short> re = new List<short>();
-                using (ProtoMemory memory = new ProtoMemory(value))
-                {
-                    var vv = (short)memory.ReadSInt32();
-                    re.Add(vv);
-                    for (int i = 1; i < count; i++)
-                    {
-                        var vss = (short)memory.ReadSInt32();
-                        vv = (short)(vv + vss);
-                        re.Add((short)(vv));
-                       
-                    }
-                }
-                return re as List<T>;
-
-            }
-            else if (typeof(T) == typeof(ushort))
-            {
-                List<ushort> re = new List<ushort>();
-                using (ProtoMemory memory = new ProtoMemory(value))
-                {
-                    var vv = (ushort)memory.ReadSInt32();
-                    re.Add((ushort)vv);
-                    for (int i = 1; i < count; i++)
-                    {
-                        var vss = (short)memory.ReadSInt32();
-                        vv = (ushort)(vv + vss);
-                        re.Add((ushort)(vv));
-                       
-                    }
-                }
-                return re as List<T>;
-
-            }
-            else if (typeof(T) == typeof(int))
-            {
-                List<int> re = new List<int>();
-                using (ProtoMemory memory = new ProtoMemory(value))
-                {
-                    var vv = (int)memory.ReadInt32();
-                    re.Add(vv);
-                    for (int i = 1; i < count; i++)
-                    {
-                        var vss = (int)memory.ReadSInt32();
-                        vv= (int)(vv + vss);
-                        re.Add(vv);
-                  
-                    }
-                }
-                return re as List<T>;
-            }
-            else if (typeof(T) == typeof(uint))
-            {
-                List<uint> re = new List<uint>();
-                using (ProtoMemory memory = new ProtoMemory(value))
-                {
-                    var vv = (uint)memory.ReadInt32();
-                    re.Add((uint)vv);
-                    for (int i = 1; i < count; i++)
-                    {
-                        var vss = memory.ReadSInt32();
-                        vv = (uint)(vv + vss);
-                        re.Add(vv);
-                    }
-                }
-                return re as List<T>;
-            }
-            else if (typeof(T) == typeof(long))
-            {
-                List<long> re = new List<long>();
-                using (ProtoMemory memory = new ProtoMemory(value))
-                {
-                    var vv = (long)memory.ReadInt64();
-                    re.Add(vv);
-                    for (int i = 1; i < count; i++)
-                    {
-                        var vss = (long)memory.ReadSInt64();
-                        vv = (long)(vv + vss);
-                        re.Add(vv);
-                       
-                    }
-                }
-                return re as List<T>;
-            }
-            else if (typeof(T) == typeof(ulong))
-            {
-                List<ulong> re = new List<ulong>();
-                using (ProtoMemory memory = new ProtoMemory(value))
-                {
-                    var vv = (ulong)memory.ReadInt64();
-                    re.Add(vv);
-                    for (int i = 1; i < count; i++)
-                    {
-                        var vss = memory.ReadSInt64();
-                        vv = (ulong)((long)vv + vss);
-                        re.Add(vv);
-                    }
-                }
-                return re as List<T>;
-            }
-            else if (typeof(T) == typeof(DateTime))
-            {
-                List<DateTime> re = new List<DateTime>();
-                using (ProtoMemory memory = new ProtoMemory(value))
-                {
-                    var vv = (ulong)memory.ReadInt64();
-                    re.Add(MemoryHelper.ReadDateTime(BitConverter.GetBytes(vv)));
-                    for (int i = 1; i < count; i++)
-                    {
-                        var vss = memory.ReadSInt64();
-                        vv = (ulong)((long)vv + vss);
-                        re.Add(MemoryHelper.ReadDateTime(BitConverter.GetBytes(vv)));
-                    }
-                }
-                return re as List<T>;
-            }
-            else if (typeof(T) == typeof(double))
-            {
-                return  DoubleCompressBuffer.Decompress(value) as List<T>;
-
-                //using (MemorySpan block = new MemorySpan(value))
-                //{
-                //    return block.ToDoubleList() as List<T>;
-                //}
-            }
-            else if (typeof(T) == typeof(float))
-            {
-                return FloatCompressBuffer.Decompress(value) as List<T>;
-                //using (MemorySpan block = new MemorySpan(value))
-                //{
-                //    return block.ToFloatList() as List<T>;
-                //}
-            }
-            else if (typeof(T) == typeof(string))
-            {
-                return DeCompressToStrings(value) as List<T>;
-                //using (MemorySpan block = new MemorySpan(value))
-                //{
-                //    return block.ToStringList(Encoding.Unicode) as List<T>;
-                //}
-            }
-            else if (typeof(T) == typeof(bool))
-            {
-                using (MemorySpan block = new MemorySpan(value))
-                {
-                    List<bool> re = new List<bool>();
-                    var rtmp = block.ToByteList();
-
-                    foreach (var vv in rtmp)
-                    {
-                        bool bval = ((vv & 0x80) >> 7) > 0;
-                        byte bcount = (byte)(vv & 0x7F);
-                        for (int i = 0; i < bcount; i++)
+                        foreach (var vv in rtmp)
                         {
-                            re.Add(bval);
+                            bool bval = ((vv & 0x80) >> 7) > 0;
+                            byte bcount = (byte)(vv & 0x7F);
+                            for (int i = 0; i < bcount; i++)
+                            {
+                                bre.Add(bval);
+                            }
+                        }
+                        return bre as List<T>;
+                    }
+                case "Byte":
+                    return value.ToList() as List<T>;
+                case "Int16":
+                    List<short> re = new List<short>();
+                    using (ProtoMemory memory = new ProtoMemory(value))
+                    {
+                        var vv = (short)memory.ReadSInt32();
+                        re.Add(vv);
+                        for (int i = 1; i < count; i++)
+                        {
+                            var vss = (short)memory.ReadSInt32();
+                            vv = (short)(vv + vss);
+                            re.Add((short)(vv));
+
                         }
                     }
                     return re as List<T>;
-                }
-            }
-            else if (typeof(T) == typeof(IntPointData))
-            {
-                List<IntPointData> re = new List<IntPointData>();
-                using (ProtoMemory memory = new ProtoMemory(value))
-                {
-                    var vv = (int)memory.ReadInt32();
-                    var vv2 = (int)memory.ReadInt32();
-                    re.Add(new IntPointData(vv,vv2));
-                    for (int i = 1; i < count; i++)
+                case "UInt16":
+                    List<ushort> ure = new List<ushort>();
+                    using (ProtoMemory memory = new ProtoMemory(value))
                     {
-                        var vss = (int)memory.ReadSInt32();
-                        var vss2 = (int)memory.ReadSInt32();
-                        vv = (vv + vss);
-                        vv2 = (vv2 + vss2);
-                        re.Add(new IntPointData((int)vv, (int)vv2));
-                        
-                    }
-                }
-                return re as List<T>;
-            }
-            else if (typeof(T) == typeof(UIntPointData))
-            {
-                List<UIntPointData> re = new List<UIntPointData>();
-                using (ProtoMemory memory = new ProtoMemory(value))
-                {
-                    var vv = (int)memory.ReadInt32();
-                    var vv2 = (int)memory.ReadInt32();
-                    re.Add(new UIntPointData((uint)vv, (uint)vv2));
-                    for (int i = 1; i < count; i++)
-                    {
-                        var vss = (int)memory.ReadSInt32();
-                        var vss2 = (int)memory.ReadSInt32();
-                        vv = (vv + vss);
-                        vv2 = (vv2 + vss2);
-                        re.Add(new UIntPointData((uint)vv, (uint)vv2));
-                    }
-                }
-                return re as List<T>;
-            }
-            else if (typeof(T) == typeof(LongPointData))
-            {
-                List<LongPointData> re = new List<LongPointData>();
-                using (ProtoMemory memory = new ProtoMemory(value))
-                {
-                    var vv = (long)memory.ReadInt64();
-                    var vv2 = (long)memory.ReadInt64();
-                    re.Add(new LongPointData(vv, vv2));
-                    for (int i = 1; i < count; i++)
-                    {
-                        var vss = memory.ReadSInt64();
-                        var vss2 = memory.ReadSInt64();
-                        vv = (vv + vss);
-                        vv2 = (vv2 + vss2);
-                        re.Add(new LongPointData(vv, vv2));
-                       
-                    }
-                }
-                return re as List<T>;
-            }
-            else if (typeof(T) == typeof(ULongPointData))
-            {
-                List<ULongPointData> re = new List<ULongPointData>();
-                using (ProtoMemory memory = new ProtoMemory(value))
-                {
-                    var vv = memory.ReadInt64();
-                    var vv2 = memory.ReadInt64();
-                    re.Add(new ULongPointData((ulong)vv, (ulong)vv2));
-                    for (int i = 1; i < count; i++)
-                    {
-                        var vss = memory.ReadSInt64();
-                        var vss2 = memory.ReadSInt64();
-                        vv = (vv + vss);
-                        vv2 = (vv2 + vss2);
-                        re.Add(new ULongPointData((ulong)vv, (ulong)vv2));
-                        
-                    }
-                }
-                return re as List<T>;
-            }
-            else if (typeof(T) == typeof(IntPoint3Data))
-            {
-                List<IntPoint3Data> re = new List<IntPoint3Data>();
-                using (ProtoMemory memory = new ProtoMemory(value))
-                {
-                    var vv = (int)memory.ReadInt32();
-                    var vv2 = (int)memory.ReadInt32();
-                    var vv3 = (int)memory.ReadInt32();
-                    re.Add(new IntPoint3Data(vv, vv2,vv3));
-                    for (int i = 1; i < count; i++)
-                    {
-                        var vss = (int)memory.ReadSInt32();
-                        var vss2 = (int)memory.ReadSInt32();
-                        var vss3 = (int)memory.ReadSInt32();
+                        var vv = (ushort)memory.ReadSInt32();
+                        ure.Add((ushort)vv);
+                        for (int i = 1; i < count; i++)
+                        {
+                            var vss = (short)memory.ReadSInt32();
+                            vv = (ushort)(vv + vss);
+                            ure.Add((ushort)(vv));
 
-                        vv = (vv + vss);
-                        vv2 = (vv2 + vss2);
-                        vv3 = (vv3 + vss3);
-
-                        re.Add(new IntPoint3Data((int)vv, (int)vv2, (int)vv3));
-                       
+                        }
                     }
-                }
-                return re as List<T>;
-            }
-            else if (typeof(T) == typeof(UIntPoint3Data))
-            {
-                List<UIntPoint3Data> re = new List<UIntPoint3Data>();
-                using (ProtoMemory memory = new ProtoMemory(value))
-                {
-                    var vv = (int)memory.ReadInt32();
-                    var vv2 = (int)memory.ReadInt32();
-                    var vv3 = (int)memory.ReadInt32();
-                    re.Add(new UIntPoint3Data((uint)vv, (uint)vv2, (uint)vv3));
-                    for (int i = 1; i < count; i++)
+                    return ure as List<T>;
+                case "Int32":
+                    List<int> ire = new List<int>();
+                    using (ProtoMemory memory = new ProtoMemory(value))
                     {
-                        var vss = (int)memory.ReadSInt32();
-                        var vss2 = (int)memory.ReadSInt32();
-                        var vss3 = (int)memory.ReadSInt32();
+                        var vv = (int)memory.ReadInt32();
+                        ire.Add(vv);
+                        for (int i = 1; i < count; i++)
+                        {
+                            var vss = (int)memory.ReadSInt32();
+                            vv = (int)(vv + vss);
+                            ire.Add(vv);
 
-                        vv = (vv + vss);
-                        vv2 = (vv2 + vss2);
-                        vv3 = (vv3 + vss3);
-
-                        re.Add(new UIntPoint3Data((uint)vv, (uint)vv2, (uint)vv3));
-                       
+                        }
                     }
-                }
-                return re as List<T>;
-            }
-            else if (typeof(T) == typeof(LongPoint3Data))
-            {
-                List<LongPoint3Data> re = new List<LongPoint3Data>();
-                using (ProtoMemory memory = new ProtoMemory(value))
-                {
-                    var vv = (long)memory.ReadInt64();
-                    var vv2 = (long)memory.ReadInt64();
-                    var vv3 = (long)memory.ReadInt64();
-                    re.Add(new LongPoint3Data((long)vv, (long)vv2, (long)vv3));
-                    for (int i = 1; i < count; i++)
+                    return ire as List<T>;
+                case "UInt32":
+                    List<uint> uire = new List<uint>();
+                    using (ProtoMemory memory = new ProtoMemory(value))
                     {
-                        var vss = memory.ReadInt64();
-                        var vss2 = memory.ReadInt64();
-                        var vss3 = memory.ReadInt64();
-                        vv = (vv + vss);
-                        vv2 = (vv2 + vss2);
-                        vv3 = (vv3 + vss3);
-
-                        re.Add(new LongPoint3Data((long)vv, (long)vv2, (long)vv3));
-                        //vv = vss;
-                        //vv2 = vss2;
-                        //vv3 = vss3;
+                        var vv = (uint)memory.ReadInt32();
+                        uire.Add((uint)vv);
+                        for (int i = 1; i < count; i++)
+                        {
+                            var vss = memory.ReadSInt32();
+                            vv = (uint)(vv + vss);
+                            uire.Add(vv);
+                        }
                     }
-                }
-                return re as List<T>;
-            }
-            else if (typeof(T) == typeof(ULongPoint3Data))
-            {
-                List<ULongPoint3Data> re = new List<ULongPoint3Data>();
-                using (ProtoMemory memory = new ProtoMemory(value))
-                {
-                    var vv = (long)memory.ReadInt64();
-                    var vv2 = (long)memory.ReadInt64();
-                    var vv3 = (long)memory.ReadInt64();
-                    re.Add(new ULongPoint3Data((ulong)vv, (ulong)vv2, (ulong)vv3));
-                    for (int i = 1; i < count; i++)
+                    return uire as List<T>;
+                case "Int64":
+                    List<long> lre = new List<long>();
+                    using (ProtoMemory memory = new ProtoMemory(value))
                     {
-                        var vss = memory.ReadInt64();
-                        var vss2 = memory.ReadInt64();
-                        var vss3 = memory.ReadInt64();
-                        vv = (vv + vss);
-                        vv2 = (vv2 + vss2);
-                        vv3 = (vv3 + vss3);
-                        re.Add(new ULongPoint3Data((ulong)vv, (ulong)vv2, (ulong)vv3));
-                        //vv = vss;
-                        //vv2 = vss2;
-                        //vv3 = vss3;
+                        var vv = (long)memory.ReadInt64();
+                        lre.Add(vv);
+                        for (int i = 1; i < count; i++)
+                        {
+                            var vss = (long)memory.ReadSInt64();
+                            vv = (long)(vv + vss);
+                            lre.Add(vv);
+
+                        }
                     }
-                }
-                return re as List<T>;
+                    return lre as List<T>;
+                case "UInt64":
+                    List<ulong> ulre = new List<ulong>();
+                    using (ProtoMemory memory = new ProtoMemory(value))
+                    {
+                        var vv = (ulong)memory.ReadInt64();
+                        ulre.Add(vv);
+                        for (int i = 1; i < count; i++)
+                        {
+                            var vss = memory.ReadSInt64();
+                            vv = (ulong)((long)vv + vss);
+                            ulre.Add(vv);
+                        }
+                    }
+                    return ulre as List<T>;
+                case "Double":
+                    return DoubleCompressBuffer.Decompress(value) as List<T>;
+                case "Single":
+                    return FloatCompressBuffer.Decompress(value) as List<T>;
+                case "String":
+                    return DeCompressToStrings(value) as List<T>;
+                case "DateTime":
+                    List<DateTime> dtre = new List<DateTime>();
+                    using (ProtoMemory memory = new ProtoMemory(value))
+                    {
+                        var vv = (ulong)memory.ReadInt64();
+                        dtre.Add(MemoryHelper.ReadDateTime(BitConverter.GetBytes(vv)));
+                        for (int i = 1; i < count; i++)
+                        {
+                            var vss = memory.ReadSInt64();
+                            vv = (ulong)((long)vv + vss);
+                            dtre.Add(MemoryHelper.ReadDateTime(BitConverter.GetBytes(vv)));
+                        }
+                    }
+                    return dtre as List<T>;
+                case "IntPointData":
+                    List<IntPointData> lpre = new List<IntPointData>();
+                    using (ProtoMemory memory = new ProtoMemory(value))
+                    {
+                        var vv = (int)memory.ReadInt32();
+                        var vv2 = (int)memory.ReadInt32();
+                        lpre.Add(new IntPointData(vv, vv2));
+                        for (int i = 1; i < count; i++)
+                        {
+                            var vss = (int)memory.ReadSInt32();
+                            var vss2 = (int)memory.ReadSInt32();
+                            vv = (vv + vss);
+                            vv2 = (vv2 + vss2);
+                            lpre.Add(new IntPointData((int)vv, (int)vv2));
+
+                        }
+                    }
+                    return lpre as List<T>;
+                case "UIntPointData":
+                    List<UIntPointData> ulpre = new List<UIntPointData>();
+                    using (ProtoMemory memory = new ProtoMemory(value))
+                    {
+                        var vv = (int)memory.ReadInt32();
+                        var vv2 = (int)memory.ReadInt32();
+                        ulpre.Add(new UIntPointData((uint)vv, (uint)vv2));
+                        for (int i = 1; i < count; i++)
+                        {
+                            var vss = (int)memory.ReadSInt32();
+                            var vss2 = (int)memory.ReadSInt32();
+                            vv = (vv + vss);
+                            vv2 = (vv2 + vss2);
+                            ulpre.Add(new UIntPointData((uint)vv, (uint)vv2));
+                        }
+                    }
+                    return ulpre as List<T>;
+                case "LongPointData":
+                    List<LongPointData> lppre = new List<LongPointData>();
+                    using (ProtoMemory memory = new ProtoMemory(value))
+                    {
+                        var vv = (long)memory.ReadInt64();
+                        var vv2 = (long)memory.ReadInt64();
+                        lppre.Add(new LongPointData(vv, vv2));
+                        for (int i = 1; i < count; i++)
+                        {
+                            var vss = memory.ReadSInt64();
+                            var vss2 = memory.ReadSInt64();
+                            vv = (vv + vss);
+                            vv2 = (vv2 + vss2);
+                            lppre.Add(new LongPointData(vv, vv2));
+
+                        }
+                    }
+                    return lppre as List<T>;
+                case "ULongPointData":
+                    List<ULongPointData> ulppre = new List<ULongPointData>();
+                    using (ProtoMemory memory = new ProtoMemory(value))
+                    {
+                        var vv = memory.ReadInt64();
+                        var vv2 = memory.ReadInt64();
+                        ulppre.Add(new ULongPointData((ulong)vv, (ulong)vv2));
+                        for (int i = 1; i < count; i++)
+                        {
+                            var vss = memory.ReadSInt64();
+                            var vss2 = memory.ReadSInt64();
+                            vv = (vv + vss);
+                            vv2 = (vv2 + vss2);
+                            ulppre.Add(new ULongPointData((ulong)vv, (ulong)vv2));
+
+                        }
+                    }
+                    return ulppre as List<T>;
+                case "IntPoint3Data":
+                    List<IntPoint3Data> ip3re = new List<IntPoint3Data>();
+                    using (ProtoMemory memory = new ProtoMemory(value))
+                    {
+                        var vv = (int)memory.ReadInt32();
+                        var vv2 = (int)memory.ReadInt32();
+                        var vv3 = (int)memory.ReadInt32();
+                        ip3re.Add(new IntPoint3Data(vv, vv2, vv3));
+                        for (int i = 1; i < count; i++)
+                        {
+                            var vss = (int)memory.ReadSInt32();
+                            var vss2 = (int)memory.ReadSInt32();
+                            var vss3 = (int)memory.ReadSInt32();
+
+                            vv = (vv + vss);
+                            vv2 = (vv2 + vss2);
+                            vv3 = (vv3 + vss3);
+
+                            ip3re.Add(new IntPoint3Data((int)vv, (int)vv2, (int)vv3));
+
+                        }
+                    }
+                    return ip3re as List<T>;
+                case "UIntPoint3Data":
+                    List<UIntPoint3Data> uip3re = new List<UIntPoint3Data>();
+                    using (ProtoMemory memory = new ProtoMemory(value))
+                    {
+                        var vv = (int)memory.ReadInt32();
+                        var vv2 = (int)memory.ReadInt32();
+                        var vv3 = (int)memory.ReadInt32();
+                        uip3re.Add(new UIntPoint3Data((uint)vv, (uint)vv2, (uint)vv3));
+                        for (int i = 1; i < count; i++)
+                        {
+                            var vss = (int)memory.ReadSInt32();
+                            var vss2 = (int)memory.ReadSInt32();
+                            var vss3 = (int)memory.ReadSInt32();
+
+                            vv = (vv + vss);
+                            vv2 = (vv2 + vss2);
+                            vv3 = (vv3 + vss3);
+
+                            uip3re.Add(new UIntPoint3Data((uint)vv, (uint)vv2, (uint)vv3));
+
+                        }
+                    }
+                    return uip3re as List<T>;
+                case "LongPoint3Data":
+                    List<LongPoint3Data> lpp3re = new List<LongPoint3Data>();
+                    using (ProtoMemory memory = new ProtoMemory(value))
+                    {
+                        var vv = (long)memory.ReadInt64();
+                        var vv2 = (long)memory.ReadInt64();
+                        var vv3 = (long)memory.ReadInt64();
+                        lpp3re.Add(new LongPoint3Data((long)vv, (long)vv2, (long)vv3));
+                        for (int i = 1; i < count; i++)
+                        {
+                            var vss = memory.ReadInt64();
+                            var vss2 = memory.ReadInt64();
+                            var vss3 = memory.ReadInt64();
+                            vv = (vv + vss);
+                            vv2 = (vv2 + vss2);
+                            vv3 = (vv3 + vss3);
+
+                            lpp3re.Add(new LongPoint3Data((long)vv, (long)vv2, (long)vv3));
+                            //vv = vss;
+                            //vv2 = vss2;
+                            //vv3 = vss3;
+                        }
+                    }
+                    return lpp3re as List<T>;
+                case "ULongPoint3Data":
+                    List<ULongPoint3Data> ulpp3re = new List<ULongPoint3Data>();
+                    using (ProtoMemory memory = new ProtoMemory(value))
+                    {
+                        var vv = (long)memory.ReadInt64();
+                        var vv2 = (long)memory.ReadInt64();
+                        var vv3 = (long)memory.ReadInt64();
+                        ulpp3re.Add(new ULongPoint3Data((ulong)vv, (ulong)vv2, (ulong)vv3));
+                        for (int i = 1; i < count; i++)
+                        {
+                            var vss = memory.ReadInt64();
+                            var vss2 = memory.ReadInt64();
+                            var vss3 = memory.ReadInt64();
+                            vv = (vv + vss);
+                            vv2 = (vv2 + vss2);
+                            vv3 = (vv3 + vss3);
+                            ulpp3re.Add(new ULongPoint3Data((ulong)vv, (ulong)vv2, (ulong)vv3));
+                            //vv = vss;
+                            //vv2 = vss2;
+                            //vv3 = vss3;
+                        }
+                    }
+                    return ulpp3re as List<T>;
             }
             return null;
         }
@@ -2298,42 +2246,65 @@ namespace Cdy.Tag
 
                                 var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
 
-                                if (typeof(T) == typeof(double))
+                              
+                                switch (typeof(T).Name)
                                 {
-                                    return val1;
+                                    case "Byte":
+                                        return (byte)val1;
+                                    case "Int16":
+                                        return (short)val1;
+                                    case "UInt16":
+                                        return (ushort)val1;
+                                    case "Int32":
+                                        return (int)val1;
+                                    case "UInt32":
+                                        return (uint)val1;
+                                    case "Int64":
+                                        return (long)val1;
+                                    case "UInt64":
+                                        return (ulong)val1;
+                                    case "Double":
+                                        return val1;
+                                    case "Single":
+                                        return (float)val1;
                                 }
-                                else if (typeof(T) == typeof(float))
-                                {
-                                    return (float)val1;
-                                }
-                                else if (typeof(T) == typeof(short))
-                                {
-                                    return (short)val1;
-                                }
-                                else if (typeof(T) == typeof(ushort))
-                                {
-                                    return (ushort)val1;
-                                }
-                                else if (typeof(T) == typeof(int))
-                                {
-                                    return (int)val1;
-                                }
-                                else if (typeof(T) == typeof(uint))
-                                {
-                                    return (uint)val1;
-                                }
-                                else if (typeof(T) == typeof(long))
-                                {
-                                    return (long)val1;
-                                }
-                                else if (typeof(T) == typeof(ulong))
-                                {
-                                    return (ulong)val1;
-                                }
-                                else if (typeof(T) == typeof(byte))
-                                {
-                                    return (byte)val1;
-                                }
+
+                                //if (typeof(T) == typeof(double))
+                                //{
+                                //    return val1;
+                                //}
+                                //else if (typeof(T) == typeof(float))
+                                //{
+                                //    return (float)val1;
+                                //}
+                                //else if (typeof(T) == typeof(short))
+                                //{
+                                //    return (short)val1;
+                                //}
+                                //else if (typeof(T) == typeof(ushort))
+                                //{
+                                //    return (ushort)val1;
+                                //}
+                                //else if (typeof(T) == typeof(int))
+                                //{
+                                //    return (int)val1;
+                                //}
+                                //else if (typeof(T) == typeof(uint))
+                                //{
+                                //    return (uint)val1;
+                                //}
+                                //else if (typeof(T) == typeof(long))
+                                //{
+                                //    return (long)val1;
+                                //}
+                                //else if (typeof(T) == typeof(ulong))
+                                //{
+                                //    return (ulong)val1;
+                                //}
+                                //else if (typeof(T) == typeof(byte))
+                                //{
+                                //    return (byte)val1;
+                                //}
                             }
                             else if (val.Value.Quality < 20)
                             {
@@ -2411,42 +2382,65 @@ namespace Cdy.Tag
 
                                 var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
 
-                                if (typeof(T) == typeof(double))
+                                string tname = typeof(T).Name;
+                                switch (tname)
                                 {
-                                    return val1;
+                                    case "Byte":
+                                        return (byte)val1;
+                                    case "Int16":
+                                        return (short)val1;
+                                    case "UInt16":
+                                        return (ushort)val1;
+                                    case "Int32":
+                                        return (int)val1;
+                                    case "UInt32":
+                                        return (uint)val1;
+                                    case "Int64":
+                                        return (long)val1;
+                                    case "UInt64":
+                                        return (ulong)val1;
+                                    case "Double":
+                                        return val1;
+                                    case "Single":
+                                        return (float)val1;
                                 }
-                                else if (typeof(T) == typeof(float))
-                                {
-                                    return (float)val1;
-                                }
-                                else if (typeof(T) == typeof(short))
-                                {
-                                    return (short)val1;
-                                }
-                                else if (typeof(T) == typeof(ushort))
-                                {
-                                    return (ushort)val1;
-                                }
-                                else if (typeof(T) == typeof(int))
-                                {
-                                    return (int)val1;
-                                }
-                                else if (typeof(T) == typeof(uint))
-                                {
-                                    return (uint)val1;
-                                }
-                                else if (typeof(T) == typeof(long))
-                                {
-                                    return (long)val1;
-                                }
-                                else if (typeof(T) == typeof(ulong))
-                                {
-                                    return (ulong)val1;
-                                }
-                                else if (typeof(T) == typeof(byte))
-                                {
-                                    return (byte)val1;
-                                }
+
+                                //if (typeof(T) == typeof(double))
+                                //{
+                                //    return val1;
+                                //}
+                                //else if (typeof(T) == typeof(float))
+                                //{
+                                //    return (float)val1;
+                                //}
+                                //else if (typeof(T) == typeof(short))
+                                //{
+                                //    return (short)val1;
+                                //}
+                                //else if (typeof(T) == typeof(ushort))
+                                //{
+                                //    return (ushort)val1;
+                                //}
+                                //else if (typeof(T) == typeof(int))
+                                //{
+                                //    return (int)val1;
+                                //}
+                                //else if (typeof(T) == typeof(uint))
+                                //{
+                                //    return (uint)val1;
+                                //}
+                                //else if (typeof(T) == typeof(long))
+                                //{
+                                //    return (long)val1;
+                                //}
+                                //else if (typeof(T) == typeof(ulong))
+                                //{
+                                //    return (ulong)val1;
+                                //}
+                                //else if (typeof(T) == typeof(byte))
+                                //{
+                                //    return (byte)val1;
+                                //}
                             }
                             else if (val.Value.Quality < 20)
                             {
@@ -2529,41 +2523,27 @@ namespace Cdy.Tag
 
                                         var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
 
-                                        if (typeof(T) == typeof(double))
+                                        string tname = typeof(T).Name;
+                                        switch (tname)
                                         {
-                                            return val1;
-                                        }
-                                        else if (typeof(T) == typeof(float))
-                                        {
-                                            return (float)val1;
-                                        }
-                                        else if (typeof(T) == typeof(short))
-                                        {
-                                            return (short)val1;
-                                        }
-                                        else if (typeof(T) == typeof(ushort))
-                                        {
-                                            return (ushort)val1;
-                                        }
-                                        else if (typeof(T) == typeof(int))
-                                        {
-                                            return (int)val1;
-                                        }
-                                        else if (typeof(T) == typeof(uint))
-                                        {
-                                            return (uint)val1;
-                                        }
-                                        else if (typeof(T) == typeof(long))
-                                        {
-                                            return (long)val1;
-                                        }
-                                        else if (typeof(T) == typeof(ulong))
-                                        {
-                                            return (ulong)val1;
-                                        }
-                                        else if (typeof(T) == typeof(byte))
-                                        {
-                                            return (byte)val1;
+                                            case "Byte":
+                                                return (byte)val1;
+                                            case "Int16":
+                                                return (short)val1;
+                                            case "UInt16":
+                                                return (ushort)val1;
+                                            case "Int32":
+                                                return (int)val1;
+                                            case "UInt32":
+                                                return (uint)val1;
+                                            case "Int64":
+                                                return (long)val1;
+                                            case "UInt64":
+                                                return (ulong)val1;
+                                            case "Double":
+                                                return val1;
+                                            case "Single":
+                                                return (float)val1;
                                         }
                                     }
                                     else if (qulityes[i] < 20)
@@ -2818,73 +2798,61 @@ namespace Cdy.Tag
             var pval1 = (time - startTime).TotalMilliseconds;
             var tval1 = (endTime - startTime).TotalMilliseconds;
 
-            if (typeof(T) == typeof(IntPointData))
+            string tname = typeof(T).Name;
+            switch (tname)
             {
-                var sval1 = (IntPointData)((object)value1);
-                var sval2 = (IntPointData)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                return new IntPointData((int)val1, (int)val2);
-            }
-            else if (typeof(T) == typeof(UIntPointData))
-            {
-                var sval1 = (UIntPointData)((object)value1);
-                var sval2 = (UIntPointData)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                return new UIntPointData((uint)val1, (uint)val2);
-            }
-            else if (typeof(T) == typeof(LongPointData))
-            {
-                var sval1 = (LongPointData)((object)value1);
-                var sval2 = (LongPointData)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                return new LongPointData((long)val1, (long)val2);
-            }
-            else if (typeof(T) == typeof(ULongPointData))
-            {
-                var sval1 = (ULongPointData)((object)value1);
-                var sval2 = (ULongPointData)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                return new ULongPointData((ulong)val1, (ulong)val2);
-            }
-            else if (typeof(T) == typeof(IntPoint3Data))
-            {
-                var sval1 = (IntPoint3Data)((object)value1);
-                var sval2 = (IntPoint3Data)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
-                return new IntPoint3Data((int)val1, (int)val2, (int)val3);
-            }
-            else if (typeof(T) == typeof(UIntPoint3Data))
-            {
-                var sval1 = (UIntPoint3Data)((object)value1);
-                var sval2 = (UIntPoint3Data)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
-                return new UIntPoint3Data((uint)val1, (uint)val2, (uint)val3);
-            }
-            else if (typeof(T) == typeof(LongPoint3Data))
-            {
-                var sval1 = (LongPoint3Data)((object)value1);
-                var sval2 = (LongPoint3Data)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
-                return new LongPoint3Data((long)val1, (long)val2, (long)val3);
-            }
-            else if (typeof(T) == typeof(ULongPoint3Data))
-            {
-                var sval1 = (ULongPoint3Data)((object)value1);
-                var sval2 = (ULongPoint3Data)((object)value2);
-                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
-                var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
-                var val3 = pval1 / tval1 * (Convert.ToDouble(sval2.Z) - Convert.ToDouble(sval1.Z)) + Convert.ToDouble(sval1.Z);
-                return new ULongPoint3Data((ulong)val1, (ulong)val2, (ulong)val3);
+                case "IntPointData":
+                    var sval1 = (IntPointData)((object)value1);
+                    var sval2 = (IntPointData)((object)value2);
+                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2.X) - Convert.ToDouble(sval1.X)) + Convert.ToDouble(sval1.X);
+                    var val2 = pval1 / tval1 * (Convert.ToDouble(sval2.Y) - Convert.ToDouble(sval1.Y)) + Convert.ToDouble(sval1.Y);
+                    return new IntPointData((int)val1, (int)val2);
+                case "UIntPointData":
+                    var usval1 = (UIntPointData)((object)value1);
+                    var usval2 = (UIntPointData)((object)value2);
+                    var uval1 = pval1 / tval1 * (Convert.ToDouble(usval2.X) - Convert.ToDouble(usval1.X)) + Convert.ToDouble(usval1.X);
+                    var uval2 = pval1 / tval1 * (Convert.ToDouble(usval2.Y) - Convert.ToDouble(usval1.Y)) + Convert.ToDouble(usval1.Y);
+                    return new UIntPointData((uint)uval1, (uint)uval2);
+                case "LongPointData":
+                    var lsval1 = (LongPointData)((object)value1);
+                    var lsval2 = (LongPointData)((object)value2);
+                    var lval1 = pval1 / tval1 * (Convert.ToDouble(lsval2.X) - Convert.ToDouble(lsval1.X)) + Convert.ToDouble(lsval1.X);
+                    var lval2 = pval1 / tval1 * (Convert.ToDouble(lsval2.Y) - Convert.ToDouble(lsval1.Y)) + Convert.ToDouble(lsval1.Y);
+                    return new LongPointData((long)lval1, (long)lval2);
+                case "ULongPointData":
+                    var ulsval1 = (ULongPointData)((object)value1);
+                    var ulsval2 = (ULongPointData)((object)value2);
+                    var ulval1 = pval1 / tval1 * (Convert.ToDouble(ulsval2.X) - Convert.ToDouble(ulsval1.X)) + Convert.ToDouble(ulsval1.X);
+                    var ulval2 = pval1 / tval1 * (Convert.ToDouble(ulsval2.Y) - Convert.ToDouble(ulsval1.Y)) + Convert.ToDouble(ulsval1.Y);
+                    return new ULongPointData((ulong)ulval1, (ulong)ulval2);
+                case "IntPoint3Data":
+                    var s3val1 = (IntPoint3Data)((object)value1);
+                    var s3val2 = (IntPoint3Data)((object)value2);
+                    var v3al1 = pval1 / tval1 * (Convert.ToDouble(s3val2.X) - Convert.ToDouble(s3val1.X)) + Convert.ToDouble(s3val1.X);
+                    var v3al2 = pval1 / tval1 * (Convert.ToDouble(s3val2.Y) - Convert.ToDouble(s3val1.Y)) + Convert.ToDouble(s3val1.Y);
+                    var v3al3 = pval1 / tval1 * (Convert.ToDouble(s3val2.Z) - Convert.ToDouble(s3val1.Z)) + Convert.ToDouble(s3val1.Z);
+                    return new IntPoint3Data((int)v3al1, (int)v3al2, (int)v3al3);
+                case "UIntPoint3Data":
+                    var us3val1 = (UIntPoint3Data)((object)value1);
+                    var us3val2 = (UIntPoint3Data)((object)value2);
+                    var uv3al1 = pval1 / tval1 * (Convert.ToDouble(us3val2.X) - Convert.ToDouble(us3val1.X)) + Convert.ToDouble(us3val1.X);
+                    var uva3l2 = pval1 / tval1 * (Convert.ToDouble(us3val2.Y) - Convert.ToDouble(us3val1.Y)) + Convert.ToDouble(us3val1.Y);
+                    var uva3l3 = pval1 / tval1 * (Convert.ToDouble(us3val2.Z) - Convert.ToDouble(us3val1.Z)) + Convert.ToDouble(us3val1.Z);
+                    return new UIntPoint3Data((uint)uv3al1, (uint)uva3l2, (uint)uva3l3);
+                case "LongPoint3Data":
+                    var lpsval1 = (LongPoint3Data)((object)value1);
+                    var lpsval2 = (LongPoint3Data)((object)value2);
+                    var lpval1 = pval1 / tval1 * (Convert.ToDouble(lpsval2.X) - Convert.ToDouble(lpsval1.X)) + Convert.ToDouble(lpsval1.X);
+                    var lpval2 = pval1 / tval1 * (Convert.ToDouble(lpsval2.Y) - Convert.ToDouble(lpsval1.Y)) + Convert.ToDouble(lpsval1.Y);
+                    var lpval3 = pval1 / tval1 * (Convert.ToDouble(lpsval2.Z) - Convert.ToDouble(lpsval1.Z)) + Convert.ToDouble(lpsval1.Z);
+                    return new LongPoint3Data((long)lpval1, (long)lpval2, (long)lpval3);
+                case "ULongPoint3Data":
+                    var ulpsval1 = (ULongPoint3Data)((object)value1);
+                    var ulpsval2 = (ULongPoint3Data)((object)value2);
+                    var ulpval1 = pval1 / tval1 * (Convert.ToDouble(ulpsval2.X) - Convert.ToDouble(ulpsval1.X)) + Convert.ToDouble(ulpsval1.X);
+                    var ulpval2 = pval1 / tval1 * (Convert.ToDouble(ulpsval2.Y) - Convert.ToDouble(ulpsval1.Y)) + Convert.ToDouble(ulpsval1.Y);
+                    var ulpval3 = pval1 / tval1 * (Convert.ToDouble(ulpsval2.Z) - Convert.ToDouble(ulpsval1.Z)) + Convert.ToDouble(ulpsval1.Z);
+                    return new ULongPoint3Data((ulong)ulpval1, (ulong)ulpval2, (ulong)ulpval3);
             }
 
             return default(T);

@@ -934,11 +934,13 @@ namespace Cdy.Tag
             HisRunTag.StartTime = mLastProcessTime;
             CurrentMemory = mCachMemory1;
             CurrentMemory.CurrentDatetime = mLastProcessTime;
+            CurrentMemory.BaseTime = HisRunTag.StartTime;
 
             HisDataMemoryQueryService3.Service.RegistorMemory(CurrentMemory.CurrentDatetime, mLastProcessTime.AddSeconds(CachMemoryTime), CurrentMemory);
 
             mCurrentMergeMemory = mMergeMemory1;
             mCurrentMergeMemory.CurrentDatetime = CurrentMemory.CurrentDatetime;
+            mCurrentMergeMemory.BaseTime = CurrentMemory.BaseTime;
 
             if (LogManager != null)
             {
@@ -1055,6 +1057,7 @@ namespace Cdy.Tag
             if (count == 0)
             {
                 mCurrentMergeMemory.CurrentDatetime = mWaitForMergeMemory.CurrentDatetime;
+                mCurrentMergeMemory.BaseTime = mWaitForMergeMemory.BaseTime;
                 LoggerService.Service.Info("HisEnginer", "MergeMemory 使用新的时间起点:" + mWaitForMergeMemory.Name+" " + FormateDatetime(this.mCurrentMergeMemory.CurrentDatetime), ConsoleColor.Green);
             }
 
@@ -1142,23 +1145,26 @@ namespace Cdy.Tag
 
             
 
-            long ltmp = sw.ElapsedMilliseconds;
+            //long ltmp = sw.ElapsedMilliseconds;
 
             HisDataMemoryQueryService3.Service.RegistorMemory(CurrentMemory.CurrentDatetime,dateTime.AddSeconds(CachMemoryTime), CurrentMemory);
-            long ltmp21 = sw.ElapsedMilliseconds;
+            //long ltmp21 = sw.ElapsedMilliseconds;
             if (mMergeCount==0)
             {
                 mNeedSnapAllTag = true;
                 LoggerService.Service.Info("HisEnginer", "使用新的时间起点:" + CurrentMemory.Name + "  " + FormateDatetime(CurrentMemory.CurrentDatetime), ConsoleColor.Cyan);
                 HisRunTag.StartTime = dateTime;
             }
-            long ltmp22 = sw.ElapsedMilliseconds;
+
+            CurrentMemory.BaseTime = HisRunTag.StartTime;
+
+            //long ltmp22 = sw.ElapsedMilliseconds;
             ////PrepareForReadyMemory();
             //foreach (var vv in mHisTags)
             //{
             //    vv.Value.Reset();
             //}
-            long ltmp2 = sw.ElapsedMilliseconds;
+            //long ltmp2 = sw.ElapsedMilliseconds;
             if (mcc != null)
             {
                 mcc.MakeMemoryBusy();
@@ -1171,10 +1177,10 @@ namespace Cdy.Tag
                 mLogManager?.RequestToSave(mcc.CurrentDatetime,dateTime, basetime, mcc);
 
             }
-            long ltmp3 = sw.ElapsedMilliseconds;
+            //long ltmp3 = sw.ElapsedMilliseconds;
             sw.Stop();
 
-            LoggerService.Service.Info("HisEnginer", "SubmiteMemory 耗时:" + ltmp + "," + (ltmp2-ltmp22)+","+(ltmp21-ltmp)+","+(ltmp22-ltmp21)+","+(ltmp3-ltmp2), ConsoleColor.Cyan);
+            LoggerService.Service.Info("HisEnginer", "SubmiteMemory 耗时:" + sw.ElapsedMilliseconds, ConsoleColor.Cyan);
 
         }
 

@@ -60,7 +60,7 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="client"></param>
         /// <param name="data"></param>
-        public override void ProcessData(string client, IByteBuffer data)
+        protected override void ProcessSingleData(string client, IByteBuffer data)
         {
             if (data.ReferenceCount == 0)
             {
@@ -71,10 +71,10 @@ namespace DBRuntime.Api
             long id = data.ReadLong();
             if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(id))
             {
-                switch(cmd)
+                switch (cmd)
                 {
                     case RequestAllHisData:
-                        ProcessRequestAllHisDataByMemory(client,data);
+                        ProcessRequestAllHisDataByMemory(client, data);
                         break;
                     case RequestHisDatasByTimePoint:
                         ProcessRequestHisDatasByTimePointByMemory(client, data);
@@ -88,7 +88,7 @@ namespace DBRuntime.Api
             {
                 Parent.AsyncCallback(client, FunId, new byte[1], 0);
             }
-            base.ProcessData(client, data);
+            base.ProcessSingleData(client, data);
         }
 
         #region Serise to IByteBuffer

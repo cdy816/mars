@@ -59,7 +59,7 @@ namespace Cdy.Tag
         public abstract bool CheckAndOpen();
 
         /// <summary>
-        /// 创建新的画面
+        /// 创建新的文件
         /// </summary>
         public abstract bool CreatOrOpenFile(string filename);
 
@@ -270,6 +270,20 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public abstract DataFileSeriserbase GoToEnd();
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public abstract DataFileSeriserbase GoTo(long position);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public abstract DataFileSeriserbase GoToStart();
 
         /// <summary>
         /// 刷新数据

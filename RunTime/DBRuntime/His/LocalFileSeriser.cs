@@ -576,6 +576,27 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public override DataFileSeriserbase GoTo(long position)
+        {
+            mStream.Position = position;
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override DataFileSeriserbase GoToStart()
+        {
+            mStream.Position = 0;
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="source"></param>
         /// <param name="start"></param>
         public override DataFileSeriserbase Write(List<byte[]> source, long start, int offset, int len)
@@ -614,7 +635,12 @@ namespace Cdy.Tag
             return this;
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="start"></param>
+        /// <returns></returns>
         public override DataFileSeriserbase Write(List<byte[]> source, long start)
         {
             mStream.Position = start;
@@ -681,5 +707,7 @@ namespace Cdy.Tag
         {
             return mStream != null;
         }
+
+
     }
 }

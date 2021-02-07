@@ -42,12 +42,28 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="source"></param>
+        /// <param name="startAddr"></param>
+        /// <param name="target"></param>
+        /// <param name="targetaddr"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        protected override int NumberStatistic(IMemoryFixedBlock source, long startAddr, IMemoryBlock target, long targetaddr, TagType type)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
         /// <param name="sourceAddr"></param>
         /// <param name="target"></param>
         /// <param name="targetAddr"></param>
         /// <param name="size"></param>
+        /// <param name="statisticTarget"></param>
+        /// <param name="statisticAddr"></param>
         /// <returns></returns>
-        public override long Compress(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size)
+        public override long Compress(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size, IMemoryBlock statisticTarget, long statisticAddr)
         {
            // LoggerService.Service.Erro("NoneCompressUnit", "目标地址:"+targetAddr +" 数值地址: " + (targetAddr+10) +" 变量个数: "+ (size - this.QulityOffset));
             target.WriteDatetime(targetAddr,this.StartTime);
@@ -57,6 +73,9 @@ namespace Cdy.Tag
 
             if (size > 0)
                 source.CopyTo(target, sourceAddr, targetAddr + 17, size);
+
+            NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
+
             return size + 17;
         }
 

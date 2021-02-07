@@ -32,7 +32,10 @@ namespace Cdy.Tag
         /// </summary>
         public static DataFileSeriserManager manager = new DataFileSeriserManager();
 
-        private string mDefaultSeriseName = "LocalFile";
+        /// <summary>
+        /// 
+        /// </summary>
+        public static string mDefaultSeriseName = "LocalFile";
 
         #endregion ...Variables...
 

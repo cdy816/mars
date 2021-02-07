@@ -81,6 +81,7 @@ namespace Cdy.Tag
 
         private bool mIsBusy = false;
 
+        private StatisticsMemoryMap mStatisticsMemory;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -152,6 +153,8 @@ namespace Cdy.Tag
         /// </summary>
         public static int HisDataKeepTimeInPrimaryPath { get; set; } = 30;
 
+
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -159,7 +162,7 @@ namespace Cdy.Tag
         //private long GetDriverSize(string path)
         //{
         //    System.IO.DriveInfo driverinfo = new System.IO.DriveInfo(path);
-           
+
         //    return 0;
         //}
 
@@ -203,6 +206,8 @@ namespace Cdy.Tag
             var his = ServiceLocator.Locator.Resolve<IHisEngine3>();
             var histag = his.ListAllTags().OrderBy(e => e.Id);
 
+            mStatisticsMemory = new StatisticsMemoryMap();
+
             //计算数据区域个数
             var mLastDataRegionId = -1;
             foreach (var vv in histag)
@@ -211,7 +216,7 @@ namespace Cdy.Tag
                 var did = id / TagCountOneFile;
                 if (mLastDataRegionId != did)
                 {
-                    mSeriserFiles.Add(did, new SeriseFileItem3() { FileDuration = FileDuration, BlockDuration = BlockDuration, TagCountOneFile = TagCountOneFile, DatabaseName = DatabaseName, Id = did });
+                    mSeriserFiles.Add(did, new SeriseFileItem3() { FileDuration = FileDuration, BlockDuration = BlockDuration, TagCountOneFile = TagCountOneFile, DatabaseName = DatabaseName, Id = did,StatisticsMemory= mStatisticsMemory });
                     mLastDataRegionId = did;
                 }
             }
@@ -617,6 +622,11 @@ namespace Cdy.Tag
         public const string HisDataFileExtends = ".his";
 
         /// <summary>
+        /// 日统计文件扩展名
+        /// </summary>
+        public const string DayStatisticsFileExtends = ".stad";
+
+        /// <summary>
         /// 文件头大小
         /// </summary>
         public const int FileHeadSize = 84;
@@ -654,6 +664,8 @@ namespace Cdy.Tag
 
         private int mId = 0;
 
+        private DataFileSeriserbase mStatisticsWriter;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -665,6 +677,11 @@ namespace Cdy.Tag
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public StatisticsMemoryMap StatisticsMemory { get; set; }
 
         /// <summary>
         /// 
@@ -775,6 +792,20 @@ namespace Cdy.Tag
             var ntmp = Encoding.UTF8.GetBytes(databaseName);
             Buffer.BlockCopy(ntmp, 0, nameBytes, 0, Math.Min(64, ntmp.Length));
             mFileWriter.Write(nameBytes, 20);
+        }
+
+        /// <summary>
+        /// 添加统计文件头部
+        /// datetime(8)+databasename(64)
+        /// </summary>
+        private void AppendStatisticsFileHeader(DateTime time, string databaseName, DataFileSeriserbase mFileWriter)
+        {
+            mFileWriter.Write(time, 0);
+            byte[] nameBytes = new byte[64];
+            Array.Clear(nameBytes, 0, nameBytes.Length);
+            var ntmp = Encoding.UTF8.GetBytes(databaseName);
+            Buffer.BlockCopy(ntmp, 0, nameBytes, 0, Math.Min(64, ntmp.Length));
+            mFileWriter.Write(nameBytes, 8);
         }
 
         /// <summary>
@@ -892,6 +923,17 @@ namespace Cdy.Tag
         private string GetFileName(DateTime time)
         {
             return DatabaseName + Id.ToString("D3") + time.ToString("yyyyMMdd") + FileDuration.ToString("D2") + (time.Hour / FileDuration).ToString("D2") + DataFileExtends;
+        }
+
+
+        /// <summary>
+        /// 获取统计文件名称
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        private string GetStatisticsFileName(DateTime time)
+        {
+            return DatabaseName + Id.ToString("D3") + time.ToString("yyyyMMdd") + DayStatisticsFileExtends;
         }
 
         /// <summary>
@@ -1212,38 +1254,7 @@ namespace Cdy.Tag
             return preoffset;
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="mFileWriter"></param>
-        ///// <param name="time"></param>
-        ///// <returns></returns>
-        //private long SearchDataRegionToDatetime(DataFileSeriserbase mFileWriter, DateTime time)
-        //{
-        //    long preoffset = -1, offset = FileHeadSize;
-        //    DateTime tm;
-        //    while (true)
-        //    {
-        //        tm = mFileWriter.ReadDateTime(offset + 16);
-        //        if (tm > time)
-        //        {
-        //            break;
-        //        }
-
-        //        var nextaddr = mFileWriter.ReadLong(offset + 8);
-        //        if (nextaddr <= 0)
-        //        {
-        //            preoffset = offset;
-        //            break;
-        //        }
-        //        else
-        //        {
-        //            preoffset = offset;
-        //            offset = nextaddr;
-        //        }
-        //    }
-        //    return preoffset;
-        //}
+        
 
         /// <summary>
         /// 
@@ -1299,13 +1310,14 @@ namespace Cdy.Tag
                 DateTime maxTime = DateTime.MinValue;
                 DateTime mLastModifyTime = DateTime.MinValue;
                 int datasize = 0;
+                //56 是统计数据区的长度
                 foreach (var vvv in vv.Value)
                 {
-                    int id = vvv.ReadInt(0);
-                    int size = vvv.ReadInt(20);
-                    DateTime time = vvv.ReadDateTime(4);
+                    int id = vvv.ReadInt(0+56);
+                    int size = vvv.ReadInt(20 + 56);
+                    DateTime time = vvv.ReadDateTime(4 + 56);
 
-                    DateTime endTime = vvv.ReadDateTime(12);
+                    DateTime endTime = vvv.ReadDateTime(12 + 56);
                    
                     if(times.ContainsKey(id))
                     {
@@ -1318,7 +1330,7 @@ namespace Cdy.Tag
                     maxTime = time > maxTime ? time : maxTime;
                     mLastModifyTime = endTime > mLastModifyTime ? endTime : mLastModifyTime;
 
-                    datasize += (size - 28);
+                    datasize += (size - 28-56);
                 }
 
                 mHeadAddress = GetDataRegionHeadPoint(vv.Key, times, maxTime, out mwriter);
@@ -1336,8 +1348,8 @@ namespace Cdy.Tag
                     //写入数据，同时获取数据块地址
                     foreach (var vvv in vv.Value)
                     {
-                        int id = vvv.ReadInt(0);
-                        int size = vvv.ReadInt(20);
+                        int id = vvv.ReadInt(0 + 56);
+                        int size = vvv.ReadInt(20 + 56);
                         if (mHeadValue.ContainsKey(id))
                         {
                             mHeadValue[id].Add(vpointer);
@@ -1346,8 +1358,8 @@ namespace Cdy.Tag
                         {
                             mHeadValue.Add(id, new List<long>() { vpointer });
                         }
-                        (vvv as MarshalMemoryBlock).CopyTo(sourceM, 28, vpointer, size);
-                        vpointer += (size - 28);
+                        (vvv as MarshalMemoryBlock).CopyTo(sourceM, 28 + 56, vpointer, size);
+                        vpointer += (size - 28-56);
                     }
 
                     int csize = 0;
@@ -1388,8 +1400,8 @@ namespace Cdy.Tag
                     //写入数据，同时获取数据块地址
                     foreach (var vvv in vv.Value)
                     {
-                        int id = vvv.ReadInt(0);
-                        int size = vvv.ReadInt(20);
+                        int id = vvv.ReadInt(0 + 56);
+                        int size = vvv.ReadInt(20 + 56);
                         if (mHeadValue.ContainsKey(id))
                         {
                             mHeadValue[id].Add(vpointer);
@@ -1398,9 +1410,9 @@ namespace Cdy.Tag
                         {
                             mHeadValue.Add(id, new List<long>() { vpointer });
                         }
-                        vvv.WriteToStream(mwriter.GetStream(), 28, size - 28);//直接拷贝数据块
-                        vpointer += (size - 28);
-                        datasize += (size - 28);
+                        vvv.WriteToStream(mwriter.GetStream(), 28 + 56, size - 28-56);//直接拷贝数据块
+                        vpointer += (size - 28-56);
+                        datasize += (size - 28-56);
                     }
 
                     //更新数据块指针
@@ -1416,8 +1428,7 @@ namespace Cdy.Tag
                     LoggerService.Service.Info("SeriseEnginer3", "SeriseFileItem " + this.Id + " 完成存储,数据块:" + vv.Value.Count + " 数据量:" + datasize + " 耗时:" + sw.ElapsedMilliseconds);
                 }
 
-              
-               
+                
 
                 //更新文件的最后修改时间
                 var vtmp = mwriter.ReadDateTime(8);
@@ -1430,7 +1441,8 @@ namespace Cdy.Tag
 
                 if (mwriter != mFileWriter)
                     mwriter.Close();
-                
+
+                UpdateStaticstics(vv.Value);
 
                 foreach (var vvv in vv.Value)
                 {
@@ -1630,6 +1642,173 @@ namespace Cdy.Tag
         }
 
         /// <summary>
+        /// 获取统计文件值
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        private DataFileSeriserbase GetStatisticsFileWriter(DateTime time)
+        {
+            string sfile = GetStatisticsFileName(time);
+
+            if (mStatisticsWriter != null && mStatisticsWriter.FileName == sfile)
+            {
+                return mStatisticsWriter;
+            }
+            else
+            {
+                var re = DataFileSeriserManager.manager.GetDefaultFileSersie();
+                if (re.CreatOrOpenFile(sfile))
+                {
+                    AppendStatisticsFileHeader(time, this.DatabaseName, re);
+                    re.AppendZore(TagCountOneFile * 8);
+                }
+                else
+                {
+                    if (re.Length < TagCountOneFile * 8)
+                    {
+                        AppendStatisticsFileHeader(time, this.DatabaseName, re);
+                        re.AppendZore(TagCountOneFile * 8);
+                    }
+                }
+
+                if (mStatisticsWriter != null) mStatisticsWriter.Dispose();
+                mStatisticsWriter = re;
+                return re;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mProcessMemory"></param>
+        /// <param name="time"></param>
+        private void UpdateStaticstics(Queue<IMemoryBlock> mProcessMemory)
+        {
+            
+            if(mProcessMemory.Count==0)
+            {
+                return;
+            }
+            var time = mProcessMemory.First().ReadDateTime(4 + 56);
+            var filewriter = GetStatisticsFileWriter(time);
+            filewriter.GoToStart();
+            StatisticsMemory.Load(filewriter.GetStream());
+            MarshalFixedMemoryBlock mfb = new MarshalFixedMemoryBlock();
+
+            foreach (var vv in mProcessMemory)
+            {
+                var id = vv.ReadInt(56);
+                StatisticsMemory.GetStatisticsData(id, mfb);
+
+                var avgcount = vv.ReadInt(0);
+                var avgvalue = vv.ReadDouble(4);
+                var maxtime = vv.ReadLong(12);
+                var maxvalue = vv.ReadDouble(20);
+                var mintime = vv.ReadLong(28);
+                var minvalue = vv.ReadDouble(36);
+
+
+                var ncount = mfb.ReadInt(4);
+                var navgvalue = mfb.ReadDouble(8);
+
+                mfb.WriteByte(0, 1);
+                mfb.WriteInt(4, ncount + avgcount);
+                if ((ncount + avgcount) > 0)
+                {
+                    mfb.WriteDouble(8, (avgcount * avgvalue + navgvalue * ncount) / (ncount + avgcount));
+                }
+
+                var nmaxvalue = mfb.ReadDouble(24);
+                if (nmaxvalue < maxvalue)
+                {
+                    mfb.WriteLong(16, maxtime);
+                    mfb.WriteDouble(24, maxvalue);
+                }
+
+                var nminvalue = mfb.ReadDouble(40);
+                if (nminvalue > minvalue)
+                {
+                    mfb.WriteLong(32, mintime);
+                    mfb.WriteDouble(40, minvalue);
+                }
+            }
+
+            filewriter.GoToStart();
+            StatisticsMemory.Save(filewriter.GetStream());
+            filewriter.Flush();
+            filewriter.Dispose();
+
+        }
+
+        /// <summary>
+        /// 更新统计数据
+        /// </summary>
+        /// <param name="mProcessMemory"></param>
+        /// <param name="dataOffset"></param>
+        /// <param name="time"></param>
+        private void UpdateStaticstics(MarshalMemoryBlock mProcessMemory, DateTime time)
+        {
+            var filewriter = GetStatisticsFileWriter(time);
+            filewriter.GoToStart();
+            StatisticsMemory.Load(filewriter.GetStream());
+            MarshalFixedMemoryBlock mfb = new MarshalFixedMemoryBlock();
+            var cm = (mProcessMemory as CompressMemory3).StaticsMemoryBlock;
+            if(cm!=null)
+            {
+                int offset = 0;
+               
+                for(int i=0;i<TagCountOneFile;i++)
+                {
+
+                    offset = i * 52;
+
+                    var id = cm.ReadInt(offset);
+                    var avgcount = cm.ReadInt();
+                    var avgvalue = cm.ReadDouble();
+                    var maxtime = cm.ReadLong();
+                    var maxvalue = cm.ReadDouble();
+                    var mintime = cm.ReadLong();
+                    var minvalue = cm.ReadDouble();
+
+                    if (id == 0 && avgcount == 0 && avgcount == 0 && maxtime == 0 && mintime == 0) continue;
+                    StatisticsMemory.GetStatisticsData(id, mfb);
+
+                    var ncount = mfb.ReadInt(4);
+                    var navgvalue = mfb.ReadDouble(8);
+
+                    mfb.WriteByte(0,1);
+                    mfb.WriteInt(4, ncount + avgcount);
+                    if ((ncount + avgcount) > 0)
+                    {
+                        mfb.WriteDouble(8, (avgcount * avgvalue + navgvalue * ncount) / (ncount + avgcount));
+                    }
+
+                    var nmaxvalue = mfb.ReadDouble(24);
+                    if (nmaxvalue < maxvalue)
+                    {
+                        mfb.WriteLong(16, maxtime);
+                        mfb.WriteDouble(24, maxvalue);
+                    }
+
+                    var nminvalue = mfb.ReadDouble(40);
+                    if(nminvalue>minvalue)
+                    {
+                        mfb.WriteLong(32, mintime);
+                        mfb.WriteDouble(40, minvalue);
+                    }
+                }
+            }
+
+            filewriter.GoToStart();
+            StatisticsMemory.Save(filewriter.GetStream());
+            filewriter.Flush();
+            filewriter.Dispose();
+
+            cm.MakeMemoryNoBusy();
+            cm.Clear();
+        }
+
+        /// <summary>
         /// 检查文件是否存在
         /// </summary>
         /// <param name="time"></param>
@@ -1701,135 +1880,7 @@ namespace Cdy.Tag
         {
             SaveToFile(mProcessMemory, 0, time,endTime);
         }
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="time"></param>
-        ///// <returns></returns>
-        //private DateTime FormateTime(DateTime time)
-        //{
-        //    return new DateTime(time.Year, time.Month, time.Day, time.Hour, time.Minute, 0);
-        //}
-
-        //Dictionary<int, long> mHeadValues = new Dictionary<int, long>();
-
-        //MarshalFixedMemoryBlock mHeadValues;
-
-        ///// <summary>
-        ///// 执行存储到磁盘
-        ///// </summary>
-        //public void SaveToFileB(MarshalMemoryBlock mProcessMemory, long dataOffset, DateTime time,DateTime endTime)
-        //{
-        //    /*
-        //     1. 检查变量ID是否变动，如果变动则重新记录变量的ID列表
-        //     2. 拷贝数据块
-        //     3. 更新数据块指针
-        //     */
-        //    //LoggerService.Service.Info("SeriseFileItem" + Id, "*********开始执行存储**********");
-        //    try
-        //    {
-        //        lock (mFileLocker)
-        //        {
-
-        //            Stopwatch sw = new Stopwatch();
-        //            sw.Start();
-
-        //            //数据大小
-        //            var datasize = mProcessMemory.ReadInt(dataOffset);
-        //            var count = mProcessMemory.ReadInt(dataOffset + 4);//变量个数
-        //            //mTagCount = count;
-        //            mCurrentTime = time;
-
-        //            var ltmp = sw.ElapsedMilliseconds;
-
-        //            //打开文件
-        //            if (!CheckFile(time))
-        //                return;
-
-        //            //更新最后写入时间
-        //            var vtmp = mFileWriter.ReadDateTime(8);
-        //            if (endTime > vtmp)
-        //            {
-        //                mFileWriter.Write(endTime, 8);
-        //            }
-
-        //            if (datasize == 0)
-        //            {
-        //                Flush();
-        //                sw.Stop();
-        //                return;
-        //            }
-
-        //            var ltmp2 = sw.ElapsedMilliseconds;
-
-        //            long offset = 8 + dataOffset;
-        //            long start = count * 8 + offset;//计算出数据起始地址
-
-        //            var dataAddr = this.mFileWriter.GoToEnd().CurrentPostion;
-
-        //            if(mHeadValues==null)
-        //            {
-        //                mHeadValues = new MarshalFixedMemoryBlock(count * 12);
-        //            }
-        //            else
-        //            {
-        //                mHeadValues.CheckAndResize(count * 12);
-        //            }
-
-        //            mHeadValues.Clear();
-        //            //更新数据块指针
-        //            for (int i = 0; i < count; i++)
-        //            {
-        //                var id = mProcessMemory.ReadInt(offset);
-        //                //计算新的偏移量
-        //                var addr = mProcessMemory.ReadInt(offset + 4) - start + dataAddr;
-        //                offset += 8;
-        //                if (id > -1)
-        //                {
-        //                    mHeadValues.Write(id);
-        //                    mHeadValues.Write(addr);
-        //                }
-        //            }
-
-        //            //计算本次更新对应的指针区域的起始地址
-        //            FileStartHour = (time.Hour / FileDuration) * FileDuration;
-        //            int bid = ((time.Hour - FileStartHour) * 60 + time.Minute) / BlockDuration;
-
-        //            //计算出本次更新的头地址地址
-        //            var pointAddr = mBlockPointOffset + mTagCount * 8 * bid;
-
-        //            var ltmp3 = sw.ElapsedMilliseconds;
-
-        //            mFileWriter.GoToEnd();
-
-        //            mProcessMemory.WriteToStream(mFileWriter.GetStream(), start, datasize);//直接拷贝数据块
-
-        //            //写入指针头部区域
-        //            int key = 0;
-        //            long data = 0;
-        //            mHeadValues.Position = 0;
-        //            for(int i=0;i<count;i++)
-        //            {
-        //                key = mHeadValues.ReadInt();
-        //                data = mHeadValues.ReadLong();
-        //                mFileWriter.Write(data, pointAddr + mTagIndexCach[key] * 8);
-        //            }
-
-        //            Flush();
-
-
-        //            sw.Stop();
-
-        //            LoggerService.Service.Info("SeriseFileItem" + Id, "写入数据 " + mCurrentFileName + "  数据大小：" + ((datasize) ) / 1024.0 / 1024 + " m" + "其他脚本耗时:" + ltmp + "," + (ltmp2 - ltmp) + "," + (ltmp3 - ltmp2) + "存储耗时:" + (sw.ElapsedMilliseconds - ltmp3));
-        //        }
-        //    }
-        //    catch (System.IO.IOException ex)
-        //    {
-        //        LoggerService.Service.Erro("SeriseEnginer" + Id, ex.Message);
-        //    }
-        //}
-
+                
 
         /// <summary>
         /// 执行存储到磁盘,
@@ -1950,7 +2001,7 @@ namespace Cdy.Tag
                     }
                     Flush();
 
-
+                    UpdateStaticstics(mProcessMemory,time);
                     sw.Stop();
 
                     LoggerService.Service.Info("SeriseFileItem" + Id, "写入数据 " + mCurrentFileName + "  数据大小：" + (writedatasize / 1024.0 / 1024) + " m" +  "存储耗时:" + (sw.ElapsedMilliseconds));

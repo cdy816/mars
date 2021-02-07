@@ -1027,9 +1027,9 @@ namespace Cdy.Tag
                 foreach(var vvv in vv.Value)
                 {
                     int id = vvv.ReadInt(0);
-                    DateTime time = vvv.ReadDateTime(4);
+                    DateTime time = vvv.ReadDateTime(4+56);
 
-                    DateTime endTime = vvv.ReadDateTime(12);
+                    DateTime endTime = vvv.ReadDateTime(12 + 56);
                    
                     //mTagCount = vvv.ReadInt(24);//变量个数
 
@@ -1059,8 +1059,8 @@ namespace Cdy.Tag
                 //写入数据，同时获取数据块地址
                 foreach (var vvv in vv.Value)
                 {
-                    int id = vvv.ReadInt(0);
-                    int size = vvv.ReadInt(20);
+                    int id = vvv.ReadInt(0 + 56);
+                    int size = vvv.ReadInt(20 + 56);
                     if(mHeadValue.ContainsKey(id))
                     {
                         mHeadValue[id].Add(vpointer);
@@ -1070,9 +1070,9 @@ namespace Cdy.Tag
                         mHeadValue.Add(id, new List<long>() { vpointer });
                     }
                    // mHeadValue.Add(vvv.Key, vpointer);
-                    vvv.WriteToStream(mwriter.GetStream(), 28, size - 28);//直接拷贝数据块
-                    vpointer += (size - 28);
-                    datasize += (size - 28);
+                    vvv.WriteToStream(mwriter.GetStream(), 28 + 56, size - 28-56);//直接拷贝数据块
+                    vpointer += (size - 28 - 56);
+                    datasize += (size - 28 - 56);
                 }
 
                 long ltmp2 = sw.ElapsedMilliseconds;

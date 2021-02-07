@@ -83,11 +83,27 @@ namespace Cdy.Tag
         /// </summary>
         public int TimeTick { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Id { get; set; }
+
 
         #endregion ...Properties...
 
         #region ... Methods    ...
 
+
+        /// <summary>
+        /// 统计最大值、最小值、平均值
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="target"></param>
+        /// <param name="targetaddr"></param>
+        protected abstract int NumberStatistic(IMemoryFixedBlock source, long startAddr, IMemoryBlock target, long targetaddr, TagType type);
+        
 
         /// <summary>
         /// 
@@ -98,7 +114,7 @@ namespace Cdy.Tag
         /// <param name="targetAddr"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        public abstract long Compress(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size);
+        public abstract long Compress(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size, IMemoryBlock statisticTarget,long statisticAddr);
 
 
 

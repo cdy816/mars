@@ -49,6 +49,8 @@ namespace Cdy.Tag
 
         private int mCompressedDataSize = 0;
 
+        private MarshalMemoryBlock mStaticsMemoryBlock;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -77,6 +79,18 @@ namespace Cdy.Tag
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public MarshalMemoryBlock StaticsMemoryBlock
+        {
+            get
+            {
+                return mStaticsMemoryBlock;
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -111,7 +125,11 @@ namespace Cdy.Tag
         /// </summary>
         public static int TagCountPerMemory { get; set; }
 
-       
+        /// <summary>
+        /// 
+        /// </summary>
+        public int StartId { get; set; }
+
 
         /// <summary>
         /// 
@@ -248,8 +266,9 @@ namespace Cdy.Tag
         {
             mTagIds.Clear();
             long lsize = 0;
+            StartId = Id * TagCountPerMemory;
 
-            foreach(var vv in CompressUnitManager2.Manager.CompressUnit)
+            foreach (var vv in CompressUnitManager2.Manager.CompressUnit)
             {
                 mCompressCach.Add(vv.Key, vv.Value.Clone());
             }
@@ -264,7 +283,11 @@ namespace Cdy.Tag
             this.ReAlloc2(HeadSize + (long)(lsize));
             this.Clear();
 
-            mCompressedDataPointer = Marshal.AllocHGlobal((int)this.AllocSize);
+
+            if (IsEnableCompress)
+                mCompressedDataPointer = Marshal.AllocHGlobal((int)this.AllocSize);
+
+            mStaticsMemoryBlock = new MarshalMemoryBlock(TagCountPerMemory * 52, TagCountPerMemory * 52);
 
         }
 
@@ -292,6 +315,12 @@ namespace Cdy.Tag
             }
 
             this.Resize(HeadSize + lsize);
+
+            if (IsEnableCompress)
+            {
+                Marshal.FreeHGlobal(mCompressedDataPointer);
+                mCompressedDataPointer = Marshal.AllocHGlobal((int)this.AllocSize);
+            }
         }
 
         /// <summary>
@@ -322,6 +351,7 @@ namespace Cdy.Tag
                     long Offset = tagheadoffset;
 
                     this.MakeMemoryBusy();
+                    this.StaticsMemoryBlock.MakeMemoryBusy();
 
                     long ltmp1 = sw.ElapsedMilliseconds;
 
@@ -361,7 +391,7 @@ namespace Cdy.Tag
                     {
                         ZipCompress(headOffset + mTagIds.Count * 8, (int)datasize);
                     }
-
+                    
                     ServiceLocator.Locator.Resolve<IDataSerialize3>().RequestToSeriseFile(this);
                     sw.Stop();
                     LoggerService.Service.Info("CompressEnginer", this.Name + " 压缩完成 耗时:" + sw.ElapsedMilliseconds  + " CPU Id:" + ThreadHelper.GetCurrentProcessorNumber(), ConsoleColor.Blue);
@@ -413,7 +443,9 @@ namespace Cdy.Tag
                 tp.Parameters = histag.Parameters;
                 tp.Precision = histag.Precision;
                 tp.TimeTick = 100;
-                var size = tp.Compress(mSourceMemory, 0, this, targetPosition + 5, len) + 1;
+                tp.Id = id;
+
+                var size = tp.Compress(mSourceMemory, 0, this, targetPosition + 5, len, mStaticsMemoryBlock,(id- StartId)*52) + 1;
                 this.WriteInt(targetPosition, (int)size);
                 //this.Dump();
             
@@ -430,7 +462,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         private MarshalMemoryBlock CompressBlockMemory(ManualHisDataMemoryBlock data)
         {
-            MarshalMemoryBlock block = MarshalMemoryBlockPool.Pool.Get(data.Length * 2 + 28 + 5);
+            MarshalMemoryBlock block = MarshalMemoryBlockPool.Pool.Get(data.Length * 2 + 28 + 5+56);
             var histag = mHisTagService.GetHisTag(data.Id);
             if (histag == null)
             {
@@ -438,12 +470,16 @@ namespace Cdy.Tag
             }
             int datasize = 0;
 
-            var targetPosition = 28;
-            block.WriteInt(0,data.Id);
-            block.WriteDatetime(4, data.Time);     //时间
-            block.WriteDatetime(12, data.EndTime); //结束时间
+            var targetPosition = 28+56;
+            //前56个字节用于统计数据存放
+
+
+            block.WriteInt(56,data.Id);
+            block.WriteDatetime(56+4, data.Time);     //时间
+            block.WriteDatetime(56+12, data.EndTime); //结束时间
+
             //block.WriteInt(20, 0);                 //写入数据大小
-            block.WriteInt(24, mTagIds.Count);//写入变量的个数
+            block.WriteInt(56 + 24, mTagIds.Count);//写入变量的个数
 
             var qulityoffset = data.QualityAddress;
             var comtype = histag.CompressType;//压缩类型
@@ -459,10 +495,13 @@ namespace Cdy.Tag
                 tp.Parameters = histag.Parameters;
                 tp.Precision = histag.Precision;
                 tp.TimeTick = data.TimeUnit;
-                var size = tp.Compress(data, 0, block, targetPosition + 5, data.Length) + 1;
+                tp.Id = data.Id;
+
+                var size = tp.Compress(data, 0, block, targetPosition + 5, data.Length, block, 0) + 1;
                 block.WriteInt(targetPosition, (int)size);
+
                 datasize = (int)(targetPosition + size + 5);
-                block.WriteInt(20, datasize);                 //写入数据大小
+                block.WriteInt(56 + 20, datasize);                 //写入数据大小
             }
             return block;
         }

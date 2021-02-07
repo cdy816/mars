@@ -64,9 +64,12 @@ namespace Cdy.Tag
         /// <param name="target"></param>
         /// <param name="targetAddr"></param>
         /// <param name="size"></param>
+        /// <param name="statisticTarget">统计值内存地址</param>
+        /// <param name="statisticAddr">统计值起始地址偏移</param>
         /// <returns></returns>
-        public override long Compress(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size)
+        public override long Compress(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size, IMemoryBlock statisticTarget, long statisticAddr)
         {
+
             target.WriteDatetime(targetAddr, this.StartTime);
 
             //LoggerService.Service.Debug("LosslessCompressUnit2", "Record time: "+this.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fff"));
@@ -77,24 +80,33 @@ namespace Cdy.Tag
                 case TagType.Bool:
                     return Compress<bool>(source, sourceAddr, target, targetAddr+12, size,TagType) + 12;
                 case TagType.Byte:
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
                     return Compress<byte>(source, sourceAddr, target, targetAddr+ 12, size, TagType) + 12;
                 case TagType.UShort:
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
                     return Compress<ushort>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Short:
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
                     return Compress<short>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.UInt:
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
                     return Compress<uint>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Int:
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
                     return Compress<int>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.ULong:
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
                     return Compress<ulong>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Long:
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
                     return Compress<long>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Double:
-                     return Compress<double>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
+                    return Compress<double>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.DateTime:
                     return Compress<DateTime>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Float:
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
                     return Compress<float>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.String:
                     return Compress<string>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
@@ -155,6 +167,42 @@ namespace Cdy.Tag
         //    }
         //    return mVarintMemory.DataBuffer.AsMemory(0, (int)mVarintMemory.WritePosition);
         //}
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="startAddr"></param>
+        /// <param name="target"></param>
+        /// <param name="targetaddr"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        protected override int NumberStatistic(IMemoryFixedBlock source, long startAddr, IMemoryBlock target, long targetaddr, TagType type)
+        {
+            switch(type)
+            {
+                case TagType.Byte:
+                    break;
+                case TagType.Short:
+                    break;
+                case TagType.UShort:
+                    break;
+                case TagType.Int:
+                    break;
+                case TagType.UInt:
+                    break;
+                case TagType.Long:
+                    break;
+                case TagType.ULong:
+                    break;
+                case TagType.Double:
+                    break;
+                case TagType.Float:
+                    break;
+            }
+            return 54;
+        }
 
         /// <summary>
         /// 

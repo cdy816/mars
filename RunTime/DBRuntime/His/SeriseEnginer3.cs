@@ -935,6 +935,16 @@ namespace Cdy.Tag
         {
             return DatabaseName + Id.ToString("D3") + time.ToString("yyyyMMdd") + DayStatisticsFileExtends;
         }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        private string GetStatisticsDataPath(DateTime time)
+        {
+            return System.IO.Path.Combine(SeriseEnginer3.HisDataPath, GetStatisticsFileName(time));
+        }
 
         /// <summary>
         /// 搜索最后一个数据区域
@@ -1648,7 +1658,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         private DataFileSeriserbase GetStatisticsFileWriter(DateTime time)
         {
-            string sfile = GetStatisticsFileName(time);
+            string sfile = GetStatisticsDataPath(time);
 
             if (mStatisticsWriter != null && mStatisticsWriter.FileName == sfile)
             {
@@ -1660,17 +1670,15 @@ namespace Cdy.Tag
                 if (re.CreatOrOpenFile(sfile))
                 {
                     AppendStatisticsFileHeader(time, this.DatabaseName, re);
-                    re.AppendZore(TagCountOneFile * 8);
                 }
                 else
                 {
                     if (re.Length < TagCountOneFile * 8)
                     {
                         AppendStatisticsFileHeader(time, this.DatabaseName, re);
-                        re.AppendZore(TagCountOneFile * 8);
                     }
                 }
-
+               
                 if (mStatisticsWriter != null) mStatisticsWriter.Dispose();
                 mStatisticsWriter = re;
                 return re;
@@ -1691,21 +1699,23 @@ namespace Cdy.Tag
             }
             var time = mProcessMemory.First().ReadDateTime(4 + 56);
             var filewriter = GetStatisticsFileWriter(time);
-            filewriter.GoToStart();
+            filewriter.Write(time, 0);//写入最后更新时间
+            filewriter.GoTo(72);
+
             StatisticsMemory.Load(filewriter.GetStream());
             MarshalFixedMemoryBlock mfb = new MarshalFixedMemoryBlock();
 
             foreach (var vv in mProcessMemory)
             {
-                var id = vv.ReadInt(56);
+                var id = vv.ReadInt(0);
                 StatisticsMemory.GetStatisticsData(id, mfb);
 
-                var avgcount = vv.ReadInt(0);
-                var avgvalue = vv.ReadDouble(4);
-                var maxtime = vv.ReadLong(12);
-                var maxvalue = vv.ReadDouble(20);
-                var mintime = vv.ReadLong(28);
-                var minvalue = vv.ReadDouble(36);
+                var avgcount = vv.ReadInt(8);
+                var avgvalue = vv.ReadDouble(12);
+                var maxtime = vv.ReadLong(20);
+                var maxvalue = vv.ReadDouble(28);
+                var mintime = vv.ReadLong(36);
+                var minvalue = vv.ReadDouble(44);
 
 
                 var ncount = mfb.ReadInt(4);
@@ -1718,23 +1728,27 @@ namespace Cdy.Tag
                     mfb.WriteDouble(8, (avgcount * avgvalue + navgvalue * ncount) / (ncount + avgcount));
                 }
 
+                var nmaxtime = mfb.ReadLong(16);
                 var nmaxvalue = mfb.ReadDouble(24);
-                if (nmaxvalue < maxvalue)
+                if (nmaxvalue < maxvalue || nmaxtime==0)
                 {
                     mfb.WriteLong(16, maxtime);
                     mfb.WriteDouble(24, maxvalue);
                 }
 
+                var nmintime = mfb.ReadLong(32);
                 var nminvalue = mfb.ReadDouble(40);
-                if (nminvalue > minvalue)
+                if (nminvalue > minvalue || nmintime==0)
                 {
                     mfb.WriteLong(32, mintime);
                     mfb.WriteDouble(40, minvalue);
                 }
             }
 
-            filewriter.GoToStart();
+            filewriter.GoTo(72);
             StatisticsMemory.Save(filewriter.GetStream());
+           
+
             filewriter.Flush();
             filewriter.Dispose();
 
@@ -1749,7 +1763,8 @@ namespace Cdy.Tag
         private void UpdateStaticstics(MarshalMemoryBlock mProcessMemory, DateTime time)
         {
             var filewriter = GetStatisticsFileWriter(time);
-            filewriter.GoToStart();
+            filewriter.Write(time, 0);//写入最后更新时间
+            filewriter.GoTo(72);
             StatisticsMemory.Load(filewriter.GetStream());
             MarshalFixedMemoryBlock mfb = new MarshalFixedMemoryBlock();
             var cm = (mProcessMemory as CompressMemory3).StaticsMemoryBlock;
@@ -1763,14 +1778,14 @@ namespace Cdy.Tag
                     offset = i * 52;
 
                     var id = cm.ReadInt(offset);
-                    var avgcount = cm.ReadInt();
+                    var avgcount = cm.ReadInt(offset+8);
                     var avgvalue = cm.ReadDouble();
                     var maxtime = cm.ReadLong();
                     var maxvalue = cm.ReadDouble();
                     var mintime = cm.ReadLong();
                     var minvalue = cm.ReadDouble();
 
-                    if (id == 0 && avgcount == 0 && avgcount == 0 && maxtime == 0 && mintime == 0) continue;
+                    if (id <= 0 && avgcount <= 0 && avgcount <= 0 && maxtime <= 0 && mintime <= 0) continue;
                     StatisticsMemory.GetStatisticsData(id, mfb);
 
                     var ncount = mfb.ReadInt(4);
@@ -1783,15 +1798,17 @@ namespace Cdy.Tag
                         mfb.WriteDouble(8, (avgcount * avgvalue + navgvalue * ncount) / (ncount + avgcount));
                     }
 
+                    var nmaxtime = mfb.ReadLong(16);
                     var nmaxvalue = mfb.ReadDouble(24);
-                    if (nmaxvalue < maxvalue)
+                    if (nmaxvalue < maxvalue || nmaxtime == 0)
                     {
                         mfb.WriteLong(16, maxtime);
                         mfb.WriteDouble(24, maxvalue);
                     }
 
+                    var nmintime = mfb.ReadLong(32);
                     var nminvalue = mfb.ReadDouble(40);
-                    if(nminvalue>minvalue)
+                    if(nminvalue>minvalue || nmintime==0)
                     {
                         mfb.WriteLong(32, mintime);
                         mfb.WriteDouble(40, minvalue);
@@ -1799,8 +1816,9 @@ namespace Cdy.Tag
                 }
             }
 
-            filewriter.GoToStart();
+            filewriter.GoTo(72);
             StatisticsMemory.Save(filewriter.GetStream());
+           
             filewriter.Flush();
             filewriter.Dispose();
 

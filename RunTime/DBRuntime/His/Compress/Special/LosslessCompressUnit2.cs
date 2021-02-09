@@ -80,33 +80,33 @@ namespace Cdy.Tag
                 case TagType.Bool:
                     return Compress<bool>(source, sourceAddr, target, targetAddr+12, size,TagType) + 12;
                 case TagType.Byte:
-                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, size, TagType);
                     return Compress<byte>(source, sourceAddr, target, targetAddr+ 12, size, TagType) + 12;
                 case TagType.UShort:
-                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, size, TagType);
                     return Compress<ushort>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Short:
-                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, size, TagType);
                     return Compress<short>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.UInt:
-                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, size, TagType);
                     return Compress<uint>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Int:
-                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, size, TagType);
                     return Compress<int>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.ULong:
-                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, size, TagType);
                     return Compress<ulong>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Long:
-                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, size, TagType);
                     return Compress<long>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Double:
-                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, size, TagType);
                     return Compress<double>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.DateTime:
                     return Compress<DateTime>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.Float:
-                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, TagType);
+                    NumberStatistic(source, sourceAddr, statisticTarget, statisticAddr, size, TagType);
                     return Compress<float>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
                 case TagType.String:
                     return Compress<string>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
@@ -171,6 +171,361 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="source"></param>
+        /// <param name="startAddr"></param>
+        /// <param name="count"></param>
+        /// <param name="value"></param>
+        private void CalAvgValue(IMemoryFixedBlock source,long startAddr,out int count,out double value,long size, TagType type)
+        {
+            byte tlen = (source as HisDataMemoryBlock).TimeLen;
+            var valuecount = size - this.QulityOffset;
+            long valueoffset = tlen * valuecount;
+            
+            double dval = 0;
+            emptys.Reset();
+            ReadAvaiableTimerIds(source, startAddr, valuecount, emptys);
+            switch (type)
+            {
+                case TagType.Byte:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadByte(valueoffset + vid);
+                            dval += val;
+                        }
+                        dval = dval / emptys.WriteIndex;
+                    }
+                    break;
+                case TagType.Short:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadShort(valueoffset + vid*2);
+                            dval += val;
+                        }
+                        dval = dval / emptys.WriteIndex;
+                    }
+                    break;
+                case TagType.UShort:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadUShort(valueoffset + vid * 2);
+                            dval += val;
+                        }
+                        dval = dval / emptys.WriteIndex;
+                    }
+                    break;
+                case TagType.Int:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadInt(valueoffset + vid * 4);
+                            dval += val;
+                        }
+                        dval = dval / emptys.WriteIndex;
+                    }
+                    break;
+                case TagType.UInt:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadUInt(valueoffset + vid * 4);
+                            dval += val;
+                        }
+                        dval = dval / emptys.WriteIndex;
+                    }
+                    break;
+                case TagType.Long:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadLong(valueoffset + vid * 8);
+                            dval += val;
+                        }
+                        dval = dval / emptys.WriteIndex;
+                    }
+                    break;
+                case TagType.ULong:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadULong(valueoffset + vid * 8);
+                            dval += val;
+                        }
+                        dval = dval / emptys.WriteIndex;
+                    }
+                    break;
+                case TagType.Double:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadDouble(valueoffset + vid * 8);
+                            dval += val;
+                        }
+                        dval = dval / emptys.WriteIndex;
+                    }
+                    break;
+                case TagType.Float:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadFloat(valueoffset + vid * 4);
+                            dval += val;
+                        }
+                        dval = dval / emptys.WriteIndex;
+                    }
+                    break;
+            }
+            count = emptys.WriteIndex;
+            value = dval;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="startAddr"></param>
+        /// <param name="maxValue"></param>
+        /// <param name="maxTime"></param>
+        /// <param name="minValue"></param>
+        /// <param name="minTime"></param>
+        private void CalMaxMinValue(IMemoryFixedBlock source,long startAddr,out double maxValue,out DateTime maxTime,out double minValue,out DateTime minTime,long size, TagType type)
+        {
+
+            maxValue = double.MinValue; minValue = double.MaxValue;
+            maxTime = minTime = DateTime.Now;
+            int maxtimeId=-1, mintimeId = -1;
+
+            byte tlen = (source as HisDataMemoryBlock).TimeLen;
+            var valuecount = size - this.QulityOffset;
+            long valueoffset = tlen * valuecount;
+            //long valueoffset = tlen * size;
+            emptys.Reset();
+            ReadAvaiableTimerIds(source, startAddr, valuecount, emptys);
+            switch (type)
+            {
+                case TagType.Byte:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadByte(valueoffset + vid);
+                            if(val<minValue)
+                            {
+                                minValue = val;
+                                mintimeId = vid;
+                            }
+                            if(val>maxValue)
+                            {
+                                maxValue = val;
+                                maxtimeId = vid;
+                            }
+                        }
+                    }
+                    break;
+                case TagType.Short:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadShort(valueoffset + vid * 2);
+                            if (val < minValue)
+                            {
+                                minValue = val;
+                                mintimeId = vid;
+                            }
+                            if (val > maxValue)
+                            {
+                                maxValue = val;
+                                maxtimeId = vid;
+                            }
+                        }
+                      
+                    }
+                    break;
+                case TagType.UShort:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadUShort(valueoffset + vid * 2);
+                            if (val < minValue)
+                            {
+                                minValue = val;
+                                mintimeId = vid;
+                            }
+                            if (val > maxValue)
+                            {
+                                maxValue = val;
+                                maxtimeId = vid;
+                            }
+                        }
+                        
+                    }
+                    break;
+                case TagType.Int:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadInt(valueoffset + vid * 4);
+                            if (val < minValue)
+                            {
+                                minValue = val;
+                                mintimeId = vid;
+                            }
+                            if (val > maxValue)
+                            {
+                                maxValue = val;
+                                maxtimeId = vid;
+                            }
+                        }
+                        
+                    }
+                    break;
+                case TagType.UInt:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadUInt(valueoffset + vid * 4);
+                            if (val < minValue)
+                            {
+                                minValue = val;
+                                mintimeId = vid;
+                            }
+                            if (val > maxValue)
+                            {
+                                maxValue = val;
+                                maxtimeId = vid;
+                            }
+                        }
+                        
+                    }
+                    break;
+                case TagType.Long:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadLong(valueoffset + vid * 8);
+                            if (val < minValue)
+                            {
+                                minValue = val;
+                                mintimeId = vid;
+                            }
+                            if (val > maxValue)
+                            {
+                                maxValue = val;
+                                maxtimeId = vid;
+                            }
+                        }
+                       
+                    }
+                    break;
+                case TagType.ULong:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadULong(valueoffset + vid * 8);
+                            if (val < minValue)
+                            {
+                                minValue = val;
+                                mintimeId = vid;
+                            }
+                            if (val > maxValue)
+                            {
+                                maxValue = val;
+                                maxtimeId = vid;
+                            }
+                        }
+                        
+                    }
+                    break;
+                case TagType.Double:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadDouble(valueoffset + vid * 8);
+                            if (val < minValue)
+                            {
+                                minValue = val;
+                                mintimeId = vid;
+                            }
+                            if (val > maxValue)
+                            {
+                                maxValue = val;
+                                maxtimeId = vid;
+                            }
+                        }
+                    }
+                    break;
+                case TagType.Float:
+                    if (emptys.WriteIndex > 0)
+                    {
+                        for (int i = 0; i < emptys.WriteIndex; i++)
+                        {
+                            var vid = emptys.IncRead();
+                            var val = source.ReadFloat(valueoffset + vid * 4);
+                            if (val < minValue)
+                            {
+                                minValue = val;
+                                mintimeId = vid;
+                            }
+                            if (val > maxValue)
+                            {
+                                maxValue = val;
+                                maxtimeId = vid;
+                            }
+                        }
+                    }
+                    break;
+            }
+
+            if(maxtimeId>-1 && mintimeId>-1)
+            {
+                emptys.Reset();
+                ReadAllTimerValues(source, startAddr, valuecount, emptys);
+
+                var maxtimeval = emptys.Read(maxtimeId);
+                var mintimeval = emptys.Read(mintimeId);
+                maxTime = StartTime.AddMilliseconds(maxtimeval * HisEnginer3.MemoryTimeTick);
+                minTime = StartTime.AddMilliseconds(mintimeval * HisEnginer3.MemoryTimeTick);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source"></param>
         /// <param name="startAddr"></param>
@@ -178,30 +533,26 @@ namespace Cdy.Tag
         /// <param name="targetaddr"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        protected override int NumberStatistic(IMemoryFixedBlock source, long startAddr, IMemoryBlock target, long targetaddr, TagType type)
+        protected override int NumberStatistic(IMemoryFixedBlock source, long startAddr, IMemoryBlock target, long targetaddr,long size, TagType type)
         {
-            switch(type)
-            {
-                case TagType.Byte:
-                    break;
-                case TagType.Short:
-                    break;
-                case TagType.UShort:
-                    break;
-                case TagType.Int:
-                    break;
-                case TagType.UInt:
-                    break;
-                case TagType.Long:
-                    break;
-                case TagType.ULong:
-                    break;
-                case TagType.Double:
-                    break;
-                case TagType.Float:
-                    break;
-            }
-            return 54;
+            var count = (int)(size - this.QulityOffset);
+
+            int avgcount=0;
+            double avgvalue=0, maxvalue=0, minvalue=0;
+            DateTime maxtime=DateTime.Now, mintime=DateTime.Now;
+
+            CalAvgValue(source, startAddr, out avgcount, out avgvalue,size,type);
+            CalMaxMinValue(source, startAddr, out maxvalue, out maxtime, out minvalue, out mintime,size, type);
+
+            target.WriteInt(targetaddr, Id);
+            target.WriteInt(targetaddr + 8, avgcount);
+            target.WriteDouble(targetaddr + 12, avgvalue);
+            target.WriteDatetime(targetaddr + 20, maxtime);
+            target.WriteDouble(targetaddr + 28, maxvalue);
+            target.WriteDatetime(targetaddr + 36, mintime);
+            target.WriteDouble(targetaddr + 44, minvalue);
+
+            return 52;
         }
 
         /// <summary>
@@ -245,6 +596,46 @@ namespace Cdy.Tag
                 }
             }
             return mVarintMemory.DataBuffer.AsMemory(0, (int)mVarintMemory.WritePosition);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="timers"></param>
+        private void ReadAvaiableTimerIds(IMemoryFixedBlock timerVals, long startaddr, long count, CustomQueue<int> timers)
+        {
+            timers.Reset();
+            byte tlen = (timerVals as HisDataMemoryBlock).TimeLen;
+            timers.CheckAndResize((int)count);
+        
+            for (int i = 0; i < count; i++)
+            {
+                var id = tlen == 2 ? timerVals.ReadUShort((int)startaddr + i * 2) : timerVals.ReadInt((int)startaddr + i * 4);
+                if (id > 0)
+                {
+                    timers.Insert(i);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="timerVals"></param>
+        /// <param name="startaddr"></param>
+        /// <param name="count"></param>
+        /// <param name="timers"></param>
+        private void ReadAllTimerValues(IMemoryFixedBlock timerVals, long startaddr, long count, CustomQueue<int> timers)
+        {
+            timers.Reset();
+            byte tlen = (timerVals as HisDataMemoryBlock).TimeLen;
+            timers.CheckAndResize((int)count);
+           
+            for (int i = 0; i < count; i++)
+            {
+                var id = tlen == 2 ? timerVals.ReadUShort((int)startaddr + i * 2) : timerVals.ReadInt((int)startaddr + i * 4);
+                timers.Insert(id);
+            }
         }
 
         /// <summary>
@@ -1008,10 +1399,9 @@ namespace Cdy.Tag
             }
 
             emptys.CheckAndResize(count);
+            emptys.Reset();
 
-           
-
-            var datas = CompressTimers(source, sourceAddr, (int)count, emptys);
+             var datas = CompressTimers(source, sourceAddr, (int)count, emptys);
             long rsize = 0;
             int rcount = count - emptys.WriteIndex - 1;
 

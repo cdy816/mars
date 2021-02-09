@@ -102,7 +102,7 @@ namespace Cdy.Tag
         /// <param name="sourceAddr"></param>
         /// <param name="target"></param>
         /// <param name="targetaddr"></param>
-        protected abstract int NumberStatistic(IMemoryFixedBlock source, long startAddr, IMemoryBlock target, long targetaddr, TagType type);
+        protected abstract int NumberStatistic(IMemoryFixedBlock source, long startAddr, IMemoryBlock target, long targetaddr,long size, TagType type);
         
 
         /// <summary>

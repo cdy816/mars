@@ -77,7 +77,6 @@ namespace Cdy.Tag
             {
                 int datasize = br.ReadInt32();
                 mHead.ReadFromStream(stream, datasize);
-                stream.Position = datasize + 4;
                 datasize = br.ReadInt32();
                 mData.ReadFromStream(stream, datasize);
                 mAvaiableDataLen = datasize;
@@ -137,7 +136,10 @@ namespace Cdy.Tag
         /// </summary>
         public void Save(System.IO.Stream stream)
         {
+            stream.Write(BitConverter.GetBytes(mHead.AllocSize));
             mHead.WriteToStream(stream,0,mHead.AllocSize);
+
+            stream.Write(BitConverter.GetBytes(mAvaiableDataLen));
             mData.WriteToStream(stream, 0, mAvaiableDataLen);
         }
 

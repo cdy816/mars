@@ -1701,7 +1701,7 @@ namespace Cdy.Tag
             var filewriter = GetStatisticsFileWriter(time);
             filewriter.Write(time, 0);//写入最后更新时间
             filewriter.GoTo(72);
-
+            StatisticsMemory.StartId = this.Id * this.TagCountOneFile;
             StatisticsMemory.Load(filewriter.GetStream());
             MarshalFixedMemoryBlock mfb = new MarshalFixedMemoryBlock();
 
@@ -1750,7 +1750,7 @@ namespace Cdy.Tag
            
 
             filewriter.Flush();
-            filewriter.Dispose();
+            //filewriter.Dispose();
 
         }
 
@@ -1765,6 +1765,7 @@ namespace Cdy.Tag
             var filewriter = GetStatisticsFileWriter(time);
             filewriter.Write(time, 0);//写入最后更新时间
             filewriter.GoTo(72);
+            StatisticsMemory.StartId = this.Id * this.TagCountOneFile;
             StatisticsMemory.Load(filewriter.GetStream());
             MarshalFixedMemoryBlock mfb = new MarshalFixedMemoryBlock();
             var cm = (mProcessMemory as CompressMemory3).StaticsMemoryBlock;
@@ -1820,7 +1821,7 @@ namespace Cdy.Tag
             StatisticsMemory.Save(filewriter.GetStream());
            
             filewriter.Flush();
-            filewriter.Dispose();
+            //filewriter.Dispose();
 
             cm.MakeMemoryNoBusy();
             cm.Clear();

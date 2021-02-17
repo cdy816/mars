@@ -130,7 +130,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <returns></returns>
-        private string GetPrimaryHisDataPath()
+        public string GetPrimaryHisDataPath()
         {
             return string.IsNullOrEmpty(PrimaryHisDataPath) ? PathHelper.helper.GetDataPath(this.mDatabaseName,"HisData") : System.IO.Path.IsPathRooted(PrimaryHisDataPath) ? PrimaryHisDataPath : PathHelper.helper.GetDataPath(this.mDatabaseName,PrimaryHisDataPath);
         }
@@ -148,7 +148,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <returns></returns>
-        private string GetBackHisDataPath()
+        public string GetBackHisDataPath()
         {
             return string.IsNullOrEmpty(BackHisDataPath) ? "" : System.IO.Path.IsPathRooted(BackHisDataPath) ? BackHisDataPath : PathHelper.helper.GetDataPath(this.mDatabaseName, BackHisDataPath);
         }

@@ -21,6 +21,8 @@ namespace Cdy.Tag
     {
         IHisQueryFromMemory mMemoryService;
 
+        StatisticsFileHelper statisticsHelper;
+
         /// <summary>
         /// 
         /// </summary>
@@ -36,7 +38,7 @@ namespace Cdy.Tag
         public QuerySerivce(string databaseName) : this()
         {
             Database = databaseName;
-            
+            statisticsHelper = new StatisticsFileHelper() { Database = databaseName, Manager = GetFileManager() };
         }
 
         public string Database { get; set; }
@@ -400,6 +402,52 @@ namespace Cdy.Tag
             var result = new HisQueryResult<T>(valueCount);
             ReadValueByUTCTime(id, times, type, result);
             return result; 
+        }
+
+        /// <summary>
+        /// 读取某个时间段内，值类型变量的统计信息
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <returns></returns>
+        public NumberStatisticsQueryResult ReadNumberStatistics(int id, DateTime startTime, DateTime endTime)
+        {
+            return ReadNumberStatisticsByUTCTime(id, startTime.ToUniversalTime(), endTime.ToUniversalTime()).ConvertUTCTimeToLocal();
+        }
+
+        /// <summary>
+        /// 读取某个时间段（UTC时间）内，值类型变量的统计信息
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <returns></returns>
+        public NumberStatisticsQueryResult ReadNumberStatisticsByUTCTime(int id, DateTime startTime, DateTime endTime)
+        {
+            return statisticsHelper.Read(id, startTime, endTime);
+        }
+
+        /// <summary>
+        /// 读取指定时间点的，值类型变量的统计信息
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <returns></returns>
+        public NumberStatisticsQueryResult ReadNumberStatistics(int id, IEnumerable<DateTime> times)
+        {
+            return ReadNumberStatisticsByUTCTime(id, times.Select(e => e.ToUniversalTime())).ConvertUTCTimeToLocal();
+        }
+
+        /// <summary>
+        /// 读取指定时间点（UTC时间）的，值类型变量的统计信息
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <returns></returns>
+        public NumberStatisticsQueryResult ReadNumberStatisticsByUTCTime(int id, IEnumerable<DateTime> times)
+        {
+            return statisticsHelper.Read(id, times);
         }
     }
 }

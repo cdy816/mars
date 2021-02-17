@@ -36,19 +36,19 @@ namespace Cdy.Tag.Tests
             HisQueryResult<double> res9 = new HisQueryResult<double>(10);
             HisQueryResult<float> res10 = new HisQueryResult<float>(10);
             HisQueryResult<string> res11 = new HisQueryResult<string>(10);
-            Assert.IsTrue(res.BufferSize == 100);
-            Assert.IsTrue(res1.BufferSize == 100);
-            Assert.IsTrue(res2.BufferSize == 110);
-            Assert.IsTrue(res3.BufferSize == 110);
-            Assert.IsTrue(res4.BufferSize == 130);
-            Assert.IsTrue(res5.BufferSize == 130);
-            Assert.IsTrue(res6.BufferSize == 170);
-            Assert.IsTrue(res7.BufferSize == 170);
-            Assert.IsTrue(res8.BufferSize == 170);
+            Assert.IsTrue(res.Length == 100);
+            Assert.IsTrue(res1.Length == 100);
+            Assert.IsTrue(res2.Length == 110);
+            Assert.IsTrue(res3.Length == 110);
+            Assert.IsTrue(res4.Length == 130);
+            Assert.IsTrue(res5.Length == 130);
+            Assert.IsTrue(res6.Length == 170);
+            Assert.IsTrue(res7.Length == 170);
+            Assert.IsTrue(res8.Length == 170);
 
-            Assert.IsTrue(res9.BufferSize == 170);
-            Assert.IsTrue(res10.BufferSize == 130);
-            Assert.IsTrue(res11.BufferSize == (Const.StringSize + 9) *10);
+            Assert.IsTrue(res9.Length == 170);
+            Assert.IsTrue(res10.Length == 130);
+            Assert.IsTrue(res11.Length == (Const.StringSize + 9) *10);
            
         }
 

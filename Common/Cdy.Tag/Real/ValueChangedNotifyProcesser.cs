@@ -402,7 +402,7 @@ namespace Cdy.Tag
         {
             int count = maxid / BlockSize;
             count = maxid % BlockSize > 0 ? count + 1 : count;
-            for(int i=0;i<count;i++)
+            for(int i=0;i<=count;i++)
             {
                 int start = getAddress(i * BlockSize);
                 int end = getAddress(i * BlockSize + BlockSize);

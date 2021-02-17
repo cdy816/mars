@@ -24,7 +24,7 @@ namespace Cdy.Tag
 
         private MarshalMemoryBlock mData;
 
-        private int mAvaiableDataLen = 0;
+        private int mAvaiableDataLen = 48;
 
         public const int TagTotalCount = 100000;
 
@@ -68,19 +68,25 @@ namespace Cdy.Tag
         {
             mHead.Clear();
             mData.Clear();
-            mAvaiableDataLen = 4;
-            if(stream.Length< TagTotalCount*8)
+            mAvaiableDataLen = 48;
+            if (stream.Length < TagTotalCount * 8)
             {
                 return;
             }
-            using (var br = new System.IO.BinaryReader(stream))
-            {
-                int datasize = br.ReadInt32();
-                mHead.ReadFromStream(stream, datasize);
-                datasize = br.ReadInt32();
-                mData.ReadFromStream(stream, datasize);
-                mAvaiableDataLen = datasize;
-            }
+
+            byte[] bvals = System.Buffers.ArrayPool<byte>.Shared.Rent(4);
+
+            //var br = new System.IO.BinaryReader(stream);
+            stream.Read(bvals, 0, 4);
+            var datasize = BitConverter.ToInt32(bvals, 0);
+            mHead.ReadFromStream(stream, datasize);
+            stream.Read(bvals, 0, 4);
+            datasize = BitConverter.ToInt32(bvals, 0);
+
+            mData.ReadFromStream(stream, datasize);
+            mAvaiableDataLen = datasize;
+
+            System.Buffers.ArrayPool<byte>.Shared.Return(bvals);
         }
 
         /// <summary>
@@ -102,7 +108,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    re = new MarshalFixedMemoryBlock((mData.Buffers[0] + id), 48);
+                    re = new MarshalFixedMemoryBlock((mData.Buffers[0] + (int)vid), 48);
                 }
             }         
             return re;
@@ -126,7 +132,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    block.Reset((mData.Buffers[0] + id), 48);
+                    block.Reset((mData.Buffers[0] + (int)vid), 48);
                 }
             }
         }
@@ -136,7 +142,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Save(System.IO.Stream stream)
         {
-            stream.Write(BitConverter.GetBytes(mHead.AllocSize));
+            stream.Write(BitConverter.GetBytes((int)mHead.AllocSize));
             mHead.WriteToStream(stream,0,mHead.AllocSize);
 
             stream.Write(BitConverter.GetBytes(mAvaiableDataLen));
@@ -153,6 +159,8 @@ namespace Cdy.Tag
             if (mData != null)
                 mData.Dispose();
         }
+
+
 
         #endregion ...Methods...
 

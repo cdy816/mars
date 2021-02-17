@@ -8,6 +8,7 @@
 //==============================================================
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -27,7 +28,7 @@ namespace Cdy.Tag
 
         private int mQulityAddr = 0;
 
-        private int mLenght = 0;
+        //private int mLenght = 0;
 
         private int mDataSize = 0;
 
@@ -41,7 +42,7 @@ namespace Cdy.Tag
 
         private int mLimite = 0;
 
-        public static byte[] zoreData = new byte[1024 * 10];
+        //public static byte[] zoreData = new byte[1024 * 10];
 
         private int mSize;
 
@@ -64,22 +65,6 @@ namespace Cdy.Tag
             Init(count);
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="handle"></param>
-        ///// <param name="count"></param>
-        //public HisQueryResult(IntPtr handle,int count)
-        //{
-        //    this.handle = handle;
-        //    mCount = count;
-        //    mTimeAddr = count * mDataSize;
-        //    mQulityAddr = count * (mDataSize + 8);
-        //    mLenght = count;
-        //    mLimite = count;
-        //    mPosition = 0;
-        //}
-
         #endregion ...Constructor...
 
         #region ... Properties ...
@@ -97,7 +82,7 @@ namespace Cdy.Tag
 
 
         /// <summary>
-        /// 
+        /// 当前添加数值个数
         /// </summary>
         public int Count
         {
@@ -112,31 +97,19 @@ namespace Cdy.Tag
         }
 
         /// <summary>
-        /// 
+        /// 总共数值个数
         /// </summary>
-        public int BufferSize
+        public int Length
         {
             get
             {
-                return mLenght;
+                return mLimite;
             }
         }
 
         /// <summary>
-        /// 
+        /// 总共内存分配大小
         /// </summary>
-        public int Position
-        {
-            get
-            {
-                return mPosition;
-            }
-            set
-            {
-                mPosition = value;
-            }
-        }
-
         public int Size
         {
             get
@@ -186,7 +159,7 @@ namespace Cdy.Tag
 
             mTimeAddr = count * mDataSize;
             mQulityAddr = count * (mDataSize + 8);
-            mLenght = count;
+            //mLenght = count;
             //handle = mDataBuffer.AsMemory().Pin().Pointer;
             handle = Marshal.AllocHGlobal(csize);
            // handle = (void*)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mDataBuffer, 0);
@@ -1069,22 +1042,29 @@ namespace Cdy.Tag
         {
 
             var newsize = count * (9 + mDataSize);
+            mLimite = count > mLimite ? count : mLimite;
 
-            if (newsize == mLenght) return;
+            if (newsize <= mSize)
+            {
+                return;
+            }
 
             IntPtr nhd = Marshal.AllocHGlobal(newsize);
 
             var mTimeAddrn = count * mDataSize;
             var mQulityAddrn = count * (mDataSize + 8);
 
-            Buffer.MemoryCopy((void*)handle, (void*)nhd, newsize, mLenght);
+            Buffer.MemoryCopy((void*)handle, (void*)nhd, newsize, mSize);
 
             mTimeAddr = mTimeAddrn;
             mQulityAddr = mQulityAddrn;
 
             Marshal.FreeHGlobal(handle);
             handle = nhd;
-            mLimite = count;
+
+            mSize = newsize;
+
+            //mLimite = count;
 
         }
 
@@ -1171,10 +1151,12 @@ namespace Cdy.Tag
             mPosition = 0;
             mCount = 0;
 
-            for (int i = 0; i < mLenght / zoreData.Length; i++)
-            {
-                Marshal.Copy(zoreData, 0, (IntPtr)(handle+ i * zoreData.Length), zoreData.Length);
-            }
+            //for (int i = 0; i < mLenght / zoreData.Length; i++)
+            //{
+            //    Marshal.Copy(zoreData, 0, (IntPtr)(handle+ i * zoreData.Length), zoreData.Length);
+            //}
+
+            Unsafe.InitBlockUnaligned((void*)handle, 0, (uint)mSize);
         }
 
         /// <summary>
@@ -1185,7 +1167,7 @@ namespace Cdy.Tag
         {
             if (target.mLimite < this.mLimite) target.Resize(this.mLimite);
 
-            Buffer.MemoryCopy((void*)handle, (void*)target.handle, mLimite, this.mLenght);
+            Buffer.MemoryCopy((void*)handle, (void*)target.handle, mLimite, this.mSize);
             target.mCount = this.mCount;
             target.mPosition = this.mPosition;
         }

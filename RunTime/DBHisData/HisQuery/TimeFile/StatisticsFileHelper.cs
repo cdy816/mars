@@ -23,7 +23,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public StatisticsFileHelper Helper = new StatisticsFileHelper();
+        public static StatisticsFileHelper Helper = new StatisticsFileHelper();
 
         public const string DayStatisticsFileExtends = ".stad";
 

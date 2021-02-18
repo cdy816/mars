@@ -47,8 +47,8 @@ namespace HisDataTools.Properties {
         }
         
         /// <summary>
-        ///   重写当前线程的 CurrentUICulture 属性
-        ///   重写当前线程的 CurrentUICulture 属性。
+        ///   重写当前线程的 CurrentUICulture 属性，对
+        ///   使用此强类型资源类的所有资源查找执行重写。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
         internal static global::System.Globalization.CultureInfo Culture {
@@ -75,6 +75,15 @@ namespace HisDataTools.Properties {
         internal static string AllValue {
             get {
                 return ResourceManager.GetString("AllValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Avg value 的本地化字符串。
+        /// </summary>
+        internal static string AvgValue {
+            get {
+                return ResourceManager.GetString("AvgValue", resourceCulture);
             }
         }
         
@@ -187,6 +196,42 @@ namespace HisDataTools.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Max Value 的本地化字符串。
+        /// </summary>
+        internal static string MaxValue {
+            get {
+                return ResourceManager.GetString("MaxValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Max value time 的本地化字符串。
+        /// </summary>
+        internal static string MaxValueTime {
+            get {
+                return ResourceManager.GetString("MaxValueTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Min value 的本地化字符串。
+        /// </summary>
+        internal static string MinValue {
+            get {
+                return ResourceManager.GetString("MinValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Min value time 的本地化字符串。
+        /// </summary>
+        internal static string MinValueTime {
+            get {
+                return ResourceManager.GetString("MinValueTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 OK 的本地化字符串。
         /// </summary>
         internal static string OK {
@@ -210,6 +255,15 @@ namespace HisDataTools.Properties {
         internal static string OpMsgFormate {
             get {
                 return ResourceManager.GetString("OpMsgFormate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Original 的本地化字符串。
+        /// </summary>
+        internal static string OriginalValue {
+            get {
+                return ResourceManager.GetString("OriginalValue", resourceCulture);
             }
         }
         
@@ -255,6 +309,15 @@ namespace HisDataTools.Properties {
         internal static string startvalue {
             get {
                 return ResourceManager.GetString("startvalue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Statistics 的本地化字符串。
+        /// </summary>
+        internal static string StatisticsValue {
+            get {
+                return ResourceManager.GetString("StatisticsValue", resourceCulture);
             }
         }
         

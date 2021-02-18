@@ -150,11 +150,11 @@ namespace DBInRun
                         break;
                     case "setdatapath":
                         if (cmd.Length > 1)
-                            SeriseEnginer3.HisDataPathPrimary = cmd[1];
+                            SeriseEnginer4.HisDataPathPrimary = cmd[1];
                         break;
                     case "setdatabackuppath":
                         if (cmd.Length > 1)
-                            SeriseEnginer3.HisDataPathBack = cmd[1];
+                            SeriseEnginer4.HisDataPathBack = cmd[1];
                         break;
                     case "h":
                         Console.WriteLine(GetHelpString());

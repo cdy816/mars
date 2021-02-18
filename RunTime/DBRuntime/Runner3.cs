@@ -54,7 +54,7 @@ namespace Cdy.Tag
 
         private CompressEnginer3 compressEnginer;
 
-        private SeriseEnginer3 seriseEnginer;
+        private SeriseEnginer4 seriseEnginer;
 
         private DataFileManager mHisFileManager;
 
@@ -322,7 +322,7 @@ namespace Cdy.Tag
                 compressEnginer.Init();
                 ServiceLocator.Locator.Registor<IDataCompress3>(compressEnginer);
 
-                seriseEnginer = new SeriseEnginer3() { DatabaseName = database };
+                seriseEnginer = new SeriseEnginer4() { DatabaseName = database };
                 seriseEnginer.FileDuration = mHisDatabase.Setting.FileDataDuration;
                 seriseEnginer.BlockDuration = mHisDatabase.Setting.DataBlockDuration;
                 seriseEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;

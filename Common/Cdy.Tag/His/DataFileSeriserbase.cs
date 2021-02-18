@@ -325,4 +325,35 @@ namespace Cdy.Tag
 
         #endregion ...Interfaces...
     }
+
+
+    public static class DataFileSeriserExtends
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public static DataFileSeriserbase GetFileSeriserForReadOnly(this string filename)
+        {
+            var re = DataFileSeriserManager.manager.GetDefaultFileSersie();
+            re.FileName = filename;
+            re.OpenForReadOnly(filename);
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public static DataFileSeriserbase GetFileSeriser(this string filename)
+        {
+            var re = DataFileSeriserManager.manager.GetDefaultFileSersie();
+            re.FileName = filename;
+            re.OpenFile(filename);
+            return re;
+        }
+    }
+
 }

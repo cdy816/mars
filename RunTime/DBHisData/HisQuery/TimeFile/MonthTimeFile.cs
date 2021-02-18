@@ -100,14 +100,14 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="duration"></param>
         /// <param name="file"></param>
-        public void AddFile(DateTime startTime,TimeSpan duration, DataFileInfo file)
+        public void AddFile(DateTime startTime,TimeSpan duration, DataFileInfo4 file)
         {
             lock (this)
             {
                 if (!mFileMaps.ContainsKey(startTime))
                 {
                     var vdd = new DayFileItem() { Duration = duration, Time = startTime };
-                    if (file is HisDataFileInfo)
+                    if (file is HisDataFileInfo4)
                     {
                         vdd.File1 = file;
                     }
@@ -127,7 +127,7 @@ namespace Cdy.Tag
                 {
                     var vv = mFileMaps[startTime];
                     vv.Duration = duration;
-                    if (file is HisDataFileInfo)
+                    if (file is HisDataFileInfo4)
                     {
                         vv.File1 = file;
                     }
@@ -150,7 +150,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="dateTime"></param>
         /// <returns></returns>
-        public DataFileInfo GetDataFile(DateTime dateTime)
+        public DataFileInfo4 GetDataFile(DateTime dateTime)
         {
             lock (this)
             {
@@ -174,11 +174,11 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <returns></returns>
-        public List<DataFileInfo> GetDataFiles(DateTime startTime,DateTime endTime)
+        public List<DataFileInfo4> GetDataFiles(DateTime startTime,DateTime endTime)
         {
             lock (this)
             {
-                List<DataFileInfo> infos = new List<DataFileInfo>();
+                List<DataFileInfo4> infos = new List<DataFileInfo4>();
 
                 DateTime stime = startTime;
                 foreach (var vv in mFileMaps)
@@ -198,7 +198,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="span"></param>
         /// <returns></returns>
-        public List<DataFileInfo> GetDataFiles(DateTime startTime,TimeSpan span)
+        public List<DataFileInfo4> GetDataFiles(DateTime startTime,TimeSpan span)
         {
             return GetDataFiles(startTime, startTime + span);
         }
@@ -228,12 +228,12 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public DataFileInfo File1 { get; set; }
+        public DataFileInfo4 File1 { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public DataFileInfo File2 { get; set; }
+        public DataFileInfo4 File2 { get; set; }
     }
 
 }

@@ -110,7 +110,7 @@ namespace Cdy.Tag
             List<DateTime> mLogTimes = new List<DateTime>();
             var vfiles = GetFileManager().GetDataFiles(ltmp, mLogTimes, id);
 
-            DataFileInfo mPreFile = null;
+            DataFileInfo4 mPreFile = null;
 
             List<DateTime> mtime = new List<DateTime>();
 
@@ -121,9 +121,9 @@ namespace Cdy.Tag
                 {
                     if (mPreFile != null)
                     {
-                        if (mPreFile is HisDataFileInfo)
+                        if (mPreFile is HisDataFileInfo4)
                         {
-                            (mPreFile as HisDataFileInfo).Read(id, mtime, type, result);
+                            (mPreFile as HisDataFileInfo4).Read(id, mtime, type, result);
                         }
                         else
                             mPreFile.Read<T>(id, mtime, type, result);
@@ -136,7 +136,7 @@ namespace Cdy.Tag
                 {
                     if (mPreFile != null)
                     {
-                        if (mPreFile is HisDataFileInfo) (mPreFile as HisDataFileInfo).Read(id, mtime, type, result);
+                        if (mPreFile is HisDataFileInfo4) (mPreFile as HisDataFileInfo4).Read(id, mtime, type, result);
                         else
                             mPreFile.Read<T>(id, mtime, type, result);
                     }
@@ -151,7 +151,7 @@ namespace Cdy.Tag
             }
             if (mPreFile != null)
             {
-                if (mPreFile is HisDataFileInfo) (mPreFile as HisDataFileInfo).Read(id, mtime, type, result);
+                if (mPreFile is HisDataFileInfo4) (mPreFile as HisDataFileInfo4).Read(id, mtime, type, result);
                 else
                     mPreFile.Read<T>(id, mtime, type, result);
             }
@@ -315,9 +315,9 @@ namespace Cdy.Tag
                     {
                         DateTime sstart = e.StartTime > startTime ? e.StartTime : startTime;
                         DateTime eend = e.EndTime > endTime ? endTime : e.EndTime;
-                        if (e is HisDataFileInfo)
+                        if (e is HisDataFileInfo4)
                         {
-                            (e as HisDataFileInfo).ReadAllValue(id, startTime, endTime, result);
+                            (e as HisDataFileInfo4).ReadAllValue(id, startTime, endTime, result);
                         }
                         else { e.ReadAllValue(id, sstart, eend, result); }
                     }

@@ -44,7 +44,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="duration"></param>
         /// <param name="file"></param>
-        public void AddFile(DateTime startTime,TimeSpan duration,DataFileInfo file)
+        public void AddFile(DateTime startTime,TimeSpan duration,DataFileInfo4 file)
         {
             int mon1 = startTime.Month;
             var endTime = startTime.Add(duration);
@@ -129,7 +129,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="dateTime"></param>
         /// <returns></returns>
-        public DataFileInfo GetDataFile(DateTime dateTime)
+        public DataFileInfo4 GetDataFile(DateTime dateTime)
         {
             if(this.ContainsKey(dateTime.Month))
             {
@@ -144,9 +144,9 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="span"></param>
         /// <returns></returns>
-        public List<DataFileInfo> GetDataFiles(DateTime startTime,TimeSpan span)
+        public List<DataFileInfo4> GetDataFiles(DateTime startTime,TimeSpan span)
         {
-            List<DataFileInfo> re = new List<DataFileInfo>();
+            List<DataFileInfo4> re = new List<DataFileInfo4>();
             var nxtMonth = startTime.AddMonths(1);
             nxtMonth = new DateTime(nxtMonth.Year, nxtMonth.Month,1);
             if(nxtMonth>startTime+span)

@@ -120,6 +120,9 @@
   <data name="AllValue" xml:space="preserve">
     <value>所有值</value>
   </data>
+  <data name="AvgValue" xml:space="preserve">
+    <value>平均值</value>
+  </data>
   <data name="bad" xml:space="preserve">
     <value>坏</value>
   </data>
@@ -156,6 +159,18 @@
   <data name="Init" xml:space="preserve">
     <value>初始态</value>
   </data>
+  <data name="MaxValue" xml:space="preserve">
+    <value>最大值</value>
+  </data>
+  <data name="MaxValueTime" xml:space="preserve">
+    <value>最大值时间</value>
+  </data>
+  <data name="MinValue" xml:space="preserve">
+    <value>最小值</value>
+  </data>
+  <data name="MinValueTime" xml:space="preserve">
+    <value>最小值时间</value>
+  </data>
   <data name="null" xml:space="preserve">
     <value>空</value>
   </data>
@@ -167,6 +182,9 @@
   </data>
   <data name="OpMsgFormate" xml:space="preserve">
     <value>{1} ms 查询到{0} 个值</value>
+  </data>
+  <data name="OriginalValue" xml:space="preserve">
+    <value>原始值</value>
   </data>
   <data name="Quality" xml:space="preserve">
     <value>质量</value>
@@ -182,6 +200,9 @@
   </data>
   <data name="startvalue" xml:space="preserve">
     <value>起停值</value>
+  </data>
+  <data name="StatisticsValue" xml:space="preserve">
+    <value>统计值</value>
   </data>
   <data name="Tag" xml:space="preserve">
     <value>变量</value>

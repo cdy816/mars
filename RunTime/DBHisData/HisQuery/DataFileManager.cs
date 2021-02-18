@@ -480,7 +480,7 @@ namespace Cdy.Tag
             }
         }
 
-        private DataFileInfo CheckAndGetDataFile(string file)
+        private DataFileInfo4 CheckAndGetDataFile(string file)
         {
             string sname = file.Replace(DataFileExtends, "");
             string stime = sname.Substring(sname.Length - 12, 12);
@@ -667,11 +667,11 @@ namespace Cdy.Tag
 
             if (file.Extension == DataFileExtends)
             {
-                yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new DataFileInfo() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName, FId = mDatabaseName + id });
+                yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new DataFileInfo4() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName, FId = mDatabaseName + id });
             }
             else if (file.Extension==HisDataFileExtends)
             {
-                yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new HisDataFileInfo() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName, FId = mDatabaseName + id });
+                yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new HisDataFileInfo4() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName, FId = mDatabaseName + id });
             }
         }
 
@@ -712,7 +712,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         /// <param name="Id"></param>
         /// <returns></returns>
-        public DataFileInfo GetDataFile(DateTime time,int Id)
+        public DataFileInfo4 GetDataFile(DateTime time,int Id)
         {
             int id = Id / TagCountOneFile;
 
@@ -739,7 +739,7 @@ namespace Cdy.Tag
         /// <param name="endtime"></param>
         /// <param name="Id"></param>
         /// <returns></returns>
-        public List<DataFileInfo> GetDataFiles(DateTime starttime, DateTime endtime, out Tuple<DateTime, DateTime> logFileTimes, int Id)
+        public List<DataFileInfo4> GetDataFiles(DateTime starttime, DateTime endtime, out Tuple<DateTime, DateTime> logFileTimes, int Id)
         {
             DateTime dt = DateTime.MinValue;
             var vfiles = GetDataFiles(starttime, endtime - starttime, Id);
@@ -759,9 +759,9 @@ namespace Cdy.Tag
         /// <param name="span"></param>
         /// <param name="Id"></param>
         /// <returns></returns>
-        public List<DataFileInfo> GetDataFiles(DateTime startTime, TimeSpan span, int Id)
+        public List<DataFileInfo4> GetDataFiles(DateTime startTime, TimeSpan span, int Id)
         {
-            List<DataFileInfo> re = new List<DataFileInfo>();
+            List<DataFileInfo4> re = new List<DataFileInfo4>();
             int id = Id / TagCountOneFile;
             if (mTimeFileMaps.ContainsKey(id))
             {
@@ -793,9 +793,9 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="Id"></param>
         /// <returns></returns>
-        public SortedDictionary<DateTime, DataFileInfo> GetDataFiles(List<DateTime> times, List<DateTime> logFileTimes,int Id)
+        public SortedDictionary<DateTime, DataFileInfo4> GetDataFiles(List<DateTime> times, List<DateTime> logFileTimes,int Id)
         {
-            SortedDictionary<DateTime, DataFileInfo> re = new SortedDictionary<DateTime, DataFileInfo>();
+            SortedDictionary<DateTime, DataFileInfo4> re = new SortedDictionary<DateTime, DataFileInfo4>();
             foreach(var vv in times)
             {
                 if (CheckDataInLogFile(vv, Id))

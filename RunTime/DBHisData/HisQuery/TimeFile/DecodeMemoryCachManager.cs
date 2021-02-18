@@ -76,7 +76,7 @@ namespace Cdy.Tag
                     string sfile = System.IO.Path.Combine(GetCacheLocation(), skey);
                     if (System.IO.File.Exists(sfile) && !mBusyFiles.ContainsKey(skey))
                     {
-                        var sff = sfile.GetFileSeriser();
+                        var sff = sfile.GetFileSeriserForReadOnly();
                         var datasize = sff.ReadInt(dp + 8);
                         return sff.Read(dp + 8 + 4, datasize);
                     }

@@ -44,6 +44,8 @@ namespace HisDataTools.ViewModel
 
         private List<HisDataPoint> mDatas = new List<HisDataPoint>();
 
+        private List<StatisticsHisDataPoint> mStatisticsDatas;
+
         private List<ICurveEntitySource> mChartSource = new List<ICurveEntitySource>();
 
         private bool mIsBusy = false;
@@ -64,6 +66,9 @@ namespace HisDataTools.ViewModel
         private int mTimeSpan=10;
 
         private string mOpMessage;
+
+        private bool mIsStatisticsValue=false;
+        private bool mIsOriginalValue = true;
 
         #endregion ...Variables...
 
@@ -253,21 +258,28 @@ namespace HisDataTools.ViewModel
                         DateTime stime = StartTime.AddHours(StartTimeHour);
                         DateTime etime = EndTime.AddHours(EndTimeHour);
 
-                        if (!AllValue)
+                        if (IsOriginalValue)
                         {
-                            List<DateTime> dt = new List<DateTime>();
-                            DateTime dtt = stime;
-                            do
+                            if (!AllValue)
                             {
-                                dtt = dtt.AddSeconds(TimeSpan);
-                                dt.Add(dtt);
+                                List<DateTime> dt = new List<DateTime>();
+                                DateTime dtt = stime;
+                                do
+                                {
+                                    dtt = dtt.AddSeconds(TimeSpan);
+                                    dt.Add(dtt);
+                                }
+                                while (dtt <= etime);
+                                QueryHisData(SelectTag, dt);
                             }
-                            while (dtt <= etime);
-                            QueryHisData(SelectTag, dt);
+                            else
+                            {
+                                QueryHisData(SelectTag, stime, etime);
+                            }
                         }
                         else
                         {
-                            QueryHisData(SelectTag, stime, etime);
+                            QueryStatisticsData(SelectTag, stime, etime);
                         }
 
 
@@ -292,7 +304,21 @@ namespace HisDataTools.ViewModel
                 OnPropertyChanged("Datas");
             }
         }
-        
+
+
+        public List<StatisticsHisDataPoint> StatisticsDatas
+        {
+            get
+            {
+                return mStatisticsDatas;
+            }
+            set
+            {
+                mStatisticsDatas = value;
+                OnPropertyChanged("StatisticsDatas");
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -413,6 +439,51 @@ namespace HisDataTools.ViewModel
         /// <summary>
             /// 
             /// </summary>
+        public bool IsOriginalValue
+        {
+            get
+            {
+                return mIsOriginalValue;
+            }
+            set
+            {
+                if (mIsOriginalValue != value)
+                {
+                    mIsOriginalValue = value;
+                    mIsStatisticsValue = !value;
+                    OnPropertyChanged("IsOriginalValue");
+                    OnPropertyChanged("IsStatisticsValue");
+                }
+            }
+        }
+
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool IsStatisticsValue
+        {
+            get
+            {
+                return mIsStatisticsValue;
+            }
+            set
+            {
+                if (mIsStatisticsValue != value)
+                {
+                    mIsStatisticsValue = value;
+                    mIsOriginalValue = !value;
+                    OnPropertyChanged("IsOriginalValue");
+                    OnPropertyChanged("IsStatisticsValue");
+                }
+            }
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         public int TimeSpan
         {
             get
@@ -611,6 +682,79 @@ namespace HisDataTools.ViewModel
             mIsBusy = false;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        private void QueryStatisticsData(string tag,DateTime startTime,DateTime endTime)
+        {
+            mIsBusy = true;
+
+            if (!mTags.ContainsKey(mSelectTag)) return;
+
+            int id = mTags[mSelectTag].Item1;
+            DateTime sTime = startTime;
+            DateTime eTime = endTime;
+
+            int tcount = (int)(eTime - sTime).TotalSeconds;
+
+            switch (mTags[mSelectTag].Item2)
+            {
+                case (byte)Cdy.Tag.TagType.Bool:
+                    break;
+                case (byte)Cdy.Tag.TagType.Byte:
+                    ProcessDataQuery<byte>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.DateTime:
+                    break;
+                case (byte)Cdy.Tag.TagType.Double:
+                    ProcessDataQuery<double>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.Float:
+                    ProcessDataQuery<float>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.Int:
+                    ProcessDataQuery<int>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.Long:
+                    ProcessDataQuery<long>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.Short:
+                    ProcessDataQuery<short>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.String:
+                    break;
+                case (byte)Cdy.Tag.TagType.UInt:
+                    ProcessDataQuery<uint>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.ULong:
+                    ProcessDataQuery<ulong>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.UShort:
+                    ProcessDataQuery<ushort>(id, sTime, eTime);
+                    break;
+                case (byte)Cdy.Tag.TagType.IntPoint:
+                    break;
+                case (byte)Cdy.Tag.TagType.UIntPoint:
+                    break;
+                case (byte)Cdy.Tag.TagType.IntPoint3:
+                    break;
+                case (byte)Cdy.Tag.TagType.UIntPoint3:
+                    break;
+                case (byte)Cdy.Tag.TagType.LongPoint:
+                    break;
+                case (byte)Cdy.Tag.TagType.ULongPoint:
+                    break;
+                case (byte)Cdy.Tag.TagType.LongPoint3:
+                    break;
+                case (byte)Cdy.Tag.TagType.ULongPoint3:
+                    break;
+            }
+            mIsBusy = false;
+        }
+
         private void ProcessDataQuery<T>(int id, List<DateTime> times)
         {
             Stopwatch sw = new Stopwatch();
@@ -796,6 +940,43 @@ namespace HisDataTools.ViewModel
             result.Dispose();
         }
 
+
+        private void ProcessStatisticsDataQuery(int id, DateTime sTime, DateTime eTime)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            var result = HisDataManager.Manager.GetQueryService(mDatabase).ReadNumberStatistics(id, sTime, eTime);
+            sw.Stop();
+
+            OpMessage = string.Format(Res.Get("OpMsgFormate"), result.Count, sw.ElapsedMilliseconds);
+
+            //Debug.Print("查询耗时:" + sw.ElapsedMilliseconds);
+
+            CurveEntitySource entity = new CurveEntitySource();
+            entity.Text = this.SelectTag;
+            entity.Color = System.Windows.Media.Brushes.Red;
+            entity.Marker = new CirclePointMarker();
+            entity.Marker.Fill = System.Windows.Media.Brushes.Red;
+            entity.Marker.Visibility = Visibility.Hidden;
+
+
+            List<StatisticsHisDataPoint> ltmp = new List<StatisticsHisDataPoint>();
+
+            for (int i = 0; i < result.Count; i++)
+            {
+                double avgvalue,maxvalue,minvalue;
+
+                DateTime time,maxvaluetime,minvaluetime;
+                byte qu = 0;
+                result.ReadValue(i, out time, out avgvalue,out maxvalue,out maxvaluetime,out minvalue,out minvaluetime);
+
+                ltmp.Add(new StatisticsHisDataPoint() { DateTime = time, AvgValue=avgvalue,MaxValue=maxvalue,MinValue=minvalue,MaxValueTime=maxvaluetime,MinValueTime=minvaluetime });
+            }
+            StatisticsDatas = ltmp;
+
+            result.Dispose();
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -846,6 +1027,49 @@ namespace HisDataTools.ViewModel
         /// 
         /// </summary>
         public int Quality { get; set; }
+    }
+
+
+    public struct StatisticsHisDataPoint
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime DateTime { get; set; }
+
+        public string DateTimeString
+        {
+            get
+            {
+                return DateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public object AvgValue { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime MaxValueTime { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public object MaxValue { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime MinValueTime { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public object MinValue { get; set; }
     }
 
 }

@@ -64,6 +64,29 @@ namespace Cdy.Tag
 
         #region ... Properties ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Count
+        {
+            get
+            {
+                return mCount;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Size
+        {
+            get
+            {
+                return mSize;
+            }
+        }
+
+
         #endregion ...Properties...
 
         #region ... Methods    ...

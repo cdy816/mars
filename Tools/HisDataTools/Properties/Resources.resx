@@ -120,6 +120,9 @@
   <data name="AllValue" xml:space="preserve">
     <value>All value</value>
   </data>
+  <data name="AvgValue" xml:space="preserve">
+    <value>Avg value</value>
+  </data>
   <data name="bad" xml:space="preserve">
     <value>Bad</value>
   </data>
@@ -156,6 +159,18 @@
   <data name="Init" xml:space="preserve">
     <value>Init</value>
   </data>
+  <data name="MaxValue" xml:space="preserve">
+    <value>Max Value</value>
+  </data>
+  <data name="MaxValueTime" xml:space="preserve">
+    <value>Max value time</value>
+  </data>
+  <data name="MinValue" xml:space="preserve">
+    <value>Min value</value>
+  </data>
+  <data name="MinValueTime" xml:space="preserve">
+    <value>Min value time</value>
+  </data>
   <data name="null" xml:space="preserve">
     <value>Null</value>
   </data>
@@ -167,6 +182,9 @@
   </data>
   <data name="OpMsgFormate" xml:space="preserve">
     <value>Value count {0}/{1} ms</value>
+  </data>
+  <data name="OriginalValue" xml:space="preserve">
+    <value>Original</value>
   </data>
   <data name="Quality" xml:space="preserve">
     <value>Quality</value>
@@ -182,6 +200,9 @@
   </data>
   <data name="startvalue" xml:space="preserve">
     <value>StartValue</value>
+  </data>
+  <data name="StatisticsValue" xml:space="preserve">
+    <value>Statistics</value>
   </data>
   <data name="Tag" xml:space="preserve">
     <value>Tag</value>

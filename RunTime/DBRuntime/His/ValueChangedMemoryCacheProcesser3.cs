@@ -187,6 +187,19 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="tag"></param>
+        public void Remove(HisRunTag tag)
+        {
+            if(mTags.ContainsKey(tag.Id))
+            {
+                mTags.Remove(tag.Id);
+                mCurrentCount--;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public void Clear()
         {
             mTags.Clear();

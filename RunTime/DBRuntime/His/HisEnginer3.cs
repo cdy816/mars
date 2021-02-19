@@ -395,25 +395,77 @@ namespace Cdy.Tag
             //mRecordTimer.Start();
         }
 
+        private HisRunTag GetHisRunTag(HisTag vv)
+        {
+            HisRunTag mHisTag=null;
+            IntPtr realHandle = mRealEnginer.MemoryHandle;
+            var realaddr = (int)mRealEnginer.GetDataAddr((int)vv.Id);
+            var mRealTag = mRealEnginer.GetTagById(vv.Id);
+            switch (vv.TagType)
+            {
+                case Cdy.Tag.TagType.Bool:
+                case Cdy.Tag.TagType.Byte:
+                    mHisTag = new ByteHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                    break;
+                case Cdy.Tag.TagType.Short:
+                case Cdy.Tag.TagType.UShort:
+                    mHisTag = new ShortHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                    break;
+                case Cdy.Tag.TagType.Int:
+                case Cdy.Tag.TagType.UInt:
+                    mHisTag = new IntHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                    break;
+                case Cdy.Tag.TagType.Long:
+                case Cdy.Tag.TagType.ULong:
+                    mHisTag = new LongHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                    break;
+                case Cdy.Tag.TagType.Float:
+                    mHisTag = new FloatHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters, Precision = (mRealTag as FloatingTagBase).Precision };
+                    break;
+                case Cdy.Tag.TagType.Double:
+                    mHisTag = new DoubleHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters, Precision = (mRealTag as FloatingTagBase).Precision };
+                    break;
+                case Cdy.Tag.TagType.DateTime:
+                    mHisTag = new DateTimeHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                    break;
+                case Cdy.Tag.TagType.String:
+                    mHisTag = new StirngHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                    break;
+                case Cdy.Tag.TagType.UIntPoint:
+                case Cdy.Tag.TagType.IntPoint:
+                    mHisTag = new IntPointHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                    break;
+                case Cdy.Tag.TagType.UIntPoint3:
+                case Cdy.Tag.TagType.IntPoint3:
+                    mHisTag = new IntPoint3HisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                    break;
+                case Cdy.Tag.TagType.ULongPoint:
+                case Cdy.Tag.TagType.LongPoint:
+                    mHisTag = new LongPointHisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                    break;
+                case Cdy.Tag.TagType.ULongPoint3:
+                case Cdy.Tag.TagType.LongPoint3:
+                    mHisTag = new LongPoint3HisRunTag() { Id = vv.Id, Circle = vv.Circle, Type = vv.Type, TagType = vv.TagType, RealMemoryPtr = realHandle, RealValueAddr = realaddr, CompressType = vv.CompressType, Parameters = vv.Parameters };
+                    break;
+            }
+            return mHisTag;
+        }
+
         /// <summary>
         /// 加载使能新的变量
         /// </summary>
         /// <param name="tags"></param>
         /// <param name="mHisDatabase"></param>
-        public void ReLoadTags(IEnumerable<Tag.HisTag> tags,HisDatabase mHisDatabase)
+        public void AddTags(IEnumerable<Tag.HisTag> tags)
         {
             UpdatePerProcesserMaxTagCount(mManager.HisTags.Count+tags.Count());
 
-            //var realbaseaddr = this.mRealEnginer.Memory;
             IntPtr realHandle = mRealEnginer.MemoryHandle;
             HisRunTag mHisTag = null;
-
+           
             Tagbase mRealTag;
 
             var histags = new List<HisRunTag>();
-
-            //int tcount = 0;
-            //int vcount = 0;
 
             foreach (var vv in tags)
             {
@@ -469,71 +521,75 @@ namespace Cdy.Tag
                 mHisTags.Add(vv.Id, mHisTag);
                 histags.Add(mHisTag);
 
-               
-                mTagCount++;
+                this.mManager.AddOrUpdate(vv);
+                 mTagCount++;
             }
-
-            foreach(var vv in mRecordTimerProcesser)
-            {
-                vv.Stop();
-                vv.Dispose();
-            }
-            mRecordTimerProcesser.Clear();
-
-            foreach(var vv in mValueChangedProcesser)
-            {
-                vv.Stop();
-                vv.Dispose();
-            }
-            mValueChangedProcesser.Clear();
-
-            mLastProcesser = new TimerMemoryCacheProcesser3() { Id = 0 };
-            mRecordTimerProcesser.Clear();
-            mRecordTimerProcesser.Add(mLastProcesser);
-
-            mLastValueChangedProcesser = new ValueChangedMemoryCacheProcesser3() { Name = "ValueChanged0" };
-            mValueChangedProcesser.Clear();
-            mValueChangedProcesser.Add(mLastValueChangedProcesser);
 
             int qulityOffset = 0;
             int valueOffset = 0;
             int blockheadsize = 0;
 
-            foreach (var vv in mHisTags)
+            foreach (var vv in histags)
             {
 
-                var ss = CalMergeBlockSize(vv.Value.TagType, blockheadsize, out valueOffset, out qulityOffset);
+                var ss = CalMergeBlockSize(vv.TagType, blockheadsize, out valueOffset, out qulityOffset);
 
-                mMergeMemory1.AddTagAddress(vv.Value.Id, 0, valueOffset, qulityOffset, ss, 2);
-                mMergeMemory2.AddTagAddress(vv.Value.Id, 0, valueOffset, qulityOffset, ss, 2);
+                mMergeMemory1.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, ss, 2);
+                mMergeMemory2.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, ss, 2);
 
-                var css = CalCachDatablockSize(vv.Value.TagType, blockheadsize, out valueOffset, out qulityOffset);
+                var css = CalCachDatablockSize(vv.TagType, blockheadsize, out valueOffset, out qulityOffset);
                 
-                vv.Value.DataMemoryPointer1 = mCachMemory1.AddTagAddress(vv.Value.Id, 0, valueOffset, qulityOffset, css, 2);
-                vv.Value.DataMemoryPointer2 = mCachMemory2.AddTagAddress(vv.Value.Id, 0, valueOffset, qulityOffset, css, 2);
-                vv.Value.DataSize = css;
+                vv.DataMemoryPointer1 = mCachMemory1.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, css, 2);
+                vv.DataMemoryPointer2 = mCachMemory2.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, css, 2);
+                vv.DataSize = css;
+            }
 
-                if (vv.Value.Type == Cdy.Tag.RecordType.Timer)
+            mLastProcesser = mRecordTimerProcesser.Count > 0 ? mRecordTimerProcesser.Last() : null;
+            mLastValueChangedProcesser = mValueChangedProcesser.Count > 0 ? mValueChangedProcesser.Last() : null;
+
+            foreach (var vv in histags)
+            {
+                bool isadd = false;
+                if (vv.Type == Cdy.Tag.RecordType.Timer)
                 {
-                    if (!mLastProcesser.AddTag(vv.Value))
+                    foreach(var vvp in mRecordTimerProcesser)
                     {
-                        mLastProcesser = new TimerMemoryCacheProcesser3() { Id = mLastProcesser.Id + 1 };
-                        mLastProcesser.AddTag(vv.Value);
+                        if(vvp.AddTag(vv))
+                        {
+                            isadd = true;
+                            break;
+                        }
+                    }
+
+                    if (!isadd)
+                    {
+                        mLastProcesser = new TimerMemoryCacheProcesser3() { Id = mRecordTimerProcesser.Count + 1 };
+                        mLastProcesser.AddTag(vv);
                         mRecordTimerProcesser.Add(mLastProcesser);
                     }
                 }
-                else if(vv.Value.Type == RecordType.ValueChanged)
+                else if (vv.Type == RecordType.ValueChanged)
                 {
-                    if (!mLastValueChangedProcesser.AddTag(vv.Value))
+                    foreach(var vvp in mValueChangedProcesser)
+                    {
+                        if (vvp.AddTag(vv))
+                        {
+                            isadd = true;
+                            break;
+                        }
+                    }
+
+                    if (!isadd)
                     {
                         mLastValueChangedProcesser = new ValueChangedMemoryCacheProcesser3() { Name = "ValueChanged" + mValueChangedProcesser.Count + 1 };
-                        mLastValueChangedProcesser.AddTag(vv.Value);
+                        mLastValueChangedProcesser.AddTag(vv);
                         mValueChangedProcesser.Add(mLastValueChangedProcesser);
                     }
                 }
             }
 
-            this.mManager = mHisDatabase;
+
+            //this.mManager = mHisDatabase;
 
             foreach (var vv in mRecordTimerProcesser) { if (!vv.IsStarted) vv.Start(); }
 
@@ -543,6 +599,160 @@ namespace Cdy.Tag
 
             SwitchMemoryCach(mCurrentMemory.Id);
 
+        }
+
+        /// <summary>
+        /// 修改变量
+        /// </summary>
+        /// <param name="tags"></param>
+        public void ChangeTags(IEnumerable<HisTag> tags)
+        {
+            foreach(var vv in tags)
+            {
+                ChangeTag(vv);
+            }
+        }
+
+        /// <summary>
+        /// 修改变量
+        /// </summary>
+        /// <param name="tag"></param>
+        public void ChangeTag(Tag.HisTag tag)
+        {
+            var oldtag = this.mManager.GetHisTagById(tag.Id);
+            var oldruntag = this.mHisTags.ContainsKey(tag.Id) ? this.mHisTags[tag.Id] : null;
+            var targettag = oldruntag;
+
+            if(oldtag!=null)
+            {
+                if(tag.TagType != oldtag.TagType)
+                {
+                    int qulityOffset = 0;
+                    int valueOffset = 0;
+                    int blockheadsize = 0;
+
+                    var ss = CalMergeBlockSize(tag.TagType, blockheadsize, out valueOffset, out qulityOffset);
+                    mMergeMemory1.ReAllocTagAddress(tag.Id, 0, valueOffset, qulityOffset, ss, 2);
+                    mMergeMemory2.ReAllocTagAddress(tag.Id, 0, valueOffset, qulityOffset, ss, 2);
+
+                    var css = CalCachDatablockSize(tag.TagType, blockheadsize, out valueOffset, out qulityOffset);
+
+                    var vv = GetHisRunTag(tag);
+
+                    vv.DataMemoryPointer1 = mCachMemory1.ReAllocTagAddress(vv.Id, 0, valueOffset, qulityOffset, css, 2);
+                    vv.DataMemoryPointer2 = mCachMemory2.ReAllocTagAddress(vv.Id, 0, valueOffset, qulityOffset, css, 2);
+                    vv.DataSize = css;
+
+                    targettag = vv;
+
+                    if (mHisTags.ContainsKey(tag.Id))
+                    {
+                        mHisTags[tag.Id] = vv;
+                    }
+                    else
+                    {
+                        mHisTags.Add(tag.Id, vv);
+                    }
+
+                    if(oldruntag.Type == RecordType.Timer)
+                    {
+                        foreach(var vvt in mRecordTimerProcesser)
+                        {
+                            vvt.Remove(oldruntag);
+                        }
+                    }
+                    else if(oldruntag.Type == RecordType.Driver)
+                    {
+                        foreach(var vvt in mValueChangedProcesser)
+                        {
+                            vvt.Remove(oldruntag);
+                        }
+                    }
+
+                    if(tag.Type == RecordType.Timer)
+                    {
+                        foreach(var vvt in mRecordTimerProcesser)
+                        {
+                            if(vvt.AddTag(vv))
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    else if(tag.Type == RecordType.ValueChanged)
+                    {
+                        foreach (var vvt in mValueChangedProcesser)
+                        {
+                            if (vvt.AddTag(vv))
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (tag.Type != oldtag.Type)
+                    {
+                        oldruntag.Type = tag.Type;
+                        if (oldtag.Type == RecordType.Timer)
+                        {
+                            foreach (var vvt in mRecordTimerProcesser)
+                            {
+                                vvt.Remove(oldruntag);
+                            }
+                        }
+                        else if(oldtag.Type == RecordType.ValueChanged)
+                        {
+                            foreach (var vvt in mValueChangedProcesser)
+                            {
+                                vvt.Remove(oldruntag);
+                            }
+                        }
+
+                        oldruntag.Circle = tag.Circle;
+                        if (tag.Type == RecordType.Timer)
+                        {
+                            foreach (var vvt in mRecordTimerProcesser)
+                            {
+                                if (vvt.AddTag(oldruntag))
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                        else if (tag.Type == RecordType.ValueChanged)
+                        {
+                            foreach (var vvt in mValueChangedProcesser)
+                            {
+                                if (vvt.AddTag(oldruntag))
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else if(tag.Circle != oldtag.Circle)
+                    {
+                        oldruntag.Circle = tag.Circle;
+                        if(oldruntag.Type == RecordType.Timer)
+                        {
+                            foreach(var vvt in mRecordTimerProcesser)
+                            {
+                                vvt.UpdateCircle(oldruntag, oldtag.Circle);
+                            }
+                        }
+                    }
+                }
+
+                this.mManager.AddOrUpdate(tag);
+
+                if (targettag != null)
+                {
+                    targettag.CompressType = tag.CompressType;
+                    targettag.Parameters = tag.Parameters;
+                }
+            }
         }
 
         /// <summary>

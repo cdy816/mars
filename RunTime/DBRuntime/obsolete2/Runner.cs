@@ -241,7 +241,7 @@ namespace Cdy.Tag
             hisEnginer.Pause();
             
             realEnginer.Lock();
-            realEnginer.ReLoadTags(ltmp,db.RealDatabase);
+            realEnginer.AddTags(ltmp);
             realEnginer.UnLock();
 
             hisEnginer.ReLoadTags(htmp, db.HisDatabase);

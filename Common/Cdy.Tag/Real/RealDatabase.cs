@@ -227,6 +227,14 @@ namespace Cdy.Tag
             }
             else
             {
+
+                var vtag = Tags[tag.Id];
+
+                if(NamedTags.ContainsKey(vtag.FullName))
+                {
+                    NamedTags.Remove(vtag.FullName);
+                }
+
                 Tags[tag.Id] = tag;
 
                 if (!NamedTags.ContainsKey(tag.FullName))
@@ -276,6 +284,31 @@ namespace Cdy.Tag
                 tag.Id = vid;
                 NamedTags[sname] = tag;
                 Tags[vid] = tag;
+                IsDirty = true;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        public void Update(Tagbase tag)
+        {
+            if(Tags.ContainsKey(tag.Id))
+            {
+                var oldname = Tags[tag.Id].FullName;
+                if(oldname!=tag.FullName)
+                {
+                    if(NamedTags.ContainsKey(oldname))
+                    NamedTags.Remove(oldname);
+
+                    NamedTags.Add(tag.FullName, tag);
+                }
+                else
+                {
+                    NamedTags[tag.FullName] = tag;
+                }
+                Tags[tag.Id] = tag;
                 IsDirty = true;
             }
         }

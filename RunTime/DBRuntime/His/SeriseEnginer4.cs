@@ -234,13 +234,18 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="tagCount"></param>
-        public void CheckAndAddSeriseFile(int tagId)
+        public void CheckAndAddSeriseFile(IEnumerable<int> tagIds)
         {
-            var did = tagId / TagCountOneFile;
-            lock(mSeriserFiles)
-            if(!mSeriserFiles.ContainsKey(did))
+            lock (mSeriserFiles)
             {
-                mSeriserFiles.Add(did, new SeriseFileItem4() { FileDuration = FileDuration, BlockDuration = BlockDuration, TagCountOneFile = TagCountOneFile, DatabaseName = DatabaseName, Id = did, StatisticsMemory = mStatisticsMemory }.Init());
+                foreach (var tagId in tagIds)
+                {
+                    var did = tagId / TagCountOneFile;
+                    if (!mSeriserFiles.ContainsKey(did))
+                    {
+                        mSeriserFiles.Add(did, new SeriseFileItem4() { FileDuration = FileDuration, BlockDuration = BlockDuration, TagCountOneFile = TagCountOneFile, DatabaseName = DatabaseName, Id = did, StatisticsMemory = mStatisticsMemory }.Init());
+                    }
+                }
             }
         }
 
@@ -323,7 +328,7 @@ namespace Cdy.Tag
         {
             HisDataPath = SelectHisDataPath();
 
-            int id = data.ReadInt(0);
+            int id = data.ReadInt(56);
 
             lock (mSeriserFiles)
             {
@@ -1190,7 +1195,7 @@ namespace Cdy.Tag
         /// <param name="datablock"></param>
         public void AppendManualSeriseFile(int id, IMemoryBlock datablock)
         {
-            DateTime time = datablock.ReadDateTime(4);
+            DateTime time = datablock.ReadDateTime(60);
             string sfile = GetFileName(time);
 
             lock (mManualHisDataCach)
@@ -1258,7 +1263,7 @@ namespace Cdy.Tag
                     maxTime = time > maxTime ? time : maxTime;
                     mLastModifyTime = endTime > mLastModifyTime ? endTime : mLastModifyTime;
 
-                    datasize += (size - 28-56);
+                    //datasize += (size - 28-56);
                 }
 
                 mHeadAddress = GetDataRegionHeadPoint(vv.Key, times, maxTime, out mwriter);
@@ -1268,7 +1273,7 @@ namespace Cdy.Tag
                 mHeadValue.Clear();
                 mwriter.GoToEnd();
                 //var blockpointer = mwriter.CurrentPostion;
-                var vpointer = 0;
+                var vpointer = mwriter.CurrentPostion;
 
 
                 //写入数据，同时获取数据块地址

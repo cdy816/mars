@@ -111,6 +111,17 @@ namespace Cdy.Tag
             }
         }
     
+        /// <summary>
+        /// 
+        /// </summary>
+        public long UsedSize
+        {
+            get
+            {
+                return mUsedSize;
+            }
+        }
+
 
         #endregion ...Properties...
 
@@ -171,7 +182,7 @@ namespace Cdy.Tag
                         break;
                 }
             }
-            //留20%的余量
+            //留50%的余量
             mUsedSize = msize;
             var fsize = ((long)(msize * 1.5 / 1024) + 1) * 1024;
             mMemory = new byte[fsize];
@@ -231,7 +242,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="tags"></param>
         /// <param name="mNewDb"></param>
-        public void ReLoadTags(IEnumerable<Tag.Tagbase> tags,RealDatabase mNewDb)
+        public void AddTags(IEnumerable<Tag.Tagbase> tags)
         {
             long msize = 0;
             foreach (var vv in tags)
@@ -278,11 +289,15 @@ namespace Cdy.Tag
                         msize += (Const.StringSize + 9);
                         break;
                 }
+
+                mConfigDatabase.Add(vv);
             }
             var fsize = mUsedSize + msize;
-            if ((mUsedSize + msize) > mMemory.Length)
+            if (fsize > mMemory.Length)
             {
-                var men = new byte[fsize];
+                var vsize = ((long)(fsize * 1.5 / 1024) + 1) * 1024;
+                var men = new byte[vsize];
+
                 var gch = GCHandle.Alloc(men, GCHandleType.Pinned);
                 var hmen = (void*)gch.AddrOfPinnedObject();
                 men.AsSpan().Clear();
@@ -297,7 +312,88 @@ namespace Cdy.Tag
             }
             mUsedSize = fsize;
 
-            mConfigDatabase = mNewDb;
+            //mConfigDatabase = mNewDb;
+        }
+
+        /// <summary>
+        /// 更新变量
+        /// </summary>
+        /// <param name="tags"></param>
+        public void UpdateTags(IEnumerable<Tag.Tagbase> tags)
+        {
+            foreach(var vv in tags)
+            {
+                UpdateTag(vv);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        public void UpdateTag(Tag.Tagbase tag)
+        {
+            var oldtag = mConfigDatabase.GetTagById(tag.Id);
+
+            if(oldtag!=null)
+            {
+                if(oldtag.Type == tag.Type)
+                {
+                    int msize = 0;
+                    switch (tag.Type)
+                    {
+                        case TagType.Bool:
+                        case TagType.Byte:
+                            msize += 10;
+                            break;
+                        case TagType.Short:
+                        case TagType.UShort:
+                            msize += 11;
+                            break;
+                        case TagType.Int:
+                        case TagType.UInt:
+                        case TagType.Float:
+                            msize += 13;
+                            break;
+                        case TagType.Long:
+                        case TagType.ULong:
+                        case TagType.Double:
+                            msize += 17;
+                            break;
+                        case TagType.IntPoint:
+                        case TagType.UIntPoint:
+                            msize += 17;
+                            break;
+                        case TagType.IntPoint3:
+                        case TagType.UIntPoint3:
+                            msize += 21;
+                            break;
+                        case TagType.LongPoint:
+                        case TagType.ULongPoint:
+                            msize += 25;
+                            break;
+                        case TagType.LongPoint3:
+                        case TagType.ULongPoint3:
+                            msize += 33;
+                            break;
+                        case TagType.String:
+                            msize += (Const.StringSize + 9);
+                            break;
+                    }
+                    tag.ValueAddress = mUsedSize;
+                    mUsedSize += msize;
+                    if (mIdAndAddr.ContainsKey(tag.Id))
+                    {
+                        mIdAndAddr[tag.Id] = tag.ValueAddress;
+                    }
+                    else
+                    {
+                        mIdAndAddr.Add(tag.Id, tag.ValueAddress);
+                    }
+                }
+            }
+
+            mConfigDatabase.Update(tag);
         }
 
         /// <summary>

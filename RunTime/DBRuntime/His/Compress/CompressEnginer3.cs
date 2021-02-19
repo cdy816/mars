@@ -126,14 +126,14 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="tags"></param>
-        public void ReSizeTagCompress(List<HisTag> tags)
+        public void ReSizeTagCompress(IEnumerable<int> tagids)
         {
             List<CompressMemory3> ctmp = new List<CompressMemory3>();
             ctmp.Add(mTargetMemorys.Last().Value);
 
-            foreach (var vv in tags)
+            foreach (var vv in tagids)
             {
-                var id = vv.Id;
+                var id = vv;
                 var did = id / TagCountOneFile;
                 if (mLastDataRegionId != did)
                 {
@@ -142,11 +142,6 @@ namespace Cdy.Tag
                     mLastDataRegionId = did;
                     ctmp.Add(vvv);
                 }
-            }
-
-            foreach (var vv in ctmp)
-            {
-                vv.ReInit(ServiceLocator.Locator.Resolve<IHisEngine3>().CurrentMergeMemory);
             }
         }
 

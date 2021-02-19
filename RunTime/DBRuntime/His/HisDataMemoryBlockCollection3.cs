@@ -159,6 +159,36 @@ namespace DBRuntime.His
         }
 
         /// <summary>
+        /// 重新分配变量的内存
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="timeroffset"></param>
+        /// <param name="valueoffset"></param>
+        /// <param name="qualityoffset"></param>
+        /// <param name="size"></param>
+        /// <param name="timeMemorylen"></param>
+        public long ReAllocTagAddress(int id, int timeroffset, int valueoffset, int qualityoffset, int size, byte timeMemorylen)
+        {
+            if (mTagAddress.ContainsKey(id))
+            {
+                IntPtr ip = new IntPtr(this.ReadLong(mTagAddress[id] * HisDataMemoryItemSize));
+                Marshal.FreeHGlobal(ip);
+                var re = CalMemory(size).ToInt64();
+                var pp = mTagAddress[id] * HisDataMemoryItemSize;
+                this.WriteLong(pp, re);
+                this.WriteInt(pp + 8, timeroffset);
+                this.WriteInt(pp + 12, valueoffset);
+                this.WriteInt(pp + 16, qualityoffset);
+                this.WriteByte(pp + 20, timeMemorylen);
+                this.WriteInt(pp + 21, size);
+                this.WriteInt(pp + 25, 0);
+
+                return re;
+            }
+            return 0;
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="id"></param>

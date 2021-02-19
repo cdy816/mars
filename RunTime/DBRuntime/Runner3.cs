@@ -240,25 +240,27 @@ namespace Cdy.Tag
             hisEnginer.Pause();
 
             realEnginer.Lock();
-            realEnginer.ReLoadTags(ltmp, db.RealDatabase);
+            realEnginer.AddTags(ltmp);
             realEnginer.UnLock();
 
-            hisEnginer.ReLoadTags(htmp, db.HisDatabase);
-            compressEnginer.ReSizeTagCompress(htmp);
+            hisEnginer.AddTags(htmp);
 
-            seriseEnginer.Init();
+            var vids = htmp.Select(e => e.Id);
+
+            compressEnginer.ReSizeTagCompress(vids);
+            seriseEnginer.CheckAndAddSeriseFile(vids);
 
             hisEnginer.Resume();
 
-            this.mDatabase = db;
-            this.mRealDatabase = db.RealDatabase;
-            this.mHisDatabase = db.HisDatabase;
+            //this.mDatabase = db;
+            //this.mRealDatabase = db.RealDatabase;
+            //this.mHisDatabase = db.HisDatabase;
 
             CurrentDatabaseVersion = db.Version;
             CurrentDatabase = db.Name;
             CurrentDatabaseLastUpdateTime = mRealDatabase.UpdateTime;
 
-            RegistorInterface();
+            //RegistorInterface();
             sw.Stop();
             LoggerService.Service.Info("ReStartDatabase", "ReInit" + mDatabaseName + " take " + sw.ElapsedMilliseconds.ToString() + " ms");
 

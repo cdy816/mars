@@ -175,6 +175,55 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="tag"></param>
+        public void Remove(HisRunTag tag)
+        {
+            if(mTimerTags.ContainsKey(tag.Circle))
+            {
+                mTimerTags[tag.Circle].Remove(tag);
+                mCurrentCount--;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="oldcircle"></param>
+        public void UpdateCircle(HisRunTag tag,long oldcircle)
+        {
+            if (mTimerTags.ContainsKey(oldcircle) && mTimerTags[oldcircle].Contains(tag))
+            {
+                if (mTimerTags.ContainsKey(oldcircle))
+                {
+                    mTimerTags[oldcircle].Remove(tag);
+                }
+
+                var cc = tag.Circle;
+                if (mTimerTags.ContainsKey(cc))
+                {
+                    mTimerTags[cc].Add(tag);
+                }
+                else
+                {
+                    mTimerTags.Add(cc, new List<HisRunTag>() { tag });
+                    mCount.Add(cc, DateTime.UtcNow);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool CanAddTag()
+        {
+            return mCurrentCount < MaxTagCount;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public void Clear()
         {
             mTimerTags.Clear();

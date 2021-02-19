@@ -51,6 +51,8 @@ namespace Cdy.Tag
 
         private MarshalMemoryBlock mStaticsMemoryBlock;
 
+        private bool mNeedInit = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -283,7 +285,6 @@ namespace Cdy.Tag
             this.ReAlloc2(HeadSize + (long)(lsize));
             this.Clear();
 
-
             if (IsEnableCompress)
                 mCompressedDataPointer = Marshal.AllocHGlobal((int)this.AllocSize);
 
@@ -294,27 +295,34 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public void ReInit(HisDataMemoryBlockCollection3 sourceM)
+        private void CheckAndResize(HisDataMemoryBlockCollection3 sourceM)
         {
-            mTagIds.Clear();
+            //mTagIds.Clear();
             long lsize = 0;
             foreach (var vv in sourceM.TagAddress.Where(e => e.Key >= Id * TagCountPerMemory && e.Key < (Id + 1) * TagCountPerMemory))
             {
-                mTagIds.Add(vv.Key);
-                
-                if (!dtmp.ContainsKey(vv.Key))
-                    dtmp.Add(vv.Key, 0);
-
-                var cpt = mHisTagService.GetHisTag(vv.Key).CompressType;
-                if (!mCompressCach.ContainsKey(cpt))
+                if (!mTagIds.Contains(vv.Key))
                 {
-                    mCompressCach.Add(cpt, CompressUnitManager2.Manager.GetCompressQuick(cpt).Clone());
+                    mTagIds.Add(vv.Key);
+
+                    if (!dtmp.ContainsKey(vv.Key))
+                        dtmp.Add(vv.Key, 0);
+
+                    var cpt = mHisTagService.GetHisTag(vv.Key).CompressType;
+                    if (!mCompressCach.ContainsKey(cpt))
+                    {
+                        mCompressCach.Add(cpt, CompressUnitManager2.Manager.GetCompressQuick(cpt).Clone());
+                    }
                 }
                 if (vv.Value >= 0)
-                    lsize += sourceM.ReadDataSize(vv.Value);
+                    lsize += sourceM.ReadDataSize(vv.Value) + 24;
             }
 
-            this.Resize(HeadSize + lsize);
+            if (lsize > this.AllocSize)
+            {
+                this.ReAlloc2(HeadSize + lsize);
+                this.Clear();
+            }
 
             if (IsEnableCompress)
             {
@@ -337,6 +345,9 @@ namespace Cdy.Tag
                  数据区:[data block]
                  */
                 mIsRunning = true;
+
+                CheckAndResize(source);
+
                 try
                 {
                     Stopwatch sw = new Stopwatch();

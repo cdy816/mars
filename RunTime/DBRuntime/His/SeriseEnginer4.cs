@@ -5,7 +5,7 @@
 //  Create by 种道洋 at 2021/02/18 10:35:02.
 //  Version 1.0
 //  种道洋
-//  较SeriseEnginer3 修改数据块指针为：固定的100000个变量的，单个变量每5分钟一个数据块指针的结构
+//  较SeriseEnginer4 修改数据块指针为：固定的100000个变量的，单个变量每5分钟一个数据块指针的结构
 //==============================================================
 using System;
 using System.Collections.Generic;
@@ -1076,13 +1076,13 @@ namespace Cdy.Tag
 
                         if (ltmp < 0)
                         {
-                            LoggerService.Service.Warn("SeriseEnginer3", "不允许修改本次运行之前时间的历史记录!");
+                            LoggerService.Service.Warn("SeriseEnginer4", "不允许修改本次运行之前时间的历史记录!");
                             return re;
                         }
 
                         //var icount = mTagIdsCach.IndexOf(vv.Key);
                         //var icount = mTagIndexCach[vv.Key];
-                        var icount = vv.Key;
+                        var icount = vv.Key % TagCountOneFile;
 
                         ltmp += (mDataRegionHeadSize + blockcount * 8 * icount + bid * 8);
                         if (re.ContainsKey(vv.Key))
@@ -1120,13 +1120,13 @@ namespace Cdy.Tag
 
                         if (ltmp < 0)
                         {
-                            LoggerService.Service.Warn("SeriseEnginer3", "不允许修改本次运行之前时间的历史记录!");
+                            LoggerService.Service.Warn("SeriseEnginer4", "不允许修改本次运行之前时间的历史记录!");
                             return re;
                         }
 
                         //var icount = mTagIdsCach.IndexOf(vv.Key);
                         //var icount = mTagIndexCach[vv.Key];
-                        var icount = vv.Key;
+                        var icount = vv.Key%TagCountOneFile;
 
                         ltmp += mDataRegionHeadSize + TagCountOneFile * 8 * bid + icount * 8;
                         if (re.ContainsKey(vv.Key))
@@ -1673,7 +1673,7 @@ namespace Cdy.Tag
                     for (int i = 0; i < count; i++)
                     {
                         //读取ID
-                        var id = mProcessMemory.ReadInt(offset);
+                        var id = mProcessMemory.ReadInt(offset) % TagCountOneFile;
                         //读取偏移地址
                         var addr = mProcessMemory.ReadInt(offset + 4);
 

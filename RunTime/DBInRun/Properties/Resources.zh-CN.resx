@@ -120,6 +120,9 @@
   <data name="AnyKeyToExit" xml:space="preserve">
     <value>按下任意键退出.....</value>
   </data>
+  <data name="DynamicloadMsg" xml:space="preserve">
+    <value>动态加载局部变量、安全等信息</value>
+  </data>
   <data name="GDMsg" xml:space="preserve">
     <value>生成包括指定类型和数量的示例变量的数据库</value>
   </data>

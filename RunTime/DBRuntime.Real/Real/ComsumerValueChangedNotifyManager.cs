@@ -74,6 +74,15 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        public IEnumerable<ValueChangedNotifyProcesser> ListNotifiers()
+        {
+            return mProcesser.Values;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="name"></param>
         public void DisposeNotifier(string name)
         {

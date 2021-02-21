@@ -20,6 +20,9 @@ using DotNetty.Buffers;
 
 namespace DBRuntime.Api
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class RealDataServerProcess : ServerProcessBase
     {
 
@@ -124,13 +127,11 @@ namespace DBRuntime.Api
                     lock (mChangedBlocks)
                         mChangedBlocks.Enqueue(bids);
                 }
-
-            }),()=> {
                 if (!mIsClosed)
                 {
                     resetEvent.Set();
                 }
-            }, new Func<IEnumerable<int>>(() => { return null; }));
+            }), null,RealDataNotifyType.Block);
             
         }
 
@@ -832,9 +833,11 @@ namespace DBRuntime.Api
                         //Stopwatch sw = new Stopwatch();
                         //sw.Start();
                         int count = 0;
+                        BlockItem vv;
                         while (mChangedBlocks.Count>0)
                         {
-                            var vv = mChangedBlocks.Dequeue();
+                            lock (mChangedBlocks)
+                                 vv = mChangedBlocks.Dequeue();
                             if (vv == null) continue;
 
                             var buffer = GetBlockSendBuffer2(vv);

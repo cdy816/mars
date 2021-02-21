@@ -79,6 +79,11 @@ namespace DBRuntime.Proxy
         /// <summary>
         /// 
         /// </summary>
+        public Action ReloadDatabaseAction { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="buffer"></param>
         /// <returns></returns>
         protected string ReadString(IByteBuffer buffer)
@@ -148,7 +153,17 @@ namespace DBRuntime.Proxy
             var start = block.ReadInt();
             var size = block.ReadInt();
             //LoggerService.Service.Info("ProcessBlockBufferData", "block start" +start +", size:"+size);
-            Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, realenginer.Memory, start, size);
+
+            if (start + size < realenginer.Memory.Length)
+            {
+                Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, realenginer.Memory, start, size);
+            }
+            else
+            {
+                //内存数据不匹配，需要重新加载数据库
+                ReloadDatabaseAction?.BeginInvoke(null,null);
+            }
+
             block.SetReaderIndex(block.ReaderIndex + size);
             block.ReleaseBuffer();
 
@@ -293,7 +308,14 @@ namespace DBRuntime.Proxy
                 Client.RegistorTagBlockValueCallBack();
                 Client.ProcessDataPush = new ApiClient.ProcessDataPushDelegate((block) => {
                     block.Retain();
-                    mCachDatas.Enqueue(block);
+                    try
+                    {
+                        mCachDatas.Enqueue(block);
+                    }
+                    catch
+                    {
+
+                    }
                     resetEvent.Set();
                 });
             }

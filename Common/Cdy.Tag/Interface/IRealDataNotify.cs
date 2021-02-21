@@ -12,6 +12,24 @@ using System.Text;
 
 namespace Cdy.Tag
 {
+
+    public enum RealDataNotifyType
+    {
+        /// <summary>
+        /// 变量
+        /// </summary>
+        Tag,
+        /// <summary>
+        /// 数据块
+        /// </summary>
+        Block,
+        /// <summary>
+        /// 全部
+        /// </summary>
+        All
+    }
+
+
     /// <summary>
     /// 值改变通知
     /// </summary>
@@ -23,7 +41,7 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         /// <param name="valueChanged"></param>
         /// <param name="tagRegistor"></param>
-        void SubscribeValueChangedForConsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelegate valueChanged,ValueChangedNotifyProcesser.BlockChangedDelegate blockChanged,Action BlockChangedNotify, Func<IEnumerable<int>> tagRegistor);
+        ValueChangedNotifyProcesser SubscribeValueChangedForConsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelegate valueChanged,ValueChangedNotifyProcesser.BlockChangedDelegate blockChanged, Func<IEnumerable<int>> tagRegistor,RealDataNotifyType type);
 
         /// <summary>
         /// 取消订购

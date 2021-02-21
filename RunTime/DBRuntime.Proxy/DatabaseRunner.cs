@@ -294,6 +294,7 @@ namespace DBRuntime.Proxy
                 this.mRealDatabase = mDatabase.RealDatabase;
                 mHisDatabase = mDatabase.HisDatabase;
                 mSecurityRunner = new SecurityRunner() { Document = mDatabase.Security };
+                //mSecurityRunner.Start();
             }
             realEnginer = new RealEnginer(mRealDatabase);
             realEnginer.Init();
@@ -303,6 +304,13 @@ namespace DBRuntime.Proxy
 
             mDriver = new NetTransformDriver() { Client = mProxy.NetworkClient ,WorkMode=mWorkMode,PollCircle=mPollCircle};
             mDriver.ValueUpdateEvent += MDriver_ValueUpdateEvent;
+            mDriver.ReloadDatabaseAction = () => {
+
+                var mDatabase = new DatabaseSerise().Load(mDatabaseName);
+                this.mRealDatabase = mDatabase.RealDatabase;
+                mHisDatabase = mDatabase.HisDatabase;
+                mSecurityRunner.Document = mDatabase.Security ;
+            };
             mDriver.Start(realEnginer);
         }
 

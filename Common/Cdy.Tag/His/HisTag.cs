@@ -54,7 +54,46 @@ namespace Cdy.Tag
         /// </summary>
         public short MaxValueCountPerSecond { get; set; } = 1;
 
-        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            HisTag target = obj as HisTag;
+            if (target == null) return false;
+
+            return target.Id == this.Id && this.Type == target.Type && this.TagType == target.TagType && this.CompressType == target.CompressType && this.Circle == target.Circle && this.MaxValueCountPerSecond == target.MaxValueCountPerSecond && Compare(this.Parameters,target.Parameters);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source1"></param>
+        /// <param name="source2"></param>
+        /// <returns></returns>
+        private bool Compare(Dictionary<string,double> source1,Dictionary<string,double> source2)
+        {
+            if (source1 == null && source2 == null) return true;
+            if ((source1 == null && source2 != null) || (source1 != null && source2 == null)) return false;
+            foreach (var vv in source1)
+            {
+                if (!source2.ContainsKey(vv.Key)) return false;
+                if (source2[vv.Key] != source1[vv.Key]) return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
     }
 
     /// <summary>

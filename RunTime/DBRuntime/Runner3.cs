@@ -205,7 +205,138 @@ namespace Cdy.Tag
             CurrentDatabaseLastUpdateTime = mRealDatabase.UpdateTime;
 
             sw.Stop();
-            LoggerService.Service.Info("LoadDatabase", "load " +mDatabaseName +" take " + sw.ElapsedMilliseconds.ToString() +" ms");
+            LoggerService.Service.Info("LoadDatabase", "加载数据库 " +mDatabaseName +" 花费: " + sw.ElapsedMilliseconds.ToString() +" ms");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void DynamicLoadTags()
+        {
+            LoggerService.Service.Info("DynamicLoadTags", "开始动态加载变量.", ConsoleColor.DarkYellow);
+            string spath = System.IO.Path.Combine(PathHelper.helper.GetDatabasePath(this.mRealDatabase.Name), "Dynamic");
+            if(System.IO.Directory.Exists(spath))
+            {
+                foreach(var vv in System.IO.Directory.GetFiles(spath).ToArray())
+                {
+                    if(vv.EndsWith(".xdb"))
+                    {
+                        var db = new RealDatabaseSerise().Load(vv);
+                        if(db!=null)
+                        {
+                            DynamicLoadTags(db.ListAllTags(), null);
+                        }
+                    }
+                    else if(vv.EndsWith(".hdb"))
+                    {
+                        var db = new HisDatabaseSerise().Load(vv);
+                        if(db!=null)
+                        {
+                            DynamicLoadTags(null, db.ListAllTags());
+                        }
+                    }
+                    else if(vv.EndsWith(".sdb"))
+                    {
+                        var db = new SecuritySerise().Load(vv);
+                        this.Database.Security = db;
+                        mSecurityRunner.Document = db;
+                    }
+
+                    try
+                    {
+                        System.IO.File.Delete(vv);
+                    }
+                    catch
+                    {
+                        
+                    }
+
+                }
+
+            }
+
+            LoggerService.Service.Info("DynamicLoadTags", "完成动态加载变量", ConsoleColor.DarkYellow);
+        }
+
+        /// <summary>
+        /// 动态加载变量
+        /// </summary>
+        /// <param name="realtags"></param>
+        /// <param name="hisTags"></param>
+        public void DynamicLoadTags(IEnumerable<Tagbase> realtags,IEnumerable<HisTag> hisTags)
+        {
+            List<Tagbase> ltmp = new List<Tagbase>();
+            List<Tagbase> changedrealtag = new List<Tagbase>();
+            List<HisTag> htmp = new List<HisTag>();
+            List<HisTag> changedhistag = new List<HisTag>();
+
+            if (realtags != null)
+            {
+                foreach (var vv in realtags)
+                {
+                    if (this.mRealDatabase.Tags.ContainsKey(vv.Id))
+                    {
+                        var otag = this.mRealDatabase.Tags[vv.Id];
+                        if (!otag.Equals(vv))
+                        {
+                            if (otag.Type != vv.Type)
+                            {
+                                LoggerService.Service.Warn("DynamicLoadTags", "不允许动态修改变量 '"+vv.Name+"' 的类型，你可以整体重新启动数据库来生效!");
+                            }
+                            else
+                            {
+                                changedrealtag.Add(vv);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ltmp.Add(vv);
+                    }
+                }
+
+                if (changedrealtag.Count > 0 || ltmp.Count > 0)
+                {
+                    realEnginer.UpdateTags(changedrealtag);
+                    realEnginer.AddTags(ltmp);
+                }
+            }
+
+            if (hisTags != null)
+            {
+                foreach (var vv in hisTags)
+                {
+                    if (this.mHisDatabase.HisTags.ContainsKey(vv.Id))
+                    {
+                        var otag = this.mHisDatabase.HisTags[vv.Id];
+                        if (!otag.Equals(vv))
+                        {
+                            if (otag.Type == vv.Type)
+                            {
+                                changedhistag.Add(vv);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        htmp.Add(vv);
+                    }
+                }
+
+                if (htmp.Count > 0 || changedhistag.Count > 0)
+                {
+                    var vids = htmp.Select(e => e.Id);
+                    compressEnginer.ReSizeTagCompress(vids);
+                    seriseEnginer.CheckAndAddSeriseFile(vids);
+
+                    hisEnginer.Pause();
+                    hisEnginer.AddTags(htmp);
+                    hisEnginer.UpdateTags(changedhistag);
+                    hisEnginer.Resume();
+                }
+            }
+
+            CurrentDatabaseLastUpdateTime = DateTime.Now.ToString();
         }
 
         /// <summary>
@@ -214,58 +345,94 @@ namespace Cdy.Tag
         public void ReStartDatabase()
         {
 
-            LoggerService.Service.Info("ReStartDatabase", "start to hot restart database.", ConsoleColor.DarkYellow);
+            LoggerService.Service.Info("ReStartDatabase", "开始重新热启动数据库", ConsoleColor.DarkYellow);
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
             var db = new DatabaseSerise().Load(mDatabaseName);
             List<Tagbase> ltmp = new List<Tagbase>();
+
+            List<Tagbase> changedrealtag = new List<Tagbase>();
+
             List<HisTag> htmp = new List<HisTag>();
+            List<HisTag> changedhistag = new List<HisTag>();
+
+            //
             foreach (var vv in db.RealDatabase.Tags.Where(e => !this.mRealDatabase.Tags.ContainsKey(e.Key)))
             {
                 ltmp.Add(vv.Value);
             }
 
+            //
+            foreach (var vv in this.mRealDatabase.Tags)
+            {
+                if (db.RealDatabase.Tags.ContainsKey(vv.Key))
+                {
+                    var tag = db.RealDatabase.Tags[vv.Key];
+                    if(!tag.Equals(vv.Value))
+                    {
+                        if(tag.Type == vv.Value.Type)
+                        changedrealtag.Add(tag);
+                    }
+                }
+            }
+
+            //
             foreach (var vv in db.HisDatabase.HisTags.Where(e => !this.mHisDatabase.HisTags.ContainsKey(e.Key)))
             {
                 htmp.Add(vv.Value);
             }
 
-            LoggerService.Service.Info("ReStartDatabase", "reload " + mDatabaseName + " take " + sw.ElapsedMilliseconds.ToString() + " ms");
+            //
+            foreach(var vv in this.mHisDatabase.HisTags)
+            {
+                if(db.HisDatabase.HisTags.ContainsKey(vv.Key))
+                {
+                    var tag = db.HisDatabase.HisTags[vv.Key];
+                    if(!tag.Equals(vv.Value))
+                    {
+                        if (tag.TagType == vv.Value.TagType)
+                            changedhistag.Add(tag);
+                    }
+                }
+            }
+
+            LoggerService.Service.Info("ReStartDatabase", "加载 " + mDatabaseName + " 耗时: " + sw.ElapsedMilliseconds.ToString() + " ms");
             compressEnginer.WaitForReady();
 
             sw.Reset();
             sw.Start();
-            hisEnginer.Pause();
-
-            realEnginer.Lock();
-            realEnginer.AddTags(ltmp);
-            realEnginer.UnLock();
-
-            hisEnginer.AddTags(htmp);
 
             var vids = htmp.Select(e => e.Id);
 
             compressEnginer.ReSizeTagCompress(vids);
             seriseEnginer.CheckAndAddSeriseFile(vids);
 
+            
+            hisEnginer.Pause();
+
+            realEnginer.UpdateTags(changedrealtag);
+            realEnginer.AddTags(ltmp);
+
+            hisEnginer.AddTags(htmp);
+            hisEnginer.UpdateTags(changedhistag);
+
             hisEnginer.Resume();
 
-            //this.mDatabase = db;
-            //this.mRealDatabase = db.RealDatabase;
-            //this.mHisDatabase = db.HisDatabase;
+
+            mSecurityRunner.Document = db.Security;
 
             CurrentDatabaseVersion = db.Version;
-            CurrentDatabase = db.Name;
+            //CurrentDatabase = db.Name;
             CurrentDatabaseLastUpdateTime = mRealDatabase.UpdateTime;
 
             //RegistorInterface();
             sw.Stop();
-            LoggerService.Service.Info("ReStartDatabase", "ReInit" + mDatabaseName + " take " + sw.ElapsedMilliseconds.ToString() + " ms");
+            LoggerService.Service.Info("ReStartDatabase", "初始化数据库" + mDatabaseName + " 耗时: " + sw.ElapsedMilliseconds.ToString() + " ms");
 
 
-            LoggerService.Service.Info("ReStartDatabase", "hot restart database finish.", ConsoleColor.DarkYellow);
+            LoggerService.Service.Info("ReStartDatabase", "热启动数据库完成", ConsoleColor.DarkYellow);
         }
 
         /// <summary>
@@ -329,9 +496,9 @@ namespace Cdy.Tag
                 seriseEnginer.BlockDuration = mHisDatabase.Setting.DataBlockDuration;
                 seriseEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
                 seriseEnginer.DataSeriser = mHisDatabase.Setting.DataSeriser;
-                SeriseEnginer3.HisDataPathPrimary = mHisDatabase.Setting.HisDataPathPrimary;
-                SeriseEnginer3.HisDataPathBack = mHisDatabase.Setting.HisDataPathBack;
-                SeriseEnginer3.HisDataKeepTimeInPrimaryPath = mHisDatabase.Setting.HisDataKeepTimeInPrimaryPath;
+                SeriseEnginer4.HisDataPathPrimary = mHisDatabase.Setting.HisDataPathPrimary;
+                SeriseEnginer4.HisDataPathBack = mHisDatabase.Setting.HisDataPathBack;
+                SeriseEnginer4.HisDataKeepTimeInPrimaryPath = mHisDatabase.Setting.HisDataKeepTimeInPrimaryPath;
 
                 seriseEnginer.Init();
                 ServiceLocator.Locator.Registor<IDataSerialize3>(seriseEnginer);

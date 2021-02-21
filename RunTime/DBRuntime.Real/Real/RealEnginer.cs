@@ -238,6 +238,15 @@ namespace Cdy.Tag
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="values"></param>
+        private void Clear(byte[] values)
+        {
+            Array.Clear(values, 0, values.Length);
+        }
+
+        /// <summary>
         /// 加载使能新的变量
         /// </summary>
         /// <param name="tags"></param>
@@ -312,7 +321,46 @@ namespace Cdy.Tag
             }
             mUsedSize = fsize;
 
+            foreach(var vv in ComsumerValueChangedNotifyManager.Manager.ListNotifiers())
+            {
+                vv.UpdateBlock(mConfigDatabase.MaxId, (id) =>
+                {
+                    var itmp = (int)GetDataAddr(id);
+                    if (itmp < 0)
+                        return (int)(mIdAndAddr.Last().Value);
+                    else
+                    {
+                        return itmp;
+                    }
+                });
+            }
+
             //mConfigDatabase = mNewDb;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="size"></param>
+        public void CheckAndResize(int size)
+        {
+            if (size > mMemory.Length)
+            {
+                var vsize = ((long)(size * 1.5 / 1024) + 1) * 1024;
+                var men = new byte[vsize];
+
+                var gch = GCHandle.Alloc(men, GCHandleType.Pinned);
+                var hmen = (void*)gch.AddrOfPinnedObject();
+                men.AsSpan().Clear();
+
+                Array.Copy(mMemory, men, mMemory.Length);
+
+                mGCHandle.Free();
+
+                mMemory = men;
+                mGCHandle = gch;
+                mMHandle = hmen;
+            }
         }
 
         /// <summary>
@@ -330,68 +378,112 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="tagType"></param>
+        /// <returns></returns>
+        private short GetTagRealValueSize(TagType tagType)
+        {
+            short msize = 0;
+            switch (tagType)
+            {
+                case TagType.Bool:
+                case TagType.Byte:
+                    msize += 10;
+                    break;
+                case TagType.Short:
+                case TagType.UShort:
+                    msize += 11;
+                    break;
+                case TagType.Int:
+                case TagType.UInt:
+                case TagType.Float:
+                    msize += 13;
+                    break;
+                case TagType.Long:
+                case TagType.ULong:
+                case TagType.Double:
+                    msize += 17;
+                    break;
+                case TagType.IntPoint:
+                case TagType.UIntPoint:
+                    msize += 17;
+                    break;
+                case TagType.IntPoint3:
+                case TagType.UIntPoint3:
+                    msize += 21;
+                    break;
+                case TagType.LongPoint:
+                case TagType.ULongPoint:
+                    msize += 25;
+                    break;
+                case TagType.LongPoint3:
+                case TagType.ULongPoint3:
+                    msize += 33;
+                    break;
+                case TagType.String:
+                    msize += (Const.StringSize + 9);
+                    break;
+            }
+            return msize;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="tag"></param>
         public void UpdateTag(Tag.Tagbase tag)
         {
-            var oldtag = mConfigDatabase.GetTagById(tag.Id);
+            //var oldtag = mConfigDatabase.GetTagById(tag.Id);
 
-            if(oldtag!=null)
-            {
-                if(oldtag.Type == tag.Type)
-                {
-                    int msize = 0;
-                    switch (tag.Type)
-                    {
-                        case TagType.Bool:
-                        case TagType.Byte:
-                            msize += 10;
-                            break;
-                        case TagType.Short:
-                        case TagType.UShort:
-                            msize += 11;
-                            break;
-                        case TagType.Int:
-                        case TagType.UInt:
-                        case TagType.Float:
-                            msize += 13;
-                            break;
-                        case TagType.Long:
-                        case TagType.ULong:
-                        case TagType.Double:
-                            msize += 17;
-                            break;
-                        case TagType.IntPoint:
-                        case TagType.UIntPoint:
-                            msize += 17;
-                            break;
-                        case TagType.IntPoint3:
-                        case TagType.UIntPoint3:
-                            msize += 21;
-                            break;
-                        case TagType.LongPoint:
-                        case TagType.ULongPoint:
-                            msize += 25;
-                            break;
-                        case TagType.LongPoint3:
-                        case TagType.ULongPoint3:
-                            msize += 33;
-                            break;
-                        case TagType.String:
-                            msize += (Const.StringSize + 9);
-                            break;
-                    }
-                    tag.ValueAddress = mUsedSize;
-                    mUsedSize += msize;
-                    if (mIdAndAddr.ContainsKey(tag.Id))
-                    {
-                        mIdAndAddr[tag.Id] = tag.ValueAddress;
-                    }
-                    else
-                    {
-                        mIdAndAddr.Add(tag.Id, tag.ValueAddress);
-                    }
-                }
-            }
+            //if(oldtag!=null)
+            //{
+            //    if(oldtag.Type != tag.Type)
+            //    {
+            //        int msize = GetTagRealValueSize(tag.Type);
+
+            //        int osize = GetTagRealValueSize(oldtag.Type);
+
+            //        var fsize = mUsedSize + msize - osize;
+
+            //        var oldaddress = mIdAndAddr[tag.Id];
+
+            //        if(fsize> mMemory.Length)
+            //        {
+            //            var vsize = ((long)(fsize * 1.5 / 1024) + 1) * 1024;
+            //            var men = new byte[vsize];
+
+            //            var gch = GCHandle.Alloc(men, GCHandleType.Pinned);
+            //            var hmen = (void*)gch.AddrOfPinnedObject();
+            //            men.AsSpan().Clear();
+
+            //            Array.Copy(mMemory,0, men,0, oldaddress);
+
+            //            Array.Copy
+                        
+
+            //            mGCHandle.Free();
+
+            //            mMemory = men;
+            //            mGCHandle = gch;
+            //            mMHandle = hmen;
+            //        }
+            //        else
+            //        {
+
+            //        }
+            //        mUsedSize = fsize;
+                    
+            //        tag.ValueAddress = mUsedSize;
+            //        mUsedSize += msize;
+            //        if (mIdAndAddr.ContainsKey(tag.Id))
+            //        {
+            //            mIdAndAddr[tag.Id] = tag.ValueAddress;
+            //        }
+            //        else
+            //        {
+            //            mIdAndAddr.Add(tag.Id, tag.ValueAddress);
+            //        }
+            //    }
+            //}
 
             mConfigDatabase.Update(tag);
         }
@@ -4911,35 +5003,39 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         /// <param name="valueChanged"></param>
         /// <param name="tagRegistor"></param>
-        public void SubscribeValueChangedForConsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelegate valueChanged, ValueChangedNotifyProcesser.BlockChangedDelegate blockchanged,Action BlockChangedNotify, Func<IEnumerable<int>> tagRegistor)
+        public ValueChangedNotifyProcesser SubscribeValueChangedForConsumer(string name, ValueChangedNotifyProcesser.ValueChangedDelegate valueChanged, ValueChangedNotifyProcesser.BlockChangedDelegate blockchanged, Func<IEnumerable<int>> tagRegistor, RealDataNotifyType type)
         {
             var re = ComsumerValueChangedNotifyManager.Manager.GetNotifier(name);
-            if (tagRegistor != null)
+            re.NotifyType = type;
+            
+            if(type == RealDataNotifyType.Block || type == RealDataNotifyType.All)
             {
-                var val = tagRegistor();
-                if (val == null)
+                re.BuildBlock(mConfigDatabase.MaxId, (id) => {
+                    var itmp = (int)GetDataAddr(id);
+                    if (itmp < 0)
+                        return (int)(mIdAndAddr.Last().Value);
+                    else
+                    {
+                        return itmp;
+                    }
+                });
+            }
+
+            if (type == RealDataNotifyType.All || type == RealDataNotifyType.Tag)
+            {
+                if (tagRegistor != null)
                 {
-                    re.RegistorAll();
-                    re.BuildBlock(mConfigDatabase.MaxTagId(), (id) => 
-                    { 
-                        var itmp = (int)GetDataAddr(id);
-                        if (itmp < 0)
-                            return (int)(mIdAndAddr.Last().Value);
-                        else
-                        {
-                            return itmp;
-                        }
-                    });
+                    re.Registor(tagRegistor());
                 }
                 else
                 {
-                    re.Registor(val);
+                    re.RegistorAll();
                 }
             }
             re.ValueChanged = valueChanged;
             re.BlockChanged = blockchanged;
-            re.BlockChangedNotify = BlockChangedNotify;
             re.Start();
+            return re;
         }
 
 

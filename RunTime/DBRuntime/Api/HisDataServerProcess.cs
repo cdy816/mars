@@ -14,6 +14,7 @@ using System.Diagnostics;
 using System.Text;
 using Cdy.Tag;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace DBRuntime.Api
 {
@@ -74,21 +75,27 @@ namespace DBRuntime.Api
                 switch (cmd)
                 {
                     case RequestAllHisData:
-                        ProcessRequestAllHisDataByMemory(client, data);
+                       Task.Run(()=> { ProcessRequestAllHisDataByMemory(client, data);
+                           data.ReleaseBuffer();
+                       });
                         break;
                     case RequestHisDatasByTimePoint:
-                        ProcessRequestHisDatasByTimePointByMemory(client, data);
+                        Task.Run(()=> { ProcessRequestHisDatasByTimePointByMemory(client, data); data.ReleaseBuffer(); });
                         break;
                     case RequestHisDataByTimeSpan:
-                        ProcessRequestHisDataByTimeSpanByMemory(client, data);
+                        Task.Run(() => { ProcessRequestHisDataByTimeSpanByMemory(client, data); data.ReleaseBuffer(); });
+                        break;
+                    default:
+                        data.ReleaseBuffer();
                         break;
                 }
             }
             else
             {
                 Parent.AsyncCallback(client, FunId, new byte[1], 0);
+                base.ProcessSingleData(client, data);
             }
-            base.ProcessSingleData(client, data);
+            
         }
 
         #region Serise to IByteBuffer

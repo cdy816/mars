@@ -121,7 +121,7 @@ namespace Cdy.Tag
                 {
                     mChangedTags[ids[i]] = true;
                 }
-            }),null,null, new Func<IEnumerable<int>>(() => { return  mTags.Keys; }));
+            }),null,new Func<IEnumerable<int>>(() => { return  mTags.Keys; }),RealDataNotifyType.Tag);
 
             foreach(var vv in mTags.Keys)
             {

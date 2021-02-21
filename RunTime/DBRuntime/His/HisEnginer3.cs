@@ -605,11 +605,11 @@ namespace Cdy.Tag
         /// 修改变量
         /// </summary>
         /// <param name="tags"></param>
-        public void ChangeTags(IEnumerable<HisTag> tags)
+        public void UpdateTags(IEnumerable<HisTag> tags)
         {
             foreach(var vv in tags)
             {
-                ChangeTag(vv);
+                UpdateTag(vv);
             }
         }
 
@@ -617,7 +617,7 @@ namespace Cdy.Tag
         /// 修改变量
         /// </summary>
         /// <param name="tag"></param>
-        public void ChangeTag(Tag.HisTag tag)
+        public void UpdateTag(Tag.HisTag tag)
         {
             var oldtag = this.mManager.GetHisTagById(tag.Id);
             var oldruntag = this.mHisTags.ContainsKey(tag.Id) ? this.mHisTags[tag.Id] : null;

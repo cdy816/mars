@@ -100,10 +100,8 @@ namespace DBRuntime.Api
                     }
                     break;
 
-
             }
-
-           
+            base.ProcessSingleData(client, data);
         }
 
         #endregion ...Methods...

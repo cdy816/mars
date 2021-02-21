@@ -152,7 +152,6 @@ namespace DBRuntime.Api
         /// </summary>
         private void RegistorInit()
         {
-            
             this.RegistorFunCallBack(ApiFunConst.TagInfoRequest, TagInfoRequest);
             this.RegistorFunCallBack(ApiFunConst.RealDataRequestFun, ReadDataRequest);
             this.RegistorFunCallBack(ApiFunConst.HisDataRequestFun, HisDataRequest);

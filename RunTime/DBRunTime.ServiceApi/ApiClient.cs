@@ -497,7 +497,7 @@ namespace DBRunTime.ServiceApi
         {
             CheckLogin();
             int start = 0;
-            int len = 1024 * 1024 * 10;
+            int len = 1024 * 1024 * 16;
             while (start <= totalsize)
             {
                 if (start + len > totalsize)

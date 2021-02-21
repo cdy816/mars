@@ -52,6 +52,8 @@ namespace Cdy.Tag
 
         private object mLockObj = new object();
 
+        private ValueChangedNotifyProcesser mValueChangedNotifier;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -123,20 +125,19 @@ namespace Cdy.Tag
         public void Start()
         {
             //注册值改变处理
-            ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeValueChangedForConsumer(this.Name, new ValueChangedNotifyProcesser.ValueChangedDelegate((ids,len) => {
+            mValueChangedNotifier = ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeValueChangedForConsumer(this.Name, new ValueChangedNotifyProcesser.ValueChangedDelegate((ids,len) => {
                 for(int i=0;i<len;i++)
                 {
                     lock(mLockObj)
                     mChangedTags[ids[i]] = true;
                 }
                 //LoggerService.Service.Info("TagChanged", "变化变量数:"+ids.Length);
-            }),null,null, new Func<IEnumerable<int>>(() => { return  mTags.Keys; }));
+            }),null,new Func<IEnumerable<int>>(() => { return  mTags.Keys; }),RealDataNotifyType.Tag);
 
             foreach(var vv in mTags.Keys)
             {
                 mChangedTags.TryAdd(vv, false);
             }
-
 
             mRecordThread = new Thread(ThreadProcess);
             mRecordThread.IsBackground=true;
@@ -176,6 +177,10 @@ namespace Cdy.Tag
             {
                 mTags.Add(tag.Id,tag);
                 mCurrentCount++;
+
+                mChangedTags.TryAdd(tag.Id, false);
+                mValueChangedNotifier?.Registor(tag.Id);
+
                 return true;
             }
             else
@@ -195,6 +200,12 @@ namespace Cdy.Tag
                 mTags.Remove(tag.Id);
                 mCurrentCount--;
             }
+            bool btmp = false;
+            if(mChangedTags.ContainsKey(tag.Id))
+            {
+                mChangedTags.Remove(tag.Id, out btmp);
+            }
+            mValueChangedNotifier?.UnRegistor(tag.Id);
         }
 
         /// <summary>
@@ -206,8 +217,6 @@ namespace Cdy.Tag
             mChangedTags.Clear();
             mCurrentCount = 0;
         }
-
-        
 
         /// <summary>
         /// 

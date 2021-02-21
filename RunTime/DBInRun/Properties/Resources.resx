@@ -120,6 +120,9 @@
   <data name="AnyKeyToExit" xml:space="preserve">
     <value>press any key to exit.</value>
   </data>
+  <data name="DynamicloadMsg" xml:space="preserve">
+    <value>Dynamic loading of partial tag etc.</value>
+  </data>
   <data name="GDMsg" xml:space="preserve">
     <value>generate a sample databse with special number tags</value>
   </data>

@@ -41,6 +41,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 对历史数据文件格式内容进行重新整理,将一个文件内的同一个变量的数据合并在一起,提高数据查询效率
     /// </summary>
+    [Obsolete]
     public class HisDataArrange
     {
 

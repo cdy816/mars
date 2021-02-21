@@ -70,6 +70,15 @@ namespace DBInRun.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Dynamic loading of partial tag etc. 的本地化字符串。
+        /// </summary>
+        internal static string DynamicloadMsg {
+            get {
+                return ResourceManager.GetString("DynamicloadMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 generate a sample databse with special number tags 的本地化字符串。
         /// </summary>
         internal static string GDMsg {

@@ -102,7 +102,26 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            var target = obj as Tagbase;
+            if (target == null) return false;
+            return this.Name == target.Name && target.FullName == target.FullName && target.Group == this.Group && target.Desc == this.Desc && target.LinkAddress == this.LinkAddress && target.Conveter == this.Conveter && target.ReadWriteType == this.ReadWriteType && this.Id == target.Id && this.Type == target.Type;
+        }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 
     /// <summary>
@@ -158,6 +177,22 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
+        public override bool Equals(object obj)
+        {
+            var target = obj as NumberTagBase;
+            if (target == null) return false;
+            return base.Equals(obj) &&  this.MaxValue == target.MaxValue && this.MinValue == target.MinValue;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...
@@ -191,6 +226,27 @@ namespace Cdy.Tag
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            FloatingTagBase target = obj as FloatingTagBase;
+            if (target == null) return false;
+            return base.Equals(obj) && target.Precision == this.Precision;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
 
         #endregion ...Methods...
 

@@ -145,6 +145,12 @@ namespace DBInRun
                             Cdy.Tag.Runner3.RunInstance.ReStartDatabase();
                         });
                         break;
+                    case "dynamicload":
+                        LoggerService.Service.EnableLogger = true;
+                        Task.Run(() => {
+                            Cdy.Tag.Runner3.RunInstance.DynamicLoadTags();
+                        });
+                        break;
                     case "list":
                         ListDatabase();
                         break;
@@ -294,6 +300,7 @@ namespace DBInRun
             re.AppendLine("start [database]        // "+Res.Get("StartMsg"));
             re.AppendLine("stop                    // " + Res.Get("StopMsg"));
             re.AppendLine("restart                 // " + Res.Get("RestartMsg"));
+            re.AppendLine("dynamicload             // " + Res.Get("DynamicloadMsg"));
             re.AppendLine("list                    // " + Res.Get("ListMsg"));
             re.AppendLine("switch primary/standby  // " + Res.Get("RddcSwitch"));
             re.AppendLine("setdatapath [path]      // " + Res.Get("sethisdatapath"));

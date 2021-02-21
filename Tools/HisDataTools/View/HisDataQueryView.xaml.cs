@@ -64,7 +64,7 @@ namespace HisDataTools.View
         /// <returns></returns>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            int ival = (int)value;
+            int ival =  System.Convert.ToInt32(value);
             if(ival<20)
             {
                 return Res.Get("good");

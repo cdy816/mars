@@ -75,39 +75,39 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn  IsReadOnly="True" Width="200" MinWidth="100" Header="{res:ResMarker AvgValue}">
+                            <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="100" Header="{res:ResMarker AvgValue}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock HorizontalAlignment="Center" Text="{Binding AvgValue,Converter={StaticResource rvc}}" VerticalAlignment="Center" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="30" Header="{res:ResMarker MaxValueTime}">
+                            <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="100" Header="{res:ResMarker MaxValueTime}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock HorizontalAlignment="Center" Text="{Binding MaxValueTime}" VerticalAlignment="Center" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="30" Header="{res:ResMarker MaxValue}">
+                            <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="100" Header="{res:ResMarker MaxValue}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock HorizontalAlignment="Center" Text="{Binding MaxValue,Converter={StaticResource qvc}}" VerticalAlignment="Center" />
+                                        <TextBlock HorizontalAlignment="Center" Text="{Binding MaxValue}" VerticalAlignment="Center" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="30" Header="{res:ResMarker MinValueTime}">
+                            <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="100" Header="{res:ResMarker MinValueTime}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock HorizontalAlignment="Center" Text="{Binding MinValueTime}" VerticalAlignment="Center" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="30" Header="{res:ResMarker MinValue}">
+                            <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="100" Header="{res:ResMarker MinValue}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock HorizontalAlignment="Center" Text="{Binding MinValue,Converter={StaticResource qvc}}" VerticalAlignment="Center" />
+                                        <TextBlock HorizontalAlignment="Center" Text="{Binding MinValue}" VerticalAlignment="Center" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -156,7 +156,7 @@
                     </DataGrid>
                 </Grid>
             </TabItem>
-            <TabItem Header="{res:ResMarker Chart}">
+            <TabItem Header="{res:ResMarker Chart}" IsEnabled="{Binding IsChecked,ElementName=oname}">
                 <Grid Background="#FFE5E5E5">
                     <chart:StaticCurveChartPlotter DataSource="{Binding ChartSource}" SplitItemYs="{Binding YLineItems}" MaxValueX="{Binding MaxXValue}" MinValueX="{Binding MinXValue}" MaxValueY="{Binding MaxYValue}"  IsLegendVisible="True" MinValueY="{Binding MinYValue}" Background="White" FontSize="12" Foreground="Black" >
                         <!--<chart:StaticCurveChartPlotter.SplitItemYs>

@@ -705,35 +705,35 @@ namespace HisDataTools.ViewModel
                 case (byte)Cdy.Tag.TagType.Bool:
                     break;
                 case (byte)Cdy.Tag.TagType.Byte:
-                    ProcessDataQuery<byte>(id, sTime, eTime);
+                    ProcessStatisticsDataQuery(id, sTime, eTime);
                     break;
                 case (byte)Cdy.Tag.TagType.DateTime:
                     break;
                 case (byte)Cdy.Tag.TagType.Double:
-                    ProcessDataQuery<double>(id, sTime, eTime);
+                    ProcessStatisticsDataQuery(id, sTime, eTime);
                     break;
                 case (byte)Cdy.Tag.TagType.Float:
-                    ProcessDataQuery<float>(id, sTime, eTime);
+                    ProcessStatisticsDataQuery(id, sTime, eTime);
                     break;
                 case (byte)Cdy.Tag.TagType.Int:
-                    ProcessDataQuery<int>(id, sTime, eTime);
+                    ProcessStatisticsDataQuery(id, sTime, eTime);
                     break;
                 case (byte)Cdy.Tag.TagType.Long:
-                    ProcessDataQuery<long>(id, sTime, eTime);
+                    ProcessStatisticsDataQuery(id, sTime, eTime);
                     break;
                 case (byte)Cdy.Tag.TagType.Short:
-                    ProcessDataQuery<short>(id, sTime, eTime);
+                    ProcessStatisticsDataQuery(id, sTime, eTime);
                     break;
                 case (byte)Cdy.Tag.TagType.String:
                     break;
                 case (byte)Cdy.Tag.TagType.UInt:
-                    ProcessDataQuery<uint>(id, sTime, eTime);
+                    ProcessStatisticsDataQuery(id, sTime, eTime);
                     break;
                 case (byte)Cdy.Tag.TagType.ULong:
-                    ProcessDataQuery<ulong>(id, sTime, eTime);
+                    ProcessStatisticsDataQuery(id, sTime, eTime);
                     break;
                 case (byte)Cdy.Tag.TagType.UShort:
-                    ProcessDataQuery<ushort>(id, sTime, eTime);
+                    ProcessStatisticsDataQuery(id, sTime, eTime);
                     break;
                 case (byte)Cdy.Tag.TagType.IntPoint:
                     break;

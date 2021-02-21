@@ -1417,31 +1417,32 @@ namespace Cdy.Tag
                 var mintime = vv.ReadLong(36);
                 var minvalue = vv.ReadDouble(44);
 
+                int offset = time.Hour * 48;
 
-                var ncount = mfb.ReadInt(4);
-                var navgvalue = mfb.ReadDouble(8);
+                var ncount = mfb.ReadInt( offset+ 4);
+                var navgvalue = mfb.ReadDouble(offset + 8);
 
-                mfb.WriteByte(0, 1);
-                mfb.WriteInt(4, ncount + avgcount);
+                mfb.WriteByte(offset + 0, 1);
+                mfb.WriteInt(offset + 4, ncount + avgcount);
                 if ((ncount + avgcount) > 0)
                 {
-                    mfb.WriteDouble(8, (avgcount * avgvalue + navgvalue * ncount) / (ncount + avgcount));
+                    mfb.WriteDouble(offset + 8, (avgcount * avgvalue + navgvalue * ncount) / (ncount + avgcount));
                 }
 
-                var nmaxtime = mfb.ReadLong(16);
-                var nmaxvalue = mfb.ReadDouble(24);
+                var nmaxtime = mfb.ReadLong(offset + 16);
+                var nmaxvalue = mfb.ReadDouble(offset + 24);
                 if (nmaxvalue < maxvalue || nmaxtime==0)
                 {
-                    mfb.WriteLong(16, maxtime);
-                    mfb.WriteDouble(24, maxvalue);
+                    mfb.WriteLong(offset + 16, maxtime);
+                    mfb.WriteDouble(offset + 24, maxvalue);
                 }
 
-                var nmintime = mfb.ReadLong(32);
-                var nminvalue = mfb.ReadDouble(40);
+                var nmintime = mfb.ReadLong(offset + 32);
+                var nminvalue = mfb.ReadDouble(offset + 40);
                 if (nminvalue > minvalue || nmintime==0)
                 {
-                    mfb.WriteLong(32, mintime);
-                    mfb.WriteDouble(40, minvalue);
+                    mfb.WriteLong(offset + 32, mintime);
+                    mfb.WriteDouble(offset + 40, minvalue);
                 }
             }
 
@@ -1489,30 +1490,32 @@ namespace Cdy.Tag
                     if (id <= 0 && avgcount <= 0 && avgcount <= 0 && maxtime <= 0 && mintime <= 0) continue;
                     StatisticsMemory.GetStatisticsData(id, mfb);
 
-                    var ncount = mfb.ReadInt(4);
-                    var navgvalue = mfb.ReadDouble(8);
+                    int toffset = time.Hour * 48;
 
-                    mfb.WriteByte(0,1);
-                    mfb.WriteInt(4, ncount + avgcount);
+                    var ncount = mfb.ReadInt(toffset+4);
+                    var navgvalue = mfb.ReadDouble(toffset + 8);
+
+                    mfb.WriteByte(toffset + 0,1);
+                    mfb.WriteInt(toffset + 4, ncount + avgcount);
                     if ((ncount + avgcount) > 0)
                     {
-                        mfb.WriteDouble(8, (avgcount * avgvalue + navgvalue * ncount) / (ncount + avgcount));
+                        mfb.WriteDouble(toffset + 8, (avgcount * avgvalue + navgvalue * ncount) / (ncount + avgcount));
                     }
 
-                    var nmaxtime = mfb.ReadLong(16);
-                    var nmaxvalue = mfb.ReadDouble(24);
+                    var nmaxtime = mfb.ReadLong(toffset + 16);
+                    var nmaxvalue = mfb.ReadDouble(toffset + 24);
                     if (nmaxvalue < maxvalue || nmaxtime == 0)
                     {
-                        mfb.WriteLong(16, maxtime);
-                        mfb.WriteDouble(24, maxvalue);
+                        mfb.WriteLong(toffset + 16, maxtime);
+                        mfb.WriteDouble(toffset + 24, maxvalue);
                     }
 
-                    var nmintime = mfb.ReadLong(32);
-                    var nminvalue = mfb.ReadDouble(40);
+                    var nmintime = mfb.ReadLong(toffset + 32);
+                    var nminvalue = mfb.ReadDouble(toffset + 40);
                     if(nminvalue>minvalue || nmintime==0)
                     {
-                        mfb.WriteLong(32, mintime);
-                        mfb.WriteDouble(40, minvalue);
+                        mfb.WriteLong(toffset + 32, mintime);
+                        mfb.WriteDouble(toffset + 40, minvalue);
                     }
                 }
             }

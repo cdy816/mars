@@ -94,7 +94,7 @@ namespace Cdy.Tag
             Dictionary<DateTime, List<DateTime>> mFileMap = new Dictionary<DateTime, List<DateTime>>();
 
             DateTime stime = new DateTime(startTime.Year, startTime.Month, startTime.Day, startTime.Hour, 0, 0);
-            while(stime.Hour<=endTime.Hour)
+            while(stime<=endTime)
             {
                 var vdd = stime.Date;
                 if(!mFileMap.ContainsKey(vdd))
@@ -106,6 +106,24 @@ namespace Cdy.Tag
                     mFileMap[vdd].Add(stime);
                 }
                 stime = stime.AddHours(1);
+            }
+
+            if(stime>endTime)
+            {
+                stime = new DateTime(stime.Year, stime.Month, stime.Day, stime.Hour, 0, 0);
+                var etime = new DateTime(endTime.Year, endTime.Month, endTime.Day, endTime.Hour, 0, 0);
+                if(stime == endTime)
+                {
+                    var vdd = stime.Date;
+                    if (!mFileMap.ContainsKey(vdd))
+                    {
+                        mFileMap.Add(vdd, new List<DateTime>() { stime });
+                    }
+                    else
+                    {
+                        mFileMap[vdd].Add(stime);
+                    }
+                }
             }
 
             foreach(var vv in mFileMap)
@@ -190,18 +208,26 @@ namespace Cdy.Tag
             {
                 ss.OpenForReadOnly(file);
                 int icount = id % TagCountOneFile;
-                long laddr = ss.ReadLong(icount * 8 + 72);
+                long laddr = ss.ReadLong(icount * 8 + 72+4);
+
+                laddr += TagCountOneFile * 8 + 8 + 72;
 
                 var res =  ss.Read(laddr, 48 * 24);
 
                 foreach(var vv in times)
                 {
                     long lltmp = vv.Hour * 48;
-                    var avgvalue = res.ReadDouble(lltmp+8);
+                    
+                    
+                    var cmd = res.ReadByte(lltmp);
+
+                    var avgvalue = res.ReadDouble(lltmp + 8);
                     var maxtime = res.ReadDateTime();
                     var maxvalue = res.ReadDouble();
                     var mintime = res.ReadDateTime();
                     var minvalue = res.ReadDouble();
+
+                    if(cmd>0)
                     result.AddValue(vv, avgvalue, maxvalue, maxtime, minvalue, mintime);
                 }
 

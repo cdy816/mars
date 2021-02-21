@@ -92,6 +92,33 @@ namespace HisDataTools
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="databaseName"></param>
+        public void ScanDatabase(string databaseName)
+        {
+            string dbpath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Data");
+            if (System.IO.Directory.Exists(dbpath))
+            {
+                foreach (var vv in new System.IO.DirectoryInfo(dbpath).EnumerateDirectories())
+                {
+                    if (vv.Name == databaseName && !HisQueryManager.Instance.CheckDatabaseIsRegistor(databaseName))
+                    {
+                        var setting = new HisDatabaseSerise().LoadSettingOnly(vv.Name);
+                        if (setting != null)
+                        {
+                            HisQueryManager.Instance.Registor(vv.Name, setting.HisDataPathPrimary, setting.HisDataPathBack);
+                        }
+                        else
+                        {
+                            HisQueryManager.Instance.Registor(vv.Name);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public void ScanDatabase()
         {
             List<string> bds = new List<string>();
@@ -101,15 +128,15 @@ namespace HisDataTools
                 foreach (var vv in new System.IO.DirectoryInfo(dbpath).EnumerateDirectories())
                 {
                     bds.Add(vv.Name);
-                    var setting = new HisDatabaseSerise().LoadSettingOnly(vv.Name);
-                    if (setting != null)
-                    {
-                        HisQueryManager.Instance.Registor(vv.Name, setting.HisDataPathPrimary, setting.HisDataPathBack);
-                    }
-                    else
-                    {
-                        HisQueryManager.Instance.Registor(vv.Name);
-                    }
+                    //var setting = new HisDatabaseSerise().LoadSettingOnly(vv.Name);
+                    //if (setting != null)
+                    //{
+                    //    HisQueryManager.Instance.Registor(vv.Name, setting.HisDataPathPrimary, setting.HisDataPathBack);
+                    //}
+                    //else
+                    //{
+                    //    HisQueryManager.Instance.Registor(vv.Name);
+                    //}
                 }
             }
             Databases = bds;

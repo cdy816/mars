@@ -181,6 +181,9 @@ namespace HisDataTools
             if (ldm.ShowDialog().Value)
             {
                 mSelectDatabase = ldm.SelectDatabase.Name;
+
+                HisDataManager.Manager.ScanDatabase(mSelectDatabase);
+
                 mDataQueryModel.LoadData(mSelectDatabase);
                 IsEnable = true;
             }

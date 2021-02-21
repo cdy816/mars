@@ -42,7 +42,7 @@ namespace Cdy.Tag
         public StatisticsMemoryMap()
         {
             mHead = new MarshalMemoryBlock(TagTotalCount * 8, TagTotalCount * 8);
-            mData = new MarshalMemoryBlock(TagTotalCount * 48 * 24, TagTotalCount * 48 * 24);
+            mData = new MarshalMemoryBlock(TagTotalCount * 48 * 24+48, TagTotalCount * 48 * 24+48);
         }
 
         #endregion ...Constructor...
@@ -102,13 +102,13 @@ namespace Cdy.Tag
                 var vid = mHead.ReadLong((id - StartId) * 8);
                 if(vid==0)
                 {
-                    re = new MarshalFixedMemoryBlock((mData.Buffers[0]+mAvaiableDataLen), 48);
+                    re = new MarshalFixedMemoryBlock((mData.Buffers[0]+mAvaiableDataLen), 48*24);
                     mHead.WriteLong((id - StartId) * 8, mAvaiableDataLen);
-                    mAvaiableDataLen += 48;
+                    mAvaiableDataLen += 48*24;
                 }
                 else
                 {
-                    re = new MarshalFixedMemoryBlock((mData.Buffers[0] + (int)vid), 48);
+                    re = new MarshalFixedMemoryBlock((mData.Buffers[0] + (int)vid), 48*24);
                 }
             }         
             return re;
@@ -126,13 +126,13 @@ namespace Cdy.Tag
                 var vid = mHead.ReadLong((id - StartId) * 8);
                 if (vid == 0)
                 {
-                    block.Reset((mData.Buffers[0] + mAvaiableDataLen), 48);
+                    block.Reset((mData.Buffers[0] + mAvaiableDataLen), 48*24);
                     mHead.WriteLong((id - StartId) * 8, mAvaiableDataLen);
-                    mAvaiableDataLen += 48;
+                    mAvaiableDataLen += 48 * 24;
                 }
                 else
                 {
-                    block.Reset((mData.Buffers[0] + (int)vid), 48);
+                    block.Reset((mData.Buffers[0] + (int)vid), 48*24);
                 }
             }
         }

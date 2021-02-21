@@ -741,7 +741,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public List<DataFileInfo4> GetDataFiles(DateTime starttime, DateTime endtime, out Tuple<DateTime, DateTime> logFileTimes, int Id)
         {
-            DateTime dt = DateTime.MinValue;
+            DateTime dt = starttime;
             var vfiles = GetDataFiles(starttime, endtime - starttime, Id);
             foreach (var vv in vfiles)
             {

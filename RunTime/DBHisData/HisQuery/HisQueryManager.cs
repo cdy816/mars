@@ -76,6 +76,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="name"></param>
+        /// <returns></returns>
+        public bool CheckDatabaseIsRegistor(string name)
+        {
+            return mManagers.ContainsKey(name);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
         /// <param name="manager"></param>
         public void Registor(string name,DataFileManager manager)
         {

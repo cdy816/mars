@@ -59,6 +59,17 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public System.IO.Stream SeriseToStream()
+        {
+            System.IO.Compression.GZipStream gs = new System.IO.Compression.GZipStream(new System.IO.MemoryStream(), System.IO.Compression.CompressionLevel.Optimal);
+            new SecuritySerise() { Document = this }.Save(gs);
+            return gs;
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

@@ -16,7 +16,7 @@ using DotNetty.Buffers;
 
 namespace DBRuntime.Api
 {
-    public class TagInfoServerProcess : ServerProcessBase
+    public class TagInfoServerProcess : ServerProcessBase, IAPINotify
     {
 
         #region ... Variables  ...
@@ -28,6 +28,16 @@ namespace DBRuntime.Api
         public const byte RegistValueCallBack = 2;
 
         public const byte GetdatabaseName = 3;
+
+        public const byte SyncRealTagConfig = 30;
+
+        public const byte SyncHisTagConfig = 31;
+
+        public const byte SyncSecuritySetting = 32;
+
+       
+
+        private List<string> mClients = new List<string>();
 
         #endregion ...Variables...
 
@@ -44,12 +54,12 @@ namespace DBRuntime.Api
         #region ... Properties ...
 
         public override byte FunId => ApiFunConst.TagInfoRequest;
-                
+
         #endregion ...Properties...
 
         #region ... Methods    ...
 
-       
+
 
         /// <summary>
         /// 
@@ -69,8 +79,8 @@ namespace DBRuntime.Api
                         int count = data.ReadInt();
                         if (count > 0)
                         {
-                            var re = BufferManager.Manager.Allocate(ApiFunConst.TagInfoRequest,count * 4);
-                            for(int i=0;i<count;i++)
+                            var re = BufferManager.Manager.Allocate(ApiFunConst.TagInfoRequest, count * 4);
+                            for (int i = 0; i < count; i++)
                             {
                                 var ival = mm.GetTagIdByName(data.ReadString());
                                 if (ival.HasValue)
@@ -89,20 +99,92 @@ namespace DBRuntime.Api
                 case Login:
                     string user = data.ReadString();
                     string pass = data.ReadString();
-                    long result = Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().Login(user, pass,client);
+                    long result = Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().Login(user, pass, client);
+
+                    if (result > 0)
+                    {
+                        mClients.Add(client);
+                    }
+
                     Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, result));
                     break;
                 case GetdatabaseName:
                     loginId = data.ReadLong();
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
-                        Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, Runner3.CurrentDatabase+","+Runner3.CurrentDatabaseVersion+","+Runner3.CurrentDatabaseLastUpdateTime));
+                        Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, Runner3.CurrentDatabase + "," + Runner3.CurrentDatabaseVersion + "," + Runner3.CurrentDatabaseLastUpdateTime));
+                    }
+                    break;
+                case SyncRealTagConfig:
+                    loginId = data.ReadLong();
+                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
+                    {
+                        var vss = mm.SeriseToStream();
+                        vss.Position = 0;
+                        Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.SyncRealTagConfig, vss));
+                        vss.Dispose();
+                    }
+                    break;
+                case SyncSecuritySetting:
+                    loginId = data.ReadLong();
+                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
+                    {
+                        var vss = (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>() as SecurityRunner).Document.SeriseToStream();
+                        vss.Position = 0;
+                        Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.SyncSecuritySetting, vss));
+                        vss.Dispose();
                     }
                     break;
 
+                case SyncHisTagConfig:
+                    loginId = data.ReadLong();
+                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
+                    {
+                        var vss = (Cdy.Tag.ServiceLocator.Locator.Resolve<IHisTagQuery>() as HisEnginer3).HisTagManager.SeriseToStream();
+                        vss.Position = 0;
+                        Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.SyncHisTagConfig, vss));
+                        vss.Dispose();
+                    }
+                    break;
             }
             base.ProcessSingleData(client, data);
         }
+
+
+        /// <summary>
+        /// 通知数据发送变化
+        /// </summary>
+        public void NotifyDatabaseChanged(bool realchanged,bool hischanged,bool securitychanged)
+        {
+            byte val = 0;
+            if (realchanged) val += 1;
+            if (hischanged) val += 2;
+            if (securitychanged) val += 4;
+            if (val > 0)
+            {
+                IByteBuffer data = ToByteBuffer(ApiFunConst.TagInfoNotify, ApiFunConst.DatabaseChangedNotify, val);
+                foreach (var vv in mClients)
+                {
+                    Parent.AsyncCallback(vv, data);
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+
+        public override void OnClientDisconnected(string id)
+        {
+            if(mClients.Contains(id))
+            {
+                mClients.Remove(id);
+            }
+            base.OnClientDisconnected(id);
+        }
+
 
         #endregion ...Methods...
 

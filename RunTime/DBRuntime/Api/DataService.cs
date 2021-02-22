@@ -25,6 +25,11 @@ namespace DBRuntime.Api
         /// <summary>
         /// 
         /// </summary>
+        public const byte TagInfoNotify = 100;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public const byte RealDataRequestFun = 10;
 
         /// <summary>
@@ -43,8 +48,16 @@ namespace DBRuntime.Api
         /// </summary>
         public const byte HisDataRequestFun = 20;
 
+        public const byte SyncRealTagConfig = 30;
 
+        public const byte SyncHisTagConfig = 31;
 
+        public const byte SyncSecuritySetting = 32;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte DatabaseChangedNotify = 1;
 
         public const byte AysncReturn = byte.MaxValue;
     }
@@ -110,6 +123,9 @@ namespace DBRuntime.Api
             mHisProcess.Start();
             mRealProcess.Start();
             mInfoProcess.Start();
+
+            ServiceLocator.Locator.Registor<IAPINotify>(mInfoProcess);
+
             base.StartInner(port);
 
         }

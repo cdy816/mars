@@ -66,6 +66,56 @@ namespace Cdy.Tag
         }
 
         /// <summary>
+        /// 加载差异部分
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public RealDatabase LoadDifferenceByName(string name, RealDatabase target)
+        {
+            return LoadDifference(PathHelper.helper.GetDataPath(name, name + ".xdb"),target);
+        }
+
+        /// <summary>
+        /// 加载差异部分
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public RealDatabase LoadDifference(string path,RealDatabase target)
+        {
+            RealDatabase db = new RealDatabase();
+            if (System.IO.File.Exists(path))
+            {
+                db.UpdateTime = new System.IO.FileInfo(path).LastWriteTimeUtc.ToString();
+
+                XElement xe = XElement.Load(path);
+
+                db.Name = xe.Attribute("Name").Value;
+                db.Version = xe.Attribute("Version").Value;
+                                
+                if (xe.Element("Tags") != null)
+                {
+                    foreach (var vv in xe.Element("Tags").Elements())
+                    {
+                        var tag = vv.LoadTagFromXML();
+
+                        if(!target.Tags.ContainsKey(tag.Id) || tag.Equals(target.Tags[tag.Id]))
+                        {
+                            db.Tags.Add(tag.Id, tag);
+                        }
+                    }
+                    db.BuildNameMap();
+                }
+
+                db.MaxId = db.Tags.Keys.Max();
+            }
+            db.IsDirty = false;
+            this.Database = db;
+            return db;
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="path"></param>
@@ -196,6 +246,33 @@ namespace Cdy.Tag
             }
             doc.Save(sfile);
             Database.IsDirty = false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stream"></param>
+        public void Save(System.IO.Stream stream)
+        {
+            XElement doc = new XElement("RealDatabase");
+            doc.SetAttributeValue("Name", Database.Name);
+            doc.SetAttributeValue("Version", Database.Version);
+            doc.SetAttributeValue("Auther", "cdy");
+            doc.SetAttributeValue("MaxId", Database.MaxId);
+            doc.SetAttributeValue("TagCount", Database.Tags.Count);
+            XElement xe = new XElement("Tags");
+            foreach (var vv in Database.Tags.Values)
+            {
+                xe.Add(vv.SaveToXML());
+            }
+            doc.Add(xe);
+            xe = new XElement("Groups");
+            foreach (var vv in Database.Groups.Values)
+            {
+                xe.Add(vv.SaveToXML());
+            }
+            doc.Add(xe);
+            doc.Save(stream);
         }
 
         #endregion ...Methods...

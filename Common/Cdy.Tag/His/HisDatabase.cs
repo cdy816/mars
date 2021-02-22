@@ -134,5 +134,16 @@ namespace Cdy.Tag
         {
             return HisTags.Values.Where(e=>e.Type == RecordType.Driver);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public System.IO.Stream SeriseToStream()
+        {
+            System.IO.Compression.GZipStream gs = new System.IO.Compression.GZipStream(new System.IO.MemoryStream(), System.IO.Compression.CompressionLevel.Optimal);
+            new HisDatabaseSerise() { Database = this }.Save(gs);
+            return gs;
+        }
     }
 }

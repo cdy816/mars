@@ -88,15 +88,28 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="sname"></param>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public Database LoadDifference(string name, Database database)
+        {
+            var Dbase = LoadDatabaseSelf(PathHelper.helper.GetDataPath(name, name + ".db"));
+            Dbase.Security = new SecuritySerise().LoadByName(name);
+            Dbase.RealDatabase = new RealDatabaseSerise().LoadDifferenceByName(name, database.RealDatabase);
+            Dbase.HisDatabase = new HisDatabaseSerise().LoadDifferenceByName(name, database.HisDatabase);
+            return Dbase;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
         public Database LoadRealDatabase(string name)
         {
             Dbase = LoadDatabaseSelf(PathHelper.helper.GetDataPath(name, name + ".db"));
             Dbase.RealDatabase = new RealDatabaseSerise().LoadByName(name);
-
             Dbase.Security = new SecuritySerise().LoadByName(name);
-
             return Dbase;
         }
 

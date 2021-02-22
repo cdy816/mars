@@ -42,6 +42,8 @@ namespace Cdy.Tag
         /// </summary>
         private string mDatabaseName = "local";
 
+        private int mPort = -1;
+
         private Database mDatabase;
 
         private RealDatabase mRealDatabase;
@@ -213,6 +215,9 @@ namespace Cdy.Tag
         /// </summary>
         public void DynamicLoadTags()
         {
+            bool ischanged = false;
+            bool hischanged = false;
+            bool issecuritychanged = false;
             LoggerService.Service.Info("DynamicLoadTags", "开始动态加载变量.", ConsoleColor.DarkYellow);
             string spath = System.IO.Path.Combine(PathHelper.helper.GetDatabasePath(this.mRealDatabase.Name), "Dynamic");
             if(System.IO.Directory.Exists(spath))
@@ -225,6 +230,7 @@ namespace Cdy.Tag
                         if(db!=null)
                         {
                             DynamicLoadTags(db.ListAllTags(), null);
+                            ischanged = true;
                         }
                     }
                     else if(vv.EndsWith(".hdb"))
@@ -233,6 +239,7 @@ namespace Cdy.Tag
                         if(db!=null)
                         {
                             DynamicLoadTags(null, db.ListAllTags());
+                            hischanged = true;
                         }
                     }
                     else if(vv.EndsWith(".sdb"))
@@ -240,6 +247,7 @@ namespace Cdy.Tag
                         var db = new SecuritySerise().Load(vv);
                         this.Database.Security = db;
                         mSecurityRunner.Document = db;
+                        issecuritychanged = true;
                     }
 
                     try
@@ -254,6 +262,8 @@ namespace Cdy.Tag
                 }
 
             }
+
+            NotifyDatabaseChanged(ischanged,hischanged,issecuritychanged);
 
             LoggerService.Service.Info("DynamicLoadTags", "完成动态加载变量", ConsoleColor.DarkYellow);
         }
@@ -340,17 +350,28 @@ namespace Cdy.Tag
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        private void NotifyDatabaseChanged(bool realchanged,bool hischanged,bool securitychanged)
+        {
+            var api = ServiceLocator.Locator.Resolve<IAPINotify>();
+            api?.NotifyDatabaseChanged(realchanged,hischanged,securitychanged);
+        }
+
+        /// <summary>
         /// 重新加载数据库
         /// </summary>
         public void ReStartDatabase()
         {
-
+            bool ischanged = false;
+            bool hischanged = false;
+            bool issecuritychanged = false;
             LoggerService.Service.Info("ReStartDatabase", "开始重新热启动数据库", ConsoleColor.DarkYellow);
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            var db = new DatabaseSerise().Load(mDatabaseName);
+            var db = new DatabaseSerise().LoadDifference(mDatabaseName,this.Database);
             List<Tagbase> ltmp = new List<Tagbase>();
 
             List<Tagbase> changedrealtag = new List<Tagbase>();
@@ -362,6 +383,7 @@ namespace Cdy.Tag
             foreach (var vv in db.RealDatabase.Tags.Where(e => !this.mRealDatabase.Tags.ContainsKey(e.Key)))
             {
                 ltmp.Add(vv.Value);
+                ischanged = true;
             }
 
             //
@@ -372,8 +394,11 @@ namespace Cdy.Tag
                     var tag = db.RealDatabase.Tags[vv.Key];
                     if(!tag.Equals(vv.Value))
                     {
-                        if(tag.Type == vv.Value.Type)
-                        changedrealtag.Add(tag);
+                        if (tag.Type == vv.Value.Type)
+                        {
+                            changedrealtag.Add(tag);
+                            ischanged = true;
+                        }
                     }
                 }
             }
@@ -382,6 +407,7 @@ namespace Cdy.Tag
             foreach (var vv in db.HisDatabase.HisTags.Where(e => !this.mHisDatabase.HisTags.ContainsKey(e.Key)))
             {
                 htmp.Add(vv.Value);
+                hischanged = true;
             }
 
             //
@@ -393,7 +419,10 @@ namespace Cdy.Tag
                     if(!tag.Equals(vv.Value))
                     {
                         if (tag.TagType == vv.Value.TagType)
+                        {
                             changedhistag.Add(tag);
+                            hischanged = true;
+                        }
                     }
                 }
             }
@@ -418,10 +447,17 @@ namespace Cdy.Tag
             hisEnginer.AddTags(htmp);
             hisEnginer.UpdateTags(changedhistag);
 
+            if(db.HisDatabase!=null)
+            mHisDatabase.Setting = db.HisDatabase.Setting;
+            
             hisEnginer.Resume();
 
-
-            mSecurityRunner.Document = db.Security;
+            //
+            if(!mSecurityRunner.Document.Equals(db.Security))
+            {
+                mSecurityRunner.Document = db.Security;
+                issecuritychanged = true;
+            }
 
             CurrentDatabaseVersion = db.Version;
             //CurrentDatabase = db.Name;
@@ -430,6 +466,9 @@ namespace Cdy.Tag
             //RegistorInterface();
             sw.Stop();
             LoggerService.Service.Info("ReStartDatabase", "初始化数据库" + mDatabaseName + " 耗时: " + sw.ElapsedMilliseconds.ToString() + " ms");
+
+            
+            NotifyDatabaseChanged(ischanged,hischanged, issecuritychanged);
 
 
             LoggerService.Service.Info("ReStartDatabase", "热启动数据库完成", ConsoleColor.DarkYellow);
@@ -544,7 +583,7 @@ namespace Cdy.Tag
         public void ReStart()
         {
             Stop();
-            Start();
+            StartAsync(mDatabaseName,mPort);
         }
 
         /// <summary>
@@ -552,7 +591,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Start(int port = 14330)
         {
-            StartAsync("local");
+            StartAsync("local",port);
         }
 
         /// <summary>
@@ -574,15 +613,15 @@ namespace Cdy.Tag
                 return;
             }
 
-            int pt = port;
-            if(pt<1)
+            mPort = port;
+            if(mPort < 1)
             {
-                pt = mDatabase.Setting.RealDataServerPort;
+                mPort = mDatabase.Setting.RealDataServerPort;
             }
 
             try
             {
-                DBRuntime.Api.DataService.Service.Start(pt);
+                DBRuntime.Api.DataService.Service.Start(mPort);
             }
             catch
             {

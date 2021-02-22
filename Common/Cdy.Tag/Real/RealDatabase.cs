@@ -49,6 +49,11 @@ namespace Cdy.Tag
         public int MaxId { get; set; } = -1;
 
         /// <summary>
+        /// 最小ID
+        /// </summary>
+        public int MinId { get; set; } = int.MaxValue;
+
+        /// <summary>
         /// 
         /// </summary>
         public Dictionary<string,Tagbase> NamedTags { get; set; }
@@ -68,6 +73,9 @@ namespace Cdy.Tag
         /// </summary>
         public bool IsDirty { get; set; } = false;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void BuildNameMap()
         {
             NamedTags.Clear();
@@ -247,6 +255,8 @@ namespace Cdy.Tag
                 }
             }
             IsDirty = true;
+
+            MinId = Math.Min(MinId, tag.Id);
             return false;
         }
 
@@ -365,6 +375,7 @@ namespace Cdy.Tag
         public bool Append(Tagbase tag)
         {
             tag.Id = ++MaxId;
+            MinId = Math.Min(MinId, tag.Id);
             return Add(tag);
         }
 
@@ -391,6 +402,10 @@ namespace Cdy.Tag
                         tgs.Remove(tag);
                     }
                 }
+
+                if (MinId == id)
+                    MinId = Tags.Keys.Min();
+
                 IsDirty = true;
             }
             return false;
@@ -406,6 +421,9 @@ namespace Cdy.Tag
             Tags.Remove(tag.Id);
             NamedTags.Remove(tag.FullName);
             IsDirty = true;
+
+            MinId = Tags.Keys.Min();
+
             return true;
         }
 
@@ -438,6 +456,7 @@ namespace Cdy.Tag
                     Tags.Remove(vvv.Id);
                 }                
                 vv.Clear();
+                MinId = Tags.Keys.Min();
                 IsDirty = true;
             }
         }
@@ -473,6 +492,9 @@ namespace Cdy.Tag
                     this.Groups.Remove(vvn);
 
                 vv.Clear();
+
+                MinId = Tags.Keys.Min();
+
                 IsDirty = true;
             }
         }
@@ -766,7 +788,18 @@ namespace Cdy.Tag
         /// <returns></returns>
         public int MinTagId()
         {
-            return Tags.Keys.Min();
+            return MinId;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public System.IO.Stream SeriseToStream()
+        {
+            System.IO.Compression.GZipStream gs = new System.IO.Compression.GZipStream(new System.IO.MemoryStream(), System.IO.Compression.CompressionLevel.Optimal);
+            new RealDatabaseSerise() { Database = this }.Save(gs);
+            return gs;
         }
     }
 }

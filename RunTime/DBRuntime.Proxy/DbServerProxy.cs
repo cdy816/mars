@@ -268,6 +268,34 @@ namespace DBRuntime.Proxy
             return dbClient.GetRunnerDatabase();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public RealDatabase LoadRealDatabase()
+        {
+            string sfile = dbClient.GetRealdatabase();
+            if(System.IO.File.Exists(sfile))
+            {
+                return new RealDatabaseSerise().Load(sfile);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public SecurityDocument LoadSecurity()
+        {
+            string sfile = dbClient.GetSecuritySetting();
+            if (System.IO.File.Exists(sfile))
+            {
+                return new SecuritySerise().Load(sfile);
+            }
+            return null;
+        }
+
         //private unsafe Dictionary<DateTime,Tuple<object,byte>> ProcessHisResult<T>(IByteBuffer data, TagType tp)
         //{
         //    Dictionary<DateTime, Tuple<object, byte>> re = new Dictionary<DateTime, Tuple<object, byte>>();

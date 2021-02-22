@@ -344,6 +344,24 @@ namespace Cdy.Tag
             doc.Save(sfile);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stream"></param>
+        public void Save(System.IO.Stream stream)
+        {
+            XElement doc = new XElement("Security");
+            doc.SetAttributeValue("Name", this.Document.Name);
+            doc.SetAttributeValue("Version", this.Document.Version);
+            doc.SetAttributeValue("Auther", "cdy");
+
+            if (this.Document.User != null)
+                doc.Add(Save(this.Document.User));
+            if (this.Document.Permission != null)
+                doc.Add(Save(this.Document.Permission));
+            doc.Save(stream);
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

@@ -39,5 +39,23 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public List<string> Permissions { get; set; } = new List<string>();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object obj)
+        {
+            UserItem item = obj as UserItem;
+            if (obj == null) return false;
+
+            return base.Equals(obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 }

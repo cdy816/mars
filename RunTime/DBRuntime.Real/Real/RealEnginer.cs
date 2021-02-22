@@ -122,6 +122,24 @@ namespace Cdy.Tag
             }
         }
 
+        public int MaxTagId
+        {
+            get
+            {
+                return mConfigDatabase.MaxTagId();
+            }
+        }
+
+
+        public int MinTagId
+        {
+            get
+            {
+                return mConfigDatabase.MinTagId();
+            }
+        }
+
+
 
         #endregion ...Properties...
 

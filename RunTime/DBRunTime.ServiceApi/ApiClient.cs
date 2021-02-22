@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -105,6 +106,22 @@ namespace DBRunTime.ServiceApi
         /// </summary>
         public const byte RequestHisDataByTimeSpan = 2;
 
+        
+        public const byte SyncRealTagConfig = 30;
+
+        public const byte SyncHisTagConfig = 31;
+
+        public const byte SyncSecuritySetting = 32;
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte TagInfoNotify = 100;
+
+        public const byte DatabaseChangedNotify = 1;
+
+
         public const byte AysncReturn = byte.MaxValue;
     }
 
@@ -115,7 +132,11 @@ namespace DBRunTime.ServiceApi
         
         private ManualResetEvent infoRequreEvent = new ManualResetEvent(false);
 
+        private ManualResetEvent SyncDataEvent = new ManualResetEvent(false);
+
         private IByteBuffer mInfoRequreData;
+
+        private IByteBuffer mRealSyncData;
 
         private ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
 
@@ -159,6 +180,11 @@ namespace DBRunTime.ServiceApi
         public long LoginId { get; set; }
 
         public ProcessDataPushDelegate ProcessDataPush { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Action<bool,bool,bool> DatabaseChangedAction { get; set; }
 
         private string mUser;
         private string mPass;
@@ -205,10 +231,41 @@ namespace DBRunTime.ServiceApi
                         mHisRequreData = datas;
                         hisRequreEvent.Set();
                         break;
+                    case ApiFunConst.SyncRealTagConfig:
+                        mRealSyncData = datas;
+                        SyncDataEvent.Set();
+                        break;
+                    case ApiFunConst.SyncSecuritySetting:
+                        mRealSyncData = datas;
+                        SyncDataEvent.Set();
+                        break;
+                    case ApiFunConst.SyncHisTagConfig:
+                        mRealSyncData = datas;
+                        SyncDataEvent.Set();
+                        break;
+                    case ApiFunConst.TagInfoNotify:
+                        ProcessTagInfoNotify(datas);
+                        break;
                     default:
                         Debug.Print("DbClient ProcessData Invailed data");
                         break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="data"></param>
+        private void ProcessTagInfoNotify(IByteBuffer data)
+        {
+            byte cmd = data.ReadByte();
+            switch(cmd)
+            {
+                case ApiFunConst.DatabaseChangedNotify:
+                    var type = data.ReadByte();
+                    DatabaseChangedAction?.BeginInvoke((type & 0x01) > 0, (type & 0x02) > 0, (type & 0x04) > 0, null, null);
+                    break;
             }
         }
 
@@ -240,7 +297,93 @@ namespace DBRunTime.ServiceApi
             return IsLogin;
         }
 
-       
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public string GetRealdatabase(int timeout = 50000)
+        {
+            string filename = string.Empty;
+            var mb = GetBuffer(ApiFunConst.TagInfoRequest, 1 + 9);
+            mb.WriteByte(ApiFunConst.SyncRealTagConfig);
+            mb.WriteLong(LoginId);
+            this.SyncDataEvent.Reset();
+            Send(mb);
+
+            if (SyncDataEvent.WaitOne(timeout))
+            {
+                if (this.mRealSyncData.ReadableBytes > 0)
+                {
+                    try
+                    {
+                        System.IO.MemoryStream ms = new System.IO.MemoryStream();
+
+                        this.mRealSyncData.ReadBytes(ms, this.mRealSyncData.ReadableBytes);
+                        ms.Position = 0;
+                        System.IO.Compression.GZipStream gzip = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionMode.Decompress);
+                        filename = System.IO.Path.GetTempFileName();
+                        var sfile = System.IO.File.Open(filename, System.IO.FileMode.OpenOrCreate);
+                        gzip.CopyTo(sfile);
+                        sfile.Close();
+
+                        ms.Dispose();
+                        gzip.Dispose();
+                        return filename;
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+            mRealSyncData?.Release();
+            mRealSyncData = null;
+            return filename;
+        }
+
+
+        public string GetSecuritySetting(int timeout = 50000)
+        {
+            string filename = string.Empty;
+            var mb = GetBuffer(ApiFunConst.TagInfoRequest, 1 + 9);
+            mb.WriteByte(ApiFunConst.SyncSecuritySetting);
+            mb.WriteLong(LoginId);
+            this.SyncDataEvent.Reset();
+            Send(mb);
+
+            if (SyncDataEvent.WaitOne(timeout))
+            {
+                if (this.mRealSyncData.ReadableBytes > 0)
+                {
+                    try
+                    {
+                        System.IO.MemoryStream ms = new System.IO.MemoryStream();
+
+                        this.mRealSyncData.ReadBytes(ms, this.mRealSyncData.ReadableBytes);
+                        ms.Position = 0;
+                        System.IO.Compression.GZipStream gzip = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionMode.Decompress);
+                        filename = System.IO.Path.GetTempFileName();
+                        var sfile = System.IO.File.Open(filename, System.IO.FileMode.OpenOrCreate);
+                        gzip.CopyTo(sfile);
+                        sfile.Close();
+
+                        ms.Dispose();
+                        gzip.Dispose();
+                        return filename;
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+            mRealSyncData?.Release();
+            mRealSyncData = null;
+
+            return filename;
+        }
+
 
         /// <summary>
         /// 
@@ -493,31 +636,40 @@ namespace DBRunTime.ServiceApi
         /// <param name="maxid"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public IEnumerable<IByteBuffer> SyncRealMemory(int totalsize, int timeout = 5000)
+        public IEnumerable<IByteBuffer> SyncRealMemory(int startId,int endId,Func<int,int> getAddress, int timeout = 5000)
         {
             CheckLogin();
-            int start = 0;
-            int len = 1024 * 1024 * 16;
-            while (start <= totalsize)
+            int start = startId;
+            int len = 1000000;
+            while (start <= endId)
             {
-                if (start + len > totalsize)
+                if (start + len > endId)
                 {
-                    len = totalsize - start;
+                    len = endId - start;
                 }
-                
+
+                int astart = getAddress(start);
+                int aend = getAddress(start + len);
+
                 if (len <= 0) break;
                 var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 4);
                 mb.WriteByte(ApiFunConst.RealMemorySync);
                 mb.WriteLong(this.LoginId);
-                mb.WriteInt(len);
-                mb.WriteInt(start);
+                mb.WriteInt((aend - astart));
+                mb.WriteInt(astart);
                 realRequreEvent.Reset();
                 Send(mb);
                 if (realRequreEvent.WaitOne(timeout))
                 {
-                    yield return mRealRequreData;
+                    if (mRealRequreData.ReadableBytes == (aend - astart))
+                        yield return mRealRequreData;
+                    else
+                        yield return null;
                 }
-                yield return null;
+                else
+                {
+                    yield return null;
+                }
                 start += len;
             }
            

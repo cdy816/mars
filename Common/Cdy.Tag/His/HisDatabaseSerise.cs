@@ -85,6 +85,60 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="name"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public HisDatabase LoadDifferenceByName(string name, HisDatabase target)
+        {
+            return LoadDifference(PathHelper.helper.GetDataPath(name, name + ".hdb"), target);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public HisDatabase LoadDifference(string file,HisDatabase target)
+        {
+            HisDatabase db = new HisDatabase();
+            if (System.IO.File.Exists(file))
+            {
+                XElement xe = XElement.Load(file);
+
+                db.Name = xe.Attribute("Name").Value;
+                db.Version = xe.Attribute("Version").Value;
+
+                if (xe.Element("Tags") != null)
+                {
+                    //Parallel.ForEach(xe.Element("Tags").Elements(), (vv) =>
+                    //{
+                    //    var tag = vv.LoadHisTagFromXML();
+                    //    lock (db.HisTags)
+                    //        db.HisTags.Add(tag.Id, tag);
+                    //});
+
+                    foreach (var vv in xe.Element("Tags").Elements())
+                    {
+                        var tag = vv.LoadHisTagFromXML();
+                        
+                        if (!target.HisTags.ContainsKey(tag.Id) || tag.Equals(target.HisTags[tag.Id]))
+                            db.HisTags.Add(tag.Id, tag);
+                    }
+                }
+
+                if (xe.Element("HisSetting") != null)
+                {
+                    db.Setting = xe.Element("HisSetting").LoadHisSettingDocFromXML();
+                }
+            }
+            this.Database = db;
+            return db;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="file"></param>
         /// <returns></returns>
         public HisDatabase Load(string file)
@@ -163,6 +217,26 @@ namespace Cdy.Tag
 
             xe.Save(file);
             Database.IsDirty = false;
+        }
+
+
+        public void Save(System.IO.Stream file)
+        {
+            XElement xe = new XElement("HisDatabase");
+            xe.SetAttributeValue("Version", Database.Version);
+            xe.SetAttributeValue("Name", Database.Name);
+            xe.SetAttributeValue("Auther", "cdy");
+            xe.Add(Database.Setting.SaveToXML());
+
+            XElement xx = new XElement("Tags");
+
+            foreach (var vv in Database.HisTags)
+            {
+                xx.Add(vv.Value.SaveToXML());
+            }
+            xe.Add(xx);
+            xe.Save(file);
+            
         }
         #endregion ...Methods...
 

@@ -63,5 +63,11 @@ namespace Cdy.Tag
         /// <returns></returns>
         IEnumerable<Tagbase> ListAllTags();
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        System.IO.Stream SeriseToStream();
+
     }
 }

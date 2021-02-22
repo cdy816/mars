@@ -1,7 +1,9 @@
 ﻿using Cdy.Tag;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,7 +30,7 @@ namespace DBRuntime.Proxy
 
         private RealDatabase mRealDatabase;
 
-        private HisDatabase mHisDatabase;
+        //private HisDatabase mHisDatabase;
 
         private SecurityRunner mSecurityRunner;
 
@@ -280,22 +282,34 @@ namespace DBRuntime.Proxy
                 this.mDatabaseName = database;
             }
             PathHelper.helper.CheckDataPathExist();
-            if (CheckDatabaseExist(mDatabaseName))
+            if (CheckDatabaseExist(mDatabaseName) && IsRunInLocal())
             {
-                var mDatabase = new DatabaseSerise().Load(mDatabaseName);
+                LoggerService.Service.Info("DatabaseRunner", "开始从本地加载数据库:" + mDatabaseName);
+                var mDatabase = new RealDatabaseSerise().LoadByName(mDatabaseName);
 
-                string skey = mDatabase.RealDatabase.Version + mDatabase.RealDatabase.UpdateTime;
+                string skey = mDatabase.Version + mDatabase.UpdateTime;
 
-                if(skey!=checkKey)
+                if (skey != checkKey)
                 {
-                    LoggerService.Service.Warn("Proxy","代理使用的数据库和服务器使用的数据库不一致.");
+                    LoggerService.Service.Warn("Proxy", "代理使用的数据库和服务器使用的数据库不一致,将从网络进行加载");
+                    this.mRealDatabase = mProxy.LoadRealDatabase();
+                    mSecurityRunner = new SecurityRunner() { Document = mProxy.LoadSecurity() };
                 }
-
-                this.mRealDatabase = mDatabase.RealDatabase;
-                mHisDatabase = mDatabase.HisDatabase;
-                mSecurityRunner = new SecurityRunner() { Document = mDatabase.Security };
-                //mSecurityRunner.Start();
+                else
+                {
+                    this.mRealDatabase = mDatabase;
+                    mSecurityRunner = new SecurityRunner() { Document = new SecuritySerise().LoadByName(mDatabaseName) };
+                }
+                LoggerService.Service.Info("DatabaseRunner", "从本地加载数据库完成");
             }
+            else
+            {
+                LoggerService.Service.Info("DatabaseRunner", "开始从远程加载数据库");
+                this.mRealDatabase = mProxy.LoadRealDatabase();
+                mSecurityRunner = new SecurityRunner() { Document = mProxy.LoadSecurity() };
+                LoggerService.Service.Info("DatabaseRunner", "从远程加载数据库完成");
+            }
+
             realEnginer = new RealEnginer(mRealDatabase);
             realEnginer.Init();
 
@@ -304,14 +318,81 @@ namespace DBRuntime.Proxy
 
             mDriver = new NetTransformDriver() { Client = mProxy.NetworkClient ,WorkMode=mWorkMode,PollCircle=mPollCircle};
             mDriver.ValueUpdateEvent += MDriver_ValueUpdateEvent;
-            mDriver.ReloadDatabaseAction = () => {
 
-                var mDatabase = new DatabaseSerise().Load(mDatabaseName);
-                this.mRealDatabase = mDatabase.RealDatabase;
-                mHisDatabase = mDatabase.HisDatabase;
-                mSecurityRunner.Document = mDatabase.Security ;
+            mProxy.NetworkClient.DatabaseChangedAction = (realchanged, hischanged, securitychanged) => { 
+                
+                if(IsRunInLocal())
+                {
+                    //Stopwatch sw = new Stopwatch();
+                    //sw.Start();
+                    LoggerService.Service.Info("DatabaseRunner", "开始从本地加载数据库:" + mDatabaseName);
+
+                    if (realchanged)
+                    {
+                        var mDatabase = new RealDatabaseSerise().LoadByName(mDatabaseName);
+                        this.mRealDatabase = mDatabase;
+
+                        var oldeng = realEnginer;
+                        realEnginer = new RealEnginer(this.mRealDatabase);
+                        realEnginer.Init();
+
+                        mDriver.Stop();
+                        mDriver.Start(realEnginer);
+
+                        oldeng.Dispose();
+                    }
+
+                    if (securitychanged)
+                    {
+                        mSecurityRunner.Document = new SecuritySerise().LoadByName(mDatabaseName);
+                    }
+
+                    //sw.Stop();
+
+                    LoggerService.Service.Info("DatabaseRunner", "从本地加载数据库完成");
+                }
+                else
+                {
+                    //Stopwatch sw = new Stopwatch();
+                    //sw.Start();
+
+                    if (realchanged)
+                    {
+                        LoggerService.Service.Info("DatabaseRunner", "开始从远程加载数据库");
+                        //通过远程下载数据库
+                        this.mRealDatabase = mProxy.LoadRealDatabase();
+
+                        var oldeng = realEnginer;
+                        realEnginer = new RealEnginer(this.mRealDatabase);
+                        realEnginer.Init();
+                        mDriver.Stop();
+                        mDriver.Start(realEnginer);
+                        oldeng.Dispose();
+                        LoggerService.Service.Info("DatabaseRunner", "从远程加载数据库完成");
+                    }
+
+                    if (securitychanged)
+                    {
+                        LoggerService.Service.Info("DatabaseRunner", "开始从远程加载安全配置");
+                        mSecurityRunner.Document = mProxy.LoadSecurity();
+                        LoggerService.Service.Info("DatabaseRunner", "从远程加载安全配置完成");
+                    }
+                    //sw.Stop();
+
+                    
+                }
             };
+
             mDriver.Start(realEnginer);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private bool IsRunInLocal()
+        {
+            return mIp.StartsWith("127.0.0.") || mIp == "0.0.0.0" || Dns.GetHostAddresses(Dns.GetHostName()).Select(e => e.AddressFamily.ToString()).Contains(mIp);
         }
 
         private void MDriver_ValueUpdateEvent(object sender, EventArgs e)
@@ -329,7 +410,7 @@ namespace DBRuntime.Proxy
             ServiceLocator.Locator.Registor<IRealDataNotifyForProducter>(realEnginer);
             ServiceLocator.Locator.Registor<IRealTagConsumer>(realEnginer);
             ServiceLocator.Locator.Registor<ITagManager>(mRealDatabase);
-            ServiceLocator.Locator.Registor<IHisTagQuery>(mHisDatabase);
+            //ServiceLocator.Locator.Registor<IHisTagQuery>(mHisDatabase);
             
             ServiceLocator.Locator.Registor<IRuntimeSecurity>(mSecurityRunner);
         }

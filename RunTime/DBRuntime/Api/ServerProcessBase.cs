@@ -10,6 +10,7 @@
 using Cdy.Tag;
 using DotNetty.Buffers;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -84,12 +85,39 @@ namespace DBRuntime.Api
             return re;
         }
 
+        protected IByteBuffer ToByteBuffer(byte id, byte value,byte value2)
+        {
+            var re = BufferManager.Manager.Allocate(id, 2);
+            re.WriteByte(value);
+            re.WriteByte(value2);
+            return re;
+        }
+
         protected IByteBuffer ToByteBuffer(byte id, long value)
         {
-            var re = BufferManager.Manager.Allocate(id, 1);
+            var re = BufferManager.Manager.Allocate(id, 8);
             re.WriteLong(value);
             return re;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        protected IByteBuffer ToByteBuffer(byte id,System.IO.Stream stream)
+        {
+            int len = (int)stream.Length;
+            var re = BufferManager.Manager.Allocate(id, len);
+            var bytes = ArrayPool<byte>.Shared.Rent(len);
+            stream.Read(bytes, 0, len);
+            re.WriteBytes(bytes, 0, len);
+            ArrayPool<byte>.Shared.Return(bytes);
+
+            return re;
+        }
+
 
         /// <summary>
         /// 

@@ -79,7 +79,7 @@ namespace DBRuntime.Proxy
         /// <summary>
         /// 
         /// </summary>
-        public Action ReloadDatabaseAction { get; set; }
+        public Action<bool,bool,bool> ReloadDatabaseAction { get; set; }
 
         /// <summary>
         /// 
@@ -103,13 +103,16 @@ namespace DBRuntime.Proxy
                     resetEvent.WaitOne();
                     if (mIsClosed) break;
                     resetEvent.Reset();
-                    int icount = mCachDatas.Count;
-                    while (mCachDatas.Count > 0)
+                    if (mCachDatas != null)
                     {
-                        // ProcessSingleBufferData(mCachDatas.Dequeue());
-                        ProcessBufferData(mCachDatas.Dequeue());
+                        int icount = mCachDatas.Count;
+                        while (mCachDatas.Count > 0)
+                        {
+                            // ProcessSingleBufferData(mCachDatas.Dequeue());
+                            ProcessBufferData(mCachDatas.Dequeue());
+                        }
+                        ValueUpdateEvent?.Invoke(this, null);
                     }
-                    ValueUpdateEvent?.Invoke(this, null);
                 }
                 else
                 {
@@ -156,12 +159,19 @@ namespace DBRuntime.Proxy
 
             if (start + size < realenginer.Memory.Length)
             {
-                Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, realenginer.Memory, start, size);
+                try
+                {
+                    Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, realenginer.Memory, start, size);
+                }
+                catch
+                {
+
+                }
             }
             else
             {
                 //内存数据不匹配，需要重新加载数据库
-                ReloadDatabaseAction?.BeginInvoke(null,null);
+                //ReloadDatabaseAction?.BeginInvoke(true,true,true,null,null);
             }
 
             block.SetReaderIndex(block.ReaderIndex + size);
@@ -187,11 +197,21 @@ namespace DBRuntime.Proxy
                 {
                     Debug.Print("Invaild value!");
                 }
-                var tag = mTagManager.GetTagById(vid);
-                if (tag != null)
+                if (mTagManager != null)
                 {
-                    Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, realenginer.Memory, (int)tag.ValueAddress, tag.ValueSize);
-                    block.SetReaderIndex(block.ReaderIndex + tag.ValueSize);
+                    var tag = mTagManager.GetTagById(vid);
+                    if (tag != null)
+                    {
+                        try
+                        {
+                            Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, realenginer.Memory, (int)tag.ValueAddress, tag.ValueSize);
+                        }
+                        catch
+                        {
+
+                        }
+                        block.SetReaderIndex(block.ReaderIndex + tag.ValueSize);
+                    }
                 }
             }
             block.ReleaseBuffer();
@@ -373,6 +393,14 @@ namespace DBRuntime.Proxy
         /// <summary>
         /// 
         /// </summary>
+        public void ReInit()
+        {
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="values"></param>
         private void ProcessValueChanged(Dictionary<int, object> values)
         {
@@ -418,7 +446,7 @@ namespace DBRuntime.Proxy
             if (Client != null && Client.IsConnected && realenginer.Memory!=null)
             {
                 int i = 0;
-                foreach (var vv in Client.SyncRealMemory(realenginer.Memory.Length))
+                foreach (var vv in Client.SyncRealMemory(realenginer.MinTagId,realenginer.MaxTagId,(id)=> { return (int)realenginer.GetDataAddr(id); }))
                 {
                     if (vv != null)
                     {

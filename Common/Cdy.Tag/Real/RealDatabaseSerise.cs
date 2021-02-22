@@ -188,6 +188,9 @@ namespace Cdy.Tag
                 {
                     db.MaxId = db.Tags.Keys.Max();
                 }
+
+                db.MinId = db.Tags.Keys.Min();
+
             }
             db.IsDirty = false;
             this.Database = db;

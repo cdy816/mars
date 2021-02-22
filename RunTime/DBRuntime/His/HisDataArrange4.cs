@@ -185,9 +185,9 @@ namespace Cdy.Tag
             CheckPaused();
 
             //copy data region head
-            byte[] bval = ArrayPool<byte>.Shared.Rent(48);
-            msource.Read(bval, 0, 48);
-            mtarget.Write(bval, 0, 48);
+            byte[] bval = ArrayPool<byte>.Shared.Rent(40);
+            msource.Read(bval, 0, 40);
+            mtarget.Write(bval, 0, 40);
 
             //
             fileDuration = BitConverter.ToInt32(bval, 24);
@@ -195,20 +195,6 @@ namespace Cdy.Tag
             tagcount = BitConverter.ToInt32(bval, 36);
 
             int blockcount = fileDuration * 60 / blockDuration;
-
-            //copy data ids
-            msource.Read(bval, 0, 4);
-            int size = BitConverter.ToInt32(bval);
-            mtarget.Write(bval, 0, 4);
-
-            if (size > 0)
-            {
-                var bval2 = ArrayPool<byte>.Shared.Rent(size);
-                msource.Read(bval2, 0, size);
-                mtarget.Write(bval2, 0, size);
-                ArrayPool<byte>.Shared.Return(bval2);
-            }
-            ArrayPool<byte>.Shared.Return(bval);
 
             long pheadpointlocation = mtarget.Position;
 
@@ -274,20 +260,18 @@ namespace Cdy.Tag
 
             long mtargetposition = mtarget.Position;
             int offset = 0;
-            for (int i = 0; i < tagcount; i++)
+            for (int tagid = 0; tagid < tagcount; tagid++)
             {
                
                 data.Clear();
                 offset = 0;
                 mtargetposition = mtarget.Position;
-                for (int j = 0; j < blockcount; j++)
+                for (int blockid = 0; blockid < blockcount; blockid++)
                 {
                     CheckPaused();
 
-                    var baseaddress = sourceheadpoint.ReadInt(j * tagcount * 8 + i * 8);
+                    var baseaddress = sourceheadpoint.ReadInt(blockid * tagcount * 8 + tagid * 8);
                     //var baseaddress = sourceheadpoint.ReadLong(j * tagcount * 8 + i * 8 + 4);
-
-                  
 
                     if (baseaddress > 0)
                     {
@@ -295,24 +279,24 @@ namespace Cdy.Tag
                         //重新组织数据块指针的分布形式，使得一个变量的数据块指针在一起
                         //re.WriteInt(j * 12 + i * blockcount * 12, (int)(offset | 0x80000000));
                         //re.WriteLong(j * 12 + i * blockcount * 12 + 4, mtargetposition);
-                        re.WriteLong(j * 8 + i * blockcount * 8, mtargetposition+ offset);
+                        re.WriteLong(blockid * 8 + tagid * blockcount * 8, mtargetposition+ offset);
 
                         int datasize = 0;
                         int dataloc = 0;
-                        if (baseaddress >= databufferLocations[j] && (baseaddress - databufferLocations[j] + 4) <= databufferLens[j] && (baseaddress - databufferLocations[j] + 4 + MemoryHelper.ReadInt32((void*)databuffers[j], baseaddress - databufferLocations[j])) <= databufferLens[j])
+                        if (baseaddress >= databufferLocations[blockid] && (baseaddress - databufferLocations[blockid] + 4) <= databufferLens[blockid] && (baseaddress - databufferLocations[blockid] + 4 + MemoryHelper.ReadInt32((void*)databuffers[blockid], baseaddress - databufferLocations[blockid])) <= databufferLens[blockid])
                         {
-                            datasize = MemoryHelper.ReadInt32((void*)databuffers[j], baseaddress - databufferLocations[j]);
-                            dataloc = (int)(baseaddress - databufferLocations[j] + 4);
+                            datasize = MemoryHelper.ReadInt32((void*)databuffers[blockid], baseaddress - databufferLocations[blockid]);
+                            dataloc = (int)(baseaddress - databufferLocations[blockid] + 4);
                         }
                         else
                         {
                             int len = (int)Math.Min(bufferLenght, msource.Length - msource.Position);
                             msource.Position = baseaddress;
-                            msource.Read(new Span<byte>((void*)databuffers[j], len));
-                            databufferLocations[j] = baseaddress;
-                            databufferLens[j] = len;
-                            datasize = MemoryHelper.ReadInt32((void*)databuffers[j], 0);
-                            dataloc = (int)(baseaddress - databufferLocations[j] + 4);
+                            msource.Read(new Span<byte>((void*)databuffers[blockid], len));
+                            databufferLocations[blockid] = baseaddress;
+                            databufferLens[blockid] = len;
+                            datasize = MemoryHelper.ReadInt32((void*)databuffers[blockid], 0);
+                            dataloc = (int)(baseaddress - databufferLocations[blockid] + 4);
                         }
 
     
@@ -327,7 +311,7 @@ namespace Cdy.Tag
                             return;
                         }
 
-                        Buffer.MemoryCopy((void*)(databuffers[j] + dataloc), (void*)(data.Buffers + offset), datasize, datasize);
+                        Buffer.MemoryCopy((void*)(databuffers[blockid] + dataloc), (void*)(data.Buffers + offset), datasize, datasize);
                         data.Position += datasize;
                         offset += datasize;
                     }
@@ -335,7 +319,7 @@ namespace Cdy.Tag
                     {
                         //重新组织数据块指针的分布形式，使得一个变量的数据块指针在一起
                         //re.WriteInt(j * 12 + i * blockcount * 12, 0);
-                        re.WriteLong(j * 8 + i * blockcount * 8 , 0);
+                        re.WriteLong(blockid * 8 + tagid * blockcount * 8 , 0);
                     }
 
                 }

@@ -858,6 +858,7 @@ namespace Cdy.Tag
             mFileWriter.Append(bval, 0, datalen);
             mFileWriter.AppendZore(totalLen - datalen);
 
+            //更新DataRegion 的数量
             mFileWriter.Write(mFileWriter.ReadInt(16) + 1, 16);
 
             //LoggerService.Service.Debug("SeriseEnginer2", "AppendDataRegionHeader_数据区数量更新:" + mFileWriter.ReadInt(16));

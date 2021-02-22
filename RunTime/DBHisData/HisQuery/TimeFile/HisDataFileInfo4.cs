@@ -49,7 +49,7 @@ namespace Cdy.Tag
 
     HisDataRegion Structor: RegionHead + DataBlockPoint Area + DataBlock Area
 
-    RegionHead:          PreDataRegionPoint(8) + NextDataRegionPoint(8) + Datatime(8)+ tagcount(4)+ tagid sum(8)+file duration(4)+block duration(4)+Time tick duration(4)
+    RegionHead:          PreDataRegionPoint(8) + NextDataRegionPoint(8) + Datatime(8) +file duration(4)+block duration(4)+Time tick duration(4)+ tagcount(4)
     DataBlockPoint Area: [ID]+[block Point]
     [block point]:       [[tag1 block1 point(12),tag1 block2 point(12),....][tag2 block1 point(12),tag2 block2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
     [tag block point]:   offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
@@ -468,7 +468,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public static void ReadRegionHead(DataFileSeriserbase datafile, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick, out long blockPointer, out DateTime time)
         {
-            //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+tagcount(4)+ tagid sum(8) +file duration(4)+ block duration(4)+Time tick duration(4)+ { + tagid1+tagid2+...+tagidn }+ {[tag1 block point1(8) + tag2 block point1+ tag3 block point1+...] + [tag1 block point2(8) + tag2 block point2+ tag3 block point2+...]....}
+            //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8) +file duration(4)+ block duration(4)+Time tick duration(4)+ tagcount(4)+ {[tag1 block point1(8) + tag2 block point1+ tag3 block point1+...] + [tag1 block point2(8) + tag2 block point2+ tag3 block point2+...]....}
             var dataoffset = offset + 16;
 
             //读取时间
@@ -491,146 +491,7 @@ namespace Cdy.Tag
 
             blockPointer = dataoffset - offset;
         }
-
-        ///// <summary>
-        ///// 检测数据头部指针区域数据是否被缓存
-        ///// </summary>
-        ///// <param name="datafile"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="fileDuration"></param>
-        ///// <param name="blockDuration"></param>
-        ///// <param name="timetick"></param>
-        ///// <returns></returns>
-        //private static Dictionary<int, int> CheckBlockHeadCach(DataFileSeriserbase datafile, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick, out long blockPointer, out DateTime time)
-        //{
-        //    //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+tagcount(4)+ tagid sum(8) +file duration(4)+ block duration(4)+Time tick duration(4)+ { + tagid1+tagid2+...+tagidn }+ {[tag1 block point1(8) + tag2 block point1+ tag3 block point1+...] + [tag1 block point2(8) + tag2 block point2+ tag3 block point2+...]....}
-        //    var dataoffset = offset + 16;
-
-        //    //读取时间
-        //    time = datafile.ReadDateTime(dataoffset);
-        //    dataoffset += 8;
-
-        //    //读取变量个数
-        //    int count = datafile.ReadInt(dataoffset);
-        //    dataoffset += 4;
-
-        //    tagCount = count;
-
-        //    //读取校验和
-        //    long idsum = datafile.ReadLong(dataoffset);
-        //    dataoffset += 8;
-
-        //    //读取单个文件的时长
-        //    fileDuration = datafile.ReadInt(dataoffset);
-        //    dataoffset += 4;
-        //    //读取数据块时长
-        //    blockDuration = datafile.ReadInt(dataoffset);
-        //    dataoffset += 4;
-        //    //读取时钟周期
-        //    timetick = datafile.ReadInt(dataoffset);
-        //    dataoffset += 4;
-
-        //    lock (TagHeadOffsetManager.manager)
-        //    {
-        //        if (!TagHeadOffsetManager.manager.Contains(idsum, count))
-        //        {
-        //            //Tag id 列表经过压缩，内容格式为:DataSize + Data
-        //            var dsize = datafile.ReadInt(dataoffset);
-
-        //            if (dsize <= 0)
-        //            {
-        //                tagCount = 0;
-        //                fileDuration = 0;
-        //                blockDuration = 0;
-        //                timetick = 0;
-        //                blockPointer = 0;
-        //                return new Dictionary<int, int>();
-        //            }
-
-        //            dataoffset += 4;
-
-        //            blockPointer = dataoffset + dsize - offset;
-        //            var dtmp = new Dictionary<int, int>();
-        //            using (var dd = datafile.Read(dataoffset, dsize))
-        //            {
-        //                MarshalVarintCodeMemory vcm = new MarshalVarintCodeMemory(dd.StartMemory, dsize);
-        //                var ltmp = vcm.ToIntList();
-        //                //vcm.Dispose();
-
-
-        //                if (ltmp.Count > 0)
-        //                {
-        //                    int preid = ltmp[0];
-        //                    dtmp.Add(preid, 0);
-        //                    for (int i = 1; i < ltmp.Count; i++)
-        //                    {
-        //                        var id = ltmp[i] + preid;
-        //                        dtmp.Add(id, i);
-        //                        preid = id;
-        //                    }
-        //                }
-        //                TagHeadOffsetManager.manager.Add(idsum, count, dtmp, blockPointer);
-
-        //                dd.Dispose();
-        //            }
-        //            return dtmp;
-        //        }
-        //        else
-        //        {
-        //            var re = TagHeadOffsetManager.manager.Get(idsum, count);
-        //            blockPointer = re.Item2;
-        //            return re.Item1;
-        //        }
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 读取某个变量在头部文件种的序号
-        ///// </summary>
-        ///// <param name="datafile"></param>
-        ///// <param name="tid"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="fileDuration"></param>
-        ///// <param name="blockDuration"></param>
-        ///// <param name="timetick"></param>
-        ///// <returns></returns>
-        //private static int ReadTagIndexInDataPointer(DataFileSeriserbase datafile, int tid, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick, out long blockpointer, out DateTime time)
-        //{
-        //    var hfile = CheckBlockHeadCach(datafile,offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
-        //    if (hfile.ContainsKey(tid))
-        //    {
-        //        return hfile[tid];
-        //    }
-        //    return -1;
-        //}
-
-        ///// <summary>
-        ///// 读取数据区域的数据头数据
-        ///// </summary>
-        ///// <param name="datafile"></param>
-        ///// <param name="tid"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="fileDuration"></param>
-        ///// <param name="blockDuration"></param>
-        ///// <param name="timetick"></param>
-        ///// <returns></returns>
-        //private static List<long> ReadTargetBlockAddress(DataFileSeriserbase datafile, List<int> tid, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick, out long blockpointer, out DateTime time)
-        //{
-        //    var hfile = CheckBlockHeadCach(datafile,offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
-        //    List<long> re = new List<long>();
-        //    foreach (var vv in tid)
-        //    {
-        //        if (hfile.ContainsKey(vv))
-        //        {
-        //            re.Add(hfile[vv]);
-        //        }
-        //        else
-        //        {
-        //            re.Add(-1);
-        //        }
-        //    }
-        //    return re;
-        //}
+                
         #endregion
 
         #region 读取数据块

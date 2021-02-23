@@ -1295,34 +1295,34 @@ namespace Cdy.Tag
             foreach(var vv in mcc.TagAddress)
             {
                 var tag = mHisTags[vv.Key];
-                // var taddrs = mCurrentMergeMemory.TagAddress[tag.Id];
-                var taddrs = tag.Id;
+                var taddrs = mCurrentMergeMemory.TagAddress[tag.Id];
+                //var taddrs = tag.Id;
 
-                var saddrs = tag.Id;
-                //var saddrs = vv.Value;
+                //var saddrs = tag.Id;
+                var saddrs = vv.Value;
 
-                var targetaddress = mCurrentMergeMemory.ReadDataBaseAddress(taddrs);
-                var sourceaddress = mcc.ReadDataBaseAddress(saddrs);
+                var targetaddress = mCurrentMergeMemory.ReadDataBaseAddressByIndex(taddrs);
+                var sourceaddress = mcc.ReadDataBaseAddressByIndex(saddrs);
                 //
                 //if (taddrs == null || saddrs == null) continue;
 
                 //拷贝时间
-                var dlen = mcc.ReadValueOffsetAddress(saddrs);//  saddrs.ValueAddress;
+                var dlen = mcc.ReadValueOffsetAddressByIndex(saddrs);//  saddrs.ValueAddress;
                 var vtimeaddr = dlen * count + 2;
 
-                mcc.CopyTo(targetaddress, vtimeaddr, sourceaddress, mcc.ReadTimerOffsetAddress(vv.Value), dlen);
+                mcc.CopyTo(targetaddress, vtimeaddr, sourceaddress, mcc.ReadTimerOffsetAddressByIndex(vv.Value), dlen);
 
                 //拷贝数值
                 // dlen = saddrs.QualityAddress - saddrs.ValueAddress;
-                dlen = mcc.ReadQualityOffsetAddress(saddrs) - mcc.ReadValueOffsetAddress(saddrs);
-                vtimeaddr = mCurrentMergeMemory.ReadValueOffsetAddress(taddrs) + dlen * count + tag.SizeOfValue;
-                mcc.CopyTo(targetaddress, vtimeaddr, sourceaddress, mcc.ReadValueOffsetAddress(saddrs), dlen);
+                dlen = mcc.ReadQualityOffsetAddressByIndex(saddrs) - mcc.ReadValueOffsetAddressByIndex(saddrs);
+                vtimeaddr = mCurrentMergeMemory.ReadValueOffsetAddressByIndex(taddrs) + dlen * count + tag.SizeOfValue;
+                mcc.CopyTo(targetaddress, vtimeaddr, sourceaddress, mcc.ReadValueOffsetAddressByIndex(saddrs), dlen);
 
                 //拷贝质量戳
                 // dlen = tag.DataSize - saddrs.QualityAddress;
-                dlen = (int)(tag.DataSize - mcc.ReadQualityOffsetAddress(saddrs));
-                vtimeaddr = mCurrentMergeMemory.ReadQualityOffsetAddress(taddrs) + dlen * count + 1;
-                mcc.CopyTo(targetaddress, vtimeaddr, sourceaddress, mcc.ReadQualityOffsetAddress(saddrs), dlen);
+                dlen = (int)(tag.DataSize - mcc.ReadQualityOffsetAddressByIndex(saddrs));
+                vtimeaddr = mCurrentMergeMemory.ReadQualityOffsetAddressByIndex(taddrs) + dlen * count + 1;
+                mcc.CopyTo(targetaddress, vtimeaddr, sourceaddress, mcc.ReadQualityOffsetAddressByIndex(saddrs), dlen);
 
             }
 
@@ -1441,7 +1441,7 @@ namespace Cdy.Tag
 
                 //if (vv.Value == null) continue;
 
-                var baseaddress = mCurrentMergeMemory.ReadDataBaseAddress(vv.Key);
+                var baseaddress = mCurrentMergeMemory.ReadDataBaseAddressByIndex(vv.Value);
 
                 var tag = mHisTags[vv.Key];
 
@@ -1453,11 +1453,11 @@ namespace Cdy.Tag
                 //写入数值
                 //vv.Value.WriteBytesDirect((int)vv.Value.ValueAddress,tag.ValueSnape);
 
-                mCurrentMergeMemory.WriteBytesDirect(baseaddress,mCurrentMergeMemory.ReadValueOffsetAddress(vv.Key),tag.ValueSnape);
+                mCurrentMergeMemory.WriteBytesDirect(baseaddress,mCurrentMergeMemory.ReadValueOffsetAddressByIndex(vv.Value),tag.ValueSnape);
 
                 //更新质量戳,在现有质量戳的基础添加100，用于表示这是一个强制更新的值
                 //vv.Value.WriteByteDirect((int)vv.Value.QualityAddress, (byte)(tag.QulitySnape+100));
-                mCurrentMergeMemory.WriteByteDirect(baseaddress, mCurrentMergeMemory.ReadQualityOffsetAddress(vv.Key), (byte)(tag.QulitySnape + 100));
+                mCurrentMergeMemory.WriteByteDirect(baseaddress, mCurrentMergeMemory.ReadQualityOffsetAddressByIndex(vv.Value), (byte)(tag.QulitySnape + 100));
             }
         }
 
@@ -1477,13 +1477,13 @@ namespace Cdy.Tag
 
                 //if (vv.Value == null) continue;
 
-                var baseaddress = mCurrentMergeMemory.ReadDataBaseAddress(vv.Key);
+                var baseaddress = mCurrentMergeMemory.ReadDataBaseAddressByIndex(vv.Value);
 
                 var tag = mHisTags[vv.Key];
 
-                long timeraddr = mCurrentMergeMemory.ReadValueOffsetAddress(vv.Key) -2;
-                long valueaddr = mCurrentMergeMemory.ReadQualityOffsetAddress(vv.Key) - tag.SizeOfValue;
-                long qaddr = mCurrentMergeMemory.ReadDataSize(vv.Key) - 1;
+                long timeraddr = mCurrentMergeMemory.ReadValueOffsetAddressByIndex(vv.Value) -2;
+                long valueaddr = mCurrentMergeMemory.ReadQualityOffsetAddressByIndex(vv.Value) - tag.SizeOfValue;
+                long qaddr = mCurrentMergeMemory.ReadDataSizeByIndex(vv.Value) - 1;
 
                 //
                 mCurrentMergeMemory.WriteUShortDirect(baseaddress,(int)timeraddr, timespan);

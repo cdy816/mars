@@ -985,7 +985,7 @@ namespace DBStudio
         private static void ClearTag(Database database)
         {
             database.RealDatabase.Tags.Clear();
-            database.RealDatabase.MaxId = -1;
+            database.RealDatabase.MaxId = 0;
             database.HisDatabase.HisTags.Clear();
         }
 

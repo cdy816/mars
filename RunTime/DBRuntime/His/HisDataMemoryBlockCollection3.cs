@@ -188,22 +188,116 @@ namespace DBRuntime.His
             return 0;
         }
 
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <returns></returns>
+        //public long ReadDataBaseAddress(int id)
+        //{
+        //    if (mTagAddress.ContainsKey(id))
+        //    {
+        //        var vdd = mTagAddress[id] * HisDataMemoryItemSize;
+        //        return this.ReadLong(vdd);
+        //    }
+        //    else
+        //    {
+        //        return 0;
+        //    }
+        //}
+
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="index"></param>
         /// <returns></returns>
-        public long ReadDataBaseAddress(int id)
+        public long ReadDataBaseAddressByIndex(int index)
         {
-            if (mTagAddress.ContainsKey(id))
-            {
-                var vdd = mTagAddress[id] * HisDataMemoryItemSize;
-                return this.ReadLong(vdd);
-            }
-            else
-            {
-                return 0;
-            }
+            var vdd = index * HisDataMemoryItemSize;
+            return this.ReadLong(vdd);
+        }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <returns></returns>
+        //public int ReadTimerOffsetAddress(int id)
+        //{
+        //    if (mTagAddress.ContainsKey(id))
+        //    {
+        //        var vdd = mTagAddress[id] * HisDataMemoryItemSize+8;
+        //        return this.ReadInt(vdd);
+        //    }
+        //    else
+        //    {
+        //        return -1;
+        //    }
+        //}
+
+
+        public int ReadTimerOffsetAddressByIndex(int index)
+        {
+            var vdd = index * HisDataMemoryItemSize + 8;
+            return this.ReadInt(vdd);
+        }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <returns></returns>
+        //public int ReadValueOffsetAddress(int id)
+        //{
+        //    if (mTagAddress.ContainsKey(id))
+        //    {
+        //        var vdd = mTagAddress[id] * HisDataMemoryItemSize + 12;
+        //        return this.ReadInt(vdd);
+        //    }
+        //    else
+        //    {
+        //        return -1;
+        //    }
+        //}
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public int ReadValueOffsetAddressByIndex(int index)
+        {
+            var vdd = index * HisDataMemoryItemSize + 12;
+            return this.ReadInt(vdd);
+        }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <returns></returns>
+        //public int ReadQualityOffsetAddress(int id)
+        //{
+        //    if (mTagAddress.ContainsKey(id))
+        //    {
+        //        var vdd = mTagAddress[id] * HisDataMemoryItemSize + 16;
+        //        return this.ReadInt(vdd);
+        //    }
+        //    else
+        //    {
+        //        return -1;
+        //    }
+        //}
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public int ReadQualityOffsetAddressByIndex(int index)
+        {
+            var vdd = index * HisDataMemoryItemSize + 16;
+            return this.ReadInt(vdd);
         }
 
         /// <summary>
@@ -211,17 +305,10 @@ namespace DBRuntime.His
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public int ReadTimerOffsetAddress(int id)
+        public byte ReadTimeLenByIndex(int index)
         {
-            if (mTagAddress.ContainsKey(id))
-            {
-                var vdd = mTagAddress[id] * HisDataMemoryItemSize+8;
-                return this.ReadInt(vdd);
-            }
-            else
-            {
-                return -1;
-            }
+            var vdd = index * HisDataMemoryItemSize + 20;
+            return this.ReadByte(vdd);
         }
 
         /// <summary>
@@ -229,72 +316,47 @@ namespace DBRuntime.His
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public int ReadValueOffsetAddress(int id)
+        public int ReadDataSizeByIndex(int index)
         {
-            if (mTagAddress.ContainsKey(id))
-            {
-                var vdd = mTagAddress[id] * HisDataMemoryItemSize + 12;
-                return this.ReadInt(vdd);
-            }
-            else
-            {
-                return -1;
-            }
+            var vdd = index * HisDataMemoryItemSize + 21;
+            return this.ReadInt(vdd);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public int ReadQualityOffsetAddress(int id)
-        {
-            if (mTagAddress.ContainsKey(id))
-            {
-                var vdd = mTagAddress[id] * HisDataMemoryItemSize + 16;
-                return this.ReadInt(vdd);
-            }
-            else
-            {
-                return -1;
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <returns></returns>
+        //public byte ReadTimeLen(int id)
+        //{
+        //    if (mTagAddress.ContainsKey(id))
+        //    {
+        //        var vdd = mTagAddress[id] * HisDataMemoryItemSize + 20;
+        //        return this.ReadByte(vdd);
+        //    }
+        //    else
+        //    {
+        //        return 2;
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public byte ReadTimeLen(int id)
-        {
-            if (mTagAddress.ContainsKey(id))
-            {
-                var vdd = mTagAddress[id] * HisDataMemoryItemSize + 20;
-                return this.ReadByte(vdd);
-            }
-            else
-            {
-                return 2;
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public int ReadDataSize(int id)
-        {
-            if (mTagAddress.ContainsKey(id))
-            {
-                var vdd = mTagAddress[id] * HisDataMemoryItemSize + 21;
-                return this.ReadInt(vdd);
-            }
-            else
-            {
-                return 0;
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <returns></returns>
+        //public int ReadDataSize(int id)
+        //{
+        //    if (mTagAddress.ContainsKey(id))
+        //    {
+        //        var vdd = mTagAddress[id] * HisDataMemoryItemSize + 21;
+        //        return this.ReadInt(vdd);
+        //    }
+        //    else
+        //    {
+        //        return 0;
+        //    }
+        //}
 
         /// <summary>
         /// 
@@ -795,7 +857,7 @@ namespace DBRuntime.His
             {
                 mfb.Write(vv.Key);
                 mfb.Write(stream.Position);
-                RecordToLog2(new IntPtr(memory.ReadDataBaseAddress(vv.Key)), memory.ReadDataSize(vv.Key), stream);
+                RecordToLog2(new IntPtr(memory.ReadDataBaseAddressByIndex(vv.Value)), memory.ReadDataSizeByIndex(vv.Value), stream);
             }
             return mfb;
         }

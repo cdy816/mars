@@ -478,6 +478,8 @@ namespace Cdy.Tag
         {
             ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
 
+            int count = 0;
+
             while (!mIsClosed)
             {
                 var wpath = SelectHisDataPath();
@@ -553,8 +555,16 @@ namespace Cdy.Tag
 
                     }
                 }
-                Thread.Sleep(1000 * 60 * 10);
+
+
+                while(count>1000*60*10 && !mIsClosed)
+                {
+                    Thread.Sleep(1);
+                    count++;
+                }
+                count = 0;
             }
+
             mIsBackupFinished = true;
         }
 

@@ -32,7 +32,7 @@ namespace DBRuntime.His
         /// </summary>
         public static HisDataMemoryQueryService3 Service = new HisDataMemoryQueryService3();
 
-        private Dictionary<long, SortedDictionary<DateTime,ManualTimeSpanMemory3>> mManualHisMemorys = new Dictionary<long, SortedDictionary<DateTime, ManualTimeSpanMemory3>>();
+        private Dictionary<long, SortedDictionary<DateTime, ManualTimeSpanMemory3>> mManualHisMemorys = new Dictionary<long, SortedDictionary<DateTime, ManualTimeSpanMemory3>>();
 
         private SortedDictionary<DateTime, TimeSpanMemory3> mHisMemorys = new SortedDictionary<DateTime, TimeSpanMemory3>();
 
@@ -54,7 +54,7 @@ namespace DBRuntime.His
         /// </summary>
         public HisEnginer3 HisEnginer { get; set; }
 
-        
+
 
         #endregion ...Properties...
 
@@ -74,7 +74,7 @@ namespace DBRuntime.His
         /// </summary>
         /// <param name="time"></param>
         /// <param name="endtime"></param>
-        public void RegistorMemory(DateTime startTime,DateTime endtime, HisDataMemoryBlockCollection3 memory)
+        public void RegistorMemory(DateTime startTime, DateTime endtime, HisDataMemoryBlockCollection3 memory)
         {
             lock (mHisMemorys)
             {
@@ -114,7 +114,7 @@ namespace DBRuntime.His
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <param name="memory"></param>
-        public void RegistorManual(long id,DateTime startTime,DateTime endTime, ManualHisDataMemoryBlock memory)
+        public void RegistorManual(long id, DateTime startTime, DateTime endTime, ManualHisDataMemoryBlock memory)
         {
             lock (mManualHisMemorys)
             {
@@ -178,9 +178,9 @@ namespace DBRuntime.His
         /// </summary>
         /// <param name="id"></param>
         /// <param name="time"></param>
-        public bool CheckTime(long id,DateTime time)
+        public bool CheckTime(long id, DateTime time)
         {
-            if(IsManualRecord(id))
+            if (IsManualRecord(id))
             {
                 lock (mManualHisMemorys)
                 {
@@ -256,32 +256,32 @@ namespace DBRuntime.His
             {
 
                 KeyValuePair<DateTime, TimeSpanMemory3>[] vhh;
-                lock(mHisMemorys)
-                vhh = mHisMemorys.ToArray();
+                lock (mHisMemorys)
+                    vhh = mHisMemorys.ToArray();
 
-                foreach(var vv in vhh)
+                foreach (var vv in vhh)
                 {
                     var vss = vv.Value.Cross(new DateTimeSpan() { Start = startTime, End = endTime });
-                    if(!vss.IsEmpty())
+                    if (!vss.IsEmpty())
                     {
 
                         if (!vv.Value.Memory.TagAddress.ContainsKey(id)) break;
 
-                        //var vmm = vv.Value.Memory.TagAddress[id];
+                        var vmm = vv.Value.Memory.TagAddress[id];
 
                         var stim = (int)((vss.Start - vv.Value.Memory.CurrentDatetime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
                         var etim = (int)((vss.End - vv.Value.Memory.CurrentDatetime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
-                        var tims = ReadTimer(stim, etim, vv.Value.Memory, id);
+                        var tims = ReadTimer(stim, etim, vv.Value.Memory, vmm);
 
-                        var vals = ReadValueInner<T>(vv.Value.Memory, tims.Keys.ToList(), 0, vv.Value.Memory.ReadValueOffsetAddress(id),vv.Value.Memory.ReadDataBaseAddress(id));
+                        var vals = ReadValueInner<T>(vv.Value.Memory, tims.Keys.ToList(), 0, vv.Value.Memory.ReadValueOffsetAddressByIndex(vmm), vv.Value.Memory.ReadDataBaseAddressByIndex(vmm));
 
                         int cc = 0;
                         foreach (var vvk in tims)
                         {
                             var time = vv.Value.Memory.CurrentDatetime.AddMilliseconds(vvk.Value * HisEnginer3.MemoryTimeTick);
-                            var qq = vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddress(id), vvk.Key + vv.Value.Memory.ReadQualityOffsetAddress(id));
+                            var qq = vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddressByIndex(vmm), vvk.Key + vv.Value.Memory.ReadQualityOffsetAddressByIndex(vmm));
                             if (qq < 100)
-                                result.Add(vals[cc], time, vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddress(id), vvk.Key + vv.Value.Memory.ReadQualityOffsetAddress(id)));
+                                result.Add(vals[cc], time, vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddressByIndex(vmm), vvk.Key + vv.Value.Memory.ReadQualityOffsetAddressByIndex(vmm)));
                             cc++;
                         }
 
@@ -316,8 +316,8 @@ namespace DBRuntime.His
                         {
                             var time = vv.Value.Memory.Time.AddMilliseconds(vvk.Value * HisEnginer3.MemoryTimeTick);
                             var qq = vmm.ReadByte(vvk.Key + vmm.QualityAddress);
-                            if(qq<100)
-                            result.Add(vals[cc], time, qq);
+                            if (qq < 100)
+                                result.Add(vals[cc], time, qq);
                             cc++;
                         }
                     }
@@ -325,18 +325,18 @@ namespace DBRuntime.His
             }
         }
 
-        private Dictionary<int, int> ReadTimer(int start, int end,HisDataMemoryBlockCollection3  block,int index)
+        private Dictionary<int, int> ReadTimer(int start, int end, HisDataMemoryBlockCollection3 block, int index)
         {
             Dictionary<int, int> re = new Dictionary<int, int>();
             bool isStart = false;
-            var vcount = block.ReadValueOffsetAddress(index)/2;
-            var basedata = block.ReadDataBaseAddress(index);
+            var vcount = block.ReadValueOffsetAddressByIndex(index) / 2;
+            var basedata = block.ReadDataBaseAddressByIndex(index);
 
             var disval = (int)((block.CurrentDatetime - block.BaseTime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
 
             for (int i = 0; i < vcount; i++)
             {
-                var val = block.ReadShort(basedata,i * 2)- disval;
+                var val = block.ReadShort(basedata, i * 2) - disval;
 
                 if (i != 0 && val <= 0) continue;
 
@@ -372,10 +372,10 @@ namespace DBRuntime.His
         {
             Dictionary<int, int> re = new Dictionary<int, int>();
             bool isStart = false;
-            var vcount = block.ValueAddress/4;
+            var vcount = block.ValueAddress / 4;
             for (int i = 0; i < vcount; i++)
             {
-                var val = block.ReadInt(i*4);
+                var val = block.ReadInt(i * 4);
                 if (i != 0 && val == 0) continue;
                 if (!isStart)
                 {
@@ -403,21 +403,21 @@ namespace DBRuntime.His
         /// </summary>
         /// <param name="time"></param>
         /// <param name="block"></param>
-        private Tuple<int,int> ReadTimeToFit(int time,HisDataMemoryBlock block)
+        private Tuple<int, int> ReadTimeToFit(int time, HisDataMemoryBlock block)
         {
-            var vcount = block.ValueAddress/2;
+            var vcount = block.ValueAddress / 2;
             short prev = block.ReadShort(0);
             if (prev == time) return new Tuple<int, int>(0, 0);
             else if (time < prev) return new Tuple<int, int>(-1, -1);
 
-            for(int i=1;i<vcount;i++)
+            for (int i = 1; i < vcount; i++)
             {
                 var after = block.ReadShort(i * 2);
-                if(time == after)
+                if (time == after)
                 {
                     return new Tuple<int, int>(after, after);
                 }
-                else if(time<after)
+                else if (time < after)
                 {
                     return new Tuple<int, int>(i - 1, i);
                 }
@@ -427,10 +427,10 @@ namespace DBRuntime.His
         }
 
 
-        private Tuple<int, int> ReadTimeToFit(int time, HisDataMemoryBlockCollection3 block,int id)
+        private Tuple<int, int> ReadTimeToFit(int time, HisDataMemoryBlockCollection3 block, int id)
         {
-            var vcount = block.ReadValueOffsetAddress(id) / 2;
-            var basedata = block.ReadDataBaseAddress(id);
+            var vcount = block.ReadValueOffsetAddressByIndex(id) / 2;
+            var basedata = block.ReadDataBaseAddressByIndex(id);
             short prev = block.ReadShort(basedata, 0);
             if (prev == time) return new Tuple<int, int>(0, 0);
             else if (time < prev) return new Tuple<int, int>(-1, -1);
@@ -459,7 +459,7 @@ namespace DBRuntime.His
         /// <returns></returns>
         private Tuple<int, int> ReadTimeToFit2(int time, HisDataMemoryBlock block)
         {
-            var vcount = block.ValueAddress/4;
+            var vcount = block.ValueAddress / 4;
             int prev = block.ReadInt(0);
             if (prev == time) return new Tuple<int, int>(0, 0);
             else if (time < prev) return new Tuple<int, int>(-1, -1);
@@ -633,7 +633,7 @@ namespace DBRuntime.His
             return re;
         }
 
-        private List<object> ReadValueInner<T>(HisDataMemoryBlockCollection3 datafile, List<int> valIndex, long offset, long valueaddr,long address)
+        private List<object> ReadValueInner<T>(HisDataMemoryBlockCollection3 datafile, List<int> valIndex, long offset, long valueaddr, long address)
         {
             List<object> re = new List<object>();
 
@@ -795,7 +795,7 @@ namespace DBRuntime.His
         /// <param name="result"></param>
         public void ReadValue<T>(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
         {
-            if(!IsManualRecord(id))
+            if (!IsManualRecord(id))
             {
                 KeyValuePair<DateTime, TimeSpanMemory3>[] vhh;
                 lock (mHisMemorys)
@@ -810,24 +810,23 @@ namespace DBRuntime.His
                             if (vv.Value.Memory.TagAddress.ContainsKey(id))
                             {
                                 var tim = (int)((vtime - vv.Value.Memory.CurrentDatetime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
-                                //var vmm = vv.Value.Memory.TagAddress[id];
-                                var vmm = id;
+                                var vmm = vv.Value.Memory.TagAddress[id];
                                 var timeindx = ReadTimeToFit(tim, vv.Value.Memory, vmm);
                                 if (timeindx.Item1 > -1 && timeindx.Item2 > -1)
                                 {
                                     if (timeindx.Item1 == timeindx.Item2)
                                     {
-                                        var vals = ReadValueInner<T>(vv.Value.Memory, new List<int>() { timeindx.Item1 }, 0, vv.Value.Memory.ReadValueOffsetAddress(vmm), vv.Value.Memory.ReadDataBaseAddress(vmm));
-                                        var qua = vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddress(vmm), vv.Value.Memory.ReadQualityOffsetAddress(vmm) + timeindx.Item1);
+                                        var vals = ReadValueInner<T>(vv.Value.Memory, new List<int>() { timeindx.Item1 }, 0, vv.Value.Memory.ReadValueOffsetAddressByIndex(vmm), vv.Value.Memory.ReadDataBaseAddressByIndex(vmm));
+                                        var qua = vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddressByIndex(vmm), vv.Value.Memory.ReadQualityOffsetAddressByIndex(vmm) + timeindx.Item1);
                                         result.Add(vals[0], vtime, qua);
                                     }
                                     else
                                     {
-                                        var vals = ReadValueInner<T>(vv.Value.Memory, new List<int>() { timeindx.Item1, timeindx.Item2 }, 0, vv.Value.Memory.ReadValueOffsetAddress(vmm), vv.Value.Memory.ReadDataBaseAddress(vmm));
-                                        var qua1 = vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddress(vmm), vv.Value.Memory.ReadQualityOffsetAddress(vmm) + timeindx.Item1);
-                                        var qua2 = vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddress(vmm), vv.Value.Memory.ReadQualityOffsetAddress(vmm) + timeindx.Item2);
-                                        var time1 = vv.Value.Memory.CurrentDatetime.AddMilliseconds(vv.Value.Memory.ReadShort(vv.Value.Memory.ReadDataBaseAddress(vmm), timeindx.Item1) * HisEnginer3.MemoryTimeTick);
-                                        var time2 = vv.Value.Memory.CurrentDatetime.AddMilliseconds(vv.Value.Memory.ReadShort(vv.Value.Memory.ReadDataBaseAddress(vmm), timeindx.Item2) * HisEnginer3.MemoryTimeTick);
+                                        var vals = ReadValueInner<T>(vv.Value.Memory, new List<int>() { timeindx.Item1, timeindx.Item2 }, 0, vv.Value.Memory.ReadValueOffsetAddressByIndex(vmm), vv.Value.Memory.ReadDataBaseAddressByIndex(vmm));
+                                        var qua1 = vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddressByIndex(vmm), vv.Value.Memory.ReadQualityOffsetAddressByIndex(vmm) + timeindx.Item1);
+                                        var qua2 = vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddressByIndex(vmm), vv.Value.Memory.ReadQualityOffsetAddressByIndex(vmm) + timeindx.Item2);
+                                        var time1 = vv.Value.Memory.CurrentDatetime.AddMilliseconds(vv.Value.Memory.ReadShort(vv.Value.Memory.ReadDataBaseAddressByIndex(vmm), timeindx.Item1) * HisEnginer3.MemoryTimeTick);
+                                        var time2 = vv.Value.Memory.CurrentDatetime.AddMilliseconds(vv.Value.Memory.ReadShort(vv.Value.Memory.ReadDataBaseAddressByIndex(vmm), timeindx.Item2) * HisEnginer3.MemoryTimeTick);
                                         switch (type)
                                         {
                                             case QueryValueMatchType.Previous:
@@ -1016,7 +1015,7 @@ namespace DBRuntime.His
                     }
                 }
             }
-            
+
         }
 
         /// <summary>
@@ -1039,7 +1038,7 @@ namespace DBRuntime.His
         /// <param name="value1"></param>
         /// <param name="value2"></param>
         /// <returns></returns>
-        private  object LinerValue<T>(DateTime startTime, DateTime endTime, DateTime time, T value1, T value2)
+        private object LinerValue<T>(DateTime startTime, DateTime endTime, DateTime time, T value1, T value2)
         {
             var pval1 = (time - startTime).TotalMilliseconds;
             var tval1 = (endTime - startTime).TotalMilliseconds;

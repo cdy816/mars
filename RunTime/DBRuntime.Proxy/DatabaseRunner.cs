@@ -184,11 +184,11 @@ namespace DBRuntime.Proxy
             Task.Run(() => {
                 if (mProxy.IsConnected)
                 {
-                    LoggerService.Service.Info("DatabaseProxy", "Server is connected!",ConsoleColor.Cyan);
+                    LoggerService.Service.Info("DatabaseProxy", "服务器连接成功!",ConsoleColor.Cyan);
                 }
                 else
                 {
-                    LoggerService.Service.Warn("DatabaseProxy", "Server is disconnected!");
+                    LoggerService.Service.Warn("DatabaseProxy", "服务器连接断开!");
                 }
                 resetEvent.Set();
 
@@ -329,6 +329,8 @@ namespace DBRuntime.Proxy
 
                     if (realchanged)
                     {
+                        mDriver.Stop();
+
                         var mDatabase = new RealDatabaseSerise().LoadByName(mDatabaseName);
                         this.mRealDatabase = mDatabase;
 
@@ -336,7 +338,7 @@ namespace DBRuntime.Proxy
                         realEnginer = new RealEnginer(this.mRealDatabase);
                         realEnginer.Init();
 
-                        mDriver.Stop();
+                        
                         mDriver.Start(realEnginer);
 
                         oldeng.Dispose();
@@ -358,6 +360,8 @@ namespace DBRuntime.Proxy
 
                     if (realchanged)
                     {
+                        mDriver.Stop();
+
                         LoggerService.Service.Info("DatabaseRunner", "开始从远程加载数据库");
                         //通过远程下载数据库
                         this.mRealDatabase = mProxy.LoadRealDatabase();
@@ -365,7 +369,7 @@ namespace DBRuntime.Proxy
                         var oldeng = realEnginer;
                         realEnginer = new RealEnginer(this.mRealDatabase);
                         realEnginer.Init();
-                        mDriver.Stop();
+                        
                         mDriver.Start(realEnginer);
                         oldeng.Dispose();
                         LoggerService.Service.Info("DatabaseRunner", "从远程加载数据库完成");

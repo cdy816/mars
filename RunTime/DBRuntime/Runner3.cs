@@ -380,53 +380,43 @@ namespace Cdy.Tag
             List<HisTag> changedhistag = new List<HisTag>();
 
             //
-            foreach (var vv in db.RealDatabase.Tags.Where(e => !this.mRealDatabase.Tags.ContainsKey(e.Key)))
+            foreach (var vv in db.RealDatabase.Tags)
             {
-                ltmp.Add(vv.Value);
-                ischanged = true;
-            }
-
-            //
-            foreach (var vv in this.mRealDatabase.Tags)
-            {
-                if (db.RealDatabase.Tags.ContainsKey(vv.Key))
+                if (mRealDatabase.Tags.ContainsKey(vv.Key))
                 {
-                    var tag = db.RealDatabase.Tags[vv.Key];
-                    if(!tag.Equals(vv.Value))
+                    var tag = mRealDatabase.Tags[vv.Key];
+                    if (tag.Type == vv.Value.Type)
                     {
-                        if (tag.Type == vv.Value.Type)
-                        {
-                            changedrealtag.Add(tag);
-                            ischanged = true;
-                        }
+                        changedrealtag.Add(tag);
+                        ischanged = true;
                     }
+                }
+                else
+                {
+                    ltmp.Add(vv.Value);
+                    ischanged = true;
                 }
             }
 
             //
-            foreach (var vv in db.HisDatabase.HisTags.Where(e => !this.mHisDatabase.HisTags.ContainsKey(e.Key)))
+            foreach (var vv in db.HisDatabase.HisTags)
             {
-                htmp.Add(vv.Value);
-                hischanged = true;
-            }
-
-            //
-            foreach(var vv in this.mHisDatabase.HisTags)
-            {
-                if(db.HisDatabase.HisTags.ContainsKey(vv.Key))
+                if (this.hisEnginer.Tags.ContainsKey(vv.Key))
                 {
-                    var tag = db.HisDatabase.HisTags[vv.Key];
-                    if(!tag.Equals(vv.Value))
+                    var tag = this.hisEnginer.Tags[vv.Key];
+                    if (tag.TagType == vv.Value.TagType)
                     {
-                        if (tag.TagType == vv.Value.TagType)
-                        {
-                            changedhistag.Add(tag);
-                            hischanged = true;
-                        }
+                        changedhistag.Add(tag);
+                        hischanged = true;
                     }
                 }
+                else
+                {
+                    htmp.Add(vv.Value);
+                    hischanged = true;
+                }
             }
-
+            
             LoggerService.Service.Info("ReStartDatabase", "加载 " + mDatabaseName + " 耗时: " + sw.ElapsedMilliseconds.ToString() + " ms");
             compressEnginer.WaitForReady();
 

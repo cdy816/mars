@@ -120,9 +120,7 @@ namespace DBRuntime.Api
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
                         var vss = mm.SeriseToStream();
-                        vss.Position = 0;
                         Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.SyncRealTagConfig, vss));
-                        vss.Dispose();
                     }
                     break;
                 case SyncSecuritySetting:
@@ -130,9 +128,7 @@ namespace DBRuntime.Api
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
                         var vss = (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>() as SecurityRunner).Document.SeriseToStream();
-                        vss.Position = 0;
                         Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.SyncSecuritySetting, vss));
-                        vss.Dispose();
                     }
                     break;
 
@@ -141,9 +137,7 @@ namespace DBRuntime.Api
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
                         var vss = (Cdy.Tag.ServiceLocator.Locator.Resolve<IHisTagQuery>() as HisEnginer3).HisTagManager.SeriseToStream();
-                        vss.Position = 0;
                         Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.SyncHisTagConfig, vss));
-                        vss.Dispose();
                     }
                     break;
             }

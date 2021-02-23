@@ -2,7 +2,7 @@
   "profiles": {
     "DBHighApi": {
       "commandName": "Executable",
-      "executablePath": "C:\\Users\\cdy81\\source\\repos\\mars\\Output\\DBHighApi.exe"
+      "executablePath": "C:\\Users\\chongdaoyang\\source\\repos\\mars\\Output\\DBHighApi.exe"
     }
   }
 }

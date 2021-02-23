@@ -795,7 +795,7 @@ namespace DBRuntime.His
             {
                 mfb.Write(vv.Key);
                 mfb.Write(stream.Position);
-                RecordToLog2(new IntPtr(memory.ReadDataBaseAddress(vv.Value)), memory.ReadDataSize(vv.Value), stream);
+                RecordToLog2(new IntPtr(memory.ReadDataBaseAddress(vv.Key)), memory.ReadDataSize(vv.Key), stream);
             }
             return mfb;
         }

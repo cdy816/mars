@@ -267,21 +267,21 @@ namespace DBRuntime.His
 
                         if (!vv.Value.Memory.TagAddress.ContainsKey(id)) break;
 
-                        var vmm = vv.Value.Memory.TagAddress[id];
+                        //var vmm = vv.Value.Memory.TagAddress[id];
 
                         var stim = (int)((vss.Start - vv.Value.Memory.CurrentDatetime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
                         var etim = (int)((vss.End - vv.Value.Memory.CurrentDatetime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
-                        var tims = ReadTimer(stim, etim, vv.Value.Memory, vmm);
+                        var tims = ReadTimer(stim, etim, vv.Value.Memory, id);
 
-                        var vals = ReadValueInner<T>(vv.Value.Memory, tims.Keys.ToList(), 0, vv.Value.Memory.ReadValueOffsetAddress(vmm),vv.Value.Memory.ReadDataBaseAddress(vmm));
+                        var vals = ReadValueInner<T>(vv.Value.Memory, tims.Keys.ToList(), 0, vv.Value.Memory.ReadValueOffsetAddress(id),vv.Value.Memory.ReadDataBaseAddress(id));
 
                         int cc = 0;
                         foreach (var vvk in tims)
                         {
                             var time = vv.Value.Memory.CurrentDatetime.AddMilliseconds(vvk.Value * HisEnginer3.MemoryTimeTick);
-                            var qq = vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddress(vmm), vvk.Key + vv.Value.Memory.ReadQualityOffsetAddress(vmm));
+                            var qq = vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddress(id), vvk.Key + vv.Value.Memory.ReadQualityOffsetAddress(id));
                             if (qq < 100)
-                                result.Add(vals[cc], time, vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddress(vmm), vvk.Key + vv.Value.Memory.ReadQualityOffsetAddress(vmm)));
+                                result.Add(vals[cc], time, vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddress(id), vvk.Key + vv.Value.Memory.ReadQualityOffsetAddress(id)));
                             cc++;
                         }
 
@@ -810,7 +810,8 @@ namespace DBRuntime.His
                             if (vv.Value.Memory.TagAddress.ContainsKey(id))
                             {
                                 var tim = (int)((vtime - vv.Value.Memory.CurrentDatetime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
-                                var vmm = vv.Value.Memory.TagAddress[id];
+                                //var vmm = vv.Value.Memory.TagAddress[id];
+                                var vmm = id;
                                 var timeindx = ReadTimeToFit(tim, vv.Value.Memory, vmm);
                                 if (timeindx.Item1 > -1 && timeindx.Item2 > -1)
                                 {

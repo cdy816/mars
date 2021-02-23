@@ -279,7 +279,7 @@ namespace Cdy.Tag
             {
                 mTagIds.Add(vv.Key);
                 dtmp.Add(vv.Key, 0);
-                lsize += (sourceM.ReadDataSize(vv.Value)+24);
+                lsize += (sourceM.ReadDataSize(vv.Key)+24);
             }
 
             this.ReAlloc2(HeadSize + (long)(lsize));
@@ -315,7 +315,7 @@ namespace Cdy.Tag
                     }
                 }
                 if (vv.Value >= 0)
-                    lsize += sourceM.ReadDataSize(vv.Value) + 24;
+                    lsize += sourceM.ReadDataSize(vv.Key) + 24;
             }
 
             if (lsize > this.AllocSize)
@@ -372,8 +372,8 @@ namespace Cdy.Tag
                         var val = source.TagAddress[vv];
                         if (val >=0)
                         {
-                            cachblock.Reset(new IntPtr(source.ReadDataBaseAddress(val)), source.ReadDataSize(val));
-                            var size = CompressBlockMemory(cachblock, Offset, source.ReadQualityOffsetAddress(val), source.ReadDataSize(val), vv);
+                            cachblock.Reset(new IntPtr(source.ReadDataBaseAddress(vv)), source.ReadDataSize(vv));
+                            var size = CompressBlockMemory(cachblock, Offset, source.ReadQualityOffsetAddress(vv), source.ReadDataSize(vv), vv);
                             if (dtmp.ContainsKey(vv))
                                 dtmp[vv] = Offset;
                             Offset += size;

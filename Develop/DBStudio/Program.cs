@@ -467,6 +467,28 @@ namespace DBStudio
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="headname"></param>
+        /// <param name="group"></param>
+        /// <param name="startId"></param>
+        /// <param name="realDatabase"></param>
+        /// <returns></returns>
+        private static string GetAvaiableName(string headname,string group,ref int startId,RealDatabase realDatabase)
+        {
+            for(int i=startId;i<int.MaxValue;i++)
+            {
+                string sname = group +"."+ headname + i;
+                if(!realDatabase.NamedTags.ContainsKey(sname))
+                {
+                    startId = i+1;
+                    return headname + i;
+                }
+            }
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="db"></param>
         /// <param name="paras"></param>
         private static void Sp(Database db,int rtp,int ctp,int addressType, params string[] paras)
@@ -476,6 +498,8 @@ namespace DBStudio
             Cdy.Tag.HisDatabase htest = db.HisDatabase;
             
             Cdy.Tag.RecordType rrtp = (RecordType)(rtp);
+
+            int idstart = 0;
 
             string address = "";
             if (paras.Length > 0)
@@ -502,7 +526,7 @@ namespace DBStudio
                             address = "Sim:step";
                         }
                     }
-                    var vtag = new Cdy.Tag.DoubleTag() { Name = "Double" + i, Group = "Double", LinkAddress = address };
+                    var vtag = new Cdy.Tag.DoubleTag() { Name = GetAvaiableName("Double", "Double",ref idstart,test), Group = "Double", LinkAddress = address };
                     test.Append(vtag);
                     htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Double, Circle = 1000, Type = rrtp, CompressType = ctp });
                 }
@@ -532,7 +556,7 @@ namespace DBStudio
                             address = "Sim:step";
                         }
                     }
-                    var vtag = new Cdy.Tag.FloatTag() { Name = "Float" + i, Group = "Float", LinkAddress = address };
+                    var vtag = new Cdy.Tag.FloatTag() { Name = GetAvaiableName("Float", "Float", ref idstart, test), Group = "Float", LinkAddress = address };
                     test.Append(vtag);
                     htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Float, Circle = 1000, Type = rrtp, CompressType = ctp });
                 }
@@ -551,7 +575,7 @@ namespace DBStudio
                 }
                 for (int i = 0; i < fcount; i++)
                 {
-                    var vtag = new Cdy.Tag.LongTag() { Name = "Long" + i, Group = "Long", LinkAddress = address };
+                    var vtag = new Cdy.Tag.LongTag() { Name = GetAvaiableName("Long", "Long", ref idstart, test), Group = "Long", LinkAddress = address };
                     test.Append(vtag);
                     htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Long, Circle = 1000, Type = rrtp, CompressType = ctp });
                 }
@@ -570,7 +594,7 @@ namespace DBStudio
                 int fcount = int.Parse(paras[3]);
                 for (int i = 0; i < fcount; i++)
                 {
-                    var vtag = new Cdy.Tag.IntTag() { Name = "Int" + i, Group = "Int", LinkAddress = address };
+                    var vtag = new Cdy.Tag.IntTag() { Name = GetAvaiableName("Int", "Int", ref idstart, test), Group = "Int", LinkAddress = address };
                     test.Append(vtag);
                     htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Int, Circle = 1000, Type = rrtp, CompressType = ctp });
                 }
@@ -589,7 +613,7 @@ namespace DBStudio
                 int fcount = int.Parse(paras[4]);
                 for (int i = 0; i < fcount; i++)
                 {
-                    var vtag = new Cdy.Tag.BoolTag() { Name = "Bool" + i, Group = "Bool", LinkAddress = address };
+                    var vtag = new Cdy.Tag.BoolTag() { Name = GetAvaiableName("Bool", "Bool", ref idstart, test), Group = "Bool", LinkAddress = address };
                     test.Append(vtag);
                     htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.Bool, Circle = 1000, Type = rrtp, CompressType = ctp });
                 }
@@ -609,7 +633,7 @@ namespace DBStudio
                 int fcount = int.Parse(paras[5]);
                 for (int i = 0; i < fcount; i++)
                 {
-                    var vtag = new Cdy.Tag.IntPointTag() { Name = "IntPoint" + i, Group = "IntPoint", LinkAddress = address };
+                    var vtag = new Cdy.Tag.IntPointTag() { Name = GetAvaiableName("IntPoint", "IntPoint", ref idstart, test), Group = "IntPoint", LinkAddress = address };
                     test.Append(vtag);
                     htest.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = Cdy.Tag.TagType.IntPoint, Circle = 1000, Type = rrtp, CompressType = ctp });
                 }
@@ -961,7 +985,7 @@ namespace DBStudio
         private static void ClearTag(Database database)
         {
             database.RealDatabase.Tags.Clear();
-            database.RealDatabase.MaxId = 0;
+            database.RealDatabase.MaxId = -1;
             database.HisDatabase.HisTags.Clear();
         }
 

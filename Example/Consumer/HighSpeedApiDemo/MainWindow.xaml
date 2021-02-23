@@ -29,11 +29,11 @@
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
-        <Label Content="变量ID:" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="2" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Margin="70,15,0,0" Grid.Row="2" Text="{Binding Id,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Top" Width="100"/>
-        <TextBox HorizontalAlignment="Left" Margin="259,15,0,0" Grid.Row="2" Text="{Binding Value,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Top" Width="100"/>
-        <Button Content="变量下发" HorizontalAlignment="Left" Margin="398,13,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding SetTagValueCommand}"/>
-        <Label Content="变量值:" HorizontalAlignment="Left" Margin="206,10,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <Label Content="变量ID:" HorizontalAlignment="Left" Margin="10,0,0,7" Grid.Row="2" VerticalAlignment="Bottom"/>
+        <TextBox HorizontalAlignment="Left" Margin="70,0,0,10" Grid.Row="2" Text="{Binding Id,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Bottom" Width="100"/>
+        <TextBox HorizontalAlignment="Left" Margin="259,0,0,10" Grid.Row="2" Text="{Binding Value,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Bottom" Width="100"/>
+        <Button Content="变量下发" HorizontalAlignment="Left" Margin="398,0,0,10" Grid.Row="2" VerticalAlignment="Bottom" Width="76" Command="{Binding SetTagValueCommand}"/>
+        <Label Content="变量值:" HorizontalAlignment="Left" Margin="206,0,0,7" Grid.Row="2" VerticalAlignment="Bottom"/>
 
     </Grid>
 </Window>

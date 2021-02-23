@@ -36,6 +36,8 @@ namespace DBRuntime.Proxy
 
         private Thread mScanThread;
 
+        private Dictionary<long, long> mSyncMemoryCach = new Dictionary<long, long>();
+
         /// <summary>
         /// 
         /// </summary>
@@ -117,7 +119,7 @@ namespace DBRuntime.Proxy
                 else
                 {
                     DateTime stime = DateTime.Now;
-                    Client.SyncRealMemory();
+                    Client.SyncRealMemory(mSyncMemoryCach);
                     double span = (DateTime.Now - stime).TotalMilliseconds;
                     int sleeptime = span > PollCircle ? 1 : (int)(PollCircle - span);
                     ValueUpdateEvent?.Invoke(this, null);
@@ -383,7 +385,39 @@ namespace DBRuntime.Proxy
             }
             //RegistorTag();
 
-            Client.SyncRealMemory();
+
+            mSyncMemoryCach.Clear();
+
+            int synccount = 500000;
+            int start = 0;
+            int end = synccount;
+            var addrs = (mServier as RealEnginer).IdAndValueAddress;
+
+            var vcount = addrs.Count;
+            long startaddress = 0, endaddress = 0;
+
+            while (start<vcount)
+            {
+                startaddress = addrs.ElementAt(start).Value;
+
+                if (end > vcount)
+                {
+                    end = vcount;
+                    endaddress = (mServier as RealEnginer).UsedSize;
+                }
+                else
+                {
+                    endaddress = addrs.ElementAt(end).Value;
+                }
+
+                mSyncMemoryCach.Add(startaddress, endaddress);
+
+                start = end;
+                end += synccount;
+
+            }
+
+            Client.SyncRealMemory(mSyncMemoryCach);
             mScanThread = new Thread(RemoteDataudpatePro);
             mScanThread.IsBackground = true;
             mScanThread.Start();
@@ -438,32 +472,38 @@ namespace DBRuntime.Proxy
         /// <summary>
         /// 
         /// </summary>
-        public static void SyncRealMemory(this ApiClient Client)
+        public static void SyncRealMemory(this ApiClient Client,Dictionary<long,long> address)
         {
             //Stopwatch sw = new Stopwatch();
             //sw.Start();
             var realenginer = (ServiceLocator.Locator.Resolve<IRealTagConsumer>() as RealEnginer);
             if (Client != null && Client.IsConnected && realenginer.Memory!=null)
             {
-                int i = 0;
-                foreach (var vv in Client.SyncRealMemory(realenginer.MinTagId,realenginer.MaxTagId,(id)=> { return (int)realenginer.GetDataAddr(id); }))
+                foreach (var vv in  address)
                 {
-                    if (vv != null)
+                    try
                     {
-                        int size = vv.ReadableBytes;
-                        Buffer.BlockCopy(vv.Array, vv.ArrayOffset + vv.ReaderIndex, realenginer.Memory, i, size);
-                        vv.SetReaderIndex(vv.ReaderIndex + size);
-                        i += size;
-                        vv.ReleaseBuffer();
+                        var res = Client.SyncRealMemory((int)vv.Key, (int)vv.Value);
+                        if (res != null)
+                        {
+                            int size = res.ReadableBytes;
+                            Buffer.BlockCopy(res.Array, res.ArrayOffset + res.ReaderIndex, realenginer.Memory, (int)vv.Key, size);
+                            res.SetReaderIndex(res.ReaderIndex + size);
+                            res.ReleaseBuffer();
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
-                    else
+                    catch
                     {
                         break;
                     }
                 }
             }
             //sw.Stop();
-            //LoggerService.Service.Info("SyncRealMemory", "数据大小:"+ (realenginer.Memory.Length/1024/1024) + " 耗时: "+ sw.ElapsedMilliseconds);
+            //LoggerService.Service.Info("SyncRealMemory", "数据大小:" + (realenginer.Memory.Length / 1024 / 1024) + " 耗时: " + sw.ElapsedMilliseconds);
         }
 
         /// <summary>

@@ -122,7 +122,7 @@ namespace Cdy.Tag
                     {
                         var tag = vv.LoadHisTagFromXML();
                         
-                        if (!target.HisTags.ContainsKey(tag.Id) || tag.Equals(target.HisTags[tag.Id]))
+                        if (!target.HisTags.ContainsKey(tag.Id) || !tag.Equals(target.HisTags[tag.Id]))
                             db.HisTags.Add(tag.Id, tag);
                     }
                 }

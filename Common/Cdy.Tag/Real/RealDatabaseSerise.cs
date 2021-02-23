@@ -100,7 +100,7 @@ namespace Cdy.Tag
                     {
                         var tag = vv.LoadTagFromXML();
 
-                        if(!target.Tags.ContainsKey(tag.Id) || tag.Equals(target.Tags[tag.Id]))
+                        if(!target.Tags.ContainsKey(tag.Id) || !tag.Equals(target.Tags[tag.Id]))
                         {
                             db.Tags.Add(tag.Id, tag);
                         }

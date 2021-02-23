@@ -128,9 +128,6 @@ namespace Cdy.Tag
         /// <param name="tags"></param>
         public void ReSizeTagCompress(IEnumerable<int> tagids)
         {
-            List<CompressMemory3> ctmp = new List<CompressMemory3>();
-            ctmp.Add(mTargetMemorys.Last().Value);
-
             foreach (var vv in tagids)
             {
                 var id = vv;
@@ -140,7 +137,6 @@ namespace Cdy.Tag
                     var vvv = new CompressMemory3() { Id = did, Name = "CompressTarget" + did };
                     mTargetMemorys.Add(did, vvv);
                     mLastDataRegionId = did;
-                    ctmp.Add(vvv);
                 }
             }
         }

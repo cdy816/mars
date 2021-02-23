@@ -277,7 +277,14 @@ namespace DBRuntime.Proxy
             string sfile = dbClient.GetRealdatabase();
             if(System.IO.File.Exists(sfile))
             {
-                return new RealDatabaseSerise().Load(sfile);
+                try
+                {
+                    return new RealDatabaseSerise().Load(sfile);
+                }
+                finally
+                {
+                    System.IO.File.Delete(sfile);
+                }
             }
             return null;
         }
@@ -291,7 +298,14 @@ namespace DBRuntime.Proxy
             string sfile = dbClient.GetSecuritySetting();
             if (System.IO.File.Exists(sfile))
             {
-                return new SecuritySerise().Load(sfile);
+                try
+                {
+                    return new SecuritySerise().Load(sfile);
+                }
+                finally
+                {
+                    System.IO.File.Delete(sfile);
+                }
             }
             return null;
         }

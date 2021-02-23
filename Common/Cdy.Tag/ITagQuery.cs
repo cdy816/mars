@@ -67,7 +67,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <returns></returns>
-        System.IO.Stream SeriseToStream();
+        byte[] SeriseToStream();
 
     }
 }

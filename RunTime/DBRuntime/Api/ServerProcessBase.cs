@@ -106,15 +106,10 @@ namespace DBRuntime.Api
         /// <param name="id"></param>
         /// <param name="stream"></param>
         /// <returns></returns>
-        protected IByteBuffer ToByteBuffer(byte id,System.IO.Stream stream)
+        protected IByteBuffer ToByteBuffer(byte id,byte[] values)
         {
-            int len = (int)stream.Length;
-            var re = BufferManager.Manager.Allocate(id, len);
-            var bytes = ArrayPool<byte>.Shared.Rent(len);
-            stream.Read(bytes, 0, len);
-            re.WriteBytes(bytes, 0, len);
-            ArrayPool<byte>.Shared.Return(bytes);
-
+            var re = BufferManager.Manager.Allocate(id, (int)values.Length);
+            re.WriteBytes(values, 0, (int)values.Length);
             return re;
         }
 

@@ -63,11 +63,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <returns></returns>
-        public System.IO.Stream SeriseToStream()
+        public byte[] SeriseToStream()
         {
-            System.IO.Compression.GZipStream gs = new System.IO.Compression.GZipStream(new System.IO.MemoryStream(), System.IO.Compression.CompressionLevel.Optimal);
-            new SecuritySerise() { Document = this }.Save(gs);
-            return gs;
+            using (var ms = new System.IO.MemoryStream())
+            {
+                using (System.IO.Compression.GZipStream gs = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionLevel.Optimal))
+                {
+                    new SecuritySerise() { Document = this }.Save(gs);
+                    return ms.GetBuffer();
+                }
+            }
         }
 
         #endregion ...Methods...

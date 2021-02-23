@@ -174,7 +174,7 @@ namespace DBInRun
 
         private static void CurrentDomain_FirstChanceException(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
         {
-            Console.WriteLine(e.Exception.StackTrace);
+            //Console.WriteLine(e.Exception.StackTrace);
             e.Exception.HResult = 0;
         }
 

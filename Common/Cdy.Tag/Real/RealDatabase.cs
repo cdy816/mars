@@ -23,7 +23,7 @@ namespace Cdy.Tag
         /// </summary>
         public RealDatabase()
         {
-            Tags = new Dictionary<int, Tagbase>();
+            Tags = new SortedDictionary<int, Tagbase>();
             NamedTags = new Dictionary<string, Tagbase>();
             Groups = new Dictionary<string, TagGroup>();
         }
@@ -61,7 +61,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public Dictionary<int,Tagbase> Tags { get; set; }
+        public SortedDictionary<int,Tagbase> Tags { get; set; }
 
         /// <summary>
         /// 
@@ -795,11 +795,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <returns></returns>
-        public System.IO.Stream SeriseToStream()
+        public byte[] SeriseToStream()
         {
-            System.IO.Compression.GZipStream gs = new System.IO.Compression.GZipStream(new System.IO.MemoryStream(), System.IO.Compression.CompressionLevel.Optimal);
-            new RealDatabaseSerise() { Database = this }.Save(gs);
-            return gs;
+            using (var ms = new System.IO.MemoryStream())
+            {
+                using (System.IO.Compression.GZipStream gs = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionLevel.Optimal))
+                {
+                    new RealDatabaseSerise() { Database = this }.Save(gs);
+                    return ms.GetBuffer();
+                }
+            }
         }
     }
 }

@@ -202,10 +202,20 @@ namespace Cdy.Tag
                     boundChannel = await bootstrap.BindAsync(IPAddress.Parse(mIp), port);
                 }
             }
+            catch (System.Net.Sockets.SocketException se)
+            {
+                if(se.SocketErrorCode == System.Net.Sockets.SocketError.AccessDenied)
+                {
+                    LoggerService.Service.Erro("SocketServer", "启动服务失败,端口 " + port + " 被占用");
+                }
+                else
+                {
+                    LoggerService.Service.Erro("SocketServer", "在端口 " + port + " 启动服务失败, " + se.Message);
+                }
+            }
             catch(Exception ex)
             {
-                LoggerService.Service.Erro("SocketServer", ex.Message);
-                LoggerService.Service.Erro("SocketServer", ex.StackTrace.ToString());
+                LoggerService.Service.Erro("SocketServer","在端口 "+ port+" 启动服务失败, " + ex.Message + ex.StackTrace);
             }
         }
 

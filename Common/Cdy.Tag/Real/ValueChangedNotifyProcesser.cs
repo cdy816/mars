@@ -280,7 +280,8 @@ namespace Cdy.Tag
         {
             if (this.NotifyType == RealDataNotifyType.All || this.NotifyType == RealDataNotifyType.Block)
             {
-                mBlockChangeds[id / BlockSize].IsDirty = true;
+                lock (mBlockChangeds)
+                    mBlockChangeds[id / BlockSize].IsDirty = true;
             }
 
             if ((this.NotifyType == RealDataNotifyType.All || this.NotifyType == RealDataNotifyType.Tag))
@@ -438,14 +439,18 @@ namespace Cdy.Tag
         /// <param name="getAddress"></param>
         public void BuildBlock(int maxid,Func<int,int> getAddress)
         {
-            int count = maxid / BlockSize;
-            count = maxid % BlockSize > 0 ? count + 1 : count;
-            for(int i=0;i<=count;i++)
+            lock (mBlockChangeds)
             {
-                int start = getAddress(i * BlockSize);
-                int end = getAddress(i * BlockSize + BlockSize);
-                lock (mBlockChangeds)
+                mBlockChangeds.Clear();
+                int count = maxid / BlockSize;
+                count = maxid % BlockSize > 0 ? count + 1 : count;
+                for (int i = 0; i <= count; i++)
+                {
+                    int start = getAddress(i * BlockSize);
+                    int end = getAddress(i * BlockSize + BlockSize);
+
                     mBlockChangeds.Add(i, new BlockItem() { Id = i, StartAddress = start, EndAddress = end });
+                }
             }
         }
 
@@ -458,7 +463,6 @@ namespace Cdy.Tag
         {
             lock (mBlockChangeds)
             {
-                mBlockChangeds.Clear();
                 int count = maxid / BlockSize;
                 count = maxid % BlockSize > 0 ? count + 1 : count;
                 for (int i = 0; i <= count; i++)

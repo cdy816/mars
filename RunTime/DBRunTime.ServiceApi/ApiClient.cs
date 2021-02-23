@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Cdy.Tag;
 using DotNetty.Buffers;
 
@@ -264,7 +265,9 @@ namespace DBRunTime.ServiceApi
             {
                 case ApiFunConst.DatabaseChangedNotify:
                     var type = data.ReadByte();
-                    DatabaseChangedAction?.BeginInvoke((type & 0x01) > 0, (type & 0x02) > 0, (type & 0x04) > 0, null, null);
+                    Task.Run(() => {
+                        DatabaseChangedAction((type & 0x01) > 0, (type & 0x02) > 0, (type & 0x04) > 0);
+                    });
                     break;
             }
         }
@@ -636,43 +639,28 @@ namespace DBRunTime.ServiceApi
         /// <param name="maxid"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public IEnumerable<IByteBuffer> SyncRealMemory(int startId,int endId,Func<int,int> getAddress, int timeout = 5000)
+        public IByteBuffer SyncRealMemory(int startaddress,int endaddress, int timeout = 5000)
         {
             CheckLogin();
-            int start = startId;
-            int len = 1000000;
-            while (start <= endId)
+            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 4);
+            mb.WriteByte(ApiFunConst.RealMemorySync);
+            mb.WriteLong(this.LoginId);
+            mb.WriteInt((endaddress - startaddress));
+            mb.WriteInt(startaddress);
+            realRequreEvent.Reset();
+            Send(mb);
+            if (realRequreEvent.WaitOne(timeout))
             {
-                if (start + len > endId)
-                {
-                    len = endId - start;
-                }
-
-                int astart = getAddress(start);
-                int aend = getAddress(start + len);
-
-                if (len <= 0) break;
-                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 4);
-                mb.WriteByte(ApiFunConst.RealMemorySync);
-                mb.WriteLong(this.LoginId);
-                mb.WriteInt((aend - astart));
-                mb.WriteInt(astart);
-                realRequreEvent.Reset();
-                Send(mb);
-                if (realRequreEvent.WaitOne(timeout))
-                {
-                    if (mRealRequreData.ReadableBytes == (aend - astart))
-                        yield return mRealRequreData;
-                    else
-                        yield return null;
-                }
+                if (mRealRequreData.ReadableBytes == (endaddress - startaddress))
+                    return mRealRequreData;
                 else
-                {
-                    yield return null;
-                }
-                start += len;
+                    return null;
             }
-           
+            else
+            {
+                return  null;
+            }
+            
         }
 
         /// <summary>

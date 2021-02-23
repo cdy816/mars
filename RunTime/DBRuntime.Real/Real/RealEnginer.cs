@@ -139,6 +139,17 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public Dictionary<int, long> IdAndValueAddress
+        {
+            get
+            {
+                return mIdAndAddr;
+            }
+        }
+
 
 
         #endregion ...Properties...
@@ -3342,8 +3353,6 @@ namespace Cdy.Tag
             return -1;
         }
 
-
-
         #endregion
 
         #endregion ...Methods...
@@ -3360,7 +3369,12 @@ namespace Cdy.Tag
         /// <returns></returns>
         public List<int?> GetTagIdByName(List<string> name)
         {
+            if(mConfigDatabase!=null)
             return mConfigDatabase.GetTagIdByName(name);
+            else
+            {
+                return new List<int?>();
+            }
         }
 
         /// <summary>
@@ -3370,7 +3384,14 @@ namespace Cdy.Tag
         /// <returns></returns>
         public List<int> GetTagIdsByLinkAddress(string address)
         {
-            return mConfigDatabase.GetTagIdsByLinkAddress(address);
+            if (mConfigDatabase != null)
+            {
+                return mConfigDatabase.GetTagIdsByLinkAddress(address);
+            }
+            else
+            {
+                return new List<int>();
+            }
         }
 
         /// <summary>
@@ -3380,7 +3401,14 @@ namespace Cdy.Tag
         /// <returns></returns>
         public Dictionary<string, List<int>> GetTagsIdByLinkAddress(List<string> address)
         {
-            return mConfigDatabase.GetTagsIdByLinkAddress(address);
+            if (mConfigDatabase != null)
+            {
+                return mConfigDatabase.GetTagsIdByLinkAddress(address);
+            }
+            else
+            {
+                return new Dictionary<string, List<int>>();
+            }
         }
 
         /// <summary>
@@ -3390,7 +3418,14 @@ namespace Cdy.Tag
         /// <returns></returns>
         List<Tagbase> IRealTagProduct.GetTagByLinkAddress(string address)
         {
-            return mConfigDatabase.GetTagByLinkAddress(address);
+            if (mConfigDatabase != null)
+            {
+                return mConfigDatabase.GetTagByLinkAddress(address);
+            }
+            else
+            {
+                return new List<Tagbase>();
+            }
         }
 
         /// <summary>
@@ -3400,7 +3435,14 @@ namespace Cdy.Tag
         /// <returns></returns>
         Dictionary<string, List<Tagbase>> IRealTagProduct.GetTagsByLinkAddress(List<string> address)
         {
-            return mConfigDatabase.GetTagsByLinkAddress(address);
+            if (mConfigDatabase != null)
+            {
+                return mConfigDatabase.GetTagsByLinkAddress(address);
+            }
+            else
+            {
+                return new Dictionary<string, List<Tagbase>>();
+            }
         }
 
         /// <summary>
@@ -3411,9 +3453,12 @@ namespace Cdy.Tag
         public Dictionary<int, long> GetTagMemoryAddress(List<int> ids)
         {
             Dictionary<int, long> re = new Dictionary<int, long>();
-            foreach(var vv in mConfigDatabase.GetTagsById(ids))
+            if (mConfigDatabase != null)
             {
-                re.Add(vv.Id, vv.ValueAddress);
+                foreach (var vv in mConfigDatabase.GetTagsById(ids))
+                {
+                    re.Add(vv.Id, vv.ValueAddress);
+                }
             }
             return re;
         }

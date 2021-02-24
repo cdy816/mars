@@ -96,6 +96,8 @@ namespace DBInStudio.Desktop
         /// </summary>
         public MainViewModel()
         {
+            ValueConvertManager.manager.Init();
+
             ServiceLocator.Locator.Registor<IProcessNotify>(this);
             CurrentUserManager.Manager.RefreshNameEvent += Manager_RefreshNameEvent;
             mCheckRunningTimer = new System.Timers.Timer(1000);
@@ -495,7 +497,7 @@ namespace DBInStudio.Desktop
                 {
                     mSaveCommand = new RelayCommand(() => {
 
-                        CheckSaveDatabase();
+                        CheckSaveDatabase(false);
                         //if (ContentViewModel is TagGroupDetailViewModel)
                         //{
                         //    (ContentViewModel as TagGroupDetailViewModel).UpdateAll();
@@ -593,7 +595,7 @@ namespace DBInStudio.Desktop
         /// <summary>
         /// 
         /// </summary>
-        private void CheckSaveDatabase()
+        private void CheckSaveDatabase(bool propmsg=true)
         {
             if (ContentViewModel is IModeSwitch)
             {
@@ -601,7 +603,14 @@ namespace DBInStudio.Desktop
             }
             if (DevelopServiceHelper.Helper.IsDatabaseDirty(mDatabase))
             {
-                if (MessageBox.Show(Res.Get("saveprompt"), "", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                if (propmsg)
+                {
+                    if (MessageBox.Show(Res.Get("saveprompt"), "", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                    {
+                        DevelopServiceHelper.Helper.Save(mDatabase);
+                    }
+                }
+                else
                 {
                     DevelopServiceHelper.Helper.Save(mDatabase);
                 }

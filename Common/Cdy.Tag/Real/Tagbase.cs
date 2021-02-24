@@ -90,7 +90,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        private void UpdateFullName()
+        public void UpdateFullName()
         {
             if(string.IsNullOrEmpty(Group))
             {

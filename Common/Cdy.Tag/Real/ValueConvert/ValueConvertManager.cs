@@ -81,11 +81,20 @@ namespace Cdy.Tag
         {
             if(mValueConverts.ContainsKey(name))
             {
-                return mValueConverts[name];
+                return mValueConverts[name].Clone();
             }
             return null;
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Init()
+        {
+            //注册线性转换器
+            ValueConvertManager.manager.Registor(new LinerConvert());
+        }
 
        
 

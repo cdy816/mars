@@ -222,6 +222,8 @@ namespace Cdy.Tag
                 CheckAndAddGroup(tag.Group)?.Tags.Add(tag);
                 MaxId = Math.Max(MaxId, tag.Id);
 
+                tag.UpdateFullName();
+
                 if (!NamedTags.ContainsKey(tag.FullName))
                 {
                     NamedTags.Add(tag.FullName, tag);

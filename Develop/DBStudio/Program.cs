@@ -118,6 +118,7 @@ namespace DBStudio
 
             Program pg = new Program();
             Config.Instance.Load();
+            ValueConvertManager.manager.Init();
 
             ServiceLocator.Locator.Registor(typeof(DBDevelopService.IDatabaseManager), pg);
 

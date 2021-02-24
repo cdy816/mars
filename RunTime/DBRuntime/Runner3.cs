@@ -168,8 +168,9 @@ namespace Cdy.Tag
             ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
 
             //注册线性转换器
-            ValueConvertManager.manager.Registor(new LinerConvert());
+            //ValueConvertManager.manager.Registor(new LinerConvert());
 
+            ValueConvertManager.manager.Init();
             DataFileSeriserManager.manager.Init();
             CPUAssignHelper.Helper.Init();
         }

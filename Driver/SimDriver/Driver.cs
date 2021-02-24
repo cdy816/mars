@@ -7,10 +7,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SimDriver
 {
-    public class Driver : Cdy.Tag.Driver.IProducterDriver
+    public class Driver : IProducterDriver
     {
 
         #region ... Variables  ...
@@ -532,9 +533,98 @@ namespace SimDriver
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public bool Init()
         {
             return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="arg"></param>
+        public void OnRealTagChanged(TagChangedArg arg)
+        {
+            
+            var tags  = arg.AddedTags.Where(e => e.Value.StartsWith("Sim"));
+
+            foreach (var vv in tags)
+            {
+                var vtag = mTagService.GetTagById(vv.Key);
+                if (mTagIdCach.ContainsKey(vv.Value))
+                {
+                    mTagIdCach[vv.Value].Add(vtag);
+                }
+                else
+                {
+                    mTagIdCach.Add(vv.Value, new List<Tagbase>() { vtag });
+                }
+            }
+
+            var cgtags = arg.ChangedTags;
+
+            foreach (var vvt in mTagIdCach)
+            {
+                vvt.Value.RemoveAll((tag) => { return cgtags.ContainsKey(tag.Id); });
+            }
+
+            tags = arg.ChangedTags.Where(e => e.Value.StartsWith("Sim"));
+
+            foreach (var vv in tags)
+            {
+                var vtag = mTagService.GetTagById(vv.Key);
+                if (mTagIdCach.ContainsKey(vv.Value))
+                {
+                    mTagIdCach[vv.Value].Add(vtag);
+                }
+                else
+                {
+                    mTagIdCach.Add(vv.Value, new List<Tagbase>() { vtag });
+                }
+            }
+
+            
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="arg"></param>
+        public void OnHisTagChanged(HisTagChangedArg arg)
+        {
+            if (arg.ChangedTags != null && arg.ChangedTags.Count()>0)
+            {
+                mManualRecordTagCach.Clear();
+                mTagHisValueService = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
+
+                foreach (var vv in mTagIdCach)
+                {
+                    mManualRecordTagCach.Add(vv.Key, mTagHisValueService.GetTagRecordType(vv.Value.Select(e => e.Id).ToList()).Where(e => e.Value == RecordType.Driver).Select(e => e.Key).ToList());
+                }
+            }
+            else
+            {
+                var atags = arg.AddedTags.ToList();
+                var typ = mTagHisValueService.GetTagRecordType(arg.AddedTags.ToList());
+                for (int i = 0; i < atags.Count; i++)
+                {
+                    var tag = mTagService.GetTagById(atags[i]);
+                    if (typ[i] == RecordType.Driver && tag.LinkAddress.StartsWith("Sim"))
+                    {
+                        if (mManualRecordTagCach.ContainsKey(tag.LinkAddress))
+                        {
+                            mManualRecordTagCach[tag.LinkAddress].Add(tag.Id);
+                        }
+                        else
+                        {
+                            mManualRecordTagCach.Add(tag.LinkAddress, new List<int>() { tag.Id });
+                        }
+                    }
+                }
+            }
         }
 
 

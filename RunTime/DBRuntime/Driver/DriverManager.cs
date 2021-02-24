@@ -113,6 +113,34 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addTags"></param>
+        /// <param name="changedTags"></param>
+        public void NotifyRealTagChanged(Dictionary<int,string> addTags,Dictionary<int,string> changedTags)
+        {
+            TagChangedArg tca = new TagChangedArg() { AddedTags = addTags, ChangedTags = changedTags };
+            foreach(var vv in mDrivers)
+            {
+                vv.Value.OnRealTagChanged(tca);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addTags"></param>
+        /// <param name="changedTags"></param>
+        public void NotifyHisTagChanged(IEnumerable<int> addTags, IEnumerable<int> changedTags)
+        {
+            HisTagChangedArg tca = new HisTagChangedArg() { AddedTags = addTags, ChangedTags = changedTags };
+            foreach (var vv in mDrivers)
+            {
+                vv.Value.OnHisTagChanged(tca);
+            }
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

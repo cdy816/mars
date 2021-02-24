@@ -309,6 +309,8 @@ namespace Cdy.Tag
                 {
                     realEnginer.UpdateTags(changedrealtag);
                     realEnginer.AddTags(ltmp);
+
+                    DriverManager.Manager.NotifyRealTagChanged(ltmp.ToDictionary(e => e.Id, e => e.LinkAddress), changedrealtag.ToDictionary(e => e.Id, e => e.LinkAddress));
                 }
             }
 
@@ -343,6 +345,8 @@ namespace Cdy.Tag
                     hisEnginer.AddTags(htmp);
                     hisEnginer.UpdateTags(changedhistag);
                     hisEnginer.Resume();
+
+                    DriverManager.Manager.NotifyHisTagChanged(htmp.Select(e => e.Id), changedhistag.Select(e => e.Id));
                 }
             }
 
@@ -459,6 +463,9 @@ namespace Cdy.Tag
 
             
             NotifyDatabaseChanged(ischanged,hischanged, issecuritychanged);
+
+            DriverManager.Manager.NotifyRealTagChanged(ltmp.ToDictionary(e => e.Id, e => e.LinkAddress), changedrealtag.ToDictionary(e => e.Id, e => e.LinkAddress));
+            DriverManager.Manager.NotifyHisTagChanged(htmp.Select(e => e.Id), changedhistag.Select(e => e.Id));
 
 
             LoggerService.Service.Info("ReStartDatabase", "热启动数据库完成", ConsoleColor.DarkYellow);

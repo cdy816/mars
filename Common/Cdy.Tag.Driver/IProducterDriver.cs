@@ -3,6 +3,35 @@ using System.Collections.Generic;
 
 namespace Cdy.Tag.Driver
 {
+
+    /// <summary>
+    /// 变更
+    /// </summary>
+    public struct TagChangedArg
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public Dictionary<int,string> AddedTags { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Dictionary<int,string> ChangedTags { get; set; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public struct HisTagChangedArg
+    {
+        public IEnumerable<int> AddedTags { get; set; }
+
+        public IEnumerable<int> ChangedTags { get; set; }
+    }
+
+
+
     /// <summary>
     /// 
     /// </summary>
@@ -68,6 +97,18 @@ namespace Cdy.Tag.Driver
         /// <param name="database">数据库名称</param>
         /// <param name="config">配置</param>
         void UpdateConfig(string database, Dictionary<string, string> config);
+
+        /// <summary>
+        /// 变量的实时信息改变
+        /// </summary>
+        /// <param name="arg"></param>
+        void OnRealTagChanged(TagChangedArg arg);
+
+        /// <summary>
+        /// 变量的历史配置信息改变
+        /// </summary>
+        /// <param name="arg"></param>
+        void OnHisTagChanged(HisTagChangedArg arg);
 
         #endregion ...Methods...
 

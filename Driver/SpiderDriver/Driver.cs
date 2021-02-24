@@ -210,5 +210,23 @@ namespace SpiderDriver
             Load();
             return true;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="arg"></param>
+        public void OnRealTagChanged(TagChangedArg arg)
+        {
+           
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="arg"></param>
+        public void OnHisTagChanged(HisTagChangedArg arg)
+        {
+            
+        }
     }
 }

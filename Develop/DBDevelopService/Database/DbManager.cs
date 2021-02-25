@@ -94,9 +94,12 @@ namespace DBDevelopService
         /// <param name="db"></param>
         public void CheckAndContinueLoadDatabase(Database db)
         {
-            if(db.RealDatabase==null)
+            lock (db)
             {
-                new Cdy.Tag.DatabaseSerise() { Dbase = db }.ContinuePartLoad(db.Name);
+                if (db.RealDatabase == null)
+                {
+                    new Cdy.Tag.DatabaseSerise() { Dbase = db }.ContinuePartLoad(db.Name);
+                }
             }
         }
 
@@ -193,7 +196,7 @@ namespace DBDevelopService
         /// 
         /// </summary>
         /// <param name="name"></param>
-        public void NewDB(string name,string desc)
+        public Database NewDB(string name,string desc)
         {
             if (mDatabase.ContainsKey(name))
             {
@@ -203,6 +206,7 @@ namespace DBDevelopService
             {
                 mDatabase.Add(name, new Cdy.Tag.Database() { Name = name,Desc=desc });
             }
+            return mDatabase[name];
         }
 
         /// <summary>

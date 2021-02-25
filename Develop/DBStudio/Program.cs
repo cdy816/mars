@@ -118,9 +118,12 @@ namespace DBStudio
 
             Program pg = new Program();
             Config.Instance.Load();
+            ServiceLocator.Locator.Registor(typeof(DBDevelopService.IDatabaseManager), pg);
+
             ValueConvertManager.manager.Init();
 
-            ServiceLocator.Locator.Registor(typeof(DBDevelopService.IDatabaseManager), pg);
+            if (!DBDevelopService.DbManager.Instance.IsLoaded)
+                DBDevelopService.DbManager.Instance.PartLoad();
 
             int port = Config.Instance.GrpcPort;
             int webPort = Config.Instance.WebApiPort;
@@ -233,8 +236,8 @@ namespace DBStudio
         /// </summary>
         private static void ListDatabase()
         {
-            if (!DBDevelopService.DbManager.Instance.IsLoaded)
-                DBDevelopService.DbManager.Instance.PartLoad();
+            //if (!DBDevelopService.DbManager.Instance.IsLoaded)
+            //    DBDevelopService.DbManager.Instance.PartLoad();
 
             StringBuilder sb = new StringBuilder();
             foreach (var vdd in DBDevelopService.DbManager.Instance.ListDatabase())
@@ -291,17 +294,36 @@ namespace DBStudio
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="prechar"></param>
+        /// <param name="description"></param>
+        /// <param name="waitstring"></param>
+        /// <returns></returns>
+        private static bool WaitForInput(string prechar,string description, string waitstring)
+        {
+            OutByLine(prechar, description);
+            var cmd = Console.ReadLine().Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+            if (cmd.Length > 0 && string.Compare(waitstring,cmd[0],true)==0) return true;
+            else return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="name"></param>
         private static void ProcessDatabaseCreate(string name)
         {
-            if (!DBDevelopService.DbManager.Instance.IsLoaded)
-                DBDevelopService.DbManager.Instance.PartLoad();
-
             Database db = DBDevelopService.DbManager.Instance.GetDatabase(name);
 
             if (db == null)
             {
-                db = Database.New(name);
+                if(WaitForInput("",string.Format(Res.Get("NewDatabase"),name),"y"))
+                {
+                    db = DbManager.Instance.NewDB(name, name);
+                }
+                else
+                {
+                    return;
+                }
             }
             else
             {
@@ -320,7 +342,7 @@ namespace DBStudio
                     if (cmsg == "save")
                     {
                         new DatabaseSerise() { Dbase = db }.Save();
-                        DBDevelopService.DbManager.Instance.AddDatabase(db.Name, db);
+                        //DBDevelopService.DbManager.Instance.AddDatabase(db.Name, db);
                     }
                     else if (cmsg == "add")
                     {
@@ -986,7 +1008,7 @@ namespace DBStudio
         private static void ClearTag(Database database)
         {
             database.RealDatabase.Tags.Clear();
-            database.RealDatabase.MaxId = 0;
+            database.RealDatabase.MaxId = -1;
             database.HisDatabase.HisTags.Clear();
         }
 
@@ -1018,7 +1040,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.DoubleTag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.DoubleTag() { Name = tag, LinkAddress = link,Group="" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.Double, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1036,7 +1058,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.FloatTag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.FloatTag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.Float, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1044,7 +1066,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.FloatTag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.FloatTag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.Float, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1054,7 +1076,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.IntTag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.IntTag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.Int, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1062,7 +1084,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.IntTag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.IntTag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.Int, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1072,7 +1094,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.UIntTag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.UIntTag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.UInt, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1080,7 +1102,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.UIntTag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.UIntTag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.UInt, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1090,7 +1112,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.LongTag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.LongTag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.Long, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1098,7 +1120,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.LongTag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.LongTag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.Long, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1108,7 +1130,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.ULongTag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.ULongTag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.ULong, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1116,7 +1138,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.ULongTag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.ULongTag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.ULong, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1126,7 +1148,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.ShortTag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.ShortTag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.Short, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1134,7 +1156,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.ShortTag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.ShortTag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.Short, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1144,7 +1166,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.UShortTag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.UShortTag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.UShort, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1152,7 +1174,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.UShortTag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.UShortTag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.UShort, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1162,7 +1184,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.BoolTag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.BoolTag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.Bool, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1170,7 +1192,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.BoolTag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.BoolTag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.Bool, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1180,7 +1202,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.StringTag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.StringTag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.String, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1188,7 +1210,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.StringTag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.StringTag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.String, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1198,7 +1220,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.DateTimeTag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.DateTimeTag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.String, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1206,7 +1228,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.DateTimeTag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.DateTimeTag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.String, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1216,7 +1238,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.IntPointTag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.IntPointTag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.IntPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1224,7 +1246,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.IntPointTag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.IntPointTag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.IntPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1234,7 +1256,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.UIntPointTag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.UIntPointTag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.UIntPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1242,7 +1264,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.UIntPointTag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.UIntPointTag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.UIntPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1252,7 +1274,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.IntPoint3Tag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.IntPoint3Tag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.IntPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1260,7 +1282,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.IntPoint3Tag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.IntPoint3Tag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.IntPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1270,7 +1292,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.UIntPoint3Tag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.UIntPoint3Tag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.UIntPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1278,7 +1300,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.UIntPoint3Tag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.UIntPoint3Tag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.UIntPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1288,7 +1310,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.LongPoint3Tag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.LongPoint3Tag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.LongPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1296,7 +1318,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.LongPoint3Tag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.LongPoint3Tag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.LongPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1306,7 +1328,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.LongPointTag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.LongPointTag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.LongPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1314,7 +1336,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.LongPointTag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.LongPointTag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.LongPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1324,7 +1346,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.ULongPoint3Tag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.ULongPoint3Tag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.ULongPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1332,7 +1354,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.ULongPoint3Tag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.ULongPoint3Tag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.ULongPoint3, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }
@@ -1342,7 +1364,7 @@ namespace DBStudio
             {
                 if (repeat == 1)
                 {
-                    var vtag = new Cdy.Tag.ULongPointTag() { Name = tag, LinkAddress = link };
+                    var vtag = new Cdy.Tag.ULongPointTag() { Name = tag, LinkAddress = link, Group = "" };
                     database.RealDatabase.Append(vtag);
                     database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.ULongPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                 }
@@ -1350,7 +1372,7 @@ namespace DBStudio
                 {
                     for (int j = 0; j < repeat; j++)
                     {
-                        var vtag = new Cdy.Tag.ULongPointTag() { Name = tag + j, LinkAddress = link };
+                        var vtag = new Cdy.Tag.ULongPointTag() { Name = tag + j, LinkAddress = link, Group = "" };
                         database.RealDatabase.Append(vtag);
                         database.HisDatabase.AddHisTags(new Cdy.Tag.HisTag() { Id = vtag.Id, TagType = TagType.ULongPoint, Type = RecordType.Timer, Circle = 1000, CompressType = 0 });
                     }

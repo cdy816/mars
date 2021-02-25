@@ -162,6 +162,9 @@
   <data name="ListTagHlp" xml:space="preserve">
     <value>List the summary info of a specical type tags or all tags</value>
   </data>
+  <data name="NewDatabase" xml:space="preserve">
+    <value>Will create database '{0}'? Input 'y' for sure ,anyother char for cancel.</value>
+  </data>
   <data name="QuickGeneraterTagHlp" xml:space="preserve">
     <value>Quickly generate the specified number of tags for test purposes</value>
   </data>

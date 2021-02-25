@@ -162,6 +162,9 @@
   <data name="ListTagHlp" xml:space="preserve">
     <value>列出某种类型的变量或全部变量的概要信息</value>
   </data>
+  <data name="NewDatabase" xml:space="preserve">
+    <value>是否创建数据库 '{0}'?  输入 'y' 创建 ，其他字符串取消。</value>
+  </data>
   <data name="QuickGeneraterTagHlp" xml:space="preserve">
     <value>快速创建一些测试变量</value>
   </data>

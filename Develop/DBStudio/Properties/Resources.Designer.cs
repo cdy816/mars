@@ -196,6 +196,15 @@ namespace DBInStudioServer.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Will create database &apos;{0}&apos;? Input &apos;y&apos; for sure ,anyother char for cancel. 的本地化字符串。
+        /// </summary>
+        internal static string NewDatabase {
+            get {
+                return ResourceManager.GetString("NewDatabase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Quickly generate the specified number of tags for test purposes 的本地化字符串。
         /// </summary>
         internal static string QuickGeneraterTagHlp {

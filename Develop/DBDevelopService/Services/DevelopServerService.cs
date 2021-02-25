@@ -680,17 +680,21 @@ namespace DBDevelopService
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
-            var db = DbManager.Instance.GetDatabase(request.Database);
-            if(db!=null)
-            {
-                return Task.FromResult(new BoolResultReplay() { Result = false,ErroMessage="数据库已经存在!" });
-            }
-            else
-            {
-                DbManager.Instance.NewDB(request.Database,request.Desc);
-                var user = SecurityManager.Manager.GetUser(request.LoginId);
 
-                user.Databases.Add(request.Database);
+            lock (DbManager.Instance)
+            {
+                var db = DbManager.Instance.GetDatabase(request.Database);
+                if (db != null)
+                {
+                    return Task.FromResult(new BoolResultReplay() { Result = false, ErroMessage = "数据库已经存在!" });
+                }
+                else
+                {
+                    DbManager.Instance.NewDB(request.Database, request.Desc);
+                    var user = SecurityManager.Manager.GetUser(request.LoginId);
+
+                    user.Databases.Add(request.Database);
+                }
             }
             return Task.FromResult(new BoolResultReplay() { Result = true });
         }

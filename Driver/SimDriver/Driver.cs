@@ -453,6 +453,7 @@ namespace SimDriver
         private void ScanThreadPro()
         {
             ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+            bool isNeedRepeat = false;
             while (!mIsClosed)
             {
                 DateTime time = DateTime.Now;
@@ -463,7 +464,28 @@ namespace SimDriver
                 }
                 else
                 {
-                    Thread.Sleep(100);
+                    if (isNeedRepeat)
+                    {
+
+                        Thread.Sleep(300);
+
+                        mMaxProcessTimeSpan = 0;
+                        //mSelfProcessTimeSpan = 0;
+
+                        mLastProcessTime = DateTime.Now;
+
+                        mSinEvent.Set();
+                        mCosEvent.Set();
+                        mSquareEvent.Set();
+                        mDatetimeEvent.Set();
+                        mStepEvent.Set();
+                        mSteppointEvent.Set();
+                        isNeedRepeat = false;
+                    }
+                    else
+                    {
+                        Thread.Sleep(100);
+                    }
                     continue;
                 }
 
@@ -495,7 +517,7 @@ namespace SimDriver
                 mDatetimeEvent.Set();
                 mStepEvent.Set();
                 mSteppointEvent.Set();
-
+                isNeedRepeat = true;
                 Thread.Sleep(100);            
             }
         }

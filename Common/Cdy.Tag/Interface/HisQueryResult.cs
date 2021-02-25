@@ -207,42 +207,50 @@ namespace Cdy.Tag
                     mPosition++;
                     break;
                 case 2:
-                    MemoryHelper.WriteShort((void*)handle, mPosition, (short)value);
+                    MemoryHelper.WriteShort((void*)handle, mPosition, Convert.ToInt16(value));
                     mPosition+=2;
                     break;
                 case 3:
-                    MemoryHelper.WriteUShort((void*)handle, mPosition, (ushort)value);
+                    MemoryHelper.WriteUShort((void*)handle, mPosition, Convert.ToUInt16(value));
                     mPosition += 2;
                     break;
                 case 4:
-                    MemoryHelper.WriteInt32((void*)handle, mPosition, (int)value);
+                    MemoryHelper.WriteInt32((void*)handle, mPosition, Convert.ToInt32(value));
                     mPosition += 4;
                     break;
                 case 5:
-                    MemoryHelper.WriteUInt32((void*)handle, mPosition, (uint)value);
+                    MemoryHelper.WriteUInt32((void*)handle, mPosition, Convert.ToUInt32(value));
                     mPosition += 4;
                     break;
                 case 6:
-                    MemoryHelper.WriteInt64((void*)handle, mPosition, (long)value);
+                    MemoryHelper.WriteInt64((void*)handle, mPosition, Convert.ToInt64(value));
                     mPosition += 8;
                     break;
                 case 7:
-                    MemoryHelper.WriteUInt64((void*)handle, mPosition, (ulong)value);
+                    MemoryHelper.WriteUInt64((void*)handle, mPosition, Convert.ToUInt64(value));
                     mPosition += 8;
                     break;
                 case 8:
-                    MemoryHelper.WriteFloat((void*)handle, mPosition, (float)value);
+                    MemoryHelper.WriteFloat((void*)handle, mPosition, Convert.ToSingle(value));
                     mPosition += 4;
                     break;
                 case 9:
-                    MemoryHelper.WriteDouble((void*)handle, mPosition, (double)value);
+                    MemoryHelper.WriteDouble((void*)handle, mPosition,Convert.ToDouble(value));
                     mPosition += 8;
                     break;
                 case 10:
-                    MemoryHelper.WriteDateTime((void*)handle, mPosition, (DateTime)value);
+                    try
+                    {
+                        MemoryHelper.WriteDateTime((void*)handle, mPosition, (DateTime)value);
+                    }
+                    catch
+                    {
+
+                    }
                     mPosition += 8;
                     break;
                 case 11:
+
                     var sdata = Encoding.Unicode.GetBytes((string)value);
                     MemoryHelper.WriteByte((void*)handle, mPosition, (byte)sdata.Length);
                     mPosition++;

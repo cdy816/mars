@@ -400,7 +400,7 @@ namespace DBRuntime.Proxy
             {
                 startaddress = addrs.ElementAt(start).Value;
 
-                if (end > vcount)
+                if (end >= vcount)
                 {
                     end = vcount;
                     endaddress = (mServier as RealEnginer).UsedSize;

@@ -738,77 +738,134 @@ namespace SpiderDriver
             for (int i = 0; i < count; i++)
             {
                 var id = block.ReadInt();
-
                 byte typ = block.ReadByte();
-                object value = null;
+                byte qua;
                 switch (typ)
                 {
                     case (byte)TagType.Bool:
-                        value = block.ReadByte();
+                        var bvalue = block.ReadByte();
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref bvalue, qua);
+
                         break;
                     case (byte)TagType.Byte:
-                        value = block.ReadByte();
+                        var  bbvalue = block.ReadByte();
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref bbvalue, qua);
+
                         break;
                     case (byte)TagType.Short:
-                        value = block.ReadShort();
+                        var svalue = block.ReadShort();
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref svalue, qua);
                         break;
                     case (byte)TagType.UShort:
-                        value = (ushort)block.ReadShort();
+                        var  uvalue = (ushort)block.ReadShort();
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref uvalue, qua);
                         break;
                     case (byte)TagType.Int:
-                        value = block.ReadInt();
+                        var ivalue = block.ReadInt();
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref ivalue, qua);
                         break;
                     case (byte)TagType.UInt:
-                        value = (uint)block.ReadInt();
+                        var uivalue = (uint)block.ReadInt();
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref uivalue, qua);
                         break;
                     case (byte)TagType.Long:
-                        value = block.ReadLong();
+                        var lvalue = block.ReadLong();
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref lvalue, qua);
                         break;
                     case (byte)TagType.ULong:
-                        value = (ulong)block.ReadLong();
+                        var ulvalue = (ulong)block.ReadLong();
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref ulvalue, qua);
                         break;
                     case (byte)TagType.Float:
-                        value = block.ReadFloat();
+                        var fvalue = block.ReadFloat();
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref fvalue, qua);
                         break;
                     case (byte)TagType.Double:
-                        value = block.ReadDouble();
+                        var dvalue = block.ReadDouble();
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref dvalue, qua);
                         break;
                     case (byte)TagType.String:
-                        value = block.ReadString();
+                        var ssvalue = block.ReadString();
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ssvalue, qua);
                         break;
                     case (byte)TagType.DateTime:
                         var tick = block.ReadLong();
-                        value = new DateTime(tick);
+                        var ddvalue = new DateTime(tick);
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref ddvalue, qua);
                         break;
                     case (byte)TagType.IntPoint:
-                        value = new IntPointData(block.ReadInt(), block.ReadInt());
+                        var ipvalue = new IntPointData(block.ReadInt(), block.ReadInt());
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref ipvalue, qua);
                         break;
                     case (byte)TagType.UIntPoint:
-                        value = new UIntPointData(block.ReadInt(), block.ReadInt());
+                        var uipvalue = new UIntPointData(block.ReadInt(), block.ReadInt());
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref uipvalue, qua);
                         break;
                     case (byte)TagType.IntPoint3:
-                        value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        var ip3value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref ip3value, qua);
                         break;
                     case (byte)TagType.UIntPoint3:
-                        value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        var uip3value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref uip3value, qua);
                         break;
                     case (byte)TagType.LongPoint:
-                        value = new LongPointData(block.ReadLong(), block.ReadLong());
+                       var  lpvalue = new LongPointData(block.ReadLong(), block.ReadLong());
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref lpvalue, qua);
                         break;
                     case (byte)TagType.ULongPoint:
-                        value = new ULongPointData(block.ReadLong(), block.ReadLong());
+                       var upvalue = new ULongPointData(block.ReadLong(), block.ReadLong());
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref upvalue, qua);
                         break;
                     case (byte)TagType.LongPoint3:
-                        value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                       var lp3value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref lp3value, qua);
                         break;
                     case (byte)TagType.ULongPoint3:
-                        value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                       var up3value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        qua = block.ReadByte();
+                        if (AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref up3value, qua);
                         break;
                 }
-                var qua = block.ReadByte();
-
-                //if (AllowTagIds.Contains(id))
-                //    service.SetTagValue(id, value,qua);
             }
             service.SubmiteNotifyChanged();
             Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));

@@ -48,5 +48,9 @@
     </None>
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="md &quot;$(SolutionDir)Output\DbWebApi&quot;&#xD;&#xA;xcopy &quot;$(TargetDir)&quot; &quot;$(SolutionDir)Output\DbWebApi&quot; /y /S" />
+  </Target>
+
 
 </Project>

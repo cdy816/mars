@@ -10,4 +10,8 @@
     <ProjectReference Include="..\..\..\Develop\DBDevelopClientWebApi\DBDevelopClientWebApi.csproj" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="md &quot;$(SolutionDir)Output\APIExample&quot;&#xD;&#xA;md &quot;$(SolutionDir)Output\APIExample\DevelopWebApi&quot;&#xD;&#xA;xcopy &quot;$(TargetDir)&quot; &quot;$(SolutionDir)Output\APIExample\DevelopWebApi&quot; /y /S" />
+  </Target>
+
 </Project>

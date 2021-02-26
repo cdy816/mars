@@ -10,4 +10,8 @@
     <ProjectReference Include="..\..\..\Driver\SpiderDriver.ClientApi\SpiderDriver.ClientApi.csproj" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="md &quot;$(SolutionDir)Output\APIExample&quot;&#xD;&#xA;md &quot;$(SolutionDir)Output\APIExample\SpiderDriverDemo&quot;&#xD;&#xA;xcopy &quot;$(TargetDir)&quot; &quot;$(SolutionDir)Output\APIExample\SpiderDriverDemo&quot; /y /S" />
+  </Target>
+
 </Project>

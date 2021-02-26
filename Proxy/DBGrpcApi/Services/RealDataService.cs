@@ -36,7 +36,7 @@ namespace DBGrpcApi
                 var ids = service.GetTagIdByName(request.TagNames.Select(e => string.IsNullOrEmpty(request.Group) ? e : request.Group + "." + e).ToList());
                 for (int i = 0; i < request.TagNames.Count; i++)
                 {
-                    if(ids[i].HasValue)
+                    if(ids.Count > i && ids[i].HasValue)
                     {
                         response.Ids.Add(ids[i].Value);
                     }
@@ -68,13 +68,14 @@ namespace DBGrpcApi
                 var ids = service.GetTagIdByName(request.TagNames.Select(e => string.IsNullOrEmpty(request.Group) ? e : request.Group + "." + e).ToList());
                 for (int i = 0; i < request.TagNames.Count; i++)
                 {
-                    if (ids[i].HasValue)
+                    if (ids.Count>i && ids[i].HasValue)
                     {
                         byte quality;
                         DateTime time;
                         byte tagtype = 0;
                         var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
-                        response.Values.Add(new ValueQualityTime() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype,Time=time.ToBinary()});
+                        if (val != null)
+                            response.Values.Add(new ValueQualityTime() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype,Time=time.ToBinary()});
                     }
                 }
                 return Task.FromResult(response);
@@ -103,6 +104,7 @@ namespace DBGrpcApi
                     DateTime time;
                     byte tagtype = 0;
                     var val = service.GetTagValue(request.Ids[i], out quality, out time, out tagtype);
+                    if(val!=null)
                     response.Values.Add(new ValueQualityTime() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype, Time = time.ToBinary() });
                 }
                 return Task.FromResult(response);
@@ -128,13 +130,14 @@ namespace DBGrpcApi
                 var ids = service.GetTagIdByName(request.TagNames.Select(e => string.IsNullOrEmpty(request.Group) ? e : request.Group + "." + e).ToList());
                 for (int i = 0; i < request.TagNames.Count; i++)
                 {
-                    if (ids[i].HasValue)
+                    if (ids.Count > i && ids[i].HasValue)
                     {
                         byte quality;
                         DateTime time;
                         byte tagtype = 0;
                         var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
-                        response.Values.Add(new ValueAndQuality() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype });
+                        if (val != null)
+                            response.Values.Add(new ValueAndQuality() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype });
                     }
                 }
                 return Task.FromResult(response);
@@ -163,7 +166,8 @@ namespace DBGrpcApi
                     DateTime time;
                     byte tagtype = 0;
                     var val = service.GetTagValue(request.Ids[i], out quality, out time, out tagtype);
-                    response.Values.Add(new ValueAndQuality() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype });
+                    if (val != null)
+                        response.Values.Add(new ValueAndQuality() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype });
                 }
                 return Task.FromResult(response);
             }
@@ -188,12 +192,13 @@ namespace DBGrpcApi
                 var ids = service.GetTagIdByName(request.TagNames.Select(e => string.IsNullOrEmpty(request.Group) ? e : request.Group + "." + e).ToList());
                 for (int i = 0; i < request.TagNames.Count; i++)
                 {
-                    if (ids[i].HasValue)
+                    if (ids.Count>i && ids[i].HasValue)
                     {
                         byte quality;
                         DateTime time;
                         byte tagtype = 0;
                         var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
+                        if(val!=null)
                         response.Values.Add(new ValueOnly() { Id = i, Value = val.ToString(), ValueType = tagtype });
                     }
                 }
@@ -224,7 +229,8 @@ namespace DBGrpcApi
                     DateTime time;
                     byte tagtype = 0;
                     var val = service.GetTagValue(request.Ids[i], out quality, out time, out tagtype);
-                    response.Values.Add(new ValueOnly() { Id = i, Value = val.ToString(), ValueType = tagtype });
+                    if (val != null)
+                        response.Values.Add(new ValueOnly() { Id = i, Value = val.ToString(), ValueType = tagtype });
                 }
                 return Task.FromResult(response);
             }

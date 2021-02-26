@@ -102,6 +102,21 @@ namespace SpiderDriver
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="value2"></param>
+        /// <returns></returns>
+        protected IByteBuffer ToByteBuffer(byte id, byte value, byte value2)
+        {
+            var re = BufferManager.Manager.Allocate(id, 2);
+            re.WriteByte(value);
+            re.WriteByte(value2);
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="data"></param>
         public virtual void ProcessData(string client, IByteBuffer data)
         {

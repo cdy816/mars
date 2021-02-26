@@ -349,6 +349,7 @@ namespace DBRuntime.Proxy
                         mSecurityRunner.Document = new SecuritySerise().LoadByName(mDatabaseName);
                     }
 
+                    RegistorInterface();
                     //sw.Stop();
 
                     LoggerService.Service.Info("DatabaseRunner", "从本地加载数据库完成");
@@ -381,9 +382,11 @@ namespace DBRuntime.Proxy
                         mSecurityRunner.Document = mProxy.LoadSecurity();
                         LoggerService.Service.Info("DatabaseRunner", "从远程加载安全配置完成");
                     }
+
+                    RegistorInterface();
                     //sw.Stop();
 
-                    
+
                 }
             };
 

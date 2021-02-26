@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace SpiderDriver
 {
@@ -26,6 +27,9 @@ namespace SpiderDriver
         private int mEndPort = 3600;
 
         private List<DataService> mService;
+
+        public static HashSet<int> AllowTagIds = new HashSet<int>();
+
 
         private void Load()
         {
@@ -142,7 +146,7 @@ namespace SpiderDriver
             Load();
             mService = new List<DataService>();
 
-            RealDataServerProcess.AllowTagIds = new HashSet<int>(tagQuery.GetTagIdsByLinkAddress(this.Name+":"));
+            AllowTagIds = new HashSet<int>(tagQuery.GetTagIdsByLinkAddress(this.Name+":"));
             
             for (int i = mPort; i <= mEndPort; i++)
             {
@@ -217,7 +221,28 @@ namespace SpiderDriver
         /// <param name="arg"></param>
         public void OnRealTagChanged(TagChangedArg arg)
         {
-           
+            foreach (var vv in arg.AddedTags.Where(e => e.Value.StartsWith(this.Name) && !AllowTagIds.Contains(e.Key)))
+            {
+                AllowTagIds.Add(vv.Key);
+            }
+
+            foreach(var vv in arg.ChangedTags)
+            {
+                if(vv.Value.StartsWith(this.Name))
+                {
+                    if(!AllowTagIds.Contains(vv.Key))
+                    {
+                        AllowTagIds.Add(vv.Key);
+                    }
+                }
+                else
+                {
+                    if(AllowTagIds.Contains(vv.Key))
+                    {
+                        AllowTagIds.Remove(vv.Key);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -226,7 +251,10 @@ namespace SpiderDriver
         /// <param name="arg"></param>
         public void OnHisTagChanged(HisTagChangedArg arg)
         {
-            
+            foreach(var vv in mService)
+            {
+                vv.NotifyDatabaseChangd(false, true);
+            }
         }
     }
 }

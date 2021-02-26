@@ -183,6 +183,15 @@ namespace SpiderDriver
             return null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="isRealChanged"></param>
+        /// <param name="isHisChanged"></param>
+        public void NotifyDatabaseChangd(bool isRealChanged,bool isHisChanged)
+        {
+            this.mInfoProcess.NotifyDatabaseChanged(isRealChanged, isHisChanged);
+        }
 
         /// <summary>
         /// 

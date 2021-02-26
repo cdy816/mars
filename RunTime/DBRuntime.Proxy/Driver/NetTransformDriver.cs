@@ -373,6 +373,7 @@ namespace DBRuntime.Proxy
         /// <returns></returns>
         public bool Start(IRealTagProduct tagQuery)
         {
+            mIsClosed = false;
             mServier = tagQuery;
             resetEvent = new ManualResetEvent(false);
             ServiceLocator.Locator.Resolve<IRealDataNotifyForProducter>().SubscribeValueChangedForProducter("NetTransformDriver", ProcessValueChanged,
@@ -427,14 +428,6 @@ namespace DBRuntime.Proxy
         /// <summary>
         /// 
         /// </summary>
-        public void ReInit()
-        {
-
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="values"></param>
         private void ProcessValueChanged(Dictionary<int, object> values)
         {
@@ -453,8 +446,10 @@ namespace DBRuntime.Proxy
         /// <returns></returns>
         public bool Stop()
         {
+            ServiceLocator.Locator.Resolve<IRealDataNotifyForProducter>().UnSubscribeValueChangedForProducter("NetTransformDriver");
             mIsClosed = true;
             resetEvent.Set();
+            while (mScanThread.IsAlive) Thread.Sleep(1);
             return true;
         }
 

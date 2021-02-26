@@ -32,6 +32,8 @@ namespace SpiderDriver
 
         public const byte Login = 1;
 
+        private List<string> mClients = new List<string>();
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -167,12 +169,38 @@ namespace SpiderDriver
                     string user = data.ReadString();
                     string pass = data.ReadString();
                     long result = Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().Login(user, pass, client);
+
+                    if (result > 0)
+                    {
+                        mClients.Add(client);
+                    }
+
                     Parent.AsyncCallback(client, ToByteBuffer(APIConst.TagInfoRequestFun, result));
+
                     break;
 
             }
 
 
+        }
+
+        /// <summary>
+        /// 通知数据发送变化
+        /// </summary>
+        public void NotifyDatabaseChanged(bool realchanged, bool hischanged)
+        {
+            byte val = 0;
+            if (realchanged) val += 1;
+            if (hischanged) val += 2;
+           
+            if (val > 0)
+            {
+                IByteBuffer data = ToByteBuffer(APIConst.TagInfoRequestFun, APIConst.DatabaseChangedNotify, val);
+                foreach (var vv in mClients)
+                {
+                    Parent.AsyncCallback(vv, data);
+                }
+            }
         }
 
         /// <summary>
@@ -210,6 +238,19 @@ namespace SpiderDriver
                 re.WriteInt(vv.Id);
             }
             return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        public override void OnClientDisconnected(string id)
+        {
+            if (mClients.Contains(id))
+            {
+                mClients.Remove(id);
+            }
+            base.OnClientDisconnected(id);
         }
 
         #endregion ...Methods...

@@ -470,7 +470,7 @@ namespace Cdy.Tag
         /// <param name="mHisDatabase"></param>
         public void AddTags(IEnumerable<Tag.HisTag> tags)
         {
-            UpdatePerProcesserMaxTagCount(mManager.HisTags.Count+tags.Count());
+            UpdatePerProcesserMaxTagCount(this.mHisTags.Count+tags.Count());
 
             IntPtr realHandle = mRealEnginer.MemoryHandle;
             HisRunTag mHisTag = null;
@@ -543,17 +543,40 @@ namespace Cdy.Tag
 
             foreach (var vv in histags)
             {
+                if (vv.Type != RecordType.Driver)
+                {
+                    var ss = CalMergeBlockSize(vv.TagType, blockheadsize, out valueOffset, out qulityOffset);
 
-                var ss = CalMergeBlockSize(vv.TagType, blockheadsize, out valueOffset, out qulityOffset);
+                    mMergeMemory1.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, ss, 2);
+                    mMergeMemory2.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, ss, 2);
 
-                mMergeMemory1.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, ss, 2);
-                mMergeMemory2.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, ss, 2);
+                    var css = CalCachDatablockSize(vv.TagType, blockheadsize, out valueOffset, out qulityOffset);
 
-                var css = CalCachDatablockSize(vv.TagType, blockheadsize, out valueOffset, out qulityOffset);
-                
-                vv.DataMemoryPointer1 = mCachMemory1.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, css, 2);
-                vv.DataMemoryPointer2 = mCachMemory2.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, css, 2);
-                vv.DataSize = css;
+                    vv.DataMemoryPointer1 = mCachMemory1.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, css, 2);
+                    vv.DataMemoryPointer2 = mCachMemory2.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, css, 2);
+                    vv.DataSize = css;
+                    vv.TimerValueStartAddr = 0;
+                    vv.HisValueStartAddr = valueOffset;
+                    vv.HisQulityStartAddr = qulityOffset;
+
+                    if (mCurrentMemory.Id == 1)
+                    {
+                        vv.CurrentMemoryPointer = vv.DataMemoryPointer1;
+                        vv.Reset();
+                    }
+                    else
+                    {
+                        vv.CurrentMemoryPointer = vv.DataMemoryPointer2;
+                        vv.Reset();
+                    }
+
+                }
+                else
+                {
+                    var css = CalCachDatablockSizeForManualRecord(vv.TagType, 0, MergeMemoryTime * vv.MaxValueCountPerSecond + 2, out valueOffset, out qulityOffset);
+                    ManualHisDataMemoryBlockPool.Pool.PreAlloc(css);
+                    ManualHisDataMemoryBlockPool.Pool.PreAlloc(css);
+                }
             }
 
             mLastProcesser = mRecordTimerProcesser.Count > 0 ? mRecordTimerProcesser.Last() : null;

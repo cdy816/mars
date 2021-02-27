@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="md &quot;$(SolutionDir)Output\APIExample&quot;&#xD;&#xA;md &quot;$(SolutionDir)Output\APIExample\HighSpeedApiDemo&quot;&#xD;&#xA;xcopy &quot;$(TargetDir)&quot; &quot;$(SolutionDir)Output\APIExample\HighSpeedApiDemo&quot; /y /S" />
+    <Exec Command="md &quot;$(SolutionDir)Output\APIExample&quot;&#xD;&#xA;md &quot;$(SolutionDir)Output\APIExample\HighSpeedApiDemo&quot;&#xD;&#xA;xcopy &quot;$(TargetDir)*.*&quot; &quot;$(SolutionDir)Output\APIExample\HighSpeedApiDemo&quot; /y /S" />
   </Target>
 
 </Project>

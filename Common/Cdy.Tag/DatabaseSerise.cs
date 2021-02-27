@@ -104,6 +104,22 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="name"></param>
+        /// <param name="database"></param>
+        /// <param name="hiscompareaction"></param>
+        /// <returns></returns>
+        public Database LoadDifference(string name, RealDatabase database,Func<HisTag,bool> hiscompareaction)
+        {
+            var Dbase = LoadDatabaseSelf(PathHelper.helper.GetDataPath(name, name + ".db"));
+            Dbase.Security = new SecuritySerise().LoadByName(name);
+            Dbase.RealDatabase = new RealDatabaseSerise().LoadDifferenceByName(name, database);
+            Dbase.HisDatabase = new HisDatabaseSerise().LoadDifferenceByName(name, hiscompareaction);
+            return Dbase;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
         /// <returns></returns>
         public Database LoadRealDatabase(string name)
         {

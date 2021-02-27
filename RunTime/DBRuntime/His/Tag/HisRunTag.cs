@@ -339,6 +339,34 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="tag"></param>
+        /// <returns></returns>
+        public bool EqualsTo(HisTag tag)
+        {
+            return tag.Id == this.Id && this.Type == tag.Type && this.TagType == tag.TagType && this.CompressType == tag.CompressType && this.Circle == tag.Circle && this.MaxValueCountPerSecond == tag.MaxValueCountPerSecond && Compare(this.Parameters, tag.Parameters);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source1"></param>
+        /// <param name="source2"></param>
+        /// <returns></returns>
+        private bool Compare(Dictionary<string, double> source1, Dictionary<string, double> source2)
+        {
+            if (source1 == null && source2 == null) return true;
+            if ((source1 == null && source2 != null) || (source1 != null && source2 == null)) return false;
+            foreach (var vv in source1)
+            {
+                if (!source2.ContainsKey(vv.Key)) return false;
+                if (source2[vv.Key] != source1[vv.Key]) return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public void Dispose()
         {
             

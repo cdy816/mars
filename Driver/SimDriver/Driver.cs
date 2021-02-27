@@ -633,8 +633,9 @@ namespace SimDriver
                 var typ = mTagHisValueService.GetTagRecordType(arg.AddedTags.ToList());
                 for (int i = 0; i < atags.Count; i++)
                 {
-                    var tag = mTagService.GetTagById(atags[i]);
-                    if (typ[i] == RecordType.Driver && tag.LinkAddress.StartsWith("Sim"))
+                    var tid = atags[i];
+                    var tag = mTagService.GetTagById(tid);
+                    if (typ[tid] == RecordType.Driver && tag.LinkAddress.StartsWith("Sim"))
                     {
                         if (mManualRecordTagCach.ContainsKey(tag.LinkAddress))
                         {

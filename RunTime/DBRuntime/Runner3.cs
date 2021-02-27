@@ -376,7 +376,18 @@ namespace Cdy.Tag
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            var db = new DatabaseSerise().LoadDifference(mDatabaseName,this.Database);
+            var db = new DatabaseSerise().LoadDifference(mDatabaseName,this.Database.RealDatabase,new Func<HisTag, bool>((tag)=> { 
+                
+                if(this.hisEnginer.Tags.ContainsKey(tag.Id))
+                {
+                    return this.hisEnginer.Tags[tag.Id].EqualsTo(tag);
+                }
+                else
+                {
+                    return false;
+                }
+             }));
+
             List<Tagbase> ltmp = new List<Tagbase>();
 
             List<Tagbase> changedrealtag = new List<Tagbase>();

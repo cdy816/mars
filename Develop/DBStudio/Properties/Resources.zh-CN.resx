@@ -178,7 +178,7 @@
     <value>重启数据库 ‘{0}’ 成功.</value>
   </data>
   <data name="ReStartDatabaseHlp" xml:space="preserve">
-    <value>重启当前数据库</value>
+    <value>重启数据库使变动部分生效</value>
   </data>
   <data name="SaveDatabaseHlp" xml:space="preserve">
     <value>保存数据库</value>

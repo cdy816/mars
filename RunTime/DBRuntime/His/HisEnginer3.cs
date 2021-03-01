@@ -268,7 +268,7 @@ namespace Cdy.Tag
         private void UpdatePerProcesserMaxTagCount(int totalTagCount)
         {
             int count = Environment.ProcessorCount / 2;
-            int pcount = totalTagCount / count + count;
+            int pcount = Math.Max(totalTagCount / count + totalTagCount % count,1000);
             TimerMemoryCacheProcesser3.MaxTagCount = ValueChangedMemoryCacheProcesser3.MaxTagCount = pcount;
         }
 
@@ -533,6 +533,9 @@ namespace Cdy.Tag
                 mHisTags.Add(vv.Id, mHisTag);
                 histags.Add(mHisTag);
 
+                mHisTag.MaxValueCountPerSecond = vv.MaxValueCountPerSecond;
+                mHisTag.MaxCount = CachMemoryTime - 1;
+
                 this.mManager.AddOrUpdate(vv);
                  mTagCount++;
             }
@@ -626,7 +629,7 @@ namespace Cdy.Tag
 
             //this.mManager = mHisDatabase;
 
-            foreach (var vv in mRecordTimerProcesser) { if (!vv.IsStarted) vv.Start(); }
+            foreach (var vv in mRecordTimerProcesser) { if (!vv.IsStarted) vv.Start();}
 
             foreach (var vv in mValueChangedProcesser) { if (!vv.IsStarted) vv.Start(); }
 

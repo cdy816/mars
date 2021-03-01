@@ -241,7 +241,7 @@ namespace DBInStudioServer.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Restart current database 的本地化字符串。
+        ///   查找类似 Restart the database to make the change effective 的本地化字符串。
         /// </summary>
         internal static string ReStartDatabaseHlp {
             get {

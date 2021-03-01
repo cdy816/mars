@@ -445,8 +445,7 @@ namespace Cdy.Tag
             seriseEnginer.CheckAndAddSeriseFile(vids);
 
             
-            hisEnginer.Pause();
-
+            //hisEnginer.Pause();
             realEnginer.UpdateTags(changedrealtag);
             realEnginer.AddTags(ltmp);
 
@@ -456,7 +455,7 @@ namespace Cdy.Tag
             if(db.HisDatabase!=null)
             mHisDatabase.Setting = db.HisDatabase.Setting;
             
-            hisEnginer.Resume();
+            //hisEnginer.Resume();
 
             //
             if(!mSecurityRunner.Document.Equals(db.Security))

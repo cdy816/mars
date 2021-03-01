@@ -178,7 +178,7 @@
     <value>Rerun database ‘{0}’ sucessfull.</value>
   </data>
   <data name="ReStartDatabaseHlp" xml:space="preserve">
-    <value>Restart current database</value>
+    <value>Restart the database to make the change effective</value>
   </data>
   <data name="SaveDatabaseHlp" xml:space="preserve">
     <value>Save database</value>

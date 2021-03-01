@@ -91,6 +91,11 @@ namespace Cdy.Tag
 
         public bool IsStarted { get { return mIsStarted; } }
 
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public bool  NeedReInit { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -255,6 +260,17 @@ namespace Cdy.Tag
                 resetEvent.Reset();
                 if (mIsClosed) 
                     break;
+
+                //if(NeedReInit)
+                //{
+                //    NeedReInit = false;
+                //    vkeys = mCount.Keys.ToArray();
+                //    vdd = DateTime.UtcNow;
+                //    foreach (var vv in vkeys)
+                //    {
+                //        mCount[vv] = vdd.AddMilliseconds(vv);
+                //    }
+                //}
 
                 var dnow = DateTime.Now;
 

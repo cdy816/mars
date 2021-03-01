@@ -372,7 +372,8 @@ namespace DBStudio
                             Console.WriteLine(string.Format(Res.Get("databaseinrunningHlp"), db.Name));
                         }
                     }
-                    else if (cmsg == "rerun")
+                    //else if (cmsg == "rerun")
+                    else if (cmsg == "restart")
                     {
                         if (!CheckStart(db.Name))
                         {
@@ -383,12 +384,12 @@ namespace DBStudio
                             ReLoadDatabase(db.Name);
                         }
                     }
-                    else if (cmsg == "restart")
-                    {
-                        StopDatabase(db.Name);
-                        while (CheckStart(db.Name)) Thread.Sleep(100);
-                        StartDb(db.Name);
-                    }
+                    //else if (cmsg == "restart")
+                    //{
+                    //    StopDatabase(db.Name);
+                    //    while (CheckStart(db.Name)) Thread.Sleep(100);
+                    //    StartDb(db.Name);
+                    //}
                     else if (cmsg == "isstarted")
                     {
                         if(CheckStart(db.Name))
@@ -1457,22 +1458,24 @@ namespace DBStudio
                         client.WriteByte(1);
                         client.FlushAsync();
 
+                        var res = 0;
                         if (OperatingSystem.IsWindows())
                         {
                             client.WaitForPipeDrain();
-                        }
-
-                        int count = 0;
-                        var res = client.ReadByte();
-                        while (res == -1)
-                        {
                             res = client.ReadByte();
-                            count++;
-                            if (count > 20) break;
-                            Thread.Sleep(100);
                         }
-
-                        res = client.ReadByte();
+                        else
+                        {
+                            int count = 0;
+                            res = client.ReadByte();
+                            while (res == -1)
+                            {
+                                res = client.ReadByte();
+                                count++;
+                                if (count > 20) break;
+                                Thread.Sleep(100);
+                            }
+                        }
                         if (res == 1)
                         {
                             Console.WriteLine(string.Format(Res.Get("RerundatabaseSucessful"), name));

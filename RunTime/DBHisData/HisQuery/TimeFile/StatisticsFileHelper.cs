@@ -75,7 +75,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         private string GetStatisticsFileName(int id,DateTime time)
         {
-            return Database + (id/ TagCountOneFile).ToString("D3") + time.ToString("yyyyMMdd") + DayStatisticsFileExtends;
+            return Database + (id/ TagCountOneFile).ToString("X3") + time.ToString("yyyyMMdd") + DayStatisticsFileExtends;
         }
 
         /// <summary>

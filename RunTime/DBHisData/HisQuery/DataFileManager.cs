@@ -618,10 +618,17 @@ namespace Cdy.Tag
             int yy=0, mm=0, dd=0;
 
             int id = -1;
-            int.TryParse(sname.Substring(sname.Length - 15, 3), out id);
+            try
+            {
+                id = int.Parse(sname.Substring(sname.Length - 15, 3), System.Globalization.NumberStyles.HexNumber);
 
-            if (id == -1)
+                if (id <0)
+                    return;
+            }
+            catch
+            {
                 return;
+            }
 
             if (!int.TryParse(stime.Substring(0, 4),out yy))
             {

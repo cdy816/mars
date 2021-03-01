@@ -954,7 +954,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         private string GetFileName(DateTime time)
         {
-            return DatabaseName + Id.ToString("D3") + time.ToString("yyyyMMdd") + FileDuration.ToString("D2") + (time.Hour / FileDuration).ToString("D2") + DataFileExtends;
+            return DatabaseName + Id.ToString("X3") + time.ToString("yyyyMMdd") + FileDuration.ToString("D2") + (time.Hour / FileDuration).ToString("D2") + DataFileExtends;
         }
 
 
@@ -965,7 +965,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         private string GetStatisticsFileName(DateTime time)
         {
-            return DatabaseName + Id.ToString("D3") + time.ToString("yyyyMMdd") + DayStatisticsFileExtends;
+            return DatabaseName + Id.ToString("X3") + time.ToString("yyyyMMdd") + DayStatisticsFileExtends;
         }
         
         /// <summary>

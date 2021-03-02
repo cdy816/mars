@@ -91,6 +91,11 @@ namespace Cdy.Tag
 
         public bool IsStarted { get { return mIsStarted; } }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Count { get { return mCurrentCount; } }
+
         ///// <summary>
         ///// 
         ///// </summary>

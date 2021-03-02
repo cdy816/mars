@@ -268,7 +268,7 @@ namespace Cdy.Tag
         private void UpdatePerProcesserMaxTagCount(int totalTagCount)
         {
             int count = Environment.ProcessorCount / 2;
-            int pcount = Math.Max(totalTagCount / count + totalTagCount % count,1000);
+            int pcount = Math.Max(totalTagCount / count + 1,1000);
             TimerMemoryCacheProcesser3.MaxTagCount = ValueChangedMemoryCacheProcesser3.MaxTagCount = pcount;
         }
 
@@ -561,18 +561,6 @@ namespace Cdy.Tag
                     vv.TimerValueStartAddr = 0;
                     vv.HisValueStartAddr = valueOffset;
                     vv.HisQulityStartAddr = qulityOffset;
-
-                    if (mCurrentMemory.Id == 1)
-                    {
-                        vv.CurrentMemoryPointer = vv.DataMemoryPointer1;
-                        vv.Reset();
-                    }
-                    else
-                    {
-                        vv.CurrentMemoryPointer = vv.DataMemoryPointer2;
-                        vv.Reset();
-                    }
-
                 }
                 else
                 {
@@ -587,6 +575,15 @@ namespace Cdy.Tag
 
             foreach (var vv in histags)
             {
+                if (mCurrentMemory.Id == 1)
+                {
+                    vv.CurrentMemoryPointer = vv.DataMemoryPointer1;
+                }
+                else
+                {
+                    vv.CurrentMemoryPointer = vv.DataMemoryPointer2;
+                }
+
                 bool isadd = false;
                 if (vv.Type == Cdy.Tag.RecordType.Timer)
                 {
@@ -635,7 +632,7 @@ namespace Cdy.Tag
 
             //mLogManager.InitHeadData();
 
-            SwitchMemoryCach(mCurrentMemory.Id);
+            //SwitchMemoryCach(mCurrentMemory.Id);
 
         }
 

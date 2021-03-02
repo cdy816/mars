@@ -92,6 +92,11 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        public int Count { get { return mCurrentCount; } }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private DateTime mLastUpdateTime;
 
         private int mLastUpdateSecond = -1;

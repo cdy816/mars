@@ -107,7 +107,7 @@ namespace Cdy.Tag
                     }
                     db.BuildNameMap();
                 }
-
+                if(db.Tags.Count>0)
                 db.MaxId = db.Tags.Keys.Max();
             }
             db.IsDirty = false;
@@ -186,6 +186,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
+                    if(db.Tags.Count>0)
                     db.MaxId = db.Tags.Keys.Max();
                 }
 

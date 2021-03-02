@@ -150,6 +150,7 @@ namespace DBRuntime.His
                 this.WriteInt(pp + 21, size);
                 this.WriteInt(pp + 25, 0);
                 mCount++;
+                Clear(new IntPtr(re), size);
                 return re;
             }
             else
@@ -182,7 +183,7 @@ namespace DBRuntime.His
                 this.WriteByte(pp + 20, timeMemorylen);
                 this.WriteInt(pp + 21, size);
                 this.WriteInt(pp + 25, 0);
-
+                Clear(new IntPtr(re), size);
                 return re;
             }
             return 0;
@@ -381,6 +382,16 @@ namespace DBRuntime.His
                 Marshal.FreeHGlobal(pp);
                 mTagAddress.Remove(id);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="size"></param>
+        public void Clear(IntPtr ptr,int size)
+        {
+            Unsafe.InitBlockUnaligned((void*)ptr, 0, (uint)size);
         }
 
         /// <summary>

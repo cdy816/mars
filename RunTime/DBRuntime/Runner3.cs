@@ -342,10 +342,10 @@ namespace Cdy.Tag
                     compressEnginer.ReSizeTagCompress(vids);
                     seriseEnginer.CheckAndAddSeriseFile(vids);
 
-                    hisEnginer.Pause();
+                    //hisEnginer.Pause();
                     hisEnginer.AddTags(htmp);
                     hisEnginer.UpdateTags(changedhistag);
-                    hisEnginer.Resume();
+                    //hisEnginer.Resume();
 
                     DriverManager.Manager.NotifyHisTagChanged(htmp.Select(e => e.Id), changedhistag.Select(e => e.Id));
                 }

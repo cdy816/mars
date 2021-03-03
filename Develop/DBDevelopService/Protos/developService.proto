@@ -82,7 +82,6 @@ service DevelopServer {
   //添加数据库权限
   rpc NewDatabasePermission(DatabasePermissionRequest) returns (BoolResultReplay);
 
-
   //更新数据库权限
   rpc UpdateDatabasePermission(DatabasePermissionRequest) returns (BoolResultReplay);
 
@@ -188,6 +187,7 @@ service DevelopServer {
    //在运行不中断的情况下加载数据库
    rpc ReRun(DatabasesRequest) returns (BoolResultReplay);
 
+   //
    rpc IsDatabaseRunning(DatabasesRequest) returns (BoolResultReplay);
 
    //
@@ -208,6 +208,32 @@ service DevelopServer {
    //更新历史数据存放路径
    rpc UpdateDatabaseHisSetting(UpdateDatabaseHisSettingRequest) returns (BoolResultReplay);
 
+   //重置变量ID
+   rpc ResetTagId(ResetTagIdRequest) returns (ResetTagIdReplay);
+
+}
+
+//重置变量ID
+message ResetTagIdRequest
+{
+    string LoginId=1;
+    string Database=2;
+    int32 StartId=3;
+    repeated int32 TagIds=4;
+}
+
+//重置变量返回
+message ResetTagIdReplay
+{
+    bool Result =1;
+    string ErroMessage=2;
+    repeated IntKeyValueMessage TagIds=3;
+}
+
+message IntKeyValueMessage
+{
+    int32 key=1;
+    int32 value=2;
 }
 
 //

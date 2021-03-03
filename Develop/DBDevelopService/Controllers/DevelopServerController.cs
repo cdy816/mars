@@ -1390,6 +1390,57 @@ namespace DBDevelopService.Controllers
             return new ResultResponse() { Result = true };
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object ResetTagId([FromBody] WebApiResetTagIdsRequest request)
+        {
+            if (!IsAdmin(request.Id))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                Dictionary<int, int> res = new Dictionary<int, int>();
+                foreach (var vv in request.TagIds.OrderBy(e => e))
+                {
+                    bool ishase = false;
+
+                    int endindex = vv < request.StartId ? int.MaxValue : vv;
+
+                    for (int i = request.StartId; i < endindex; i++)
+                    {
+                        if (!db.RealDatabase.Tags.ContainsKey(i))
+                        {
+                            ishase = true;
+                            var rtag = db.RealDatabase.Tags[vv];
+                            db.RealDatabase.Tags.Remove(vv);
+
+                            rtag.Id = i;
+                            db.RealDatabase.Tags.Add(i, rtag);
+
+                            if (db.HisDatabase.HisTags.ContainsKey(vv))
+                            {
+                                var htag = db.HisDatabase.HisTags[vv];
+                                htag.Id = i;
+                                db.HisDatabase.HisTags.Add(i, htag);
+                            }
+                            res.Add(vv, i);
+                            break;
+                        }
+                    }
+                    if (!ishase)
+                        res.Add(vv, vv);
+                }
+                return new ResultResponse() { Result = res.Select(e=>new IntKeyValue() { Key = e.Key, Value = e.Value }).ToList() };
+            }
+            return new ResultResponse() { ErroMsg = "数据库不存在", HasErro = true };
+        }
+
         #endregion
     }
 }

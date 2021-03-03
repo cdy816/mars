@@ -54,6 +54,20 @@ namespace DBDevelopClientWebApi
         public string Id { get; set; }
     }
 
+    public class WebApiResetTagIdsRequest : WebApiDatabaseRequest
+    {
+
+        public int StartId { get; set; }
+        public List<int> TagIds { get; set; }
+    }
+
+    public class IntKeyValue
+    {
+        public int Key { get; set; }
+
+        public int Value { get; set; }
+    }
+
     /// <summary>
     /// 
     /// </summary>

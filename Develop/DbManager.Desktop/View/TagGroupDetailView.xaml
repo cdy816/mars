@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DBInStudio.Desktop"
              mc:Ignorable="d"  Foreground="{DynamicResource Window.Forground}"
-             d:DesignHeight="450" d:DesignWidth="1024" Name="tgd" Background="#7F000000">
+             d:DesignHeight="450" d:DesignWidth="1024" x:Name="tgd" Background="#7F000000">
     <UserControl.Resources>
         <local:IndexConverter x:Key="ic" />
         <BooleanToVisibilityConverter x:Key="btv" />
@@ -16,13 +16,19 @@
         <ContextMenu x:Key="ctxmenu">
             <MenuItem Header="{local:ResMarker Add}" Command="{Binding AddCommand}" />
             <MenuItem Header="{local:ResMarker Remove}" Command="{Binding RemoveCommand}" />
-            <MenuItem Header="{local:ResMarker Import}" Command="{Binding ImportCommand}" />
-            <MenuItem Header="{local:ResMarker Export}" Command="{Binding ExportCommand}" />
             <MenuItem Header="{local:ResMarker Copy}" Command="{Binding CopyCommand}" />
             <MenuItem Header="{local:ResMarker Paste}" Command="{Binding PasteCommand}" />
             <MenuItem Header="{local:ResMarker PropertyCopy}" Command="{Binding CellCopyCommand}" />
             <MenuItem Header="{local:ResMarker PropertyPaste}" Command="{Binding CellPasteCommand}" />
+            <Separator/>
+            <MenuItem Header="{local:ResMarker Import}" Command="{Binding ImportCommand}" />
+            <MenuItem Header="{local:ResMarker Export}" Command="{Binding ExportCommand}" />
+            <Separator/>
+            <MenuItem Header="{local:ResMarker FindAvaiableId}" Command="{Binding FindAvaiableIdCommand}" ToolTip="{local:ResMarker FindAvaiableIdTooltip}" />
+            
         </ContextMenu>
+
+        
     </UserControl.Resources>
     <Grid Background="Transparent">
         
@@ -116,20 +122,16 @@
 
             <DataGrid.Columns>
 
-                <!--<DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="30" Header="{local:ResMarker Id}" >
+                <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="40"  >
+                    <DataGridTemplateColumn.Header>
+                        <TextBlock Text="ID" Margin="12,0,0,0" HorizontalAlignment="Center" TextAlignment="Center" VerticalAlignment="Center" />
+                    </DataGridTemplateColumn.Header>
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Foreground="{DynamicResource Window.Forground}" HorizontalAlignment="Center" VerticalAlignment="Center" >
-                                <TextBlock.Text>
-                                    <MultiBinding Converter="{StaticResource ic}">
-                                        <Binding />
-                                        <Binding Path="DataContext.SelectGroupTags" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type DataGrid}}" />
-                                    </MultiBinding>
-                                </TextBlock.Text>
-                            </TextBlock>
+                            <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" Foreground="{DynamicResource Window.Forground}" Text="{Binding Id}" VerticalAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>-->
+                </DataGridTemplateColumn>
 
                 <DataGridTemplateColumn Header="{local:ResMarker Name}" Width="100" >
                     <DataGridTemplateColumn.CellTemplate>

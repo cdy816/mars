@@ -46,6 +46,8 @@ namespace DBInStudio.Desktop.ViewModel
         private ICommand mPasteCommand;
         private ICommand mCellPasteCommand;
 
+        private ICommand mFindAvaiableIdCommand;
+
         private TagViewModel mCurrentSelectTag;
 
         private int mTotalPageNumber = 0;
@@ -633,6 +635,28 @@ namespace DBInStudio.Desktop.ViewModel
         /// <summary>
         /// 
         /// </summary>
+        public ICommand FindAvaiableIdCommand
+        {
+            get
+            {
+                if(mFindAvaiableIdCommand==null)
+                {
+                    mFindAvaiableIdCommand = new RelayCommand(() => {
+                        IdResetViewModel model = new IdResetViewModel();
+                        if(model.ShowDialog().Value)
+                        {
+                            DoResetTagId(model.StartId);
+                        }
+                    });
+                }
+                return mFindAvaiableIdCommand;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         public TagViewModel CurrentSelectTag
         {
             get
@@ -748,10 +772,6 @@ namespace DBInStudio.Desktop.ViewModel
         /// </summary>
         public string[] RegistorList { get; set; }
 
-        #endregion ...Properties...
-
-        #region ... Methods    ...
-
         /// <summary>
         /// 
         /// </summary>
@@ -761,6 +781,42 @@ namespace DBInStudio.Desktop.ViewModel
         /// 
         /// </summary>
         public DataGrid grid { get; set; }
+
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="startId"></param>
+        private void DoResetTagId(int startId)
+        {
+            if (CurrentSelectTag != null)
+            {
+                var res = DevelopServiceHelper.Helper.ResetTagIds(GroupModel.Database, new List<int>() { CurrentSelectTag.Id }, startId);
+               if (res!=null && res.Count>0)
+                {
+                    CurrentSelectTag.Id = res.First().Value;
+                }
+            }
+            else
+            {
+                var tags = SelectedCells.Select(e => (e.Item as TagViewModel).Id).ToList();
+                var res = DevelopServiceHelper.Helper.ResetTagIds(GroupModel.Database, new List<int>() { CurrentSelectTag.Id }, startId);
+                if (res != null && res.Count > 0)
+                {
+                    foreach (var vv in SelectedCells.Select(e => e.Item).Distinct().ToArray())
+                    {
+                        var vvt = vv as TagViewModel;
+                        if(res.ContainsKey(vvt.Id))
+                        {
+                            vvt.Id = res[vvt.Id];
+                        }
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// 

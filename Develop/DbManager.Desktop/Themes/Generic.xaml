@@ -72,6 +72,11 @@
         <view:DatabaseSettingView />
     </DataTemplate>
 
+
+    <DataTemplate DataType="{x:Type viewmodel:IdResetViewModel}">
+        <view:IdResetView />
+    </DataTemplate>
+
     <BooleanToVisibilityConverter x:Key="bvc" />
     
     

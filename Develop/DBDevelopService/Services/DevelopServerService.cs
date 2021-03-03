@@ -2176,5 +2176,60 @@ namespace DBDevelopService
             return Task.FromResult(new BoolResultReplay() { Result = false });
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<ResetTagIdReplay> ResetTagId(ResetTagIdRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, request.Database))
+            {
+                return Task.FromResult(new ResetTagIdReplay() { Result = false });
+            }
+
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                Dictionary<int, int> res = new Dictionary<int, int>();
+                ResetTagIdReplay rep = new ResetTagIdReplay() { Result = true };
+                foreach(var vv in request.TagIds.OrderBy(e=>e))
+                {
+                    bool ishase = false;
+
+                    int endindex = vv < request.StartId ? int.MaxValue : vv;
+
+                    for(int i=request.StartId;i< endindex; i++)
+                    {
+                        if(!db.RealDatabase.Tags.ContainsKey(i))
+                        {
+                            ishase = true;
+                            var rtag = db.RealDatabase.Tags[vv];
+                            db.RealDatabase.Tags.Remove(vv);
+
+                            rtag.Id = i;
+                            db.RealDatabase.Tags.Add(i, rtag);
+
+                            if(db.HisDatabase.HisTags.ContainsKey(vv))
+                            {
+                                var htag = db.HisDatabase.HisTags[vv];
+                                htag.Id = i;
+                                db.HisDatabase.HisTags.Add(i, htag);
+                            }
+                            res.Add(vv, i);
+                            break;
+                        }
+                    }
+                    if(!ishase)
+                    res.Add(vv, vv);
+                }
+
+                rep.TagIds.AddRange(res.Select(e => new IntKeyValueMessage() { Key = e.Key, Value = e.Value }));
+                return Task.FromResult(rep);
+            }
+            return Task.FromResult(new ResetTagIdReplay() { Result = false });
+        }
+
     }
 }

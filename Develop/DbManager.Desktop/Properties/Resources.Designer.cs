@@ -286,6 +286,24 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Reset id 的本地化字符串。
+        /// </summary>
+        internal static string FindAvaiableId {
+            get {
+                return ResourceManager.GetString("FindAvaiableId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Find the smallest unused ID and set it to the tag.The ID is used as the record identifier of historical records. Resetting the ID may cause confusion of historical data. 的本地化字符串。
+        /// </summary>
+        internal static string FindAvaiableIdTooltip {
+            get {
+                return ResourceManager.GetString("FindAvaiableIdTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Conversion formula 的本地化字符串。
         /// </summary>
         internal static string funTitle {
@@ -327,6 +345,24 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Id {
             get {
                 return ResourceManager.GetString("Id", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Start search ID 的本地化字符串。
+        /// </summary>
+        internal static string IDResetStartId {
+            get {
+                return ResourceManager.GetString("IDResetStartId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Warning: The ID is used as the record identifier of historical records. Resetting the ID may cause confusion of historical data. 的本地化字符串。
+        /// </summary>
+        internal static string IDResetWarnning {
+            get {
+                return ResourceManager.GetString("IDResetWarnning", resourceCulture);
             }
         }
         

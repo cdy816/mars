@@ -1482,6 +1482,32 @@ namespace DBDevelopClientApi
             return null;
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagids"></param>
+        /// <returns></returns>
+        public Dictionary<int,int> ResetTagIds(string database,List<int> tagids,int startId)
+        {
+            Dictionary<int, int> re = new Dictionary<int, int>();
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                var qq = new DBDevelopService.ResetTagIdRequest() { Database = database, LoginId = mLoginId, StartId = startId };
+                qq.TagIds.AddRange(tagids);
+                var res = mCurrentClient.ResetTagId(qq);
+                var sval = res.TagIds;
+                if (sval.Count>0)
+                {
+                    foreach(var vv in sval)
+                    {
+                        re.Add(vv.Key, vv.Value);
+                    }
+                }
+            }
+            return re;
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

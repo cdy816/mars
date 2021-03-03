@@ -1,0 +1,24 @@
+﻿<UserControl x:Class="DBInStudio.Desktop.View.IdResetView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:DBInStudio.Desktop"
+             Name="cfg" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}"
+             mc:Ignorable="d" 
+             d:DesignHeight="140" d:DesignWidth="540">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="64"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="87*"/>
+        </Grid.ColumnDefinitions>
+        <Label Foreground="{Binding Foreground,ElementName=cfg}" Content="{local:ResMarker IDResetStartId,:}" HorizontalAlignment="Left" Margin="10,0,10,0" VerticalAlignment="Center"/>
+        <TextBlock Grid.Column="1" Margin="10,10,10,10" Foreground="Red" Text="{local:ResMarker IDResetWarnning}" TextWrapping="Wrap" Grid.Row="1"/>
+        <TextBox Grid.Column="1"  CaretBrush="White" Background="#1FFFFFFF"  Foreground="{Binding Foreground,ElementName=cfg}" HorizontalAlignment="Left" Height="28" VerticalContentAlignment="Center" Margin="10,0,0,0" Text="{Binding StartId,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" TextWrapping="Wrap" VerticalAlignment="Center" Width="400"/>
+
+    </Grid>
+</UserControl>

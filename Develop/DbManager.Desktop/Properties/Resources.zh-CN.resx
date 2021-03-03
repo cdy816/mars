@@ -193,6 +193,12 @@
   <data name="Export" xml:space="preserve">
     <value>导出</value>
   </data>
+  <data name="FindAvaiableId" xml:space="preserve">
+    <value>重置Id</value>
+  </data>
+  <data name="FindAvaiableIdTooltip" xml:space="preserve">
+    <value>找到一个最小的未被使用的ID，并将该Id设置给变量。历史记录是以ID做为记录标识，重置ID可能会引起历史数据混乱。</value>
+  </data>
   <data name="funTitle" xml:space="preserve">
     <value>转换公式</value>
   </data>
@@ -207,6 +213,12 @@
   </data>
   <data name="Id" xml:space="preserve">
     <value>编号</value>
+  </data>
+  <data name="IDResetStartId" xml:space="preserve">
+    <value>开始搜索的ID</value>
+  </data>
+  <data name="IDResetWarnning" xml:space="preserve">
+    <value>注意: 历史记录是以ID做为记录标识，重置ID可能会引起历史数据混乱。</value>
   </data>
   <data name="Import" xml:space="preserve">
     <value>导入</value>

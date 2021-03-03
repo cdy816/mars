@@ -20,6 +20,24 @@ namespace DBDevelopService.Controllers
         public string Database { get; set; }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    public class WebApiResetTagIdsRequest : WebApiDatabaseRequest
+    {
+
+        public int StartId { get; set; }
+        public List<int> TagIds { get; set; }
+    }
+
+
+    public class IntKeyValue
+    {
+        public int Key { get; set; }
+
+        public int Value { get; set; }
+    }
+
 
     public class WebApiHisSettingUpdateRequest : WebApiDatabaseRequest
     {
@@ -204,8 +222,5 @@ namespace DBDevelopService.Controllers
     {
         public int TotalPages { get; set; }
     }
-
-
-
 
 }

@@ -173,6 +173,26 @@ namespace DBInStudio.Desktop
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        public int Id
+        {
+            get
+            {
+                return mRealTagMode != null ? mRealTagMode.Id : -1;
+            }
+            set
+            {
+                if(mRealTagMode!=null)
+                mRealTagMode.Id = value;
+                if (mHisTagMode != null)
+                    mHisTagMode.Id = value;
+                OnPropertyChanged("Id");
+            }
+        }
+
+
+        /// <summary>
         /// 名字
         /// </summary>
         public string Name

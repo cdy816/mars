@@ -1648,6 +1648,41 @@ namespace DBDevelopClientWebApi
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="tagids"></param>
+        /// <param name="startId"></param>
+        /// <returns></returns>
+        public Dictionary<int, int> ResetTagIds(string database, List<int> tagids,int startId)
+        {
+            if (string.IsNullOrEmpty(mLoginId))
+            {
+                LastErroMessage = "未登录";
+                return null;
+            }
+            Dictionary<int, int> re = new Dictionary<int, int>();
+            WebApiResetTagIdsRequest login = new WebApiResetTagIdsRequest() { Database = database, TagIds = tagids, StartId = startId,Id=mLoginId };
+
+            string sval = Post("ResetTagId", JsonConvert.SerializeObject(login));
+            var result = JsonConvert.DeserializeObject<ResultResponse<List<IntKeyValue>>>(sval);
+
+            if(result.HasErro)
+            {
+                LastErroMessage = result.ErroMsg;
+                return null;
+            }
+            else
+            {
+                foreach(var vv in result.Result)
+                {
+                    re.Add(vv.Key, vv.Value);
+                }
+            }
+            return re;
+        }
+
         #endregion
 
         #endregion ...Methods...

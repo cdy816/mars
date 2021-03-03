@@ -193,6 +193,12 @@
   <data name="Export" xml:space="preserve">
     <value>Export</value>
   </data>
+  <data name="FindAvaiableId" xml:space="preserve">
+    <value>Reset id</value>
+  </data>
+  <data name="FindAvaiableIdTooltip" xml:space="preserve">
+    <value>Find the smallest unused ID and set it to the tag.The ID is used as the record identifier of historical records. Resetting the ID may cause confusion of historical data.</value>
+  </data>
   <data name="funTitle" xml:space="preserve">
     <value>Conversion formula</value>
   </data>
@@ -207,6 +213,12 @@
   </data>
   <data name="Id" xml:space="preserve">
     <value>Id</value>
+  </data>
+  <data name="IDResetStartId" xml:space="preserve">
+    <value>Start search ID</value>
+  </data>
+  <data name="IDResetWarnning" xml:space="preserve">
+    <value>Warning: The ID is used as the record identifier of historical records. Resetting the ID may cause confusion of historical data.</value>
   </data>
   <data name="Import" xml:space="preserve">
     <value>Import</value>

@@ -2214,6 +2214,7 @@ namespace DBDevelopService
                             if(db.HisDatabase.HisTags.ContainsKey(vv))
                             {
                                 var htag = db.HisDatabase.HisTags[vv];
+                                db.HisDatabase.HisTags.Remove(vv);
                                 htag.Id = i;
                                 db.HisDatabase.HisTags.Add(i, htag);
                             }

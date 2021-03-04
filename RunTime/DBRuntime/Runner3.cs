@@ -403,7 +403,7 @@ namespace Cdy.Tag
                     var tag = mRealDatabase.Tags[vv.Key];
                     if (tag.Type == vv.Value.Type)
                     {
-                        changedrealtag.Add(tag);
+                        changedrealtag.Add(vv.Value);
                         ischanged = true;
                     }
                 }
@@ -422,7 +422,7 @@ namespace Cdy.Tag
                     var tag = this.hisEnginer.Tags[vv.Key];
                     if (tag.TagType == vv.Value.TagType)
                     {
-                        changedhistag.Add(tag);
+                        changedhistag.Add(vv.Value);
                         hischanged = true;
                     }
                 }

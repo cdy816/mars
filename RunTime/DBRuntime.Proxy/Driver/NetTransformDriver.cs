@@ -155,26 +155,31 @@ namespace DBRuntime.Proxy
         private void ProcessBlockBufferData(IByteBuffer block)
         {
             var realenginer = (ServiceLocator.Locator.Resolve<IRealTagConsumer>() as RealEnginer);
+
+            if (realenginer == null || realenginer.Memory == null) return;
+
             var start = block.ReadInt();
             var size = block.ReadInt();
             //LoggerService.Service.Info("ProcessBlockBufferData", "block start" +start +", size:"+size);
 
-            if (start + size < realenginer.Memory.Length)
+            try
             {
-                try
+                if (realenginer.Memory!=null &&(start + size < realenginer.Memory.Length))
                 {
                     Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, realenginer.Memory, start, size);
                 }
-                catch
+                else
                 {
-
+                    //内存数据不匹配，需要重新加载数据库
+                    //ReloadDatabaseAction?.BeginInvoke(true,true,true,null,null);
                 }
+               
             }
-            else
+            catch
             {
-                //内存数据不匹配，需要重新加载数据库
-                //ReloadDatabaseAction?.BeginInvoke(true,true,true,null,null);
+
             }
+           
 
             block.SetReaderIndex(block.ReaderIndex + size);
             block.ReleaseBuffer();
@@ -202,7 +207,7 @@ namespace DBRuntime.Proxy
                 if (mTagManager != null)
                 {
                     var tag = mTagManager.GetTagById(vid);
-                    if (tag != null)
+                    if (tag != null && realenginer.Memory!=null)
                     {
                         try
                         {

@@ -3972,6 +3972,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool SetPointValue<T>(int id, byte quality, DateTime time, params T[] values)
         {
+            if (mConfigDatabase == null) return false;
             if (mIdAndAddr.ContainsKey(id) && mConfigDatabase.Tags.ContainsKey(id))
             {
                 SetPointValue(mConfigDatabase.Tags[id], quality, time, values);
@@ -4200,9 +4201,11 @@ namespace Cdy.Tag
             try
             {
                 Take();
-                var tag = mConfigDatabase.Tags[id];
-
-                SetTagValue(tag,value);
+                if (mConfigDatabase != null)
+                {
+                    var tag = mConfigDatabase.Tags[id];
+                    SetTagValue(tag, value);
+                }
             }
             catch
             {
@@ -4225,9 +4228,12 @@ namespace Cdy.Tag
             try
             {
                 Take();
-                var tag = mConfigDatabase.Tags[id];
+                if (mConfigDatabase != null)
+                {
+                    var tag = mConfigDatabase.Tags[id];
 
-                SetTagValue(tag,ref value,  time,  quality);
+                    SetTagValue(tag, ref value, time, quality);
+                }
             }
             catch
             {
@@ -5245,7 +5251,7 @@ namespace Cdy.Tag
         public object GetTagValue(int id)
         {
             Take();
-            var tag = mConfigDatabase.GetTagById(id);
+            var tag = mConfigDatabase?.GetTagById(id);
             object re = null;
             if (tag == null) return re;
 
@@ -5303,7 +5309,7 @@ namespace Cdy.Tag
         public object GetTagValue(int id, out byte quality, out DateTime time, out byte valueType)
         {
             Take();
-            var tag = mConfigDatabase.GetTagById(id);
+            var tag = mConfigDatabase?.GetTagById(id);
             if (tag == null)
             {
                 time = DateTime.UtcNow;
@@ -5327,7 +5333,7 @@ namespace Cdy.Tag
         public object GetTagValue(string name, out byte quality, out DateTime time, out byte valueType)
         {
             Take();
-            var tag = mConfigDatabase.GetTagByName(name);
+            var tag = mConfigDatabase?.GetTagByName(name);
             if (tag != null)
             {
                 valueType = (byte)tag.Type;
@@ -5351,7 +5357,9 @@ namespace Cdy.Tag
             try
             {
                 Take();
-                var tag = mConfigDatabase.Tags[id];
+                var tag = mConfigDatabase?.Tags[id];
+                if (tag == null) return false;
+
                 DateTime time = DateTime.UtcNow;
                 switch (tag.Type)
                 {
@@ -5438,7 +5446,7 @@ namespace Cdy.Tag
             {
                 return SetTagValueForConsumer(tag.Value, value);
             }
-            return true;
+            return false;
         }
 
 

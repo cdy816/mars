@@ -53,6 +53,13 @@ namespace SimDriver
         private ManualResetEvent mSquareEvent;
         private ManualResetEvent mDatetimeEvent;
 
+        private bool mCosNeedReload = false;
+        private bool mSinNeedReload = false;
+        private bool mStepNeedReload = false;
+        private bool mStepPointNeedReload = false;
+        private bool mSquareNeedReload = false;
+        private bool mDatetimeReload = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -206,6 +213,14 @@ namespace SimDriver
             {
                 mCosEvent.WaitOne();
                 mCosEvent.Reset();
+
+                if(mCosNeedReload)
+                {
+                    vv = mTagIdCach.ContainsKey("Sim:cos") ? mTagIdCach["Sim:cos"] : null;
+                    vvr = mManualRecordTagCach.ContainsKey("Sim:cos") ? mManualRecordTagCach["Sim:cos"] : null;
+                    mCosNeedReload = false;
+                }
+
                 //mCosStopwatch.Restart();
                 //long ll = 0;
                 double fval = Math.Cos(mNumber / 180.0 * Math.PI);
@@ -256,6 +271,14 @@ namespace SimDriver
             {
                 mSinEvent.WaitOne();
                 mSinEvent.Reset();
+
+                if(mSinNeedReload)
+                {
+                    vv = mTagIdCach.ContainsKey("Sim:sin") ? mTagIdCach["Sim:sin"] : null;
+                    vvr = mManualRecordTagCach.ContainsKey("Sim:sin") ? mManualRecordTagCach["Sim:sin"] : null;
+                    mSinNeedReload = false;
+                }
+
                 //mSinStopwatch.Restart();
                 double fval = Math.Sin(mNumber / 180.0 * Math.PI);
                 if (vv != null)
@@ -300,6 +323,14 @@ namespace SimDriver
             {
                 mStepEvent.WaitOne();
                 mStepEvent.Reset();
+
+                if(mStepNeedReload)
+                {
+                    vv = mTagIdCach.ContainsKey("Sim:step") ? mTagIdCach["Sim:step"] : null;
+                    vvr = mManualRecordTagCach.ContainsKey("Sim:step") ? mManualRecordTagCach["Sim:step"] : null;
+                    mStepNeedReload = false;
+                }
+
                 //mStepStopwatch.Restart();
                 if (vv != null)
                 {
@@ -342,6 +373,14 @@ namespace SimDriver
             {
                 mSteppointEvent.WaitOne();
                 mSteppointEvent.Reset();
+
+                if(mStepPointNeedReload)
+                {
+                    vv = mTagIdCach.ContainsKey("Sim:steppoint") ? mTagIdCach["Sim:steppoint"] : null;
+                    vvr = mManualRecordTagCach.ContainsKey("Sim:steppoint") ? mManualRecordTagCach["Sim:steppoint"] : null;
+                    mStepPointNeedReload = false;
+                }
+
                 var vpp = new IntPoint3Data(mNumber, mNumber, mNumber);
                 if (vv != null)
                 {
@@ -383,6 +422,14 @@ namespace SimDriver
             {
                 mSquareEvent.WaitOne();
                 mSquareEvent.Reset();
+
+                if(mSquareNeedReload)
+                {
+                    vv = mTagIdCach.ContainsKey("Sim:square") ? mTagIdCach["Sim:square"] : null;
+                    vvr = mManualRecordTagCach.ContainsKey("Sim:square") ? mManualRecordTagCach["Sim:square"] : null;
+                    mSquareNeedReload = false;
+                }
+
                 if (vv != null)
                 {
                     mTagService.SetTagValue(vv,ref mBoolNumber, 0);
@@ -420,6 +467,14 @@ namespace SimDriver
             {
                 mDatetimeEvent.WaitOne();
                 mDatetimeEvent.Reset();
+
+                if (mDatetimeReload)
+                {
+                    vv = mTagIdCach.ContainsKey("Sim:datetime") ? mTagIdCach["Sim:datetime"] : null;
+                    vvr = mManualRecordTagCach.ContainsKey("Sim:datetime") ? mManualRecordTagCach["Sim:datetime"] : null;
+                    mDatetimeReload = false;
+                }
+
                 if (vv != null)
                 {
                     DateTime dnow = DateTime.Now;
@@ -608,7 +663,12 @@ namespace SimDriver
                 }
             }
 
-            
+            mCosNeedReload = true;
+            mSinNeedReload = true;
+            mStepPointNeedReload = true;
+            mStepNeedReload = true;
+            mSquareNeedReload = true;
+            mDatetimeReload = true;
         }
 
         /// <summary>

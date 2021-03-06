@@ -347,6 +347,9 @@
   <data name="Remove" xml:space="preserve">
     <value>Remove</value>
   </data>
+  <data name="RemoveConfirmMsg" xml:space="preserve">
+    <value>Are you sure to remove {0}?</value>
+  </data>
   <data name="ReName" xml:space="preserve">
     <value>Rename</value>
   </data>

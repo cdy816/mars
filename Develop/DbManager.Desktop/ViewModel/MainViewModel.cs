@@ -985,7 +985,7 @@ namespace DBInStudio.Desktop
                 foreach(var vvv in vv.Where(e=>string.IsNullOrEmpty(e.Value)))
                 {
                     Application.Current?.Dispatcher.Invoke(() => {
-                        TagGroupViewModel groupViewModel = new TagGroupViewModel() { mName = vvv.Key,Database=mDatabase };
+                        TagGroupViewModel groupViewModel = new TagGroupViewModel() { mName = vvv.Key,Database=mDatabase,Parent = mRootTagGroupModel };
                         mRootTagGroupModel.Children.Add(groupViewModel);
                         groupViewModel.InitData(vv);
                     });

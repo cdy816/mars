@@ -406,7 +406,7 @@ namespace Cdy.Tag
                 }
 
                 if (MinId == id)
-                    MinId = Tags.Keys.Min();
+                    MinId = Tags.Keys.Count > 0 ? Tags.Keys.Min() : 0;
 
                 IsDirty = true;
             }
@@ -424,7 +424,7 @@ namespace Cdy.Tag
             NamedTags.Remove(tag.FullName);
             IsDirty = true;
 
-            MinId = Tags.Keys.Min();
+            MinId = Tags.Keys.Count > 0 ? Tags.Keys.Min() : 0;
 
             return true;
         }
@@ -458,7 +458,7 @@ namespace Cdy.Tag
                     Tags.Remove(vvv.Id);
                 }                
                 vv.Clear();
-                MinId = Tags.Keys.Min();
+                MinId = Tags.Keys.Count > 0 ? Tags.Keys.Min() : 0;
                 IsDirty = true;
             }
         }
@@ -495,7 +495,7 @@ namespace Cdy.Tag
 
                 vv.Clear();
 
-                MinId = Tags.Keys.Min();
+                MinId = Tags.Keys.Count>0?Tags.Keys.Min():0;
 
                 IsDirty = true;
             }

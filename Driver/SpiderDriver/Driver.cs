@@ -81,6 +81,11 @@ namespace SpiderDriver
         /// <param name="database"></param>
         public void SaveForDatabase(string database)
         {
+            string sfile = PathHelper.helper.GetDatabasePath(database);
+            if(!System.IO.Directory.Exists(sfile))
+            {
+                System.IO.Directory.CreateDirectory(sfile);
+            }
             Save(System.IO.Path.Combine(PathHelper.helper.GetDatabasePath(database), "SpiderDriver.cfg"));
         }
 

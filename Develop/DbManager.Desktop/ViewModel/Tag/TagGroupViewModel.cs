@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows;
 
 namespace DBInStudio.Desktop
 {
@@ -104,15 +105,18 @@ namespace DBInStudio.Desktop
         public override void Remove()
         {
             string sname = this.FullName;
-            if (DevelopServiceHelper.Helper.RemoveTagGroup(Database, sname))
+            if (MessageBox.Show(string.Format(Res.Get("RemoveConfirmMsg"), sname), "", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                if (Parent != null && Parent is HasChildrenTreeItemViewModel)
+                if (DevelopServiceHelper.Helper.RemoveTagGroup(Database, sname))
                 {
-                    (Parent as HasChildrenTreeItemViewModel).Children.Remove(this);
-                    Parent = null;
+                    if (Parent != null && Parent is HasChildrenTreeItemViewModel)
+                    {
+                        (Parent as HasChildrenTreeItemViewModel).Children.Remove(this);
+                        Parent = null;
+                    }
+                    if (CopyTarget == this)
+                        CopyTarget = null;
                 }
-                if (CopyTarget == this)
-                    CopyTarget = null;
             }
         }
 

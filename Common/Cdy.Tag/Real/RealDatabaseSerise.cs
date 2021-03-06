@@ -190,7 +190,7 @@ namespace Cdy.Tag
                     db.MaxId = db.Tags.Keys.Max();
                 }
 
-                db.MinId = db.Tags.Keys.Min();
+                db.MinId = db.Tags.Count>0?db.Tags.Keys.Min():0;
 
             }
             db.IsDirty = false;

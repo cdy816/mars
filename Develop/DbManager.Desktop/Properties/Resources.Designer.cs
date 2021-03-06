@@ -745,6 +745,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Are you sure to remove {0}? 的本地化字符串。
+        /// </summary>
+        internal static string RemoveConfirmMsg {
+            get {
+                return ResourceManager.GetString("RemoveConfirmMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Rename 的本地化字符串。
         /// </summary>
         internal static string ReName {

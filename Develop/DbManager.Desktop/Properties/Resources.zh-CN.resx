@@ -347,6 +347,9 @@
   <data name="Remove" xml:space="preserve">
     <value>删除</value>
   </data>
+  <data name="RemoveConfirmMsg" xml:space="preserve">
+    <value>确定要删除 '{0}' ?</value>
+  </data>
   <data name="ReName" xml:space="preserve">
     <value>重命名</value>
   </data>

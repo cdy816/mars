@@ -513,6 +513,12 @@ namespace Cdy.Tag
             //        }
             //    }
             //}
+            
+            if(mIdAndAddr.ContainsKey(tag.Id))
+            {
+                tag.ValueAddress = mIdAndAddr[tag.Id];
+            }
+
 
             mConfigDatabase.Update(tag);
         }

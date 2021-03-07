@@ -36,7 +36,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 压缩算法
         /// </summary>
-        public int CompressType { get; set; } = 0;
+        public int CompressType { get; set; } = 1;
 
         /// <summary>
         /// 

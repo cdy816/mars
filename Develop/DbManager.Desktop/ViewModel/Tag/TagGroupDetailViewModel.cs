@@ -1078,6 +1078,7 @@ namespace DBInStudio.Desktop.ViewModel
                        
                     }
                 }
+                TagCount = count;
             }
             else
             {
@@ -1098,9 +1099,11 @@ namespace DBInStudio.Desktop.ViewModel
                             }));
                         }
                     }
+
+                    TagCount = count;
                 }
             }
-            TagCount = count;
+           
             mIsBusy = false;
         }
 

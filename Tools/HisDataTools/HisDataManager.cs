@@ -113,6 +113,8 @@ namespace HisDataTools
                         }
                     }
                 }
+
+                HisQueryManager.Instance.StartMonitor();
             }
         }
 

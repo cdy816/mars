@@ -128,7 +128,7 @@ namespace Cdy.Tag
 
             lock (mLockObj)
             {
-                mTimeOffsets.Clear();
+                //mTimeOffsets.Clear();
                 GetFileLastUpdateTime();
 
                 lock (DataFileManager.CurrentDateTime)
@@ -179,9 +179,11 @@ namespace Cdy.Tag
                 mLastTime = ss.ReadDateTime(8);
 
                 var rcount = ss.ReadInt(16);
-                if(rcount!= mRegionCount)
+
+                if (rcount != mRegionCount)
                 {
                     mRegionCount = rcount;
+                    mTimeOffsets.Clear();
                 }
                 else
                 {

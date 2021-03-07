@@ -350,8 +350,7 @@ namespace Cdy.Tag
         /// <param name="e"></param>
         private void LogDataWatcher_Changed(object sender, System.IO.FileSystemEventArgs e)
         {
-            mResetEvent.Set();
-            mResetCount = 0;
+            
             if (e.ChangeType == System.IO.WatcherChangeTypes.Deleted)
             {
                 if(mLogFileMaps.ContainsKey(e.FullPath))
@@ -371,6 +370,10 @@ namespace Cdy.Tag
                     }
                 }
             }
+
+            mResetCount = 0;
+            mResetEvent.Set();
+            
         }
 
         /// <summary>
@@ -380,8 +383,7 @@ namespace Cdy.Tag
         /// <param name="e"></param>
         private void HisDataWatcher_Changed(object sender, System.IO.FileSystemEventArgs e)
         {
-            mResetEvent.Set();
-            mResetCount = 0;
+            
             if (e.ChangeType == System.IO.WatcherChangeTypes.Created)
             {
                 lock (mLocker)
@@ -414,6 +416,10 @@ namespace Cdy.Tag
             {
                 CheckRemoveOldFile(e.FullPath);
             }
+
+            mResetCount = 0;
+            mResetEvent.Set();
+           
         }
 
         /// <summary>

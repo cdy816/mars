@@ -38,6 +38,17 @@ namespace DBRuntime.Api
         /// </summary>
         public const byte RequestHisDataByTimeSpan = 2;
 
+        /// <summary>
+        /// 读取数据的统计值
+        /// </summary>
+        public const byte RequestNumberStatistics = 3;
+
+        /// <summary>
+        /// 读取某个时间点的统计值
+        /// </summary>
+        public const byte RequestNumberStatisticsByTimePoint = 4;
+
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -49,7 +60,7 @@ namespace DBRuntime.Api
         #endregion ...Constructor...
 
         #region ... Properties ...
-        
+
         public override byte FunId => ApiFunConst.HisDataRequestFun;
 
         #endregion ...Properties...
@@ -84,6 +95,12 @@ namespace DBRuntime.Api
                         break;
                     case RequestHisDataByTimeSpan:
                         Task.Run(() => { ProcessRequestHisDataByTimeSpanByMemory(client, data); data.ReleaseBuffer(); });
+                        break;
+                    case RequestNumberStatistics:
+                        Task.Run(() => { ProcessRequestNumberStatistics(client, data); data.ReleaseBuffer(); });
+                        break;
+                    case RequestNumberStatisticsByTimePoint:
+                        Task.Run(() => { ProcessRequestStatisitcsDatasByTimePoint(client, data); data.ReleaseBuffer(); });
                         break;
                     default:
                         data.ReleaseBuffer();
@@ -477,6 +494,19 @@ namespace DBRuntime.Api
         //}
         #endregion
 
+        private unsafe IByteBuffer WriteDataToBufferByMemory<T>(byte type, HisQueryResult<T> resb)
+        {
+            var vdata = resb.Contracts();
+            var re = BufferManager.Manager.Allocate(FunId, 5 + vdata.Size);
+            re.WriteByte(type);
+            re.WriteInt(resb.Count);
+
+            Marshal.Copy(vdata.Address, re.Array, re.ArrayOffset + re.WriterIndex, vdata.Size);
+            re.SetWriterIndex(re.WriterIndex + vdata.Size);
+
+            return re;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -484,17 +514,42 @@ namespace DBRuntime.Api
         /// <param name="type"></param>
         /// <param name="resb"></param>
         /// <returns></returns>
-        private unsafe IByteBuffer WriteDataToBufferByMemory<T>(byte type, HisQueryResult<T> resb)
+        private unsafe IByteBuffer WriteDataToBufferByMemory(byte type, NumberStatisticsQueryResult resb)
         {
-            var vdata = resb.Contracts();
-            var re = BufferManager.Manager.Allocate(FunId, 5 + vdata.Size);
+            var vdata = resb;
+            var re = BufferManager.Manager.Allocate(FunId, 5 + vdata.Position);
             re.WriteByte(type);
             re.WriteInt(resb.Count);
          
-            Marshal.Copy(vdata.Address, re.Array, re.ArrayOffset+ 6, vdata.Size);
+            Marshal.Copy(vdata.MemoryHandle, re.Array, re.ArrayOffset+ re.WriterIndex, vdata.Position);
             re.SetWriterIndex(re.WriterIndex + vdata.Size);
             
             return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="data"></param>
+        private unsafe void ProcessRequestNumberStatistics(string clientId, IByteBuffer data)
+        {
+            int id = data.ReadInt();
+            DateTime sTime = new DateTime(data.ReadLong());
+            DateTime eTime = new DateTime(data.ReadLong());
+            var tags = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
+
+            IByteBuffer re = null;
+
+            if (tags != null)
+            {
+                re = WriteDataToBufferByMemory((byte)tags.Type, ProcessStatisticsDataQuery(id, sTime, eTime));
+                Parent.AsyncCallback(clientId, re);
+            }
+            else
+            {
+                Parent.AsyncCallback(clientId, FunId, new byte[1], 0);
+            }
         }
 
         private unsafe void ProcessRequestAllHisDataByMemory(string clientId, IByteBuffer data)
@@ -571,6 +626,33 @@ namespace DBRuntime.Api
                         re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<ULongPoint3Data>(id, sTime, eTime));
                         break;
                 }
+                Parent.AsyncCallback(clientId, re);
+            }
+            else
+            {
+                Parent.AsyncCallback(clientId, FunId, new byte[1], 0);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="data"></param>
+        private void ProcessRequestStatisitcsDatasByTimePoint(string clientId, IByteBuffer data)
+        {
+            int id = data.ReadInt();
+            int count = data.ReadInt();
+            List<DateTime> times = new List<DateTime>();
+            for (int i = 0; i < count; i++)
+            {
+                times.Add(new DateTime(data.ReadLong()));
+            }
+            var tags = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
+
+            if (tags != null)
+            {
+               var  re = WriteDataToBufferByMemory((byte)tags.Type, ProcessStatisticsDataQuery(id, times));
                 Parent.AsyncCallback(clientId, re);
             }
             else
@@ -772,6 +854,31 @@ namespace DBRuntime.Api
         private HisQueryResult<T> ProcessDataQuery<T>(int id, DateTime stime, DateTime etime)
         {
             return ServiceLocator.Locator.Resolve<IHisQuery>().ReadAllValue<T>(id, stime, etime);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="stime"></param>
+        /// <param name="etime"></param>
+        /// <returns></returns>
+        private NumberStatisticsQueryResult ProcessStatisticsDataQuery(int id, DateTime stime, DateTime etime)
+        {
+            return ServiceLocator.Locator.Resolve<IHisQuery>().ReadNumberStatistics(id, stime, etime);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <returns></returns>
+        private NumberStatisticsQueryResult ProcessStatisticsDataQuery(int id, IEnumerable<DateTime> times)
+        {
+            return ServiceLocator.Locator.Resolve<IHisQuery>().ReadNumberStatistics(id, times);
         }
 
         /// <summary>

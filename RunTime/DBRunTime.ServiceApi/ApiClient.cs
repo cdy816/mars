@@ -107,7 +107,17 @@ namespace DBRunTime.ServiceApi
         /// </summary>
         public const byte RequestHisDataByTimeSpan = 2;
 
-        
+        /// <summary>
+        /// 读取数据的统计值
+        /// </summary>
+        public const byte RequestNumberStatistics = 3;
+
+        /// <summary>
+        /// 读取某个时间点的统计值
+        /// </summary>
+        public const byte RequestNumberStatisticsByTimePoint = 4;
+
+
         public const byte SyncRealTagConfig = 30;
 
         public const byte SyncHisTagConfig = 31;
@@ -150,6 +160,10 @@ namespace DBRunTime.ServiceApi
         private IByteBuffer mRealRequreData;
 
         private IByteBuffer mRealSetResponseData;
+
+        private object mHisDataLock = new object();
+
+        private object mRealDataLock = new object();
 
         /// <summary>
         /// 
@@ -345,7 +359,11 @@ namespace DBRunTime.ServiceApi
             return filename;
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
         public string GetSecuritySetting(int timeout = 50000)
         {
             string filename = string.Empty;
@@ -935,9 +953,45 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public IByteBuffer QueryAllHisValue(int id,DateTime startTime,DateTime endTime,int timeout=5000)
         {
+            lock(mHisDataLock)
             CheckLogin();
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20);
             mb.WriteByte(ApiFunConst.RequestAllHisData);
+            mb.WriteLong(this.LoginId);
+            mb.WriteInt(id);
+            mb.WriteLong(startTime.Ticks);
+            mb.WriteLong(endTime.Ticks);
+
+            this.hisRequreEvent.Reset();
+            Send(mb);
+            try
+            {
+                if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+                {
+                    return mHisRequreData;
+                }
+            }
+            finally
+            {
+                //mHisRequreData?.ReleaseBuffer();
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public IByteBuffer QueryStatisitcsValue(int id, DateTime startTime, DateTime endTime, int timeout = 5000)
+        {
+            lock (mHisDataLock)
+                CheckLogin();
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20);
+            mb.WriteByte(ApiFunConst.RequestNumberStatistics);
             mb.WriteLong(this.LoginId);
             mb.WriteInt(id);
             mb.WriteLong(startTime.Ticks);
@@ -968,12 +1022,50 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public IByteBuffer QueryHisValueAtTimes(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType matchType, int timeout = 5000)
         {
-            CheckLogin();
+            lock (mHisDataLock)
+                CheckLogin();
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + times.Count * 8 + 5);
             mb.WriteByte(ApiFunConst.RequestHisDatasByTimePoint);
             mb.WriteLong(this.LoginId);
             mb.WriteInt(id);
             mb.WriteByte((byte)matchType);
+            mb.WriteInt(times.Count);
+            for (int i = 0; i < times.Count; i++)
+            {
+                mb.WriteLong(times[i].Ticks);
+            }
+
+            this.hisRequreEvent.Reset();
+            Send(mb);
+            try
+            {
+                if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+                {
+                    return mHisRequreData;
+                }
+            }
+            finally
+            {
+                //mHisRequreData?.ReleaseBuffer();
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public IByteBuffer QueryStatisticsHisValueAtTimes(int id, List<DateTime> times,  int timeout = 5000)
+        {
+            lock (mHisDataLock)
+                CheckLogin();
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + times.Count * 8 + 5);
+            mb.WriteByte(ApiFunConst.RequestHisDatasByTimePoint);
+            mb.WriteLong(this.LoginId);
+            mb.WriteInt(id);
             mb.WriteInt(times.Count);
             for (int i = 0; i < times.Count; i++)
             {
@@ -1007,7 +1099,8 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public IByteBuffer QueryHisValueForTimeSpan(int id,DateTime startTime,DateTime endTime,TimeSpan span,QueryValueMatchType matchType, int timeout = 5000)
         {
-            CheckLogin();
+            lock (mHisDataLock)
+                CheckLogin();
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 24+ 5);
             mb.WriteByte(ApiFunConst.RequestHisDataByTimeSpan);
             mb.WriteLong(this.LoginId);

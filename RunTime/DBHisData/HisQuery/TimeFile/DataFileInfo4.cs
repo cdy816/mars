@@ -142,6 +142,8 @@ namespace Cdy.Tag
                         DataFileManager.CurrentDateTime.Add(FId, mLastTime);
                     }
                 }
+
+                HeadPointDataCachManager.Manager.ClearMemoryCach(this.FileName);
             }
         }
 

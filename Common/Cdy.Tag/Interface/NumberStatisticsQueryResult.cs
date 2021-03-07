@@ -73,6 +73,10 @@ namespace Cdy.Tag
             {
                 return mCount;
             }
+            set
+            {
+                mCount = value;
+            }
         }
 
         /// <summary>
@@ -84,7 +88,35 @@ namespace Cdy.Tag
             {
                 return mSize;
             }
+            set
+            {
+                mSize = value;
+            }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Position
+        {
+            get
+            {
+                return mPosition;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public IntPtr MemoryHandle
+        {
+            get
+            {
+                return handle;
+            }
+        }
+
 
 
         #endregion ...Properties...

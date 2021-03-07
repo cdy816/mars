@@ -87,6 +87,68 @@ namespace DBGrpcApi
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<StatisticsDataCollectionReplay> GetNumberValueStatisticsData(NumberValueStatisticsDataRequest request, ServerCallContext context)
+        {
+            if (SecurityManager.Manager.IsLogin(request.Token))
+            {
+                StatisticsDataCollectionReplay re = new StatisticsDataCollectionReplay() { Result = true };
+                foreach (var vv in request.Tags)
+                {
+                    string sname = GetGroupName(vv);
+                    if (SecurityManager.Manager.CheckReaderPermission(request.Token, sname))
+                    {
+                        ReadTagStatisticsValue(vv, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), re);
+                    }
+                }
+                return Task.FromResult(re);
+            }
+            else
+            {
+                return Task.FromResult(new StatisticsDataCollectionReplay() { Result = false });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<StatisticsDataCollectionReplay> GetNumberValueStatisticsDataAtTimePoint(NumberValueStatisticsDataAtTimePointRequest request, ServerCallContext context)
+        {
+            if (SecurityManager.Manager.IsLogin(request.Token))
+            {
+                StatisticsDataCollectionReplay re = new StatisticsDataCollectionReplay() { Result = true };
+                foreach (var vv in request.Tags)
+                {
+                    string sname = GetGroupName(vv);
+                    if (SecurityManager.Manager.CheckReaderPermission(request.Token, sname))
+                    {
+                        List<DateTime> ltmp = new List<DateTime>();
+                        DateTime dtime = DateTime.FromBinary(request.StartTime);
+                        DateTime etime = DateTime.FromBinary(request.EndTime);
+                        while(dtime<=etime)
+                        {
+                            ltmp.Add(dtime);
+                            dtime = dtime.AddSeconds(request.Duration);
+                        }
+                        ReadTagStatisticsValue(vv, ltmp, re);
+                    }
+                }
+                return Task.FromResult(re);
+            }
+            else
+            {
+                return Task.FromResult(new StatisticsDataCollectionReplay() { Result = false });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="tag"></param>
         /// <param name="value"></param>
@@ -304,6 +366,55 @@ namespace DBGrpcApi
                     ProcessResult<ULongPoint3Data>(tag, res, result, (int)tgs.Type);
                     break;
             }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="result"></param>
+        private void ReadTagStatisticsValue(string tag, DateTime startTime, DateTime endTime, StatisticsDataCollectionReplay result)
+        {
+            var tgs = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(tag);
+            if (tgs == null) return;
+
+           var  res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryStatisticsHisData(tgs.Id, startTime, endTime);
+            ProcessStatisticsDataResult(tag, res, result, (int)tgs.Type);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="times"></param>
+        /// <param name="result"></param>
+        private void ReadTagStatisticsValue(string tag,List<DateTime> times, StatisticsDataCollectionReplay result)
+        {
+            var tgs = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(tag);
+            if (tgs == null) return;
+
+            var res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryStatisticsHisData(tgs.Id, times);
+            ProcessStatisticsDataResult(tag, res, result, (int)tgs.Type);
+        }
+
+
+        private void ProcessStatisticsDataResult(string tag, NumberStatisticsQueryResult value, StatisticsDataCollectionReplay result, int valueType)
+        {
+            StatisticsDataPointCollection hdp = new StatisticsDataPointCollection() { Tag = tag };
+            DateTime time,maxvalueTime,minvalueTime;
+            double avgvalue, minvalue, maxvalue;
+            if (value != null)
+            {
+                for (int i = 0; i < value.Count; i++)
+                {
+                    var val = value.ReadValue(i, out time, out avgvalue, out maxvalue,out maxvalueTime, out minvalue, out minvalueTime);
+                    hdp.Values.Add(new StatisticsDataPoint() { Time = time.ToBinary(), AvgValue = avgvalue,MaxTime=maxvalueTime.ToBinary(),MaxValue=maxvalue,MinTime=minvalueTime.ToBinary(),MinValue=minvalue });
+                }
+            }
+            result.Values.Add(hdp);
         }
 
     }

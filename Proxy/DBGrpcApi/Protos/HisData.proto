@@ -11,6 +11,12 @@ service HislData {
 
   //读取所有值
   rpc GetAllHisValue (AllHisDataRequest) returns (HisDataCollectionReplay);
+
+   // 读取指定间隔的时间点的统计值
+  rpc GetNumberValueStatisticsDataAtTimePoint (NumberValueStatisticsDataAtTimePointRequest) returns (StatisticsDataCollectionReplay);
+
+  //读取统计值
+  rpc GetNumberValueStatisticsData (NumberValueStatisticsDataRequest) returns (StatisticsDataCollectionReplay);
 }
 
 message HisDataRequest{
@@ -30,9 +36,32 @@ message AllHisDataRequest{
 	int64 EndTime=4;
 }
 
+
+message NumberValueStatisticsDataRequest{
+	string Token=1;
+	repeated string Tags=2;
+	int64 StartTime=3;
+	int64 EndTime=4;
+	int32 Duration=5;
+}
+
+
+message NumberValueStatisticsDataAtTimePointRequest{
+	string Token=1;
+	repeated string Tags=2;
+	int64 StartTime=3;
+	int64 EndTime=4;
+	int32 Duration=5;
+}
+
 message HisDataCollectionReplay{
 	bool result=1;
 	repeated HisDataPointCollection Values=2;
+}
+
+message StatisticsDataCollectionReplay{
+	bool result=1;
+	repeated StatisticsDataPointCollection Values=2;
 }
 
 message HisDataPointCollection{
@@ -46,3 +75,17 @@ message HisDataPoint{
 	int64 Time=2;
 }
 
+
+message StatisticsDataPointCollection{
+	string Tag=1;
+	repeated StatisticsDataPoint Values=3;
+}
+
+message StatisticsDataPoint{
+int64 Time=1;	
+double AvgValue=2;
+int64 MaxTime=3;
+double MaxValue=4;
+int64 MinTime=5;
+double MinValue=6;
+}

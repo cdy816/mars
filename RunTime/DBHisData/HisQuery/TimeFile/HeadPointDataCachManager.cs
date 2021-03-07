@@ -47,6 +47,24 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="datafile"></param>
+        public void ClearMemoryCach(string datafile)
+        {
+            lock (mCacheDatas)
+            {
+                string skey = System.IO.Path.GetFileNameWithoutExtension(datafile);
+                foreach (var vv in mCacheDatas.Where(e => e.Key.StartsWith(skey)))
+                {
+                   var vvb = mCacheDatas[vv.Key];
+                    vvb.DataBlock?.Dispose();
+                    vvb.DataBlock = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="datafile"></param>
         /// <param name="address"></param>
         /// <returns></returns>
         public MarshalMemoryBlock GetMemory(DataFileSeriserbase datafile, long address,int len)
@@ -55,41 +73,55 @@ namespace Cdy.Tag
             sw.Start();
             try
             {
-                string skey = System.IO.Path.GetFileNameWithoutExtension(datafile.FileName) + address;
-                if (mCacheDatas.ContainsKey(skey))
+                lock (mCacheDatas)
                 {
-                    mCacheDatas[skey].LastAccessTime = DateTime.Now;
-                    return mCacheDatas[skey].DataBlock;
-                }
-                else
-                {
-                    DateTime dnow = DateTime.Now;
-                    var mh = datafile.Read(address, len);
-                    mCacheDatas.Add(skey,new HeadDataPointCachItem() { DataBlock = mh, LastAccessTime = dnow, Name = skey });
-
-                    if (mCacheDatas.Count > 24)
+                    string skey = System.IO.Path.GetFileNameWithoutExtension(datafile.FileName) + address;
+                    if (mCacheDatas.ContainsKey(skey) && mCacheDatas[skey]!=null)
                     {
-                        Task.Run(() => {
-                            try
-                            {
-                                foreach (var vv in mCacheDatas.Values.OrderBy(e => e.LastAccessTime))
-                                {
-                                    if ((dnow - vv.LastAccessTime).TotalDays >= 1)
-                                    {
-                                        mCacheDatas.Remove(vv.Name);
-                                    }
-                                    vv.DataBlock.Dispose();
-                                }
-                            }
-                            catch
-                            {
-
-                            }
-                        });
-
+                        mCacheDatas[skey].LastAccessTime = DateTime.Now;
+                        return mCacheDatas[skey].DataBlock;
                     }
+                    else
+                    {
+                        DateTime dnow = DateTime.Now;
+                        var mh = datafile.Read(address, len);
 
-                    return mh;
+                        if (!mCacheDatas.ContainsKey(skey))
+                        {
+                            mCacheDatas.Add(skey, new HeadDataPointCachItem() { DataBlock = mh, LastAccessTime = dnow, Name = skey });
+                        }
+                        else
+                        {
+                            mCacheDatas[skey].DataBlock = mh;
+                        }
+                        if (mCacheDatas.Count > 24)
+                        {
+                            Task.Run(() =>
+                            {
+                                try
+                                {
+                                    lock (mCacheDatas)
+                                    {
+                                        foreach (var vv in mCacheDatas.Values.OrderBy(e => e.LastAccessTime))
+                                        {
+                                            if ((dnow - vv.LastAccessTime).TotalDays >= 1)
+                                            {
+                                                mCacheDatas.Remove(vv.Name);
+                                            }
+                                            vv.DataBlock.Dispose();
+                                        }
+                                    }
+                                }
+                                catch
+                                {
+
+                                }
+                            });
+
+                        }
+
+                        return mh;
+                    }
                 }
             }
             finally

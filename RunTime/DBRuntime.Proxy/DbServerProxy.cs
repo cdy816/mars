@@ -531,6 +531,22 @@ namespace DBRuntime.Proxy
         /// <summary>
         /// 
         /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="data"></param>
+        /// <param name="tp"></param>
+        /// <returns></returns>
+        private unsafe NumberStatisticsQueryResult ProcessStatisticsResult(IByteBuffer data, TagType tp)
+        {
+            int count = data.ReadInt();
+            NumberStatisticsQueryResult re = new NumberStatisticsQueryResult(count);
+            Marshal.Copy(data.Array, data.ArrayOffset + data.ReaderIndex, re.MemoryHandle, data.ReadableBytes);
+            re.Count = count;
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="id"></param>
         /// <param name="stime"></param>
         /// <param name="etime"></param>
@@ -539,10 +555,45 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-               return this.mUsedHisClient.QueryAllHisValue(id, stime, etime);
+                return this.mUsedHisClient.QueryAllHisValue(id, stime, etime);
             }
             return null;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="stime"></param>
+        /// <param name="etime"></param>
+        /// <returns></returns>
+        public NumberStatisticsQueryResult QueryStatisticsHisData(int id, DateTime stime, DateTime etime)
+        {
+            if (IsConnected)
+            {
+                var res = this.mUsedHisClient.QueryStatisitcsValue(id, stime, etime);
+                TagType tp = (TagType)res.ReadByte();
+                return ProcessStatisticsResult(res, tp);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="stime"></param>
+        /// <param name="etime"></param>
+        /// <returns></returns>
+        public IByteBuffer QueryStatisticsHisValueByMemory(int id, DateTime stime, DateTime etime)
+        {
+            if (IsConnected)
+            {
+                return this.mUsedHisClient.QueryStatisitcsValue(id, stime, etime);
+            }
+            return null;
+        }
+
 
         /// <summary>
         /// 
@@ -574,6 +625,41 @@ namespace DBRuntime.Proxy
             if (IsConnected)
             {
                 return mUsedHisClient.QueryHisValueAtTimes(id, times, type);
+            }
+            return null;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public IByteBuffer QueryStatisticsHisDataByMemory(int id, List<DateTime> times)
+        {
+            if (IsConnected)
+            {
+                return mUsedHisClient.QueryStatisticsHisValueAtTimes(id, times);
+            }
+            return null;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <returns></returns>
+        public NumberStatisticsQueryResult QueryStatisticsHisData(int id, List<DateTime> times)
+        {
+            if (IsConnected)
+            {
+                var res = mUsedHisClient.QueryStatisticsHisValueAtTimes(id, times);
+                TagType tp = (TagType)res.ReadByte();
+                return ProcessStatisticsResult(res, tp);
             }
             return null;
         }

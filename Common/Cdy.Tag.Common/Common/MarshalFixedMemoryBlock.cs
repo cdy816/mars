@@ -1374,24 +1374,24 @@ namespace Cdy.Tag
                 var hdt = vtarget.RelocationAddressToArrayIndex(targetAddr, out ostt);
                 if (ostt + len < vtarget.BufferItemSize)
                 {
-                    Buffer.MemoryCopy((void*)(sourceStart), (void*)(vtarget.Handles[hdt] + (int)ostt), vtarget.BufferItemSize - ostt, len);
+                    Buffer.MemoryCopy((void*)(this.mHandleValue + sourceStart), (void*)(vtarget.Handles[hdt] + (int)ostt), vtarget.BufferItemSize - ostt, len);
                 }
                 else
                 {
-                    Buffer.MemoryCopy((void*)(sourceStart), (void*)(vtarget.Handles[hdt] + (int)ostt), vtarget.BufferItemSize - ostt, (vtarget.BufferItemSize - ostt));
+                    Buffer.MemoryCopy((void*)(this.mHandleValue + sourceStart), (void*)(vtarget.Handles[hdt] + (int)ostt), vtarget.BufferItemSize - ostt, (vtarget.BufferItemSize - ostt));
                     var vcount = vtarget.BufferItemSize - ostt;
                     var count = len - vcount;
                     while (count > vtarget.BufferItemSize)
                     {
                         hdt++;
-                        Buffer.MemoryCopy((void*)(sourceStart + vcount), (void*)(vtarget.Handles[hdt]), vtarget.BufferItemSize, vtarget.BufferItemSize);
+                        Buffer.MemoryCopy((void*)(this.mHandleValue + sourceStart + vcount), (void*)(vtarget.Handles[hdt]), vtarget.BufferItemSize, vtarget.BufferItemSize);
                         count = len - vcount;
                         vcount += vtarget.BufferItemSize;
                     }
                     if (count > 0)
                     {
                         hdt++;
-                        Buffer.MemoryCopy((void*)(sourceStart + vcount), (void*)(vtarget.Handles[hdt]), vtarget.BufferItemSize, (count));
+                        Buffer.MemoryCopy((void*)(this.mHandleValue + sourceStart + vcount), (void*)(vtarget.Handles[hdt]), vtarget.BufferItemSize, (count));
                     }
                 }
             }
@@ -1402,24 +1402,24 @@ namespace Cdy.Tag
                 var hdt = vtarget.RelocationAddressToArrayIndex(targetAddr, out ostt);
                 if (ostt + len < vtarget.BufferItemSize)
                 {
-                    Buffer.MemoryCopy((void*)(sourceStart), (void*)(vtarget.Handles[hdt] + (int)ostt), vtarget.BufferItemSize - ostt, len);
+                    Buffer.MemoryCopy((void*)(this.mHandleValue + sourceStart), (void*)(vtarget.Handles[hdt] + (int)ostt), vtarget.BufferItemSize - ostt, len);
                 }
                 else
                 {
-                    Buffer.MemoryCopy((void*)(sourceStart), (void*)(vtarget.Handles[hdt] + (int)ostt), vtarget.BufferItemSize - ostt, (vtarget.BufferItemSize - ostt));
+                    Buffer.MemoryCopy((void*)(this.mHandleValue + sourceStart), (void*)(vtarget.Handles[hdt] + (int)ostt), vtarget.BufferItemSize - ostt, (vtarget.BufferItemSize - ostt));
                     var vcount = vtarget.BufferItemSize - ostt;
                     var count = len - vcount;
                     while (count > vtarget.BufferItemSize)
                     {
                         hdt++;
-                        Buffer.MemoryCopy((void*)(sourceStart + vcount), (void*)(vtarget.Handles[hdt]), vtarget.BufferItemSize, vtarget.BufferItemSize);
+                        Buffer.MemoryCopy((void*)(this.mHandleValue + sourceStart + vcount), (void*)(vtarget.Handles[hdt]), vtarget.BufferItemSize, vtarget.BufferItemSize);
                         count = len - vcount;
                         vcount += vtarget.BufferItemSize;
                     }
                     if (count > 0)
                     {
                         hdt++;
-                        Buffer.MemoryCopy((void*)(sourceStart + vcount), (void*)(vtarget.Handles[hdt]), vtarget.BufferItemSize, (count));
+                        Buffer.MemoryCopy((void*)(this.mHandleValue + sourceStart + vcount), (void*)(vtarget.Handles[hdt]), vtarget.BufferItemSize, (count));
                     }
                 }
             }

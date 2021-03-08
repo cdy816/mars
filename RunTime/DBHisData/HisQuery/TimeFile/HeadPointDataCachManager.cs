@@ -76,7 +76,7 @@ namespace Cdy.Tag
                 lock (mCacheDatas)
                 {
                     string skey = System.IO.Path.GetFileNameWithoutExtension(datafile.FileName) + address;
-                    if (mCacheDatas.ContainsKey(skey) && mCacheDatas[skey]!=null)
+                    if (mCacheDatas.ContainsKey(skey) && mCacheDatas[skey]!=null && mCacheDatas[skey].DataBlock!=null)
                     {
                         mCacheDatas[skey].LastAccessTime = DateTime.Now;
                         return mCacheDatas[skey].DataBlock;

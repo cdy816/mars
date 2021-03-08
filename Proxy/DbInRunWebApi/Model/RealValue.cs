@@ -131,6 +131,7 @@ namespace DbInRunWebApi.Model
         #endregion ...Interfaces...
     }
 
+
     public class ValueItem
     {
 
@@ -170,6 +171,57 @@ namespace DbInRunWebApi.Model
 
         #endregion ...Interfaces...
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class StatisticsValue : ResponseBase
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public string tagName { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<StatisticsValueItem> Values { get; set; } = new List<StatisticsValueItem>();
+    }
+
+
+    public class StatisticsValueItem
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime Time { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public double AvgValue { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime MaxValueTime { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public double MaxValue { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime MinValueTime { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public double MinValue { get; set; }
+    }
+
 
 
 

@@ -297,6 +297,59 @@ namespace DbInRunWebApi.Model
         #endregion ...Interfaces...
     }
 
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class StatisticsDataRequest : Requestbase
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string TagName { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string StartTime { get; set; }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string EndTime { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Duration { get; set; }
+
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
     public class AllHisDataRequest : Requestbase
     {
 

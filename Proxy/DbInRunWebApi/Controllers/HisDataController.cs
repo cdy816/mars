@@ -364,5 +364,70 @@ namespace DbInRunWebApi.Controllers
             return revals;
         }
 
+
+        /// <summary>
+        /// 获取统计信息
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpGet("GetStatisticsValue")]
+        public StatisticsValue GetStatisticsValue([FromBody] AllHisDataRequest request)
+        {
+            var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
+            if (tag == null) return null;
+            StatisticsValue revals = new StatisticsValue() { tagName = request.TagName };
+           var res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryStatisticsHisData(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+
+            if(res!=null)
+            {
+                double avgvalue, maxvalue, minvalue;
+                DateTime time, maxtime, mintime;
+                for(int i=0;i<res.Count;i++)
+                {
+                    res.ReadValue(i, out time, out avgvalue, out maxvalue, out maxtime, out minvalue, out mintime);
+                    revals.Values.Add(new StatisticsValueItem() { Time = time, AvgValue = avgvalue, MaxValue = maxvalue, MinValue = minvalue, MaxValueTime = maxtime, MinValueTime = mintime });
+                }
+            }
+
+            return revals;
+        }
+
+        /// <summary>
+        /// 获取统计信息，通过时间点
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpGet("GetStatisticsValueByTimeSpan")]
+        public StatisticsValue GetStatisticsValueByTimeSpan([FromBody] StatisticsDataRequest request)
+        {
+            var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
+            if (tag == null) return null;
+            StatisticsValue revals = new StatisticsValue() { tagName = request.TagName };
+
+            List<DateTime> ltmp = new List<DateTime>();
+            DateTime dtime = ConvertToDateTime(request.StartTime);
+            DateTime etime = ConvertToDateTime(request.EndTime);
+            while (dtime <= etime)
+            {
+                ltmp.Add(dtime);
+                dtime = dtime.Add(ConvertToTimeSpan(request.Duration));
+            }
+
+            var res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryStatisticsHisData(tag.Id, ltmp);
+
+            if (res != null)
+            {
+                double avgvalue, maxvalue, minvalue;
+                DateTime time, maxtime, mintime;
+                for (int i = 0; i < res.Count; i++)
+                {
+                    res.ReadValue(i, out time, out avgvalue, out maxvalue, out maxtime, out minvalue, out mintime);
+                    revals.Values.Add(new StatisticsValueItem() { Time = time, AvgValue = avgvalue, MaxValue = maxvalue, MinValue = minvalue, MaxValueTime = maxtime, MinValueTime = mintime });
+                }
+            }
+
+            return revals;
+        }
+
     }
 }

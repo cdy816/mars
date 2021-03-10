@@ -47,6 +47,8 @@ namespace DBGrpcApiDemo
 
         private DateTime mEndTime;
 
+        private bool mIsReadStatistics = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -100,6 +102,26 @@ namespace DBGrpcApiDemo
         /// <summary>
             /// 
             /// </summary>
+        public bool IsReadStatistics
+        {
+            get
+            {
+                return mIsReadStatistics;
+            }
+            set
+            {
+                if (mIsReadStatistics != value)
+                {
+                    mIsReadStatistics = value;
+                    OnPropertyChanged("IsReadStatistics");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         public string UserName
         {
             get
@@ -267,30 +289,60 @@ namespace DBGrpcApiDemo
                 {
                     mQueryHisDataCommand = new RelayCommand(() =>
                     {
-                        var vals = clinet.ReadAllHisValue(new List<string> { mTags.First().Key }, StartTime, EndTime);
-                        if (vals != null&&vals.Count>0)
+                        if (mIsReadStatistics)
                         {
-
-                            int count = 0;
-                            string sfile = System.IO.Path.GetTempFileName();
-                            using (var stream = System.IO.File.Open(sfile, System.IO.FileMode.OpenOrCreate))
+                            var vals = clinet.ReadStatisticsValue(new List<string> { mTags.First().Key }, StartTime, EndTime);
+                            if(vals!=null && vals.Count>0)
                             {
-                                using (var vss = new System.IO.StreamWriter(stream))
+                                int count = 0;
+                                string sfile = System.IO.Path.GetTempFileName();
+                                using (var stream = System.IO.File.Open(sfile, System.IO.FileMode.OpenOrCreate))
                                 {
-                                    foreach (var vv in vals)
+                                    using (var vss = new System.IO.StreamWriter(stream))
                                     {
-                                        vss.WriteLine(vv.Key);
-                                        foreach (var vvv in vv.Value)
+                                        foreach (var vv in vals)
                                         {
-                                            vss.WriteLine(vvv.Time + "," + vvv.Value);
-                                            count++;
+                                            vss.WriteLine(vv.Key);
+                                            foreach (var vvv in vv.Value)
+                                            {
+                                                vss.WriteLine(vvv.Time + "," + vvv.AvgValue + "," + vvv.MaxValueTime + "," + vvv.MaxValue + "," + vvv.MinValueTime + "," + vvv.MinValue);
+                                                count++;
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            System.IO.File.Move(sfile, sfile.Replace(".tmp", ".txt"));
+                                System.IO.File.Move(sfile, sfile.Replace(".tmp", ".txt"));
 
-                            MessageBox.Show("读取历史数据个数:" + count + " 详情查看历史文件:" + sfile.Replace(".tmp", ".txt"));
+                                MessageBox.Show("读取历史数据个数:" + count + " 详情查看历史文件:" + sfile.Replace(".tmp", ".txt"));
+                            }
+                        }
+                        else
+                        {
+                            var vals = clinet.ReadAllHisValue(new List<string> { mTags.First().Key }, StartTime, EndTime);
+                            if (vals != null && vals.Count > 0)
+                            {
+
+                                int count = 0;
+                                string sfile = System.IO.Path.GetTempFileName();
+                                using (var stream = System.IO.File.Open(sfile, System.IO.FileMode.OpenOrCreate))
+                                {
+                                    using (var vss = new System.IO.StreamWriter(stream))
+                                    {
+                                        foreach (var vv in vals)
+                                        {
+                                            vss.WriteLine(vv.Key);
+                                            foreach (var vvv in vv.Value)
+                                            {
+                                                vss.WriteLine(vvv.Time + "," + vvv.Value);
+                                                count++;
+                                            }
+                                        }
+                                    }
+                                }
+                                System.IO.File.Move(sfile, sfile.Replace(".tmp", ".txt"));
+
+                                MessageBox.Show("读取历史数据个数:" + count + " 详情查看历史文件:" + sfile.Replace(".tmp", ".txt"));
+                            }
                         }
                     });
                 }

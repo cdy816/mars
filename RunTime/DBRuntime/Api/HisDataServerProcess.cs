@@ -522,7 +522,7 @@ namespace DBRuntime.Api
             re.WriteInt(resb.Count);
          
             Marshal.Copy(vdata.MemoryHandle, re.Array, re.ArrayOffset+ re.WriterIndex, vdata.Position);
-            re.SetWriterIndex(re.WriterIndex + vdata.Size);
+            re.SetWriterIndex(re.WriterIndex + vdata.Position);
             
             return re;
         }

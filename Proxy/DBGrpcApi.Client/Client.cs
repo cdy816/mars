@@ -556,6 +556,38 @@ namespace DBGrpcApi
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="tags"></param>
+        /// <param name="starttime"></param>
+        /// <param name="endtime"></param>
+        /// <returns></returns>
+        public Dictionary<string,StatisticsValueCollection > ReadStatisticsValue(List<string> tags,DateTime starttime,DateTime endtime)
+        {
+            if (mHisDataClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                Dictionary<string, StatisticsValueCollection> re = new Dictionary<string, StatisticsValueCollection>();
+                var req = new NumberValueStatisticsDataRequest() { StartTime = starttime.ToBinary(), EndTime = endtime.ToBinary(), Token = mLoginId };
+                req.Tags.AddRange(tags);
+                var res = mHisDataClient.GetNumberValueStatisticsData(req);
+                if (res.Result)
+                {
+                    foreach (var vv in res.Values)
+                    {
+                        StatisticsValueCollection hvd = new StatisticsValueCollection();
+                        foreach (var vvv in vv.Values)
+                        {
+                            hvd.Add(new StatisticsValue() { Time = DateTime.FromBinary(vvv.Time),AvgValue=vvv.AvgValue,MaxValue=vvv.MaxValue,MaxValueTime=DateTime.FromBinary(vvv.MaxTime),MinValue=vvv.MinValue,MinValueTime=DateTime.FromBinary(vvv.MinTime) });
+                        }
+                        re.Add(vv.Tag, hvd);
+                    }
+                }
+                return re;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="tag"></param>
         /// <param name="value"></param>
         /// <returns></returns>
@@ -624,6 +656,29 @@ namespace DBGrpcApi
         #region ... Interfaces ...
 
         #endregion ...Interfaces...
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class StatisticsValueCollection : List<StatisticsValue>
+    {
+    
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public struct StatisticsValue
+    {
+        public DateTime Time { get; set; }
+        public double AvgValue { get; set; }
+        public DateTime MaxValueTime { get; set; }
+        public double MaxValue { get; set; }
+
+        public DateTime MinValueTime { get; set; }
+
+        public double MinValue { get; set; }
     }
 
 

@@ -550,6 +550,8 @@ namespace Cdy.Tag
                 seriseEnginer.Init();
                 ServiceLocator.Locator.Registor<IDataSerialize3>(seriseEnginer);
 
+                
+                HisQueryManager.Instance.Registor(mDatabaseName, mHisFileManager);
                 querySerivce = new QuerySerivce(this.mDatabaseName);
 
                 mSecurityRunner = new SecurityRunner() { Document = mDatabase.Security };
@@ -558,7 +560,6 @@ namespace Cdy.Tag
 
                 DriverManager.Manager.Init(realEnginer, hisEnginer);
 
-                HisQueryManager.Instance.Registor(mDatabaseName, mHisFileManager);
                 HisQueryManager.Instance.StartMonitor();
 
                 await task;

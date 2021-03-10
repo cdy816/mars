@@ -39,9 +39,10 @@
         <Label Content="变量值:" HorizontalAlignment="Left" Margin="229,5,0,0" Grid.Row="2" VerticalAlignment="Top"/>
         <Label Content="开始时间:" HorizontalAlignment="Left" Margin="4,33,0,0" Grid.Row="2" VerticalAlignment="Top"/>
         <DatePicker SelectedDate="{Binding StartTime,Mode=TwoWay}" HorizontalAlignment="Left" Margin="70,35,0,0" Grid.Row="2" VerticalAlignment="Top" Width="132"/>
-        <Button x:Name="hisqB" Content="读取历史" HorizontalAlignment="Left" Margin="458,37,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding QueryHisDataCommand}"/>
+        <Button x:Name="hisqB" Content="读取历史" HorizontalAlignment="Left" Margin="561,37,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding QueryHisDataCommand}"/>
         <Label Content="结束时间:" HorizontalAlignment="Left" Margin="211,33,0,0" Grid.Row="2" VerticalAlignment="Top"/>
         <DatePicker SelectedDate="{Binding EndTime,Mode=TwoWay}" HorizontalAlignment="Left" Margin="277,35,0,0" Grid.Row="2" VerticalAlignment="Top" Width="132"/>
+        <CheckBox Content="统计值" HorizontalAlignment="Left" Margin="459,40,0,0" Grid.Row="2" VerticalAlignment="Top" IsChecked="{Binding IsReadStatistics,Mode=TwoWay}"/>
 
     </Grid>
 </Window>

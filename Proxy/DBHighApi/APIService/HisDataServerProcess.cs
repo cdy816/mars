@@ -37,6 +37,18 @@ namespace DBHighApi.Api
         /// </summary>
         public const byte RequestHisDataByTimeSpan = 2;
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte RequestStatisticData = 3;
+
+        /// <summary>
+        /// 
+        /// </summary>
+
+        public const byte RequestStatisticDataByTimeSpan = 4;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -48,7 +60,7 @@ namespace DBHighApi.Api
         #endregion ...Constructor...
 
         #region ... Properties ...
-        
+
         public override byte FunId => ApiFunConst.HisDataRequestFun;
 
         #endregion ...Properties...
@@ -81,6 +93,12 @@ namespace DBHighApi.Api
                         break;
                     case RequestHisDataByTimeSpan:
                         ProcessRequestHisDataByTimeSpanByMemory(client, data);
+                        break;
+                    case RequestStatisticData:
+                        ProcessRequestStatisticsDataByMemory(client, data);
+                        break;
+                    case RequestStatisticDataByTimeSpan:
+                        ProcessRequestStatisticsDataByTimePointByMemory(client, data);
                         break;
                 }
             }
@@ -132,6 +150,21 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="data"></param>
+        private unsafe void ProcessRequestStatisticsDataByMemory(string clientId, IByteBuffer data)
+        {
+            int id = data.ReadInt();
+            DateTime sTime = new DateTime(data.ReadLong());
+            DateTime eTime = new DateTime(data.ReadLong());
+
+            IByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryStatisticsHisValueByMemory(id, sTime, eTime);
+            Parent.AsyncCallback(clientId, re);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="data"></param>
         private void ProcessRequestHisDatasByTimePointByMemory(string clientId, IByteBuffer data)
         {
             int id = data.ReadInt();
@@ -143,6 +176,24 @@ namespace DBHighApi.Api
                 times.Add(new DateTime(data.ReadLong()));
             }
             IByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData(id, times, type);
+            Parent.AsyncCallback(clientId, re);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="data"></param>
+        private void ProcessRequestStatisticsDataByTimePointByMemory(string clientId, IByteBuffer data)
+        {
+            int id = data.ReadInt();
+            int count = data.ReadInt();
+            List<DateTime> times = new List<DateTime>();
+            for (int i = 0; i < count; i++)
+            {
+                times.Add(new DateTime(data.ReadLong()));
+            }
+            IByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryStatisticsHisDataByMemory(id, times);
             Parent.AsyncCallback(clientId, re);
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Cdy.Tag;
@@ -125,6 +126,18 @@ namespace DBHighApi
         /// 
         /// </summary>
         public const byte RequestHisDataByTimeSpan = 2;
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte RequestStatisticData = 3;
+
+        /// <summary>
+        /// 
+        /// </summary>
+
+        public const byte RequestStatisticDataByTimeSpan = 4;
     }
 
     public class ApiClient:SocketClient
@@ -1352,6 +1365,104 @@ namespace DBHighApi
                 }
                 return null;
             }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public NumberStatisticsQueryResult QueryStatisticsValue(int id, DateTime startTime, DateTime endTime, int timeout = 5000)
+        {
+            lock (mlockHisQueryObj)
+            {
+                CheckLogin();
+                if (!IsLogin) return null;
+                var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20);
+                mb.WriteByte(ApiFunConst.RequestStatisticData);
+                mb.WriteLong(this.LoginId);
+                mb.WriteInt(id);
+                mb.WriteLong(startTime.Ticks);
+                mb.WriteLong(endTime.Ticks);
+
+                this.hisRequreEvent.Reset();
+                Send(mb);
+                try
+                {
+                    if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+                    {
+                        TagType tp = (TagType)mHisRequreData.ReadByte();
+                        return ProcessStatisticsResult(mHisRequreData,tp);
+                    }
+                }
+                finally
+                {
+                    //mHisRequreData?.ReleaseBuffer();
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="matchType"></param>
+        /// <returns></returns>
+        public NumberStatisticsQueryResult QueryHisValueAtTimes(int id, List<DateTime> times, int timeout = 5000)
+        {
+            lock (mlockHisQueryObj)
+            {
+                CheckLogin();
+                if (!IsLogin) return null;
+                var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + times.Count * 8 + 5);
+                mb.WriteByte(ApiFunConst.RequestHisDatasByTimePoint);
+                mb.WriteLong(this.LoginId);
+                mb.WriteInt(id);
+                mb.WriteInt(times.Count);
+                for (int i = 0; i < times.Count; i++)
+                {
+                    mb.WriteLong(times[i].Ticks);
+                }
+
+                this.hisRequreEvent.Reset();
+                Send(mb);
+                try
+                {
+                    if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableBytes > 1)
+                    {
+                        TagType tp = (TagType)mHisRequreData.ReadByte();
+                        return ProcessStatisticsResult(mHisRequreData, tp);
+                    }
+                }
+                finally
+                {
+                    //mHisRequreData?.ReleaseBuffer();
+                }
+                return null;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="data"></param>
+        /// <param name="tp"></param>
+        /// <returns></returns>
+        private unsafe NumberStatisticsQueryResult ProcessStatisticsResult(IByteBuffer data, TagType tp)
+        {
+            int count = data.ReadInt();
+            NumberStatisticsQueryResult re = new NumberStatisticsQueryResult(count);
+            Marshal.Copy(data.Array, data.ArrayOffset + data.ReaderIndex, re.MemoryHandle, data.ReadableBytes);
+            re.Count = count;
+            return re;
         }
 
         #endregion

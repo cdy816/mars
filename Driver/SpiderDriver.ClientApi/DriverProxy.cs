@@ -423,32 +423,32 @@ namespace SpiderDriver.ClientApi
             switch (type)
             {
                 case TagType.Bool:
-                    re.WriteByte((byte)value);
+                    re.WriteByte(Convert.ToByte(value));
                     break;
                 case TagType.Byte:
-                    re.WriteByte((byte)value);
+                    re.WriteByte(Convert.ToByte(value));
                     break;
                 case TagType.Short:
-                    re.WriteShort((short)value);
+                    re.WriteShort(Convert.ToInt16(value));
                     break;
                 case TagType.UShort:
-                    re.WriteUnsignedShort((ushort)value);
+                    re.WriteUnsignedShort(Convert.ToUInt16(value));
                     break;
                 case TagType.Int:
-                    re.WriteInt((int)value);
+                    re.WriteInt(Convert.ToInt32(value));
                     break;
                 case TagType.UInt:
-                    re.WriteInt((int)value);
+                    re.WriteInt(Convert.ToInt32(value));
                     break;
                 case TagType.Long:
                 case TagType.ULong:
-                    re.WriteLong((long)value);
+                    re.WriteLong(Convert.ToInt64(value));
                     break;
                 case TagType.Float:
-                    re.WriteFloat((float)value);
+                    re.WriteFloat(Convert.ToSingle(value));
                     break;
                 case TagType.Double:
-                    re.WriteDouble((double)value);
+                    re.WriteDouble(Convert.ToDouble(value));
                     break;
                 case TagType.String:
                     string sval = value.ToString();
@@ -510,32 +510,32 @@ namespace SpiderDriver.ClientApi
             switch (type)
             {
                 case TagType.Bool:
-                    re.WriteByte((byte)value);
+                    re.WriteByte(Convert.ToByte(value));
                     break;
                 case TagType.Byte:
-                    re.WriteByte((byte)value);
+                    re.WriteByte(Convert.ToByte(value));
                     break;
                 case TagType.Short:
-                    re.WriteShort((short)value);
+                    re.WriteShort(Convert.ToInt16(value));
                     break;
                 case TagType.UShort:
-                    re.WriteUnsignedShort((ushort)value);
+                    re.WriteUnsignedShort(Convert.ToUInt16(value));
                     break;
                 case TagType.Int:
-                    re.WriteInt((int)value);
+                    re.WriteInt(Convert.ToInt32(value));
                     break;
                 case TagType.UInt:
-                    re.WriteInt((int)value);
+                    re.WriteInt(Convert.ToInt32(value));
                     break;
                 case TagType.Long:
                 case TagType.ULong:
-                    re.WriteLong((long)value);
+                    re.WriteLong(Convert.ToInt64(value));
                     break;
                 case TagType.Float:
-                    re.WriteFloat((float)value);
+                    re.WriteFloat(Convert.ToSingle(value));
                     break;
                 case TagType.Double:
-                    re.WriteDouble((double)value);
+                    re.WriteDouble(Convert.ToDouble(value));
                     break;
                 case TagType.String:
                     string sval = value.ToString();

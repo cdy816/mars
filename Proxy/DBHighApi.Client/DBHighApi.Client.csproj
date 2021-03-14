@@ -12,6 +12,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\Common\Cdy.Tag.Network\Cdy.Tag.Network.csproj" />
     <ProjectReference Include="..\..\Common\Cdy.Tag\Cdy.Tag.csproj" />

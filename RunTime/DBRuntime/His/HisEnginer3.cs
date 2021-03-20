@@ -302,6 +302,9 @@ namespace Cdy.Tag
                 {
                     var realaddr = (int)mRealEnginer.GetDataAddr((int)vv.Value.Id);
                     mRealTag = mRealEnginer.GetTagById(vv.Value.Id);
+                    
+                    if (mRealTag == null) continue;
+
                     switch (vv.Value.TagType)
                     {
                         case Cdy.Tag.TagType.Bool:

@@ -2454,6 +2454,21 @@ namespace Cdy.Tag
         {
             return SetTagHisValue(id, DateTime.UtcNow, value, 0);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool SetTagHisValue<T>(int id, T value, byte quality)
+        {
+            return SetTagHisValue(id, DateTime.UtcNow, value, quality);
+        }
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -2552,6 +2567,8 @@ namespace Cdy.Tag
         {
             return mHisTags.ContainsKey(id) ? mHisTags[id] : null;
         }
+
+
 
         #endregion ...Methods...
 

@@ -740,7 +740,7 @@ namespace SpiderDriver.ClientApi
         public bool SetTagValue(Dictionary<int, Tuple<TagType, object>> ids, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + ids.Count * 32);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count * 32);
             mb.WriteByte(ApiFunConst.SetTagValueFun);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(ids.Count);
@@ -776,7 +776,7 @@ namespace SpiderDriver.ClientApi
         public bool SetTagRealAndHisValue(Dictionary<int, Tuple<TagType, object>> ids, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + ids.Count * 32);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count * 32);
             mb.WriteByte(ApiFunConst.SetTagRealAndHisValueFun);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(ids.Count);
@@ -813,7 +813,7 @@ namespace SpiderDriver.ClientApi
         public bool SetTagValueAndQuality(Dictionary<int, Tuple<TagType, object,byte>> values, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + values.Count * 32);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * 32);
             mb.WriteByte(ApiFunConst.SetTagValueAndQualityFun);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(values.Count);
@@ -849,7 +849,7 @@ namespace SpiderDriver.ClientApi
         public bool AppendRegistorDataChangedCallBack(IEnumerable<int> ids,int timeout=5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + ids.Count() * 4);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count() * 4);
             mb.WriteByte(ApiFunConst.RegistorTag);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(ids.Count());
@@ -883,7 +883,7 @@ namespace SpiderDriver.ClientApi
         public bool UnRegistorDataChangedCallBack(IEnumerable<int> ids, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 8 + ids.Count() * 4);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count() * 4);
             mb.WriteByte(ApiFunConst.UnRegistorTag);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(ids.Count());
@@ -916,7 +916,7 @@ namespace SpiderDriver.ClientApi
         public bool ResetRegistorDataChangedCallBack(int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 8);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13);
             mb.WriteByte(ApiFunConst.ClearRegistorTag);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(1);
@@ -948,7 +948,7 @@ namespace SpiderDriver.ClientApi
         public bool SetTagHisValue(int id, TagType type, IEnumerable<TagValue> values, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 22 + values.Count() * 33);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 18 + values.Count() * 33);
             mb.WriteByte(ApiFunConst.SetTagHisValue);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(id);
@@ -990,7 +990,7 @@ namespace SpiderDriver.ClientApi
         public bool SetTagHisValue(int id, TagType type, HisDataBuffer data, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 22 + (int)data.Position);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 18 + (int)data.Position);
             mb.WriteByte(ApiFunConst.SetTagHisValue);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(id);
@@ -1028,7 +1028,7 @@ namespace SpiderDriver.ClientApi
             if (idvalues == null && idvalues.Count == 0) return false;
 
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 17 + idvalues.Count * 38);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 13 + idvalues.Count * 38);
             mb.WriteByte(ApiFunConst.SetTagHisValue2);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(idvalues.Count);
@@ -1069,7 +1069,7 @@ namespace SpiderDriver.ClientApi
             if (data == null && data.ValueCount == 0) return false;
 
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 17 + (int)data.Position);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 13 + (int)data.Position);
             mb.WriteByte(ApiFunConst.SetTagHisValue2);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(data.ValueCount);
@@ -1104,7 +1104,7 @@ namespace SpiderDriver.ClientApi
         public bool SetTagHisValue(int id, TagValueAndType values,  int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 17 + 38);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 26 + 40);
             mb.WriteByte(ApiFunConst.SetTagHisValue2);
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(1);
@@ -1143,7 +1143,7 @@ namespace SpiderDriver.ClientApi
             {
                 List<int> re = new List<int>();
                 CheckLogin();
-                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8 + tags.Count() * 256);
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 13 + tags.Count() * 256);
                 mb.WriteByte(ApiFunConst.GetTagIdByNameFun);
                 mb.WriteLong(this.mLoginId);
                 mb.WriteInt(tags.Count());
@@ -1188,7 +1188,7 @@ namespace SpiderDriver.ClientApi
             {
                 Dictionary<int, Tuple<string, byte>> re = new Dictionary<int, Tuple<string, byte>>();
                 CheckLogin();
-                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8);
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 9);
                 mb.WriteByte(ApiFunConst.QueryAllTagNameAndIds);
                 mb.WriteLong(this.mLoginId);
                 DateTime dt = DateTime.Now;
@@ -1266,7 +1266,7 @@ namespace SpiderDriver.ClientApi
             {
                 List<int> re = new List<int>();
                 CheckLogin();
-                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8);
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 9);
                 mb.WriteByte(ApiFunConst.GetDriverRecordTypeTagIds);
                 mb.WriteLong(this.mLoginId);
                 DateTime dt = DateTime.Now;
@@ -1340,7 +1340,7 @@ namespace SpiderDriver.ClientApi
             {
                 List<bool> re = new List<bool>();
                 CheckLogin();
-                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 8+4+ids.Count()*4);
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 13+ids.Count()*4);
                 mb.WriteByte(ApiFunConst.GetDriverRecordTypeTagIds2);
                 mb.WriteLong(this.mLoginId);
                 mb.WriteInt(ids.Count());

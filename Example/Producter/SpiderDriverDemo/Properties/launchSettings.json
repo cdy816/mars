@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SpiderDriverDemo": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\cdy81\\source\\repos\\cdy816\\Spider\\Output\\InSpiderRun.exe"
+    }
+  }
+}

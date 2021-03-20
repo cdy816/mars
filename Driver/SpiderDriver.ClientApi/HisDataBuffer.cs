@@ -113,13 +113,15 @@ namespace SpiderDriver.ClientApi
         /// <param name="size"></param>
         public void CheckAndResize(long size)
         {
-            if (size > mPosition)
+            if (size > mAllocSize)
             {
                 IntPtr moldptr = mHandle;
-                long oldlen = mPosition;
-                Init(size);
-                Buffer.MemoryCopy((void*)moldptr, (void*)mHandle, size, oldlen);
+                long oldlen = mAllocSize;
+                long newsize = mAllocSize + (size - mAllocSize) * 10;
+                Init(newsize);
+                Buffer.MemoryCopy((void*)moldptr, (void*)mHandle, newsize, oldlen);
                 Marshal.FreeHGlobal(moldptr);
+                mAllocSize = newsize;
             }
         }
 
@@ -1260,6 +1262,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(DateTime time, byte value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 10);
             this.WriteLong(Position, time.ToBinary());
             this.WriteByte(Position, value);
             this.WriteByte(Position, quality);
@@ -1274,6 +1277,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(int id, DateTime time, byte value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 15);
             this.WriteInt(Position, id);
             this.WriteLong(Position, time.ToBinary());
             this.WriteByte(Position, (byte)TagType.Byte);
@@ -1292,6 +1296,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(DateTime time, long value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 15);
             this.WriteLong(Position, time.ToBinary());
             this.WriteLong(Position, value);
             this.WriteByte(Position, quality);
@@ -1306,6 +1311,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(int id, DateTime time, long value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 22);
             this.WriteInt(Position, id);
             this.WriteLong(Position, time.ToBinary());
             this.WriteByte(Position, (byte)TagType.Long);
@@ -1323,6 +1329,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(DateTime time, ulong value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 17);
             this.WriteLong(Position, time.ToBinary());
             this.WriteULong(Position, value);
             this.WriteByte(Position, quality);
@@ -1337,6 +1344,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(int id, DateTime time, ulong value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 22);
             this.WriteInt(Position, id);
             this.WriteLong(Position, time.ToBinary());
             this.WriteByte(Position, (byte)TagType.ULong);
@@ -1354,6 +1362,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(DateTime time, DateTime value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 17);
             this.WriteLong(Position, time.ToBinary());
             this.WriteLong(Position, value.ToBinary());
             this.WriteByte(Position, quality);
@@ -1368,6 +1377,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(int id, DateTime time, DateTime value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 22);
             this.WriteInt(Position, id);
             this.WriteLong(Position, time.ToBinary());
             this.WriteByte(Position, (byte)TagType.DateTime);
@@ -1385,6 +1395,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(DateTime time, string value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + value.Length+9);
             this.WriteLong(Position, time.ToBinary());
             this.WriteString(Position, value,Encoding.Unicode);
             this.WriteByte(Position, quality);
@@ -1399,6 +1410,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(int id, DateTime time, string value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + value.Length+14);
             this.WriteInt(Position, id);
             this.WriteLong(Position, time.ToBinary());
             this.WriteByte(Position, (byte)TagType.String);
@@ -1416,6 +1428,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(DateTime time, IntPointData value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 17);
             this.WriteLong(Position, time.ToBinary());
             this.WriteInt(Position, value.X);
             this.WriteInt(Position, value.Y);
@@ -1432,6 +1445,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(int id, DateTime time, IntPointData value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 22);
             this.WriteInt(Position, id);
             this.WriteLong(Position, time.ToBinary());
             this.WriteByte(Position, (byte)TagType.IntPoint);
@@ -1450,6 +1464,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(DateTime time, UIntPointData value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 17);
             this.WriteLong(Position, time.ToBinary());
             this.WriteUInt(Position, value.X);
             this.WriteUInt(Position, value.Y);
@@ -1465,6 +1480,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(int id, DateTime time, UIntPointData value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 22);
             this.WriteInt(Position, id);
             this.WriteLong(Position, time.ToBinary());
             this.WriteByte(Position, (byte)TagType.UIntPoint);
@@ -1483,6 +1499,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(DateTime time, IntPoint3Data value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 21);
             this.WriteLong(Position, time.ToBinary());
             this.WriteInt(Position, value.X);
             this.WriteInt(Position, value.Y);
@@ -1500,6 +1517,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(int id, DateTime time, IntPoint3Data value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 26);
             this.WriteInt(Position, id);
             this.WriteLong(Position, time.ToBinary());
             this.WriteByte(Position, (byte)TagType.IntPoint3);
@@ -1520,6 +1538,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(DateTime time, UIntPoint3Data value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 21);
             this.WriteLong(Position, time.ToBinary());
             this.WriteUInt(Position, value.X);
             this.WriteUInt(Position, value.Y);
@@ -1536,6 +1555,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(int id, DateTime time, UIntPoint3Data value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 26);
             this.WriteInt(Position, id);
             this.WriteLong(Position, time.ToBinary());
             this.WriteByte(Position, (byte)TagType.UIntPoint3);
@@ -1555,6 +1575,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(DateTime time, LongPointData value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 25);
             this.WriteLong(Position, time.ToBinary());
             this.WriteLong(Position, value.X);
             this.WriteLong(Position, value.Y);
@@ -1571,6 +1592,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(int id, DateTime time, LongPointData value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 30);
             this.WriteInt(Position, id);
             this.WriteLong(Position, time.ToBinary());
             this.WriteByte(Position, (byte)TagType.LongPoint);
@@ -1589,6 +1611,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(DateTime time, ULongPointData value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 25);
             this.WriteLong(Position, time.ToBinary());
             this.WriteULong(Position, value.X);
             this.WriteULong(Position, value.Y);
@@ -1604,6 +1627,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(int id, DateTime time, ULongPointData value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 29);
             this.WriteInt(Position, id);
             this.WriteLong(Position, time.ToBinary());
             this.WriteByte(Position, (byte)TagType.ULongPoint);
@@ -1622,6 +1646,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(DateTime time, LongPoint3Data value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 33);
             this.WriteLong(Position, time.ToBinary());
             this.WriteLong(Position, value.X);
             this.WriteLong(Position, value.Y);
@@ -1638,6 +1663,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(int id, DateTime time, LongPoint3Data value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 40);
             this.WriteInt(Position, id);
             this.WriteLong(Position, time.ToBinary());
             this.WriteByte(Position, (byte)TagType.LongPoint3);
@@ -1657,6 +1683,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(DateTime time, ULongPoint3Data value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 33);
             this.WriteLong(Position, time.ToBinary());
             this.WriteULong(Position, value.X);
             this.WriteULong(Position, value.Y);
@@ -1673,6 +1700,7 @@ namespace SpiderDriver.ClientApi
         public HisDataBuffer AppendValue(int id, DateTime time, ULongPoint3Data value, byte quality)
         {
             ValueCount++;
+            CheckAndResize(Position + 38);
             this.WriteInt(Position, id);
             this.WriteLong(Position, time.ToBinary());
             this.WriteByte(Position, (byte)TagType.ULongPoint3);

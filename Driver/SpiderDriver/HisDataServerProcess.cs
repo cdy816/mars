@@ -62,14 +62,21 @@ namespace SpiderDriver
             long id = data.ReadLong();
             if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(id))
             {
-                switch (cmd)
+                try
                 {
-                    case APIConst.SetTagHisValue:
-                        ProcessSetHisData(client, data);
-                        break;
-                    case APIConst.SetTagHisValue2:
-                        ProcessSetHisData2(client, data);
-                        break;
+                    switch (cmd)
+                    {
+                        case APIConst.SetTagHisValue:
+                            ProcessSetHisData(client, data);
+                            break;
+                        case APIConst.SetTagHisValue2:
+                            ProcessSetHisData2(client, data);
+                            break;
+                    }
+                }
+                catch(Exception ex)
+                {
+                    LoggerService.Service.Warn("Spider HisDataServerProcess", ex.Message);
                 }
             }
             base.ProcessSingleData(client, data);

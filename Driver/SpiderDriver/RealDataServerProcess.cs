@@ -438,6 +438,7 @@ namespace SpiderDriver
             int count = block.ReadInt();
             int id = 0;
             byte typ;
+            byte qua = 0;
             for (int i = 0; i < count; i++)
             {
                 id = block.ReadInt();
@@ -449,39 +450,45 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = block.ReadByte();
-                            service.SetTagValue(id, ref bval, 0);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
 
-                            hisservice.SetTagHisValue<bool>(id, bval>0);
+                            hisservice.SetTagHisValue<bool>(id, bval>0,qua);
                         }
                         else
                         {
                             block.ReadByte();
+                            qua = block.ReadByte();
                         }
                         break;
                     case (byte)TagType.Byte:
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = block.ReadByte();
-                            service.SetTagValue(id, ref bval, 0);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
 
-                            hisservice.SetTagHisValue<byte>(id, bval);
+                            hisservice.SetTagHisValue<byte>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadByte();
+                            qua = block.ReadByte();
                         }
                         break;
                     case (byte)TagType.Short:
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = block.ReadShort();
-                            service.SetTagValue(id, ref bval, 0);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
 
-                            hisservice.SetTagHisValue<short>(id, bval);
+                            hisservice.SetTagHisValue<short>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadShort();
+                            qua = block.ReadByte();
                         }
                         //value = block.ReadShort();
                         break;
@@ -489,12 +496,14 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = (ushort)block.ReadShort();
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<ushort>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<ushort>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadShort();
+                            qua = block.ReadByte();
                         }
                         //value = (ushort)block.ReadShort();
                         break;
@@ -502,12 +511,14 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = block.ReadInt();
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<int>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<int>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadInt();
+                            qua = block.ReadByte();
                         }
                         //value = block.ReadInt();
                         break;
@@ -515,12 +526,14 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = (uint)block.ReadInt();
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<uint>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<uint>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadInt();
+                            qua = block.ReadByte();
                         }
                         //value = (uint)block.ReadInt();
                         break;
@@ -528,12 +541,14 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = block.ReadLong();
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<long>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<long>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadLong();
+                            qua = block.ReadByte();
                         }
                         //value = block.ReadLong();
                         break;
@@ -541,12 +556,14 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = (ulong)block.ReadLong();
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<ulong>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<ulong>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadLong();
+                            qua = block.ReadByte();
                         }
                         //value = (ulong)block.ReadLong();
                         break;
@@ -554,12 +571,14 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = block.ReadFloat();
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<float>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<float>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadFloat();
+                            qua = block.ReadByte();
                         }
                         // value = block.ReadFloat();
                         break;
@@ -567,12 +586,14 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = block.ReadDouble();
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<double>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<double>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadDouble();
+                            qua = block.ReadByte();
                         }
                         // block.ReadDouble();
                         break;
@@ -580,12 +601,14 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bs = block.ReadString();
-                            service.SetTagValue(id, bs, 0);
-                            hisservice.SetTagHisValue<string>(id, bs);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, bs, qua);
+                            hisservice.SetTagHisValue<string>(id, bs, qua);
                         }
                         else
                         {
                             block.ReadString();
+                            qua = block.ReadByte();
                         }
                         //value = block.ReadString();
                         break;
@@ -593,12 +616,14 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = DateTime.FromBinary(block.ReadLong());
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<DateTime>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<DateTime>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadLong();
+                            qua = block.ReadByte();
                         }
                         //value = DateTime.FromBinary(block.ReadLong());
                         break;
@@ -606,13 +631,15 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = new IntPointData(block.ReadInt(), block.ReadInt());
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<IntPointData>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<IntPointData>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadInt();
                             block.ReadInt();
+                            qua = block.ReadByte();
                         }
                         //value = new IntPointData(block.ReadInt(), block.ReadInt());
                         break;
@@ -620,13 +647,15 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = new UIntPointData(block.ReadInt(), block.ReadInt());
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<UIntPointData>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<UIntPointData>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadInt();
                             block.ReadInt();
+                            qua = block.ReadByte();
                         }
                         //value = new UIntPointData(block.ReadInt(), block.ReadInt());
                         break;
@@ -634,14 +663,16 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<IntPoint3Data>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<IntPoint3Data>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadInt();
                             block.ReadInt();
                             block.ReadInt();
+                            qua = block.ReadByte();
                         }
                         //value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
                         break;
@@ -649,14 +680,16 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<UIntPoint3Data>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<UIntPoint3Data>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadInt();
                             block.ReadInt();
                             block.ReadInt();
+                            qua = block.ReadByte();
                         }
                         //value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
                         break;
@@ -664,13 +697,15 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = new LongPointData(block.ReadLong(), block.ReadLong());
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<LongPointData>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<LongPointData>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadLong();
                             block.ReadLong();
+                            qua = block.ReadByte();
                         }
                         //value = new LongPointData(block.ReadLong(), block.ReadLong());
                         break;
@@ -678,13 +713,15 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = new ULongPointData(block.ReadLong(), block.ReadLong());
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<ULongPointData>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<ULongPointData>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadLong();
                             block.ReadLong();
+                            qua = block.ReadByte();
                         }
                         //value = new ULongPointData(block.ReadLong(), block.ReadLong());
                         break;
@@ -692,14 +729,16 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<LongPoint3Data>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<LongPoint3Data>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadLong();
                             block.ReadLong();
                             block.ReadLong();
+                            qua = block.ReadByte();
                         }
                         //value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                         break;
@@ -707,14 +746,16 @@ namespace SpiderDriver
                         if (Driver.AllowTagIds.Contains(id))
                         {
                             var bval = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
-                            service.SetTagValue(id, ref bval, 0);
-                            hisservice.SetTagHisValue<ULongPoint3Data>(id, bval);
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<ULongPoint3Data>(id, bval, qua);
                         }
                         else
                         {
                             block.ReadLong();
                             block.ReadLong();
                             block.ReadLong();
+                            qua = block.ReadByte();
                         }
                         //value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                         break;

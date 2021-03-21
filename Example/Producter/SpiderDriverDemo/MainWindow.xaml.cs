@@ -300,77 +300,77 @@ namespace SpiderDriverDemo
                 switch ((TagType)vv.Value.Item2)
                 {
                     case TagType.Double:
-                        rdb.AppendValue(vv.Key,sin);
+                        rdb.AppendValue(vv.Key,sin,0);
                       
                         break;
                     case TagType.Bool:
-                        rdb.AppendValue(vv.Key, bval);
+                        rdb.AppendValue(vv.Key, bval, 0);
                       
                         break;
                     case TagType.Byte:
-                        rdb.AppendValue(vv.Key, btmp);
+                        rdb.AppendValue(vv.Key, btmp, 0);
                        
                         break;
                     case TagType.DateTime:
-                        rdb.AppendValue(vv.Key, dnow);
+                        rdb.AppendValue(vv.Key, dnow, 0);
                         
                         break;
                     case TagType.Float:
-                        rdb.AppendValue(vv.Key, (float)cos);
+                        rdb.AppendValue(vv.Key, (float)cos, 0);
                        
                         break;
                     case TagType.Int:
-                        rdb.AppendValue(vv.Key, mCount);
+                        rdb.AppendValue(vv.Key, mCount, 0);
                         break;
                     case TagType.Long:
-                        rdb.AppendValue(vv.Key, (long)mCount);
+                        rdb.AppendValue(vv.Key, (long)mCount, 0);
                         break;
                     case TagType.UInt:
-                        rdb.AppendValue(vv.Key, (uint)mCount);
+                        rdb.AppendValue(vv.Key, (uint)mCount, 0);
                         break;
                     case TagType.ULong:
-                        rdb.AppendValue(vv.Key, (ulong)mCount);
+                        rdb.AppendValue(vv.Key, (ulong)mCount, 0);
                         break;
                     case TagType.UShort:
-                        rdb.AppendValue(vv.Key, (ushort)mCount);
+                        rdb.AppendValue(vv.Key, (ushort)mCount, 0);
                         break;
                     case TagType.Short:
-                        rdb.AppendValue(vv.Key, (short)mCount);
+                        rdb.AppendValue(vv.Key, (short)mCount, 0);
                         break;
                     case TagType.IntPoint:
-                        rdb.AppendValue(vv.Key, new IntPointData(mCount, mCount));
+                        rdb.AppendValue(vv.Key, new IntPointData(mCount, mCount), 0);
                         break;
                     case TagType.UIntPoint:
-                        rdb.AppendValue(vv.Key, new UIntPointData(mCount, mCount));
+                        rdb.AppendValue(vv.Key, new UIntPointData(mCount, mCount), 0);
                         break;
                     case TagType.IntPoint3:
-                        rdb.AppendValue(vv.Key, new IntPoint3Data(mCount, mCount, mCount));
+                        rdb.AppendValue(vv.Key, new IntPoint3Data(mCount, mCount, mCount), 0);
                         break;
                     case TagType.UIntPoint3:
-                        rdb.AppendValue(vv.Key, new UIntPoint3Data(mCount, mCount, mCount));
+                        rdb.AppendValue(vv.Key, new UIntPoint3Data(mCount, mCount, mCount), 0);
                         break;
                     case TagType.LongPoint:
-                        rdb.AppendValue(vv.Key, new LongPointData(mCount, mCount));
+                        rdb.AppendValue(vv.Key, new LongPointData(mCount, mCount), 0);
                         break;
                     case TagType.ULongPoint:
-                        rdb.AppendValue(vv.Key, new ULongPointData(mCount, mCount));
+                        rdb.AppendValue(vv.Key, new ULongPointData(mCount, mCount), 0);
                         break;
                     case TagType.LongPoint3:
-                        rdb.AppendValue(vv.Key, new LongPoint3Data(mCount, mCount, mCount));
+                        rdb.AppendValue(vv.Key, new LongPoint3Data(mCount, mCount, mCount), 0);
                         break;
                     case TagType.ULongPoint3:
-                        rdb.AppendValue(vv.Key, new ULongPoint3Data(mCount, mCount, mCount));
+                        rdb.AppendValue(vv.Key, new ULongPoint3Data(mCount, mCount, mCount), 0);
                         break;
                 }
                 i++;
                 if (i % 1000000 == 0)
                 {
-                    driverProxy.SetTagValueAsync(rdb);
+                    driverProxy.SetTagValueAndQuality(rdb);
                     rdb.Clear();
                 }
             }
             if(i % 1000000 != 0)
-            driverProxy.SetTagValueAsync(rdb);
+            driverProxy.SetTagValueAndQuality(rdb);
             sw.Stop();
             Debug.Print("发送耗时:" + sw.ElapsedMilliseconds);
         }

@@ -120,26 +120,33 @@ namespace SpiderDriver
             long id = data.ReadLong();
             if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(id))
             {
-                switch (cmd)
+                try
                 {
-                    case APIConst.SetTagValueFun:
-                        ProcessSetRealData(client, data);
-                        break;
-                    case APIConst.SetTagValueAndQualityFun:
-                        ProcessSetRealDataAndQuality(client, data);
-                        break;
-                    case APIConst.SetTagRealAndHisValueFun:
-                        ProcessSetRealAndHistData(client, data);
-                        break;
-                    case APIConst.RegistorTag:
-                        ProcessValueChangeNotify(client, data);
-                        break;
-                    case APIConst.RemoveRegistorTag:
-                        ProcessRemoveValueChangeNotify(client, data);
-                        break;
-                    case APIConst.ClearRegistorTag:
-                        ProcessResetValueChangedNotify(client, data);
-                        break;
+                    switch (cmd)
+                    {
+                        case APIConst.SetTagValueFun:
+                            ProcessSetRealData(client, data);
+                            break;
+                        case APIConst.SetTagValueAndQualityFun:
+                            ProcessSetRealDataAndQuality(client, data);
+                            break;
+                        case APIConst.SetTagRealAndHisValueFun:
+                            ProcessSetRealAndHistData(client, data);
+                            break;
+                        case APIConst.RegistorTag:
+                            ProcessValueChangeNotify(client, data);
+                            break;
+                        case APIConst.RemoveRegistorTag:
+                            ProcessRemoveValueChangeNotify(client, data);
+                            break;
+                        case APIConst.ClearRegistorTag:
+                            ProcessResetValueChangedNotify(client, data);
+                            break;
+                    }
+                }
+                catch(Exception ex)
+                {
+                    LoggerService.Service.Warn("SpiderDriver", ex.Message);
                 }
             }
             else

@@ -32,7 +32,7 @@ QQ 群:950906131
 [文档](https://github.com/cdy816/mars/tree/master/Doc)([Gitee地址](https://gitee.com/chongdaoyang/mars/tree/master/Doc))
 
 ## 版本
-1. [0.35 版本](https://github.com/cdy816/mars/releases/tag/0.35)
+1. [0.35 版本](https://github.com/cdy816/mars/releases/tag/V0.35)
 
 ## 未来计划
 1. **2021年3月发布1.0版本**，完成单机版功能，同时性能尽量达到单机100万点左右。

@@ -9,6 +9,7 @@
              d:DesignHeight="450" d:DesignWidth="800" >
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="btv" />
+        <res:BoolInvertToVisiableConvert x:Key="ibtc" />
         <res:BoolInvertConvert x:Key="bic" />
         <Style x:Key="ListBoxItemContainerStyle1" TargetType="{x:Type ListBoxItem}">
             <Setter Property="SnapsToDevicePixels" Value="True"/>
@@ -79,8 +80,8 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid HorizontalAlignment="Stretch" Height="26">
-                        <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding Name}" VerticalAlignment="Center" />
-                        <TextBox Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="-5,-1" Loaded="TextBox_Loaded" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalContentAlignment="Center" Visibility="{Binding IsEdit,Converter={StaticResource btv}}" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" Keyboard.KeyDown="TextBox_KeyDown" />
+                        <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding Name}" VerticalAlignment="Center" Visibility="{Binding IsEdit,Converter={StaticResource ibtc}}"/>
+                        <TextBox Background="#1FFFFFFF" BorderThickness="0" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="-3,-1" Loaded="TextBox_Loaded" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalContentAlignment="Center" Visibility="{Binding IsEdit,Converter={StaticResource btv}}" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" Keyboard.KeyDown="TextBox_KeyDown" />
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>

@@ -131,26 +131,26 @@ namespace DBInStudio.Desktop.ViewModel
         }
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public UserTreeItemViewModel Model
-        {
-            get
-            {
-                return mModel;
-            }
-            set
-            {
-                if (mModel != value)
-                {
-                    mModel = value;
-                    OnPropertyChanged("Model");
-                    mPermissionCach = null;
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public UserTreeItemViewModel Model
+        //{
+        //    get
+        //    {
+        //        return mModel;
+        //    }
+        //    set
+        //    {
+        //        if (mModel != value)
+        //        {
+        //            mModel = value;
+        //            OnPropertyChanged("Model");
+        //            mPermissionCach = null;
                     
-                }
-            }
-        }
+        //        }
+        //    }
+        //}
 
         #endregion ...Properties...
 
@@ -209,7 +209,7 @@ namespace DBInStudio.Desktop.ViewModel
             int id = Users.IndexOf(mCurrentSelectedUser);
             if(!mCurrentSelectedUser.IsNew)
             {
-                if(DBDevelopClientApi.DevelopServiceHelper.Helper.RemoveDatabaseUser(Model.Database,mCurrentSelectedUser.Name))
+                if(DBDevelopClientApi.DevelopServiceHelper.Helper.RemoveUser(mCurrentSelectedUser.Name))
                 {
                     Users.Remove(mCurrentSelectedUser);
                 }

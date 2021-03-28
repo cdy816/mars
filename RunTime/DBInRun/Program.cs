@@ -234,49 +234,57 @@ namespace DBInRun
             {
                 while (!mIsClosed)
                 {
-                    using (var server = new NamedPipeServerStream(name, PipeDirection.InOut))
+                    try
                     {
-                        server.WaitForConnection();
-                        while (!mIsClosed)
+                        using (var server = new NamedPipeServerStream(name, PipeDirection.InOut))
                         {
-                            try
+                            server.WaitForConnection();
+                            while (!mIsClosed)
                             {
-                                if (!server.IsConnected) break;
-                                var cmd = server.ReadByte();
-                                if (cmd == 0)
+                                try
                                 {
-                                    if (Cdy.Tag.Runner3.RunInstance.IsStarted)
+                                    if (!server.IsConnected) break;
+                                    var cmd = server.ReadByte();
+                                    if (cmd == 0)
                                     {
-                                        Cdy.Tag.Runner3.RunInstance.Stop();
+                                        if (Cdy.Tag.Runner3.RunInstance.IsStarted)
+                                        {
+                                            Cdy.Tag.Runner3.RunInstance.Stop();
+                                        }
+                                        mIsClosed = true;
+                                        server.WriteByte(1);
+                                        server.FlushAsync();
+                                        //server.WaitForPipeDrain();
+                                        Console.WriteLine(Res.Get("AnyKeyToExit") + ".....");
+                                        break;
+                                        //退出系统
                                     }
-                                    mIsClosed = true;
-                                    server.WriteByte(1);
-                                    server.FlushAsync();
-                                    //server.WaitForPipeDrain();
-                                    Console.WriteLine(Res.Get("AnyKeyToExit")+".....");
-                                    break;
-                                    //退出系统
-                                }
-                                else if(cmd==1)
-                                {
-                                    Console.WriteLine("Start to restart database.......");
-                                    Task.Run(() => {
-                                        Cdy.Tag.Runner3.RunInstance.ReStartDatabase();
-                                    });
-                                    server.WriteByte(1);
-                                    server.FlushAsync();
-                                   // server.WaitForPipeDrain();
-                                }
-                                else
-                                {
+                                    else if (cmd == 1)
+                                    {
+                                        Console.WriteLine("Start to restart database.......");
+                                        Task.Run(() =>
+                                        {
+                                            Cdy.Tag.Runner3.RunInstance.ReStartDatabase();
+                                        });
+                                        server.WriteByte(1);
+                                        server.FlushAsync();
+                                        // server.WaitForPipeDrain();
+                                    }
+                                    else
+                                    {
 
+                                    }
                                 }
-                            }
-                            catch
-                            {
-                                break;
+                                catch(Exception eex)
+                                {
+                                    break;
+                                }
                             }
                         }
+                    }
+                    catch(Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
                     }
                     
                 }

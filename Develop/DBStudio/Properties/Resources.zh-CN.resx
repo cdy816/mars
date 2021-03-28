@@ -186,6 +186,9 @@
   <data name="StartDatabaseHlp" xml:space="preserve">
     <value>启动当前数据库</value>
   </data>
+  <data name="StartdatabaseSucessful" xml:space="preserve">
+    <value>启动数据库 ‘{0}’ 成功.</value>
+  </data>
   <data name="Stopdatabasefail" xml:space="preserve">
     <value>停止数据库 ‘{0}’ 失败.</value>
   </data>

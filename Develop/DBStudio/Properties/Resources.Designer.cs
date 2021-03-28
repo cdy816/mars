@@ -268,6 +268,15 @@ namespace DBInStudioServer.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Start database ‘{0}’ sucessfull. 的本地化字符串。
+        /// </summary>
+        internal static string StartdatabaseSucessful {
+            get {
+                return ResourceManager.GetString("StartdatabaseSucessful", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Stop database ‘{0}’ failed. 的本地化字符串。
         /// </summary>
         internal static string Stopdatabasefail {

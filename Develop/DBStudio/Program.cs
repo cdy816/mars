@@ -480,6 +480,9 @@ namespace DBStudio
                     info.WorkingDirectory = System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location);
                     Process.Start(info).WaitForExit(1000);
                 }
+
+
+                Console.WriteLine(string.Format(Res.Get("StartdatabaseSucessful"), name));
             }
             catch(Exception ex)
             {

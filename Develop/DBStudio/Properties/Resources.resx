@@ -186,6 +186,9 @@
   <data name="StartDatabaseHlp" xml:space="preserve">
     <value>Start current database</value>
   </data>
+  <data name="StartdatabaseSucessful" xml:space="preserve">
+    <value>Start database ‘{0}’ sucessfull.</value>
+  </data>
   <data name="Stopdatabasefail" xml:space="preserve">
     <value>Stop database ‘{0}’ failed.</value>
   </data>

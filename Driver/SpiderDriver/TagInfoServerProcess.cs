@@ -173,6 +173,11 @@ namespace SpiderDriver
                     if (result > 0)
                     {
                         mClients.Add(client);
+                        LoggerService.Service.Info("Spider", user +" at client "+ client  + " login sucessfull.");
+                    }
+                    else
+                    {
+                        LoggerService.Service.Warn("Spider", user + " at client " + client + " login failed.");
                     }
 
                     Parent.AsyncCallback(client, ToByteBuffer(APIConst.TagInfoRequestFun, result));

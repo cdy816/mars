@@ -61,23 +61,45 @@
 ## 运行环境
 系统采用.net 5 平台开发,依赖于.net 5 的**跨平台**性，可部署在window、Linux等操作系统中,也可以部署在Docker中。 
 
-## 沟通交流
-QQ 群:950906131
-Email:cdy816@hotmail.com
+## 开始使用
+
+### 安装
+
+ 1. 安装.net 运行环境 [参考微软官方文档](https://dotnet.microsoft.com/download/dotnet/5.0)
+ 2. 数据库安装。下载Mars 发部版本，将软件包解压到特定目录。
+
+### 手动构建
+
+ 1. 安装 [VS 2019 开发环境](https://visualstudio.microsoft.com/zh-hans/vs/)
+ 2. Clone [Mars 工程](https://github.com/cdy816/mars)
+
+
+### 使用流程
+
+ 1. 使用DbInStudio 进行开发配置
+ 2. 使用DbInRun 运行配置结果
+ 3. 运行 XXXAPI 对外提供不同类型的服务
+ 4. 通过 InSpiderDevelopWindow 进行数据采集驱动配置
+ 5. 运行 InSpiderRun.exe 进行传感器设备采集
+
 
 ## 帮助文档、接口开发文档
 1. [文档](https://github.com/cdy816/mars/tree/master/Doc)([Gitee地址](https://gitee.com/chongdaoyang/mars/tree/master/Doc))
 2. [Mar数据库应用结构](https://my.oschina.net/u/3520380/blog/4288058)
 
 ## 版本
-1. [0.35 版本](https://github.com/cdy816/mars/releases/tag/V0.35)
+[0.35 版本](https://github.com/cdy816/mars/releases/tag/V0.35)
 
 ## 路线图
 项目分成2个阶段：单机、分布式。
 
-2021年完成第一阶段，同时性能尽量达到单机300万点左右。
+1. 2021年完成第一阶段，同时性能尽量达到单机300万点左右。
+2. 2022年2月份开始分布式版本的开发，预计2025年10月份能够推出分布式版本的2.0。分布式版本通过计算机集群、多级协作的方式，来实现更大规模、变化更加快速的传感器数据的接入。
 
-2022年2月份开始分布式版本的开发，预计2025年10月份能够推出分布式版本的2.0。分布式版本通过计算机集群、多级协作的方式，来实现更大规模、变化更加快速的传感器数据的接入。
+## 沟通交流
+
+1. QQ 群:950906131
+2. Email:cdy816@hotmail.com
 
 ## 合作伙伴
 

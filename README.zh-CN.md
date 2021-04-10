@@ -13,6 +13,9 @@
 [![Issues][issues-shield]][issues-url]
 [![Apache License][license-shield]][license-url]
 
+[![star](https://gitee.com/chongdaoyang/mars/badge/star.svg?theme=white)](https://gitee.com/chongdaoyang/mars/stargazers)
+[![fork](https://gitee.com/chongdaoyang/mars/badge/fork.svg?theme=white)](https://gitee.com/chongdaoyang/mars/members)
+
 
 <!-- PROJECT LOGO -->
 <br />
@@ -22,16 +25,15 @@
   </a>
 
   <h3 align="center">Mars 实时库</h3>
-
+ 
   <p align="center">
-    高性能、跨平台实时库!
+    高性能、跨平台实时库!        
     <br />
-    <a href="https://github.com/cdy816/mars/tree/master/Doc"><strong>帮助文档 »</strong></a>
-    <br />
-    <br />
+    <a href="https://github.com/cdy816/mars/tree/master/Doc">帮助文档</a>
+    ·
     <a href="https://github.com/cdy816/mars/issues">Bug 提交</a>
     ·
-    <a href="https://github.com/cdy816/mars/issues">功能请求</a>
+    <a href="https://github.com/cdy816/mars/issues">功能申请</a>
   </p>
 </p>
 

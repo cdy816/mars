@@ -11,20 +11,20 @@
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
+[![Apache License][license-shield]][license-url]
 
 
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
   <a href="https://github.com/cdy816/mars">
-    <img src="Doc/images/mrdbr.png" alt="Logo" width="128" height="80">
+    <img src="/Doc/Images/mrdbr.png" alt="Logo" width="128" height="80">
   </a>
 
   <h3 align="center">Mars 实时库</h3>
 
   <p align="center">
-    An awesome README template to jumpstart your projects!
+    高性能、跨平台实时库!
     <br />
     <a href="https://github.com/cdy816/mars/tree/master/Doc"><strong>帮助文档 »</strong></a>
     <br />
@@ -68,10 +68,17 @@
 <!-- ABOUT THE PROJECT -->
 ## 项目背景
 
+
 [![Product Name Screen Shot][product-screenshot]](https://github.com/cdy816/mars)
 
-  在一个物联网、大数据的时代，需要完成对海量的、各种传感器数据的采集、存储。传感器数据的特点是：时序的、海量的。目前主要有关系型数据库、时序库、实时库三种类型数据库可用于对数据记录存储。区别于结构化的数据，这类数据具有时间的特性；如果使用关系型数据库，则需要自己设计数据库表的结构使其能够高效的存储数据，由于海量数据的存在，对数据的压缩显得尤为重要，而这些是传统的关系型数据库所不具备的，需要自己实现。时序数据库设计的初衷，就是为了弥补关系型数据库在存储时序性数据方面的缺点，但是它自身的定位还是在一种存储软件上；而现实中的应用除了需要将数据存储下来之外还有传感器的实时值服务、传感器的采集等工作是其不曾涉及的；
-同样这些需要使用者自己开发功能，而对于一个有着几十万、上百万、千万级别的系统来说，设计一套传感器实时数据的采集、实时数据的管理、服务等功能，同样需要较高的要求；这一点在传统工业领域使用的实时库，能够较好的弥补时序数据的不足。而工业系统中使用的实时库，在灵活性、新式接口、分布式的支持等方面略显不足。该项目就是想兼顾各自的优缺点，开发出一款适应这个时代的工业互联网实时数据库（**实时物联数据库**）。该项目的目标：在单台服务器上达到**300~500万**个传感器数据按照秒级变化的数据的历史存储，分布式版本可以达到**上千万、亿级别**。
+   
+   在一个物联网、大数据的时代，需要完成对海量的、各种传感器数据的采集、存储。传感器数据的特点是：时序的、海量的。目前主要有关系型数据库、时序库、实时库三种类型数据库可用于对数据记录存储。区别于结构化的数据，这类数据具有时间的特性.
+   
+   如果使用关系型数据库，则需要自己设计数据库表的结构使其能够高效的存储数据，由于海量数据的存在，对数据的压缩显得尤为重要，而这些是传统的关系型数据库所不具备的，需要自己实现。
+   
+   时序数据库设计的初衷，就是为了弥补关系型数据库在存储时序性数据方面的缺点，但是它自身的定位还是在一种存储软件上；而现实中的应用除了需要将数据存储下来之外还有传感器的实时值服务、传感器的采集等工作是其不曾涉及的；同样这些需要使用者自己开发功能，而对于一个有着几十万、上百万、千万级别的系统来说，设计一套传感器实时数据的采集、实时数据的管理、服务等功能，同样需要较高的要求；这一点在传统工业领域使用的实时库，能够较好的弥补时序数据的不足。
+   
+   而工业系统中使用的实时库，在灵活性、新式接口、分布式的支持等方面略显不足。该项目就是想兼顾各自的优缺点，开发出一款适应这个时代的工业互联网实时数据库（**实时物联数据库**）。该项目的目标：在单台服务器上达到**300~500万**个传感器数据按照秒级变化的数据的历史存储，分布式版本可以达到**上千万、亿级别**。
 
 ### 功能特点
   Mars 数据库整个分成开发、运行2个部分，两者之间相互独立。数据库的开发用于管理数据库支持的变量、安全信息、接口信息等；数据库的运行负责数据的采集、存储、对外提供实时、历史数据服务。
@@ -104,19 +111,29 @@
 
 ### 安装
 
-1. 安装.net 运行环境 [参考微软官方文档](https://dotnet.microsoft.com/download/dotnet/5.0)
-2. 数据库安装。下载Mars 发部版本，将软件包解压到特定目录。
+ 1. 安装.net 运行环境 [参考微软官方文档](https://dotnet.microsoft.com/download/dotnet/5.0)
+ 
+ 2. 数据库安装。下载Mars 发部版本，将软件包解压到特定目录。
 
 ### 手动构建
-1.安装 [VS 2019 开发环境](https://visualstudio.microsoft.com/zh-hans/vs/)
-2.Clone [Mars 工程](https://github.com/cdy816/mars)
+
+ 1.安装 [VS 2019 开发环境](https://visualstudio.microsoft.com/zh-hans/vs/)
+
+ 2.Clone [Mars 工程](https://github.com/cdy816/mars)
+
 
 ### 使用流程
-1.使用DbInStudio 进行开发配置
-2.使用DbInRun 运行配置结果
-3.运行 XXXAPI 对外提供不同类型的服务
-4.通过 InSpiderDevelopWindow 进行数据采集驱动配置
-5.运行 InSpiderRun.exe 进行传感器设备采集
+
+ 1.使用DbInStudio 进行开发配置
+
+ 2.使用DbInRun 运行配置结果
+
+ 3.运行 XXXAPI 对外提供不同类型的服务
+
+ 4.通过 InSpiderDevelopWindow 进行数据采集驱动配置
+
+ 5.运行 InSpiderRun.exe 进行传感器设备采集
+
 
 <!-- USAGE EXAMPLES -->
 ## 使用帮助
@@ -127,11 +144,11 @@
 <!-- ROADMAP -->
 ## 路线图
 
-项目分成2个阶段：单机、分布式。
+ 项目分成2个阶段：单机、分布式。
 
-1. **2021年完成第一阶段**，同时性能尽量达到单机300万点左右。
+ 1. **2021年完成第一阶段**，同时性能尽量达到单机300万点左右。
 
-2. 2022年2月份开始分布式版本的开发，预计**2025年10月份能够推出分布式版本的2.0**。分布式版本通过计算机集群、多级协作的方式，来实现更大规模、变化更加快速的传感器数据的接入。
+ 2. 2022年2月份开始分布式版本的开发，预计**2025年10月份能够推出分布式版本的2.0**。分布式版本通过计算机集群、多级协作的方式，来实现更大规模、变化更加快速的传感器数据的接入。
 
 <!-- CONTRIBUTING -->
 ## 贡献
@@ -157,15 +174,13 @@ Email:cdy816@hotmail.com
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/othneildrew/Best-README-Template.svg?style=for-the-badge
-[contributors-url]: https://github.com/othneildrew/Best-README-Template/graphs/contributors
+[contributors-url]: https://github.com/cdy816/mars/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/othneildrew/Best-README-Template.svg?style=for-the-badge
-[forks-url]: https://github.com/othneildrew/Best-README-Template/network/members
+[forks-url]:https://github.com/cdy816/mars/network/members
 [stars-shield]: https://img.shields.io/github/stars/othneildrew/Best-README-Template.svg?style=for-the-badge
-[stars-url]: https://github.com/othneildrew/Best-README-Template/stargazers
+[stars-url]:https://github.com/cdy816/mars/stargazers
 [issues-shield]: https://img.shields.io/github/issues/othneildrew/Best-README-Template.svg?style=for-the-badge
-[issues-url]: https://github.com/othneildrew/Best-README-Template/issues
+[issues-url]:https://github.com/cdy816/mars/issues
 [license-shield]: https://img.shields.io/github/license/othneildrew/Best-README-Template.svg?style=for-the-badge
-[license-url]: https://github.com/othneildrew/Best-README-Template/blob/master/LICENSE.txt
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://linkedin.com/in/othneildrew
-[product-screenshot]: Doc/images/DbInStudio.png
+[license-url]: https://github.com/cdy816/mars/blob/master/LICENSE.txt
+[product-screenshot]:https://github.com/cdy816/mars/blob/master/Doc/Images/DbInStudio.png

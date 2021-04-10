@@ -143,6 +143,7 @@
 
 [文档](https://github.com/cdy816/mars/tree/master/Doc)([Gitee地址](https://gitee.com/chongdaoyang/mars/tree/master/Doc))
 
+[应用结构](https://my.oschina.net/u/3520380/blog/4288058)
 
 <!-- ROADMAP -->
 ## 路线图
@@ -158,7 +159,7 @@
 
 非常欢迎你的加入！提一个 [Issue](https://github.com/cdy816/mars/issues)  或者提交一个 Pull Request。
 
-感谢以下参与项目的人：
+感谢以下人员的参与：
 
  **lin**
 

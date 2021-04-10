@@ -126,5 +126,5 @@
 [issues-shield]: https://img.shields.io/github/issues/cdy816/mars.svg?style=for-the-badge
 [issues-url]:https://github.com/cdy816/mars/issues
 [license-shield]: https://img.shields.io/github/license/cdy816/mars.svg?style=for-the-badge
-[license-url]: https://github.com/cdy816/mars/blob/master/LICENSE.txt
+[license-url]: https://github.com/cdy816/mars/blob/master/LICENSE
 [product-screenshot]:https://github.com/cdy816/mars/blob/master/Doc/Images/DbInStudio.png

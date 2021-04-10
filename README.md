@@ -81,6 +81,10 @@ Email:cdy816@hotmail.com
 
 ## 合作伙伴
 
+非常欢迎你的加入！提一个 [Issue](https://github.com/cdy816/mars/issues)  或者提交一个 Pull Request。
+
+感谢以下人员的参与：
+
   **lin**
 
 <!-- MARKDOWN LINKS & IMAGES -->

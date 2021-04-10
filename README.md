@@ -1,3 +1,33 @@
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![Apache License][license-shield]][license-url]
+
+[![star](https://gitee.com/chongdaoyang/mars/badge/star.svg?theme=white)](https://gitee.com/chongdaoyang/mars/stargazers)
+[![fork](https://gitee.com/chongdaoyang/mars/badge/fork.svg?theme=white)](https://gitee.com/chongdaoyang/mars/members)
+
+<!-- PROJECT LOGO -->
+<br />
+<p align="center">
+  <a href="https://github.com/cdy816/mars">
+    <img src="/Doc/Images/mrdbr.png" alt="Logo" width="128" height="80">
+  </a>
+
+  <h2 align="center">Mars 实时库</h2>
+ 
+  <p align="center">
+    高性能、跨平台实时库!        
+    <br />
+    <br />
+    <a href="https://github.com/cdy816/mars/tree/master/Doc">帮助文档</a>
+    ·
+    <a href="https://github.com/cdy816/mars/issues">Bug 提交</a>
+    ·
+    <a href="https://github.com/cdy816/mars/issues">功能申请</a>
+  </p>
+</p>
+
 # mars/火星实时物联数据库
 
  在一个物联网、大数据的时代，需要完成对海量的、各种传感器数据的采集、存储。传感器数据的特点是：时序的、海量的。目前主要有关系型数据库、时序库、实时库三种类型数据库可用于对数据记录存储。区别于结构化的数据，这类数据具有时间的特性.
@@ -33,21 +63,36 @@
 
 ## 沟通交流
 QQ 群:950906131
+Email:cdy816@hotmail.com
 
 ## 帮助文档、接口开发文档
-[文档](https://github.com/cdy816/mars/tree/master/Doc)([Gitee地址](https://gitee.com/chongdaoyang/mars/tree/master/Doc))
+1. [文档](https://github.com/cdy816/mars/tree/master/Doc)([Gitee地址](https://gitee.com/chongdaoyang/mars/tree/master/Doc))
+2. [Mar数据库应用结构](https://my.oschina.net/u/3520380/blog/4288058)
 
 ## 版本
 1. [0.35 版本](https://github.com/cdy816/mars/releases/tag/V0.35)
 
-## 未来计划
-1. **2021年3月发布1.0版本**，完成单机版功能，同时性能尽量达到单机100万点左右。
-2. **2022年1月份发布1.1版本**，完成单机性能在300~500万点左右的目标。
-3. 2022年2月份开始分布式版本的开发，预计**2025年10月份能够推出分布式版本的2.0**。分布式版本通过计算机集群、多级协作的方式，来实现更大规模、变化更加快速的传感器数据的接入。
+## 路线图
+项目分成2个阶段：单机、分布式。
+
+2021年完成第一阶段，同时性能尽量达到单机300万点左右。
+
+2022年2月份开始分布式版本的开发，预计2025年10月份能够推出分布式版本的2.0。分布式版本通过计算机集群、多级协作的方式，来实现更大规模、变化更加快速的传感器数据的接入。
 
 ## 合作伙伴
 
   **lin**
 
-## 应用
-1. [Mar数据库应用结构](https://my.oschina.net/u/3520380/blog/4288058)
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[contributors-shield]: https://img.shields.io/github/contributors/cdy816/mars.svg?style=for-the-badge
+[contributors-url]: https://github.com/cdy816/mars/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/cdy816/mars.svg?style=for-the-badge
+[forks-url]:https://github.com/cdy816/mars/network/members
+[stars-shield]: https://img.shields.io/github/stars/cdy816/mars.svg?style=for-the-badge
+[stars-url]:https://github.com/cdy816/mars/stargazers
+[issues-shield]: https://img.shields.io/github/issues/cdy816/mars.svg?style=for-the-badge
+[issues-url]:https://github.com/cdy816/mars/issues
+[license-shield]: https://img.shields.io/github/license/cdy816/mars.svg?style=for-the-badge
+[license-url]: https://github.com/cdy816/mars/blob/master/LICENSE.txt
+[product-screenshot]:https://github.com/cdy816/mars/blob/master/Doc/Images/DbInStudio.png

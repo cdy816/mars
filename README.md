@@ -1,9 +1,13 @@
+
+ **物联网三板斧：[Mars 实时库](https://github.com/cdy816/mars) 、设备采集平台[Spider](https://github.com/cdy816/Spider) 、跨平台界面解决方案[Chameleon](https://github.com/cdy816/Chameleon)**
+ <br />
+ <br />
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![Apache License][license-shield]][license-url]
-
+<br />
 [![star](https://gitee.com/chongdaoyang/mars/badge/star.svg?theme=white)](https://gitee.com/chongdaoyang/mars/stargazers)
 [![fork](https://gitee.com/chongdaoyang/mars/badge/fork.svg?theme=white)](https://gitee.com/chongdaoyang/mars/members)
 
@@ -37,6 +41,8 @@
    时序数据库设计的初衷，就是为了弥补关系型数据库在存储时序性数据方面的缺点，但是它自身的定位还是在一种存储软件上；而现实中的应用除了需要将数据存储下来之外还有传感器的实时值服务、传感器的采集等工作是其不曾涉及的；同样这些需要使用者自己开发功能，而对于一个有着几十万、上百万、千万级别的系统来说，设计一套传感器实时数据的采集、实时数据的管理、服务等功能，同样需要较高的要求；这一点在传统工业领域使用的实时库，能够较好的弥补时序数据的不足。
    
    而工业系统中使用的实时库，在灵活性、新式接口、分布式的支持等方面略显不足。该项目就是想兼顾各自的优缺点，开发出一款适应这个时代的工业互联网实时数据库（**实时物联数据库**）。该项目的目标：在单台服务器上达到**300~500万**个传感器数据按照秒级变化的数据的历史存储，分布式版本可以达到**上千万、亿级别**。
+   
+  
 
 ## 功能
 
@@ -120,5 +126,5 @@
 [issues-shield]: https://img.shields.io/github/issues/cdy816/mars.svg?style=for-the-badge
 [issues-url]:https://github.com/cdy816/mars/issues
 [license-shield]: https://img.shields.io/github/license/cdy816/mars.svg?style=for-the-badge
-[license-url]: https://github.com/cdy816/mars/blob/master/LICENSE.txt
+[license-url]: https://github.com/cdy816/mars/blob/master/LICENSE
 [product-screenshot]:https://github.com/cdy816/mars/blob/master/Doc/Images/DbInStudio.png

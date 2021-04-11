@@ -187,6 +187,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Relative database path or absolute path 的本地化字符串。
+        /// </summary>
+        internal static string CustomDataPathTooltip {
+            get {
+                return ResourceManager.GetString("CustomDataPathTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Database 的本地化字符串。
         /// </summary>
         internal static string Database {
@@ -264,6 +273,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string EnableWrite {
             get {
                 return ResourceManager.GetString("EnableWrite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 End port 的本地化字符串。
+        /// </summary>
+        internal static string EndPort {
+            get {
+                return ResourceManager.GetString("EndPort", resourceCulture);
             }
         }
         
@@ -975,6 +993,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Start_Tooltip {
             get {
                 return ResourceManager.GetString("Start_Tooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Start port 的本地化字符串。
+        /// </summary>
+        internal static string StartPort {
+            get {
+                return ResourceManager.GetString("StartPort", resourceCulture);
             }
         }
         

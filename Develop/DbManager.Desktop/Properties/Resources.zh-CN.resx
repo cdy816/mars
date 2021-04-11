@@ -159,6 +159,9 @@
   <data name="Custom" xml:space="preserve">
     <value>自定义</value>
   </data>
+  <data name="CustomDataPathTooltip" xml:space="preserve">
+    <value>相对数据库目录的路径或者绝对路径</value>
+  </data>
   <data name="Database" xml:space="preserve">
     <value>数据库</value>
   </data>
@@ -186,6 +189,9 @@
   </data>
   <data name="EnableWrite" xml:space="preserve">
     <value>写可用</value>
+  </data>
+  <data name="EndPort" xml:space="preserve">
+    <value>结束服务端口</value>
   </data>
   <data name="erro" xml:space="preserve">
     <value>错误</value>
@@ -422,6 +428,9 @@
   </data>
   <data name="Start" xml:space="preserve">
     <value>启动</value>
+  </data>
+  <data name="StartPort" xml:space="preserve">
+    <value>开始服务端口</value>
   </data>
   <data name="Start_Tooltip" xml:space="preserve">
     <value>运行数据库</value>

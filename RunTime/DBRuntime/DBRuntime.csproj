@@ -13,6 +13,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="obsolete2\**" />
+    <Compile Remove="obsolete3\**" />
+    <Compile Remove="obsolete\**" />
+    <EmbeddedResource Remove="obsolete2\**" />
+    <EmbeddedResource Remove="obsolete3\**" />
+    <EmbeddedResource Remove="obsolete\**" />
+    <None Remove="obsolete2\**" />
+    <None Remove="obsolete3\**" />
+    <None Remove="obsolete\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Common\Cdy.Tag.Common\Cdy.Tag.Common.csproj" />
     <ProjectReference Include="..\..\Common\Cdy.Tag.Consume\Cdy.Tag.Consume.csproj" />
     <ProjectReference Include="..\..\Common\Cdy.Tag.Driver\Cdy.Tag.Driver.csproj" />

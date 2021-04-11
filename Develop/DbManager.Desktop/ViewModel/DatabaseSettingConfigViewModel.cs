@@ -370,6 +370,18 @@ namespace DBInStudio.Desktop.ViewModel
         /// <summary>
         /// 
         /// </summary>
+        public string DisplayName
+        {
+            get
+            {
+                return Res.Get(Name)+":";
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         public string Value
         {
             get

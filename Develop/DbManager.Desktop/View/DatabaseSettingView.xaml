@@ -51,7 +51,7 @@
                     <ColumnDefinition Width="100" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Name}"  VerticalAlignment="Center" Foreground="{DynamicResource Window.Forground}"/>
+                <TextBlock Text="{Binding DisplayName}"  VerticalAlignment="Center" Foreground="{DynamicResource Window.Forground}"/>
                 <TextBox CaretBrush="{DynamicResource Window.Forground}" VerticalContentAlignment="Center" Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" Height="24"  VerticalAlignment="Center" Text="{Binding Value,Mode=TwoWay}" Grid.Column="1" Width="160" />
             </Grid>
         </DataTemplate>
@@ -65,9 +65,9 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
-            <RowDefinition Height="32"/>
-            <RowDefinition Height="32"/>
-            <RowDefinition Height="32"/>
+            <RowDefinition Height="36"/>
+            <RowDefinition Height="36"/>
+            <RowDefinition Height="36"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Border Margin="5,0" Grid.ColumnSpan="2" BorderThickness="0,0,0,0.5" SnapsToDevicePixels="True" UseLayoutRounding="True" BorderBrush="{DynamicResource Window.Forground}">
@@ -79,7 +79,7 @@
         <StackPanel Grid.Column="1" Grid.Row="2"  Orientation="Horizontal" VerticalAlignment="Center"  HorizontalAlignment="Left" Margin="10,0,0,0">
             <RadioButton BorderBrush="{DynamicResource Window.Forground}" GroupName="gg" Content="{local:ResMarker Default}" IsChecked="{Binding HisDataPathIsDefault,Mode=TwoWay}" Background="Transparent" VerticalAlignment="Center" Foreground="{DynamicResource Window.Forground}"/>
             <RadioButton BorderBrush="{DynamicResource Window.Forground}" GroupName="gg" x:Name="cusc" Margin="80,0,10,00"  IsChecked="{Binding HisDataPathIsCustom,Mode=TwoWay}" Content="{local:ResMarker Custom}" Background="Transparent" VerticalAlignment="Center" Foreground="{DynamicResource Window.Forground}"/>
-            <TextBox IsEnabled="{Binding IsChecked,ElementName=cusc}" CaretBrush="{DynamicResource Window.Forground}" Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" Height="24" Margin="10,0,0,0" VerticalContentAlignment="Center"  Text="{Binding DataPath,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" TextWrapping="Wrap" VerticalAlignment="Center" Width="198"/>
+            <TextBox ToolTip="{local:ResMarker CustomDataPathTooltip}" IsEnabled="{Binding IsChecked,ElementName=cusc}" CaretBrush="{DynamicResource Window.Forground}" Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" Height="24" Margin="10,0,0,0" VerticalContentAlignment="Center"  Text="{Binding DataPath,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" TextWrapping="Wrap" VerticalAlignment="Center" Width="220"/>
 
             <TextBlock Text="{local:ResMarker HisDataKeepTime}" VerticalAlignment="Bottom"  HorizontalAlignment="Left" Margin="20,0,0,5"/>
             <TextBox  CaretBrush="{DynamicResource Window.Forground}" Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" Height="24" Margin="10,0,0,0" VerticalContentAlignment="Center"  Text="{Binding KeepTime,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" TextWrapping="Wrap" VerticalAlignment="Center" Width="80"/>

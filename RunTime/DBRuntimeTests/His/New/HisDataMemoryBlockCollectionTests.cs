@@ -24,25 +24,25 @@ namespace DBRuntime.His.Tests
         [Obsolete]
         public void ClearTest()
         {
-            HisDataMemoryBlockCollection hdb = new HisDataMemoryBlockCollection();
-            for (int i = 0; i < 1000000; i++)
-            {
-                hdb.AddTagAddress(i, new HisDataMemoryBlock(3300));
-            }
+            //HisDataMemoryBlockCollection hdb = new HisDataMemoryBlockCollection();
+            //for (int i = 0; i < 1000000; i++)
+            //{
+            //    hdb.AddTagAddress(i, new HisDataMemoryBlock(3300));
+            //}
 
-            hdb.Clear();
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            foreach(var vv in hdb.TagAddress.Values)
-            {
-                vv.WriteShort(0, 10);
-                vv.WriteInt(10, 20);
-                vv.WriteDouble(20, 3.444);
-                Assert.IsTrue(vv.ReadShort(0) == 10);
-                Assert.IsTrue(vv.ReadInt(10) == 20);
-                Assert.IsTrue(vv.ReadDouble(20) == 3.444);
-            }
-            sw.Stop();
+            //hdb.Clear();
+            //Stopwatch sw = new Stopwatch();
+            //sw.Start();
+            //foreach(var vv in hdb.TagAddress.Values)
+            //{
+            //    vv.WriteShort(0, 10);
+            //    vv.WriteInt(10, 20);
+            //    vv.WriteDouble(20, 3.444);
+            //    Assert.IsTrue(vv.ReadShort(0) == 10);
+            //    Assert.IsTrue(vv.ReadInt(10) == 20);
+            //    Assert.IsTrue(vv.ReadDouble(20) == 3.444);
+            //}
+            //sw.Stop();
 
         }
     }

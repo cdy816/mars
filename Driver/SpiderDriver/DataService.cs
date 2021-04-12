@@ -25,6 +25,9 @@ namespace SpiderDriver
         private TagInfoServerProcess mInfoProcess;
         private RealDataServerProcess mRealProcess;
         private HisDataServerProcess mHisProcess;
+
+        private bool mIsStarted = false;
+
         //private IByteBuffer mAsyncCalldata;
 
         #endregion ...Variables...
@@ -155,7 +158,14 @@ namespace SpiderDriver
         /// </summary>
         private IByteBuffer TagInfoRequest(string clientId, IByteBuffer memory)
         {
-            mInfoProcess?.ProcessData(clientId, memory);
+            if (mIsStarted&& mInfoProcess!=null)
+            {
+                mInfoProcess.ProcessData(clientId, memory);
+            }
+            else
+            {
+                LoggerService.Service.Info("Spider Driver", "Spider driver is not started!");
+            }
             return null;
         }
 
@@ -167,7 +177,14 @@ namespace SpiderDriver
         /// <returns></returns>
         private IByteBuffer RealDataRequest(string clientId, IByteBuffer memory)
         {
-            this.mRealProcess?.ProcessData(clientId, memory);
+            if (mIsStarted && mRealProcess != null)
+            {
+                this.mRealProcess.ProcessData(clientId, memory);
+            }
+            else
+            {
+                LoggerService.Service.Info("Spider Driver", "Spider driver is not started!");
+            }
             return null;
         }
 
@@ -179,7 +196,14 @@ namespace SpiderDriver
         /// <returns></returns>
         private IByteBuffer HisDataRequest(string clientid,IByteBuffer memory)
         {
-            this.mHisProcess?.ProcessData(clientid, memory);
+            if (mIsStarted && mHisProcess != null)
+            {
+                this.mHisProcess.ProcessData(clientid, memory);
+            }
+            else
+            {
+                LoggerService.Service.Info("Spider Driver", "Spider driver is not started!");
+            }
             return null;
         }
 
@@ -199,13 +223,24 @@ namespace SpiderDriver
         /// <param name="port"></param>
         protected override void StartInner(int port)
         {
-            mRealProcess = new RealDataServerProcess() { Parent = this };
-            mRealProcess.Init();
-            mInfoProcess = new TagInfoServerProcess() { Parent = this };
-            mHisProcess = new HisDataServerProcess() { Parent = this };
-            mRealProcess.Start();
-            mInfoProcess.Start();
-            mHisProcess.Start();
+            try
+            {
+               
+                mRealProcess = new RealDataServerProcess() { Parent = this };
+                mRealProcess.Init();
+                mInfoProcess = new TagInfoServerProcess() { Parent = this };
+                mHisProcess = new HisDataServerProcess() { Parent = this };
+                mRealProcess.Start();
+                mInfoProcess.Start();
+                mHisProcess.Start();
+                mIsStarted = true;
+                LoggerService.Service.Info("Spider Driver", "Start Sucessfull!");
+
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Erro("Spider Driver", ex.Message);
+            }
             base.StartInner(port);
 
         }

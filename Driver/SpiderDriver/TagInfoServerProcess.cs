@@ -166,21 +166,28 @@ namespace SpiderDriver
                     }
                     break;
                 case Login:
-                    string user = data.ReadString();
-                    string pass = data.ReadString();
-                    long result = Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().Login(user, pass, client);
-
-                    if (result > 0)
+                    try
                     {
-                        mClients.Add(client);
-                        LoggerService.Service.Info("Spider", user +" at client "+ client  + " login sucessfull.");
-                    }
-                    else
-                    {
-                        LoggerService.Service.Warn("Spider", user + " at client " + client + " login failed.");
-                    }
+                        string user = data.ReadString();
+                        string pass = data.ReadString();
+                        long result = Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().Login(user, pass, client);
 
-                    Parent.AsyncCallback(client, ToByteBuffer(APIConst.TagInfoRequestFun, result));
+                        if (result > 0)
+                        {
+                            mClients.Add(client);
+                            LoggerService.Service.Info("Spider", user + " at client " + client + " login sucessfull.");
+                        }
+                        else
+                        {
+                            LoggerService.Service.Warn("Spider", user + " at client " + client + " login failed.");
+                        }
+
+                        Parent.AsyncCallback(client, ToByteBuffer(APIConst.TagInfoRequestFun, result));
+                    }
+                    catch(Exception eex)
+                    {
+                        LoggerService.Service.Erro("SpiderDriver", eex.Message);
+                    }
 
                     break;
 

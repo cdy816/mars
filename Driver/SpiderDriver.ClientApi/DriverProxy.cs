@@ -220,8 +220,16 @@ namespace SpiderDriver.ClientApi
                 if (vdata.ReadableBytes > 4 && vdata.ReferenceCount > 0)
                 {
                     mLoginId = vdata.ReadLong();
+                    if(mLoginId<0)
+                    {
+                        Console.WriteLine("Username or password is invailed!");
+                    }
                     return IsLogin;
                 }
+            }
+            else
+            {
+                Console.WriteLine("Login timeout!");
             }
             //mInfoRequreData?.Release();
             mLoginId = -1;

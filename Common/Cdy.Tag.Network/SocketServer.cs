@@ -251,6 +251,10 @@ namespace Cdy.Tag
             {
                 return mFuns[fun](GetClientId(context), datas);
             }
+            else
+            {
+                LoggerService.Service.Warn("socket server:", "invailed data:"+fun.ToString());
+            }
             return null;
         }
 

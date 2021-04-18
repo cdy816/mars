@@ -462,13 +462,13 @@ namespace SpiderDriverDemo
                         break;
                 }
                 i++;
-                if (i % 1000000 == 0)
+                if (i % 100000 == 0)
                 {
                     driverProxy.SetTagRealAndHisValueAsync(rdb);
                     rdb.Clear();
                 }
             }
-            if (i % 1000000 != 0)
+            if (i % 100000 != 0)
                 driverProxy.SetTagRealAndHisValue(rdb);
             sw.Stop();
             Debug.Print("发送耗时:" + sw.ElapsedMilliseconds);

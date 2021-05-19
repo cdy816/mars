@@ -1028,37 +1028,37 @@ namespace SpiderDriver
             switch (type)
             {
                 case (byte)TagType.Bool:
-                    re.WriteByte((byte)value);
+                    re.WriteByte(Convert.ToByte(value));
                     break;
                 case (byte)TagType.Byte:
-                    re.WriteByte((byte)value);
+                    re.WriteByte(Convert.ToByte(value));
                     break;
                 case (byte)TagType.Short:
-                    re.WriteShort((short)value);
+                    re.WriteShort(Convert.ToInt16(value));
                     break;
                 case (byte)TagType.UShort:
-                    re.WriteUnsignedShort((ushort)value);
+                    re.WriteUnsignedShort(Convert.ToUInt16(value));
                     break;
                 case (byte)TagType.Int:
-                    re.WriteInt((int)value);
+                    re.WriteInt(Convert.ToInt32(value));
                     break;
                 case (byte)TagType.UInt:
-                    re.WriteInt((int)value);
+                    re.WriteInt(Convert.ToInt32(value));
                     break;
                 case (byte)TagType.Long:
                 case (byte)TagType.ULong:
-                    re.WriteLong((long)value);
+                    re.WriteLong(Convert.ToInt64(value));
                     break;
                 case (byte)TagType.Float:
-                    re.WriteFloat((float)value);
+                    re.WriteFloat(Convert.ToSingle(value));
                     break;
                 case (byte)TagType.Double:
-                    re.WriteDouble((double)value);
+                    re.WriteDouble(Convert.ToDouble(value));
                     break;
                 case (byte)TagType.String:
                     string sval = value.ToString();
-                    re.WriteInt(sval.Length);
-                    re.WriteString(sval, Encoding.Unicode);
+                    //re.WriteInt(sval.Length);
+                    re.WriteString(sval);
                     break;
                 case (byte)TagType.DateTime:
                     re.WriteLong(((DateTime)value).Ticks);

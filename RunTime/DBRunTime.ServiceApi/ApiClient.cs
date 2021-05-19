@@ -726,37 +726,38 @@ namespace DBRunTime.ServiceApi
             switch (valueType)
             {
                 case (byte)TagType.Bool:
-                    mb.WriteByte((byte)value);
+                    mb.WriteByte(Convert.ToByte(value));
                     break;
                 case (byte)TagType.Byte:
-                    mb.WriteByte((byte)value);
+                    mb.WriteByte(Convert.ToByte(value));
                     break;
                 case (byte)TagType.Short:
-                    mb.WriteShort((short)value);
+                    mb.WriteShort(Convert.ToInt16(value));
                     break;
                 case (byte)TagType.UShort:
-                    mb.WriteUnsignedShort((ushort)value);
+                    mb.WriteUnsignedShort(Convert.ToUInt16(value));
                     break;
                 case (byte)TagType.Int:
-                    mb.WriteInt((int)value);
+                    mb.WriteInt(Convert.ToInt32(value));
                     break;
                 case (byte)TagType.UInt:
-                    mb.WriteInt((int)value);
+                    mb.WriteInt(Convert.ToInt32(value));
                     break;
                 case (byte)TagType.Long:
                 case (byte)TagType.ULong:
-                    mb.WriteLong((long)value);
+                    mb.WriteLong(Convert.ToInt64(value));
                     break;
                 case (byte)TagType.Float:
-                    mb.WriteFloat((float)value);
+                    mb.WriteFloat(Convert.ToSingle(value));
                     break;
                 case (byte)TagType.Double:
-                    mb.WriteDouble((double)value);
+                    mb.WriteDouble(Convert.ToDouble(value));
                     break;
                 case (byte)TagType.String:
                     string sval = value.ToString();
-                    mb.WriteInt(sval.Length);
-                    mb.WriteString(sval, Encoding.Unicode);
+                    mb.WriteString(sval);
+                    //mb.WriteInt(Encoding.Unicode.GetBytes(sval).Length);
+                    //mb.WriteString(sval, Encoding.Unicode);
                     break;
                 case (byte)TagType.DateTime:
                     mb.WriteLong(((DateTime)value).Ticks);

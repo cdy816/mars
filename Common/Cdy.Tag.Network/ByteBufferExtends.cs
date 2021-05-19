@@ -46,7 +46,7 @@ namespace Cdy.Tag
         {
             var indx = buffer.WriterIndex;
             buffer.WriteInt(0);
-            buffer.WriteString(value, Encoding.UTF8);
+            buffer.WriteString(value, Encoding.Unicode);
             int len = buffer.WriterIndex - indx - 4;
             buffer.MarkWriterIndex();
             buffer.SetWriterIndex(indx);
@@ -64,7 +64,7 @@ namespace Cdy.Tag
         public static string ReadString(this IByteBuffer buffer)
         {
             int dsize = buffer.ReadInt();
-            return buffer.ReadString(dsize, Encoding.UTF8);
+            return buffer.ReadString(dsize, Encoding.Unicode);
         }
 
         /// <summary>

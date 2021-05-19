@@ -60,6 +60,11 @@ namespace DbInRunWebApi.Controllers
         [HttpGet()]
         public HisValue Get([FromBody] HisDataRequest request)
         {
+            if (!DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))
+            {
+                return new HisValue() { Result = false, ErroMessage = "not login" };
+            }
+
             var tag  = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
             if (tag == null) return null;
             object res;
@@ -161,6 +166,11 @@ namespace DbInRunWebApi.Controllers
         [HttpGet("GetByTimeSpan")]
         public HisValue GetByTimeSpan([FromBody] HisDataRequest2 request)
         {
+            if (!DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))
+            {
+                return new HisValue() { Result = false, ErroMessage = "not login" };
+            }
+
             var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
             if (tag == null) return null;
             object res;
@@ -272,6 +282,11 @@ namespace DbInRunWebApi.Controllers
         [HttpGet("GetAllValue")]
         public HisValue GetAllValue([FromBody] AllHisDataRequest request)
         {
+            if (!DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))
+            {
+                return new HisValue() { Result = false, ErroMessage = "not login" };
+            }
+
             var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
             if (tag == null) return null;
             object res;
@@ -373,16 +388,20 @@ namespace DbInRunWebApi.Controllers
         [HttpGet("GetStatisticsValue")]
         public StatisticsValue GetStatisticsValue([FromBody] AllHisDataRequest request)
         {
+            if (!DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))
+            {
+                return new StatisticsValue() { Result = false, ErroMessage = "not login" };
+            }
             var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
             if (tag == null) return null;
             StatisticsValue revals = new StatisticsValue() { tagName = request.TagName };
-           var res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryStatisticsHisData(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+            var res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryStatisticsHisData(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
 
-            if(res!=null)
+            if (res != null)
             {
                 double avgvalue, maxvalue, minvalue;
                 DateTime time, maxtime, mintime;
-                for(int i=0;i<res.Count;i++)
+                for (int i = 0; i < res.Count; i++)
                 {
                     res.ReadValue(i, out time, out avgvalue, out maxvalue, out maxtime, out minvalue, out mintime);
                     revals.Values.Add(new StatisticsValueItem() { Time = time, AvgValue = avgvalue, MaxValue = maxvalue, MinValue = minvalue, MaxValueTime = maxtime, MinValueTime = mintime });
@@ -400,6 +419,11 @@ namespace DbInRunWebApi.Controllers
         [HttpGet("GetStatisticsValueByTimeSpan")]
         public StatisticsValue GetStatisticsValueByTimeSpan([FromBody] StatisticsDataRequest request)
         {
+            if (!DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))
+            {
+                return new StatisticsValue() { Result = false, ErroMessage = "not login" };
+            }
+
             var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
             if (tag == null) return null;
             StatisticsValue revals = new StatisticsValue() { tagName = request.TagName };

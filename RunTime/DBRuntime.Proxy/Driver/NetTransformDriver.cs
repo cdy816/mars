@@ -255,7 +255,7 @@ namespace DBRuntime.Proxy
                         value = block.ReadInt();
                         break;
                     case (byte)TagType.UInt:
-                        value = (uint)block.ReadInt();
+                        value =  Convert.ToUInt32(block.ReadInt());
                         break;
                     case (byte)TagType.Long:
                         value = block.ReadLong();

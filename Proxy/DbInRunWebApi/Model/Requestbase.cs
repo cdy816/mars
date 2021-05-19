@@ -123,6 +123,39 @@ namespace DbInRunWebApi.Model
         #endregion ...Interfaces...
     }
 
+    public class Requestbase2
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Token { get; set; }
+
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
     public class RealDataRequest:Requestbase
     {
 
@@ -164,7 +197,7 @@ namespace DbInRunWebApi.Model
     /// <summary>
     /// 
     /// </summary>
-    public class RealDataSetRequest : Requestbase
+    public class RealDataSetRequest : Requestbase2
     {
 
         #region ... Variables  ...

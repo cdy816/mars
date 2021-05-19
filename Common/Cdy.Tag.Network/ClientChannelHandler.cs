@@ -65,11 +65,18 @@ namespace Cdy.Tag
         /// <param name="fun"></param>
         public void Write(byte[] values,byte fun)
         {
-            var buffer = pooledByteBufAllocator.DirectBuffer(values.Length+1);
-            buffer.WriteByte(fun);
-            Marshal.Copy(values, 0, buffer.AddressOfPinnedMemory()+1, values.Length);
-            buffer.SetWriterIndex(values.Length + 1);
-            mContext?.WriteAndFlushAsync(buffer);
+            try
+            {
+                var buffer = pooledByteBufAllocator.DirectBuffer(values.Length + 1);
+                buffer.WriteByte(fun);
+                Marshal.Copy(values, 0, buffer.AddressOfPinnedMemory() + 1, values.Length);
+                buffer.SetWriterIndex(values.Length + 1);
+                mContext?.WriteAndFlushAsync(buffer);
+            }
+            catch
+            {
+
+            }
         }
 
         /// <summary>
@@ -81,11 +88,18 @@ namespace Cdy.Tag
         /// <param name="fun"></param>
         public void Write(byte[] values,int offset,int len, byte fun)
         {
-            var buffer = pooledByteBufAllocator.DirectBuffer(len+1);
-            buffer.WriteByte(fun);
-            Marshal.Copy(values, offset, buffer.AddressOfPinnedMemory()+1,len);
-            buffer.SetWriterIndex(len + 1);
-            mContext?.WriteAndFlushAsync(buffer);
+            try
+            {
+                var buffer = pooledByteBufAllocator.DirectBuffer(len + 1);
+                buffer.WriteByte(fun);
+                Marshal.Copy(values, offset, buffer.AddressOfPinnedMemory() + 1, len);
+                buffer.SetWriterIndex(len + 1);
+                mContext?.WriteAndFlushAsync(buffer);
+            }
+            catch
+            {
+
+            }
         }
 
         /// <summary>
@@ -96,11 +110,18 @@ namespace Cdy.Tag
         /// <param name="fun"></param>
         public unsafe void Write(IntPtr value,int len, byte fun)
         {
-            var buffer = pooledByteBufAllocator.DirectBuffer(len+1);
-            buffer.WriteByte(fun);
-            Buffer.MemoryCopy((void*)(value), (void*)(buffer.AddressOfPinnedMemory()+1), len, len);
-            buffer.SetWriterIndex(len + 1);
-            mContext?.WriteAndFlushAsync(buffer);
+            try
+            {
+                var buffer = pooledByteBufAllocator.DirectBuffer(len + 1);
+                buffer.WriteByte(fun);
+                Buffer.MemoryCopy((void*)(value), (void*)(buffer.AddressOfPinnedMemory() + 1), len, len);
+                buffer.SetWriterIndex(len + 1);
+                mContext?.WriteAndFlushAsync(buffer);
+            }
+            catch
+            {
+
+            }
         }
 
         /// <summary>
@@ -109,7 +130,14 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void Write(IByteBuffer values)
         {
-            mContext?.WriteAndFlushAsync(values);
+            try
+            {
+                mContext?.WriteAndFlushAsync(values);
+            }
+            catch
+            {
+
+            }
         }
 
         /// <summary>
@@ -129,8 +157,11 @@ namespace Cdy.Tag
         /// <param name="context"></param>
         public override void ChannelInactive(IChannelHandlerContext context)
         {
-            mParent.IsConnected = false;
-            base.ChannelInactive(context);
+            if (mParent != null)
+            {
+                mParent.IsConnected = false;
+                base.ChannelInactive(context);
+            }
         }
 
         /// <summary>
@@ -140,11 +171,18 @@ namespace Cdy.Tag
         /// <param name="message"></param>
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
-            IByteBuffer buffer = message as IByteBuffer;
-            if (buffer.IsReadable() && buffer.Capacity>1)
+            try
             {
-                var fun = buffer.ReadByte();
-                DataArrivedEvent?.Invoke(fun, buffer);
+                IByteBuffer buffer = message as IByteBuffer;
+                if (buffer.IsReadable() && buffer.Capacity > 1)
+                {
+                    var fun = buffer.ReadByte();
+                    DataArrivedEvent?.Invoke(fun, buffer);
+                }
+            }
+            catch
+            {
+
             }
             base.ChannelRead(context, message);
         }
@@ -153,7 +191,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="context"></param>
-        public override void ChannelReadComplete(IChannelHandlerContext context) => context.Flush();
+        public override void ChannelReadComplete(IChannelHandlerContext context) => context?.Flush();
 
         /// <summary>
         /// 

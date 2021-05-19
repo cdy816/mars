@@ -728,7 +728,7 @@ namespace SpiderDriver.ClientApi
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(data.ValueCount);
 
-            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.WriterIndex, (int)data.Position);
+            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
             mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
 
             realRequreEvent.Reset();
@@ -764,7 +764,7 @@ namespace SpiderDriver.ClientApi
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(data.ValueCount);
 
-            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.WriterIndex, (int)data.Position);
+            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
             mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
 
             realRequreEvent.Reset();
@@ -1064,7 +1064,7 @@ namespace SpiderDriver.ClientApi
             mb.WriteInt(data.ValueCount);
             mb.WriteByte((byte)type);
 
-            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.WriterIndex, (int)data.Position);
+            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
             mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
             hisRequreEvent.Reset();
             Send(mb);
@@ -1141,7 +1141,7 @@ namespace SpiderDriver.ClientApi
             mb.WriteLong(this.mLoginId);
             mb.WriteInt(data.ValueCount);
 
-            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.WriterIndex, (int)data.Position);
+            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
             mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
 
             hisRequreEvent.Reset();

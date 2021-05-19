@@ -60,11 +60,18 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void Write(IChannelHandlerContext mContext, byte[] values,int len,byte fun)
         {
-            var buffer = BufferManager.Manager.Allocate(len + 1);
-            buffer.WriteByte(fun);
-            Marshal.Copy(values, 0, buffer.AddressOfPinnedMemory() + 1, len);
-            buffer.SetWriterIndex(len + 1);
-            mContext?.WriteAndFlushAsync(buffer);
+            try
+            {
+                var buffer = BufferManager.Manager.Allocate(len + 1);
+                buffer.WriteByte(fun);
+                Marshal.Copy(values, 0, buffer.AddressOfPinnedMemory() + 1, len);
+                buffer.SetWriterIndex(len + 1);
+                mContext?.WriteAndFlushAsync(buffer);
+            }
+            catch
+            {
+
+            }
         }
 
         /// <summary>
@@ -77,11 +84,18 @@ namespace Cdy.Tag
         /// <param name="fun"></param>
         public void Write(IChannelHandlerContext mContext, byte[] values, int offset, int len, byte fun)
         {
-            var buffer = BufferManager.Manager.Allocate(len + 1);
-            buffer.WriteByte(fun);
-            Marshal.Copy(values, offset, buffer.AddressOfPinnedMemory() + 1, len);
-            buffer.SetWriterIndex(len + 1);
-            mContext?.WriteAndFlushAsync(buffer);
+            try
+            {
+                var buffer = BufferManager.Manager.Allocate(len + 1);
+                buffer.WriteByte(fun);
+                Marshal.Copy(values, offset, buffer.AddressOfPinnedMemory() + 1, len);
+                buffer.SetWriterIndex(len + 1);
+                mContext?.WriteAndFlushAsync(buffer);
+            }
+            catch
+            {
+
+            }
         }
 
         /// <summary>
@@ -93,11 +107,18 @@ namespace Cdy.Tag
         /// <param name="fun"></param>
         public unsafe void Write(IChannelHandlerContext mContext, IntPtr value, int len, byte fun)
         {
-            var buffer = BufferManager.Manager.Allocate(len + 1);
-            buffer.WriteByte(fun);
-            Buffer.MemoryCopy((void*)(value), (void*)(buffer.AddressOfPinnedMemory() + 1), len, len);
-            buffer.SetWriterIndex(len + 1);
-            mContext?.WriteAndFlushAsync(buffer);
+            try
+            {
+                var buffer = BufferManager.Manager.Allocate(len + 1);
+                buffer.WriteByte(fun);
+                Buffer.MemoryCopy((void*)(value), (void*)(buffer.AddressOfPinnedMemory() + 1), len, len);
+                buffer.SetWriterIndex(len + 1);
+                mContext?.WriteAndFlushAsync(buffer);
+            }
+            catch
+            {
+
+            }
         }
 
         /// <summary>
@@ -106,7 +127,14 @@ namespace Cdy.Tag
         /// <param name="values"></param>
         public void Write(IChannelHandlerContext mContext, IByteBuffer values)
         {
-            mContext?.WriteAndFlushAsync(values);
+            try
+            {
+                mContext?.WriteAndFlushAsync(values);
+            }
+            catch
+            {
+
+            }
         }
 
         /// <summary>
@@ -115,7 +143,10 @@ namespace Cdy.Tag
         /// <param name="context"></param>
         public override void ChannelActive(IChannelHandlerContext context)
         {
-            mServer.Registor(context);
+            if (mServer != null)
+            {
+                mServer.Registor(context);
+            }
             base.ChannelActive(context);
         }
 
@@ -125,7 +156,8 @@ namespace Cdy.Tag
         /// <param name="context"></param>
         public override void ChannelInactive(IChannelHandlerContext context)
         {
-            mServer.UnRegistor(context);
+            if (mServer != null)
+                mServer.UnRegistor(context);
             base.ChannelInactive(context);
         }
 
@@ -137,17 +169,24 @@ namespace Cdy.Tag
         public  override void ChannelRead(IChannelHandlerContext context, object message)
         {
             IByteBuffer buffer = message as IByteBuffer;
-            if (buffer.IsReadable())
+            try
             {
-                var fun = buffer.ReadByte();
-                if (DataArrived != null)
+                if (buffer.IsReadable())
                 {
-                    var vdd = DataArrived(context, fun, buffer);
-                    if (vdd != null && vdd.ReferenceCount>0)
+                    var fun = buffer.ReadByte();
+                    if (DataArrived != null)
                     {
-                        Write(context, vdd);
+                        var vdd = DataArrived(context, fun, buffer);
+                        if (vdd != null && vdd.ReferenceCount > 0)
+                        {
+                            Write(context, vdd);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Service.Warn("Socket Service", ex.Message);
             }
             base.ChannelRead(context, message);
         }
@@ -158,7 +197,7 @@ namespace Cdy.Tag
         /// <param name="context"></param>
         public override void ChannelReadComplete(IChannelHandlerContext context)
         {
-            context.Flush();
+            context?.Flush();
         }
 
         /// <summary>

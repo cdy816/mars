@@ -37,9 +37,15 @@ namespace DbInRunWebApi.Controllers
                         values.Add(new ValueItem() { Time = time, Quality = qu, Value = val.ToString() });
                     }
                     re.Values = values;
+
+                    vdata.Dispose();
                 }
                 else
                 {
+                    if(datas!=null && datas is IDisposable)
+                    {
+                        (datas as IDisposable).Dispose();
+                    }
                     re.Result = false;
                     re.ErroMessage = "no result";
                 }
@@ -456,6 +462,7 @@ namespace DbInRunWebApi.Controllers
                         res.ReadValue(i, out time, out avgvalue, out maxvalue, out maxtime, out minvalue, out mintime);
                         revals.Values.Add(new StatisticsValueItem() { Time = time, AvgValue = avgvalue, MaxValue = maxvalue, MinValue = minvalue, MaxValueTime = maxtime, MinValueTime = mintime });
                     }
+                    res.Dispose();
                 }
                 if (revals != null)
                 {
@@ -511,6 +518,7 @@ namespace DbInRunWebApi.Controllers
                         res.ReadValue(i, out time, out avgvalue, out maxvalue, out maxtime, out minvalue, out mintime);
                         revals.Values.Add(new StatisticsValueItem() { Time = time, AvgValue = avgvalue, MaxValue = maxvalue, MinValue = minvalue, MaxValueTime = maxtime, MinValueTime = mintime });
                     }
+                    res.Dispose();
                 }
 
                 if (revals != null)

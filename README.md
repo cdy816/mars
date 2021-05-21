@@ -14,9 +14,6 @@
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <a href="https://github.com/cdy816/mars">
-    <img src="/Doc/Images/mrdbr.png" alt="Logo" width="128" height="80">
-  </a>
 
   <h2 align="center">Mars 实时库</h2>
  

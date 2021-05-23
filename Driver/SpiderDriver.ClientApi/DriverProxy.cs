@@ -176,19 +176,19 @@ namespace SpiderDriver.ClientApi
                         value = block.ReadShort();
                         break;
                     case (byte)TagType.UShort:
-                        value = (ushort)block.ReadShort();
+                        value = block.ReadUShort();
                         break;
                     case (byte)TagType.Int:
                         value = block.ReadInt();
                         break;
                     case (byte)TagType.UInt:
-                        value = (uint)block.ReadInt();
+                        value = block.ReadUInt();
                         break;
                     case (byte)TagType.Long:
                         value = block.ReadLong();
                         break;
                     case (byte)TagType.ULong:
-                        value = (ulong)block.ReadLong();
+                        value =block.ReadULong();
                         break;
                     case (byte)TagType.Float:
                         value = block.ReadFloat();
@@ -258,7 +258,7 @@ namespace SpiderDriver.ClientApi
                 var vdata = mInfoRequreData.Dequeue();
                 try
                 {
-                    if (vdata.ReadableCount > 4 && vdata.RefCount > 0)
+                    if (vdata.ReadableCount > 4)
                     {
                         mLoginId = vdata.ReadLong();
                         if (mLoginId < 0)
@@ -293,176 +293,176 @@ namespace SpiderDriver.ClientApi
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="value"></param>
-        /// <param name="re"></param>
-        private void SetTagValueToBuffer(TagType type,object value,ByteBuffer re)
-        {
-            re.Write((byte)type);
-            switch (type)
-            {
-                case TagType.Bool:
-                    re.Write((byte)value);
-                    break;
-                case TagType.Byte:
-                    re.Write((byte)value);
-                    break;
-                case TagType.Short:
-                    re.Write((short)value);
-                    break;
-                case TagType.UShort:
-                    re.Write((ushort)value);
-                    break;
-                case TagType.Int:
-                    re.Write((int)value);
-                    break;
-                case TagType.UInt:
-                    re.Write((uint)value);
-                    break;
-                case TagType.Long:
-                case TagType.ULong:
-                    re.Write((long)value);
-                    break;
-                case TagType.Float:
-                    re.Write((float)value);
-                    break;
-                case TagType.Double:
-                    re.Write((double)value);
-                    break;
-                case TagType.String:
-                    string sval = value.ToString();
-                    //re.WriteInt(sval.Length);
-                    re.Write(sval, Encoding.Unicode);
-                    break;
-                case TagType.DateTime:
-                    re.Write(((DateTime)value).Ticks);
-                    break;
-                case TagType.IntPoint:
-                    re.Write(((IntPointData)value).X);
-                    re.Write(((IntPointData)value).Y);
-                    break;
-                case TagType.UIntPoint:
-                    re.Write((int)((UIntPointData)value).X);
-                    re.Write((int)((UIntPointData)value).Y);
-                    break;
-                case TagType.IntPoint3:
-                    re.Write(((IntPoint3Data)value).X);
-                    re.Write(((IntPoint3Data)value).Y);
-                    re.Write(((IntPoint3Data)value).Z);
-                    break;
-                case TagType.UIntPoint3:
-                    re.Write((int)((UIntPoint3Data)value).X);
-                    re.Write((int)((UIntPoint3Data)value).Y);
-                    re.Write((int)((UIntPoint3Data)value).Z);
-                    break;
-                case TagType.LongPoint:
-                    re.Write(((LongPointData)value).X);
-                    re.Write(((LongPointData)value).Y);
-                    break;
-                case TagType.ULongPoint:
-                    re.Write((long)((ULongPointData)value).X);
-                    re.Write((long)((ULongPointData)value).Y);
-                    break;
-                case TagType.LongPoint3:
-                    re.Write(((LongPoint3Data)value).X);
-                    re.Write(((LongPoint3Data)value).Y);
-                    re.Write(((LongPoint3Data)value).Z);
-                    break;
-                case TagType.ULongPoint3:
-                    re.Write((long)((ULongPoint3Data)value).X);
-                    re.Write((long)((ULongPoint3Data)value).Y);
-                    re.Write((long)((ULongPoint3Data)value).Z);
-                    break;
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="type"></param>
+        ///// <param name="value"></param>
+        ///// <param name="re"></param>
+        //private void SetTagValueToBuffer(TagType type,object value,ByteBuffer re)
+        //{
+        //    re.Write((byte)type);
+        //    switch (type)
+        //    {
+        //        case TagType.Bool:
+        //            re.Write((byte)value);
+        //            break;
+        //        case TagType.Byte:
+        //            re.Write((byte)value);
+        //            break;
+        //        case TagType.Short:
+        //            re.Write((short)value);
+        //            break;
+        //        case TagType.UShort:
+        //            re.Write((ushort)value);
+        //            break;
+        //        case TagType.Int:
+        //            re.Write((int)value);
+        //            break;
+        //        case TagType.UInt:
+        //            re.Write((uint)value);
+        //            break;
+        //        case TagType.Long:
+        //        case TagType.ULong:
+        //            re.Write((long)value);
+        //            break;
+        //        case TagType.Float:
+        //            re.Write((float)value);
+        //            break;
+        //        case TagType.Double:
+        //            re.Write((double)value);
+        //            break;
+        //        case TagType.String:
+        //            string sval = value.ToString();
+        //            //re.WriteInt(sval.Length);
+        //            re.Write(sval, Encoding.Unicode);
+        //            break;
+        //        case TagType.DateTime:
+        //            re.Write(((DateTime)value).Ticks);
+        //            break;
+        //        case TagType.IntPoint:
+        //            re.Write(((IntPointData)value).X);
+        //            re.Write(((IntPointData)value).Y);
+        //            break;
+        //        case TagType.UIntPoint:
+        //            re.Write((int)((UIntPointData)value).X);
+        //            re.Write((int)((UIntPointData)value).Y);
+        //            break;
+        //        case TagType.IntPoint3:
+        //            re.Write(((IntPoint3Data)value).X);
+        //            re.Write(((IntPoint3Data)value).Y);
+        //            re.Write(((IntPoint3Data)value).Z);
+        //            break;
+        //        case TagType.UIntPoint3:
+        //            re.Write((int)((UIntPoint3Data)value).X);
+        //            re.Write((int)((UIntPoint3Data)value).Y);
+        //            re.Write((int)((UIntPoint3Data)value).Z);
+        //            break;
+        //        case TagType.LongPoint:
+        //            re.Write(((LongPointData)value).X);
+        //            re.Write(((LongPointData)value).Y);
+        //            break;
+        //        case TagType.ULongPoint:
+        //            re.Write((long)((ULongPointData)value).X);
+        //            re.Write((long)((ULongPointData)value).Y);
+        //            break;
+        //        case TagType.LongPoint3:
+        //            re.Write(((LongPoint3Data)value).X);
+        //            re.Write(((LongPoint3Data)value).Y);
+        //            re.Write(((LongPoint3Data)value).Z);
+        //            break;
+        //        case TagType.ULongPoint3:
+        //            re.Write((long)((ULongPoint3Data)value).X);
+        //            re.Write((long)((ULongPoint3Data)value).Y);
+        //            re.Write((long)((ULongPoint3Data)value).Z);
+        //            break;
+        //    }
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="value"></param>
-        /// <param name="re"></param>
-        private void SetTagValueToBuffer2(TagType type, object value, ByteBuffer re)
-        {
-            switch (type)
-            {
-                case TagType.Bool:
-                    re.Write((byte)value);
-                    break;
-                case TagType.Byte:
-                    re.Write((byte)value);
-                    break;
-                case TagType.Short:
-                    re.Write((short)value);
-                    break;
-                case TagType.UShort:
-                    re.Write((ushort)value);
-                    break;
-                case TagType.Int:
-                    re.Write((int)value);
-                    break;
-                case TagType.UInt:
-                    re.Write((int)value);
-                    break;
-                case TagType.Long:
-                case TagType.ULong:
-                    re.Write((long)value);
-                    break;
-                case TagType.Float:
-                    re.Write((float)value);
-                    break;
-                case TagType.Double:
-                    re.Write((double)value);
-                    break;
-                case TagType.String:
-                    string sval = value.ToString();
-                    //re.WriteInt(sval.Length);
-                    re.Write(sval, Encoding.Unicode);
-                    break;
-                case TagType.DateTime:
-                    re.Write(((DateTime)value).Ticks);
-                    break;
-                case TagType.IntPoint:
-                    re.Write(((IntPointData)value).X);
-                    re.Write(((IntPointData)value).Y);
-                    break;
-                case TagType.UIntPoint:
-                    re.Write((int)((UIntPointData)value).X);
-                    re.Write((int)((UIntPointData)value).Y);
-                    break;
-                case TagType.IntPoint3:
-                    re.Write(((IntPoint3Data)value).X);
-                    re.Write(((IntPoint3Data)value).Y);
-                    re.Write(((IntPoint3Data)value).Z);
-                    break;
-                case TagType.UIntPoint3:
-                    re.Write((int)((UIntPoint3Data)value).X);
-                    re.Write((int)((UIntPoint3Data)value).Y);
-                    re.Write((int)((UIntPoint3Data)value).Z);
-                    break;
-                case TagType.LongPoint:
-                    re.Write(((LongPointData)value).X);
-                    re.Write(((LongPointData)value).Y);
-                    break;
-                case TagType.ULongPoint:
-                    re.Write((long)((ULongPointData)value).X);
-                    re.Write((long)((ULongPointData)value).Y);
-                    break;
-                case TagType.LongPoint3:
-                    re.Write(((LongPoint3Data)value).X);
-                    re.Write(((LongPoint3Data)value).Y);
-                    re.Write(((LongPoint3Data)value).Z);
-                    break;
-                case TagType.ULongPoint3:
-                    re.Write((long)((ULongPoint3Data)value).X);
-                    re.Write((long)((ULongPoint3Data)value).Y);
-                    re.Write((long)((ULongPoint3Data)value).Z);
-                    break;
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="type"></param>
+        ///// <param name="value"></param>
+        ///// <param name="re"></param>
+        //private void SetTagValueToBuffer2(TagType type, object value, ByteBuffer re)
+        //{
+        //    switch (type)
+        //    {
+        //        case TagType.Bool:
+        //            re.Write((byte)value);
+        //            break;
+        //        case TagType.Byte:
+        //            re.Write((byte)value);
+        //            break;
+        //        case TagType.Short:
+        //            re.Write((short)value);
+        //            break;
+        //        case TagType.UShort:
+        //            re.Write((ushort)value);
+        //            break;
+        //        case TagType.Int:
+        //            re.Write((int)value);
+        //            break;
+        //        case TagType.UInt:
+        //            re.Write((int)value);
+        //            break;
+        //        case TagType.Long:
+        //        case TagType.ULong:
+        //            re.Write((long)value);
+        //            break;
+        //        case TagType.Float:
+        //            re.Write((float)value);
+        //            break;
+        //        case TagType.Double:
+        //            re.Write((double)value);
+        //            break;
+        //        case TagType.String:
+        //            string sval = value.ToString();
+        //            //re.WriteInt(sval.Length);
+        //            re.Write(sval, Encoding.Unicode);
+        //            break;
+        //        case TagType.DateTime:
+        //            re.Write(((DateTime)value).Ticks);
+        //            break;
+        //        case TagType.IntPoint:
+        //            re.Write(((IntPointData)value).X);
+        //            re.Write(((IntPointData)value).Y);
+        //            break;
+        //        case TagType.UIntPoint:
+        //            re.Write((int)((UIntPointData)value).X);
+        //            re.Write((int)((UIntPointData)value).Y);
+        //            break;
+        //        case TagType.IntPoint3:
+        //            re.Write(((IntPoint3Data)value).X);
+        //            re.Write(((IntPoint3Data)value).Y);
+        //            re.Write(((IntPoint3Data)value).Z);
+        //            break;
+        //        case TagType.UIntPoint3:
+        //            re.Write((int)((UIntPoint3Data)value).X);
+        //            re.Write((int)((UIntPoint3Data)value).Y);
+        //            re.Write((int)((UIntPoint3Data)value).Z);
+        //            break;
+        //        case TagType.LongPoint:
+        //            re.Write(((LongPointData)value).X);
+        //            re.Write(((LongPointData)value).Y);
+        //            break;
+        //        case TagType.ULongPoint:
+        //            re.Write((long)((ULongPointData)value).X);
+        //            re.Write((long)((ULongPointData)value).Y);
+        //            break;
+        //        case TagType.LongPoint3:
+        //            re.Write(((LongPoint3Data)value).X);
+        //            re.Write(((LongPoint3Data)value).Y);
+        //            re.Write(((LongPoint3Data)value).Z);
+        //            break;
+        //        case TagType.ULongPoint3:
+        //            re.Write((long)((ULongPoint3Data)value).X);
+        //            re.Write((long)((ULongPoint3Data)value).Y);
+        //            re.Write((long)((ULongPoint3Data)value).Z);
+        //            break;
+        //    }
+        //}
 
         /// <summary>
         /// 
@@ -579,7 +579,7 @@ namespace SpiderDriver.ClientApi
                     re.Write(Convert.ToInt32(value));
                     break;
                 case TagType.UInt:
-                    re.Write(Convert.ToInt32(value));
+                    re.Write(Convert.ToUInt32(value));
                     break;
                 case TagType.Long:
                 case TagType.ULong:

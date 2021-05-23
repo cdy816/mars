@@ -1195,8 +1195,10 @@ namespace SpiderDriver
                             cb.Value.Write(mDataCounts[cb.Key]);
                             //cb.Value.ResetWriterIndex();
                             cb.Value.WriteIndex = idx;
+
+                            Parent.PushRealDatatoClient(cb.Key, cb.Value);
                         }
-                        Parent.PushRealDatatoClient(cb.Key, cb.Value);
+                       
                     }
                     buffers.Clear();
                 }

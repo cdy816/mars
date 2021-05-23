@@ -855,7 +855,7 @@ namespace DBRunTime.ServiceApi
                     break;
                 case (byte)TagType.String:
                     string sval = value.ToString();
-                    mb.Write(sval.Length);
+                    //mb.Write(sval.Length);
                     mb.Write(sval, Encoding.Unicode);
                     break;
                 case (byte)TagType.DateTime:
@@ -972,7 +972,7 @@ namespace DBRunTime.ServiceApi
                         break;
                     case (byte)TagType.String:
                         string sval = value[i].ToString();
-                        mb.Write(sval.Length);
+                        //mb.Write(sval.Length);
                         mb.Write(sval, Encoding.Unicode);
                         break;
                     case (byte)TagType.DateTime:

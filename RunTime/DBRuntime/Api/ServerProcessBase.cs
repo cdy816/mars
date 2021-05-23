@@ -145,14 +145,21 @@ namespace DBRuntime.Api
                 resetEvent.WaitOne();
                 if (mIsClosed) return;
                 resetEvent.Reset();
-                foreach (var vv in mDatasCach)
+                try
                 {
-                    while(vv.Value.Count>0)
+                    foreach (var vv in mDatasCach)
                     {
-                        var dd = vv.Value.Dequeue();
-                        if(dd!=null)
-                        ProcessSingleData(vv.Key, dd);
+                        while (vv.Value.Count > 0)
+                        {
+                            var dd = vv.Value.Dequeue();
+                            if (dd != null)
+                                ProcessSingleData(vv.Key, dd);
+                        }
                     }
+                }
+                catch
+                {
+
                 }
             }
         }

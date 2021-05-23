@@ -162,7 +162,7 @@ namespace DBRuntime.Proxy
 
             var start = block.ReadInt();
             var size = block.ReadInt();
-            LoggerService.Service.Info("ProcessBlockBufferData", "block start" +start +", size:"+size);
+            //LoggerService.Service.Info("ProcessBlockBufferData", "block start" +start +", size:"+size);
 
             try
             {
@@ -478,8 +478,8 @@ namespace DBRuntime.Proxy
         /// </summary>
         public static void SyncRealMemory(this ApiClient Client,Dictionary<long,long> address)
         {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
+            //Stopwatch sw = new Stopwatch();
+            //sw.Start();
             var realenginer = (ServiceLocator.Locator.Resolve<IRealTagConsumer>() as RealEnginer);
             if (Client != null && Client.IsConnected && realenginer.Memory!=null)
             {
@@ -512,8 +512,8 @@ namespace DBRuntime.Proxy
                     }
                 }
             }
-            sw.Stop();
-            LoggerService.Service.Info("SyncRealMemory", "数据大小:" + (realenginer.Memory.Length / 1024 / 1024) + " 耗时: " + sw.ElapsedMilliseconds);
+            //sw.Stop();
+            //LoggerService.Service.Info("SyncRealMemory", "数据大小:" + (realenginer.Memory.Length / 1024 / 1024) + " 耗时: " + sw.ElapsedMilliseconds);
         }
 
         /// <summary>

@@ -1021,6 +1021,7 @@ namespace Cdy.Tag
             var val = Encoding.Unicode.GetBytes(value);
             MemoryHelper.WriteByte(mMHandle, addr, (byte)val.Length);
             System.Buffer.BlockCopy(val, 0, mMemory, (int)addr+1, val.Length);
+
             MemoryHelper.WriteDateTime(mMHandle, addr+ Const.StringSize, time);
             MemoryHelper.WriteByte(mMHandle, addr+Const.StringSize + 8, quality); 
         }
@@ -2165,7 +2166,8 @@ namespace Cdy.Tag
         public string ReadStringValueByAddr(long addr)
         {
             int len = MemoryHelper.ReadByte((sbyte*)mMHandle, addr);
-            return new string((sbyte*)mMHandle, (int)addr+1, len, Encoding.Unicode);
+           return  Encoding.Unicode.GetString(mMemory,(int)(addr+1), len);
+            //return new string((sbyte*)mMHandle, (int)addr+1, len, Encoding.Unicode);
         }
 
         /// <summary>
@@ -2179,7 +2181,8 @@ namespace Cdy.Tag
         public string ReadStringValueByAddr(long addr,out DateTime time, out byte quality)
         {
             int len = MemoryHelper.ReadByte((sbyte*)mMHandle, addr);
-            var re = new string((sbyte*)mMHandle, (int)addr+1, len, Encoding.Unicode);
+            //var re = new string((sbyte*)mMHandle, (int)addr+1, len, Encoding.Unicode);
+            var re = Encoding.Unicode.GetString(mMemory, (int)(addr + 1), len);
             time = MemoryHelper.ReadDateTime(mMHandle, addr+ Const.StringSize);
             quality = MemoryHelper.ReadByte(mMHandle, addr + Const.StringSize + 8);
             return re;
@@ -5696,11 +5699,11 @@ namespace Cdy.Tag
             Take();
             if (tag.ReadWriteType == ReadWriteMode.Read) return false;
             string btmp = Convert.ToString(value);
-            SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
             if (tag.Conveter != null)
             {
                 btmp = Convert.ToString(tag.Conveter.ConvertBackTo(value));
             }
+            SetValueByAddr(tag.ValueAddress, btmp, qulity, time);
             NotifyValueChangedToProducter(tag.Id, btmp);
             return true;
         }

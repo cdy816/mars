@@ -17,8 +17,8 @@
       }
     },
     "DbInRunWebApi": {
-      "commandName": "Project",
-      "launchBrowser": true,
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\chongdaoyang\\source\\repos\\mars\\Output\\DbWebApi\\DbWebApi.exe",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

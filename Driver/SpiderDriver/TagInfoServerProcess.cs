@@ -112,6 +112,12 @@ namespace SpiderDriver
                                 Parent.AsyncCallback(client, GetTagBuffer(vv, (short)i, (short)tcount));
                             }
                         }
+
+                        if(tcount==0)
+                        {
+                            Parent.AsyncCallback(client, GetTagBuffer(new List<Tagbase>(), (short)0, (short)0));
+                        }
+
                     }
                     break;
                 case GetDriverRecordTypeTagIds:
@@ -137,6 +143,11 @@ namespace SpiderDriver
                                 var vv = vtags.Skip(i * psize).Take(psize);
                                 Parent.AsyncCallback(client, GetRecordTypeBuffer(vv, (short)i, (short)tcount));
                             }
+                        }
+
+                        if (tcount == 0)
+                        {
+                            Parent.AsyncCallback(client, GetRecordTypeBuffer(new List<HisTag>(), (short)0, (short)0));
                         }
                     }
                     break;

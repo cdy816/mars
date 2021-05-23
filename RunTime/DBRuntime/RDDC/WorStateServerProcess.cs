@@ -8,6 +8,7 @@
 //==============================================================
 
 using Cdy.Tag;
+using Cheetah;
 using DBRuntime.Api;
 using DotNetty.Buffers;
 using System;
@@ -65,7 +66,7 @@ namespace DBRuntime.RDDC
         /// </summary>
         /// <param name="client"></param>
         /// <param name="data"></param>
-        protected override void ProcessSingleData(string client, IByteBuffer data)
+        protected override void ProcessSingleData(string client, ByteBuffer data)
         {
             byte cmd = data.ReadByte();
             switch (cmd)

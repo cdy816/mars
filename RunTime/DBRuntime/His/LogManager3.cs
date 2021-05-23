@@ -43,8 +43,6 @@ namespace Cdy.Tag
 
         private string mDatabase = string.Empty;
 
-        //private VarintCodeMemory memory;
-
         private bool mIsChanged = false;
 
         private object mLocker = new object();
@@ -98,65 +96,7 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //public void InitHeadData()
-        //{
-        //    HisDataMemoryBlockCollection3 mtags = Parent.CurrentMemory;
-
-        //    if (memory != null)
-        //    {
-        //        memory.Dispose();
-        //        memory = null;
-        //    }
-
-        //    // var vtmp = mtags.TagAddress.Where(e => e.Value>0);
-
-        //    var vtmp = mtags.TagAddress;
-
-        //    memory = new VarintCodeMemory(vtmp.Count() * 16);
-        //    memory.WriteInt64(vtmp.Count());
-
-        //    long prev = 0;
-        //    int i = 0;
-        //    foreach (var vv in vtmp)
-        //    {
-        //        if (i == 0)
-        //        {
-        //            prev = vv.Key;
-        //            memory.WriteInt64(prev);
-        //        }
-        //        else
-        //        {
-        //            memory.WriteInt64((vv.Key - prev));
-        //            prev = vv.Key;
-        //        }
-        //        i++;
-        //    }
-
-        //    prev = 0;
-        //    i = 0;
-        //    long ltmp = 0;
-        //    foreach (var vv in vtmp)
-        //    {
-        //        if (i == 0)
-        //        {
-        //            memory.WriteInt64(prev);
-        //        }
-        //        else
-        //        {
-        //            memory.WriteInt64(ltmp - prev);
-        //            prev = ltmp;
-        //        }
-        //        // ltmp += vv.Value.Length;
-        //        ltmp = mtags.ReadDataSize(vv.Value);
-        //        i++;
-        //    }
-
-        //    memory.WriteInt64(ltmp);
-
-        //}
+        
 
         /// <summary>
         /// 
@@ -263,20 +203,9 @@ namespace Cdy.Tag
         /// </summary>
         private void RecordToFile()
         {
-            //TimeSpan +  HeadLength+HeadData+Data
-
-            //lock (mLocker)
-            //{
-            //    if (IsChanged)
-            //    {
-            //        IsChanged = false;
-            //        InitHeadData();
-            //    }
-            //}
-
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            string fileName = GetLogFilePath(mStartTime,mEndTime);
+            string fileName = GetLogFilePath(mStartTime, mEndTime);
             LoggerService.Service.Info("LogManager", "开始记日志录文件：" + fileName);
 
             var manager = DataFileSeriserManager.manager.GetDefaultFileSersie();
@@ -284,30 +213,31 @@ namespace Cdy.Tag
             var stream = manager.GetStream();
 
             //using (var stream = System.IO.File.Open(fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
-            {
-                stream.Write(BitConverter.GetBytes(TimeLen));         //写入文件时长
+            //{
+            stream.Write(BitConverter.GetBytes(TimeLen));         //写入文件时长
 
-                stream.Write(BitConverter.GetBytes(mBaseTime.ToBinary()));
+            stream.Write(BitConverter.GetBytes(mBaseTime.ToBinary()));
 
-                long ltmp = stream.Position;
-                int headsize = mNeedSaveMemory1.TagAddress.Count * 12+4;
-               
-                stream.Position = ltmp + headsize;
-                //stream.Write(memory.Buffer, 0, memory.Position);      //写入文件头
+            long ltmp = stream.Position;
+            int headsize = mNeedSaveMemory1.TagAddress.Count * 12 + 4;
 
-                var vtmp = mNeedSaveMemory1.RecordDataToLog(stream);                 //写入内存数据
+            stream.Position = ltmp + headsize;
+            //stream.Write(memory.Buffer, 0, memory.Position);      //写入文件头
 
-                //写入文件头数据
-                stream.Position = ltmp;
+            var vtmp = mNeedSaveMemory1.RecordDataToLog(stream);                 //写入内存数据
 
-                vtmp.WriteToStream(stream, 0, headsize);
+            //写入文件头数据
+            stream.Position = ltmp;
 
+            vtmp.WriteToStream(stream, 0, headsize);
 
-            }
+            vtmp.Dispose();
+
+            //}
             manager.Dispose();
 
             sw.Stop();
-            LoggerService.Service.Info("LogManager", "日志文件："+ fileName + " 记录完成! 耗时:"+sw.ElapsedMilliseconds );
+            LoggerService.Service.Info("LogManager", "日志文件：" + fileName + " 记录完成! 耗时:" + sw.ElapsedMilliseconds);
 
         }
 

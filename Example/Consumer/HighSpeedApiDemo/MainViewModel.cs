@@ -193,7 +193,7 @@ namespace HighSpeedApiDemo
         /// </summary>
         private void Connect()
         {
-            clinet.Connect(mIp, 14332);
+            clinet.Open(mIp, 14332);
            
         }
 

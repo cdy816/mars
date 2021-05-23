@@ -305,7 +305,7 @@ namespace Cdy.Tag
                         offset += 4;
 
                         
-                        if ((dataloc + datasize) > bufferLenght)
+                        if ((dataloc + datasize) > bufferLenght || datasize<=0)
                         {
                             targetheadpoint = null;
                             return;

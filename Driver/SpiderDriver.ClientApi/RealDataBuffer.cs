@@ -291,7 +291,8 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteLong(long offset, long value)
         {
-            MemoryHelper.WriteInt64Reverse((void*)mHandle, offset, value);
+            // MemoryHelper.WriteInt64Reverse((void*)mHandle, offset, value);
+            MemoryHelper.WriteInt64((void*)mHandle, offset, value);
             Position = offset + 8;
         }
 
@@ -302,7 +303,8 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteLongDirect(long offset, long value)
         {
-            MemoryHelper.WriteInt64Reverse((void*)mHandle, offset, value);
+            //MemoryHelper.WriteInt64Reverse((void*)mHandle, offset, value);
+            MemoryHelper.WriteInt64((void*)mHandle, offset, value);
         }
 
         /// <summary>
@@ -312,7 +314,8 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteULong(long offset, ulong value)
         {
-            MemoryHelper.WriteUInt64Reverse((void*)mHandle, offset, value);
+            //MemoryHelper.WriteUInt64Reverse((void*)mHandle, offset, value);
+            MemoryHelper.WriteUInt64((void*)mHandle, offset, value);
             Position = offset + 8;
         }
 
@@ -323,7 +326,8 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteFloat(long offset, float value)
         {
-            MemoryHelper.WriteFloatReverse((void*)mHandle, offset, value);
+            // MemoryHelper.WriteFloatReverse((void*)mHandle, offset, value);
+            MemoryHelper.WriteFloat((void*)mHandle, offset, value);
             Position = offset + 4;
 
         }
@@ -335,7 +339,8 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteDouble(long offset, double value)
         {
-            MemoryHelper.WriteDoubleReverse((void*)mHandle, offset, value);
+            MemoryHelper.WriteDouble((void*)mHandle, offset, value);
+            //MemoryHelper.WriteDoubleReverse((void*)mHandle, offset, value);
             Position = offset + 8;
         }
 
@@ -497,7 +502,8 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteDatetime(long offset, DateTime value)
         {
-            MemoryHelper.WriteDateTimeReverse((void*)mHandle, offset, value);
+            //MemoryHelper.WriteDateTimeReverse((void*)mHandle, offset, value);
+            MemoryHelper.WriteDateTime((void*)mHandle, offset, value);
             Position = offset + 8;
         }
         /// <summary>
@@ -507,7 +513,8 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteInt(long offset, int value)
         {
-            MemoryHelper.WriteInt32Reverse((void*)mHandle, offset, value);
+            // MemoryHelper.WriteInt32Reverse((void*)mHandle, offset, value);
+            MemoryHelper.WriteInt32((void*)mHandle, offset, value);
             Position = offset + 4;
         }
 
@@ -518,7 +525,8 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteIntDirect(long offset, int value)
         {
-            MemoryHelper.WriteInt32Reverse((void*)mHandle, offset, value);
+            // MemoryHelper.WriteInt32Reverse((void*)mHandle, offset, value);
+            MemoryHelper.WriteInt32((void*)mHandle, offset, value);
         }
 
         /// <summary>
@@ -528,7 +536,8 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteUInt(long offset, uint value)
         {
-            MemoryHelper.WriteUInt32Reverse((void*)mHandle, offset, value);
+            // MemoryHelper.WriteUInt32Reverse((void*)mHandle, offset, value);
+            MemoryHelper.WriteUInt32((void*)mHandle, offset, value);
             Position = offset + 4;
         }
 
@@ -539,7 +548,8 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteUIntDirect(long offset, uint value)
         {
-            MemoryHelper.WriteUInt32Reverse((void*)mHandle, offset, value);
+            MemoryHelper.WriteUInt32((void*)mHandle, offset, value);
+            //MemoryHelper.WriteUInt32Reverse((void*)mHandle, offset, value);
         }
 
         /// <summary>
@@ -549,7 +559,8 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteShort(long offset, short value)
         {
-            MemoryHelper.WriteShortReverse((void*)mHandle, offset, value);
+            MemoryHelper.WriteShort((void*)mHandle, offset, value);
+            // MemoryHelper.WriteShortReverse((void*)mHandle, offset, value);
             Position = offset + 2;
         }
 
@@ -560,7 +571,8 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteShortDirect(long offset, short value)
         {
-            MemoryHelper.WriteShortReverse((void*)mHandle, offset, value);
+            MemoryHelper.WriteShort((void*)mHandle, offset, value);
+            //MemoryHelper.WriteShortReverse((void*)mHandle, offset, value);
         }
 
         /// <summary>
@@ -570,7 +582,8 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteUShort(long offset, ushort value)
         {
-            MemoryHelper.WriteUShortReverse((void*)mHandle, offset, value);
+            MemoryHelper.WriteUShort((void*)mHandle, offset, value);
+            // MemoryHelper.WriteUShortReverse((void*)mHandle, offset, value);
             Position = offset + 2;
         }
 
@@ -581,7 +594,8 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         public void WriteUShortDirect(long offset, ushort value)
         {
-            MemoryHelper.WriteUShortReverse((void*)mHandle, offset, value);
+            MemoryHelper.WriteUShort((void*)mHandle, offset, value);
+            // MemoryHelper.WriteUShortReverse((void*)mHandle, offset, value);
         }
 
         /// <summary>
@@ -593,7 +607,8 @@ namespace SpiderDriver.ClientApi
         public void WriteString(long offset, string value, Encoding encode)
         {
             var sdata = encode.GetBytes(value);
-            WriteByte(offset, (byte)sdata.Length);
+            //WriteByte(offset, (byte)sdata.Length);
+            WriteInt(offset, sdata.Length);
             WriteBytes(offset + 1, sdata);
             Position = offset + sdata.Length + 1;
         }
@@ -607,7 +622,8 @@ namespace SpiderDriver.ClientApi
         public void WriteStringDirect(long offset, string value, Encoding encode)
         {
             var sdata = encode.GetBytes(value);
-            WriteByte(offset, (byte)sdata.Length);
+            // WriteByte(offset, (byte)sdata.Length);
+            WriteInt(offset, sdata.Length);
             WriteBytes(offset + 1, sdata);
         }
 
@@ -807,9 +823,9 @@ namespace SpiderDriver.ClientApi
         /// <returns></returns>
         public string ReadString(long offset, Encoding encoding)
         {
-            var len = ReadByte(offset);
-            mPosition = offset + len + 1;
-            return encoding.GetString(ReadBytesInner(offset + 1, len));
+            var len = ReadInt(offset);
+            mPosition = offset + len + 4;
+            return encoding.GetString(ReadBytesInner(offset + 4, len));
         }
 
         /// <summary>

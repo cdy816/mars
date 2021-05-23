@@ -13,6 +13,8 @@ namespace DBInRun
     {
         static bool mIsClosed = false;
 
+        static DateTime mStartTime = DateTime.Now;
+
         static void Main(string[] args)
         {
             Console.CancelKeyPress += Console_CancelKeyPress;
@@ -98,6 +100,7 @@ namespace DBInRun
                         mIsClosed = true;
                         break;
                     case "start":
+                        mStartTime = DateTime.Now;
                         string dbname = "local";
                         if (cmd.Length > 1)
                         {
@@ -164,6 +167,9 @@ namespace DBInRun
                         break;
                     case "h":
                         Console.WriteLine(GetHelpString());
+                        break;
+                    case "time":
+                        Console.WriteLine((DateTime.Now - mStartTime).TotalSeconds);
                         break;
                     case "**":
                         LogoHelper.PrintAuthor();

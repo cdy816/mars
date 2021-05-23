@@ -8,9 +8,10 @@
 //==============================================================
 
 using Cdy.Tag;
-using DotNetty.Buffers;
+using Cheetah;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 
@@ -23,7 +24,7 @@ namespace SpiderDriver
         /// <summary>
         /// 
         /// </summary>
-        private Dictionary<string, Queue<IByteBuffer>> mDatasCach = new Dictionary<string, Queue<IByteBuffer>>();
+        protected Dictionary<string, Queue<ByteBuffer>> mDatasCach = new Dictionary<string, Queue<ByteBuffer>>();
 
         private Thread mProcessThread;
 
@@ -66,10 +67,10 @@ namespace SpiderDriver
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        protected IByteBuffer ToByteBuffer(byte id, string value)
+        protected ByteBuffer ToByteBuffer(byte id, string value)
         {
-            var re = BufferManager.Manager.Allocate(id, value.Length*2);
-            re.WriteString(value);
+            var re = Parent.Allocate(id, value.Length*2+4);
+            re.Write(value);
             return re;
         }
 
@@ -79,10 +80,10 @@ namespace SpiderDriver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        protected IByteBuffer ToByteBuffer(byte id, byte value)
+        protected ByteBuffer ToByteBuffer(byte id, byte value)
         {
-            var re = BufferManager.Manager.Allocate(id, 1);
-            re.WriteByte(value);
+            var re = Parent.Allocate(id, 1);
+            re.Write(value);
             return re;
         }
 
@@ -92,10 +93,10 @@ namespace SpiderDriver
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        protected IByteBuffer ToByteBuffer(byte id, long value)
+        protected ByteBuffer ToByteBuffer(byte id, long value)
         {
-            var re = BufferManager.Manager.Allocate(id, 1);
-            re.WriteLong(value);
+            var re = Parent.Allocate(id, 8);
+            re.Write(value);
             return re;
         }
 
@@ -106,11 +107,11 @@ namespace SpiderDriver
         /// <param name="value"></param>
         /// <param name="value2"></param>
         /// <returns></returns>
-        protected IByteBuffer ToByteBuffer(byte id, byte value, byte value2)
+        protected ByteBuffer ToByteBuffer(byte id, byte value, byte value2)
         {
-            var re = BufferManager.Manager.Allocate(id, 2);
-            re.WriteByte(value);
-            re.WriteByte(value2);
+            var re = Parent.Allocate(id, 2);
+            re.Write(value);
+            re.Write(value2);
             return re;
         }
 
@@ -118,16 +119,16 @@ namespace SpiderDriver
         /// 
         /// </summary>
         /// <param name="data"></param>
-        public virtual void ProcessData(string client, IByteBuffer data)
+        public virtual void ProcessData(string client, ByteBuffer data)
         {
-            data.Retain();
+            data.IncRef();
             if (mDatasCach.ContainsKey(client))
             {
                 mDatasCach[client].Enqueue(data);
             }
             else
             {
-                var vq = new Queue<IByteBuffer>();
+                var vq = new Queue<ByteBuffer>();
                 vq.Enqueue(data);
 
                 lock (mDatasCach)
@@ -135,7 +136,16 @@ namespace SpiderDriver
                 lock (mClients)
                     mClients.Add(client);
             }
+            CheckDataBusy(client);
             resetEvent.Set();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public virtual void CheckDataBusy(string client)
+        {
+
         }
 
         /// <summary>
@@ -167,7 +177,7 @@ namespace SpiderDriver
         private void DataProcess()
         {
             string sname="";
-            Queue<IByteBuffer> datas = null;
+            Queue<ByteBuffer> datas = null;
             while (!mIsClosed)
             {
                 resetEvent.WaitOne();
@@ -197,10 +207,15 @@ namespace SpiderDriver
                         }
                         if (datas != null)
                         {
+                            //Stopwatch sw = new Stopwatch();
+                            //sw.Start();
+                            //Debug.Print("开始实时数据请求:" + FunId +"  " + datas.Count);
                             while (datas.Count > 0)
                             {
                                 ProcessSingleData(sname, datas.Dequeue());
                             }
+                            //sw.Stop();
+                            //Debug.Print("结束实时数据请求:" + sw.ElapsedMilliseconds);
                         }
                     }
                 }
@@ -212,9 +227,9 @@ namespace SpiderDriver
         /// </summary>
         /// <param name="client"></param>
         /// <param name="data"></param>
-        protected virtual void ProcessSingleData(string client, IByteBuffer data)
+        protected virtual void ProcessSingleData(string client, ByteBuffer data)
         {
-            data.ReleaseBuffer();
+            data.UnlockAndReturn();
         }
 
         /// <summary>

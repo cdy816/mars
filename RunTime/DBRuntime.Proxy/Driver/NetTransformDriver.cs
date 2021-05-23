@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Cheetah;
 
 namespace DBRuntime.Proxy
 {
@@ -28,7 +29,7 @@ namespace DBRuntime.Proxy
         
         private IRealTagProduct mServier;
 
-        private Queue<IByteBuffer> mCachDatas = new Queue<IByteBuffer>();
+        private Queue<ByteBuffer> mCachDatas = new Queue<ByteBuffer>();
 
         private ManualResetEvent resetEvent;
 
@@ -88,9 +89,10 @@ namespace DBRuntime.Proxy
         /// </summary>
         /// <param name="buffer"></param>
         /// <returns></returns>
-        protected string ReadString(IByteBuffer buffer)
+        protected string ReadString(ByteBuffer buffer)
         {
-            return buffer.ReadString(buffer.ReadInt(), Encoding.Unicode);
+            //return buffer.ReadString(buffer.ReadInt(), Encoding.Unicode);
+            return buffer.ReadString(Encoding.Unicode);
         }
 
         /// <summary>
@@ -132,7 +134,7 @@ namespace DBRuntime.Proxy
         /// 
         /// </summary>
         /// <param name="block"></param>
-        private void ProcessBufferData(IByteBuffer block)
+        private void ProcessBufferData(ByteBuffer block)
         {
 
             if (block == null) return;
@@ -152,7 +154,7 @@ namespace DBRuntime.Proxy
         /// 
         /// </summary>
         /// <param name="block"></param>
-        private void ProcessBlockBufferData(IByteBuffer block)
+        private void ProcessBlockBufferData(ByteBuffer block)
         {
             var realenginer = (ServiceLocator.Locator.Resolve<IRealTagConsumer>() as RealEnginer);
 
@@ -160,13 +162,14 @@ namespace DBRuntime.Proxy
 
             var start = block.ReadInt();
             var size = block.ReadInt();
-            //LoggerService.Service.Info("ProcessBlockBufferData", "block start" +start +", size:"+size);
+            LoggerService.Service.Info("ProcessBlockBufferData", "block start" +start +", size:"+size);
 
             try
             {
                 if (realenginer.Memory!=null &&(start + size < realenginer.Memory.Length))
                 {
-                    Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, realenginer.Memory, start, size);
+                    block.CopyTo(realenginer.MemoryHandle, block.ReadIndex, start, size);
+                   // Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, realenginer.Memory, start, size);
                 }
                 else
                 {
@@ -179,10 +182,10 @@ namespace DBRuntime.Proxy
             {
 
             }
-           
-
-            block.SetReaderIndex(block.ReaderIndex + size);
-            block.ReleaseBuffer();
+            block.ReadIndex += size;
+            block.UnlockAndReturn();
+            //block.SetReaderIndex(block.ReaderIndex + size);
+            //block.ReleaseBuffer();
 
         }
 
@@ -190,7 +193,7 @@ namespace DBRuntime.Proxy
         /// 
         /// </summary>
         /// <param name="block"></param>
-        private void ProcessSingleBufferDataByMemoryCopy(IByteBuffer block)
+        private void ProcessSingleBufferDataByMemoryCopy(ByteBuffer block)
         {
             var realenginer = (ServiceLocator.Locator.Resolve<IRealTagConsumer>() as RealEnginer);
             var mTagManager = ServiceLocator.Locator.Resolve<ITagManager>();
@@ -211,20 +214,22 @@ namespace DBRuntime.Proxy
                     {
                         try
                         {
-                            Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, realenginer.Memory, (int)tag.ValueAddress, tag.ValueSize);
+                            block.CopyTo(realenginer.MemoryHandle, block.ReadIndex, tag.ValueAddress, tag.ValueSize);
+                           // Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, realenginer.Memory, (int)tag.ValueAddress, tag.ValueSize);
                         }
                         catch
                         {
 
                         }
-                        block.SetReaderIndex(block.ReaderIndex + tag.ValueSize);
+                        block.ReadIndex += tag.ValueSize;
+                        //block.SetReaderIndex(block.ReaderIndex + tag.ValueSize);
                     }
                 }
             }
-            block.ReleaseBuffer();
+            block.UnlockAndReturn();
         }
 
-        private void ProcessSingleBufferData(IByteBuffer block)
+        private void ProcessSingleBufferData(ByteBuffer block)
         {
             if (block == null) return;
             var count = block.ReadInt();
@@ -305,7 +310,7 @@ namespace DBRuntime.Proxy
                 var qua = block.ReadByte();
                 mServier.SetTagValue(vid,ref value, time, qua);
             }
-            block.Release();
+            block.UnlockAndReturn();
         }
 
 
@@ -334,7 +339,6 @@ namespace DBRuntime.Proxy
             {
                 Client.RegistorTagBlockValueCallBack();
                 Client.ProcessDataPush = new ApiClient.ProcessDataPushDelegate((block) => {
-                    block.Retain();
                     try
                     {
                         mCachDatas.Enqueue(block);
@@ -474,8 +478,8 @@ namespace DBRuntime.Proxy
         /// </summary>
         public static void SyncRealMemory(this ApiClient Client,Dictionary<long,long> address)
         {
-            //Stopwatch sw = new Stopwatch();
-            //sw.Start();
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             var realenginer = (ServiceLocator.Locator.Resolve<IRealTagConsumer>() as RealEnginer);
             if (Client != null && Client.IsConnected && realenginer.Memory!=null)
             {
@@ -486,10 +490,16 @@ namespace DBRuntime.Proxy
                         var res = Client.SyncRealMemory((int)vv.Key, (int)vv.Value);
                         if (res != null)
                         {
-                            int size = res.ReadableBytes;
-                            Buffer.BlockCopy(res.Array, res.ArrayOffset + res.ReaderIndex, realenginer.Memory, (int)vv.Key, size);
-                            res.SetReaderIndex(res.ReaderIndex + size);
-                            res.ReleaseBuffer();
+                            int size = (int)res.ReadableCount;
+
+                            res.CopyTo(realenginer.MemoryHandle, res.ReadIndex, vv.Key, size);
+
+                            //Buffer.BlockCopy(res.Array, res.ArrayOffset + res.ReaderIndex, realenginer.Memory, (int)vv.Key, size);
+                            //res.SetReaderIndex(res.ReaderIndex + size);
+                            //res.ReleaseBuffer();
+
+
+                            res.UnlockAndReturn();
                         }
                         else
                         {
@@ -502,8 +512,8 @@ namespace DBRuntime.Proxy
                     }
                 }
             }
-            //sw.Stop();
-            //LoggerService.Service.Info("SyncRealMemory", "数据大小:" + (realenginer.Memory.Length / 1024 / 1024) + " 耗时: " + sw.ElapsedMilliseconds);
+            sw.Stop();
+            LoggerService.Service.Info("SyncRealMemory", "数据大小:" + (realenginer.Memory.Length / 1024 / 1024) + " 耗时: " + sw.ElapsedMilliseconds);
         }
 
         /// <summary>
@@ -533,21 +543,27 @@ namespace DBRuntime.Proxy
         /// 
         /// </summary>
         /// <param name="block"></param>
-        private static void ProcessSingleBufferDataByMemoryCopy(int sid, int eid, IByteBuffer block)
+        private static void ProcessSingleBufferDataByMemoryCopy(int sid, int eid, ByteBuffer block)
         {
             if (block == null) return;
             var count = block.ReadInt();
             var tserver = ServiceLocator.Locator.Resolve<ITagManager>();
             var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
-            int targetbaseoffset = block.ArrayOffset + block.ReaderIndex;
+            //int targetbaseoffset = block.ArrayOffset + block.ReaderIndex;
             for (int i = sid; i <= eid; i++)
             {
                 var tag = tserver.GetTagById(i);
-                Marshal.Copy(block.Array, targetbaseoffset, (service as RealEnginer).MemoryHandle + (int)tag.ValueAddress, tag.ValueSize);
-                block.SetReaderIndex(block.ReaderIndex + tag.ValueSize);
-                targetbaseoffset = block.ArrayOffset + block.ReaderIndex;
+
+                Marshal.Copy(block.StartMemory, (service as RealEnginer).Memory, (int)tag.ValueAddress, tag.ValueSize);
+
+                block.ReadIndex += tag.ValueSize;
+
+                //Marshal.Copy(block.Array, targetbaseoffset, (service as RealEnginer).MemoryHandle + (int)tag.ValueAddress, tag.ValueSize);
+                //block.SetReaderIndex(block.ReaderIndex + tag.ValueSize);
+                //targetbaseoffset = block.ArrayOffset + block.ReaderIndex;
             }
-            block.ReleaseBuffer();
+            block.UnlockAndReturn();
+            //block.ReleaseBuffer();
         }
     }
 

@@ -8,6 +8,7 @@
 //==============================================================
 
 using Cdy.Tag;
+using Cheetah;
 using DotNetty.Buffers;
 using System;
 using System.Collections.Generic;
@@ -24,7 +25,7 @@ namespace DBHighApi.Api
         /// <summary>
         /// 
         /// </summary>
-        private Dictionary<string, Queue<IByteBuffer>> mDatasCach = new Dictionary<string, Queue<IByteBuffer>>();
+        private Dictionary<string, Queue<ByteBuffer>> mDatasCach = new Dictionary<string, Queue<ByteBuffer>>();
 
         private Thread mProcessThread;
 
@@ -67,10 +68,10 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        protected IByteBuffer ToByteBuffer(byte id, string value)
+        protected ByteBuffer ToByteBuffer(byte id, string value)
         {
-            var re = BufferManager.Manager.Allocate(id, value.Length*2);
-            re.WriteString(value);
+            var re = Parent.Allocate(id, value.Length*2);
+            re.Write(value);
             return re;
         }
 
@@ -80,17 +81,17 @@ namespace DBHighApi.Api
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        protected IByteBuffer ToByteBuffer(byte id, byte value)
+        protected ByteBuffer ToByteBuffer(byte id, byte value)
         {
-            var re = BufferManager.Manager.Allocate(id, 1);
-            re.WriteByte(value);
+            var re = Parent.Allocate(id, 1);
+            re.Write(value);
             return re;
         }
 
-        protected IByteBuffer ToByteBuffer(byte id, long value)
+        protected ByteBuffer ToByteBuffer(byte id, long value)
         {
-            var re = BufferManager.Manager.Allocate(id, 1);
-            re.WriteLong(value);
+            var re = Parent.Allocate(id, 1);
+            re.Write(value);
             return re;
         }
 
@@ -98,18 +99,18 @@ namespace DBHighApi.Api
         /// 
         /// </summary>
         /// <param name="data"></param>
-        public virtual void ProcessData(string client, IByteBuffer data)
+        public virtual void ProcessData(string client, ByteBuffer data)
         {
             if (data != null)
             {
-                data.Retain();
+                data.IncRef();
                 if (mDatasCach.ContainsKey(client))
                 {
                     mDatasCach[client].Enqueue(data);
                 }
                 else
                 {
-                    var vq = new Queue<IByteBuffer>();
+                    var vq = new Queue<ByteBuffer>();
                     vq.Enqueue(data);
                     lock (mLockObj)
                         mDatasCach.Add(client, vq);
@@ -149,9 +150,9 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="client"></param>
         /// <param name="data"></param>
-        protected virtual void ProcessSingleData(string client, IByteBuffer data)
+        protected virtual void ProcessSingleData(string client, ByteBuffer data)
         {
-            data.ReleaseBuffer();
+            data.UnlockAndReturn();
         }
 
 

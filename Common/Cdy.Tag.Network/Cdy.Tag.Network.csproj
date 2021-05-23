@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -13,12 +14,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Obsolute\**" />
+    <EmbeddedResource Remove="Obsolute\**" />
+    <None Remove="Obsolute\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="BufferManager2.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Cheetah" Version="0.6.5" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Cdy.Tag.Common\Cdy.Tag.Common.csproj" />
-    <ProjectReference Include="..\DotNettyCore\DotNettyCore.csproj" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).XML&quot; copy &quot;$(TargetDir)$(TargetName).XML&quot; &quot;$(SolutionDir)\Output\Xml&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).pdb&quot;  copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)\Output&quot; /y" />
+    <Exec Command="copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).XML&quot; copy &quot;$(TargetDir)$(TargetName).XML&quot; &quot;$(SolutionDir)\Output\Xml&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).pdb&quot;  copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)Cheetah.dll&quot;  copy &quot;$(TargetDir)Cheetah.dll&quot; &quot;$(SolutionDir)\Output&quot; /y" />
   </Target>
 
 </Project>

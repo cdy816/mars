@@ -47,7 +47,7 @@ namespace SpiderDriverDemo
             if (driverProxy == null)
             {
                 driverProxy = new SpiderDriver.ClientApi.DriverProxy();
-                driverProxy.Connect(this.ipt.Text, int.Parse(portt.Text));
+                driverProxy.Open(this.ipt.Text, int.Parse(portt.Text));
                 driverProxy.ValueChanged = new SpiderDriver.ClientApi.DriverProxy.ProcessDataPushDelegate((values) =>
                 {
                     foreach (var vv in values)
@@ -68,7 +68,7 @@ namespace SpiderDriverDemo
             if (driverProxy == null)
             {
                 driverProxy = new SpiderDriver.ClientApi.DriverProxy();
-                driverProxy.Connect(this.ipt.Text, int.Parse(portt.Text));
+                driverProxy.Open(this.ipt.Text, int.Parse(portt.Text));
                 driverProxy.ValueChanged = new SpiderDriver.ClientApi.DriverProxy.ProcessDataPushDelegate((values) =>
                 {
                     foreach (var vv in values)
@@ -128,7 +128,7 @@ namespace SpiderDriverDemo
                 {
                     ProcessSetHisTagValue();
                 }
-                Thread.Sleep(1000);
+                Thread.Sleep(2000);
             }
         }
 
@@ -295,6 +295,8 @@ namespace SpiderDriverDemo
             Stopwatch sw = new Stopwatch();
             sw.Start();
             int i = 0;
+            StringBuilder sb = new StringBuilder();
+            sb.Append(" : ");
             foreach(var vv in mAllId)
             {
                 switch ((TagType)vv.Value.Item2)
@@ -365,14 +367,16 @@ namespace SpiderDriverDemo
                 i++;
                 if (i % 1000000 == 0)
                 {
+                    var vtmp = sw.ElapsedMilliseconds;
                     driverProxy.SetTagValueAndQuality(rdb);
+                    sb.Append(sw.ElapsedMilliseconds - vtmp+",");
                     rdb.Clear();
                 }
             }
             if(i % 1000000 != 0)
             driverProxy.SetTagValueAndQuality(rdb);
             sw.Stop();
-            Debug.Print("发送耗时:" + sw.ElapsedMilliseconds);
+            Debug.Print("发送耗时:" + sw.ElapsedMilliseconds +sb.ToString());
         }
 
 
@@ -462,16 +466,16 @@ namespace SpiderDriverDemo
                         break;
                 }
                 i++;
-                if (i % 100000 == 0)
+                if (i % 1000000 == 0)
                 {
-                    driverProxy.SetTagRealAndHisValueAsync(rdb);
+                    driverProxy.SetTagRealAndHisValue(rdb);
                     rdb.Clear();
                 }
             }
-            if (i % 100000 != 0)
+            if (i % 1000000 != 0)
                 driverProxy.SetTagRealAndHisValue(rdb);
             sw.Stop();
-            Debug.Print("发送耗时:" + sw.ElapsedMilliseconds);
+            Debug.Print(DateTime.Now.ToString() + "  发送耗时:  " + sw.ElapsedMilliseconds);
         }
 
         /// <summary>

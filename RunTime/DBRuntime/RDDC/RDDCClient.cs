@@ -8,6 +8,7 @@
 //==============================================================
 
 using Cdy.Tag;
+using Cheetah;
 using DotNetty.Buffers;
 using DotNetty.Common;
 using System;
@@ -21,7 +22,7 @@ namespace DBRuntime.RDDC
     /// <summary>
     /// 
     /// </summary>
-    public class RDDCClient:SocketClient
+    public class RDDCClient:SocketClient2
     {
 
         #region ... Variables  ...
@@ -64,11 +65,11 @@ namespace DBRuntime.RDDC
 
         private ManualResetEvent mWorkStateEvent = new ManualResetEvent(false);
 
-        private IByteBuffer mWorkStateData;
+        private ByteBuffer mWorkStateData;
 
         private ManualResetEvent mRealDataSyncEvent = new ManualResetEvent(false);
 
-        private IByteBuffer mRealDataSyncData;
+        private ByteBuffer mRealDataSyncData;
 
         private object mWorkStateLockObj = new object();
 
@@ -93,9 +94,9 @@ namespace DBRuntime.RDDC
         /// </summary>
         /// <param name="fun"></param>
         /// <param name="datas"></param>
-        protected override void ProcessData(byte fun, IByteBuffer datas)
+        protected override void ProcessData(byte fun, ByteBuffer datas)
         {
-            datas.Retain();
+            datas.IncRef();
             //收到异步请求回调数据
             switch (fun)
             {
@@ -119,11 +120,11 @@ namespace DBRuntime.RDDC
         /// </summary>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public IByteBuffer SyncRealData(int timeout=5000)
+        public ByteBuffer SyncRealData(int timeout=5000)
         {
             var mb = GetBuffer(RealDataSyncFun, 0);
             mRealDataSyncEvent.Reset();
-            Send(mb);
+            SendData(mb);
             try
             {
                 if (mRealDataSyncEvent.WaitOne(timeout))
@@ -150,7 +151,7 @@ namespace DBRuntime.RDDC
                 var mb = GetBuffer(WorkStateFun, 1);
                 mb.WriteByte(GetStartTimeFun);
                 mWorkStateEvent.Reset();
-                Send(mb);
+                SendData(mb);
                 try
                 {
                     if (mWorkStateEvent.WaitOne(timeout))
@@ -179,7 +180,7 @@ namespace DBRuntime.RDDC
                 var mb = GetBuffer(WorkStateFun, 1);
                 mb.WriteByte(GetStateFun);
                 mWorkStateEvent.Reset();
-                Send(mb);
+                SendData(mb);
                 try
                 {
                     if (mWorkStateEvent.WaitOne(timeout))
@@ -207,7 +208,7 @@ namespace DBRuntime.RDDC
                 var mb = GetBuffer(WorkStateFun, 1);
                 mb.WriteByte(ChangeToPrimaryFun);
                 mWorkStateEvent.Reset();
-                Send(mb);
+                SendData(mb);
                 try
                 {
                     if (mWorkStateEvent.WaitOne(timeout))
@@ -236,7 +237,7 @@ namespace DBRuntime.RDDC
                 var mb = GetBuffer(WorkStateFun, 1);
                 mb.WriteByte(ChangeToStandbyFun);
                 mWorkStateEvent.Reset();
-                Send(mb);
+                SendData(mb);
                 try
                 {
                     if (mWorkStateEvent.WaitOne(timeout))

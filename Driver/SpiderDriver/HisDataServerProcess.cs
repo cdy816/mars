@@ -9,7 +9,7 @@
 
 using Cdy.Tag;
 using Cdy.Tag.Driver;
-using DotNetty.Buffers;
+using Cheetah;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,7 +24,7 @@ namespace SpiderDriver
     {
 
         #region ... Variables  ...
-
+        private bool mIsBusy = false;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -50,10 +50,28 @@ namespace SpiderDriver
         /// 
         /// </summary>
         /// <param name="client"></param>
-        /// <param name="data"></param>
-        protected override void ProcessSingleData(string client, IByteBuffer data)
+        public override void CheckDataBusy(string client)
         {
-            if (data.ReferenceCount == 0)
+            if (mDatasCach.ContainsKey(client) && mDatasCach[client].Count > 100)
+            {
+                Parent.AsyncCallback(client, ToByteBuffer(APIConst.AysncReturn, APIConst.HisServerBusy));
+                mIsBusy = true;
+            }
+            else if (mIsBusy)
+            {
+                mIsBusy = false;
+                Parent.AsyncCallback(client, ToByteBuffer(APIConst.AysncReturn, APIConst.HisServerNoBusy));
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="data"></param>
+        protected override void ProcessSingleData(string client, ByteBuffer data)
+        {
+            if (data.RefCount == 0)
             {
                 LoggerService.Service.Warn("SpiderDriver_HisDataServerProcess", "invailed data buffer in HisDataServerProcess");
                 return;
@@ -87,7 +105,7 @@ namespace SpiderDriver
         /// </summary>
         /// <param name="clientid"></param>
         /// <param name="block"></param>
-        private void ProcessSetHisData(string clientid, IByteBuffer block)
+        private void ProcessSetHisData(string clientid, ByteBuffer block)
         {
             var id = block.ReadInt();
             var count = block.ReadInt();
@@ -102,7 +120,7 @@ namespace SpiderDriver
                     for(int i=0;i<count;i++)
                     {
                         var dt = DateTime.FromBinary(block.ReadLong());
-                        var bval = block.ReadBoolean();
+                        var bval = block.ReadByte();
                         var qa = block.ReadByte();
                         service.SetTagHisValue(id, dt, bval, qa);
                         //service.SetTagHisValue(id,new TagValue() { Quality = qa, Time = dt, Value = bval });
@@ -132,7 +150,7 @@ namespace SpiderDriver
                     for (int i = 0; i < count; i++)
                     {
                         var dt = DateTime.FromBinary(block.ReadLong());
-                        var bval = block.ReadUnsignedShort();
+                        var bval = block.ReadUShort();
                         var qa = block.ReadByte();
                         service.SetTagHisValue(id, dt, bval, qa);
                         // service.SetTagHisValue(id, new TagValue() { Quality = qa, Time = dt, Value = bval });
@@ -152,7 +170,7 @@ namespace SpiderDriver
                     for (int i = 0; i < count; i++)
                     {
                         var dt = DateTime.FromBinary(block.ReadLong());
-                        var bval = block.ReadUnsignedInt();
+                        var bval = block.ReadUInt();
                         var qa = block.ReadByte();
                         service.SetTagHisValue(id, dt, bval, qa);
                         //service.SetTagHisValue(id, new TagValue() { Quality = qa, Time = dt, Value = bval });
@@ -234,8 +252,8 @@ namespace SpiderDriver
                     {
                         var dt = DateTime.FromBinary(block.ReadLong());
                         //var bval = new UIntPointData() { X = block.ReadUnsignedInt(), Y = block.ReadUnsignedInt() };
-                        var bval1 = block.ReadUnsignedInt();
-                        var bval2 = block.ReadUnsignedInt();
+                        var bval1 = block.ReadUInt();
+                        var bval2 = block.ReadUInt();
                         var qa = block.ReadByte();
                         service.SetTagHisValue(id, dt, qa, bval1, bval2);
                         //service.SetTagHisValue(id, new TagValue() { Quality = qa, Time = dt, Value = bval });
@@ -259,9 +277,9 @@ namespace SpiderDriver
                     {
                         var dt = DateTime.FromBinary(block.ReadLong());
                         // var bval = new UIntPoint3Data() { X = block.ReadUnsignedInt(), Y = block.ReadUnsignedInt(), Z = block.ReadUnsignedInt() };
-                        var bval1 = block.ReadUnsignedInt();
-                        var bval2 = block.ReadUnsignedInt();
-                        var bval3 = block.ReadUnsignedInt();
+                        var bval1 = block.ReadUInt();
+                        var bval2 = block.ReadUInt();
+                        var bval3 = block.ReadUInt();
                         var qa = block.ReadByte();
                         service.SetTagHisValue(id, dt,  qa,bval1,bval2,bval3);
                         //service.SetTagHisValue(id, new TagValue() { Quality = qa, Time = dt, Value = bval });
@@ -327,7 +345,7 @@ namespace SpiderDriver
         /// </summary>
         /// <param name="clientid"></param>
         /// <param name="block"></param>
-        private void ProcessSetHisData2(string clientid, IByteBuffer block)
+        private void ProcessSetHisData2(string clientid, ByteBuffer block)
         {
             Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.HisValueFun, (byte)1));
             var service = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
@@ -340,7 +358,7 @@ namespace SpiderDriver
                 switch (tp)
                 {
                     case TagType.Bool:
-                        var bval = block.ReadBoolean();
+                        var bval = block.ReadByte();
                         var qa = block.ReadByte();
                         service.SetTagHisValue(id,dt,bval,qa);
                         break;
@@ -357,7 +375,7 @@ namespace SpiderDriver
                         // service.SetTagHisValue(id,new TagValue() { Quality = qa, Time = dt, Value = sbval });
                         break;
                     case TagType.UShort:
-                        var usbval = block.ReadUnsignedShort();
+                        var usbval = block.ReadUShort();
                         qa = block.ReadByte();
                         service.SetTagHisValue(id, dt, usbval, qa);
                         // service.SetTagHisValue(id,new TagValue() { Quality = qa, Time = dt, Value = usbval });
@@ -369,7 +387,7 @@ namespace SpiderDriver
                         //service.SetTagHisValue(id,new TagValue() { Quality = qa, Time = dt, Value = ibval });
                         break;
                     case TagType.UInt:
-                        var uibval = block.ReadUnsignedInt();
+                        var uibval = block.ReadUInt();
                         qa = block.ReadByte();
                         service.SetTagHisValue(id, dt, uibval, qa);
                         // service.SetTagHisValue(id,new TagValue() { Quality = qa, Time = dt, Value = uibval });

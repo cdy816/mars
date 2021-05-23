@@ -8,6 +8,7 @@
 //==============================================================
 
 using Cdy.Tag;
+using Cheetah;
 using DBRuntime.Api;
 using DotNetty.Buffers;
 using System;
@@ -48,7 +49,7 @@ namespace DBRuntime.RDDC
         /// </summary>
         /// <param name="client"></param>
         /// <param name="data"></param>
-        protected override void ProcessSingleData(string client, IByteBuffer data)
+        protected override void ProcessSingleData(string client, ByteBuffer data)
         {
             ProcessRealDataSync(client);
             base.ProcessSingleData(client, data);
@@ -63,10 +64,17 @@ namespace DBRuntime.RDDC
         {
             var service = ServiceLocator.Locator.Resolve<IRealData>();
             var real = (service as RealEnginer);
-            var re = BufferManager.Manager.Allocate(ApiFunConst.RealDataSyncFun,4);
-            re.WriteInt(real.Memory.Length);
-            re = Unpooled.CompositeBuffer().AddComponents(true, re, Unpooled.WrappedBuffer(real.Memory, 0, real.Memory.Length));
-            Parent.AsyncCallback(clientId, re);
+            var re = Parent.Allocate(ApiFunConst.RealDataSyncFun,4);
+            re.Write(real.Memory.Length);
+
+            var ob = Parent.MemoryPool.GetBuffer();
+            ob.IsPooled = false;
+            ob.ReInit(real.MemoryHandle , real.Memory.Length);
+            ob.WriteIndex = real.Memory.Length;
+
+            //re = Unpooled.CompositeBuffer().AddComponents(true, re, Unpooled.WrappedBuffer(real.Memory, 0, real.Memory.Length));
+            Parent.AsyncCallback(clientId, ob, re);
+           // Parent.AsyncCallback(clientId, re);
         }
 
 

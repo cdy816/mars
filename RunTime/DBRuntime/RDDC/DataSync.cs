@@ -10,6 +10,7 @@
 using Cdy.Tag;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
@@ -109,7 +110,9 @@ namespace DBRuntime.RDDC
                     if (block != null)
                     {
                         var size = block.ReadInt();
-                        Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, (realenginer as RealEnginer).Memory, 0, size);
+                        Marshal.Copy(block.StartMemory + (int)block.ReadIndex, (realenginer as RealEnginer).Memory, 0, size);
+                       
+                        //Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, (realenginer as RealEnginer).Memory, 0, size);
                     }
                 }
             }

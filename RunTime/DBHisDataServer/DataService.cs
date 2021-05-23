@@ -8,6 +8,7 @@
 //==============================================================
 
 using Cdy.Tag;
+using Cheetah;
 using DotNetty.Buffers;
 using System;
 using System.Collections.Generic;
@@ -43,12 +44,12 @@ namespace DBRuntime.Api
     /// <summary>
     /// 
     /// </summary>
-    public class DataService: SocketServer
+    public class DataService: SocketServer2
     {
 
         #region ... Variables  ...
 
-        private IByteBuffer mAsyncCalldata;
+        private ByteBuffer mAsyncCalldata;
 
         private Dictionary<byte, ServerProcessBase> mProcess = new Dictionary<byte, ServerProcessBase>();
 
@@ -83,18 +84,27 @@ namespace DBRuntime.Api
         #region ... Methods    ...
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="port"></param>
-        protected override void StartInner(int port)
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="port"></param>
+        //protected override void StartInner(int port)
+        //{
+        //    mHisProcess = new HisDataServerProcess() { Parent = this };
+        //    mInfoProcess = new TagInfoServerProcess() { Parent = this };
+        //    mHisProcess.Start();
+        //    mInfoProcess.Start();
+        //    base.StartInner(port);
+
+        //}
+
+        public override void Start(int port)
         {
             mHisProcess = new HisDataServerProcess() { Parent = this };
             mInfoProcess = new TagInfoServerProcess() { Parent = this };
             mHisProcess.Start();
             mInfoProcess.Start();
-            base.StartInner(port);
-
+            base.Start(port);
         }
 
         /// <summary>
@@ -111,10 +121,10 @@ namespace DBRuntime.Api
             }
         }
 
-        private IByteBuffer GetAsyncData()
+        private ByteBuffer GetAsyncData()
         {
-            mAsyncCalldata = BufferManager.Manager.Allocate(ApiFunConst.AysncReturn, 4);
-            mAsyncCalldata.WriteInt(0);
+            mAsyncCalldata = Allocate(ApiFunConst.AysncReturn, 4);
+            mAsyncCalldata.Write(0);
             return mAsyncCalldata;
         }
 
@@ -140,9 +150,9 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="value"></param>
-        public void PushRealDatatoClient(string clientId, IByteBuffer value)
+        public void PushRealDatatoClient(string clientId, ByteBuffer value)
         {
-            this.SendData(clientId, value);
+            this.SendDataToClient(clientId, value);
         }
 
         /// <summary>
@@ -162,9 +172,9 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="data"></param>
-        public void AsyncCallback(string clientId, IByteBuffer data)
+        public void AsyncCallback(string clientId, ByteBuffer data)
         {
-            this.SendData(clientId, data);
+            this.SendDataToClient(clientId, data);
         }
 
         /// <summary>
@@ -179,7 +189,7 @@ namespace DBRuntime.Api
             this.SendData(clientId, fun, value, len);
         }
 
-        private IByteBuffer TagInfoRequest(string clientId, IByteBuffer memory)
+        private ByteBuffer TagInfoRequest(string clientId, ByteBuffer memory)
         {
             mInfoProcess.ProcessData(clientId, memory);
             return GetAsyncData();
@@ -191,7 +201,7 @@ namespace DBRuntime.Api
         /// <param name="clientId"></param>
         /// <param name="memory"></param>
         /// <returns></returns>
-        private IByteBuffer HisDataRequest(string clientId, IByteBuffer memory)
+        private ByteBuffer HisDataRequest(string clientId, ByteBuffer memory)
         {
             this.mHisProcess.ProcessData(clientId, memory);
             return GetAsyncData();

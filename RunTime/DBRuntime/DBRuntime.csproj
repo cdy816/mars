@@ -25,6 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="His\CachMemoryBlock.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Common\Cdy.Tag.Common\Cdy.Tag.Common.csproj" />
     <ProjectReference Include="..\..\Common\Cdy.Tag.Consume\Cdy.Tag.Consume.csproj" />
     <ProjectReference Include="..\..\Common\Cdy.Tag.Driver\Cdy.Tag.Driver.csproj" />

@@ -14,6 +14,7 @@ using System.Diagnostics;
 using System.Text;
 using Cdy.Tag;
 using System.Runtime.InteropServices;
+using Cheetah;
 
 namespace DBHighApi.Api
 {
@@ -72,9 +73,9 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="client"></param>
         /// <param name="data"></param>
-        public override void ProcessData(string client, IByteBuffer data)
+        public override void ProcessData(string client, ByteBuffer data)
         {
-            if (data.ReferenceCount == 0)
+            if (data.RefCount == 0)
             {
                LoggerService.Service.Warn("ProcessData","invailed data buffer in HisDataServerProcess");
                 return;
@@ -117,16 +118,17 @@ namespace DBHighApi.Api
         /// <param name="type"></param>
         /// <param name="resb"></param>
         /// <returns></returns>
-        private unsafe IByteBuffer WriteDataToBufferByMemory<T>(byte type, HisQueryResult<T> resb)
+        private unsafe ByteBuffer WriteDataToBufferByMemory<T>(byte type, HisQueryResult<T> resb)
         {
             var vdata = resb.Contracts();
-            var re = BufferManager.Manager.Allocate(FunId, 5 + vdata.Size);
+            var re = Parent.Allocate(FunId, 5 + vdata.Size);
             re.WriteByte(type);
-            re.WriteInt(resb.Count);
-         
-            Marshal.Copy(vdata.Address, re.Array, re.ArrayOffset+ 6, vdata.Size);
-            re.SetWriterIndex(re.WriterIndex + vdata.Size);
-            
+            re.Write(resb.Count);
+            re.Write(vdata.Address, vdata.Size);
+
+            //Marshal.Copy(vdata.Address, re.Array, re.ArrayOffset+ 6, vdata.Size);
+            //re.SetWriterIndex(re.WriterIndex + vdata.Size);
+
             return re;
         }
 
@@ -135,13 +137,31 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="data"></param>
-        private unsafe void ProcessRequestAllHisDataByMemory(string clientId, IByteBuffer data)
+        private unsafe void ProcessRequestAllHisDataByMemory(string clientId, ByteBuffer data)
         {
             int id = data.ReadInt();
             DateTime sTime = new DateTime(data.ReadLong());
             DateTime eTime = new DateTime(data.ReadLong());
 
-            IByteBuffer re  = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisValue(id, sTime, eTime);
+            ByteBuffer re  = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisValue(id, sTime, eTime);
+            re.UnLock();
+            Parent.AsyncCallback(clientId, re);
+            
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="data"></param>
+        private unsafe void ProcessRequestStatisticsDataByMemory(string clientId, ByteBuffer data)
+        {
+            int id = data.ReadInt();
+            DateTime sTime = new DateTime(data.ReadLong());
+            DateTime eTime = new DateTime(data.ReadLong());
+
+            ByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryStatisticsHisValueByMemory(id, sTime, eTime);
+            re.UnLock();
             Parent.AsyncCallback(clientId, re);
         }
 
@@ -150,22 +170,7 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="data"></param>
-        private unsafe void ProcessRequestStatisticsDataByMemory(string clientId, IByteBuffer data)
-        {
-            int id = data.ReadInt();
-            DateTime sTime = new DateTime(data.ReadLong());
-            DateTime eTime = new DateTime(data.ReadLong());
-
-            IByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryStatisticsHisValueByMemory(id, sTime, eTime);
-            Parent.AsyncCallback(clientId, re);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="clientId"></param>
-        /// <param name="data"></param>
-        private void ProcessRequestHisDatasByTimePointByMemory(string clientId, IByteBuffer data)
+        private void ProcessRequestHisDatasByTimePointByMemory(string clientId, ByteBuffer data)
         {
             int id = data.ReadInt();
             Cdy.Tag.QueryValueMatchType type = (QueryValueMatchType)data.ReadByte();
@@ -175,7 +180,8 @@ namespace DBHighApi.Api
             {
                 times.Add(new DateTime(data.ReadLong()));
             }
-            IByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData(id, times, type);
+            ByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData(id, times, type);
+            re.UnLock();
             Parent.AsyncCallback(clientId, re);
         }
 
@@ -184,7 +190,7 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="data"></param>
-        private void ProcessRequestStatisticsDataByTimePointByMemory(string clientId, IByteBuffer data)
+        private void ProcessRequestStatisticsDataByTimePointByMemory(string clientId, ByteBuffer data)
         {
             int id = data.ReadInt();
             int count = data.ReadInt();
@@ -193,7 +199,8 @@ namespace DBHighApi.Api
             {
                 times.Add(new DateTime(data.ReadLong()));
             }
-            IByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryStatisticsHisDataByMemory(id, times);
+            ByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryStatisticsHisDataByMemory(id, times);
+            re.UnLock();
             Parent.AsyncCallback(clientId, re);
         }
 
@@ -202,7 +209,7 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="data"></param>
-        private void ProcessRequestHisDataByTimeSpanByMemory(string clientId, IByteBuffer data)
+        private void ProcessRequestHisDataByTimeSpanByMemory(string clientId, ByteBuffer data)
         {
             int id = data.ReadInt();
             Cdy.Tag.QueryValueMatchType type = (QueryValueMatchType)data.ReadByte();
@@ -210,7 +217,8 @@ namespace DBHighApi.Api
             DateTime etime = new DateTime(data.ReadLong());
             TimeSpan ts = new TimeSpan(data.ReadLong());
 
-            IByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData(id, stime,etime,ts, type);
+            ByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData(id, stime,etime,ts, type);
+            re.UnLock();
             Parent.AsyncCallback(clientId, re);
         }
 

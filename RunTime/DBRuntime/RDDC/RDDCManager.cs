@@ -146,7 +146,7 @@ namespace DBRuntime
                 mServer.Start(Port);
 
                 mClient = new RDDCClient();
-                mClient.Connect(RemoteIp, Port);
+                mClient.Open(RemoteIp, Port);
                 mClient.PropertyChanged += MClient_PropertyChanged;
 
                 mSync = new DataSync() { Client = mClient };
@@ -195,12 +195,13 @@ namespace DBRuntime
         {
             while (!mIsClosed)
             {
-                if (mClient.NeedReConnected)
-                {
-                    mClient.Connect(RemoteIp, Port);
-                    Thread.Sleep(1000);
-                }
-                else if(mClient.IsConnected)
+                //if (mClient.NeedReConnected)
+                //{
+                //    mClient.Connect(RemoteIp, Port);
+                //    Thread.Sleep(1000);
+                //}
+                //else
+                if(mClient.IsConnected)
                 {
                     CheckRunWorkState();
                     Thread.Sleep(1000);

@@ -590,7 +590,7 @@ namespace SpiderDriver.ClientApi
         public void WriteString(long offset, string value, Encoding encode)
         {
             var sdata = encode.GetBytes(value);
-            WriteByte(offset, (byte)sdata.Length);
+            WriteInt(offset, sdata.Length);
             WriteBytes(offset + 1, sdata);
             Position = offset + sdata.Length + 1;
         }
@@ -604,7 +604,7 @@ namespace SpiderDriver.ClientApi
         public void WriteStringDirect(long offset, string value, Encoding encode)
         {
             var sdata = encode.GetBytes(value);
-            WriteByte(offset, (byte)sdata.Length);
+            WriteInt(offset,sdata.Length);
             WriteBytes(offset + 1, sdata);
         }
 
@@ -804,9 +804,9 @@ namespace SpiderDriver.ClientApi
         /// <returns></returns>
         public string ReadString(long offset, Encoding encoding)
         {
-            var len = ReadByte(offset);
-            mPosition = offset + len + 1;
-            return encoding.GetString(ReadBytesInner(offset + 1, len));
+            var len = ReadInt(offset);
+            mPosition = offset + len + 4;
+            return encoding.GetString(ReadBytesInner(offset + 4, len));
         }
 
         /// <summary>

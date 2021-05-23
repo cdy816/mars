@@ -4,26 +4,26 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using Cdy.Tag;
-using DotNetty.Buffers;
 using System.Linq;
+using Cheetah;
 
 namespace SpiderDriver.ClientApi
 {
     /// <summary>
     /// 
     /// </summary>
-    public class DriverProxy:Cdy.Tag.SocketClient
+    public class DriverProxy:Cdy.Tag.SocketClient2
     {
 
         #region ... Variables  ...
         
         private long mLoginId;
 
-        private Queue<IByteBuffer> mInfoRequreData = new Queue<IByteBuffer>();
+        private Queue<ByteBuffer> mInfoRequreData = new Queue<ByteBuffer>();
 
-        private IByteBuffer mRealRequreData;
+        private ByteBuffer mRealRequreData;
 
-        private IByteBuffer mHisRequreData;
+        private ByteBuffer mHisRequreData;
 
         private ManualResetEvent infoRequreEvent = new ManualResetEvent(false);
 
@@ -36,6 +36,9 @@ namespace SpiderDriver.ClientApi
         private string mUser, mPass;
 
         private object mTagInfoLockObj = new object();
+
+        private bool mIsRealDataBusy = false;
+        private bool mIsHisDataBusy = false;
 
         #endregion ...Variables...
 
@@ -63,46 +66,81 @@ namespace SpiderDriver.ClientApi
 
         #region ... Methods    ...
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="value"></param>
-        protected override void OnConnectChanged(bool value)
+
+        public override void OnConnected(bool isConnected)
         {
-            if (!value) mLoginId = -1;
+            if (!isConnected) mLoginId = -1;
         }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="value"></param>
+        //protected override void OnConnectChanged(bool value)
+        //{
+        //    if (!value) mLoginId = -1;
+        //}
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="fun"></param>
         /// <param name="datas"></param>
-        protected override void ProcessData(byte fun, IByteBuffer datas)
+        protected override void ProcessData(byte fun, ByteBuffer datas)
         {
             
-            if (fun == ApiFunConst.PushDataChangedFun)
+            switch (fun)
             {
-                ValueChanged?.Invoke(ProcessSingleBufferData(datas));
-            }
-            else
-            {
-                datas.Retain();
-                switch (fun)
-                {
-                    case ApiFunConst.TagInfoRequestFun:
-                        lock (mInfoRequreData)
-                            mInfoRequreData.Enqueue(datas);
-                        infoRequreEvent.Set();
-                        break;
-                    case ApiFunConst.RealValueFun:
-                        mRealRequreData = datas;
-                        this.realRequreEvent.Set();
-                        break;
-                    case ApiFunConst.HisValueFun:
-                        mHisRequreData = datas;
-                        hisRequreEvent.Set();
-                        break;
-                }
+                case ApiFunConst.PushDataChangedFun:
+                    ValueChanged?.Invoke(ProcessSingleBufferData(datas));
+                    break;
+                case ApiFunConst.AysncReturn:
+                    var fun2= datas.ReadByte();
+                    switch (fun2)
+                    {
+                        case ApiFunConst.RealServerBusy:
+                            mIsRealDataBusy = true;
+                            break;
+                        case ApiFunConst.RealServerNoBusy:
+                            mIsRealDataBusy = false;
+                            break;
+                        case ApiFunConst.HisServerBusy:
+                            mIsHisDataBusy = true;
+                            break;
+                        case ApiFunConst.HisServerNoBusy:
+                            mIsHisDataBusy = false;
+                            break;
+                        case ApiFunConst.TagInfoServerBusy:
+                            break;
+                        case ApiFunConst.TagINfoServerNoBusy:
+                            break;
+                    }
+                    datas?.UnlockAndReturn();
+                    break;
+                case ApiFunConst.TagInfoRequestFun:
+                    //datas.IncRef();
+                    lock (mInfoRequreData)
+                        mInfoRequreData.Enqueue(datas);
+                    infoRequreEvent.Set();
+                    break;
+                case ApiFunConst.RealValueFun:
+                    //datas.IncRef();
+                    if (mRealRequreData != null)
+                    {
+                        mRealRequreData?.UnlockAndReturn();
+                    }
+                    mRealRequreData = datas;
+                    this.realRequreEvent.Set();
+                    break;
+                case ApiFunConst.HisValueFun:
+                    //datas.IncRef();
+                    if (mHisRequreData != null)
+                    {
+                        mHisRequreData?.UnlockAndReturn();
+                    }
+                    mHisRequreData = datas;
+                    hisRequreEvent.Set();
+                    break;
             }
         }
 
@@ -111,7 +149,7 @@ namespace SpiderDriver.ClientApi
         /// </summary>
         /// <param name="block"></param>
         /// <returns></returns>
-        private Dictionary<int, object> ProcessSingleBufferData(IByteBuffer block)
+        private Dictionary<int, object> ProcessSingleBufferData(ByteBuffer block)
         {
             if (block == null) return null;
             Dictionary<int, object> re = new Dictionary<int, object>();
@@ -192,6 +230,8 @@ namespace SpiderDriver.ClientApi
                 }
                 re.Add(vid, value);
             }
+           
+            block.UnlockAndReturn();
             //block.Release();
             return re;
         }
@@ -209,22 +249,28 @@ namespace SpiderDriver.ClientApi
              mPass = password;
             int size = username.Length + password.Length + 9;
             var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, size);
-            mb.WriteByte(ApiFunConst.LoginFun);
-            mb.WriteString(username);
-            mb.WriteString(password);
-            Send(mb);
+            mb.Write(ApiFunConst.LoginFun);
+            mb.Write(username);
+            mb.Write(password);
+            SendData(mb);
             if (infoRequreEvent.WaitOne(timeount) && mInfoRequreData.Count>0)
             {
                 var vdata = mInfoRequreData.Dequeue();
-                
-                if (vdata.ReadableBytes > 4 && vdata.ReferenceCount > 0)
+                try
                 {
-                    mLoginId = vdata.ReadLong();
-                    if(mLoginId<0)
+                    if (vdata.ReadableCount > 4 && vdata.RefCount > 0)
                     {
-                        Console.WriteLine("Username or password is invailed!");
+                        mLoginId = vdata.ReadLong();
+                        if (mLoginId < 0)
+                        {
+                            Console.WriteLine("Username or password is invailed!");
+                        }
+                        return IsLogin;
                     }
-                    return IsLogin;
+                }
+                finally
+                {
+                    vdata?.UnlockAndReturn();
                 }
             }
             else
@@ -253,82 +299,82 @@ namespace SpiderDriver.ClientApi
         /// <param name="type"></param>
         /// <param name="value"></param>
         /// <param name="re"></param>
-        private void SetTagValueToBuffer(TagType type,object value,IByteBuffer re)
+        private void SetTagValueToBuffer(TagType type,object value,ByteBuffer re)
         {
-            re.WriteByte((byte)type);
+            re.Write((byte)type);
             switch (type)
             {
                 case TagType.Bool:
-                    re.WriteByte((byte)value);
+                    re.Write((byte)value);
                     break;
                 case TagType.Byte:
-                    re.WriteByte((byte)value);
+                    re.Write((byte)value);
                     break;
                 case TagType.Short:
-                    re.WriteShort((short)value);
+                    re.Write((short)value);
                     break;
                 case TagType.UShort:
-                    re.WriteUnsignedShort((ushort)value);
+                    re.Write((ushort)value);
                     break;
                 case TagType.Int:
-                    re.WriteInt((int)value);
+                    re.Write((int)value);
                     break;
                 case TagType.UInt:
-                    re.WriteInt((int)value);
+                    re.Write((uint)value);
                     break;
                 case TagType.Long:
                 case TagType.ULong:
-                    re.WriteLong((long)value);
+                    re.Write((long)value);
                     break;
                 case TagType.Float:
-                    re.WriteFloat((float)value);
+                    re.Write((float)value);
                     break;
                 case TagType.Double:
-                    re.WriteDouble((double)value);
+                    re.Write((double)value);
                     break;
                 case TagType.String:
                     string sval = value.ToString();
-                    re.WriteInt(sval.Length);
-                    re.WriteString(sval, Encoding.Unicode);
+                    //re.WriteInt(sval.Length);
+                    re.Write(sval, Encoding.Unicode);
                     break;
                 case TagType.DateTime:
-                    re.WriteLong(((DateTime)value).Ticks);
+                    re.Write(((DateTime)value).Ticks);
                     break;
                 case TagType.IntPoint:
-                    re.WriteInt(((IntPointData)value).X);
-                    re.WriteInt(((IntPointData)value).Y);
+                    re.Write(((IntPointData)value).X);
+                    re.Write(((IntPointData)value).Y);
                     break;
                 case TagType.UIntPoint:
-                    re.WriteInt((int)((UIntPointData)value).X);
-                    re.WriteInt((int)((UIntPointData)value).Y);
+                    re.Write((int)((UIntPointData)value).X);
+                    re.Write((int)((UIntPointData)value).Y);
                     break;
                 case TagType.IntPoint3:
-                    re.WriteInt(((IntPoint3Data)value).X);
-                    re.WriteInt(((IntPoint3Data)value).Y);
-                    re.WriteInt(((IntPoint3Data)value).Z);
+                    re.Write(((IntPoint3Data)value).X);
+                    re.Write(((IntPoint3Data)value).Y);
+                    re.Write(((IntPoint3Data)value).Z);
                     break;
                 case TagType.UIntPoint3:
-                    re.WriteInt((int)((UIntPoint3Data)value).X);
-                    re.WriteInt((int)((UIntPoint3Data)value).Y);
-                    re.WriteInt((int)((UIntPoint3Data)value).Z);
+                    re.Write((int)((UIntPoint3Data)value).X);
+                    re.Write((int)((UIntPoint3Data)value).Y);
+                    re.Write((int)((UIntPoint3Data)value).Z);
                     break;
                 case TagType.LongPoint:
-                    re.WriteLong(((LongPointData)value).X);
-                    re.WriteLong(((LongPointData)value).Y);
+                    re.Write(((LongPointData)value).X);
+                    re.Write(((LongPointData)value).Y);
                     break;
                 case TagType.ULongPoint:
-                    re.WriteLong((long)((ULongPointData)value).X);
-                    re.WriteLong((long)((ULongPointData)value).Y);
+                    re.Write((long)((ULongPointData)value).X);
+                    re.Write((long)((ULongPointData)value).Y);
                     break;
                 case TagType.LongPoint3:
-                    re.WriteLong(((LongPoint3Data)value).X);
-                    re.WriteLong(((LongPoint3Data)value).Y);
-                    re.WriteLong(((LongPoint3Data)value).Z);
+                    re.Write(((LongPoint3Data)value).X);
+                    re.Write(((LongPoint3Data)value).Y);
+                    re.Write(((LongPoint3Data)value).Z);
                     break;
                 case TagType.ULongPoint3:
-                    re.WriteLong((long)((ULongPoint3Data)value).X);
-                    re.WriteLong((long)((ULongPoint3Data)value).Y);
-                    re.WriteLong((long)((ULongPoint3Data)value).Z);
+                    re.Write((long)((ULongPoint3Data)value).X);
+                    re.Write((long)((ULongPoint3Data)value).Y);
+                    re.Write((long)((ULongPoint3Data)value).Z);
                     break;
             }
         }
@@ -339,81 +385,81 @@ namespace SpiderDriver.ClientApi
         /// <param name="type"></param>
         /// <param name="value"></param>
         /// <param name="re"></param>
-        private void SetTagValueToBuffer2(TagType type, object value, IByteBuffer re)
+        private void SetTagValueToBuffer2(TagType type, object value, ByteBuffer re)
         {
             switch (type)
             {
                 case TagType.Bool:
-                    re.WriteByte((byte)value);
+                    re.Write((byte)value);
                     break;
                 case TagType.Byte:
-                    re.WriteByte((byte)value);
+                    re.Write((byte)value);
                     break;
                 case TagType.Short:
-                    re.WriteShort((short)value);
+                    re.Write((short)value);
                     break;
                 case TagType.UShort:
-                    re.WriteUnsignedShort((ushort)value);
+                    re.Write((ushort)value);
                     break;
                 case TagType.Int:
-                    re.WriteInt((int)value);
+                    re.Write((int)value);
                     break;
                 case TagType.UInt:
-                    re.WriteInt((int)value);
+                    re.Write((int)value);
                     break;
                 case TagType.Long:
                 case TagType.ULong:
-                    re.WriteLong((long)value);
+                    re.Write((long)value);
                     break;
                 case TagType.Float:
-                    re.WriteFloat((float)value);
+                    re.Write((float)value);
                     break;
                 case TagType.Double:
-                    re.WriteDouble((double)value);
+                    re.Write((double)value);
                     break;
                 case TagType.String:
                     string sval = value.ToString();
-                    re.WriteInt(sval.Length);
-                    re.WriteString(sval, Encoding.Unicode);
+                    //re.WriteInt(sval.Length);
+                    re.Write(sval, Encoding.Unicode);
                     break;
                 case TagType.DateTime:
-                    re.WriteLong(((DateTime)value).Ticks);
+                    re.Write(((DateTime)value).Ticks);
                     break;
                 case TagType.IntPoint:
-                    re.WriteInt(((IntPointData)value).X);
-                    re.WriteInt(((IntPointData)value).Y);
+                    re.Write(((IntPointData)value).X);
+                    re.Write(((IntPointData)value).Y);
                     break;
                 case TagType.UIntPoint:
-                    re.WriteInt((int)((UIntPointData)value).X);
-                    re.WriteInt((int)((UIntPointData)value).Y);
+                    re.Write((int)((UIntPointData)value).X);
+                    re.Write((int)((UIntPointData)value).Y);
                     break;
                 case TagType.IntPoint3:
-                    re.WriteInt(((IntPoint3Data)value).X);
-                    re.WriteInt(((IntPoint3Data)value).Y);
-                    re.WriteInt(((IntPoint3Data)value).Z);
+                    re.Write(((IntPoint3Data)value).X);
+                    re.Write(((IntPoint3Data)value).Y);
+                    re.Write(((IntPoint3Data)value).Z);
                     break;
                 case TagType.UIntPoint3:
-                    re.WriteInt((int)((UIntPoint3Data)value).X);
-                    re.WriteInt((int)((UIntPoint3Data)value).Y);
-                    re.WriteInt((int)((UIntPoint3Data)value).Z);
+                    re.Write((int)((UIntPoint3Data)value).X);
+                    re.Write((int)((UIntPoint3Data)value).Y);
+                    re.Write((int)((UIntPoint3Data)value).Z);
                     break;
                 case TagType.LongPoint:
-                    re.WriteLong(((LongPointData)value).X);
-                    re.WriteLong(((LongPointData)value).Y);
+                    re.Write(((LongPointData)value).X);
+                    re.Write(((LongPointData)value).Y);
                     break;
                 case TagType.ULongPoint:
-                    re.WriteLong((long)((ULongPointData)value).X);
-                    re.WriteLong((long)((ULongPointData)value).Y);
+                    re.Write((long)((ULongPointData)value).X);
+                    re.Write((long)((ULongPointData)value).Y);
                     break;
                 case TagType.LongPoint3:
-                    re.WriteLong(((LongPoint3Data)value).X);
-                    re.WriteLong(((LongPoint3Data)value).Y);
-                    re.WriteLong(((LongPoint3Data)value).Z);
+                    re.Write(((LongPoint3Data)value).X);
+                    re.Write(((LongPoint3Data)value).Y);
+                    re.Write(((LongPoint3Data)value).Z);
                     break;
                 case TagType.ULongPoint3:
-                    re.WriteLong((long)((ULongPoint3Data)value).X);
-                    re.WriteLong((long)((ULongPoint3Data)value).Y);
-                    re.WriteLong((long)((ULongPoint3Data)value).Z);
+                    re.Write((long)((ULongPoint3Data)value).X);
+                    re.Write((long)((ULongPoint3Data)value).Y);
+                    re.Write((long)((ULongPoint3Data)value).Z);
                     break;
             }
         }
@@ -425,82 +471,82 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         /// <param name="quality"></param>
         /// <param name="re"></param>
-        private void SetTagValueToBuffer(TagType type, object value,byte quality, IByteBuffer re)
+        private void SetTagValueToBuffer(TagType type, object value,byte quality, ByteBuffer re)
         {
-            re.WriteByte((byte)type);
+            re.Write((byte)type);
             switch (type)
             {
                 case TagType.Bool:
-                    re.WriteByte(Convert.ToByte(value));
+                    re.Write(Convert.ToByte(value));
                     break;
                 case TagType.Byte:
-                    re.WriteByte(Convert.ToByte(value));
+                    re.Write(Convert.ToByte(value));
                     break;
                 case TagType.Short:
-                    re.WriteShort(Convert.ToInt16(value));
+                    re.Write(Convert.ToInt16(value));
                     break;
                 case TagType.UShort:
-                    re.WriteUnsignedShort(Convert.ToUInt16(value));
+                    re.Write(Convert.ToUInt16(value));
                     break;
                 case TagType.Int:
-                    re.WriteInt(Convert.ToInt32(value));
+                    re.Write(Convert.ToInt32(value));
                     break;
                 case TagType.UInt:
-                    re.WriteInt(Convert.ToInt32(value));
+                    re.Write(Convert.ToInt32(value));
                     break;
                 case TagType.Long:
                 case TagType.ULong:
-                    re.WriteLong(Convert.ToInt64(value));
+                    re.Write(Convert.ToInt64(value));
                     break;
                 case TagType.Float:
-                    re.WriteFloat(Convert.ToSingle(value));
+                    re.Write(Convert.ToSingle(value));
                     break;
                 case TagType.Double:
-                    re.WriteDouble(Convert.ToDouble(value));
+                    re.Write(Convert.ToDouble(value));
                     break;
                 case TagType.String:
                     string sval = value.ToString();
-                    re.WriteInt(sval.Length);
-                    re.WriteString(sval, Encoding.Unicode);
+                    //re.WriteInt(sval.Length);
+                    re.Write(sval, Encoding.Unicode);
                     break;
                 case TagType.DateTime:
-                    re.WriteLong(((DateTime)value).ToBinary());
+                    re.Write(((DateTime)value).ToBinary());
                     break;
                 case TagType.IntPoint:
-                    re.WriteInt(((IntPointData)value).X);
-                    re.WriteInt(((IntPointData)value).Y);
+                    re.Write(((IntPointData)value).X);
+                    re.Write(((IntPointData)value).Y);
                     break;
                 case TagType.UIntPoint:
-                    re.WriteInt((int)((UIntPointData)value).X);
-                    re.WriteInt((int)((UIntPointData)value).Y);
+                    re.Write((int)((UIntPointData)value).X);
+                    re.Write((int)((UIntPointData)value).Y);
                     break;
                 case TagType.IntPoint3:
-                    re.WriteInt(((IntPoint3Data)value).X);
-                    re.WriteInt(((IntPoint3Data)value).Y);
-                    re.WriteInt(((IntPoint3Data)value).Z);
+                    re.Write(((IntPoint3Data)value).X);
+                    re.Write(((IntPoint3Data)value).Y);
+                    re.Write(((IntPoint3Data)value).Z);
                     break;
                 case TagType.UIntPoint3:
-                    re.WriteInt((int)((UIntPoint3Data)value).X);
-                    re.WriteInt((int)((UIntPoint3Data)value).Y);
-                    re.WriteInt((int)((UIntPoint3Data)value).Z);
+                    re.Write((int)((UIntPoint3Data)value).X);
+                    re.Write((int)((UIntPoint3Data)value).Y);
+                    re.Write((int)((UIntPoint3Data)value).Z);
                     break;
                 case TagType.LongPoint:
-                    re.WriteLong(((LongPointData)value).X);
-                    re.WriteLong(((LongPointData)value).Y);
+                    re.Write(((LongPointData)value).X);
+                    re.Write(((LongPointData)value).Y);
                     break;
                 case TagType.ULongPoint:
-                    re.WriteLong((long)((ULongPointData)value).X);
-                    re.WriteLong((long)((ULongPointData)value).Y);
+                    re.Write((long)((ULongPointData)value).X);
+                    re.Write((long)((ULongPointData)value).Y);
                     break;
                 case TagType.LongPoint3:
-                    re.WriteLong(((LongPoint3Data)value).X);
-                    re.WriteLong(((LongPoint3Data)value).Y);
-                    re.WriteLong(((LongPoint3Data)value).Z);
+                    re.Write(((LongPoint3Data)value).X);
+                    re.Write(((LongPoint3Data)value).Y);
+                    re.Write(((LongPoint3Data)value).Z);
                     break;
                 case TagType.ULongPoint3:
-                    re.WriteLong((long)((ULongPoint3Data)value).X);
-                    re.WriteLong((long)((ULongPoint3Data)value).Y);
-                    re.WriteLong((long)((ULongPoint3Data)value).Z);
+                    re.Write((long)((ULongPoint3Data)value).X);
+                    re.Write((long)((ULongPoint3Data)value).Y);
+                    re.Write((long)((ULongPoint3Data)value).Z);
                     break;
             }
             re.WriteByte(quality);
@@ -513,81 +559,81 @@ namespace SpiderDriver.ClientApi
         /// <param name="value"></param>
         /// <param name="quality"></param>
         /// <param name="re"></param>
-        private void SetTagValueToBuffer2(TagType type, object value, byte quality, IByteBuffer re)
+        private void SetTagValueToBuffer2(TagType type, object value, byte quality, ByteBuffer re)
         {
             switch (type)
             {
                 case TagType.Bool:
-                    re.WriteByte(Convert.ToByte(value));
+                    re.Write(Convert.ToByte(value));
                     break;
                 case TagType.Byte:
-                    re.WriteByte(Convert.ToByte(value));
+                    re.Write(Convert.ToByte(value));
                     break;
                 case TagType.Short:
-                    re.WriteShort(Convert.ToInt16(value));
+                    re.Write(Convert.ToInt16(value));
                     break;
                 case TagType.UShort:
-                    re.WriteUnsignedShort(Convert.ToUInt16(value));
+                    re.Write(Convert.ToUInt16(value));
                     break;
                 case TagType.Int:
-                    re.WriteInt(Convert.ToInt32(value));
+                    re.Write(Convert.ToInt32(value));
                     break;
                 case TagType.UInt:
-                    re.WriteInt(Convert.ToInt32(value));
+                    re.Write(Convert.ToInt32(value));
                     break;
                 case TagType.Long:
                 case TagType.ULong:
-                    re.WriteLong(Convert.ToInt64(value));
+                    re.Write(Convert.ToInt64(value));
                     break;
                 case TagType.Float:
-                    re.WriteFloat(Convert.ToSingle(value));
+                    re.Write(Convert.ToSingle(value));
                     break;
                 case TagType.Double:
-                    re.WriteDouble(Convert.ToDouble(value));
+                    re.Write(Convert.ToDouble(value));
                     break;
                 case TagType.String:
                     string sval = value.ToString();
-                    re.WriteInt(sval.Length);
-                    re.WriteString(sval, Encoding.Unicode);
+                    //re.WriteInt(sval.Length);
+                    re.Write(sval, Encoding.Unicode);
                     break;
                 case TagType.DateTime:
-                    re.WriteLong(((DateTime)value).ToBinary());
+                    re.Write(((DateTime)value).ToBinary());
                     break;
                 case TagType.IntPoint:
-                    re.WriteInt(((IntPointData)value).X);
-                    re.WriteInt(((IntPointData)value).Y);
+                    re.Write(((IntPointData)value).X);
+                    re.Write(((IntPointData)value).Y);
                     break;
                 case TagType.UIntPoint:
-                    re.WriteInt((int)((UIntPointData)value).X);
-                    re.WriteInt((int)((UIntPointData)value).Y);
+                    re.Write((int)((UIntPointData)value).X);
+                    re.Write((int)((UIntPointData)value).Y);
                     break;
                 case TagType.IntPoint3:
-                    re.WriteInt(((IntPoint3Data)value).X);
-                    re.WriteInt(((IntPoint3Data)value).Y);
-                    re.WriteInt(((IntPoint3Data)value).Z);
+                    re.Write(((IntPoint3Data)value).X);
+                    re.Write(((IntPoint3Data)value).Y);
+                    re.Write(((IntPoint3Data)value).Z);
                     break;
                 case TagType.UIntPoint3:
-                    re.WriteInt((int)((UIntPoint3Data)value).X);
-                    re.WriteInt((int)((UIntPoint3Data)value).Y);
-                    re.WriteInt((int)((UIntPoint3Data)value).Z);
+                    re.Write((int)((UIntPoint3Data)value).X);
+                    re.Write((int)((UIntPoint3Data)value).Y);
+                    re.Write((int)((UIntPoint3Data)value).Z);
                     break;
                 case TagType.LongPoint:
-                    re.WriteLong(((LongPointData)value).X);
-                    re.WriteLong(((LongPointData)value).Y);
+                    re.Write(((LongPointData)value).X);
+                    re.Write(((LongPointData)value).Y);
                     break;
                 case TagType.ULongPoint:
-                    re.WriteLong((long)((ULongPointData)value).X);
-                    re.WriteLong((long)((ULongPointData)value).Y);
+                    re.Write((long)((ULongPointData)value).X);
+                    re.Write((long)((ULongPointData)value).Y);
                     break;
                 case TagType.LongPoint3:
-                    re.WriteLong(((LongPoint3Data)value).X);
-                    re.WriteLong(((LongPoint3Data)value).Y);
-                    re.WriteLong(((LongPoint3Data)value).Z);
+                    re.Write(((LongPoint3Data)value).X);
+                    re.Write(((LongPoint3Data)value).Y);
+                    re.Write(((LongPoint3Data)value).Z);
                     break;
                 case TagType.ULongPoint3:
-                    re.WriteLong((long)((ULongPoint3Data)value).X);
-                    re.WriteLong((long)((ULongPoint3Data)value).Y);
-                    re.WriteLong((long)((ULongPoint3Data)value).Z);
+                    re.Write((long)((ULongPoint3Data)value).X);
+                    re.Write((long)((ULongPoint3Data)value).Y);
+                    re.Write((long)((ULongPoint3Data)value).Z);
                     break;
             }
             re.WriteByte(quality);
@@ -642,30 +688,34 @@ namespace SpiderDriver.ClientApi
         {
             CheckLogin();
 
-            if (data.Position <= 0) return false;
+            if (data.Position <= 0 || mIsRealDataBusy) return false;
 
             var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + (int)data.Position);
-            mb.WriteByte(ApiFunConst.SetTagRealAndHisValueFun);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(data.ValueCount);
+            mb.Write(ApiFunConst.SetTagRealAndHisValueFun);
+            mb.Write(this.mLoginId);
+            mb.Write(data.ValueCount);
 
-            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
-            mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
+            mb.Write(data.Buffers, (int)data.Position);
+
+            //System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
+            //mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
 
             realRequreEvent.Reset();
-            Send(mb);
+            SendData(mb);
 
-            try
+            if (realRequreEvent.WaitOne(timeout))
             {
-                if (realRequreEvent.WaitOne(timeout))
+                try
                 {
-                    return mRealRequreData != null && mRealRequreData.ReadableBytes > 1;
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
                 }
+                catch
+                {
+                    mRealRequreData?.UnlockAndReturn();
+                }
+                
             }
-            catch
-            {
-
-            }
+            
 
             return false;
         }
@@ -702,15 +752,17 @@ namespace SpiderDriver.ClientApi
         {
             CheckLogin();
 
-            if (data.Position <= 0) return false;
+            if (data.Position <= 0 || mIsRealDataBusy) return false;
 
             var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position);
-            mb.WriteByte(ApiFunConst.SetTagRealAndHisValueFun);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(data.ValueCount);
-            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
-            mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
-            Send(mb);
+            mb.Write(ApiFunConst.SetTagRealAndHisValueFun);
+            mb.Write(this.mLoginId);
+            mb.Write(data.ValueCount);
+
+            mb.Write(data.Buffers, (int)data.Position);
+            //System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
+            //mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
+            SendData(mb);
             return true;
         }
 
@@ -723,28 +775,53 @@ namespace SpiderDriver.ClientApi
         public bool SetTagValueAndQuality(RealDataBuffer data, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position);
-            mb.WriteByte(ApiFunConst.SetTagValueAndQualityFun);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(data.ValueCount);
 
-            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
-            mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
+            if (mIsRealDataBusy) return false;
+
+            //Stopwatch sw = new Stopwatch();
+            //sw.Start();
+
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position);
+            mb.Write(ApiFunConst.SetTagValueAndQualityFun);
+            mb.Write(this.mLoginId);
+            mb.Write(data.ValueCount);
+
+            mb.Write(data.Buffers, (int)data.Position);
+            //System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
+            //mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
 
             realRequreEvent.Reset();
-            Send(mb);
 
-            try
+            //long ltmp = sw.ElapsedMilliseconds;
+
+            SendData(mb);
+
+            if (realRequreEvent.WaitOne(timeout))
             {
-                if (realRequreEvent.WaitOne(timeout))
+                try
                 {
-                    return mRealRequreData != null && mRealRequreData.ReadableBytes > 1;
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
+                }
+                finally
+                {
+                    mRealRequreData?.UnlockAndReturn();
                 }
             }
-            catch
-            {
 
-            }
+            //try
+            //{
+               
+            //}
+            //catch
+            //{
+
+            //}
+            //finally
+            //{
+               
+            //    sw.Stop();
+            //    Debug.Print("SetTagValueAndQuality:" + sw.ElapsedMilliseconds + " , " + ltmp);
+            //}
 
             return false;
         }
@@ -759,16 +836,19 @@ namespace SpiderDriver.ClientApi
         public bool SetTagValueAndQualityAsync(RealDataBuffer data, int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position);
-            mb.WriteByte(ApiFunConst.SetTagValueAndQualityFun);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(data.ValueCount);
+            if (mIsRealDataBusy) return false;
 
-            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
-            mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position);
+            mb.Write(ApiFunConst.SetTagValueAndQualityFun);
+            mb.Write(this.mLoginId);
+            mb.Write(data.ValueCount);
+
+            mb.Write(data.Buffers, (int)data.Position);
+            //System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
+            //mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
 
             realRequreEvent.Reset();
-            Send(mb);
+            SendData(mb);
 
             return true;
         }
@@ -819,29 +899,34 @@ namespace SpiderDriver.ClientApi
         public bool SetTagRealAndHisValue(List<RealTagValue> ids, int timeout = 5000)
         {
             CheckLogin();
+            if (mIsRealDataBusy) return false;
+
             var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count * 32);
-            mb.WriteByte(ApiFunConst.SetTagRealAndHisValueFun);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(ids.Count);
+            mb.Write(ApiFunConst.SetTagRealAndHisValueFun);
+            mb.Write(this.mLoginId);
+            mb.Write(ids.Count);
             foreach (var vv in ids)
             {
-                mb.WriteInt(vv.Id);
+                mb.Write(vv.Id);
                 SetTagValueToBuffer((TagType)vv.ValueType, vv.Value,vv.Quality, mb);
             }
             realRequreEvent.Reset();
-            Send(mb);
+            SendData(mb);
 
-            try
+            if (realRequreEvent.WaitOne(timeout))
             {
-                if (realRequreEvent.WaitOne(timeout))
+                try
                 {
-                    return mRealRequreData != null && mRealRequreData.ReadableBytes > 1;
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
                 }
+                catch
+                {
+                    mRealRequreData?.UnlockAndReturn();
+                }
+               
             }
-            catch
-            {
 
-            }
+            
             return false;
         }
 
@@ -856,29 +941,35 @@ namespace SpiderDriver.ClientApi
         public bool SetTagValueAndQuality(List<RealTagValue> values, int timeout = 5000)
         {
             CheckLogin();
+            if (mIsRealDataBusy) return false;
+
             var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * 32);
-            mb.WriteByte(ApiFunConst.SetTagValueAndQualityFun);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(values.Count);
+            mb.Write(ApiFunConst.SetTagValueAndQualityFun);
+            mb.Write(this.mLoginId);
+            mb.Write(values.Count);
             foreach (var vv in values)
             {
-                mb.WriteInt(vv.Id);
+                mb.Write(vv.Id);
                 SetTagValueToBuffer((TagType)vv.ValueType, vv.Value,vv.Quality, mb);
             }
             realRequreEvent.Reset();
-            Send(mb);
+            SendData(mb);
 
-            try
+            if (realRequreEvent.WaitOne(timeout))
             {
-                if (realRequreEvent.WaitOne(timeout))
+                try
                 {
-                    return mRealRequreData != null && mRealRequreData.ReadableBytes > 1;
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
                 }
+                catch
+                {
+                    mRealRequreData?.UnlockAndReturn();
+                    
+                }
+               
             }
-            catch
-            {
 
-            }
+            
             return false;
         }
 
@@ -893,17 +984,18 @@ namespace SpiderDriver.ClientApi
         public bool SetTagValueAndQualityAsync(List<RealTagValue> values, int timeout = 5000)
         {
             CheckLogin();
+            if (mIsRealDataBusy) return false;
             var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * 32);
-            mb.WriteByte(ApiFunConst.SetTagValueAndQualityFun);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(values.Count);
+            mb.Write(ApiFunConst.SetTagValueAndQualityFun);
+            mb.Write(this.mLoginId);
+            mb.Write(values.Count);
             foreach (var vv in values)
             {
-                mb.WriteInt(vv.Id);
+                mb.Write(vv.Id);
                 SetTagValueToBuffer((TagType)vv.ValueType, vv.Value, vv.Quality, mb);
             }
             realRequreEvent.Reset();
-            Send(mb);
+            SendData(mb);
             return true;
         }
 
@@ -916,27 +1008,28 @@ namespace SpiderDriver.ClientApi
         public bool AppendRegistorDataChangedCallBack(IEnumerable<int> ids,int timeout=5000)
         {
             CheckLogin();
+           
             var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count() * 4);
-            mb.WriteByte(ApiFunConst.RegistorTag);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(ids.Count());
+            mb.Write(ApiFunConst.RegistorTag);
+            mb.Write(this.mLoginId);
+            mb.Write(ids.Count());
             foreach (var vv in ids)
             {
-                mb.WriteInt(vv);
+                mb.Write(vv);
             }
             realRequreEvent.Reset();
-            Send(mb);
+            SendData(mb);
 
-            try
+            if (realRequreEvent.WaitOne(timeout))
             {
-                if (realRequreEvent.WaitOne(timeout))
+                try
                 {
-                    return mRealRequreData != null && mRealRequreData.ReadableBytes > 1;
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
                 }
-            }
-            catch
-            {
-
+                finally
+                {
+                    mRealRequreData?.UnlockAndReturn();
+                }
             }
             return false;
         }
@@ -950,27 +1043,28 @@ namespace SpiderDriver.ClientApi
         public bool UnRegistorDataChangedCallBack(IEnumerable<int> ids, int timeout = 5000)
         {
             CheckLogin();
+         
             var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count() * 4);
-            mb.WriteByte(ApiFunConst.UnRegistorTag);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(ids.Count());
+            mb.Write(ApiFunConst.UnRegistorTag);
+            mb.Write(this.mLoginId);
+            mb.Write(ids.Count());
             foreach (var vv in ids)
             {
-                mb.WriteInt(vv);
+                mb.Write(vv);
             }
             realRequreEvent.Reset();
-            Send(mb);
+            SendData(mb);
 
-            try
+            if (realRequreEvent.WaitOne(timeout))
             {
-                if (realRequreEvent.WaitOne(timeout))
+                try
                 {
-                    return mRealRequreData != null && mRealRequreData.ReadableBytes > 1;
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
                 }
-            }
-            catch
-            {
-
+                finally
+                {
+                    mRealRequreData?.UnlockAndReturn();
+                }
             }
             return false;
         }
@@ -984,22 +1078,26 @@ namespace SpiderDriver.ClientApi
         {
             CheckLogin();
             var mb = GetBuffer(ApiFunConst.RealValueFun, 13);
-            mb.WriteByte(ApiFunConst.ClearRegistorTag);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(1);
+            mb.Write(ApiFunConst.ClearRegistorTag);
+            mb.Write(this.mLoginId);
+            mb.Write(1);
             realRequreEvent.Reset();
-            Send(mb);
-            try
-            {
-                if (realRequreEvent.WaitOne(timeout))
-                {
-                    return mRealRequreData != null && mRealRequreData.ReadableBytes > 1;
-                }
-            }
-            catch
-            {
+            SendData(mb);
 
+            if (realRequreEvent.WaitOne(timeout))
+            {
+                try
+                {
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
+                }
+                catch
+                {
+                    mRealRequreData?.UnlockAndReturn();
+                }
+                
             }
+
+           
             return false;
         }
 
@@ -1015,33 +1113,36 @@ namespace SpiderDriver.ClientApi
         public bool SetTagHisValue(int id, TagType type, IEnumerable<TagValue> values, int timeout = 5000)
         {
             CheckLogin();
+            if (mIsHisDataBusy) return false;
             var mb = GetBuffer(ApiFunConst.HisValueFun, 18 + values.Count() * 33);
-            mb.WriteByte(ApiFunConst.SetTagHisValue);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(id);
-            mb.WriteInt(values.Count());
-            mb.WriteByte((byte)type);
+            mb.Write(ApiFunConst.SetTagHisValue);
+            mb.Write(this.mLoginId);
+            mb.Write(id);
+            mb.Write(values.Count());
+            mb.Write((byte)type);
             
 
             foreach (var vv in values)
             {
-                mb.WriteLong(vv.Time.ToBinary());
+                mb.Write(vv.Time.ToBinary());
                 SetTagValueToBuffer2(type, vv.Value,vv.Quality, mb);
             }
             hisRequreEvent.Reset();
-            Send(mb);
+            SendData(mb);
 
-            try
+            if (this.hisRequreEvent.WaitOne(timeout))
             {
-                if (this.hisRequreEvent.WaitOne(timeout))
+                try
                 {
-                    return mHisRequreData != null && mHisRequreData.ReadableBytes > 1;
+                    return mHisRequreData != null && mHisRequreData.ReadableCount > 1;
                 }
+                catch
+                {
+                    mHisRequreData?.UnlockAndReturn();
+                }
+              
             }
-            catch
-            {
-
-            }
+            
 
             return false;
         }
@@ -1057,29 +1158,37 @@ namespace SpiderDriver.ClientApi
         public bool SetTagHisValue(int id, TagType type, HisDataBuffer data, int timeout = 5000)
         {
             CheckLogin();
+            if (mIsHisDataBusy) return false;
+
             var mb = GetBuffer(ApiFunConst.HisValueFun, 18 + (int)data.Position);
-            mb.WriteByte(ApiFunConst.SetTagHisValue);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(id);
-            mb.WriteInt(data.ValueCount);
-            mb.WriteByte((byte)type);
+            mb.Write(ApiFunConst.SetTagHisValue);
+            mb.Write(this.mLoginId);
+            mb.Write(id);
+            mb.Write(data.ValueCount);
+            mb.Write((byte)type);
 
-            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
-            mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
+            //System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
+            //mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
+
+            mb.Write(data.Buffers, (int)data.Position);
+
             hisRequreEvent.Reset();
-            Send(mb);
+            SendData(mb);
 
-            try
+            if (this.hisRequreEvent.WaitOne(timeout))
             {
-                if (this.hisRequreEvent.WaitOne(timeout))
+                try
                 {
-                    return mHisRequreData != null && mHisRequreData.ReadableBytes > 1;
+                    return mHisRequreData != null && mHisRequreData.ReadableCount > 1;
                 }
+                catch
+                {
+                    mHisRequreData?.UnlockAndReturn();
+                }
+               
             }
-            catch
-            {
 
-            }
+            
 
             return false;
         }
@@ -1093,35 +1202,39 @@ namespace SpiderDriver.ClientApi
         public bool SetMutiTagHisValue(Dictionary<int,TagValueAndType> idvalues,int timeout=5000)
         {
             if (idvalues == null && idvalues.Count == 0) return false;
+            if (mIsHisDataBusy) return false;
 
             CheckLogin();
             var mb = GetBuffer(ApiFunConst.HisValueFun, 13 + idvalues.Count * 38);
-            mb.WriteByte(ApiFunConst.SetTagHisValue2);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(idvalues.Count);
+            mb.Write(ApiFunConst.SetTagHisValue2);
+            mb.Write(this.mLoginId);
+            mb.Write(idvalues.Count);
 
             foreach (var vv in idvalues)
             {
-                mb.WriteInt(vv.Key);
-                mb.WriteLong(vv.Value.Time.ToBinary());
-                mb.WriteByte((byte)vv.Value.ValueType);
+                mb.Write(vv.Key);
+                mb.Write(vv.Value.Time.ToBinary());
+                mb.Write((byte)vv.Value.ValueType);
                 SetTagValueToBuffer2(vv.Value.ValueType, vv.Value.Value, vv.Value.Quality, mb);
             }
 
             hisRequreEvent.Reset();
-            Send(mb);
+            SendData(mb);
 
-            try
+            if (this.hisRequreEvent.WaitOne(timeout))
             {
-                if (this.hisRequreEvent.WaitOne(timeout))
+                try
                 {
-                    return mHisRequreData != null && mHisRequreData.ReadableBytes > 1;
+                    return mHisRequreData != null && mHisRequreData.ReadableCount > 1;
                 }
+                catch
+                {
+                    mHisRequreData?.UnlockAndReturn();
+                }
+              
             }
-            catch
-            {
 
-            }
+            
             return false;
         }
 
@@ -1134,29 +1247,32 @@ namespace SpiderDriver.ClientApi
         public bool SetMutiTagHisValue(HisDataBuffer data, int timeout = 5000)
         {
             if (data == null && data.ValueCount == 0) return false;
+            if (mIsHisDataBusy) return false;
 
             CheckLogin();
             var mb = GetBuffer(ApiFunConst.HisValueFun, 13 + (int)data.Position);
-            mb.WriteByte(ApiFunConst.SetTagHisValue2);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(data.ValueCount);
+            mb.Write(ApiFunConst.SetTagHisValue2);
+            mb.Write(this.mLoginId);
+            mb.Write(data.ValueCount);
 
-            System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
-            mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
+            //System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
+            //mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
+
+            mb.Write(data.Buffers, (int)data.Position);
 
             hisRequreEvent.Reset();
-            Send(mb);
+            SendData(mb);
 
-            try
+            if (this.hisRequreEvent.WaitOne(timeout))
             {
-                if (this.hisRequreEvent.WaitOne(timeout))
+                try
                 {
-                    return mHisRequreData != null && mHisRequreData.ReadableBytes > 1;
+                    return mHisRequreData != null && mHisRequreData.ReadableCount > 1;
                 }
-            }
-            catch
-            {
-
+                finally
+                {
+                    mHisRequreData?.UnlockAndReturn();
+                }
             }
             return false;
         }
@@ -1171,30 +1287,36 @@ namespace SpiderDriver.ClientApi
         public bool SetTagHisValue(int id, TagValueAndType values,  int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 26 + 40);
-            mb.WriteByte(ApiFunConst.SetTagHisValue2);
-            mb.WriteLong(this.mLoginId);
-            mb.WriteInt(1);
 
-            mb.WriteInt(id);
-            mb.WriteLong(values.Time.ToBinary());
-            mb.WriteByte((byte)values.ValueType);
+            if (mIsHisDataBusy) return false;
+
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 26 + 40);
+            mb.Write(ApiFunConst.SetTagHisValue2);
+            mb.Write(this.mLoginId);
+            mb.Write(1);
+
+            mb.Write(id);
+            mb.Write(values.Time.ToBinary());
+            mb.Write((byte)values.ValueType);
             SetTagValueToBuffer2(values.ValueType, values.Value, values.Quality, mb);
 
             hisRequreEvent.Reset();
-            Send(mb);
+            SendData(mb);
 
-            try
+            if (this.hisRequreEvent.WaitOne(timeout))
             {
-                if (this.hisRequreEvent.WaitOne(timeout))
+                try
                 {
-                    return mHisRequreData != null && mHisRequreData.ReadableBytes > 1;
+                    return mHisRequreData != null && mHisRequreData.ReadableCount > 1;
                 }
+                catch
+                {
+                    mHisRequreData?.UnlockAndReturn();
+                }
+               
             }
-            catch
-            {
 
-            }
+
             return false;
         }
 
@@ -1211,15 +1333,15 @@ namespace SpiderDriver.ClientApi
                 List<int> re = new List<int>();
                 CheckLogin();
                 var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 13 + tags.Count() * 256);
-                mb.WriteByte(ApiFunConst.GetTagIdByNameFun);
-                mb.WriteLong(this.mLoginId);
-                mb.WriteInt(tags.Count());
+                mb.Write(ApiFunConst.GetTagIdByNameFun);
+                mb.Write(this.mLoginId);
+                mb.Write(tags.Count());
                 foreach (var vv in tags)
                 {
-                    mb.WriteString(vv);
+                    mb.Write(vv);
                 }
                 infoRequreEvent.Reset();
-                Send(mb);
+                SendData(mb);
 
                 try
                 {
@@ -1233,6 +1355,7 @@ namespace SpiderDriver.ClientApi
                             {
                                 re.Add(vdata.ReadInt());
                             }
+                            vdata.UnlockAndReturn();
                         }
                     }
                 }
@@ -1256,13 +1379,19 @@ namespace SpiderDriver.ClientApi
                 Dictionary<int, Tuple<string, byte>> re = new Dictionary<int, Tuple<string, byte>>();
                 CheckLogin();
                 var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 9);
-                mb.WriteByte(ApiFunConst.QueryAllTagNameAndIds);
-                mb.WriteLong(this.mLoginId);
+                mb.Write(ApiFunConst.QueryAllTagNameAndIds);
+                mb.Write(this.mLoginId);
                 DateTime dt = DateTime.Now;
                 infoRequreEvent.Reset();
                 lock (mInfoRequreData)
+                {
+                    while(mInfoRequreData.Count>0)
+                    {
+                        mInfoRequreData.Dequeue().UnlockAndReturn();
+                    }
                     mInfoRequreData.Clear();
-                Send(mb);
+                }
+                SendData(mb);
                 try
                 {
                     if (infoRequreEvent.WaitOne(timeout) && mInfoRequreData.Count > 0)
@@ -1290,8 +1419,10 @@ namespace SpiderDriver.ClientApi
                                     }
 
                                     lock (mInfoRequreData)
-                                        mInfoRequreData.Dequeue();
-
+                                    {
+                                        var vd = mInfoRequreData.Dequeue();
+                                        vd.UnlockAndReturn();
+                                    }
                                     if (icount >= (total - 1)) break;
                                 }
                                 else
@@ -1334,13 +1465,19 @@ namespace SpiderDriver.ClientApi
                 List<int> re = new List<int>();
                 CheckLogin();
                 var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 9);
-                mb.WriteByte(ApiFunConst.GetDriverRecordTypeTagIds);
-                mb.WriteLong(this.mLoginId);
+                mb.Write(ApiFunConst.GetDriverRecordTypeTagIds);
+                mb.Write(this.mLoginId);
                 DateTime dt = DateTime.Now;
                 infoRequreEvent.Reset();
                 lock (mInfoRequreData)
+                {
+                    while (mInfoRequreData.Count > 0)
+                    {
+                        mInfoRequreData.Dequeue().UnlockAndReturn();
+                    }
                     mInfoRequreData.Clear();
-                Send(mb);
+                }
+                SendData(mb);
                 try
                 {
                     if (infoRequreEvent.WaitOne(timeout) && mInfoRequreData.Count > 0)
@@ -1363,8 +1500,10 @@ namespace SpiderDriver.ClientApi
                                     }
 
                                     lock (mInfoRequreData)
-                                        mInfoRequreData.Dequeue();
-
+                                    {
+                                        var vd = mInfoRequreData.Dequeue();
+                                        vd.UnlockAndReturn();
+                                    }
                                     if (icount >= (total - 1)) break;
                                 }
                                 else
@@ -1401,25 +1540,31 @@ namespace SpiderDriver.ClientApi
         /// <param name="ids"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public List<bool> CheckRecordTypeByTagId(IEnumerable<int> ids,int timeout = 5000)
+        public List<bool> CheckRecordTypeByTagId(IEnumerable<int> ids, int timeout = 5000)
         {
             lock (mTagInfoLockObj)
             {
                 List<bool> re = new List<bool>();
                 CheckLogin();
-                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 13+ids.Count()*4);
-                mb.WriteByte(ApiFunConst.GetDriverRecordTypeTagIds2);
-                mb.WriteLong(this.mLoginId);
-                mb.WriteInt(ids.Count());
-                foreach(var vv in ids)
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 13 + ids.Count() * 4);
+                mb.Write(ApiFunConst.GetDriverRecordTypeTagIds2);
+                mb.Write(this.mLoginId);
+                mb.Write(ids.Count());
+                foreach (var vv in ids)
                 {
-                    mb.WriteInt(vv);
+                    mb.Write(vv);
                 }
                 DateTime dt = DateTime.Now;
                 infoRequreEvent.Reset();
                 lock (mInfoRequreData)
+                {
+                    while (mInfoRequreData.Count > 0)
+                    {
+                        mInfoRequreData.Dequeue().UnlockAndReturn();
+                    }
                     mInfoRequreData.Clear();
-                Send(mb);
+                }
+                SendData(mb);
                 try
                 {
                     if (infoRequreEvent.WaitOne(timeout) && mInfoRequreData.Count > 0)
@@ -1435,7 +1580,10 @@ namespace SpiderDriver.ClientApi
                             }
 
                             lock (mInfoRequreData)
-                                mInfoRequreData.Dequeue();
+                            {
+                                 mInfoRequreData.Dequeue().UnlockAndReturn();
+                               
+                            }
                         }
 
                     }

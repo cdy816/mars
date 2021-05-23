@@ -8,6 +8,7 @@
 //==============================================================
 
 using Cdy.Tag;
+using Cheetah;
 using DotNetty.Buffers;
 using System;
 using System.Collections.Generic;
@@ -36,12 +37,12 @@ namespace DBRuntime.RDDC
     /// <summary>
     /// 
     /// </summary>
-    public class RDDCDataService: SocketServer
+    public class RDDCDataService: SocketServer2
     {
 
         #region ... Variables  ...
 
-        private IByteBuffer mAsyncCalldata;
+        private ByteBuffer mAsyncCalldata;
 
         private Dictionary<byte, RDDCServerProcessBase> mProcess = new Dictionary<byte, RDDCServerProcessBase>();
 
@@ -81,18 +82,27 @@ namespace DBRuntime.RDDC
         #region ... Methods    ...
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="port"></param>
-        protected override void StartInner(int port)
+        public override void Start(int port)
         {
             mWorkStateProcess = new WorStateServerProcess() { Parent = this };
             mRealDataSyncProcess = new RealDataSyncServerProcess() { Parent = this };
             mWorkStateProcess.Start();
             mRealDataSyncProcess.Start();
-            base.StartInner(port);
+            base.Start(port);
         }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="port"></param>
+        //protected override void StartInner(int port)
+        //{
+        //    mWorkStateProcess = new WorStateServerProcess() { Parent = this };
+        //    mRealDataSyncProcess = new RealDataSyncServerProcess() { Parent = this };
+        //    mWorkStateProcess.Start();
+        //    mRealDataSyncProcess.Start();
+        //    base.StartInner(port);
+        //}
 
         /// <summary>
         /// 
@@ -118,10 +128,10 @@ namespace DBRuntime.RDDC
         /// 
         /// </summary>
         /// <returns></returns>
-        private IByteBuffer GetAsyncData()
+        private ByteBuffer GetAsyncData()
         {
-            mAsyncCalldata = BufferManager.Manager.Allocate(ApiFunConst.AysncReturn, 4);
-            mAsyncCalldata.WriteInt(0);
+            mAsyncCalldata = Allocate(ApiFunConst.AysncReturn, 4);
+            mAsyncCalldata.Write((int)0);
             return mAsyncCalldata;
         }
 
@@ -147,9 +157,9 @@ namespace DBRuntime.RDDC
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="value"></param>
-        public void PushRealDatatoClient(string clientId, IByteBuffer value)
+        public void PushRealDatatoClient(string clientId, ByteBuffer value)
         {
-            this.SendData(clientId, value);
+            this.SendDataToClient(clientId, value);
         }
 
         /// <summary>
@@ -169,9 +179,19 @@ namespace DBRuntime.RDDC
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="data"></param>
-        public void AsyncCallback(string clientId, IByteBuffer data)
+        public void AsyncCallback(string clientId, ByteBuffer data)
         {
-            this.SendData(clientId, data);
+            this.SendDataToClient(clientId, data);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="data"></param>
+        public void AsyncCallback(string clientId, params ByteBuffer[] data)
+        {
+            this.SendDataToClient(clientId, data);
         }
 
         /// <summary>
@@ -193,7 +213,7 @@ namespace DBRuntime.RDDC
         /// <param name="clientId"></param>
         /// <param name="memory"></param>
         /// <returns></returns>
-        private IByteBuffer WorkStateProcess(string clientId, IByteBuffer memory)
+        private ByteBuffer WorkStateProcess(string clientId, ByteBuffer memory)
         {
             this.mWorkStateProcess.ProcessData(clientId, memory);
             return GetAsyncData();
@@ -205,23 +225,34 @@ namespace DBRuntime.RDDC
         /// <param name="clientId"></param>
         /// <param name="memory"></param>
         /// <returns></returns>
-        private IByteBuffer RealDataSyncProcess(string clientId, IByteBuffer memory)
+        private ByteBuffer RealDataSyncProcess(string clientId, ByteBuffer memory)
         {
             this.mRealDataSyncProcess.ProcessData(clientId, memory);
             return GetAsyncData();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        protected override void OnClientDisConnected(string id)
+        public override void OnClientConnected(string id, bool isConnected)
         {
-            mRealDataSyncProcess.OnClientDisconnected(id);
-            this.mWorkStateProcess.OnClientDisconnected(id);
-            ServiceLocator.Locator.Resolve<IRuntimeSecurity>().LogoutByClientId(id);
-            base.OnClientDisConnected(id);
+            if(!isConnected)
+            {
+                mRealDataSyncProcess.OnClientDisconnected(id);
+                this.mWorkStateProcess.OnClientDisconnected(id);
+                ServiceLocator.Locator.Resolve<IRuntimeSecurity>().LogoutByClientId(id);
+            }
+            base.OnClientConnected(id, isConnected);
         }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        //protected override void OnClientDisConnected(string id)
+        //{
+        //    mRealDataSyncProcess.OnClientDisconnected(id);
+        //    this.mWorkStateProcess.OnClientDisconnected(id);
+        //    ServiceLocator.Locator.Resolve<IRuntimeSecurity>().LogoutByClientId(id);
+        //    base.OnClientDisConnected(id);
+        //}
 
         #endregion ...Methods...
 

@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using Cdy.Tag;
+using Cheetah;
 using DotNetty.Buffers;
 
 namespace DBRuntime.Api
@@ -56,7 +57,7 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="client"></param>
         /// <param name="data"></param>
-        protected unsafe override void ProcessSingleData(string client, IByteBuffer data)
+        protected unsafe override void ProcessSingleData(string client, ByteBuffer data)
         {
             var mm = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.ITagManager>();
             byte sfun = data.ReadByte();

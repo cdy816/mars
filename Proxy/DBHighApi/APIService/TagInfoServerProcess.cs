@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using Cdy.Tag;
+using Cheetah;
 using DotNetty.Buffers;
 
 namespace DBHighApi.Api
@@ -51,7 +52,7 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="client"></param>
         /// <param name="data"></param>
-        protected unsafe override void ProcessSingleData(string client, IByteBuffer data)
+        protected unsafe override void ProcessSingleData(string client, ByteBuffer data)
         {
             var mm = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.ITagManager>();
             byte sfun = data.ReadByte();
@@ -64,17 +65,17 @@ namespace DBHighApi.Api
                         int count = data.ReadInt();
                         if (count > 0)
                         {
-                            var re = BufferManager.Manager.Allocate(ApiFunConst.TagInfoRequest,count * 4);
+                            var re = Parent.Allocate(ApiFunConst.TagInfoRequest,count * 4);
                             for(int i=0;i<count;i++)
                             {
                                 var ival = mm.GetTagIdByName(data.ReadString());
                                 if (ival.HasValue)
                                 {
-                                    re.WriteInt(ival.Value);
+                                    re.Write(ival.Value);
                                 }
                                 else
                                 {
-                                    re.WriteInt((int)-1);
+                                    re.Write((int)-1);
                                 }
                             }
                             Parent.AsyncCallback(client, re);

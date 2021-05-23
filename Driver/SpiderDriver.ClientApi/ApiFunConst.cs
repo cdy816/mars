@@ -104,5 +104,14 @@ namespace SpiderDriver.ClientApi
         /// 
         /// </summary>
         public const byte AysncReturn = byte.MaxValue;
+
+        public const byte RealServerBusy = 31;
+        public const byte RealServerNoBusy = 32;
+
+        public const byte HisServerBusy = 33;
+        public const byte HisServerNoBusy = 34;
+
+        public const byte TagInfoServerBusy = 35;
+        public const byte TagINfoServerNoBusy = 36;
     }
 }

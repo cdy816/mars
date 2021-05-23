@@ -16,6 +16,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Cdy.Tag;
+using Cheetah;
 using DBRuntime.Proxy;
 using DotNetty.Buffers;
 using Microsoft.VisualBasic;
@@ -161,7 +162,7 @@ namespace DBHighApi.Api
         private ITagManager mTagManager;
         private IRealTagConsumer mTagConsumer;
 
-        private Dictionary<string, IByteBuffer> buffers = new Dictionary<string, IByteBuffer>();
+        private Dictionary<string, ByteBuffer> buffers = new Dictionary<string, ByteBuffer>();
 
         private Dictionary<string, int> mDataCounts = new Dictionary<string, int>();
 
@@ -206,9 +207,9 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="client"></param>
         /// <param name="data"></param>
-        protected  override void ProcessSingleData(string client, IByteBuffer data)
+        protected  override void ProcessSingleData(string client, ByteBuffer data)
         {
-            if(data.ReferenceCount==0)
+            if(data.RefCount==0)
             {
                 Debug.Print("invailed data buffer in RealDataServerProcess");
                 return;
@@ -261,7 +262,7 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="clientid"></param>
         /// <param name="block"></param>
-        private void ProcessSetRealData(string clientid, IByteBuffer block)
+        private void ProcessSetRealData(string clientid, ByteBuffer block)
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
             int count = block.ReadInt();
@@ -345,11 +346,11 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="cc"></param>
         /// <param name="re"></param>
-        private void ProcessRealData(List<int> cc,IByteBuffer re)
+        private void ProcessRealData(List<int> cc,ByteBuffer re)
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
-            var sindex = re.WriterIndex;
-            re.WriteInt(cc.Count);
+            var sindex = re.WriteIndex;
+            re.Write(cc.Count);
             int count = 0;
             foreach (var vv in cc)
             {
@@ -361,102 +362,102 @@ namespace DBHighApi.Api
                 if (value != null)
                 {
                     count++;
-                    re.WriteInt(vv);
+                    re.Write(vv);
                     re.WriteByte(type);
                     switch (type)
                     {
                         case (byte)TagType.Bool:
-                            re.WriteByte(Convert.ToByte(value));
+                            re.Write(Convert.ToByte(value));
                             break;
                         case (byte)TagType.Byte:
-                            re.WriteByte(Convert.ToByte(value));
+                            re.Write(Convert.ToByte(value));
                             break;
                         case (byte)TagType.Short:
-                            re.WriteShort(Convert.ToInt16(value));
+                            re.Write(Convert.ToInt16(value));
                             break;
                         case (byte)TagType.UShort:
-                            re.WriteUnsignedShort(Convert.ToUInt16(value));
+                            re.Write(Convert.ToUInt16(value));
                             break;
                         case (byte)TagType.Int:
-                            re.WriteInt(Convert.ToInt32(value));
+                            re.Write(Convert.ToInt32(value));
                             break;
                         case (byte)TagType.UInt:
-                            re.WriteInt(Convert.ToInt32(value));
+                            re.Write(Convert.ToInt32(value));
                             break;
                         case (byte)TagType.Long:
                         case (byte)TagType.ULong:
-                            re.WriteLong(Convert.ToInt64(value));
+                            re.Write(Convert.ToInt64(value));
                             break;
                         case (byte)TagType.Float:
-                            re.WriteFloat(Convert.ToSingle(value));
+                            re.Write(Convert.ToSingle(value));
                             break;
                         case (byte)TagType.Double:
-                            re.WriteDouble(Convert.ToDouble(value));
+                            re.Write(Convert.ToDouble(value));
                             break;
                         case (byte)TagType.String:
                             string sval = value.ToString();
-                            re.WriteInt(sval.Length);
-                            re.WriteString(sval, Encoding.Unicode);
+                            //re.Write(sval.Length);
+                            re.Write(sval, Encoding.Unicode);
                             break;
                         case (byte)TagType.DateTime:
-                            re.WriteLong(((DateTime)value).Ticks);
+                            re.Write(((DateTime)value).Ticks);
                             break;
                         case (byte)TagType.IntPoint:
-                            re.WriteInt(((IntPointData)value).X);
-                            re.WriteInt(((IntPointData)value).Y);
+                            re.Write(((IntPointData)value).X);
+                            re.Write(((IntPointData)value).Y);
                             break;
                         case (byte)TagType.UIntPoint:
-                            re.WriteInt((int)((UIntPointData)value).X);
-                            re.WriteInt((int)((UIntPointData)value).Y);
+                            re.Write((int)((UIntPointData)value).X);
+                            re.Write((int)((UIntPointData)value).Y);
                             break;
                         case (byte)TagType.IntPoint3:
-                            re.WriteInt(((IntPoint3Data)value).X);
-                            re.WriteInt(((IntPoint3Data)value).Y);
-                            re.WriteInt(((IntPoint3Data)value).Z);
+                            re.Write(((IntPoint3Data)value).X);
+                            re.Write(((IntPoint3Data)value).Y);
+                            re.Write(((IntPoint3Data)value).Z);
                             break;
                         case (byte)TagType.UIntPoint3:
-                            re.WriteInt((int)((UIntPoint3Data)value).X);
-                            re.WriteInt((int)((UIntPoint3Data)value).Y);
-                            re.WriteInt((int)((UIntPoint3Data)value).Z);
+                            re.Write((int)((UIntPoint3Data)value).X);
+                            re.Write((int)((UIntPoint3Data)value).Y);
+                            re.Write((int)((UIntPoint3Data)value).Z);
                             break;
                         case (byte)TagType.LongPoint:
-                            re.WriteLong(((LongPointData)value).X);
-                            re.WriteLong(((LongPointData)value).Y);
+                            re.Write(((LongPointData)value).X);
+                            re.Write(((LongPointData)value).Y);
                             break;
                         case (byte)TagType.ULongPoint:
-                            re.WriteLong((long)((ULongPointData)value).X);
-                            re.WriteLong((long)((ULongPointData)value).Y);
+                            re.Write((long)((ULongPointData)value).X);
+                            re.Write((long)((ULongPointData)value).Y);
                             break;
                         case (byte)TagType.LongPoint3:
-                            re.WriteLong(((LongPoint3Data)value).X);
-                            re.WriteLong(((LongPoint3Data)value).Y);
-                            re.WriteLong(((LongPoint3Data)value).Z);
+                            re.Write(((LongPoint3Data)value).X);
+                            re.Write(((LongPoint3Data)value).Y);
+                            re.Write(((LongPoint3Data)value).Z);
                             break;
                         case (byte)TagType.ULongPoint3:
-                            re.WriteLong((long)((ULongPoint3Data)value).X);
-                            re.WriteLong((long)((ULongPoint3Data)value).Y);
-                            re.WriteLong((long)((ULongPoint3Data)value).Z);
+                            re.Write((long)((ULongPoint3Data)value).X);
+                            re.Write((long)((ULongPoint3Data)value).Y);
+                            re.Write((long)((ULongPoint3Data)value).Z);
                             break;
                     }
 
-                    re.WriteLong(time.Ticks);
+                    re.Write(time.Ticks);
                     re.WriteByte(qu);
                 }
             }
             if (count != cc.Count)
             {
-                int idtmp = re.WriterIndex;
-                re.SetWriterIndex(sindex);
-                re.WriteInt(count);
-                re.SetWriterIndex(idtmp);
+                long idtmp = re.WriteIndex;
+                re.WriteIndex =(sindex);
+                re.Write(count);
+                re.WriteIndex=(idtmp);
             }
         }
 
-        private void ProcessRealDataValueAndQuality(List<int> cc, IByteBuffer re)
+        private void ProcessRealDataValueAndQuality(List<int> cc, ByteBuffer re)
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
-            var sindex = re.WriterIndex;
-            re.WriteInt(cc.Count);
+            var sindex = re.WriteIndex;
+            re.Write(cc.Count);
             int count = 0;
             foreach (var vv in cc)
             {
@@ -466,82 +467,82 @@ namespace DBHighApi.Api
                 value = service.GetTagValue(vv, out qu, out time, out type);
                 if (value != null)
                 {
-                    re.WriteInt(vv);
+                    re.Write(vv);
                     count++;
                     re.WriteByte(type);
                     switch (type)
                     {
                         case (byte)TagType.Bool:
-                            re.WriteByte((byte)value);
+                            re.Write((byte)value);
                             break;
                         case (byte)TagType.Byte:
-                            re.WriteByte((byte)value);
+                            re.Write((byte)value);
                             break;
                         case (byte)TagType.Short:
-                            re.WriteShort((short)value);
+                            re.Write((short)value);
                             break;
                         case (byte)TagType.UShort:
-                            re.WriteUnsignedShort((ushort)value);
+                            re.Write((ushort)value);
                             break;
                         case (byte)TagType.Int:
-                            re.WriteInt((int)value);
+                            re.Write((int)value);
                             break;
                         case (byte)TagType.UInt:
-                            re.WriteInt((int)value);
+                            re.Write((int)value);
                             break;
                         case (byte)TagType.Long:
                         case (byte)TagType.ULong:
-                            re.WriteLong((long)value);
+                            re.Write((long)value);
                             break;
                         case (byte)TagType.Float:
-                            re.WriteFloat((float)value);
+                            re.Write((float)value);
                             break;
                         case (byte)TagType.Double:
-                            re.WriteDouble((double)value);
+                            re.Write((double)value);
                             break;
                         case (byte)TagType.String:
                             string sval = value.ToString();
-                            re.WriteInt(sval.Length);
-                            re.WriteString(sval, Encoding.Unicode);
+                            //re.WriteInt(sval.Length);
+                            re.Write(sval, Encoding.Unicode);
                             break;
                         case (byte)TagType.DateTime:
-                            re.WriteLong(((DateTime)value).Ticks);
+                            re.Write(((DateTime)value).Ticks);
                             break;
                         case (byte)TagType.IntPoint:
-                            re.WriteInt(((IntPointData)value).X);
-                            re.WriteInt(((IntPointData)value).Y);
+                            re.Write(((IntPointData)value).X);
+                            re.Write(((IntPointData)value).Y);
                             break;
                         case (byte)TagType.UIntPoint:
-                            re.WriteInt((int)((UIntPointData)value).X);
-                            re.WriteInt((int)((UIntPointData)value).Y);
+                            re.Write((int)((UIntPointData)value).X);
+                            re.Write((int)((UIntPointData)value).Y);
                             break;
                         case (byte)TagType.IntPoint3:
-                            re.WriteInt(((IntPoint3Data)value).X);
-                            re.WriteInt(((IntPoint3Data)value).Y);
-                            re.WriteInt(((IntPoint3Data)value).Z);
+                            re.Write(((IntPoint3Data)value).X);
+                            re.Write(((IntPoint3Data)value).Y);
+                            re.Write(((IntPoint3Data)value).Z);
                             break;
                         case (byte)TagType.UIntPoint3:
-                            re.WriteInt((int)((UIntPoint3Data)value).X);
-                            re.WriteInt((int)((UIntPoint3Data)value).Y);
-                            re.WriteInt((int)((UIntPoint3Data)value).Z);
+                            re.Write((int)((UIntPoint3Data)value).X);
+                            re.Write((int)((UIntPoint3Data)value).Y);
+                            re.Write((int)((UIntPoint3Data)value).Z);
                             break;
                         case (byte)TagType.LongPoint:
-                            re.WriteLong(((LongPointData)value).X);
-                            re.WriteLong(((LongPointData)value).Y);
+                            re.Write(((LongPointData)value).X);
+                            re.Write(((LongPointData)value).Y);
                             break;
                         case (byte)TagType.ULongPoint:
-                            re.WriteLong((long)((ULongPointData)value).X);
-                            re.WriteLong((long)((ULongPointData)value).Y);
+                            re.Write((long)((ULongPointData)value).X);
+                            re.Write((long)((ULongPointData)value).Y);
                             break;
                         case (byte)TagType.LongPoint3:
-                            re.WriteLong(((LongPoint3Data)value).X);
-                            re.WriteLong(((LongPoint3Data)value).Y);
-                            re.WriteLong(((LongPoint3Data)value).Z);
+                            re.Write(((LongPoint3Data)value).X);
+                            re.Write(((LongPoint3Data)value).Y);
+                            re.Write(((LongPoint3Data)value).Z);
                             break;
                         case (byte)TagType.ULongPoint3:
-                            re.WriteLong((long)((ULongPoint3Data)value).X);
-                            re.WriteLong((long)((ULongPoint3Data)value).Y);
-                            re.WriteLong((long)((ULongPoint3Data)value).Z);
+                            re.Write((long)((ULongPoint3Data)value).X);
+                            re.Write((long)((ULongPoint3Data)value).Y);
+                            re.Write((long)((ULongPoint3Data)value).Z);
                             break;
                     }
                     re.WriteByte(qu);
@@ -549,18 +550,18 @@ namespace DBHighApi.Api
             }
             if (count != cc.Count)
             {
-                int idtmp = re.WriterIndex;
-                re.SetWriterIndex(sindex);
-                re.WriteInt(count);
-                re.SetWriterIndex(idtmp);
+                var idtmp = re.WriteIndex;
+                re.WriteIndex=(sindex);
+                re.Write(count);
+                re.WriteIndex=(idtmp);
             }
         }
 
-        private void ProcessRealDataValue(List<int> cc, IByteBuffer re)
+        private void ProcessRealDataValue(List<int> cc, ByteBuffer re)
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
-            var sindex = re.WriterIndex;
-            re.WriteInt(cc.Count);
+            var sindex = re.WriteIndex;
+            re.Write(cc.Count);
             int count = 0;
             //Debug.Print("ProcessRealDataValue:" + cc.Count);
             foreach (var vv in cc)
@@ -573,91 +574,91 @@ namespace DBHighApi.Api
                 if (value != null)
                 {
                     count++;
-                    re.WriteInt(vv);
-                    re.WriteByte(type);
+                    re.Write(vv);
+                    re.Write(type);
                     switch (type)
                     {
                         case (byte)TagType.Bool:
-                            re.WriteByte((byte)value);
+                            re.Write((byte)value);
                             break;
                         case (byte)TagType.Byte:
-                            re.WriteByte((byte)value);
+                            re.Write((byte)value);
                             break;
                         case (byte)TagType.Short:
-                            re.WriteShort((short)value);
+                            re.Write((short)value);
                             break;
                         case (byte)TagType.UShort:
-                            re.WriteUnsignedShort((ushort)value);
+                            re.Write((ushort)value);
                             break;
                         case (byte)TagType.Int:
-                            re.WriteInt((int)value);
+                            re.Write((int)value);
                             break;
                         case (byte)TagType.UInt:
-                            re.WriteInt((int)value);
+                            re.Write((int)value);
                             break;
                         case (byte)TagType.Long:
                         case (byte)TagType.ULong:
-                            re.WriteLong((long)value);
+                            re.Write((long)value);
                             break;
                         case (byte)TagType.Float:
-                            re.WriteFloat((float)value);
+                            re.Write((float)value);
                             break;
                         case (byte)TagType.Double:
-                            re.WriteDouble((double)value);
+                            re.Write((double)value);
                             break;
                         case (byte)TagType.String:
                             string sval = value.ToString();
-                            re.WriteInt(sval.Length);
-                            re.WriteString(sval, Encoding.Unicode);
+                           // re.Write(sval.Length);
+                            re.Write(sval, Encoding.Unicode);
                             break;
                         case (byte)TagType.DateTime:
-                            re.WriteLong(((DateTime)value).Ticks);
+                            re.Write(((DateTime)value).Ticks);
                             break;
                         case (byte)TagType.IntPoint:
-                            re.WriteInt(((IntPointData)value).X);
-                            re.WriteInt(((IntPointData)value).Y);
+                            re.Write(((IntPointData)value).X);
+                            re.Write(((IntPointData)value).Y);
                             break;
                         case (byte)TagType.UIntPoint:
-                            re.WriteInt((int)((UIntPointData)value).X);
-                            re.WriteInt((int)((UIntPointData)value).Y);
+                            re.Write((int)((UIntPointData)value).X);
+                            re.Write((int)((UIntPointData)value).Y);
                             break;
                         case (byte)TagType.IntPoint3:
-                            re.WriteInt(((IntPoint3Data)value).X);
-                            re.WriteInt(((IntPoint3Data)value).Y);
-                            re.WriteInt(((IntPoint3Data)value).Z);
+                            re.Write(((IntPoint3Data)value).X);
+                            re.Write(((IntPoint3Data)value).Y);
+                            re.Write(((IntPoint3Data)value).Z);
                             break;
                         case (byte)TagType.UIntPoint3:
-                            re.WriteInt((int)((UIntPoint3Data)value).X);
-                            re.WriteInt((int)((UIntPoint3Data)value).Y);
-                            re.WriteInt((int)((UIntPoint3Data)value).Z);
+                            re.Write((int)((UIntPoint3Data)value).X);
+                            re.Write((int)((UIntPoint3Data)value).Y);
+                            re.Write((int)((UIntPoint3Data)value).Z);
                             break;
                         case (byte)TagType.LongPoint:
-                            re.WriteLong(((LongPointData)value).X);
-                            re.WriteLong(((LongPointData)value).Y);
+                            re.Write(((LongPointData)value).X);
+                            re.Write(((LongPointData)value).Y);
                             break;
                         case (byte)TagType.ULongPoint:
-                            re.WriteLong((long)((ULongPointData)value).X);
-                            re.WriteLong((long)((ULongPointData)value).Y);
+                            re.Write((long)((ULongPointData)value).X);
+                            re.Write((long)((ULongPointData)value).Y);
                             break;
                         case (byte)TagType.LongPoint3:
-                            re.WriteLong(((LongPoint3Data)value).X);
-                            re.WriteLong(((LongPoint3Data)value).Y);
-                            re.WriteLong(((LongPoint3Data)value).Z);
+                            re.Write(((LongPoint3Data)value).X);
+                            re.Write(((LongPoint3Data)value).Y);
+                            re.Write(((LongPoint3Data)value).Z);
                             break;
                         case (byte)TagType.ULongPoint3:
-                            re.WriteLong((long)((ULongPoint3Data)value).X);
-                            re.WriteLong((long)((ULongPoint3Data)value).Y);
-                            re.WriteLong((long)((ULongPoint3Data)value).Z);
+                            re.Write((long)((ULongPoint3Data)value).X);
+                            re.Write((long)((ULongPoint3Data)value).Y);
+                            re.Write((long)((ULongPoint3Data)value).Z);
                             break;
                     }
                 }
             }
             if(count!=cc.Count)
             {
-                int idtmp = re.WriterIndex;
-                re.SetWriterIndex(sindex);
-                re.WriteInt(count);
-                re.SetWriterIndex(idtmp);
+                var idtmp = re.WriteIndex;
+                re.WriteIndex=(sindex);
+                re.Write(count);
+                re.WriteIndex=(idtmp);
             }
         }
 
@@ -665,7 +666,7 @@ namespace DBHighApi.Api
         /// 
         /// </summary>
         /// <param name="block"></param>
-        private void ProcessGetRealData(string clientId, IByteBuffer block)
+        private void ProcessGetRealData(string clientId, ByteBuffer block)
         {
             int count = block.ReadInt();
             List<int> cc = new List<int>(count);
@@ -674,7 +675,7 @@ namespace DBHighApi.Api
                 cc.Add(block.ReadInt());
             }
 
-            var re = BufferManager.Manager.Allocate(ApiFunConst.RealDataRequestFun, count * 34);
+            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, count * 34);
             ProcessRealData(cc, re);
             Parent.AsyncCallback(clientId, re);
         }
@@ -684,7 +685,7 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="block"></param>
-        private void ProcessGetRealDataValue(string clientId, IByteBuffer block)
+        private void ProcessGetRealDataValue(string clientId, ByteBuffer block)
         {
             int count = block.ReadInt();
             List<int> cc = new List<int>(count);
@@ -693,7 +694,7 @@ namespace DBHighApi.Api
                 cc.Add(block.ReadInt());
             }
 
-            var re = BufferManager.Manager.Allocate(ApiFunConst.RealDataRequestFun, count * 34);
+            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, count * 34);
             ProcessRealDataValue(cc, re);
             Parent.AsyncCallback(clientId, re);
         }
@@ -703,7 +704,7 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="block"></param>
-        private void ProcessGetRealDataValueAndQuality(string clientId, IByteBuffer block)
+        private void ProcessGetRealDataValueAndQuality(string clientId, ByteBuffer block)
         {
             int count = block.ReadInt();
             List<int> cc = new List<int>(count);
@@ -712,7 +713,7 @@ namespace DBHighApi.Api
                 cc.Add(block.ReadInt());
             }
 
-            var re = BufferManager.Manager.Allocate(ApiFunConst.RealDataRequestFun, count * 34);
+            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, count * 34);
             ProcessRealDataValueAndQuality(cc, re);
             Parent.AsyncCallback(clientId, re);
         }
@@ -722,7 +723,7 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="block"></param>
-        private void ProcessGetRealData2(string clientId, IByteBuffer block)
+        private void ProcessGetRealData2(string clientId, ByteBuffer block)
         {
             int sid = block.ReadInt();
             int eid = block.ReadInt();
@@ -731,7 +732,7 @@ namespace DBHighApi.Api
             {
                 cc.Add(i);
             }
-            var re = BufferManager.Manager.Allocate(ApiFunConst.RealDataRequestFun, cc.Count * 34);
+            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, cc.Count * 34);
             ProcessRealData(cc, re);
             Parent.AsyncCallback(clientId, re);
         }
@@ -741,7 +742,7 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="block"></param>
-        private void ProcessGetRealData2Value(string clientId, IByteBuffer block)
+        private void ProcessGetRealData2Value(string clientId, ByteBuffer block)
         {
             int sid = block.ReadInt();
             int eid = block.ReadInt();
@@ -750,7 +751,7 @@ namespace DBHighApi.Api
             {
                 cc.Add(i);
             }
-            var re = BufferManager.Manager.Allocate(ApiFunConst.RealDataRequestFun, cc.Count * 34);
+            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, cc.Count * 34);
             ProcessRealDataValue(cc, re);
             Parent.AsyncCallback(clientId, re);
         }
@@ -760,7 +761,7 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="block"></param>
-        private void ProcessGetRealData2ValueAndQuality(string clientId, IByteBuffer block)
+        private void ProcessGetRealData2ValueAndQuality(string clientId, ByteBuffer block)
         {
             int sid = block.ReadInt();
             int eid = block.ReadInt();
@@ -769,7 +770,7 @@ namespace DBHighApi.Api
             {
                 cc.Add(i);
             }
-            var re = BufferManager.Manager.Allocate(ApiFunConst.RealDataRequestFun, cc.Count * 34);
+            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, cc.Count * 34);
             ProcessRealDataValueAndQuality(cc, re);
             Parent.AsyncCallback(clientId, re);
         }
@@ -780,7 +781,7 @@ namespace DBHighApi.Api
         /// 
         /// </summary>
         /// <param name="block"></param>
-        private void ProcessValueChangeNotify(string clientId, IByteBuffer block)
+        private void ProcessValueChangeNotify(string clientId, ByteBuffer block)
         {
             try
             {
@@ -833,7 +834,7 @@ namespace DBHighApi.Api
         /// 
         /// </summary>
         /// <param name="block"></param>
-        private void ProcessResetValueChangedNotify(string clientId, IByteBuffer block)
+        private void ProcessResetValueChangedNotify(string clientId, ByteBuffer block)
         {
             try
             {
@@ -872,83 +873,83 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="id"></param>
-        private void ProcessTagPush(IByteBuffer re,int id,byte type, object value,byte qu)
+        private void ProcessTagPush(ByteBuffer re,int id,byte type, object value,byte qu)
         {
-            re.WriteInt(id);
-            re.WriteByte(type);
+            re.Write(id);
+            re.Write(type);
             switch (type)
             {
                 case (byte)TagType.Bool:
-                    re.WriteByte((byte)value);
+                    re.Write((byte)value);
                     break;
                 case (byte)TagType.Byte:
-                    re.WriteByte((byte)value);
+                    re.Write((byte)value);
                     break;
                 case (byte)TagType.Short:
-                    re.WriteShort((short)value);
+                    re.Write((short)value);
                     break;
                 case (byte)TagType.UShort:
-                    re.WriteUnsignedShort((ushort)value);
+                    re.Write((ushort)value);
                     break;
                 case (byte)TagType.Int:
-                    re.WriteInt((int)value);
+                    re.Write((int)value);
                     break;
                 case (byte)TagType.UInt:
-                    re.WriteInt((int)value);
+                    re.Write((int)value);
                     break;
                 case (byte)TagType.Long:
                 case (byte)TagType.ULong:
-                    re.WriteLong((long)value);
+                    re.Write((long)value);
                     break;
                 case (byte)TagType.Float:
-                    re.WriteFloat((float)value);
+                    re.Write((float)value);
                     break;
                 case (byte)TagType.Double:
-                    re.WriteDouble((double)value);
+                    re.Write((double)value);
                     break;
                 case (byte)TagType.String:
                     string sval = value.ToString();
-                    re.WriteInt(sval.Length);
-                    re.WriteString(sval, Encoding.Unicode);
+                  //  re.WriteInt(sval.Length);
+                    re.Write(sval, Encoding.Unicode);
                     break;
                 case (byte)TagType.DateTime:
-                    re.WriteLong(((DateTime)value).Ticks);
+                    re.Write(((DateTime)value).Ticks);
                     break;
                 case (byte)TagType.IntPoint:
-                    re.WriteInt(((IntPointData)value).X);
-                    re.WriteInt(((IntPointData)value).Y);
+                    re.Write(((IntPointData)value).X);
+                    re.Write(((IntPointData)value).Y);
                     break;
                 case (byte)TagType.UIntPoint:
-                    re.WriteInt((int)((UIntPointData)value).X);
-                    re.WriteInt((int)((UIntPointData)value).Y);
+                    re.Write((int)((UIntPointData)value).X);
+                    re.Write((int)((UIntPointData)value).Y);
                     break;
                 case (byte)TagType.IntPoint3:
-                    re.WriteInt(((IntPoint3Data)value).X);
-                    re.WriteInt(((IntPoint3Data)value).Y);
-                    re.WriteInt(((IntPoint3Data)value).Z);
+                    re.Write(((IntPoint3Data)value).X);
+                    re.Write(((IntPoint3Data)value).Y);
+                    re.Write(((IntPoint3Data)value).Z);
                     break;
                 case (byte)TagType.UIntPoint3:
-                    re.WriteInt((int)((UIntPoint3Data)value).X);
-                    re.WriteInt((int)((UIntPoint3Data)value).Y);
-                    re.WriteInt((int)((UIntPoint3Data)value).Z);
+                    re.Write((int)((UIntPoint3Data)value).X);
+                    re.Write((int)((UIntPoint3Data)value).Y);
+                    re.Write((int)((UIntPoint3Data)value).Z);
                     break;
                 case (byte)TagType.LongPoint:
-                    re.WriteLong(((LongPointData)value).X);
-                    re.WriteLong(((LongPointData)value).Y);
+                    re.Write(((LongPointData)value).X);
+                    re.Write(((LongPointData)value).Y);
                     break;
                 case (byte)TagType.ULongPoint:
-                    re.WriteLong((long)((ULongPointData)value).X);
-                    re.WriteLong((long)((ULongPointData)value).Y);
+                    re.Write((long)((ULongPointData)value).X);
+                    re.Write((long)((ULongPointData)value).Y);
                     break;
                 case (byte)TagType.LongPoint3:
-                    re.WriteLong(((LongPoint3Data)value).X);
-                    re.WriteLong(((LongPoint3Data)value).Y);
-                    re.WriteLong(((LongPoint3Data)value).Z);
+                    re.Write(((LongPoint3Data)value).X);
+                    re.Write(((LongPoint3Data)value).Y);
+                    re.Write(((LongPoint3Data)value).Z);
                     break;
                 case (byte)TagType.ULongPoint3:
-                    re.WriteLong((long)((ULongPoint3Data)value).X);
-                    re.WriteLong((long)((ULongPoint3Data)value).Y);
-                    re.WriteLong((long)((ULongPoint3Data)value).Z);
+                    re.Write((long)((ULongPoint3Data)value).X);
+                    re.Write((long)((ULongPoint3Data)value).Y);
+                    re.Write((long)((ULongPoint3Data)value).Z);
                     break;
             }
             re.WriteByte(qu);
@@ -1015,8 +1016,8 @@ namespace DBHighApi.Api
 
                         foreach (var cb in clients)
                         {
-                            var buffer = BufferManager.Manager.Allocate(Api.ApiFunConst.RealDataPushFun, i * 64 + 4);
-                            buffer.WriteInt(0);
+                            var buffer = Parent.Allocate(Api.ApiFunConst.RealDataPushFun, i * 64 + 4);
+                            buffer.Write(0);
                             buffers.Add(cb.Key, buffer);
                             lock (mDataCounts)
                             {
@@ -1044,14 +1045,16 @@ namespace DBHighApi.Api
 
                         foreach (var cb in buffers)
                         {
-                            cb.Value.MarkWriterIndex();
-                            cb.Value.SetWriterIndex(1);
+                            //  cb.Value.MarkWriterIndex();
+                            var vindex = cb.Value.WriteIndex;
+                            cb.Value.WriteIndex = 1;
                             lock (mDataCounts)
                             {
                                 if (mDataCounts.ContainsKey(cb.Key))
                                 {
-                                    cb.Value.WriteInt(mDataCounts[cb.Key]);
-                                    cb.Value.ResetWriterIndex();
+                                    cb.Value.Write(mDataCounts[cb.Key]);
+                                    cb.Value.WriteIndex = vindex;
+                                   // cb.Value.ResetWriterIndex();
                                     Parent.PushRealDatatoClient(cb.Key, cb.Value);
                                 }
                             }

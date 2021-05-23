@@ -8,7 +8,7 @@
 //==============================================================
 
 using Cdy.Tag;
-using DotNetty.Buffers;
+using Cheetah;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,7 +18,7 @@ namespace SpiderDriver
     /// <summary>
     /// 
     /// </summary>
-    public class DataService: SocketServer
+    public class DataService: SocketServer2
     {
 
         #region ... Variables  ...
@@ -65,29 +65,48 @@ namespace SpiderDriver
             this.RegistorFunCallBack(APIConst.HisValueFun, HisDataRequest);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        protected override void OnClientConnected(string id)
+
+        public override void OnClientConnected(string id, bool isConnected)
         {
-            mRealProcess?.OnClientConnected(id);
-            mInfoProcess?.OnClientConnected(id);
-            mHisProcess?.OnClientConnected(id);
-            base.OnClientConnected(id);
+            if(isConnected)
+            {
+                mRealProcess?.OnClientConnected(id);
+                mInfoProcess?.OnClientConnected(id);
+                mHisProcess?.OnClientConnected(id);
+            }
+            else
+            {
+                mRealProcess?.OnClientDisconnected(id);
+                mInfoProcess?.OnClientDisconnected(id);
+                mHisProcess?.OnClientDisconnected(id);
+            }
+            base.OnClientConnected(id, isConnected);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        protected override void OnClientDisConnected(string id)
-        {
-            mRealProcess?.OnClientDisconnected(id);
-            mInfoProcess?.OnClientDisconnected(id);
-            mHisProcess?.OnClientDisconnected(id);
-            base.OnClientDisConnected(id);
-        }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        //protected override void OnClientConnected(string id)
+        //{
+        //    mRealProcess?.OnClientConnected(id);
+        //    mInfoProcess?.OnClientConnected(id);
+        //    mHisProcess?.OnClientConnected(id);
+        //    base.OnClientConnected(id);
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"></param>
+        //protected override void OnClientDisConnected(string id)
+        //{
+        //    mRealProcess?.OnClientDisconnected(id);
+        //    mInfoProcess?.OnClientDisconnected(id);
+        //    mHisProcess?.OnClientDisconnected(id);
+        //    base.OnClientDisConnected(id);
+        //}
 
 
         /// <summary>
@@ -103,9 +122,9 @@ namespace SpiderDriver
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="value"></param>
-        public void PushRealDatatoClient(string clientId, IByteBuffer value)
+        public void PushRealDatatoClient(string clientId, ByteBuffer value)
         {
-            this.SendData(clientId, value);
+            this.SendDataToClient(clientId, value);
         }
 
         /// <summary>
@@ -125,9 +144,9 @@ namespace SpiderDriver
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="data"></param>
-        public void AsyncCallback(string clientId, IByteBuffer data)
+        public void AsyncCallback(string clientId, ByteBuffer data)
         {
-            this.SendData(clientId, data);
+            this.SendDataToClient(clientId, data);
         }
 
         /// <summary>
@@ -156,7 +175,7 @@ namespace SpiderDriver
         /// <summary>
         /// 
         /// </summary>
-        private IByteBuffer TagInfoRequest(string clientId, IByteBuffer memory)
+        private ByteBuffer TagInfoRequest(string clientId, ByteBuffer memory)
         {
             if (mIsStarted&& mInfoProcess!=null)
             {
@@ -175,7 +194,7 @@ namespace SpiderDriver
         /// <param name="clientId"></param>
         /// <param name="memory"></param>
         /// <returns></returns>
-        private IByteBuffer RealDataRequest(string clientId, IByteBuffer memory)
+        private ByteBuffer RealDataRequest(string clientId, ByteBuffer memory)
         {
             if (mIsStarted && mRealProcess != null)
             {
@@ -194,7 +213,7 @@ namespace SpiderDriver
         /// <param name="clientid"></param>
         /// <param name="memory"></param>
         /// <returns></returns>
-        private IByteBuffer HisDataRequest(string clientid,IByteBuffer memory)
+        private ByteBuffer HisDataRequest(string clientid,ByteBuffer memory)
         {
             if (mIsStarted && mHisProcess != null)
             {
@@ -221,11 +240,11 @@ namespace SpiderDriver
         /// 
         /// </summary>
         /// <param name="port"></param>
-        protected override void StartInner(int port)
+        public override void Start(int port)
         {
             try
             {
-               
+
                 mRealProcess = new RealDataServerProcess() { Parent = this };
                 mRealProcess.Init();
                 mInfoProcess = new TagInfoServerProcess() { Parent = this };
@@ -234,16 +253,43 @@ namespace SpiderDriver
                 mInfoProcess.Start();
                 mHisProcess.Start();
                 mIsStarted = true;
-                LoggerService.Service.Info("Spider Driver", "Start Sucessfull!");
+                //LoggerService.Service.Info("Spider Driver", "Start Sucessfull!");
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LoggerService.Service.Erro("Spider Driver", ex.Message);
             }
-            base.StartInner(port);
-
+            base.Start(port);
         }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="port"></param>
+        //protected override void StartInner(int port)
+        //{
+        //    try
+        //    {
+               
+        //        mRealProcess = new RealDataServerProcess() { Parent = this };
+        //        mRealProcess.Init();
+        //        mInfoProcess = new TagInfoServerProcess() { Parent = this };
+        //        mHisProcess = new HisDataServerProcess() { Parent = this };
+        //        mRealProcess.Start();
+        //        mInfoProcess.Start();
+        //        mHisProcess.Start();
+        //        mIsStarted = true;
+        //        LoggerService.Service.Info("Spider Driver", "Start Sucessfull!");
+
+        //    }
+        //    catch(Exception ex)
+        //    {
+        //        LoggerService.Service.Erro("Spider Driver", ex.Message);
+        //    }
+        //    base.StartInner(port);
+
+        //}
 
         /// <summary>
         /// 

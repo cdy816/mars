@@ -1463,7 +1463,7 @@ namespace Cdy.Tag
 
             filewriter.Flush();
             //filewriter.Dispose();
-
+           
         }
 
         /// <summary>
@@ -1698,7 +1698,7 @@ namespace Cdy.Tag
                         }
                     }
                                        
-                    CompressMemory3 cm = mProcessMemory as CompressMemory3;
+                    //CompressMemory3 cm = mProcessMemory as CompressMemory3;
                     mProcessMemory.WriteToStream(mFileWriter.GetStream(), start, datasize);//直接拷贝数据，写入数据
 
                     mFileWriter.GoTo(pointAddr);

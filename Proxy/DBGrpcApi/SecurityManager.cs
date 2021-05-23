@@ -48,7 +48,10 @@ namespace DBGrpcApi
         /// <returns></returns>
         public bool IsLogin(string token)
         {
-            return ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(token);
+            var rs = ServiceLocator.Locator.Resolve<IRuntimeSecurity>();
+            if (rs != null)
+                return rs.CheckLogin(token);
+            return false;
         }
 
         /// <summary>

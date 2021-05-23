@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using Cdy.Tag;
+using Cheetah;
 using DotNetty.Buffers;
 
 namespace DBRuntime.Api
@@ -66,7 +67,7 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="client"></param>
         /// <param name="data"></param>
-        protected unsafe override void ProcessSingleData(string client, IByteBuffer data)
+        protected unsafe override void ProcessSingleData(string client, ByteBuffer data)
         {
             var mm = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.ITagManager>();
             byte sfun = data.ReadByte();
@@ -79,17 +80,17 @@ namespace DBRuntime.Api
                         int count = data.ReadInt();
                         if (count > 0)
                         {
-                            var re = BufferManager.Manager.Allocate(ApiFunConst.TagInfoRequest, count * 4);
+                            var re = Parent.Allocate(ApiFunConst.TagInfoRequest, count * 4);
                             for (int i = 0; i < count; i++)
                             {
                                 var ival = mm.GetTagIdByName(data.ReadString());
                                 if (ival.HasValue)
                                 {
-                                    re.WriteInt(ival.Value);
+                                    re.Write(ival.Value);
                                 }
                                 else
                                 {
-                                    re.WriteInt((int)-1);
+                                    re.Write((int)-1);
                                 }
                             }
                             Parent.AsyncCallback(client, re);
@@ -101,7 +102,7 @@ namespace DBRuntime.Api
                     string pass = data.ReadString();
                     long result = Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().Login(user, pass, client);
 
-                    if (result > 0)
+                    if (result > 0 && !mClients.Contains(client))
                     {
                         mClients.Add(client);
                     }
@@ -156,7 +157,7 @@ namespace DBRuntime.Api
             if (securitychanged) val += 4;
             if (val > 0)
             {
-                IByteBuffer data = ToByteBuffer(ApiFunConst.TagInfoNotify, ApiFunConst.DatabaseChangedNotify, val);
+                ByteBuffer data = ToByteBuffer(ApiFunConst.TagInfoNotify, ApiFunConst.DatabaseChangedNotify, val);
                 foreach (var vv in mClients)
                 {
                     Parent.AsyncCallback(vv, data);

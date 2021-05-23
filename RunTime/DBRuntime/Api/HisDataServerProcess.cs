@@ -15,6 +15,7 @@ using System.Text;
 using Cdy.Tag;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Cheetah;
 
 namespace DBRuntime.Api
 {
@@ -72,9 +73,9 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="client"></param>
         /// <param name="data"></param>
-        protected override void ProcessSingleData(string client, IByteBuffer data)
+        protected override void ProcessSingleData(string client, ByteBuffer data)
         {
-            if (data.ReferenceCount == 0)
+            if (data.RefCount == 0)
             {
                 Debug.Print("invailed data buffer in HisDataServerProcess");
                 return;
@@ -87,23 +88,23 @@ namespace DBRuntime.Api
                 {
                     case RequestAllHisData:
                        Task.Run(()=> { ProcessRequestAllHisDataByMemory(client, data);
-                           data.ReleaseBuffer();
+                           data.UnlockAndReturn();
                        });
                         break;
                     case RequestHisDatasByTimePoint:
-                        Task.Run(()=> { ProcessRequestHisDatasByTimePointByMemory(client, data); data.ReleaseBuffer(); });
+                        Task.Run(()=> { ProcessRequestHisDatasByTimePointByMemory(client, data); data.UnlockAndReturn(); });
                         break;
                     case RequestHisDataByTimeSpan:
-                        Task.Run(() => { ProcessRequestHisDataByTimeSpanByMemory(client, data); data.ReleaseBuffer(); });
+                        Task.Run(() => { ProcessRequestHisDataByTimeSpanByMemory(client, data); data.UnlockAndReturn(); });
                         break;
                     case RequestNumberStatistics:
-                        Task.Run(() => { ProcessRequestNumberStatistics(client, data); data.ReleaseBuffer(); });
+                        Task.Run(() => { ProcessRequestNumberStatistics(client, data); data.UnlockAndReturn(); });
                         break;
                     case RequestNumberStatisticsByTimePoint:
-                        Task.Run(() => { ProcessRequestStatisitcsDatasByTimePoint(client, data); data.ReleaseBuffer(); });
+                        Task.Run(() => { ProcessRequestStatisitcsDatasByTimePoint(client, data); data.UnlockAndReturn(); });
                         break;
                     default:
-                        data.ReleaseBuffer();
+                        data.UnlockAndReturn();
                         break;
                 }
             }
@@ -494,15 +495,16 @@ namespace DBRuntime.Api
         //}
         #endregion
 
-        private unsafe IByteBuffer WriteDataToBufferByMemory<T>(byte type, HisQueryResult<T> resb)
+        private unsafe ByteBuffer WriteDataToBufferByMemory<T>(int cid,byte type, HisQueryResult<T> resb)
         {
             var vdata = resb.Contracts();
-            var re = BufferManager.Manager.Allocate(FunId, 5 + vdata.Size);
-            re.WriteByte(type);
-            re.WriteInt(resb.Count);
-
-            Marshal.Copy(vdata.Address, re.Array, re.ArrayOffset + re.WriterIndex, vdata.Size);
-            re.SetWriterIndex(re.WriterIndex + vdata.Size);
+            var re = Parent.Allocate(FunId, 5 + vdata.Size+4);
+            re.Write(cid);
+            re.Write(type);
+            re.Write(resb.Count);
+            re.Write(vdata.Address, vdata.Size);
+            //Marshal.Copy(vdata.Address, re.Array, re.ArrayOffset + re.WriterIndex, vdata.Size);
+            //re.SetWriterIndex(re.WriterIndex + vdata.Size);
 
             return re;
         }
@@ -514,16 +516,17 @@ namespace DBRuntime.Api
         /// <param name="type"></param>
         /// <param name="resb"></param>
         /// <returns></returns>
-        private unsafe IByteBuffer WriteDataToBufferByMemory(byte type, NumberStatisticsQueryResult resb)
+        private unsafe ByteBuffer WriteDataToBufferByMemory(int cid, byte type, NumberStatisticsQueryResult resb)
         {
             var vdata = resb;
-            var re = BufferManager.Manager.Allocate(FunId, 5 + vdata.Position);
-            re.WriteByte(type);
-            re.WriteInt(resb.Count);
-         
-            Marshal.Copy(vdata.MemoryHandle, re.Array, re.ArrayOffset+ re.WriterIndex, vdata.Position);
-            re.SetWriterIndex(re.WriterIndex + vdata.Position);
-            
+            var re = Parent.Allocate(FunId, 5 + vdata.Position+4);
+            re.Write(cid);
+            re.Write(type);
+            re.Write(resb.Count);
+            re.Write(vdata.MemoryHandle, vdata.Position);
+            //Marshal.Copy(vdata.MemoryHandle, re.Array, re.ArrayOffset+ re.WriterIndex, vdata.Position);
+            //re.SetWriterIndex(re.WriterIndex + vdata.Position);
+
             return re;
         }
 
@@ -532,18 +535,19 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="data"></param>
-        private unsafe void ProcessRequestNumberStatistics(string clientId, IByteBuffer data)
+        private unsafe void ProcessRequestNumberStatistics(string clientId, ByteBuffer data)
         {
             int id = data.ReadInt();
             DateTime sTime = new DateTime(data.ReadLong());
             DateTime eTime = new DateTime(data.ReadLong());
+            int cid = data.ReadInt();
             var tags = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
 
-            IByteBuffer re = null;
+            ByteBuffer re = null;
 
             if (tags != null)
             {
-                re = WriteDataToBufferByMemory((byte)tags.Type, ProcessStatisticsDataQuery(id, sTime, eTime));
+                re = WriteDataToBufferByMemory(cid,(byte)tags.Type, ProcessStatisticsDataQuery(id, sTime, eTime));
                 Parent.AsyncCallback(clientId, re);
             }
             else
@@ -552,78 +556,79 @@ namespace DBRuntime.Api
             }
         }
 
-        private unsafe void ProcessRequestAllHisDataByMemory(string clientId, IByteBuffer data)
+        private unsafe void ProcessRequestAllHisDataByMemory(string clientId, ByteBuffer data)
         {
             int id = data.ReadInt();
             DateTime sTime = new DateTime(data.ReadLong());
             DateTime eTime = new DateTime(data.ReadLong());
+            int cid = data.ReadInt();
             var tags = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
 
-            IByteBuffer re = null;
+            ByteBuffer re = null;
 
             if (tags != null)
             {
                 switch (tags.Type)
                 {
                     case Cdy.Tag.TagType.Bool:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<bool>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid,(byte)tags.Type, ProcessDataQuery<bool>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.Byte:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<byte>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<byte>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.DateTime:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<DateTime>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<DateTime>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.Double:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<double>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<double>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.Float:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<float>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<float>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.Int:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<int>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<int>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.Long:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<long>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<long>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.Short:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<short>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<short>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.String:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<string>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<string>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.UInt:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<bool>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<bool>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.ULong:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<ulong>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ulong>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.UShort:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<ushort>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ushort>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.IntPoint:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<IntPointData>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<IntPointData>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.UIntPoint:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<UIntPointData>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<UIntPointData>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.IntPoint3:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<IntPoint3Data>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<IntPoint3Data>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.UIntPoint3:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<UIntPoint3Data>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<UIntPoint3Data>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.LongPoint:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<LongPointData>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<LongPointData>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.ULongPoint:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<ULongPointData>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ULongPointData>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.LongPoint3:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<LongPoint3Data>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<LongPoint3Data>(id, sTime, eTime));
                         break;
                     case Cdy.Tag.TagType.ULongPoint3:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<ULongPoint3Data>(id, sTime, eTime));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ULongPoint3Data>(id, sTime, eTime));
                         break;
                 }
                 Parent.AsyncCallback(clientId, re);
@@ -639,7 +644,7 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="data"></param>
-        private void ProcessRequestStatisitcsDatasByTimePoint(string clientId, IByteBuffer data)
+        private void ProcessRequestStatisitcsDatasByTimePoint(string clientId, ByteBuffer data)
         {
             int id = data.ReadInt();
             int count = data.ReadInt();
@@ -648,11 +653,12 @@ namespace DBRuntime.Api
             {
                 times.Add(new DateTime(data.ReadLong()));
             }
+            int cid = data.ReadInt();
             var tags = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
 
             if (tags != null)
             {
-               var  re = WriteDataToBufferByMemory((byte)tags.Type, ProcessStatisticsDataQuery(id, times));
+               var  re = WriteDataToBufferByMemory(cid,(byte)tags.Type, ProcessStatisticsDataQuery(id, times));
                 Parent.AsyncCallback(clientId, re);
             }
             else
@@ -666,7 +672,7 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="data"></param>
-        private void ProcessRequestHisDatasByTimePointByMemory(string clientId, IByteBuffer data)
+        private void ProcessRequestHisDatasByTimePointByMemory(string clientId, ByteBuffer data)
         {
             int id = data.ReadInt();
             Cdy.Tag.QueryValueMatchType type = (QueryValueMatchType)data.ReadByte();
@@ -676,73 +682,74 @@ namespace DBRuntime.Api
             {
                 times.Add(new DateTime(data.ReadLong()));
             }
+            int cid = data.ReadInt();
             var tags = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
 
-            IByteBuffer re = null;
+            ByteBuffer re = null;
 
             if (tags != null)
             {
                 switch (tags.Type)
                 {
                     case Cdy.Tag.TagType.Bool:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<bool>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid,(byte)tags.Type, ProcessDataQuery<bool>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.Byte:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<byte>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<byte>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.DateTime:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<DateTime>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<DateTime>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.Double:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<double>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<double>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.Float:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<float>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<float>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.Int:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<int>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<int>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.Long:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<long>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<long>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.Short:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<short>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<short>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.String:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<string>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<string>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.UInt:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<bool>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<bool>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.ULong:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<ulong>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ulong>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.UShort:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<ushort>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ushort>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.IntPoint:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<IntPointData>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<IntPointData>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.UIntPoint:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<UIntPointData>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<UIntPointData>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.IntPoint3:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<IntPoint3Data>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<IntPoint3Data>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.UIntPoint3:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<UIntPoint3Data>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<UIntPoint3Data>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.LongPoint:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<LongPointData>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<LongPointData>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.ULongPoint:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<ULongPointData>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ULongPointData>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.LongPoint3:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<LongPoint3Data>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<LongPoint3Data>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.ULongPoint3:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<ULongPoint3Data>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ULongPoint3Data>(id, times, type));
                         break;
                 }
                 Parent.AsyncCallback(clientId, re);
@@ -758,7 +765,7 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="data"></param>
-        private void ProcessRequestHisDataByTimeSpanByMemory(string clientId, IByteBuffer data)
+        private void ProcessRequestHisDataByTimeSpanByMemory(string clientId, ByteBuffer data)
         {
             int id = data.ReadInt();
             Cdy.Tag.QueryValueMatchType type = (QueryValueMatchType)data.ReadByte();
@@ -772,73 +779,74 @@ namespace DBRuntime.Api
                 times.Add(tmp);
                 tmp += ts;
             }
+            int cid = data.ReadInt();
             var tags = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
 
-            IByteBuffer re = null;
+            ByteBuffer re = null;
 
             if (tags != null)
             {
                 switch (tags.Type)
                 {
                     case Cdy.Tag.TagType.Bool:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<bool>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid,(byte)tags.Type, ProcessDataQuery<bool>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.Byte:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<byte>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<byte>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.DateTime:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<DateTime>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<DateTime>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.Double:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<double>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<double>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.Float:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<float>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<float>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.Int:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<int>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<int>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.Long:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<long>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<long>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.Short:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<short>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<short>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.String:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<string>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<string>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.UInt:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<bool>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<bool>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.ULong:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<ulong>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ulong>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.UShort:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<ushort>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ushort>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.IntPoint:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<IntPointData>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<IntPointData>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.UIntPoint:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<UIntPointData>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<UIntPointData>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.IntPoint3:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<IntPoint3Data>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<IntPoint3Data>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.UIntPoint3:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<UIntPoint3Data>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<UIntPoint3Data>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.LongPoint:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<LongPointData>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<LongPointData>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.ULongPoint:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<ULongPointData>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ULongPointData>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.LongPoint3:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<LongPoint3Data>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<LongPoint3Data>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.ULongPoint3:
-                        re = WriteDataToBufferByMemory((byte)tags.Type, ProcessDataQuery<ULongPoint3Data>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ULongPoint3Data>(id, times, type));
                         break;
                 }
                 Parent.AsyncCallback(clientId, re);

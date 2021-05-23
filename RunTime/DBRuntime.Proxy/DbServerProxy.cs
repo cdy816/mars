@@ -1,4 +1,5 @@
 ﻿using Cdy.Tag;
+using Cheetah;
 using DBRunTime.ServiceApi;
 using DotNetty.Buffers;
 using System;
@@ -26,7 +27,7 @@ namespace DBRuntime.Proxy
 
         private ManualResetEvent resetEvent;
 
-        private Thread mScanThread;
+        //private Thread mScanThread;
 
         private string mIp;
 
@@ -113,19 +114,19 @@ namespace DBRuntime.Proxy
         private void ConnectProcess()
         {
             Thread.Sleep(1000);
-            if(dbClient.IsConnected)
+            if (dbClient.IsConnected)
             {
-               IsConnected = dbClient.Login(UserName, Password);
+                IsConnected = dbClient.Login(UserName, Password);
             }
             else
             {
-                dbClient.Connect(mIp, mPort);
+                dbClient.Open(mIp, mPort);
             }
             if (IsUseStandardHisDataServer)
             {
                 if (!mHisClient.IsConnected)
                 {
-                    mHisClient.Connect(mIp, mPort + 1);
+                    mHisClient.Open(mIp, mPort + 1);
                 }
                 else
                 {
@@ -133,41 +134,41 @@ namespace DBRuntime.Proxy
                 }
             }
             resetEvent.Set();
-            while (!mIsClosed)
-            {
-                resetEvent.WaitOne();
-                if (mIsClosed) break;
-                if (!mIsConnected)
-                {
-                    if (dbClient.IsConnected)
-                    {
-                        IsConnected = dbClient.Login(UserName, Password);
-                    }
-                    else if(dbClient.NeedReConnected)
-                    {
-                        dbClient.Connect(mIp, mPort);
-                    }
+            //while (!mIsClosed)
+            //{
+            //    resetEvent.WaitOne();
+            //    if (mIsClosed) break;
+            //    if (!mIsConnected)
+            //    {
+            //        if (dbClient.IsConnected)
+            //        {
+            //            IsConnected = dbClient.Login(UserName, Password);
+            //        }
+            //        else if(dbClient.NeedReConnected)
+            //        {
+            //            dbClient.Connect(mIp, mPort);
+            //        }
 
-                    if (IsUseStandardHisDataServer)
-                    {
-                        if (mHisClient.IsConnected)
-                        {
-                            mHisClient.Login(UserName, Password);
-                        }
-                        else if (mHisClient.NeedReConnected)
-                        {
-                            mHisClient.Connect(mIp, mPort + 1);
-                        }
-                    }
+            //        if (IsUseStandardHisDataServer)
+            //        {
+            //            if (mHisClient.IsConnected)
+            //            {
+            //                mHisClient.Login(UserName, Password);
+            //            }
+            //            else if (mHisClient.NeedReConnected)
+            //            {
+            //                mHisClient.Connect(mIp, mPort + 1);
+            //            }
+            //        }
 
-                    Thread.Sleep(1000);
-                }
-                else
-                {
-                    resetEvent.Reset();
-                }
-              
-            }
+            //        Thread.Sleep(1000);
+            //    }
+            //    else
+            //    {
+            //        resetEvent.Reset();
+            //    }
+
+            //}
         }
 
         /// <summary>
@@ -200,7 +201,16 @@ namespace DBRuntime.Proxy
             if (e.PropertyName == "IsConnected")
             {
                 if (!mHisClient.IsConnected)
+                {
                     resetEvent.Set();
+                }
+                else
+                {
+                    if(!mHisClient.IsLogin)
+                        mHisClient.Login(UserName, Password);
+                    //IsConnected = mHisClient.IsConnected;
+                }
+                OnPropertyChanged(e.PropertyName);
             }
         }
 
@@ -218,6 +228,15 @@ namespace DBRuntime.Proxy
                     IsConnected = false;
                     resetEvent.Set();
                 }
+                else
+                {
+                    IsConnected = true;
+                    if(!dbClient.IsLogin)
+                    {
+                        dbClient.Login(UserName, Password);
+                    }
+                }
+
             }
         }
 
@@ -232,15 +251,15 @@ namespace DBRuntime.Proxy
             Init();
             mIp = ip;
             mPort = port;
-            dbClient.Connect(ip, port);
+            dbClient.Open(ip, port);
             if (IsUseStandardHisDataServer)
             {
-                mHisClient.Connect(ip, port + 1);
+                mHisClient.Open(ip, port + 1);
 
             }
-            mScanThread = new Thread(ConnectProcess);
-            mScanThread.IsBackground = true;
-            mScanThread.Start();
+            //mScanThread = new Thread(ConnectProcess);
+            //mScanThread.IsBackground = true;
+            //mScanThread.Start();
         }
 
         /// <summary>
@@ -518,13 +537,17 @@ namespace DBRuntime.Proxy
         //    return re;
         //}
 
-        private unsafe HisQueryResult<T> ProcessHisResultByMemory<T>(IByteBuffer data, TagType tp)
+        private unsafe HisQueryResult<T> ProcessHisResultByMemory<T>(ByteBuffer data, TagType tp)
         {
            
             int count = data.ReadInt();
             HisQueryResult<T> re = new HisQueryResult<T>(count);
-            Marshal.Copy(data.Array, data.ArrayOffset + data.ReaderIndex, re.Address, data.ReadableBytes);
+
+            data.CopyTo(re.Address, data.ReadIndex, 0, data.WriteIndex - data.ReadIndex);
+
+            //Marshal.Copy(data.Array, data.ArrayOffset + data.ReaderIndex, re.Address, data.ReadableBytes);
             re.Count = count;
+            data.UnlockAndReturn();
             return re;
         }
 
@@ -535,12 +558,14 @@ namespace DBRuntime.Proxy
         /// <param name="data"></param>
         /// <param name="tp"></param>
         /// <returns></returns>
-        private unsafe NumberStatisticsQueryResult ProcessStatisticsResult(IByteBuffer data, TagType tp)
+        private unsafe NumberStatisticsQueryResult ProcessStatisticsResult(ByteBuffer data, TagType tp)
         {
             int count = data.ReadInt();
             NumberStatisticsQueryResult re = new NumberStatisticsQueryResult(count);
-            Marshal.Copy(data.Array, data.ArrayOffset + data.ReaderIndex, re.MemoryHandle, data.ReadableBytes);
+            data.CopyTo(re.MemoryHandle, data.ReadIndex, 0, data.WriteIndex - data.ReadIndex);
+            // Marshal.Copy(data.Array, data.ArrayOffset + data.ReaderIndex, re.MemoryHandle, data.ReadableBytes);
             re.Count = count;
+            data.UnlockAndReturn();
             return re;
         }
 
@@ -551,7 +576,7 @@ namespace DBRuntime.Proxy
         /// <param name="stime"></param>
         /// <param name="etime"></param>
         /// <returns></returns>
-        public IByteBuffer QueryAllHisValue(int id, DateTime stime, DateTime etime)
+        public ByteBuffer QueryAllHisValue(int id, DateTime stime, DateTime etime)
         {
             if (IsConnected)
             {
@@ -585,7 +610,7 @@ namespace DBRuntime.Proxy
         /// <param name="stime"></param>
         /// <param name="etime"></param>
         /// <returns></returns>
-        public IByteBuffer QueryStatisticsHisValueByMemory(int id, DateTime stime, DateTime etime)
+        public ByteBuffer QueryStatisticsHisValueByMemory(int id, DateTime stime, DateTime etime)
         {
             if (IsConnected)
             {
@@ -604,7 +629,7 @@ namespace DBRuntime.Proxy
         /// <param name="span"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public IByteBuffer QueryHisData(int id, DateTime stime, DateTime etime, TimeSpan span, Cdy.Tag.QueryValueMatchType type)
+        public ByteBuffer QueryHisData(int id, DateTime stime, DateTime etime, TimeSpan span, Cdy.Tag.QueryValueMatchType type)
         {
             if (IsConnected)
             {
@@ -620,7 +645,7 @@ namespace DBRuntime.Proxy
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public IByteBuffer QueryHisData(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType type)
+        public ByteBuffer QueryHisData(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType type)
         {
             if (IsConnected)
             {
@@ -637,7 +662,7 @@ namespace DBRuntime.Proxy
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public IByteBuffer QueryStatisticsHisDataByMemory(int id, List<DateTime> times)
+        public ByteBuffer QueryStatisticsHisDataByMemory(int id, List<DateTime> times)
         {
             if (IsConnected)
             {
@@ -677,7 +702,7 @@ namespace DBRuntime.Proxy
             if (IsConnected)
             {
                 var res = this.mUsedHisClient.QueryAllHisValue(id, stime, etime);
-                if (res == null || res.ReferenceCount == 0) return null;
+                if (res == null || res.Handles == null || res.Handles.Count==0) return null;
                 TagType tp = (TagType)res.ReadByte();
                 switch (tp)
                 {
@@ -742,7 +767,7 @@ namespace DBRuntime.Proxy
             if (IsConnected)
             {
                 var res = mUsedHisClient.QueryHisValueForTimeSpan(id, stime, etime, span, type);
-                if (res == null) return null;
+                if (res == null || res.Handles == null || res.Handles.Count == 0) return null;
                 TagType tp = (TagType)res.ReadByte();
                 switch (tp)
                 {
@@ -805,7 +830,7 @@ namespace DBRuntime.Proxy
             if (IsConnected)
             {
                 var res = mUsedHisClient.QueryHisValueAtTimes(id, times, type);
-                if (res == null) return null;
+                if (res == null || res.Handles == null || res.Handles.Count == 0) return null;
                 TagType tp = (TagType)res.ReadByte();
                 switch (tp)
                 {

@@ -60,15 +60,6 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        //private void Init()
-        //{
-        //    LocalFileSeriser s = new LocalFileSeriser();
-        //    Registor(s.Name, s);
-        //}
-
         /// <summary>
         /// 
         /// </summary>

@@ -357,21 +357,16 @@ namespace Cdy.Tag
                         for (i = 0; i < mHandles.Count; i++)
                         {
                             nBuffers.Add(mHandles[i]);
-                            //nBuffers[i] = mBuffers[i];
                         }
 
                         for (int j = i; j < count; j++)
                         {
                             nBuffers.Add(Marshal.AllocHGlobal(mBufferItemSize));
-                           // nBuffers[j] = new byte[BufferItemSize];
                         }
 
                         mHandles = nBuffers;
-                        //GC.Collect();
                     }
                     mAllocSize = size;
-                    //GC.Collect();
-
                     LoggerService.Service.Info("CheckAndResize", "CheckAndResize " + this.Name + " " + size, ConsoleColor.Red);
                 }
                 else

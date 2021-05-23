@@ -13,7 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using Cdy.Tag;
-using DotNetty.Buffers;
+using Cheetah;
 
 namespace SpiderDriver
 {
@@ -59,7 +59,7 @@ namespace SpiderDriver
         /// </summary>
         /// <param name="client"></param>
         /// <param name="data"></param>
-        protected unsafe override void ProcessSingleData(string client, IByteBuffer data)
+        protected unsafe override void ProcessSingleData(string client, ByteBuffer data)
         {
             var mm = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.ITagManager>();
             byte sfun = data.ReadByte();
@@ -72,19 +72,19 @@ namespace SpiderDriver
                         int count = data.ReadInt();
                         if (count > 0)
                         {
-                            var re = BufferManager.Manager.Allocate(APIConst.TagInfoRequestFun, (count+1) * 4);
-                            re.WriteInt(count);
+                            var re = Parent.Allocate(APIConst.TagInfoRequestFun, (count+1) * 4);
+                            re.Write(count);
                             for (int i = 0; i < count; i++)
                             {
                                // string stag = data.ReadString();
                                 var ival = mm.GetTagIdByName(data.ReadString());
                                 if (ival.HasValue)
                                 {
-                                    re.WriteInt(ival.Value);
+                                    re.Write(ival.Value);
                                 }
                                 else
                                 {
-                                    re.WriteInt((int)-1);
+                                    re.Write((int)-1);
                                 }
                             }
                             Parent.AsyncCallback(client, re);
@@ -95,7 +95,7 @@ namespace SpiderDriver
                     loginId = data.ReadLong();
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
-                        int psize = 100000;
+                        int psize = 500000;
                         var vtags = mm.ListAllTags().Where(e=>e.LinkAddress.StartsWith("Spider"));
                         int tcount = vtags.Count() / psize;
                         tcount += (vtags.Count() % psize > 0 ? 1 : 0);
@@ -118,7 +118,7 @@ namespace SpiderDriver
                     loginId = data.ReadLong();
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
-                        int psize = 100000;
+                        int psize = 500000;
 
                         var vserver = ServiceLocator.Locator.Resolve<IHisTagQuery>();
 
@@ -148,9 +148,9 @@ namespace SpiderDriver
                         var vserver = ServiceLocator.Locator.Resolve<IHisTagQuery>();
                         int icount = data.ReadInt();
 
-                        IByteBuffer re = BufferManager.Manager.Allocate(APIConst.TagInfoRequestFun, icount + 5);
+                        ByteBuffer re = Parent.Allocate(APIConst.TagInfoRequestFun, icount + 5);
                         re.WriteByte(GetDriverRecordTypeTagIds2);
-                        re.WriteInt(icount);
+                        re.Write(icount);
                         for (int i = 0; i < icount; i++)
                         {
                             if(vserver.GetHisTagById(data.ReadInt())?.Type == RecordType.Driver)
@@ -207,7 +207,7 @@ namespace SpiderDriver
            
             if (val > 0)
             {
-                IByteBuffer data = ToByteBuffer(APIConst.TagInfoRequestFun, APIConst.DatabaseChangedNotify, val);
+                ByteBuffer data = ToByteBuffer(APIConst.TagInfoRequestFun, APIConst.DatabaseChangedNotify, val);
                 foreach (var vv in mClients)
                 {
                     Parent.AsyncCallback(vv, data);
@@ -222,32 +222,32 @@ namespace SpiderDriver
         /// <param name="bcount"></param>
         /// <param name="totalcount"></param>
         /// <returns></returns>
-        private IByteBuffer GetTagBuffer(IEnumerable<Tagbase> tags,short bcount,short totalcount)
+        private ByteBuffer GetTagBuffer(IEnumerable<Tagbase> tags,short bcount,short totalcount)
         {
-            IByteBuffer re = BufferManager.Manager.Allocate(APIConst.TagInfoRequestFun, tags.Count() * 64+9);
-            re.WriteByte(QueryAllTagNameAndIds);
-            re.WriteShort(totalcount);
-            re.WriteShort(bcount);
-            re.WriteInt(tags.Count());
+            ByteBuffer re = Parent.Allocate(APIConst.TagInfoRequestFun, tags.Count() * 64+9);
+            re.Write(QueryAllTagNameAndIds);
+            re.Write(totalcount);
+            re.Write(bcount);
+            re.Write(tags.Count());
             foreach(var vv in tags)
             {
-                re.WriteInt(vv.Id);
-                re.WriteString(vv.FullName);
+                re.Write(vv.Id);
+                re.Write(vv.FullName);
                 re.WriteByte((byte)vv.Type);
             }
             return re;
         }
 
-        private IByteBuffer GetRecordTypeBuffer(IEnumerable<HisTag> tags, short bcount, short totalcount)
+        private ByteBuffer GetRecordTypeBuffer(IEnumerable<HisTag> tags, short bcount, short totalcount)
         {
-            IByteBuffer re = BufferManager.Manager.Allocate(APIConst.TagInfoRequestFun, tags.Count() * 4 + 9);
-            re.WriteByte(GetDriverRecordTypeTagIds);
-            re.WriteShort(totalcount);
-            re.WriteShort(bcount);
-            re.WriteInt(tags.Count());
+            ByteBuffer re = Parent.Allocate(APIConst.TagInfoRequestFun, tags.Count() * 4 + 9);
+            re.Write(GetDriverRecordTypeTagIds);
+            re.Write(totalcount);
+            re.Write(bcount);
+            re.Write(tags.Count());
             foreach (var vv in tags)
             {
-                re.WriteInt(vv.Id);
+                re.Write(vv.Id);
             }
             return re;
         }

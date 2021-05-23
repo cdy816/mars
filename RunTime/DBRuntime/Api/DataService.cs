@@ -8,6 +8,7 @@
 //==============================================================
 
 using Cdy.Tag;
+using Cheetah;
 using DotNetty.Buffers;
 using System;
 using System.Collections.Generic;
@@ -65,12 +66,12 @@ namespace DBRuntime.Api
     /// <summary>
     /// 
     /// </summary>
-    public class DataService: SocketServer
+    public class DataService: SocketServer2
     {
 
         #region ... Variables  ...
 
-        private IByteBuffer mAsyncCalldata;
+        //private ByteBuffer mAsyncCalldata;
 
         private Dictionary<byte, ServerProcessBase> mProcess = new Dictionary<byte, ServerProcessBase>();
 
@@ -110,12 +111,13 @@ namespace DBRuntime.Api
 
         #region ... Methods    ...
 
+        
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="port"></param>
-        protected override void StartInner(int port)
+        public override void Start(int port)
         {
             mHisProcess = new HisDataServerProcess() { Parent = this };
             mRealProcess = new RealDataServerProcess() { Parent = this };
@@ -126,7 +128,7 @@ namespace DBRuntime.Api
 
             ServiceLocator.Locator.Registor<IAPINotify>(mInfoProcess);
 
-            base.StartInner(port);
+            base.Start(port);
 
         }
 
@@ -156,11 +158,13 @@ namespace DBRuntime.Api
             }
         }
 
-        private IByteBuffer GetAsyncData()
+        private ByteBuffer GetAsyncData()
         {
-            mAsyncCalldata = BufferManager.Manager.Allocate(ApiFunConst.AysncReturn, 4);
-            mAsyncCalldata.WriteInt(0);
-            return mAsyncCalldata;
+            //mAsyncCalldata = BufferManager2.Manager.Allocate(ApiFunConst.AysncReturn, 4);
+            //mAsyncCalldata.Write((int)0);
+            //return mAsyncCalldata;
+
+            return null;
         }
 
         /// <summary>
@@ -186,9 +190,19 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="value"></param>
-        public void PushRealDatatoClient(string clientId, IByteBuffer value)
+        public void PushRealDatatoClient(string clientId,params ByteBuffer[] value)
         {
-            this.SendData(clientId, value);
+            this.SendDataToClient(clientId, value);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="value"></param>
+        public void PushRealDatatoClient(string clientId, ByteBuffer value)
+        {
+            this.SendDataToClient(clientId, value);
         }
 
         /// <summary>
@@ -208,9 +222,19 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="data"></param>
-        public void AsyncCallback(string clientId, IByteBuffer data)
+        public void AsyncCallback(string clientId, ByteBuffer data)
         {
-            this.SendData(clientId, data);
+            this.SendDataToClient(clientId, data);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="data"></param>
+        public void AsyncCallback(string clientId,params ByteBuffer[] data)
+        {
+            this.SendDataToClient(clientId, data);
         }
 
         /// <summary>
@@ -228,7 +252,7 @@ namespace DBRuntime.Api
         /// <summary>
         /// 
         /// </summary>
-        private IByteBuffer TagInfoRequest(string clientId, IByteBuffer memory)
+        private ByteBuffer TagInfoRequest(string clientId, ByteBuffer memory)
         {
             mInfoProcess.ProcessData(clientId,memory);
             return GetAsyncData();
@@ -240,7 +264,7 @@ namespace DBRuntime.Api
         /// <param name="clientId"></param>
         /// <param name="memory"></param>
         /// <returns></returns>
-        private IByteBuffer ReadDataRequest(string clientId, IByteBuffer memory)
+        private ByteBuffer ReadDataRequest(string clientId, ByteBuffer memory)
         {
             this.mRealProcess.ProcessData(clientId, memory);
             return GetAsyncData();
@@ -252,21 +276,38 @@ namespace DBRuntime.Api
         /// <param name="clientId"></param>
         /// <param name="memory"></param>
         /// <returns></returns>
-        private IByteBuffer HisDataRequest(string clientId, IByteBuffer memory)
+        private ByteBuffer HisDataRequest(string clientId, ByteBuffer memory)
         {
             this.mHisProcess.ProcessData(clientId, memory);
             return GetAsyncData();
         }
 
 
-        protected override void OnClientDisConnected(string id)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="isConnected"></param>
+        public override void OnClientConnected(string id, bool isConnected)
         {
-            mRealProcess.OnClientDisconnected(id);
-            mHisProcess.OnClientDisconnected(id);
-            mInfoProcess.OnClientDisconnected(id);
-            ServiceLocator.Locator.Resolve<IRuntimeSecurity>().LogoutByClientId(id);
-            base.OnClientDisConnected(id);
+            if(!isConnected)
+            {
+                mRealProcess.OnClientDisconnected(id);
+                mHisProcess.OnClientDisconnected(id);
+                mInfoProcess.OnClientDisconnected(id);
+                ServiceLocator.Locator.Resolve<IRuntimeSecurity>()?.LogoutByClientId(id);
+            }
+            base.OnClientConnected(id, isConnected);
         }
+
+        //protected override void OnClientDisConnected(string id)
+        //{
+        //    mRealProcess.OnClientDisconnected(id);
+        //    mHisProcess.OnClientDisconnected(id);
+        //    mInfoProcess.OnClientDisconnected(id);
+        //    ServiceLocator.Locator.Resolve<IRuntimeSecurity>().LogoutByClientId(id);
+        //    base.OnClientDisConnected(id);
+        //}
 
         #endregion ...Methods...
 

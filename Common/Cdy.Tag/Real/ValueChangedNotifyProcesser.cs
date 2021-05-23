@@ -174,7 +174,7 @@ namespace Cdy.Tag
 
         private bool mIsClosed = false;
 
-        public const int BlockSize = 10000;
+        public const int BlockSize = 500000;
 
         #endregion ...Variables...
 
@@ -382,7 +382,8 @@ namespace Cdy.Tag
         /// </summary>
         private void ThreadProcess()
         {
-            while(!mIsClosed)
+            int i = 0;
+            while (!mIsClosed)
             {
                 resetEvent.WaitOne();
                 if (mIsClosed) break;
@@ -412,8 +413,9 @@ namespace Cdy.Tag
 
                 if (NotifyType == RealDataNotifyType.All || NotifyType == RealDataNotifyType.Block)
                 {
-                    if (BlockChanged != null)
+                    if ((BlockChanged != null) && i % 10 == 0)
                     {
+                        i = 0;
                         lock (mBlockChangeds)
                         {
                             foreach (var vv in mBlockChangeds)
@@ -427,6 +429,7 @@ namespace Cdy.Tag
                         }
                     }
                 }
+                i++;
 
                 Thread.Sleep(10);
             }

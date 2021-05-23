@@ -157,11 +157,13 @@ namespace DBRuntime.Proxy
         public void Start()
         {
             mProxy = new DbServerProxy() { UserName = mUserName, Password = mPassword,IsUseStandardHisDataServer= mUseStandardHisDataServer };
-            mProxy.Connect(mIp, mPort);
             mProxy.PropertyChanged += MProxy_PropertyChanged;
+          
             mMonitorThread = new Thread(MonitorThreadPro);
             mMonitorThread.IsBackground = true;
             mMonitorThread.Start();
+
+            mProxy.Connect(mIp, mPort);
         }
 
         /// <summary>

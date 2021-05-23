@@ -8,6 +8,7 @@
 //==============================================================
 
 using Cdy.Tag;
+using Cheetah;
 using DotNetty.Buffers;
 using System;
 using System.Collections.Generic;
@@ -47,12 +48,12 @@ namespace DBHighApi.Api
     /// <summary>
     /// 
     /// </summary>
-    public class DataService: SocketServer
+    public class DataService: SocketServer2
     {
 
         #region ... Variables  ...
 
-        private IByteBuffer mAsyncCalldata;
+        private ByteBuffer mAsyncCalldata;
 
         private Dictionary<byte, ServerProcessBase> mProcess = new Dictionary<byte, ServerProcessBase>();
 
@@ -94,11 +95,7 @@ namespace DBHighApi.Api
         #region ... Methods    ...
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="port"></param>
-        protected override void StartInner(int port)
+        public override void Start(int port)
         {
             mHisProcess = new HisDataServerProcess() { Parent = this };
             mRealProcess = new RealDataServerProcess() { Parent = this };
@@ -106,9 +103,25 @@ namespace DBHighApi.Api
             mHisProcess.Start();
             mRealProcess.Start();
             mInfoProcess.Start();
-            base.StartInner(port);
+            base.Start(port);
             mIsRunning = true;
         }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="port"></param>
+        //protected override void StartInner(int port)
+        //{
+        //    mHisProcess = new HisDataServerProcess() { Parent = this };
+        //    mRealProcess = new RealDataServerProcess() { Parent = this };
+        //    mInfoProcess = new TagInfoServerProcess() { Parent = this };
+        //    mHisProcess.Start();
+        //    mRealProcess.Start();
+        //    mInfoProcess.Start();
+        //    base.StartInner(port);
+        //    mIsRunning = true;
+        //}
 
         /// <summary>
         /// 
@@ -139,10 +152,10 @@ namespace DBHighApi.Api
             }
         }
 
-        private IByteBuffer GetAsyncData()
+        private ByteBuffer GetAsyncData()
         {
-            mAsyncCalldata = BufferManager.Manager.Allocate(ApiFunConst.AysncReturn, 4);
-            mAsyncCalldata.WriteInt(0);
+            mAsyncCalldata = Allocate(ApiFunConst.AysncReturn, 4);
+            mAsyncCalldata.Write(0);
             return mAsyncCalldata;
         }
 
@@ -170,9 +183,9 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="value"></param>
-        public void PushRealDatatoClient(string clientId, IByteBuffer value)
+        public void PushRealDatatoClient(string clientId, ByteBuffer value)
         {
-            this.SendData(clientId, value);
+            this.SendDataToClient(clientId, value);
         }
 
         /// <summary>
@@ -192,9 +205,9 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="data"></param>
-        public void AsyncCallback(string clientId, IByteBuffer data)
+        public void AsyncCallback(string clientId, ByteBuffer data)
         {
-            this.SendData(clientId, data);
+            this.SendDataToClient(clientId, data);
         }
 
         /// <summary>
@@ -212,7 +225,7 @@ namespace DBHighApi.Api
         /// <summary>
         /// 
         /// </summary>
-        private IByteBuffer TagInfoRequest(string clientId, IByteBuffer memory)
+        private ByteBuffer TagInfoRequest(string clientId, ByteBuffer memory)
         {
             mInfoProcess.ProcessData(clientId,memory);
             return null;
@@ -224,7 +237,7 @@ namespace DBHighApi.Api
         /// <param name="clientId"></param>
         /// <param name="memory"></param>
         /// <returns></returns>
-        private IByteBuffer ReadDataRequest(string clientId, IByteBuffer memory)
+        private ByteBuffer ReadDataRequest(string clientId, ByteBuffer memory)
         {
             this.mRealProcess.ProcessData(clientId, memory);
             return null;
@@ -236,21 +249,32 @@ namespace DBHighApi.Api
         /// <param name="clientId"></param>
         /// <param name="memory"></param>
         /// <returns></returns>
-        private IByteBuffer HisDataRequest(string clientId, IByteBuffer memory)
+        private ByteBuffer HisDataRequest(string clientId, ByteBuffer memory)
         {
             this.mHisProcess.ProcessData(clientId, memory);
             return null;
         }
 
-
-        protected override void OnClientDisConnected(string id)
+        public override void OnClientConnected(string id, bool isConnected)
         {
-            mRealProcess.OnClientDisconnected(id);
-            mHisProcess.OnClientDisconnected(id);
-            mInfoProcess.OnClientDisconnected(id);
-            ServiceLocator.Locator.Resolve<IRuntimeSecurity>().LogoutByClientId(id);
-            base.OnClientDisConnected(id);
+            if(!isConnected)
+            {
+                mRealProcess.OnClientDisconnected(id);
+                mHisProcess.OnClientDisconnected(id);
+                mInfoProcess.OnClientDisconnected(id);
+                ServiceLocator.Locator.Resolve<IRuntimeSecurity>().LogoutByClientId(id);
+            }
+            base.OnClientConnected(id, isConnected);
         }
+
+        //protected override void OnClientDisConnected(string id)
+        //{
+        //    mRealProcess.OnClientDisconnected(id);
+        //    mHisProcess.OnClientDisconnected(id);
+        //    mInfoProcess.OnClientDisconnected(id);
+        //    ServiceLocator.Locator.Resolve<IRuntimeSecurity>().LogoutByClientId(id);
+        //    base.OnClientDisConnected(id);
+        //}
 
         #endregion ...Methods...
 

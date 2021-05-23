@@ -548,10 +548,10 @@ namespace SimDriver
                 {
                     LoggerService.Service.Warn("Sim Driver", "出现阻塞 更新耗时:" + mMaxProcessTimeSpan + " ms");
                 }
-                else if ((mNumber % 10 == 0))
-                {
-                    LoggerService.Service.Debug("Sim Driver", "上次更新数据耗时: " + mMaxProcessTimeSpan + " ms");
-                }
+                //else if ((mNumber % 10 == 0))
+                //{
+                //    LoggerService.Service.Debug("Sim Driver", "上次更新数据耗时: " + mMaxProcessTimeSpan + " ms");
+                //}
 
                 mMaxProcessTimeSpan = 0;
                 //mSelfProcessTimeSpan = 0;

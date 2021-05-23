@@ -18,7 +18,7 @@ using System.Threading;
 using Cdy.Tag;
 using Cdy.Tag.Common;
 using Cdy.Tag.Driver;
-using DotNetty.Buffers;
+using Cheetah;
 
 namespace SpiderDriver
 {
@@ -43,7 +43,7 @@ namespace SpiderDriver
 
         private bool mIsClosed = false;
 
-        private Dictionary<string, IByteBuffer> buffers = new Dictionary<string, IByteBuffer>();
+        private Dictionary<string, ByteBuffer> buffers = new Dictionary<string, ByteBuffer>();
 
         private Dictionary<string, int> mDataCounts = new Dictionary<string, int>();
 
@@ -54,6 +54,7 @@ namespace SpiderDriver
         ///// </summary>
         //public static HashSet<int> Driver.AllowTagIds = new HashSet<int>();
 
+        private bool mIsBusy = false;
 
         private string mName;
 
@@ -108,16 +109,38 @@ namespace SpiderDriver
         /// 
         /// </summary>
         /// <param name="client"></param>
-        /// <param name="data"></param>
-        protected  override void ProcessSingleData(string client, IByteBuffer data)
+        public override void CheckDataBusy(string client)
         {
-            if(data.ReferenceCount==0)
+            //if (mDatasCach.ContainsKey(client) && mDatasCach[client].Count > 100)
+            //{
+            //    Parent.AsyncCallback(client, ToByteBuffer(APIConst.AysncReturn, APIConst.RealServerBusy));
+            //    mIsBusy = true;
+            //}
+            //else if(mIsBusy)
+            //{
+            //    mIsBusy = false;
+            //    Parent.AsyncCallback(client, ToByteBuffer(APIConst.AysncReturn, APIConst.RealServerNoBusy));
+            //}
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="data"></param>
+        protected  override void ProcessSingleData(string client, ByteBuffer data)
+        {
+            if(data.RefCount==0)
             {
                 Debug.Print("invailed data buffer in RealDataServerProcess");
                 return;
             }
+          
             byte cmd = data.ReadByte();
             long id = data.ReadLong();
+            //Stopwatch sw = new Stopwatch();
+            //sw.Start();
+            //LoggerService.Service.Info("RealDataServer","Real Data Server Process:" + cmd);
             if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(id))
             {
                 try
@@ -153,6 +176,8 @@ namespace SpiderDriver
             {
                 Parent.AsyncCallback(client, FunId, new byte[1], 0);
             }
+            //sw.Stop();
+            //LoggerService.Service.Info("RealDataServer", "finish Real Data Server Process:" + sw.ElapsedMilliseconds);
             base.ProcessSingleData(client, data);
         }
         
@@ -162,9 +187,11 @@ namespace SpiderDriver
         /// </summary>
         /// <param name="clientid"></param>
         /// <param name="block"></param>
-        private void ProcessSetRealData(string clientid, IByteBuffer block)
+        private void ProcessSetRealData(string clientid, ByteBuffer block)
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
+            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
+
             int count = block.ReadInt();
             int id = 0;
             byte typ;
@@ -425,11 +452,9 @@ namespace SpiderDriver
                         //value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                         break;
                 }
-                //if (Driver.AllowTagIds.Contains(id))
-                //    service.SetTagValue(id, value);
             }
-            service.SubmiteNotifyChanged();
-            Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
+            service?.SubmiteNotifyChanged();
+            
         }
 
         /// <summary>
@@ -437,10 +462,11 @@ namespace SpiderDriver
         /// </summary>
         /// <param name="clientid"></param>
         /// <param name="block"></param>
-        private void ProcessSetRealAndHistData(string clientid, IByteBuffer block)
+        private void ProcessSetRealAndHistData(string clientid, ByteBuffer block)
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
             var hisservice = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
+            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
 
             int count = block.ReadInt();
             int id = 0;
@@ -767,11 +793,10 @@ namespace SpiderDriver
                         //value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                         break;
                 }
-                //if (Driver.AllowTagIds.Contains(id))
-                //    service.SetTagValue(id, value);
+                
             }
-            service.SubmiteNotifyChanged();
-            Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
+            service?.SubmiteNotifyChanged();
+            
         }
 
         /// <summary>
@@ -779,15 +804,16 @@ namespace SpiderDriver
         /// </summary>
         /// <param name="clientid"></param>
         /// <param name="block"></param>
-        private void ProcessSetRealDataAndQuality(string clientid, IByteBuffer block)
+        private void ProcessSetRealDataAndQuality(string clientid, ByteBuffer block)
         {
+            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
             var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
             int count = block.ReadInt();
+            byte qua;
             for (int i = 0; i < count; i++)
             {
                 var id = block.ReadInt();
                 byte typ = block.ReadByte();
-                byte qua;
                 switch (typ)
                 {
                     case (byte)TagType.Bool:
@@ -915,8 +941,8 @@ namespace SpiderDriver
                         break;
                 }
             }
-            service.SubmiteNotifyChanged();
-            Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
+            service?.SubmiteNotifyChanged();
+            
         }
 
 
@@ -925,7 +951,7 @@ namespace SpiderDriver
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="block"></param>
-        private void ProcessRemoveValueChangeNotify(string clientId, IByteBuffer block)
+        private void ProcessRemoveValueChangeNotify(string clientId, ByteBuffer block)
         {
             try
             {
@@ -939,7 +965,7 @@ namespace SpiderDriver
                         itmp.ClearId(ival);
                     }
                 }
-                Parent.AsyncCallback(clientId, ToByteBuffer(APIConst.RealValueFun, (byte)1));
+                Parent?.AsyncCallback(clientId, ToByteBuffer(APIConst.RealValueFun, (byte)1));
             }
             catch (Exception ex)
             {
@@ -951,7 +977,7 @@ namespace SpiderDriver
         /// 
         /// </summary>
         /// <param name="block"></param>
-        private void ProcessValueChangeNotify(string clientId, IByteBuffer block)
+        private void ProcessValueChangeNotify(string clientId, ByteBuffer block)
         {
             try
             {
@@ -983,7 +1009,7 @@ namespace SpiderDriver
                     mDataCounts.Add(clientId, 0);
                 }
 
-                Parent.AsyncCallback(clientId, ToByteBuffer(APIConst.RealValueFun, (byte)1));
+                Parent?.AsyncCallback(clientId, ToByteBuffer(APIConst.RealValueFun, (byte)1));
             }
             catch(Exception ex)
             {
@@ -995,7 +1021,7 @@ namespace SpiderDriver
         /// 
         /// </summary>
         /// <param name="block"></param>
-        private void ProcessResetValueChangedNotify(string clientId, IByteBuffer block)
+        private void ProcessResetValueChangedNotify(string clientId, ByteBuffer block)
         {
             try
             {
@@ -1012,7 +1038,7 @@ namespace SpiderDriver
             {
 
             }
-            Parent.AsyncCallback(clientId, ToByteBuffer(APIConst.RealValueFun, (byte)1));
+            Parent?.AsyncCallback(clientId, ToByteBuffer(APIConst.RealValueFun, (byte)1));
         }
 
 
@@ -1021,83 +1047,83 @@ namespace SpiderDriver
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="id"></param>
-        private void ProcessTagPush(IByteBuffer re,int id,byte type,object value)
+        private void ProcessTagPush(ByteBuffer re,int id,byte type,object value)
         {
-            re.WriteInt(id);
-            re.WriteByte(type);
+            re.Write(id);
+            re.Write(type);
             switch (type)
             {
                 case (byte)TagType.Bool:
-                    re.WriteByte((byte)value);
+                    re.Write(Convert.ToByte(value));
                     break;
                 case (byte)TagType.Byte:
-                    re.WriteByte((byte)value);
+                    re.Write(Convert.ToByte(value));
                     break;
                 case (byte)TagType.Short:
-                    re.WriteShort((short)value);
+                    re.Write(Convert.ToInt16(value));
                     break;
                 case (byte)TagType.UShort:
-                    re.WriteUnsignedShort((ushort)value);
+                    re.Write(Convert.ToUInt16(value));
                     break;
                 case (byte)TagType.Int:
-                    re.WriteInt((int)value);
+                    re.Write(Convert.ToInt32(value));
                     break;
                 case (byte)TagType.UInt:
-                    re.WriteInt((int)value);
+                    re.Write(Convert.ToUInt32(value));
                     break;
                 case (byte)TagType.Long:
                 case (byte)TagType.ULong:
-                    re.WriteLong((long)value);
+                    re.Write(Convert.ToInt64(value));
                     break;
                 case (byte)TagType.Float:
-                    re.WriteFloat((float)value);
+                    re.Write(Convert.ToSingle(value));
                     break;
                 case (byte)TagType.Double:
-                    re.WriteDouble((double)value);
+                    re.Write(Convert.ToDouble(value));
                     break;
                 case (byte)TagType.String:
                     string sval = value.ToString();
-                    re.WriteInt(sval.Length);
-                    re.WriteString(sval, Encoding.Unicode);
+                    //re.Write(sval.Length);
+                    re.Write(sval, Encoding.Unicode);
                     break;
                 case (byte)TagType.DateTime:
-                    re.WriteLong(((DateTime)value).Ticks);
+                    re.Write(((DateTime)value).Ticks);
                     break;
                 case (byte)TagType.IntPoint:
-                    re.WriteInt(((IntPointData)value).X);
-                    re.WriteInt(((IntPointData)value).Y);
+                    re.Write(((IntPointData)value).X);
+                    re.Write(((IntPointData)value).Y);
                     break;
                 case (byte)TagType.UIntPoint:
-                    re.WriteInt((int)((UIntPointData)value).X);
-                    re.WriteInt((int)((UIntPointData)value).Y);
+                    re.Write((int)((UIntPointData)value).X);
+                    re.Write((int)((UIntPointData)value).Y);
                     break;
                 case (byte)TagType.IntPoint3:
-                    re.WriteInt(((IntPoint3Data)value).X);
-                    re.WriteInt(((IntPoint3Data)value).Y);
-                    re.WriteInt(((IntPoint3Data)value).Z);
+                    re.Write(((IntPoint3Data)value).X);
+                    re.Write(((IntPoint3Data)value).Y);
+                    re.Write(((IntPoint3Data)value).Z);
                     break;
                 case (byte)TagType.UIntPoint3:
-                    re.WriteInt((int)((UIntPoint3Data)value).X);
-                    re.WriteInt((int)((UIntPoint3Data)value).Y);
-                    re.WriteInt((int)((UIntPoint3Data)value).Z);
+                    re.Write((int)((UIntPoint3Data)value).X);
+                    re.Write((int)((UIntPoint3Data)value).Y);
+                    re.Write((int)((UIntPoint3Data)value).Z);
                     break;
                 case (byte)TagType.LongPoint:
-                    re.WriteLong(((LongPointData)value).X);
-                    re.WriteLong(((LongPointData)value).Y);
+                    re.Write(((LongPointData)value).X);
+                    re.Write(((LongPointData)value).Y);
                     break;
                 case (byte)TagType.ULongPoint:
-                    re.WriteLong((long)((ULongPointData)value).X);
-                    re.WriteLong((long)((ULongPointData)value).Y);
+                    re.Write((long)((ULongPointData)value).X);
+                    re.Write((long)((ULongPointData)value).Y);
                     break;
                 case (byte)TagType.LongPoint3:
-                    re.WriteLong(((LongPoint3Data)value).X);
-                    re.WriteLong(((LongPoint3Data)value).Y);
-                    re.WriteLong(((LongPoint3Data)value).Z);
+                    re.Write(((LongPoint3Data)value).X);
+                    re.Write(((LongPoint3Data)value).Y);
+                    re.Write(((LongPoint3Data)value).Z);
                     break;
                 case (byte)TagType.ULongPoint3:
-                    re.WriteLong((long)((ULongPoint3Data)value).X);
-                    re.WriteLong((long)((ULongPoint3Data)value).Y);
-                    re.WriteLong((long)((ULongPoint3Data)value).Z);
+                    re.Write((long)((ULongPoint3Data)value).X);
+                    re.Write((long)((ULongPoint3Data)value).Y);
+                    re.Write((long)((ULongPoint3Data)value).Z);
                     break;
             }
         }
@@ -1132,8 +1158,8 @@ namespace SpiderDriver
                     var clients = mCallBackRegistorIds.ToArray();
                     foreach (var cb in clients)
                     {
-                        var buffer = BufferManager.Manager.Allocate(APIConst.PushDataChangedFun, changtags.Count * 64 + 5);
-                        buffer.WriteInt(0);
+                        var buffer = Parent.Allocate(APIConst.PushDataChangedFun, changtags.Count * 64 + 5);
+                        buffer.Write(0);
                         buffers.Add(cb.Key, buffer);
                         mDataCounts[cb.Key] = 0;
                     }
@@ -1160,12 +1186,15 @@ namespace SpiderDriver
 
                     foreach (var cb in buffers)
                     {
-                        if (cb.Value.WriterIndex > 6)
+                        if (cb.Value.WriteIndex > 6)
                         {
-                            cb.Value.MarkWriterIndex();
-                            cb.Value.SetWriterIndex(1);
-                            cb.Value.WriteInt(mDataCounts[cb.Key]);
-                            cb.Value.ResetWriterIndex();
+                            var idx = cb.Value.WriteIndex;
+                            //cb.Value.MarkWriterIndex();
+                            cb.Value.WriteIndex = 1;
+                            //cb.Value.SetWriterIndex(1);
+                            cb.Value.Write(mDataCounts[cb.Key]);
+                            //cb.Value.ResetWriterIndex();
+                            cb.Value.WriteIndex = idx;
                         }
                         Parent.PushRealDatatoClient(cb.Key, cb.Value);
                     }

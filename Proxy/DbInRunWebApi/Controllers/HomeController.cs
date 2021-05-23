@@ -5,17 +5,25 @@ using System.Threading.Tasks;
 using DbWebApi;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace DbWebApiProxy.Controllers
 {
     
+    /// <summary>
+    /// 
+    /// </summary>
     public class HomeController : Controller
     {
-        // GET: api/Home
-        [HttpGet]
-        public string Index()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="context"></param>
+        public override void OnActionExecuting(ActionExecutingContext context)
         {
-            return Res.Get("WelcomeMsg");
+            context.HttpContext.Response.Redirect("index.html");
+            base.OnActionExecuting(context);
         }
+
     }
 }

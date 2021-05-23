@@ -33,7 +33,6 @@
     <ProjectReference Include="..\..\Common\Cdy.Tag.Consume\Cdy.Tag.Consume.csproj" />
     <ProjectReference Include="..\..\Common\Cdy.Tag.Driver\Cdy.Tag.Driver.csproj" />
     <ProjectReference Include="..\..\Common\Cdy.Tag.Network\Cdy.Tag.Network.csproj" />
-    <ProjectReference Include="..\..\Common\DotNettyCore\DotNettyCore.csproj" />
     <ProjectReference Include="..\DBHisData\DBHisData.csproj" />
     <ProjectReference Include="..\DBRuntime.Real\DBRuntime.Real.csproj" />
   </ItemGroup>

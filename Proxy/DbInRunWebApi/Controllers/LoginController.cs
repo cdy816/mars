@@ -5,14 +5,23 @@ using System.Threading.Tasks;
 using DbInRunWebApi.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using NSwag.Annotations;
 
 namespace DbInRunWebApi.Controllers
 {
+    /// <summary>
+    /// 
+    /// </summary>
     [Route("[controller]")]
     [ApiController]
+    [OpenApiTag("登录服务", Description = "登录服务")]
     public class LoginController : ControllerBase
     {
-        // POST: Login
+        /// <summary>
+        /// 登录
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         [HttpPost("TryLogin")]
         public LoginResponse Login([FromBody] LoginUser user)
         {
@@ -29,9 +38,9 @@ namespace DbInRunWebApi.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 心跳，维持用户在线
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="token"></param>
         /// <returns></returns>
         [HttpPost("Hart")]
         public bool Hart([FromBody] Requestbase token)
@@ -51,9 +60,9 @@ namespace DbInRunWebApi.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 登出
         /// </summary>
-        /// <param name="user"></param>
+        /// <param name="token"></param>
         /// <returns></returns>
         [HttpPost("Logout")]
         public bool Logout([FromBody] Requestbase token)

@@ -6,11 +6,16 @@ using Cdy.Tag;
 using DbInRunWebApi.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using NSwag.Annotations;
 
 namespace DbInRunWebApi.Controllers
 {
+    /// <summary>
+    /// 
+    /// </summary>
     [ApiController]
     [Route("[controller]")]
+    [OpenApiTag("变量历史值服务", Description = "变量历史值服务")]
     public class HisDataController : ControllerBase
     {
         /// <summary>
@@ -75,7 +80,7 @@ namespace DbInRunWebApi.Controllers
             return time.Select(e => DateTime.Parse(e)).ToList();
         }
         /// <summary>
-        /// 
+        /// 获取变量指定时间点上的历史值
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -193,7 +198,7 @@ namespace DbInRunWebApi.Controllers
 
 
         /// <summary>
-        /// 
+        /// 获取一个时间段内,指定时间间隔上的变量的历史值
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -319,7 +324,7 @@ namespace DbInRunWebApi.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 获取一个时间段内,变量记录的所有历史值
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -480,7 +485,7 @@ namespace DbInRunWebApi.Controllers
         }
 
         /// <summary>
-        /// 获取统计信息，通过时间点
+        /// 获取指定时间点上的变量的统计信息
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>

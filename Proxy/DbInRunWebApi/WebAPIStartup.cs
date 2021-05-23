@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using DBRuntime.Proxy;
 using Microsoft.AspNetCore.Builder;
@@ -14,16 +16,72 @@ using Microsoft.Extensions.Logging;
 
 namespace DbInRunWebApi
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class WebAPIStartup
     {
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers().AddJsonOptions(configure =>
+            {
+                configure.JsonSerializerOptions.Converters.Add(new DatetimeJsonConverter());
+            });
+            services.AddSwaggerDocument(config=> {
+                config.PostProcess = document =>
+                {
+                    document.Info.Title = "Mars Web api";
+                    document.Info.Description = "Mars Web api";
+                    document.Info.Version = "v1";
+                    document.Info.TermsOfService = "None";
+                    document.Info.Contact = new NSwag.OpenApiContact() { Url = "https://github.com/cdy816/mars", Email = "cdy816@hotmail.com" };
+                };
+                
+            });
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        public class DatetimeJsonConverter : JsonConverter<DateTime>
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="reader"></param>
+            /// <param name="typeToConvert"></param>
+            /// <param name="options"></param>
+            /// <returns></returns>
+            public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                if (reader.TokenType == JsonTokenType.String)
+                {
+                    if (DateTime.TryParse(reader.GetString(), out DateTime date))
+                        return date;
+                }
+                return reader.GetDateTime();
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="writer"></param>
+            /// <param name="value"></param>
+            /// <param name="options"></param>
+            public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+            {
+                writer.WriteStringValue(value.ToString("yyyy-MM-dd HH:mm:ss"));
+            }
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="env"></param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -37,6 +95,13 @@ namespace DbInRunWebApi
 
             app.UseAuthorization();
 
+            app.UseStaticFiles();
+
+            DefaultFilesOptions defaultFilesOptions = new DefaultFilesOptions();
+            defaultFilesOptions.DefaultFileNames.Clear();
+            defaultFilesOptions.DefaultFileNames.Add("index.html");
+            app.UseDefaultFiles(defaultFilesOptions);
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
@@ -45,6 +110,12 @@ namespace DbInRunWebApi
                     name: "default",
                    pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            app.UseOpenApi();
+            app.UseSwaggerUi3((setting0=> {
+                setting0.DocumentTitle = "Mars database web api access document";
+            }));
+
             DatabaseRunner.Manager.Load();
             DatabaseRunner.Manager.Start();
         }

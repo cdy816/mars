@@ -1,0 +1,539 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>DbWebApi</name>
+    </assembly>
+    <members>
+        <member name="T:DbInRunWebApi.Controllers.HisDataController">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.ProcessResult``1(System.String,System.Object)">
+            <summary>
+            
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="tagname"></param>
+            <param name="datas"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.Get(DbInRunWebApi.Model.HisDataRequest)">
+            <summary>
+            获取变量指定时间点上的历史值
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.GetByTimeSpan(DbInRunWebApi.Model.HisDataRequest2)">
+            <summary>
+            获取一个时间段内,指定时间间隔上的变量的历史值
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.GetAllValue(DbInRunWebApi.Model.AllHisDataRequest)">
+            <summary>
+            获取一个时间段内,变量记录的所有历史值
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.GetStatisticsValue(DbInRunWebApi.Model.AllHisDataRequest)">
+            <summary>
+            获取统计信息
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.GetStatisticsValueByTimeSpan(DbInRunWebApi.Model.StatisticsDataRequest)">
+            <summary>
+            获取指定时间点上的变量的统计信息
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="T:DbInRunWebApi.Controllers.LoginController">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.LoginController.Login(DbInRunWebApi.Model.LoginUser)">
+            <summary>
+            登录
+            </summary>
+            <param name="user"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.LoginController.Hart(DbInRunWebApi.Model.Requestbase)">
+            <summary>
+            心跳，维持用户在线
+            </summary>
+            <param name="token"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.LoginController.Logout(DbInRunWebApi.Model.Requestbase)">
+            <summary>
+            登出
+            </summary>
+            <param name="token"></param>
+            <returns></returns>
+        </member>
+        <member name="T:DbInRunWebApi.Controllers.RealDataController">
+            <summary>
+            Real data service
+            </summary>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.RealDataController.Get(DbInRunWebApi.Model.RealDataRequest)">
+            <summary>
+            获取变量的实时值(值、时间、质量戳)
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.RealDataController.GetValueOnly(DbInRunWebApi.Model.RealDataRequest)">
+            <summary>
+            只获取变量的实时值
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.RealDataController.GetValueAndQuality(DbInRunWebApi.Model.RealDataRequest)">
+            <summary>
+            获取变量的实时值、质量戳
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.RealDataController.GetGroupName(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="tag"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.RealDataController.Post(DbInRunWebApi.Model.RealDataSetRequest)">
+            <summary>
+            更新变量的值
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="P:DbInRunWebApi.Model.LoginUser.UserName">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.LoginUser.Password">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.RealValue">
+            <summary>
+            实时值
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.RealValue.Time">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.RealValue.Quality">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.RealValue.Value">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.RealValueAndQuality.Quality">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.RealValueAndQuality.Value">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.HisValue">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.HisValue.tagName">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.HisValue.Values">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.ValueItem.Time">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.ValueItem.Value">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.ValueItem.Quality">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.StatisticsValue">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.StatisticsValue.tagName">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.StatisticsValue.Values">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.StatisticsValueItem.Time">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.StatisticsValueItem.AvgValue">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.StatisticsValueItem.MaxValueTime">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.StatisticsValueItem.MaxValue">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.StatisticsValueItem.MinValueTime">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.StatisticsValueItem.MinValue">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.RealValueQueryResponse">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.RealValueQueryResponse.Datas">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.RealValueAndQualityQueryResponse.Datas">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.RealValueOnlyQueryResponse.Datas">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.RealDataSetResponse.SetResults">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.HisValueQueryResponse">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.HisValueQueryResponse.Datas">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.ResponseBase">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.ResponseBase.Result">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.ResponseBase.ErroMessage">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.ReponseBase.Token">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.LoginResponse.LoginTime">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.LoginResponse.TimeOut">
+            <summary>
+            超时时间
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.LoginResponse.Result">
+            <summary>
+            结果
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.Requestbase">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.Requestbase.Token">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.Requestbase.Time">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.Requestbase2.Token">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.RealDataRequest.Group">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.RealDataRequest.TagNames">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.RealDataSetRequest">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.RealDataSetRequest.Values">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.HisDataRequest">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.HisDataRequest.TagName">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.HisDataRequest.Times">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.HisDataRequest2">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.HisDataRequest2.MatchType">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.HisDataRequest2.TagName">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.HisDataRequest2.StartTime">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.HisDataRequest2.EndTime">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.HisDataRequest2.Duration">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.StatisticsDataRequest">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.StatisticsDataRequest.TagName">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.StatisticsDataRequest.StartTime">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.StatisticsDataRequest.EndTime">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.StatisticsDataRequest.Duration">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.AllHisDataRequest.TagName">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.AllHisDataRequest.StartTime">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.AllHisDataRequest.EndTime">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:DbInRunWebApi.SecurityManager.Manager">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:DbInRunWebApi.SecurityManager.mSuperUsers">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DbInRunWebApi.SecurityManager.IsLogin(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="token"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbInRunWebApi.SecurityManager.CheckWritePermission(System.String,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="token"></param>
+            <param name="group"></param>
+            <param name="isEnableWrite"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbInRunWebApi.SecurityManager.CheckReaderPermission(System.String,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="token"></param>
+            <param name="group"></param>
+            <returns></returns>
+        </member>
+        <member name="T:DbInRunWebApi.WebAPIStartup">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DbInRunWebApi.WebAPIStartup.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            
+            </summary>
+            <param name="services"></param>
+        </member>
+        <member name="T:DbInRunWebApi.WebAPIStartup.DatetimeJsonConverter">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DbInRunWebApi.WebAPIStartup.DatetimeJsonConverter.Read(System.Text.Json.Utf8JsonReader@,System.Type,System.Text.Json.JsonSerializerOptions)">
+            <summary>
+            
+            </summary>
+            <param name="reader"></param>
+            <param name="typeToConvert"></param>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbInRunWebApi.WebAPIStartup.DatetimeJsonConverter.Write(System.Text.Json.Utf8JsonWriter,System.DateTime,System.Text.Json.JsonSerializerOptions)">
+            <summary>
+            
+            </summary>
+            <param name="writer"></param>
+            <param name="value"></param>
+            <param name="options"></param>
+        </member>
+        <member name="M:DbInRunWebApi.WebAPIStartup.Configure(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IWebHostEnvironment)">
+            <summary>
+            
+            </summary>
+            <param name="app"></param>
+            <param name="env"></param>
+        </member>
+        <member name="T:DbWebApiProxy.Controllers.HomeController">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DbWebApiProxy.Controllers.HomeController.OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext)">
+            <summary>
+            
+            </summary>
+            <param name="context"></param>
+        </member>
+        <member name="T:DbWebApi.Properties.Resources">
+            <summary>
+              一个强类型的资源类，用于查找本地化的字符串等。
+            </summary>
+        </member>
+        <member name="P:DbWebApi.Properties.Resources.ResourceManager">
+            <summary>
+              返回此类使用的缓存的 ResourceManager 实例。
+            </summary>
+        </member>
+        <member name="P:DbWebApi.Properties.Resources.Culture">
+            <summary>
+              重写当前线程的 CurrentUICulture 属性
+              重写当前线程的 CurrentUICulture 属性。
+            </summary>
+        </member>
+        <member name="P:DbWebApi.Properties.Resources.WelcomeMsg">
+            <summary>
+              查找类似 Welcome to  Web Api of Mars high performance realtime iot database 的本地化字符串。
+            </summary>
+        </member>
+    </members>
+</doc>

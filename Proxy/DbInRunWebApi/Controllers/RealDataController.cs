@@ -6,15 +6,20 @@ using Cdy.Tag;
 using DbInRunWebApi.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using NSwag.Annotations;
 
 namespace DbInRunWebApi.Controllers
 {
+    /// <summary>
+    /// Real data service
+    /// </summary>
     [ApiController]
     [Route("[controller]")]
+    [OpenApiTag("实时数据服务", Description = "实时数据服务")]
     public class RealDataController : ControllerBase
     {
         /// <summary>
-        /// 
+        /// 获取变量的实时值(值、时间、质量戳)
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -34,7 +39,7 @@ namespace DbInRunWebApi.Controllers
                         DateTime time;
                         byte tagtype = 0;
                         var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
-                        response.Datas.Add(new RealValue() { Quality = quality, Time = time, Value = val });
+                        response.Datas.Add(new RealValue() { Quality = quality, Time = time.ToLocalTime(), Value = val });
                     }
                 }
                 return response;
@@ -43,6 +48,11 @@ namespace DbInRunWebApi.Controllers
             return new RealValueQueryResponse() { Result = false };
         }
 
+        /// <summary>
+        /// 只获取变量的实时值
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpGet("Value")]
         public RealValueOnlyQueryResponse GetValueOnly([FromBody] RealDataRequest request)
         {
@@ -68,7 +78,11 @@ namespace DbInRunWebApi.Controllers
             return new RealValueOnlyQueryResponse() { Result = false };
         }
 
-
+        /// <summary>
+        /// 获取变量的实时值、质量戳
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpGet("ValueAndQuality")]
         public RealValueAndQualityQueryResponse GetValueAndQuality([FromBody] RealDataRequest request)
         {
@@ -109,7 +123,7 @@ namespace DbInRunWebApi.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 更新变量的值
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>

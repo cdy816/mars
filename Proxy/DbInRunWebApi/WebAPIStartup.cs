@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -31,6 +33,14 @@ namespace DbInRunWebApi
             {
                 configure.JsonSerializerOptions.Converters.Add(new DatetimeJsonConverter());
             });
+
+            services.AddResponseCompression(opps => { opps.EnableForHttps = true; opps.Providers.Add<GzipCompressionProvider>(); opps.Providers.Add<BrotliCompressionProvider>(); });
+
+            services.Configure<GzipCompressionProviderOptions>(options =>
+            {
+                options.Level = CompressionLevel.Optimal;
+            });
+
             services.AddSwaggerDocument(config=> {
                 config.PostProcess = document =>
                 {
@@ -89,6 +99,8 @@ namespace DbInRunWebApi
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseResponseCompression();
+
             app.UseHttpsRedirection();
 
             app.UseRouting();
@@ -96,11 +108,6 @@ namespace DbInRunWebApi
             app.UseAuthorization();
 
             app.UseStaticFiles();
-
-            //DefaultFilesOptions defaultFilesOptions = new DefaultFilesOptions();
-            //defaultFilesOptions.DefaultFileNames.Clear();
-            //defaultFilesOptions.DefaultFileNames.Add("index.html");
-            //app.UseDefaultFiles(defaultFilesOptions);
 
             app.UseEndpoints(endpoints =>
             {
@@ -115,6 +122,8 @@ namespace DbInRunWebApi
             app.UseSwaggerUi3((setting0=> {
                 setting0.DocumentTitle = "Mars database web api access document";
             }));
+
+            
 
             DatabaseRunner.Manager.Load();
             DatabaseRunner.Manager.Start();

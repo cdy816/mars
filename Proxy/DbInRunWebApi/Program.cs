@@ -11,6 +11,9 @@ using Microsoft.Extensions.Logging;
 
 namespace DbInRunWebApi
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class Program
     {
         static int Port = 14331;
@@ -33,6 +36,10 @@ namespace DbInRunWebApi
             return 14331;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="args"></param>
         public static void Main(string[] args)
         {
             Port = ReadServerPort();
@@ -40,6 +47,11 @@ namespace DbInRunWebApi
             CreateHostBuilder(args).Build().Run();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>

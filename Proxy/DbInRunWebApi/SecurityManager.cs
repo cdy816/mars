@@ -48,7 +48,10 @@ namespace DbInRunWebApi
         /// <returns></returns>
         public bool IsLogin(string token)
         {
-            return ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(token);
+            var rss = ServiceLocator.Locator.Resolve<IRuntimeSecurity>();
+            if(rss!=null)
+            return rss.CheckLogin(token);
+            return false;
         }
 
         /// <summary>
@@ -56,7 +59,6 @@ namespace DbInRunWebApi
         /// </summary>
         /// <param name="token"></param>
         /// <param name="group"></param>
-        /// <param name="isEnableWrite"></param>
         /// <returns></returns>
         public bool CheckWritePermission(string token,string group)
         {

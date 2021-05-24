@@ -265,7 +265,9 @@ namespace DbInRunWebApi.Model
         #endregion ...Interfaces...
     }
 
-
+    /// <summary>
+    /// 
+    /// </summary>
     public class RealValueAndQualityQueryResponse : ResponseBase
     {
 
@@ -296,7 +298,9 @@ namespace DbInRunWebApi.Model
 
         #endregion ...Interfaces...
     }
-
+    /// <summary>
+    /// 
+    /// </summary>
     public class RealValueOnlyQueryResponse : ResponseBase
     {
 
@@ -328,6 +332,9 @@ namespace DbInRunWebApi.Model
         #endregion ...Interfaces...
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public class RealDataSetResponse : ResponseBase
     {
 

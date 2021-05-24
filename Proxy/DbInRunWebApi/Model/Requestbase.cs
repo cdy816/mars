@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace DbInRunWebApi.Model
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class ReponseBase
     {
 
@@ -37,6 +40,9 @@ namespace DbInRunWebApi.Model
         #endregion ...Interfaces...
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public class LoginResponse:ReponseBase
     {
 
@@ -255,7 +261,9 @@ namespace DbInRunWebApi.Model
         #endregion ...Constructor...
 
         #region ... Properties ...
-
+        /// <summary>
+        /// 值的拟合方式
+        /// </summary>
         public QueryValueMatchType MatchType { get; set; }
 
         /// <summary>

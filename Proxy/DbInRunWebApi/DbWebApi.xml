@@ -285,12 +285,27 @@
             
             </summary>
         </member>
+        <member name="T:DbInRunWebApi.Model.RealValueAndQualityQueryResponse">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="P:DbInRunWebApi.Model.RealValueAndQualityQueryResponse.Datas">
             <summary>
             
             </summary>
         </member>
+        <member name="T:DbInRunWebApi.Model.RealValueOnlyQueryResponse">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="P:DbInRunWebApi.Model.RealValueOnlyQueryResponse.Datas">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.RealDataSetResponse">
             <summary>
             
             </summary>
@@ -325,7 +340,17 @@
             
             </summary>
         </member>
+        <member name="T:DbInRunWebApi.Model.ReponseBase">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="P:DbInRunWebApi.Model.ReponseBase.Token">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.LoginResponse">
             <summary>
             
             </summary>
@@ -398,6 +423,11 @@
         <member name="T:DbInRunWebApi.Model.HisDataRequest">
             <summary>
             
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.HisDataRequest.MatchType">
+            <summary>
+            值的拟合方式
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.HisDataRequest.TagName">
@@ -555,6 +585,24 @@
             
             </summary>
         </member>
+        <member name="T:DbInRunWebApi.Program">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DbInRunWebApi.Program.Main(System.String[])">
+            <summary>
+            
+            </summary>
+            <param name="args"></param>
+        </member>
+        <member name="M:DbInRunWebApi.Program.CreateHostBuilder(System.String[])">
+            <summary>
+            
+            </summary>
+            <param name="args"></param>
+            <returns></returns>
+        </member>
         <member name="F:DbInRunWebApi.SecurityManager.Manager">
             <summary>
             
@@ -578,7 +626,6 @@
             </summary>
             <param name="token"></param>
             <param name="group"></param>
-            <param name="isEnableWrite"></param>
             <returns></returns>
         </member>
         <member name="M:DbInRunWebApi.SecurityManager.CheckReaderPermission(System.String,System.String)">

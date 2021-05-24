@@ -51,7 +51,9 @@ namespace DbInRunWebApi.Model
         #endregion ...Interfaces...
     }
 
-
+    /// <summary>
+    /// 
+    /// </summary>
     public class RealValueAndQuality
     {
 
@@ -131,7 +133,9 @@ namespace DbInRunWebApi.Model
         #endregion ...Interfaces...
     }
 
-
+    /// <summary>
+    /// 
+    /// </summary>
     public class ValueItem
     {
 
@@ -188,7 +192,9 @@ namespace DbInRunWebApi.Model
         public List<StatisticsValueItem> Values { get; set; } = new List<StatisticsValueItem>();
     }
 
-
+    /// <summary>
+    /// 
+    /// </summary>
     public class StatisticsValueItem
     {
         /// <summary>

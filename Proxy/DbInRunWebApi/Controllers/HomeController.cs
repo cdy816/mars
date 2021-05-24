@@ -18,6 +18,14 @@ namespace DbWebApiProxy.Controllers
         /// <summary>
         /// 
         /// </summary>
+        public void Index()
+        {
+            return;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="context"></param>
         public override void OnActionExecuting(ActionExecutingContext context)
         {

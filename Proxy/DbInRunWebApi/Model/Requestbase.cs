@@ -123,6 +123,9 @@ namespace DbInRunWebApi.Model
         #endregion ...Interfaces...
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public class Requestbase2
     {
 
@@ -156,6 +159,9 @@ namespace DbInRunWebApi.Model
         #endregion ...Interfaces...
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public class RealDataRequest:Requestbase
     {
 
@@ -276,6 +282,52 @@ namespace DbInRunWebApi.Model
     /// <summary>
     /// 
     /// </summary>
+    public class MutiTagHisDataRequest : Requestbase
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public QueryValueMatchType MatchType { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<string> TagNames { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<string> Times { get; set; }
+
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
     public class HisDataRequest2 : Requestbase
     {
 
@@ -302,6 +354,64 @@ namespace DbInRunWebApi.Model
         /// 
         /// </summary>
         public string TagName { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string StartTime { get; set; }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string EndTime { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Duration { get; set; }
+
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class MutiTagHisDataRequest2 : Requestbase
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public QueryValueMatchType MatchType { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<string> TagNames { get; set; }
 
         /// <summary>
         /// 
@@ -383,6 +493,9 @@ namespace DbInRunWebApi.Model
         #endregion ...Interfaces...
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public class AllHisDataRequest : Requestbase
     {
 
@@ -405,6 +518,55 @@ namespace DbInRunWebApi.Model
         /// 
         /// </summary>
         public string TagName { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string StartTime { get; set; }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string EndTime { get; set; }
+
+
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class AllMutiTagHisDataRequest : Requestbase
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<string> TagNames { get; set; }
 
         /// <summary>
         /// 

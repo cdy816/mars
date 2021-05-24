@@ -196,6 +196,123 @@ namespace DbInRunWebApi.Controllers
             }
         }
 
+        /// <summary>
+        /// 获取多个变量指定时间点上的历史值
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpGet("GetMutiTagHisValueAtTimes")]
+        public List<HisValue> GetMutiTagHisValueAtTimes([FromBody] MutiTagHisDataRequest request)
+        {
+            if (!DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))
+            {
+                return new List<HisValue>() { new HisValue() { Result = false, ErroMessage = "not login" } };
+            }
+            try
+            {
+                List<HisValue> re = new List<HisValue>();
+                foreach (var vv in request.TagNames)
+                {
+                    var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(vv);
+                    if (tag == null) return null;
+                    object res;
+                    HisValue revals = null;
+                    switch (tag.Type)
+                    {
+                        case Cdy.Tag.TagType.Bool:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<bool>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<bool>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Byte:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<byte>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<byte>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.DateTime:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<DateTime>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<DateTime>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Double:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<double>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<double>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Float:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<float>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<float>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Int:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<int>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<int>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Long:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<long>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<long>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Short:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<short>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<short>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.String:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<string>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<string>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.UInt:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<uint>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<uint>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.ULong:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<ulong>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<ulong>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.UShort:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<ushort>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<ushort>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.IntPoint:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<IntPointData>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<IntPointData>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.UIntPoint:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<UIntPointData>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<UIntPointData>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.IntPoint3:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<IntPoint3Data>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<IntPoint3Data>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.UIntPoint3:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<UIntPoint3Data>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<UIntPoint3Data>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.LongPoint:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<LongPointData>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<LongPointData>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.ULongPoint:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<ULongPointTag>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<ULongPointData>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.LongPoint3:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<LongPoint3Data>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<LongPoint3Data>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.ULongPoint3:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<ULongPoint3Data>(tag.Id, ConvertToTimes(request.Times), request.MatchType);
+                            revals = ProcessResult<ULongPoint3Data>(vv, res);
+                            break;
+                    }
+
+                    if (revals != null)
+                    {
+                        re.Add(revals);
+                    }
+                }
+                return re;
+            }
+            catch (Exception ex)
+            {
+                return new List<HisValue>() { new HisValue() { Result = false, ErroMessage = ex.Message } };
+            }
+        }
 
         /// <summary>
         /// 获取一个时间段内,指定时间间隔上的变量的历史值
@@ -311,6 +428,126 @@ namespace DbInRunWebApi.Controllers
                 return new HisValue() { Result = false, ErroMessage = ex.Message, tagName = request.TagName };
             }
 
+        }
+
+
+
+        /// <summary>
+        /// 获取多个变量一个时间段内,指定时间间隔上的历史值
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpGet("GetMutiTagHisDataByTimeSpan")]
+        public List<HisValue> GetMutiTagHisDataByTimeSpan([FromBody] MutiTagHisDataRequest2 request)
+        {
+            if (!DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))
+            {
+                return new List< HisValue >{new HisValue() { Result = false, ErroMessage = "not login" }};
+            }
+            try
+            {
+                List<HisValue> re = new List<HisValue>();
+                foreach (var vv in request.TagNames)
+                {
+                    var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(vv);
+                    if (tag == null) return null;
+                    object res;
+                    HisValue revals = null;
+                    switch (tag.Type)
+                    {
+                        case Cdy.Tag.TagType.Bool:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<bool>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<bool>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Byte:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<byte>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<byte>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.DateTime:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<DateTime>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<DateTime>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Double:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<double>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<double>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Float:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<float>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<float>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Int:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<int>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<int>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Long:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<long>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<long>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Short:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<short>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<short>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.String:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<string>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<string>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.UInt:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<uint>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<uint>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.ULong:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<ulong>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<ulong>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.UShort:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<ushort>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<ushort>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.IntPoint:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<IntPointData>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<IntPointData>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.UIntPoint:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<UIntPointData>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<UIntPointData>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.IntPoint3:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<IntPoint3Data>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<IntPoint3Data>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.UIntPoint3:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<UIntPoint3Data>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<UIntPoint3Data>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.LongPoint:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<LongPointData>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<LongPointData>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.ULongPoint:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<ULongPointTag>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<ULongPointData>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.LongPoint3:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<LongPoint3Data>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<LongPoint3Data>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.ULongPoint3:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<ULongPoint3Data>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), ConvertToTimeSpan(request.Duration), request.MatchType);
+                            revals = ProcessResult<ULongPoint3Data>(vv, res);
+                            break;
+                    }
+
+                    if (revals != null)
+                        re.Add(revals);
+                    
+                }
+
+                return re;
+            }
+            catch (Exception ex)
+            {
+                return new List<HisValue> { new HisValue() { Result = false, ErroMessage = ex.Message } };
+            }
         }
 
         private DateTime ConvertToDateTime(string time)
@@ -438,6 +675,127 @@ namespace DbInRunWebApi.Controllers
             }
         }
 
+
+        /// <summary>
+        /// 获取多个变量时间段内,记录的所有历史值
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpGet("GetMutiTagAllValue")]
+        public List<HisValue> GetMutiTagAllValue([FromBody] AllMutiTagHisDataRequest request)
+        {
+            if (!DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))
+            {
+                return new List<HisValue>(){ new HisValue() { Result = false, ErroMessage = "not login" }};
+            }
+
+            List<HisValue> re = new List<HisValue>();
+
+            foreach(var vv in request.TagNames)
+            {
+                try
+                {
+                    var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(vv);
+                    if (tag == null) return null;
+                    object res;
+                    HisValue revals = null;
+                    switch (tag.Type)
+                    {
+                        case Cdy.Tag.TagType.Bool:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<bool>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<bool>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Byte:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<byte>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<byte>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.DateTime:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<DateTime>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<DateTime>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Double:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<double>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<double>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Float:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<float>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<float>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Int:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<int>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<int>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Long:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<long>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<long>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.Short:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<short>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<short>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.String:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<string>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<string>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.UInt:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<uint>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<uint>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.ULong:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<ulong>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<ulong>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.UShort:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<ushort>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<ushort>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.IntPoint:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<int>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<IntPointData>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.UIntPoint:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<uint>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<UIntPointData>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.IntPoint3:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<IntPoint3Data>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<IntPoint3Data>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.UIntPoint3:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<UIntPoint3Data>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<UIntPoint3Data>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.LongPoint:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<LongPointData>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<LongPointData>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.ULongPoint:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<ULongPointTag>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<ULongPointData>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.LongPoint3:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<LongPoint3Data>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<LongPoint3Data>(vv, res);
+                            break;
+                        case Cdy.Tag.TagType.ULongPoint3:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisData<ULongPoint3Data>(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                            revals = ProcessResult<ULongPoint3Data>(vv, res);
+                            break;
+                    }
+
+                    if (revals != null)
+                        re.Add(revals);
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                
+            }
+
+            return re;
+
+        }
 
         /// <summary>
         /// 获取统计信息

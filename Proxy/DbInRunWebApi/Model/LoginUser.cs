@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace DbInRunWebApi.Model
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class LoginUser
     {
         #region ... Variables  ...

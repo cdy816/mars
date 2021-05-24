@@ -25,6 +25,13 @@
             <param name="request"></param>
             <returns></returns>
         </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.GetMutiTagHisValueAtTimes(DbInRunWebApi.Model.MutiTagHisDataRequest)">
+            <summary>
+            获取多个变量指定时间点上的历史值
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
         <member name="M:DbInRunWebApi.Controllers.HisDataController.GetByTimeSpan(DbInRunWebApi.Model.HisDataRequest2)">
             <summary>
             获取一个时间段内,指定时间间隔上的变量的历史值
@@ -32,9 +39,23 @@
             <param name="request"></param>
             <returns></returns>
         </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.GetMutiTagHisDataByTimeSpan(DbInRunWebApi.Model.MutiTagHisDataRequest2)">
+            <summary>
+            获取多个变量一个时间段内,指定时间间隔上的历史值
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
         <member name="M:DbInRunWebApi.Controllers.HisDataController.GetAllValue(DbInRunWebApi.Model.AllHisDataRequest)">
             <summary>
             获取一个时间段内,变量记录的所有历史值
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.GetMutiTagAllValue(DbInRunWebApi.Model.AllMutiTagHisDataRequest)">
+            <summary>
+            获取多个变量时间段内,记录的所有历史值
             </summary>
             <param name="request"></param>
             <returns></returns>
@@ -119,6 +140,11 @@
             <param name="request"></param>
             <returns></returns>
         </member>
+        <member name="T:DbInRunWebApi.Model.LoginUser">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="P:DbInRunWebApi.Model.LoginUser.UserName">
             <summary>
             
@@ -149,6 +175,11 @@
             
             </summary>
         </member>
+        <member name="T:DbInRunWebApi.Model.RealValueAndQuality">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="P:DbInRunWebApi.Model.RealValueAndQuality.Quality">
             <summary>
             
@@ -170,6 +201,11 @@
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.HisValue.Values">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.ValueItem">
             <summary>
             
             </summary>
@@ -200,6 +236,11 @@
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.StatisticsValue.Values">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.StatisticsValueItem">
             <summary>
             
             </summary>
@@ -319,7 +360,17 @@
             
             </summary>
         </member>
+        <member name="T:DbInRunWebApi.Model.Requestbase2">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="P:DbInRunWebApi.Model.Requestbase2.Token">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.RealDataRequest">
             <summary>
             
             </summary>
@@ -359,6 +410,26 @@
             
             </summary>
         </member>
+        <member name="T:DbInRunWebApi.Model.MutiTagHisDataRequest">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest.MatchType">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest.TagNames">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest.Times">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="T:DbInRunWebApi.Model.HisDataRequest2">
             <summary>
             
@@ -389,6 +460,36 @@
             
             </summary>
         </member>
+        <member name="T:DbInRunWebApi.Model.MutiTagHisDataRequest2">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest2.MatchType">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest2.TagNames">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest2.StartTime">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest2.EndTime">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest2.Duration">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="T:DbInRunWebApi.Model.StatisticsDataRequest">
             <summary>
             
@@ -414,6 +515,11 @@
             
             </summary>
         </member>
+        <member name="T:DbInRunWebApi.Model.AllHisDataRequest">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="P:DbInRunWebApi.Model.AllHisDataRequest.TagName">
             <summary>
             
@@ -425,6 +531,26 @@
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.AllHisDataRequest.EndTime">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.AllMutiTagHisDataRequest">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.AllMutiTagHisDataRequest.TagNames">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.AllMutiTagHisDataRequest.StartTime">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.AllMutiTagHisDataRequest.EndTime">
             <summary>
             
             </summary>
@@ -504,6 +630,11 @@
             <param name="env"></param>
         </member>
         <member name="T:DbWebApiProxy.Controllers.HomeController">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DbWebApiProxy.Controllers.HomeController.Index">
             <summary>
             
             </summary>

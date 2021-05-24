@@ -16,7 +16,6 @@
     <ProjectReference Include="..\..\Common\Cdy.Tag.Driver\Cdy.Tag.Driver.csproj" />
     <ProjectReference Include="..\..\Common\Cdy.Tag.Network\Cdy.Tag.Network.csproj" />
     <ProjectReference Include="..\..\Common\Cdy.Tag\Cdy.Tag.csproj" />
-    <ProjectReference Include="..\..\Common\DotNettyCore\DotNettyCore.csproj" />
     <ProjectReference Include="..\DBRuntime.Real\DBRuntime.Real.csproj" />
     <ProjectReference Include="..\DBRunTime.ServiceApi\DBRunTime.ServiceApi.csproj" />
   </ItemGroup>

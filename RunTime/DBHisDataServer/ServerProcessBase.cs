@@ -78,6 +78,19 @@ namespace DBRuntime.Api
         /// <param name="id"></param>
         /// <param name="value"></param>
         /// <returns></returns>
+        protected ByteBuffer ToByteBuffer(byte id, long value)
+        {
+            var re = Parent.Allocate(id, 8);
+            re.Write(value);
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         protected ByteBuffer ToByteBuffer(byte id, byte value)
         {
             var re = Parent.Allocate(ApiFunConst.TagInfoRequest, 1);

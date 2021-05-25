@@ -65,6 +65,8 @@ namespace DBHisDataServer
         private bool Init(string database)
         {
 
+            ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
+
             if (System.IO.Path.IsPathRooted(database))
             {
                 this.mDatabaseName = System.IO.Path.GetFileNameWithoutExtension(database);
@@ -136,7 +138,7 @@ namespace DBHisDataServer
             {
                 return;
             }
-            DBRuntime.Api.DataService.Service.Start(14331);
+            DBRuntime.Api.DataService.Service.Start(14329);
             //mSecurityRunner.Start();
             mIsStarted = true;
         }

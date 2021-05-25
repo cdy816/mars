@@ -126,7 +126,7 @@ namespace DBRuntime.Proxy
             {
                 if (!mHisClient.IsConnected)
                 {
-                    mHisClient.Open(mIp, mPort + 1);
+                    mHisClient.Open(mIp, mPort - 1);
                 }
                 else
                 {
@@ -210,7 +210,7 @@ namespace DBRuntime.Proxy
                         mHisClient.Login(UserName, Password);
                     //IsConnected = mHisClient.IsConnected;
                 }
-                OnPropertyChanged(e.PropertyName);
+                //OnPropertyChanged(e.PropertyName);
             }
         }
 
@@ -254,7 +254,7 @@ namespace DBRuntime.Proxy
             dbClient.Open(ip, port);
             if (IsUseStandardHisDataServer)
             {
-                mHisClient.Open(ip, port + 1);
+                mHisClient.Open(ip, port - 1);
 
             }
             //mScanThread = new Thread(ConnectProcess);

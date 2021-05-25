@@ -66,21 +66,10 @@ namespace DBRuntime.Api
                 case Login:
                     string user = data.ReadString();
                     string pass = data.ReadString();
-                    string result = Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().Login(user, pass);
-                    if (!string.IsNullOrEmpty(result))
-                    {
-                        Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest,result));
-                    }
-                    else
-                    {
-                        Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, ""));
-                    }
+                    long result = Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().Login(user, pass,client);
+                    Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, result));
                     break;
-
-
             }
-
-           
         }
 
         #endregion ...Methods...

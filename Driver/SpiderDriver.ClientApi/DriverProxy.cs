@@ -1407,15 +1407,24 @@ namespace SpiderDriver.ClientApi
                                     int total = vdata.ReadShort();
                                     int icount = vdata.ReadShort();
                                     int tcount = vdata.ReadInt();
+                                    string name = "";
                                     for (int i = 0; i < tcount; i++)
                                     {
                                         var id = vdata.ReadInt();
-                                        var name = vdata.ReadString();
+                                        if(id==0)
+                                        {
+                                            Debug.Print("数据错误:" + id);
+                                        }
+                                         name = vdata.ReadString();
                                         var type = vdata.ReadByte();
                                         if (!re.ContainsKey(id))
                                         {
                                             re.Add(id, new Tuple<string, byte>(name, type));
                                         }
+                                        //else
+                                        //{
+                                        //    Debug.Print("重复ID"+id);
+                                        //}
                                     }
 
                                     lock (mInfoRequreData)

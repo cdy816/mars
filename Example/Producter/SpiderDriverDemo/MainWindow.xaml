@@ -24,6 +24,7 @@
         <Label Content="{Binding DateTimeValue}" HorizontalAlignment="Left" Margin="102,247,0,0" VerticalAlignment="Top" Width="136"/>
         <Button x:Name="hisDataWrite" Content="手动历史数据写入" HorizontalAlignment="Left" Margin="502,111,0,0" VerticalAlignment="Top" Width="107" Click="hisDataWrite_Click"/>
         <Button x:Name="HisStart" Content="实时历史数据" HorizontalAlignment="Left" Margin="502,71,0,0" VerticalAlignment="Top" Width="107" Click="HisStart_Click"/>
+        <Label x:Name="fshs" Content="发送耗时:" HorizontalAlignment="Left" Margin="16,292,0,0" VerticalAlignment="Top"/>
 
     </Grid>
 </Window>

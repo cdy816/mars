@@ -235,7 +235,7 @@ namespace SpiderDriver
         /// <returns></returns>
         private ByteBuffer GetTagBuffer(IEnumerable<Tagbase> tags,short bcount,short totalcount)
         {
-            ByteBuffer re = Parent.Allocate(APIConst.TagInfoRequestFun, tags.Count() * 64+9);
+            ByteBuffer re = Parent.Allocate(APIConst.TagInfoRequestFun, tags.Count() * 302+9);
             re.Write(QueryAllTagNameAndIds);
             re.Write(totalcount);
             re.Write(bcount);

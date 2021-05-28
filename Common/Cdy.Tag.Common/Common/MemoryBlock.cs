@@ -1673,7 +1673,7 @@ namespace Cdy.Tag
                     var count = vv.Item3+ ostt - BufferItemSize;
                     Buffer.BlockCopy(this.mBuffers[vv.Item1], vv.Item2, target.mBuffers[hdt], (int)ostt, (int)(BufferItemSize - ostt));
                     hdt++;
-                    Buffer.BlockCopy(this.mBuffers[vv.Item1], vv.Item2, target.mBuffers[hdt], (int)0, (int)count);
+                    Buffer.BlockCopy(this.mBuffers[vv.Item1], vv.Item2+ (int)(BufferItemSize - ostt), target.mBuffers[hdt], (int)0, (int)count);
                 }
                 targetAddr += vv.Item3;
             }

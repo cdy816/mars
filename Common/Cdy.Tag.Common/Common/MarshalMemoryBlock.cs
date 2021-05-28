@@ -2282,7 +2282,7 @@ namespace Cdy.Tag
                     var count = vv.Item3 + ostt - mBufferItemSize;
                     Buffer.MemoryCopy((void*)(this.mHandles[vv.Item1] + vv.Item2), (void*)(target.mHandles[hdt] + (int)ostt), mBufferItemSize - ostt, (mBufferItemSize - ostt));
                     hdt++;
-                    Buffer.MemoryCopy((void*)(this.mHandles[vv.Item1] + vv.Item2), (void*)(target.mHandles[hdt]), mBufferItemSize, (count));
+                    Buffer.MemoryCopy((void*)(this.mHandles[vv.Item1] + vv.Item2+(int)(mBufferItemSize - ostt)), (void*)(target.mHandles[hdt]), mBufferItemSize, (count));
                 }
                 targetAddr += vv.Item3;
             }

@@ -250,7 +250,7 @@ namespace SpiderDriverDemo
         /// </summary>
         private void ReadAllIds()
         {
-            mAllId = driverProxy.QueryAllTagIdAndNames(600000);
+            mAllId = driverProxy.QueryAllTagIdAndNames(6000000);
 
             if (mAllId.Count > 0)
             {
@@ -376,7 +376,13 @@ namespace SpiderDriverDemo
             if(i % 1000000 != 0)
             driverProxy.SetTagValueAndQuality(rdb);
             sw.Stop();
-            Debug.Print("发送耗时:" + sw.ElapsedMilliseconds +sb.ToString());
+
+            this.Dispatcher.BeginInvoke(new Action(() => {
+
+                this.fshs.Content = "发送耗时:" + sw.ElapsedMilliseconds + sb.ToString();
+            }));
+
+           // Debug.Print("发送耗时:" + sw.ElapsedMilliseconds +sb.ToString());
         }
 
 

@@ -826,8 +826,8 @@ namespace DBRuntime.Api
 
                     if(mBlockCallBackRegistorIds.Count>0)
                     {
-                        Stopwatch sw = new Stopwatch();
-                        sw.Start();
+                        //Stopwatch sw = new Stopwatch();
+                        //sw.Start();
                         int count = 0;
                         BlockItem vv;
                         while (mChangedBlocks.Count>0)
@@ -849,8 +849,8 @@ namespace DBRuntime.Api
                             count++;
                         }
                         Thread.Sleep(10);
-                        sw.Stop();
-                        LoggerService.Service.Erro("RealDataServerProcess", "推送数据耗时" + sw.ElapsedMilliseconds + " 大小:" + count);
+                        //sw.Stop();
+                        //LoggerService.Service.Erro("RealDataServerProcess", "推送数据耗时" + sw.ElapsedMilliseconds + " 大小:" + count);
                     }
                     else
                     {

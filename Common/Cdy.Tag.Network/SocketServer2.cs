@@ -94,22 +94,22 @@ namespace Cdy.Tag
                 try
                 {
                     Open(ip,port);
-                    LoggerService.Service.Info("SocketServer", "Server " + this.Name + " start  at port " + port, ConsoleColor.Cyan);
+                    Console.WriteLine("Server " + this.Name + " start  at port " + port, ConsoleColor.Cyan);
                 }
                 catch (System.Net.Sockets.SocketException se)
                 {
                     if (se.SocketErrorCode == System.Net.Sockets.SocketError.AccessDenied)
                     {
-                        LoggerService.Service.Erro("SocketServer", "启动服务失败,端口 " + port + " 被占用");
+                        Console.WriteLine("SocketServer", "启动服务失败,端口 " + port + " 被占用");
                     }
                     else
                     {
-                        LoggerService.Service.Erro("SocketServer", "在端口 " + port + " 启动服务失败, " + se.Message);
+                        Console.WriteLine("SocketServer", "在端口 " + port + " 启动服务失败, " + se.Message,ConsoleColor.Red);
                     }
                 }
                 catch (Exception ex)
                 {
-                    LoggerService.Service.Erro("SocketServer", "在端口 " + port + " 启动服务失败, " + ex.Message + ex.StackTrace);
+                    Console.WriteLine("SocketServer", "在端口 " + port + " 启动服务失败, " + ex.Message + ex.StackTrace, ConsoleColor.Red);
                 }
             }
         }
@@ -126,22 +126,22 @@ namespace Cdy.Tag
                 try
                 {
                     Open(port);
-                    LoggerService.Service.Info("SocketServer", "Server " + this.Name + " start  at port " + port, ConsoleColor.Cyan);
+                    Console.WriteLine("Server " + this.Name + " start  at port " + port, ConsoleColor.Cyan);
                 }
                 catch (System.Net.Sockets.SocketException se)
                 {
                     if (se.SocketErrorCode == System.Net.Sockets.SocketError.AccessDenied)
                     {
-                        LoggerService.Service.Erro("SocketServer", "启动服务失败,端口 " + port + " 被占用");
+                        Console.WriteLine("SocketServer", "启动服务失败,端口 " + port + " 被占用", ConsoleColor.Red);
                     }
                     else
                     {
-                        LoggerService.Service.Erro("SocketServer", "在端口 " + port + " 启动服务失败, " + se.Message);
+                        Console.WriteLine("SocketServer", "在端口 " + port + " 启动服务失败, " + se.Message, ConsoleColor.Red);
                     }
                 }
                 catch (Exception ex)
                 {
-                    LoggerService.Service.Erro("SocketServer", "在端口 " + port + " 启动服务失败, " + ex.Message + ex.StackTrace);
+                    Console.WriteLine("SocketServer", "在端口 " + port + " 启动服务失败, " + ex.Message + ex.StackTrace, ConsoleColor.Red);
                 }
             }
         }
@@ -193,7 +193,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    LoggerService.Service.Warn("socket server:", "invailed data:" + fun.ToString());
+                    Console.WriteLine("socket server:", "invailed data:" + fun.ToString(),ConsoleColor.Yellow);
                 }
             }
             return base.OnReceiveData(id, data);

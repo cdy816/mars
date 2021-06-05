@@ -17,8 +17,9 @@ namespace DbInRunWebApi
     public class Program
     {
         static int Port = 14331;
+        static bool UseHttps = false;
 
-        private static int ReadServerPort()
+        private static void ReadServerParameter()
         {
             try
             {
@@ -26,14 +27,17 @@ namespace DbInRunWebApi
                 if (System.IO.File.Exists(spath))
                 {
                     XElement xx = XElement.Load(spath);
-                    return int.Parse(xx.Attribute("ServerPort")?.Value);
+                    if(xx.Attribute("UseHttps")!=null)
+                    {
+                        UseHttps = bool.Parse(xx.Attribute("UseHttps").Value);
+                    }
+                    Port = int.Parse(xx.Attribute("ServerPort")?.Value);
                 }
             }
             catch
             {
 
             }
-            return 14331;
         }
 
         /// <summary>
@@ -42,7 +46,7 @@ namespace DbInRunWebApi
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            Port = ReadServerPort();
+             ReadServerParameter();
             WindowConsolHelper.DisbleQuickEditMode();
             CreateHostBuilder(args).Build().Run();
         }
@@ -56,7 +60,14 @@ namespace DbInRunWebApi
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseUrls("https://0.0.0.0:"+Port);
+                    if (UseHttps)
+                    {
+                        webBuilder.UseUrls("https://0.0.0.0:" + Port);
+                    }
+                    else
+                    {
+                        webBuilder.UseUrls("http://0.0.0.0:" + Port);
+                    }
                     webBuilder.UseStartup<WebAPIStartup>();
                 });
     }

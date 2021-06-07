@@ -29,7 +29,7 @@ namespace DbInRunWebApi.Controllers
             if (service != null)
             {
                 string Token = service.Login(user.UserName, user.Password);
-                return new LoginResponse() { Token = Token, Result = !string.IsNullOrEmpty(Token), LoginTime = DateTime.UtcNow.ToBinary(), TimeOut = service.TimeOut};
+                return new LoginResponse() { Token = Token, Result = !string.IsNullOrEmpty(Token), LoginTime = DateTime.Now.ToString(), TimeOut = service.TimeOut};
             }
             else
             {
@@ -43,20 +43,28 @@ namespace DbInRunWebApi.Controllers
         /// <param name="token"></param>
         /// <returns></returns>
         [HttpPost("Hart")]
-        public bool Hart([FromBody] Requestbase token)
+        public ResponseBase Hart([FromBody] Requestbase token)
         {
-            if (string.IsNullOrEmpty(token.Time))
-            {
-                return false;
-            }
-            long ltmp = long.Parse(token.Time);
+            //try
+            //{
+            //    if (string.IsNullOrEmpty(token.Time))
+            //    {
+            //        return false;
+            //    }
+            //    //long ltmp = long.Parse(token.Time);
+            //    DateTime dt = DateTime.Parse(token.Time);
 
-            if ((DateTime.UtcNow - DateTime.FromBinary(ltmp)).TotalSeconds > Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().TimeOut)
-            {
-                return false;
-            }
+            //    if ((DateTime.Now - dt).TotalSeconds > Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().TimeOut)
+            //    {
+            //        return false;
+            //    }
+            //}
+            //catch
+            //{
 
-            return Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().FreshUserId(token.Token);
+            //}
+
+            return new ResponseBase() { Result = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().FreshUserId(token.Token) };
         }
 
         /// <summary>
@@ -65,9 +73,9 @@ namespace DbInRunWebApi.Controllers
         /// <param name="token"></param>
         /// <returns></returns>
         [HttpPost("Logout")]
-        public bool Logout([FromBody] Requestbase token)
+        public ResponseBase Logout([FromBody] Requestbase token)
         {
-            return Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().Logout(token.Token);
+            return new ResponseBase() { Result = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().Logout(token.Token) };
         }
 
     }

@@ -139,7 +139,8 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool CheckLogin(string id)
         {
-            return mLastLogin.ContainsKey(id);
+            lock (mLockObj)
+                return mLastLogin.ContainsKey(id);
         }
 
         /// <summary>
@@ -149,7 +150,8 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool CheckLogin(long id)
         {
-            return mLastLogin2.ContainsKey(id);
+            lock (mLockObj)
+                return mLastLogin2.ContainsKey(id);
         }
 
         /// <summary>
@@ -183,6 +185,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public string Login(string user, string pass)
         {
+
             if(mDocument!=null&&mDocument.User.Users.ContainsKey(user)&&mDocument.User.Users[user].Password == pass)
             {
                 string sid = Guid.NewGuid().ToString().Replace("-", "");
@@ -203,12 +206,15 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool Logout(string id)
         {
-            if(mLastLogin.ContainsKey(id))
+            lock (mLockObj)
             {
-                mLastLogin.Remove(id);
+                if (mLastLogin.ContainsKey(id))
+                {
+                    mLastLogin.Remove(id);
+                }
+                if (mUseIdMap.ContainsKey(id)) return mUseIdMap.Remove(id);
+                return true;
             }
-            if (mUseIdMap.ContainsKey(id)) return mUseIdMap.Remove(id);
-            return true;
         }
 
         /// <summary>
@@ -218,12 +224,15 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool Logout(long id)
         {
-            if (mLastLogin2.ContainsKey(id))
+            lock (mLockObj)
             {
-                mLastLogin2.Remove(id);
+                if (mLastLogin2.ContainsKey(id))
+                {
+                    mLastLogin2.Remove(id);
+                }
+                if (mUseIdMap2.ContainsKey(id)) return mUseIdMap2.Remove(id);
+                return true;
             }
-            if (mUseIdMap2.ContainsKey(id)) return mUseIdMap2.Remove(id);
-            return true;
         }
 
         /// <summary>
@@ -233,9 +242,12 @@ namespace Cdy.Tag
         /// <returns></returns>
         public string GetUserByLoginId(string id)
         {
-            if(mUseIdMap.ContainsKey(id))
+            lock (mLockObj)
             {
-                return mUseIdMap[id];
+                if (mUseIdMap.ContainsKey(id))
+                {
+                    return mUseIdMap[id];
+                }
             }
             return string.Empty;
         }
@@ -272,11 +284,35 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool FreshUserId(string id)
         {
-           if(mLastLogin.ContainsKey(id))
+            lock (mLockObj)
             {
-                mLastLogin[id] = DateTime.Now;
+                if (mLastLogin.ContainsKey(id))
+                {
+                    mLastLogin[id] = DateTime.Now;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
-            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public DateTime GetLastAccessTime(string id)
+        {
+            lock (mLockObj)
+            {
+                if (mLastLogin.ContainsKey(id))
+                {
+                    return mLastLogin[id];
+                }
+                return DateTime.MinValue;
+            }
         }
 
         /// <summary>
@@ -287,17 +323,20 @@ namespace Cdy.Tag
         /// <returns></returns>
         public long Login(string user, string pass,string clientid)
         {
-            if (mDocument != null && mDocument.User.Users.ContainsKey(user) && mDocument.User.Users[user].Password == pass)
+            lock (mLockObj)
             {
-                long sid = GetUIdByLong();
-                lock (mLockObj)
+                if (mDocument != null && mDocument.User.Users.ContainsKey(user) && mDocument.User.Users[user].Password == pass)
                 {
-                    mLastLogin2.Add(sid, DateTime.Now);
-                    mUseIdMap2.Add(sid, clientid);
+                    long sid = GetUIdByLong();
+                    lock (mLockObj)
+                    {
+                        mLastLogin2.Add(sid, DateTime.Now);
+                        mUseIdMap2.Add(sid, clientid);
+                    }
+                    return sid;
                 }
-                return sid;
+                return -1;
             }
-            return -1;
         }
 
         /// <summary>
@@ -307,12 +346,15 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool LogoutByClientId(string id)
         {
-           var vv=  mUseIdMap2.Where(e => e.Value == id);
-            if(vv!=null && vv.Count()>0)
+            lock (mLockObj)
             {
-               return Logout(vv.First().Key);
+                var vv = mUseIdMap2.Where(e => e.Value == id);
+                if (vv != null && vv.Count() > 0)
+                {
+                    return Logout(vv.First().Key);
+                }
+                return false;
             }
-            return false;
         }
 
 

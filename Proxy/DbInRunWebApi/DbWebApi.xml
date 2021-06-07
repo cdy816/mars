@@ -380,21 +380,6 @@
             
             </summary>
         </member>
-        <member name="P:DbInRunWebApi.Model.Requestbase.Time">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="T:DbInRunWebApi.Model.Requestbase2">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="P:DbInRunWebApi.Model.Requestbase2.Token">
-            <summary>
-            
-            </summary>
-        </member>
         <member name="T:DbInRunWebApi.Model.RealDataRequest">
             <summary>
             

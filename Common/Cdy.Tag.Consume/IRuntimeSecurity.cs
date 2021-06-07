@@ -68,6 +68,13 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        DateTime GetLastAccessTime(string id);
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="user"></param>
         /// <param name="pass"></param>
         /// <returns></returns>

@@ -63,7 +63,7 @@ namespace DbInRunWebApi.Model
         /// <summary>
         /// 
         /// </summary>
-        public long LoginTime { get; set; }
+        public string LoginTime { get; set; }
 
         /// <summary>
         /// 超时时间
@@ -113,10 +113,10 @@ namespace DbInRunWebApi.Model
         /// </summary>
         public string Token { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public string Time { get; set; }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public string Time { get; set; }
 
         #endregion ...Properties...
 
@@ -129,41 +129,41 @@ namespace DbInRunWebApi.Model
         #endregion ...Interfaces...
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    public class Requestbase2
-    {
+    ///// <summary>
+    ///// 
+    ///// </summary>
+    //public class Requestbase2
+    //{
 
-        #region ... Variables  ...
+    //    #region ... Variables  ...
 
-        #endregion ...Variables...
+    //    #endregion ...Variables...
 
-        #region ... Events     ...
+    //    #region ... Events     ...
 
-        #endregion ...Events...
+    //    #endregion ...Events...
 
-        #region ... Constructor...
+    //    #region ... Constructor...
 
-        #endregion ...Constructor...
+    //    #endregion ...Constructor...
 
-        #region ... Properties ...
+    //    #region ... Properties ...
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public string Token { get; set; }
+    //    /// <summary>
+    //    /// 
+    //    /// </summary>
+    //    public string Token { get; set; }
 
-        #endregion ...Properties...
+    //    #endregion ...Properties...
 
-        #region ... Methods    ...
+    //    #region ... Methods    ...
 
-        #endregion ...Methods...
+    //    #endregion ...Methods...
 
-        #region ... Interfaces ...
+    //    #region ... Interfaces ...
 
-        #endregion ...Interfaces...
-    }
+    //    #endregion ...Interfaces...
+    //}
 
     /// <summary>
     /// 
@@ -209,7 +209,7 @@ namespace DbInRunWebApi.Model
     /// <summary>
     /// 
     /// </summary>
-    public class RealDataSetRequest : Requestbase2
+    public class RealDataSetRequest : Requestbase
     {
 
         #region ... Variables  ...

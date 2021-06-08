@@ -391,7 +391,7 @@ namespace DBRuntime.Proxy
 
                 }
             };
-
+            mSecurityRunner.Start();
             mDriver.Start(realEnginer);
         }
 

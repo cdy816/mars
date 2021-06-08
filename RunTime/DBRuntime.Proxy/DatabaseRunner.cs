@@ -348,6 +348,17 @@ namespace DBRuntime.Proxy
 
                     if (securitychanged)
                     {
+                        try
+                        {
+                            if (mSecurityRunner != null)
+                            {
+                                mSecurityRunner.Stop();
+                            }
+                        }
+                        catch
+                        {
+
+                        }
                         mSecurityRunner.Document = new SecuritySerise().LoadByName(mDatabaseName);
                     }
 
@@ -381,6 +392,17 @@ namespace DBRuntime.Proxy
                     if (securitychanged)
                     {
                         LoggerService.Service.Info("DatabaseRunner", "开始从远程加载安全配置");
+                        try
+                        {
+                            if (mSecurityRunner != null)
+                            {
+                                mSecurityRunner.Stop();
+                            }
+                        }
+                        catch
+                        {
+
+                        }
                         mSecurityRunner.Document = mProxy.LoadSecurity();
                         LoggerService.Service.Info("DatabaseRunner", "从远程加载安全配置完成");
                     }

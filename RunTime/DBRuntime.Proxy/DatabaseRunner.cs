@@ -323,7 +323,7 @@ namespace DBRuntime.Proxy
 
             mProxy.NetworkClient.DatabaseChangedAction = (realchanged, hischanged, securitychanged) => { 
                 
-                if(IsRunInLocal())
+                if(CheckDatabaseExist(mDatabaseName) && IsRunInLocal())
                 {
                     //Stopwatch sw = new Stopwatch();
                     //sw.Start();
@@ -360,6 +360,7 @@ namespace DBRuntime.Proxy
 
                         }
                         mSecurityRunner.Document = new SecuritySerise().LoadByName(mDatabaseName);
+                        mSecurityRunner.Start();
                     }
 
                     RegistorInterface();
@@ -404,6 +405,7 @@ namespace DBRuntime.Proxy
 
                         }
                         mSecurityRunner.Document = mProxy.LoadSecurity();
+                        mSecurityRunner.Start();
                         LoggerService.Service.Info("DatabaseRunner", "从远程加载安全配置完成");
                     }
 
@@ -423,8 +425,9 @@ namespace DBRuntime.Proxy
         /// <returns></returns>
         private bool IsRunInLocal()
         {
-            return mIp.StartsWith("127.0.0.") || mIp == "0.0.0.0" || Dns.GetHostAddresses(Dns.GetHostName()).Select(e => e.AddressFamily.ToString()).Contains(mIp);
+            return (mIp.StartsWith("127.0.0.") || mIp == "0.0.0.0" || Dns.GetHostAddresses(Dns.GetHostName()).Select(e => e.AddressFamily.ToString()).Contains(mIp));
         }
+
 
         private void MDriver_ValueUpdateEvent(object sender, EventArgs e)
         {

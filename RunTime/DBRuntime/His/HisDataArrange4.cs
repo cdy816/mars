@@ -54,6 +54,12 @@ namespace Cdy.Tag
         const int bufferLenght = 2 * 1024 * 1024;
 
         private bool mIsPaused = false;
+
+
+        List<IntPtr> databuffers;
+        long[] databufferLocations;
+        int[] databufferLens;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -64,7 +70,14 @@ namespace Cdy.Tag
 
         public HisDataArrange4()
         {
-            
+            int blockcount = 48;
+            databuffers = new List<IntPtr>();
+            for(int i=0;i<blockcount;i++)
+            {
+                databuffers.Add(Marshal.AllocHGlobal(bufferLenght));
+            }
+            databufferLocations = new long[blockcount];
+            databufferLens = new int[blockcount];
         }
 
         #endregion ...Constructor...
@@ -174,7 +187,7 @@ namespace Cdy.Tag
         /// <param name="msource"></param>
         /// <param name="offset"></param>
         /// <param name="mtarget"></param>
-        private bool CopyDataRegion(System.IO.Stream msource,long sourceOffset,System.IO.Stream mtarget)
+        private bool CopyDataRegion(System.IO.Stream msource, long sourceOffset, System.IO.Stream mtarget)
         {
             msource.Position = sourceOffset;
 
@@ -194,7 +207,19 @@ namespace Cdy.Tag
             blockDuration = BitConverter.ToInt32(bval, 28);
             tagcount = BitConverter.ToInt32(bval, 36);
 
+
+
             int blockcount = fileDuration * 60 / blockDuration;
+            
+            if(blockcount>databuffers.Count)
+            {
+                for(int i=databuffers.Count;i<blockcount;i++)
+                {
+                    databuffers.Add(Marshal.AllocHGlobal(bufferLenght));
+                }
+                databufferLocations = new long[blockcount];
+                databufferLens = new int[blockcount];
+            }
 
             long pheadpointlocation = mtarget.Position;
 
@@ -203,7 +228,7 @@ namespace Cdy.Tag
 
             MarshalFixedMemoryBlock targetheadpoint;
 
-            CopyRegionData(msource, sourceheadpoint,tagcount,blockcount, mtarget,out targetheadpoint);
+            CopyRegionData(msource, sourceheadpoint, tagcount, blockcount, mtarget, out targetheadpoint);
             long lp = mtarget.Position;
 
             if (targetheadpoint != null)
@@ -224,7 +249,7 @@ namespace Cdy.Tag
                 return false;
             }
 
-            
+
         }
 
         /// <summary>
@@ -245,14 +270,14 @@ namespace Cdy.Tag
             MarshalFixedMemoryBlock data = new MarshalFixedMemoryBlock(blockcount * 302 * 264 * 2);
          
             //int bufferLenght = 2*1024 * 1024;
-            IntPtr[] databuffers = new IntPtr[blockcount];
-            long[] databufferLocations = new long[blockcount];
-            int[] databufferLens = new int[blockcount];
+            //IntPtr[] databuffers = new IntPtr[blockcount];
+            //long[] databufferLocations = new long[blockcount];
+            //int[] databufferLens = new int[blockcount];
 
-            for(int i=0;i<blockcount;i++)
-            {
-                databuffers[i] = Marshal.AllocHGlobal(bufferLenght);
-            }
+            //for(int i=0;i<blockcount;i++)
+            //{
+            //    databuffers[i] = Marshal.AllocHGlobal(bufferLenght);
+            //}
             //sw.Stop();
             //LoggerService.Service.Debug("HisDataArrange", "初始化分配内存 耗时:"+ ltmp1 +"," +(sw.ElapsedMilliseconds-ltmp1));
 
@@ -299,7 +324,6 @@ namespace Cdy.Tag
                             dataloc = (int)(baseaddress - databufferLocations[blockid] + 4);
                         }
 
-    
                         data.CheckAndResize(data.Position + datasize + 4, 0.5);
                         data.WriteInt(offset, datasize);
                         offset += 4;
@@ -308,7 +332,7 @@ namespace Cdy.Tag
                         if ((dataloc + datasize) > bufferLenght || datasize<=0)
                         {
                             targetheadpoint = null;
-                            return;
+                            continue;
                         }
 
                         Buffer.MemoryCopy((void*)(databuffers[blockid] + dataloc), (void*)(data.Buffers + offset), datasize, datasize);
@@ -329,10 +353,10 @@ namespace Cdy.Tag
 
             data.Dispose();
 
-            for (int i = 0; i < blockcount; i++)
-            {
-                Marshal.FreeHGlobal(databuffers[i]);
-            }
+            //for (int i = 0; i < blockcount; i++)
+            //{
+            //    Marshal.FreeHGlobal(databuffers[i]);
+            //}
 
             targetheadpoint = re;
         }

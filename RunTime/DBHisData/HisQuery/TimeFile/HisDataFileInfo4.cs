@@ -838,7 +838,7 @@ namespace Cdy.Tag
                         dataloc = (int)(dp - mbufferadderss + 4);
                     }
 
-                    if (datasize > 0)
+                    if (datasize > 0 && datasize< datafile.Length)
                     {
                         vmm = new MarshalMemoryBlock(datasize, datasize);
                         MemoryHelper.MemoryCopy(mdataBuffer, dataloc, vmm.Buffers[0], 0, datasize);

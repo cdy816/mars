@@ -18,7 +18,8 @@ namespace Cdy.Tag
 {
 
     /// <summary>
-    /// 
+    /// 无损压缩数据块内容格式
+    /// 统计值(52)(支持统计值数据类型)+压缩数据区
     /// </summary>
     public class LosslessCompressUnit2 : CompressUnitbase2
     {

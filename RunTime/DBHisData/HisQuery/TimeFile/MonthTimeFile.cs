@@ -185,7 +185,7 @@ namespace Cdy.Tag
                 {
                     if ((startTime >= vv.Key && startTime < vv.Key + vv.Value.Duration) || (endTime >= vv.Key && endTime < vv.Key + vv.Value.Duration) || (vv.Key >= startTime && (vv.Key + vv.Value.Duration) <= endTime))
                     {
-                        infos.Add(vv.Value.File1 != null ? vv.Value.File1 : vv.Value.File2);
+                        infos.Add(vv.Value.File2 != null ? vv.Value.File2 : vv.Value.File1);
                     }
                 }
                 return infos;

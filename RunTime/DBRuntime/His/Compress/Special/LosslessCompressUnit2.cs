@@ -556,7 +556,9 @@ namespace Cdy.Tag
         }
 
         /// <summary>
-        /// 
+        /// 时间戳压缩算法：
+        /// 1. 各个时间之间取后一个与前一个之间的差值，第一个保持原始值
+        /// 2. 差值之后，采用Proto 压缩原理进行压缩
         /// </summary>
         /// <param name="timerVals"></param>
         /// <param name="startaddr"></param>
@@ -639,6 +641,18 @@ namespace Cdy.Tag
         }
 
         /// <summary>
+        /// Byte 压缩算法： 字节直接存储;
+        /// Short、Int、Long,Datetime 类型数据压缩算法：
+        /// 1.相邻直接的数据，取差值
+        /// 2.将数据采用Proto 压缩算法进行压缩;
+        /// 
+        /// Double 压缩算法：
+        /// 1.将Double 数据转换成Long型
+        /// 2.将转换之后的数据采用Proto 压缩算法进行压缩;
+        /// 
+        /// Float 压缩算法：
+        /// 1.将Float 数据转换成Int型
+        /// 2.将转换之后的数据采用Proto 压缩算法进行压缩;
         /// 
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -1167,7 +1181,7 @@ namespace Cdy.Tag
         }
 
         /// <summary>
-        /// 
+        /// String 类型的数据采用GZip 算法进行压缩
         /// </summary>
         /// <param name="Vals"></param>
         /// <param name="emptyIds"></param>
@@ -1237,7 +1251,9 @@ namespace Cdy.Tag
 
 
         /// <summary>
-        /// 
+        /// 质量戳压缩原理：
+        /// 1.先将所有质量戳整理成，[值+重复个数]的形式
+        /// 2.将结果值，采用Proto 压缩算法进行压缩
         /// </summary>
         /// <param name="source"></param>
         /// <param name="offset"></param>
@@ -1323,7 +1339,8 @@ namespace Cdy.Tag
         }
 
         /// <summary>
-        /// 
+        /// Bool 值压缩算法：
+        /// 1个字节的最高位,表示Bool的值,后面7为表示该值的重复次数
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
@@ -1375,7 +1392,8 @@ namespace Cdy.Tag
         
 
         /// <summary>
-        /// 
+        /// 数据内容：有效数据个数 + 时间戳数据块 + 值数据块 + 质量戳数据块
+        /// (时间\值\质量戳)数据块: 数据长度+数据内容
         /// </summary>
         /// <param name="source"></param>
         /// <param name="sourceAddr"></param>

@@ -91,7 +91,7 @@
 2. [Mar数据库应用结构](https://my.oschina.net/u/3520380/blog/4288058)
 
 ## 版本
-[0.35 版本](https://github.com/cdy816/mars/releases/tag/V0.35)
+[0.4 版本](https://github.com/cdy816/mars/releases/tag/V0.4)
 
 ## 路线图
 项目分成2个阶段：单机、分布式。

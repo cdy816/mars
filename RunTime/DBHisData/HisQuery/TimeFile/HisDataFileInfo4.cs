@@ -34,7 +34,7 @@ namespace Cdy.Tag
     DataBlockPoint Area: [ID]+[block Point]
     [block point]:       [[tag1 block1 point,tag2 block1 point,....][tag1 block2 point(12),tag2 block2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
     [tag block point]:   offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
-    DataBlock Area:      [[tag1 block1 size + tag1 data block1][tag2 block1 size + tag2 data block1]....][[tag1 block2 size + tag1 data block2][tag2 block2 size + tag2 data block2]....]....
+    DataBlock Area:      [[tag1 block1 size + compressType+ tag1 data block1][tag2 block1 size + compressType+ tag2 data block1]....][[tag1 block2 size + compressType+ tag1 data block2][tag2 block2 size + compressType+ tag2 data block2]....]....
    */
 
     /*
@@ -53,7 +53,7 @@ namespace Cdy.Tag
     DataBlockPoint Area: [ID]+[block Point]
     [block point]:       [[tag1 block1 point(12),tag1 block2 point(12),....][tag2 block1 point(12),tag2 block2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
     [tag block point]:   offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
-    DataBlock Area:      [[tag1 block1 size + tag1 block1 data][tag1 block2 size + tag1 block2 data]....][[tag2 block1 size + tag2 block1 data][tag2 block2 size + tag2 block2 data]....]....
+    DataBlock Area:      [[tag1 block1 size + compressType + tag1 block1 data][tag1 block2 size + compressType+ tag1 block2 data]....][[tag2 block1 size + compressType+ tag2 block1 data][tag2 block2 size + compressType+ tag2 block2 data]....]....
     */
 
     /// <summary>

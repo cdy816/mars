@@ -21,21 +21,42 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 
 /*
- * ****DBD 文件结构****
- * 一个文件头 + 多个数据区组成 ， 一个数据区：数据区头+数据块指针区+数据块区
- * [] 表示重复的一个或多个内容
- * 
- HisData File Structor
- FileHead(84) + [HisDataRegion]
+    * ****DBD 文件结构****
+    * 一个文件头 + 多个数据区组成 ， 一个数据区：数据区头+数据块指针区+数据块区
+    * [] 表示重复的一个或多个内容
+    * 
+    HisData File Structor
+    FileHead(84) + [HisDataRegion]
 
- FileHead: dataTime(8)(FileTime)+dateTime(8)(LastUpdateTime)+DataRegionCount(4)+DatabaseName(64)
- 
- HisDataRegion Structor: RegionHead + DataBlockPoint Area + DataBlock Area
+    FileHead: dataTime(8)(FileTime)+dateTime(8)(LastUpdateTime)+DataRegionCount(4)+DatabaseName(64)
 
- RegionHead:          PreDataRegionPoint(8) + NextDataRegionPoint(8) + Datatime(8)+ file duration(4)+block duration(4)+Time tick duration(4) + tagcount(4)
- DataBlockPoint Area: [[tag1 block1 point(8),tag2 block1 point(8),....,tag100000 block1 point(8)][tag1 block2 point(8),tag1 block2 point(8),...,tag100000 block1 point(8)].....]   以时间单位对变量的数去区指针进行组织,
- DataBlock Area:      [[tag1 block1 size + tag1 data block1][tag2 block1 size + tag2 data block1]....][[tag1 block2 size + tag1 data block2][tag2 block2 size + tag2 data block2]....]....
-*/
+    HisDataRegion Structor: RegionHead + DataBlockPoint Area + DataBlock Area
+
+    RegionHead:          PreDataRegionPoint(8) + NextDataRegionPoint(8) + Datatime(8)+ tagcount(4)+ tagid sum(8)+file duration(4)+block duration(4)+Time tick duration(4)
+    DataBlockPoint Area: [ID]+[block Point]
+    [block point]:       [[tag1 block1 point,tag2 block1 point,....][tag1 block2 point(12),tag2 block2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
+    [tag block point]:   offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
+    DataBlock Area:      [[tag1 block1 size + compressType+ tag1 data block1][tag2 block1 size + compressType+ tag2 data block1]....][[tag1 block2 size + compressType+ tag1 data block2][tag2 block2 size + compressType+ tag2 data block2]....]....
+   */
+
+    /*
+    * ****His 文件结构****
+    * 一个文件头 + 多个数据区组成 ， 一个数据区：数据区头+数据块指针区+数据块区
+    * [] 表示重复的一个或多个内容
+    * 
+    HisData File Structor
+    FileHead(84) + [HisDataRegion]
+
+    FileHead: dataTime(8)(FileTime)+dateTime(8)(LastUpdateTime)+DataRegionCount(4)+DatabaseName(64)
+
+    HisDataRegion Structor: RegionHead + DataBlockPoint Area + DataBlock Area
+
+    RegionHead:          PreDataRegionPoint(8) + NextDataRegionPoint(8) + Datatime(8) +file duration(4)+block duration(4)+Time tick duration(4)+ tagcount(4)
+    DataBlockPoint Area: [ID]+[block Point]
+    [block point]:       [[tag1 block1 point(12),tag1 block2 point(12),....][tag2 block1 point(12),tag2 block2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
+    [tag block point]:   offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
+    DataBlock Area:      [[tag1 block1 size + compressType + tag1 block1 data][tag1 block2 size + compressType+ tag1 block2 data]....][[tag2 block1 size + compressType+ tag2 block1 data][tag2 block2 size + compressType+ tag2 block2 data]....]....
+    */
 
 namespace Cdy.Tag
 {

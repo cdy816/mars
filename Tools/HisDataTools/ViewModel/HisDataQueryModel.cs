@@ -70,6 +70,8 @@ namespace HisDataTools.ViewModel
         private bool mIsStatisticsValue=false;
         private bool mIsOriginalValue = true;
 
+        //private bool mIsFilterBusy = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -162,7 +164,7 @@ namespace HisDataTools.ViewModel
                 if (mSelectTag != value)
                 {
                     mSelectTag = value;
-                    FilterData();
+                    //Task.Run(() => { FilterData(); });
                     OnPropertyChanged("SelectTag");
                 }
             }
@@ -513,34 +515,26 @@ namespace HisDataTools.ViewModel
         public void LoadData(string database)
         {
             mTags = HisDataManager.Manager.GetHisTagIds(database);
-
-            FilterData();
+            //FilterData();
+            TagList = mTags.Keys.AsQueryable();
             mDatabase = database;
         }
 
-        private void FilterData()
-        {
-          //  string exp = @"^\S*[^0-9]";
+        //private void FilterData()
+        //{
+        //    if (mIsFilterBusy) return;
+        //    mIsFilterBusy = true;
 
-            var query = mTags.Keys.AsQueryable();
-
-            string skey = mSelectTag;
-
-            if(skey.Length>1)
-            {
-                skey = skey.Substring(0, skey.Length - 1);
-            }
-
-            //Regex rg = new Regex(exp);
-
-            //if(rg.IsMatch(exp))
-            //{
-                
-            //    skey = rg.Match(skey).Value;
-            //}
-
-            TagList = query.Where(e => e.StartsWith(skey)).Take(50);
-        }
+        //    var vtmp = mSelectTag;
+        //    var query = mTags.Keys.AsQueryable();
+        //    TagList = query.Where(e=>e.StartsWith(mSelectTag)).Take(50);
+            
+        //    mIsFilterBusy = false;
+        //    if(vtmp!=mSelectTag)
+        //    {
+        //        FilterData();
+        //    }
+        //}
 
         /// <summary>
         /// 

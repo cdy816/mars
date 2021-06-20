@@ -240,7 +240,7 @@ namespace Cdy.Tag
                         else
                         {
                             var tspan = StartTime + Duration - time;
-                            if (tspan.TotalMilliseconds > 0 && mTimeOffsets.ContainsKey(time))
+                            if (tspan.TotalMilliseconds >= 0 && !mTimeOffsets.ContainsKey(time))
                                 mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(tspan, oset, time + tspan));
                             tmp = time + tspan;
                         }

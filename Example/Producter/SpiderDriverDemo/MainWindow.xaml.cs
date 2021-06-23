@@ -492,14 +492,14 @@ namespace SpiderDriverDemo
         private void hisDataWrite_Click(object sender, RoutedEventArgs e)
         {
             List<TagValue> vals = new List<TagValue>();
-            DateTime dt = DateTime.UtcNow.AddSeconds(-300);
+            DateTime dt = DateTime.UtcNow.AddSeconds(-3000);
             Random rd = new Random((int)dt.Ticks);
             double dval = rd.NextDouble();
-            for(int i=0;i<300;i++)
+            for(int i=0;i<3000;i++)
             {
                 vals.Add(new TagValue() { Quality = 0, Time = dt.AddSeconds(i), Value = dval+i*1.0/10 });
             }
-            for(int i=5;i<7;i++)
+            for(int i=6;i<7;i++)
             driverProxy.SetTagHisValue(i, TagType.Double, vals);
         }
 

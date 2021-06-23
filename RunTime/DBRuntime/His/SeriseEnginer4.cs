@@ -1024,7 +1024,7 @@ namespace Cdy.Tag
 
         private Dictionary<int, List<long>> GetDataRegionHeadPoint(string sfile, SortedDictionary<int,List<DateTime>> ids, DateTime time, out DataFileSeriserbase mFileReader)
         {
-
+            
             Dictionary<int,List<long>> re = new Dictionary<int, List<long>>();
 
             DataFileSeriserbase dfs;
@@ -1093,7 +1093,8 @@ namespace Cdy.Tag
                         long ltmp = 0;
                         //计算本次更新对应的指针区域的起始地址
                         var fsh = (vvv.Hour / FileDuration) * FileDuration;
-                        int bid = ((vvv.Hour - fsh) * 60 + time.Minute) / BlockDuration;
+                        //int bid = ((vvv.Hour - fsh) * 60 + time.Minute) / BlockDuration;
+                        int bid = ((vvv.Hour - fsh) * 60 + vvv.Minute) / BlockDuration;
 
                         if (mLastRegionStartTime == DateTime.MaxValue || vvv < mLastRegionStartTime || vvv > mLastRegionEndTime)
                         {
@@ -1137,7 +1138,8 @@ namespace Cdy.Tag
                         long ltmp = 0;
                         //计算本次更新对应的指针区域的起始地址
                         var fsh = (vvv.Hour / FileDuration) * FileDuration;
-                        int bid = ((vvv.Hour - fsh) * 60 + time.Minute) / BlockDuration;
+                        //int bid = ((vvv.Hour - fsh) * 60 + time.Minute) / BlockDuration;
+                        int bid = ((vvv.Hour - fsh) * 60 + vvv.Minute) / BlockDuration;
 
                         if (mLastRegionStartTime == DateTime.MaxValue || vvv < mLastRegionStartTime || vvv > mLastRegionEndTime)
                         {

@@ -499,8 +499,8 @@ namespace SpiderDriverDemo
             {
                 vals.Add(new TagValue() { Quality = 0, Time = dt.AddSeconds(i), Value = dval+i*1.0/10 });
             }
-            for(int i=6;i<7;i++)
-            driverProxy.SetTagHisValue(i, TagType.Double, vals);
+            //for(int i=6;i<7;i++)
+            driverProxy.SetTagHisValue(int.Parse(Hid.Text), TagType.Double, vals);
         }
 
 

@@ -140,6 +140,7 @@ namespace DBRuntime.His
                 {
                     vv.Enqueue(block);
                 }
+                block.Reset();
                 block.Clear();
             }
             else

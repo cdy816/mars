@@ -124,7 +124,7 @@ namespace Cdy.Tag
             var vsize = datafile.ReadInt(10);
             offset = vsize+6;
 
-            if (vsize > 0)
+            if (vsize > 7)
             {
                 lock (TagHeadOffsetManager.manager.LogHeadOffsets)
                 {

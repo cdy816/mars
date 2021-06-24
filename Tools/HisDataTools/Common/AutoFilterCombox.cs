@@ -51,7 +51,7 @@ namespace HisDataTools
         private bool mIsBusy = false;
         private System.Collections.ObjectModel.ObservableCollection<string> mInnerItems = new System.Collections.ObjectModel.ObservableCollection<string>();
         //private ICollectionView view;
-
+        private string mFilterText="";
 
         static AutoFilterCombox()
         {
@@ -102,18 +102,37 @@ namespace HisDataTools
 
         private void MTextBox_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            if(!IsDropDownOpen)
-            IsDropDownOpen = true;
+            if (!IsDropDownOpen)
+            {
+                IsDropDownOpen = true;
+            }
         }
 
         private void MTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            IsDropDownOpen = true;
+            if (!IsDropDownOpen)
+            {
+                IsDropDownOpen = true;
+            }
         }
 
         private void MTextBox_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            IsDropDownOpen = true;
+            if (!IsDropDownOpen)
+            {
+                IsDropDownOpen = true;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnDropDownOpened(EventArgs e)
+        {
+            base.OnDropDownOpened(e);
+            mFilterText = string.Empty;
+            FilterData();
         }
 
         /// <summary>
@@ -123,26 +142,15 @@ namespace HisDataTools
         /// <param name="e"></param>
         private void MTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            //Task.Run(() => {
-            //    mCount = 0;
-            //    this.view.Refresh();
-            //});
+            mFilterText = mTextBox.Text;
             FilterData();
         }
-
-        //private void CreatFilter()
-        //{
-        //    mCount = 0;
-        //    view = CollectionViewSource.GetDefaultView(OrignalItemSource);
-        //    view.Filter = FilterCallback;
-        //    this.ItemsSource = view;
-        //}
 
         private void FilterData()
         {
             if (mIsBusy) return;
             mIsBusy = true;
-            var vtext = mTextBox.Text;
+            var vtext = mFilterText;
             mInnerItems.Clear();
             var vtmp = OrignalItemSource;
             Task.Run(() => {
@@ -155,39 +163,16 @@ namespace HisDataTools
                    
                 }
                 mIsBusy = false;
-                this.Dispatcher.Invoke(() => {
-                    if (vtext != mTextBox.Text)
-                    {
-                        FilterData();
-                    }
-                });
+                //this.Dispatcher.Invoke(() => {
+                //    if (vtext != mTextBox.Text)
+                //    {
+                //        FilterData();
+                //    }
+                //});
                 
             });
             
-
-
-            //Task.Run(() => {
-            //    var val = OrignalItemSource.Where(e => e.StartsWith(vtext)).Take(50).ToList();
-            //    mIsBusy = false;
-            //    this.Dispatcher.BeginInvoke(new Action(() => {
-            //        if (vtext != mTextBox.Text)
-            //        {
-            //            FilterData();
-            //        }
-            //    }));
-            //});
         }
-
-        //private int mCount = 0;
-        //private bool FilterCallback(object item)
-        //{
-        //    if(item.ToString().StartsWith(mTextBox.Text)&& mCount<50)
-        //    {
-        //        mCount++;
-        //        return true;
-        //    }
-        //    return false;
-        //}
 
     }
 }

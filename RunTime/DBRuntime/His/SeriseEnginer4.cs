@@ -447,7 +447,8 @@ namespace Cdy.Tag
 
                                 string sfile = "";
 
-                                if (HisDataArrange4.Arrange.CheckAndReArrangeHisFile(vv.FullName, out sfile, FileDuration, true))
+                                //if (HisDataArrange4.Arrange.CheckAndReArrangeHisFile(vv.FullName, out sfile, FileDuration, true))
+                                if (HisDataArrange4.Arrange.CheckAndReArrangeHisFile(vv.FullName, out sfile, 24, true))
                                 {
                                     HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(sfile);
                                     HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(vv.FullName);
@@ -1030,7 +1031,7 @@ namespace Cdy.Tag
             DataFileSeriserbase dfs;
             bool isuserhisfile = false;
 
-            if (time > mCurrentTime)
+            if (time > mCurrentTime && mCurrentTime!=DateTime.MinValue)
             {
                 //如果需要新建的文件，影响到自动记录存储要用到的文件，
                 //则转到自动记录存储逻辑进行处理
@@ -1047,7 +1048,7 @@ namespace Cdy.Tag
                 else
                 {
                     dfs = mFileWriter2;
-                    string hisfile = sfile.Replace(DataFileExtends, HisDataFileExtends);
+                    string hisfile = System.IO.Path.Combine(SeriseEnginer4.HisDataPath, sfile.Replace(DataFileExtends, HisDataFileExtends));
 
                     if (mFileWriter2.CheckExist(hisfile) && mFileWriter2.OpenFile(hisfile) && mFileWriter2.Length > FileHeadSize)
                     {
@@ -1055,7 +1056,8 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        if (mFileWriter2.CreatOrOpenFile(sfile))
+                        var vfile = System.IO.Path.Combine(SeriseEnginer4.HisDataPath, sfile);
+                        if (mFileWriter2.CreatOrOpenFile(vfile))
                         {
                             var date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
                             //新建文件

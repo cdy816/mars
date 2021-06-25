@@ -136,12 +136,12 @@ namespace DBRuntime.His
             if (mFreePools.ContainsKey(size))
             {
                 var vv = mFreePools[size];
+                block.Reset();
+                block.Clear();
                 lock (mFreePools)
                 {
                     vv.Enqueue(block);
                 }
-                block.Reset();
-                block.Clear();
             }
             else
             {

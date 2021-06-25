@@ -498,7 +498,8 @@ namespace Cdy.Tag
 
                     Debug.Print(file + ": total hours:" + (DateTime.UtcNow - dt.Value).TotalHours  +"   "+ DateTime.Now);
                     //如果文件的创建时间，到现在超过一个文件能够保存的最大时间
-                    if ((DateTime.UtcNow - dt.Value).TotalHours > (fileDuration + 0.5))
+                    //if ((DateTime.UtcNow - dt.Value).TotalHours > (fileDuration + 0.5))
+                    if ((DateTime.Now - finfo.LastWriteTime).TotalHours > (fileDuration + 0.5))
                     {
                         string tdirect = System.IO.Path.GetDirectoryName(file);
                         targetfile = System.IO.Path.Combine(tdirect, System.IO.Path.GetFileNameWithoutExtension(file) + ".his");

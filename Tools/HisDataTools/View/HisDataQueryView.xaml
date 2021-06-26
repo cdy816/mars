@@ -85,7 +85,7 @@
                             <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="100" Header="{res:ResMarker MaxValueTime}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock HorizontalAlignment="Center" Text="{Binding MaxValueTime}" VerticalAlignment="Center" />
+                                        <TextBlock HorizontalAlignment="Center" Text="{Binding MaxValueTimeString}" VerticalAlignment="Center" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -100,7 +100,7 @@
                             <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="100" Header="{res:ResMarker MinValueTime}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock HorizontalAlignment="Center" Text="{Binding MinValueTime}" VerticalAlignment="Center" />
+                                        <TextBlock HorizontalAlignment="Center" Text="{Binding MinValueTimeString}" VerticalAlignment="Center" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

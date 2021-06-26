@@ -393,8 +393,8 @@ namespace Cdy.Tag
 
                 var maxtimeval = emptys.Read(maxtimeId);
                 var mintimeval = emptys.Read(mintimeId);
-                maxTime = StartTime.AddMilliseconds(maxtimeval * HisEnginer3.MemoryTimeTick);
-                minTime = StartTime.AddMilliseconds(mintimeval * HisEnginer3.MemoryTimeTick);
+                maxTime = StartTime.AddMilliseconds(maxtimeval * TimeTick);
+                minTime = StartTime.AddMilliseconds(mintimeval * TimeTick);
             }
         }
 

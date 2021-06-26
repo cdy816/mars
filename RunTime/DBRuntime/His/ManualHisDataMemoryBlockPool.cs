@@ -88,7 +88,7 @@ namespace DBRuntime.His
                 }
                 else
                 {
-                    Cdy.Tag.LoggerService.Service.Debug("ManualHisMemoryBlockPool", "New datablock 1 size:" + size);
+                    //Cdy.Tag.LoggerService.Service.Debug("ManualHisMemoryBlockPool", "New datablock 1 size:" + size);
                     var bnb = NewBlock(size);
                     return bnb;
                 }
@@ -97,7 +97,7 @@ namespace DBRuntime.His
             {
                 lock (mFreePools)
                 {
-                    Cdy.Tag.LoggerService.Service.Debug("ManualHisMemoryBlockPool", "New datablock 2 size:" + size);
+                    //Cdy.Tag.LoggerService.Service.Debug("ManualHisMemoryBlockPool", "New datablock 2 size:" + size);
                     var bnb = NewBlock(size);
                     if (mFreePools.ContainsKey(size))
                     {

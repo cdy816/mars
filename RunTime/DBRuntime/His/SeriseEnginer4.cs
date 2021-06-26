@@ -1447,9 +1447,9 @@ namespace Cdy.Tag
 
                 var avgcount = vv.ReadInt(8);
                 var avgvalue = vv.ReadDouble(12);
-                var maxtime = vv.ReadLong(20);
+                var maxtime = vv.ReadDateTime(20);
                 var maxvalue = vv.ReadDouble(28);
-                var mintime = vv.ReadLong(36);
+                var mintime = vv.ReadDateTime(36);
                 var minvalue = vv.ReadDouble(44);
 
                 int offset = time.Hour * 48;
@@ -1464,19 +1464,19 @@ namespace Cdy.Tag
                     mfb.WriteDouble(offset + 8, (avgcount * avgvalue + navgvalue * ncount) / (ncount + avgcount));
                 }
 
-                var nmaxtime = mfb.ReadLong(offset + 16);
+                var nmaxtime = mfb.ReadDateTime(offset + 16);
                 var nmaxvalue = mfb.ReadDouble(offset + 24);
-                if (nmaxvalue < maxvalue || nmaxtime==0)
+                if (nmaxvalue < maxvalue || nmaxtime==DateTime.MinValue)
                 {
-                    mfb.WriteLong(offset + 16, maxtime);
+                    mfb.WriteDatetime(offset + 16, maxtime);
                     mfb.WriteDouble(offset + 24, maxvalue);
                 }
 
-                var nmintime = mfb.ReadLong(offset + 32);
+                var nmintime = mfb.ReadDateTime(offset + 32);
                 var nminvalue = mfb.ReadDouble(offset + 40);
-                if (nminvalue > minvalue || nmintime==0)
+                if (nminvalue > minvalue || nmintime== DateTime.MinValue)
                 {
-                    mfb.WriteLong(offset + 32, mintime);
+                    mfb.WriteDatetime(offset + 32, mintime);
                     mfb.WriteDouble(offset + 40, minvalue);
                 }
             }

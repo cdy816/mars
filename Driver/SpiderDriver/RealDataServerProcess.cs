@@ -130,7 +130,7 @@ namespace SpiderDriver
         /// <param name="data"></param>
         protected  override void ProcessSingleData(string client, ByteBuffer data)
         {
-            if(data.RefCount==0)
+            if(data==null || data.RefCount==0)
             {
                 Debug.Print("invailed data buffer in RealDataServerProcess");
                 return;

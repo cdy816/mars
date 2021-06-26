@@ -640,8 +640,11 @@ namespace Cdy.Tag
             //sw.Start();
             foreach (var vv in ReadTagDataBlock2(datafile,tid, offset, startTime, endTime))
             {
-                DeCompressDataBlockAllValue(vv.Item1, vv.Item2, vv.Item3, vv.Item4, result);
-                vv.Item1.Dispose();
+                if (vv != null)
+                {
+                    DeCompressDataBlockAllValue(vv.Item1, vv.Item2, vv.Item3, vv.Item4, result);
+                    vv.Item1.Dispose();
+                }
             }
             //sw.Stop();
             //Debug.WriteLine("Read all value:" + sw.ElapsedMilliseconds + " file:" + datafile.FileName);
@@ -1142,6 +1145,8 @@ namespace Cdy.Tag
 
 
             ReadRegionHead(datafile,  offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
+
+            if (tagCount == 0) yield return null;
 
             var tagIndex = tid % tagCount;
 

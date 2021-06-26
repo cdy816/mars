@@ -1050,6 +1050,14 @@ namespace HisDataTools.ViewModel
         /// </summary>
         public DateTime MaxValueTime { get; set; }
 
+        public string MaxValueTimeString
+        {
+            get
+            {
+                return MaxValueTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -1059,6 +1067,17 @@ namespace HisDataTools.ViewModel
         /// 
         /// </summary>
         public DateTime MinValueTime { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+
+        public string MinValueTimeString
+        {
+            get
+            {
+                return MinValueTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            }
+        }
 
         /// <summary>
         /// 

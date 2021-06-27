@@ -1023,6 +1023,8 @@ namespace Cdy.Tag
             return offset;
         }
 
+
+
         private Dictionary<int, List<long>> GetDataRegionHeadPoint(string sfile, SortedDictionary<int,List<DateTime>> ids, DateTime time, out DataFileSeriserbase mFileReader)
         {
             
@@ -1031,7 +1033,7 @@ namespace Cdy.Tag
             DataFileSeriserbase dfs;
             bool isuserhisfile = false;
 
-            if (time > mCurrentTime && mCurrentTime!=DateTime.MinValue)
+            if ((time > mCurrentTime && mCurrentTime!=DateTime.MinValue)||(sfile == GetFileName(DateTime.UtcNow)))
             {
                 //如果需要新建的文件，影响到自动记录存储要用到的文件，
                 //则转到自动记录存储逻辑进行处理

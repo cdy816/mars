@@ -1065,6 +1065,9 @@ namespace Cdy.Tag
                             //新建文件
                             AppendFileHeader(time, this.DatabaseName, mFileWriter2);
                             NewDataRegionHeader(date, mFileWriter2);
+
+                            LoggerService.Service.Info("SeriseEnginer", "new file head and data region head.");
+
                         }
                         else
                         {
@@ -1075,6 +1078,7 @@ namespace Cdy.Tag
                                 //新建文件
                                 AppendFileHeader(time, this.DatabaseName, mFileWriter2);
                                 NewDataRegionHeader(date, mFileWriter2);
+                                LoggerService.Service.Info("SeriseEnginer", "new file head and data region head.");
                             }
                         }
                     }
@@ -1593,6 +1597,8 @@ namespace Cdy.Tag
                     mCurrentDataRegion = FileHeadSize;
                     mPreDataRegion = -1;
                     AppendDataRegionHeader(date,mFileWriter, -1);
+
+                    LoggerService.Service.Info("SeriseEnginer", "new file head and data region head in CheckFile.");
                 }
                 else
                 {
@@ -1604,13 +1610,16 @@ namespace Cdy.Tag
                         mCurrentDataRegion = FileHeadSize;
                         mPreDataRegion = -1;
                         AppendDataRegionHeader(date, mFileWriter, -1);
+                        LoggerService.Service.Info("SeriseEnginer", "new file head and data region head in CheckFile.");
                     }
                     else 
                     {
                         //打开已有文件
                         mPreDataRegion = SearchLastDataRegion();
                         AppendDataRegionHeader(mCurrentTime,mFileWriter, mPreDataRegion);
-                        
+
+                        LoggerService.Service.Info("SeriseEnginer", "new data region head in CheckFile.");
+
                     }
                 }
 

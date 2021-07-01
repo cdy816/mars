@@ -173,7 +173,7 @@ namespace Cdy.Tag
         public void Scan()
         {
             long offset = DataFileManager.FileHeadSize;
-            DateTime time, tmp;
+            DateTime time, tmp=DateTime.MinValue;
             using (var ss = DataFileSeriserManager.manager.GetDefaultFileSersie())
             {
                 ss.OpenForReadOnly(FileName);
@@ -216,13 +216,31 @@ namespace Cdy.Tag
                         if (offset > 0)
                         {
                             var dt2 = ss.ReadDateTime(offset + 16);
-                            mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(dt2 - time, oset, dt2));
-                            tmp = dt2;
+                            if (!mTimeOffsets.ContainsKey(time))
+                            {
+                                var vtmps = (dt2 - time).TotalDays;
+                                if (vtmps <= 30 && vtmps >= 0)
+                                {
+                                    mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(dt2 - time, oset, dt2));
+                                }
+                                else
+                                {
+                                    LoggerService.Service.Warn("DataFileInfo", this.FileName + ": " + offset + " " + vtmps + "  遇到无效数据!");
+                                    Debug.Print(this.FileName + ": " + offset + " " + vtmps+"  无效数据!");
+                                }
+                                tmp = dt2;
+                            }
+                            else
+                            {
+                                tmp = dt2;
+                                break;
+                            }
+                            
                         }
                         else
                         {
                             var tspan = StartTime + Duration - time;
-                            if (tspan.TotalMilliseconds > 0)
+                            if (tspan.TotalMilliseconds >= 0 && !mTimeOffsets.ContainsKey(time))
                                 mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(tspan, oset, time + tspan));
                             tmp = time + tspan;
                         }
@@ -279,10 +297,17 @@ namespace Cdy.Tag
             Dictionary<DateTime, Tuple<TimeSpan, long, DateTime>> re = new Dictionary<DateTime, Tuple<TimeSpan, long, DateTime>>();
             foreach (var vv in mTimeOffsets)
             {
-                //if (vv.Key >= startTime && vv.Key < endTime)
-                if ((startTime >= vv.Key && startTime < vv.Key + vv.Value.Item1) || (endTime >= vv.Key && endTime < vv.Key + vv.Value.Item1) || (vv.Key >= startTime && (vv.Key + vv.Value.Item1) <= endTime))
+                try
                 {
-                    re.Add(vv.Key, vv.Value);
+                    //if (vv.Key >= startTime && vv.Key < endTime)
+                    if ((startTime >= vv.Key && startTime < vv.Key + vv.Value.Item1) || (endTime >= vv.Key && endTime < vv.Key + vv.Value.Item1) || (vv.Key >= startTime && (vv.Key + vv.Value.Item1) <= endTime))
+                    {
+                        re.Add(vv.Key, vv.Value);
+                    }
+                }
+                catch
+                {
+
                 }
             }
 
@@ -615,8 +640,11 @@ namespace Cdy.Tag
             //sw.Start();
             foreach (var vv in ReadTagDataBlock2(datafile,tid, offset, startTime, endTime))
             {
-                DeCompressDataBlockAllValue(vv.Item1, vv.Item2, vv.Item3, vv.Item4, result);
-                vv.Item1.Dispose();
+                if (vv != null)
+                {
+                    DeCompressDataBlockAllValue(vv.Item1, vv.Item2, vv.Item3, vv.Item4, result);
+                    vv.Item1.Dispose();
+                }
             }
             //sw.Stop();
             //Debug.WriteLine("Read all value:" + sw.ElapsedMilliseconds + " file:" + datafile.FileName);
@@ -1117,6 +1145,8 @@ namespace Cdy.Tag
 
 
             ReadRegionHead(datafile,  offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
+
+            if (tagCount == 0) yield return null;
 
             var tagIndex = tid % tagCount;
 

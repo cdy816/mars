@@ -1,8 +1,10 @@
 ﻿using Cdy.Tag;
+using HisDataTools.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -23,7 +25,20 @@ namespace HisDataTools.View
         public HisDataQueryView()
         {
             InitializeComponent();
-            
+        }
+
+        private void ComboBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (!(sender as ComboBox).IsDropDownOpen)
+                (sender as ComboBox).IsDropDownOpen = true;
+        }
+
+        private void ComboBox_FocusableChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if((bool)e.NewValue)
+            {
+                
+            }
         }
     }
 

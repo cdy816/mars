@@ -93,6 +93,18 @@ namespace DBRuntime.His
             Monitor.Exit(this);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Reset()
+        {
+            Time = DateTime.MinValue;
+            EndTime = DateTime.MinValue;
+            CurrentCount = 0;
+            MaxCount = 0;
+            TimeUnit = 0;
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

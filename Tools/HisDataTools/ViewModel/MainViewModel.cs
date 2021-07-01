@@ -11,6 +11,7 @@ using HisDataTools.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows;
 using System.Windows.Input;
 
 namespace HisDataTools
@@ -112,6 +113,8 @@ namespace HisDataTools
                     mOpenCommand = new RelayCommand(() =>
                     {
                         DatabaseSelect();
+
+                        Application.Current.MainWindow.Title = Res.Get("HisDataTools")+ "--"+mSelectDatabase;
                     });
                 }
                 return mOpenCommand;

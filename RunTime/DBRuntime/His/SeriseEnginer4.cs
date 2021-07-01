@@ -447,7 +447,8 @@ namespace Cdy.Tag
 
                                 string sfile = "";
 
-                                if (HisDataArrange4.Arrange.CheckAndReArrangeHisFile(vv.FullName, out sfile, FileDuration, true))
+                                //if (HisDataArrange4.Arrange.CheckAndReArrangeHisFile(vv.FullName, out sfile, FileDuration, true))
+                                if (HisDataArrange4.Arrange.CheckAndReArrangeHisFile(vv.FullName, out sfile, 24, true))
                                 {
                                     HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(sfile);
                                     HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(vv.FullName);
@@ -1022,15 +1023,17 @@ namespace Cdy.Tag
             return offset;
         }
 
+
+
         private Dictionary<int, List<long>> GetDataRegionHeadPoint(string sfile, SortedDictionary<int,List<DateTime>> ids, DateTime time, out DataFileSeriserbase mFileReader)
         {
-
+            
             Dictionary<int,List<long>> re = new Dictionary<int, List<long>>();
 
             DataFileSeriserbase dfs;
             bool isuserhisfile = false;
 
-            if (time > mCurrentTime)
+            if ((time > mCurrentTime && mCurrentTime!=DateTime.MinValue)||(sfile == GetFileName(DateTime.UtcNow)))
             {
                 //如果需要新建的文件，影响到自动记录存储要用到的文件，
                 //则转到自动记录存储逻辑进行处理
@@ -1047,7 +1050,7 @@ namespace Cdy.Tag
                 else
                 {
                     dfs = mFileWriter2;
-                    string hisfile = sfile.Replace(DataFileExtends, HisDataFileExtends);
+                    string hisfile = System.IO.Path.Combine(SeriseEnginer4.HisDataPath, sfile.Replace(DataFileExtends, HisDataFileExtends));
 
                     if (mFileWriter2.CheckExist(hisfile) && mFileWriter2.OpenFile(hisfile) && mFileWriter2.Length > FileHeadSize)
                     {
@@ -1055,12 +1058,16 @@ namespace Cdy.Tag
                     }
                     else
                     {
-                        if (mFileWriter2.CreatOrOpenFile(sfile))
+                        var vfile = System.IO.Path.Combine(SeriseEnginer4.HisDataPath, sfile);
+                        if (mFileWriter2.CreatOrOpenFile(vfile))
                         {
                             var date = new DateTime(time.Year, time.Month, time.Day, ((time.Hour / FileDuration) * FileDuration), 0, 0);
                             //新建文件
                             AppendFileHeader(time, this.DatabaseName, mFileWriter2);
                             NewDataRegionHeader(date, mFileWriter2);
+
+                            LoggerService.Service.Info("SeriseEnginer", "new file head and data region head.");
+
                         }
                         else
                         {
@@ -1071,6 +1078,7 @@ namespace Cdy.Tag
                                 //新建文件
                                 AppendFileHeader(time, this.DatabaseName, mFileWriter2);
                                 NewDataRegionHeader(date, mFileWriter2);
+                                LoggerService.Service.Info("SeriseEnginer", "new file head and data region head.");
                             }
                         }
                     }
@@ -1093,7 +1101,8 @@ namespace Cdy.Tag
                         long ltmp = 0;
                         //计算本次更新对应的指针区域的起始地址
                         var fsh = (vvv.Hour / FileDuration) * FileDuration;
-                        int bid = ((vvv.Hour - fsh) * 60 + time.Minute) / BlockDuration;
+                        //int bid = ((vvv.Hour - fsh) * 60 + time.Minute) / BlockDuration;
+                        int bid = ((vvv.Hour - fsh) * 60 + vvv.Minute) / BlockDuration;
 
                         if (mLastRegionStartTime == DateTime.MaxValue || vvv < mLastRegionStartTime || vvv > mLastRegionEndTime)
                         {
@@ -1137,7 +1146,8 @@ namespace Cdy.Tag
                         long ltmp = 0;
                         //计算本次更新对应的指针区域的起始地址
                         var fsh = (vvv.Hour / FileDuration) * FileDuration;
-                        int bid = ((vvv.Hour - fsh) * 60 + time.Minute) / BlockDuration;
+                        //int bid = ((vvv.Hour - fsh) * 60 + time.Minute) / BlockDuration;
+                        int bid = ((vvv.Hour - fsh) * 60 + vvv.Minute) / BlockDuration;
 
                         if (mLastRegionStartTime == DateTime.MaxValue || vvv < mLastRegionStartTime || vvv > mLastRegionEndTime)
                         {
@@ -1443,9 +1453,9 @@ namespace Cdy.Tag
 
                 var avgcount = vv.ReadInt(8);
                 var avgvalue = vv.ReadDouble(12);
-                var maxtime = vv.ReadLong(20);
+                var maxtime = vv.ReadDateTime(20);
                 var maxvalue = vv.ReadDouble(28);
-                var mintime = vv.ReadLong(36);
+                var mintime = vv.ReadDateTime(36);
                 var minvalue = vv.ReadDouble(44);
 
                 int offset = time.Hour * 48;
@@ -1460,19 +1470,19 @@ namespace Cdy.Tag
                     mfb.WriteDouble(offset + 8, (avgcount * avgvalue + navgvalue * ncount) / (ncount + avgcount));
                 }
 
-                var nmaxtime = mfb.ReadLong(offset + 16);
+                var nmaxtime = mfb.ReadDateTime(offset + 16);
                 var nmaxvalue = mfb.ReadDouble(offset + 24);
-                if (nmaxvalue < maxvalue || nmaxtime==0)
+                if (nmaxvalue < maxvalue || nmaxtime==DateTime.MinValue)
                 {
-                    mfb.WriteLong(offset + 16, maxtime);
+                    mfb.WriteDatetime(offset + 16, maxtime);
                     mfb.WriteDouble(offset + 24, maxvalue);
                 }
 
-                var nmintime = mfb.ReadLong(offset + 32);
+                var nmintime = mfb.ReadDateTime(offset + 32);
                 var nminvalue = mfb.ReadDouble(offset + 40);
-                if (nminvalue > minvalue || nmintime==0)
+                if (nminvalue > minvalue || nmintime== DateTime.MinValue)
                 {
-                    mfb.WriteLong(offset + 32, mintime);
+                    mfb.WriteDatetime(offset + 32, mintime);
                     mfb.WriteDouble(offset + 40, minvalue);
                 }
             }
@@ -1587,6 +1597,8 @@ namespace Cdy.Tag
                     mCurrentDataRegion = FileHeadSize;
                     mPreDataRegion = -1;
                     AppendDataRegionHeader(date,mFileWriter, -1);
+
+                    LoggerService.Service.Info("SeriseEnginer", "new file head and data region head in CheckFile.");
                 }
                 else
                 {
@@ -1598,13 +1610,16 @@ namespace Cdy.Tag
                         mCurrentDataRegion = FileHeadSize;
                         mPreDataRegion = -1;
                         AppendDataRegionHeader(date, mFileWriter, -1);
+                        LoggerService.Service.Info("SeriseEnginer", "new file head and data region head in CheckFile.");
                     }
                     else 
                     {
                         //打开已有文件
                         mPreDataRegion = SearchLastDataRegion();
                         AppendDataRegionHeader(mCurrentTime,mFileWriter, mPreDataRegion);
-                        
+
+                        LoggerService.Service.Info("SeriseEnginer", "new data region head in CheckFile.");
+
                     }
                 }
 

@@ -453,7 +453,7 @@ namespace Cdy.Tag
                 tp.StartTime = mCurrentTime;
                 tp.Parameters = histag.Parameters;
                 tp.Precision = histag.Precision;
-                tp.TimeTick = 100;
+                tp.TimeTick = HisEnginer3.MemoryTimeTick;
                 tp.Id = id;
 
                 var size = tp.Compress(mSourceMemory, 0, this, targetPosition + 5, len, mStaticsMemoryBlock,(id- StartId)*52) + 1;

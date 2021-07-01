@@ -26,7 +26,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <ComboBox VirtualizingPanel.IsVirtualizing="True" IsEditable="True" Text="{Binding SelectTag,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding TagList}"  HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="154" Grid.Column="1"/>
+            <res:AutoFilterCombox VirtualizingPanel.IsVirtualizing="True" IsEditable="True" Text="{Binding SelectTag,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" OrignalItemSource="{Binding TagList}"  HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="154" Grid.Column="1"  />
             <Label Content="{res:ResMarker StartTime, :}" HorizontalAlignment="Left" Margin="170,10,0,0" VerticalAlignment="Top" Grid.Column="1"/>
             <DatePicker SelectedDate="{Binding StartTime,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="5,10,0,0" VerticalAlignment="Top" Width="150" Grid.Column="2"/>
             <ComboBox ItemsSource="{Binding HourItems}" SelectedIndex="{Binding StartTimeHour,UpdateSourceTrigger=PropertyChanged}" IsEditable="True"  HorizontalAlignment="Left" Margin="170,10,0,0" VerticalAlignment="Top" Width="60" Grid.Column="2"/>
@@ -85,7 +85,7 @@
                             <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="100" Header="{res:ResMarker MaxValueTime}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock HorizontalAlignment="Center" Text="{Binding MaxValueTime}" VerticalAlignment="Center" />
+                                        <TextBlock HorizontalAlignment="Center" Text="{Binding MaxValueTimeString}" VerticalAlignment="Center" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -100,7 +100,7 @@
                             <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="100" Header="{res:ResMarker MinValueTime}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock HorizontalAlignment="Center" Text="{Binding MinValueTime}" VerticalAlignment="Center" />
+                                        <TextBlock HorizontalAlignment="Center" Text="{Binding MinValueTimeString}" VerticalAlignment="Center" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

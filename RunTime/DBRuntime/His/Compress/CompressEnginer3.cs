@@ -118,7 +118,7 @@ namespace Cdy.Tag
             foreach (var vv in mTargetMemorys)
             {
                 vv.Value.Init(ServiceLocator.Locator.Resolve<IHisEngine3>().CurrentMergeMemory);
-                LoggerService.Service.Info("CompressEnginer", "Cal CompressMemory memory size:" + vv.Value.Length / 1024.0 / 1024 + "M", ConsoleColor.Cyan);
+                LoggerService.Service.Info("CompressEnginer", "分配内存大小:" + (vv.Value.Length / 1024.0 / 1024).ToString("f1") + " M");
             }
         }
 

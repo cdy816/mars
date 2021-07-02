@@ -113,5 +113,7 @@ namespace SpiderDriver.ClientApi
 
         public const byte TagInfoServerBusy = 35;
         public const byte TagINfoServerNoBusy = 36;
+
+        public const byte Hart = 255;
     }
 }

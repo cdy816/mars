@@ -220,7 +220,7 @@ namespace Cdy.Tag
             mMHandle = (void*)mGCHandle.AddrOfPinnedObject();
             mMemory.AsSpan().Clear();
 
-            LoggerService.Service.Info("RealEnginer","Cal memory size:"+ fsize / 1024.0/1024+"M",ConsoleColor.Cyan);
+            LoggerService.Service.Info("RealEnginer", "分配内存大小:" + (fsize / 1024.0/1024).ToString("f1")+" M");
 
             foreach (var vv in mConfigDatabase.Tags)
             {

@@ -1107,8 +1107,8 @@ namespace Cdy.Tag
                 }
             }
 
-            LoggerService.Service.Info("HisEnginer", "Cal MergeMemory memory size:" + (storeHeadSize/1024.0/1024 *2)+"M", ConsoleColor.Cyan);
-            LoggerService.Service.Info("HisEnginer", "Cal CachMemoryBlock memory size:" + (cachHeadSize / 1024.0 / 1024 *2) + "M", ConsoleColor.Cyan);
+            LoggerService.Service.Info("HisEnginer", "分配二次缓存大小:" + (storeHeadSize/1024.0/1024 *2).ToString("f1") + " M");
+            LoggerService.Service.Info("HisEnginer", "分配一次缓存大小:" + (cachHeadSize / 1024.0 / 1024 *2).ToString("f1") + " M");
 
             CurrentMemory = mCachMemory1;
             mCurrentMergeMemory = mMergeMemory1;
@@ -1357,7 +1357,7 @@ namespace Cdy.Tag
 
             mcc.MakeMemoryNoBusy();
             sw.Stop();
-            LoggerService.Service.Info("HisEnginer", "合并完成 " + mcc.Name+" 次数:"+(count+1)+" 耗时:"+sw.ElapsedMilliseconds);
+            LoggerService.Service.Info("HisEnginer", "合并完成 " + mcc.Name+" 次数:"+(count+1)+" 耗时:"+sw.ElapsedMilliseconds, ConsoleColor.Green);
         }
 
 
@@ -1401,7 +1401,7 @@ namespace Cdy.Tag
             if (mMergeCount==0)
             {
                 mNeedSnapAllTag = true;
-                LoggerService.Service.Info("HisEnginer", "使用新的时间起点:" + CurrentMemory.Name + "  " + FormateDatetime(CurrentMemory.CurrentDatetime), ConsoleColor.Cyan);
+                LoggerService.Service.Debug("HisEnginer", "使用新的时间起点:" + CurrentMemory.Name + "  " + FormateDatetime(CurrentMemory.CurrentDatetime));
                 HisRunTag.StartTime = dateTime;
             }
 
@@ -1429,7 +1429,7 @@ namespace Cdy.Tag
             //long ltmp3 = sw.ElapsedMilliseconds;
             sw.Stop();
 
-            LoggerService.Service.Info("HisEnginer", "SubmiteMemory 耗时:" + sw.ElapsedMilliseconds, ConsoleColor.Cyan);
+            LoggerService.Service.Info("HisEnginer", "SubmiteMemory 耗时:" + sw.ElapsedMilliseconds);
 
         }
 
@@ -1439,15 +1439,15 @@ namespace Cdy.Tag
         private void SnapeAllTag()
         {
             mSnapAllTagTime = DateTime.UtcNow;
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
+            //Stopwatch sw = new Stopwatch();
+            //sw.Start();
             foreach(var vv in mHisTags)
             {
                 //if(vv.Value.Type != RecordType.Driver)
                 vv.Value.Snape();
             }
-            sw.Stop();
-            LoggerService.Service.Info("HisEnginer", "快照记录数值:" + FormateDatetime(mSnapAllTagTime.ToLocalTime()) + " 耗时:" + sw.ElapsedMilliseconds, ConsoleColor.Cyan);
+            //sw.Stop();
+            //LoggerService.Service.Info("HisEnginer", "快照记录数值:" + FormateDatetime(mSnapAllTagTime.ToLocalTime()) + " 耗时:" + sw.ElapsedMilliseconds, ConsoleColor.Cyan);
         }
 
         /// <summary>
@@ -1494,7 +1494,7 @@ namespace Cdy.Tag
         private void RecordAllLastValue()
         {
             DateTime time = mSnapAllTagTime;
-            LoggerService.Service.Info("HisEnginer", "RecordAllLastValue:" + FormateDatetime(time), ConsoleColor.Cyan);
+            LoggerService.Service.Info("HisEnginer", "RecordAllLastValue:" + FormateDatetime(time));
             ushort timespan = (ushort)((time - mCurrentMergeMemory.CurrentDatetime).TotalMilliseconds / 100);
             foreach (var vv in mCurrentMergeMemory.TagAddress)
             {

@@ -29,6 +29,11 @@ namespace Cdy.Tag
         public TagGroup Parent { get; set; }
 
         /// <summary>
+        /// 描述
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
         /// 
         /// </summary>
         public string FullName { get { return Parent == null ? Name : Parent.FullName + "." + Name; } }
@@ -54,6 +59,10 @@ namespace Cdy.Tag
         {
             XElement xe = new XElement("TagGroup");
             xe.SetAttributeValue("Name", group.Name);
+            if(!string.IsNullOrEmpty(group.Description))
+            {
+                xe.SetAttributeValue("Description", group.Description);
+            }
             if(group.Parent!=null)
             xe.SetAttributeValue("Parent", group.Parent.FullName);
             xe.SetAttributeValue("FullName", group.FullName);
@@ -69,8 +78,8 @@ namespace Cdy.Tag
         //{
         //    TagGroup group = new TagGroup();
         //    group.Name = xe.Attribute("Name").Value;
-        //    if(xe.Attribute("Parent") !=null)
-        //    group.ParentName = xe.Attribute("Parent").Value;
+        //    if (xe.Attribute("Parent") != null)
+        //        group.ParentName = xe.Attribute("Parent").Value;
         //    group.FullNameString = xe.Attribute("FullName").Value;
         //    return group;
         //}

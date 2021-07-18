@@ -894,7 +894,7 @@ namespace DBDevelopService
                         i++;
                     }
 
-                    Cdy.Tag.TagGroup tgg = vsg != null ? new Cdy.Tag.TagGroup() { Name = sname, Parent = vtg } : null;
+                    Cdy.Tag.TagGroup tgg = vsg != null ? new Cdy.Tag.TagGroup() { Name = sname, Parent = vtg,Description=vsg.Description } : null;
 
                     if (tgg == null) return Task.FromResult(new PasteGroupReplay() { Result = false });
 
@@ -920,6 +920,32 @@ namespace DBDevelopService
             return Task.FromResult(new PasteGroupReplay() { Result = false, ErroMessage = "database not exist!" });
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> UpdateGroupDescription(UpdateGroupDescriptionRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, request.Database))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                DbManager.Instance.CheckAndContinueLoadDatabase(db);
+                var vtg = db.RealDatabase.Groups.ContainsKey(request.GroupName) ? db.RealDatabase.Groups[request.GroupName] : null;
+                if(vtg!=null)
+                {
+                    vtg.Description = request.Desc;
+                }
+                return Task.FromResult(new BoolResultReplay() { Result = true });
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = false, ErroMessage = "database not exist!" });
+        }
 
 
         /// <summary>
@@ -1020,7 +1046,7 @@ namespace DBDevelopService
                     DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     foreach (var vv in db.RealDatabase.Groups)
                     {
-                        re.Group.Add(new TagGroup() { Name = vv.Key, Parent = vv.Value.Parent != null ? vv.Value.Parent.FullName : "" });
+                        re.Group.Add(new TagGroup() { Name = vv.Key, Parent = vv.Value.Parent != null ? vv.Value.Parent.FullName : "",Description=vv.Value.Description!=null?vv.Value.Description:"" });
                     }
                 }
             }

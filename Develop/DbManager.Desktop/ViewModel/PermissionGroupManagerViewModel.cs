@@ -207,9 +207,9 @@ namespace DBInStudio.Desktop.ViewModel
                 var vg = DevelopServiceHelper.Helper.QueryTagGroups(Database);
                 foreach(var vv in vg)
                 {
-                    if(!mGroups.Contains(vv.Key))
+                    if(!mGroups.Contains(vv.Item1))
                     {
-                        mAllGroups.Add(new GroupItemModel() { Name = vv.Key, IsSelected = false });
+                        mAllGroups.Add(new GroupItemModel() { Name = vv.Item1, IsSelected = false });
                     }
                 }
             }

@@ -310,6 +310,7 @@
                             <MenuItem Header="{local:ResMarker Add}"  Command="{Binding AddCommand}" />
                             <MenuItem Header="{local:ResMarker Remove}"  Command="{Binding RemoveCommand}" />
                             <MenuItem Header="{local:ResMarker ReName}"  Command="{Binding ReNameCommand}" />
+                            <MenuItem Header="{local:ResMarker SetDescription}"  Command="{Binding SetDescriptionCommand}" />
                             <MenuItem Header="{local:ResMarker Copy}" Command="{Binding CopyCommand}" />
                             <MenuItem Header="{local:ResMarker Paste}" Command="{Binding PasteCommand}" />
                         </ContextMenu>
@@ -323,8 +324,14 @@
                             <StackPanel Orientation="Horizontal" Height="24"  Background="Transparent">
                                 <Image Focusable="False" Source="/Image/文件夹.png"  Margin="0,0,4,0" Height="18" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                                 <Grid ContextMenu="{StaticResource groupMenu}"  Background="{Binding Background}" VerticalAlignment="Center" Focusable="False"  Name="spanel"    >
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
                                     <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{Binding Name}" VerticalAlignment="Center" />
-                                    <TextBox Background="#FF000000" Foreground="{DynamicResource Window.Forground}" LostFocus="TextBox_LostFocus" KeyDown="TextBox_KeyDown" IsVisibleChanged="TextBox_IsVisibleChanged" Loaded="TextBox_Loaded" Text="{Binding Name,Mode=TwoWay,NotifyOnTargetUpdated=True,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Center" Visibility="{Binding IsEdit,Converter={StaticResource btv}}"  />
+                                    <TextBlock Margin="5,0,0,0" Grid.Column="1" Foreground="{DynamicResource Window.Forground}" Text="{Binding Description}" VerticalAlignment="Center" />
+                                    <TextBox Background="#FF000000" Grid.ColumnSpan="2" Foreground="{DynamicResource Window.Forground}" LostFocus="TextBox_LostFocus" KeyDown="TextBox_KeyDown" IsVisibleChanged="TextBox_IsVisibleChanged" Loaded="TextBox_Loaded" Text="{Binding Name,Mode=TwoWay,NotifyOnTargetUpdated=True,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Center" Visibility="{Binding IsEdit,Converter={StaticResource btv}}"  />
+                                    <TextBox Background="#FF000000" Grid.ColumnSpan="2" Foreground="{DynamicResource Window.Forground}" LostFocus="TextBox_LostFocus" KeyDown="TextBox_KeyDown" IsVisibleChanged="TextBox_IsVisibleChanged" Loaded="TextBox_Loaded" Text="{Binding Description,Mode=TwoWay,NotifyOnTargetUpdated=True,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Center" Visibility="{Binding IsDescriptionEdit,Converter={StaticResource btv}}"  />
                                 </Grid>
                             </StackPanel>
                         </HierarchicalDataTemplate>

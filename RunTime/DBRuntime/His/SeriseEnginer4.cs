@@ -469,6 +469,33 @@ namespace Cdy.Tag
         }
 
         /// <summary>
+        /// 压缩文件
+        /// </summary>
+        /// <param name="sfile"></param>
+        private void ZipFile(string sfile)
+        {
+            try
+            {
+                string tfile = System.IO.Path.GetFileNameWithoutExtension(sfile) + ".z" + System.IO.Path.GetExtension(sfile);
+                using (System.IO.Compression.BrotliStream bs = new System.IO.Compression.BrotliStream(System.IO.File.Create(tfile), System.IO.Compression.CompressionLevel.Optimal))
+                {
+                    using (var vss = System.IO.File.Open(sfile, System.IO.FileMode.Open, System.IO.FileAccess.Read))
+                    {
+                        vss.CopyTo(bs);
+                        vss.Flush();
+                    }
+                }
+                System.IO.File.Delete(sfile);
+                HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(sfile);
+                HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(tfile);
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Erro("SeriseEnginer4", "ZipFile: " + ex.Message);
+            }
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="path"></param>

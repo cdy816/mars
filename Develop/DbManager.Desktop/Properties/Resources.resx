@@ -411,6 +411,9 @@
   <data name="ServerSetting" xml:space="preserve">
     <value>Server setting</value>
   </data>
+  <data name="SetDescription" xml:space="preserve">
+    <value>SetDescription</value>
+  </data>
   <data name="SetPasswordfail" xml:space="preserve">
     <value>set password fail.</value>
   </data>

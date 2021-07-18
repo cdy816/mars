@@ -982,10 +982,10 @@ namespace DBInStudio.Desktop
             var vv = DevelopServiceHelper.Helper.QueryTagGroups(this.mDatabase);
             if(vv!=null)
             {
-                foreach(var vvv in vv.Where(e=>string.IsNullOrEmpty(e.Value)))
+                foreach(var vvv in vv.Where(e=>string.IsNullOrEmpty(e.Item3)))
                 {
                     Application.Current?.Dispatcher.Invoke(() => {
-                        TagGroupViewModel groupViewModel = new TagGroupViewModel() { mName = vvv.Key,Database=mDatabase,Parent = mRootTagGroupModel };
+                        TagGroupViewModel groupViewModel = new TagGroupViewModel() { mName = vvv.Item1,Database=mDatabase,Parent = mRootTagGroupModel,mDescription=vvv.Item2 };
                         mRootTagGroupModel.Children.Add(groupViewModel);
                         groupViewModel.InitData(vv);
                     });

@@ -143,6 +143,10 @@ namespace Cdy.Tag
 
                         string fullName = vv.Attribute("FullName").Value;
 
+                        if(vv.Attribute("Description") !=null)
+                        {
+                            group.Description = vv.Attribute("Description").Value;
+                        }
 
                         if(!groups.ContainsKey(fullName))
                         {

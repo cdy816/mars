@@ -158,7 +158,8 @@ service DevelopServer {
   //移动变量组
   rpc MoveTagGroup(MoveGroupRequest) returns (BoolResultReplay);
 
-
+  //更新变量组描述信息
+  rpc UpdateGroupDescription(UpdateGroupDescriptionRequest) returns (BoolResultReplay);
 
   //保存
   rpc Save(GetRequest) returns (BoolResultReplay);
@@ -591,6 +592,15 @@ message RenameGroupRequest
     string NewName=4;
 }
 
+//更新组的描述
+message UpdateGroupDescriptionRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string GroupName=3;
+    string Desc=4;
+}
+
 //
 message MoveGroupRequest
 {
@@ -756,6 +766,7 @@ message TagGroup
 {
     string Name=1;
     string Parent=2;
+    string Description=3;
 }
 
 message Group

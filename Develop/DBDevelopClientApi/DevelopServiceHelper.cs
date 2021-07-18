@@ -269,14 +269,14 @@ namespace DBDevelopClientApi
         /// 
         /// </summary>
         /// <returns></returns>
-        public Dictionary<string,string> QueryTagGroups(string database)
+        public List<Tuple<string,string,string>> QueryTagGroups(string database)
         {
-            Dictionary<string, string> re = new Dictionary<string, string>();
+            List<Tuple<string, string, string>> re = new List<Tuple<string, string, string>>();
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
                 foreach(var vv in mCurrentClient.GetTagGroup(new DBDevelopService.GetRequest() { Database = database, LoginId = mLoginId }).Group)
                 {
-                    re.Add(vv.Name, vv.Parent);
+                    re.Add(new Tuple<string, string, string>(vv.Name,vv.Description, vv.Parent));
                 }
             }
             return re;
@@ -1143,6 +1143,23 @@ namespace DBDevelopClientApi
                 return mCurrentClient.AddTagGroup(new DBDevelopService.AddGroupRequest() { Database = database, LoginId = mLoginId, Name = name, ParentName = parentName }).Group;
             }
             return string.Empty;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="groupname"></param>
+        /// <param name="desc"></param>
+        /// <returns></returns>
+        public bool UpdateGroupDescription(string database, string groupname, string desc)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.UpdateGroupDescription(new DBDevelopService.UpdateGroupDescriptionRequest() { Database = database, LoginId = mLoginId, GroupName = groupname, Desc = desc }).Result;
+            }
+            return false;
         }
 
         /// <summary>

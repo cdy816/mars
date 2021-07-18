@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Windows.Input;
 
 namespace DBInStudio.Desktop
 {
@@ -24,6 +25,13 @@ namespace DBInStudio.Desktop
     {
 
         #region ... Variables  ...
+
+        internal string mDescription;
+
+        private ICommand mSetDescriptionCommand;
+
+        private bool mIsDescriptionEdit = false;
+
         public static TagGroupViewModel CopyTarget { get; set; }
         #endregion ...Variables...
 
@@ -32,12 +40,83 @@ namespace DBInStudio.Desktop
         #endregion ...Events...
 
         #region ... Constructor...
+        public TagGroupViewModel()
+        {
 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="description"></param>
+        public TagGroupViewModel(string name, string description)
+        {
+            mDescription = description;
+            Name = name;
+        }
         #endregion ...Constructor...
 
         #region ... Properties ...
 
+        public ICommand SetDescriptionCommand
+        {
+            get
+            {
+                if(mSetDescriptionCommand==null)
+                {
+                    mSetDescriptionCommand = new RelayCommand(() => {
+                        IsDescriptionEdit = true;
+                    });
+                }
+                return mSetDescriptionCommand;
+            }
+        }
+
         public override string FullName => (Parent!=null && !(Parent is RootTagGroupViewModel)) ? (Parent as TagGroupViewModel).FullName + "." + Name : Name;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Description
+        {
+            get
+            {
+                return mDescription;
+            }
+            set
+            {
+                if (mDescription != value)
+                {
+                    if (DevelopServiceHelper.Helper.UpdateGroupDescription(this.Database, this.FullName, value))
+                    {
+                        mDescription = value;
+                        IsDescriptionEdit = false;
+                    }
+                    OnPropertyChanged("Description");
+                }
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool IsDescriptionEdit
+        {
+            get
+            {
+                return mIsDescriptionEdit;
+            }
+            set
+            {
+                if (mIsDescriptionEdit != value)
+                {
+
+                    mIsDescriptionEdit = value;
+                    OnPropertyChanged("IsDescriptionEdit");
+                }
+            }
+        }
 
 
         #endregion ...Properties...
@@ -185,7 +264,7 @@ namespace DBInStudio.Desktop
             string sgroup = DevelopServiceHelper.Helper.PasteTagGroup(Database, CopyTarget.FullName, FullName);
             if (!string.IsNullOrEmpty(sgroup))
             {
-                this.Children.Add(new TagGroupViewModel() { Database = this.Database, mName = sgroup });
+                this.Children.Add(new TagGroupViewModel() { Database = this.Database, mName = sgroup,mDescription="" });
             }
         }
 
@@ -205,16 +284,16 @@ namespace DBInStudio.Desktop
         /// 
         /// </summary>
         /// <param name="groups"></param>
-        public void InitData(Dictionary<string, string> groups)
+        public void InitData(List<Tuple<string,string, string>> groups)
         {
-            foreach (var vv in groups.Where(e => e.Value == this.FullName))
+            foreach (var vv in groups.Where(e => e.Item3 == this.FullName))
             {
-                string sname = vv.Key;
-                if (!string.IsNullOrEmpty(vv.Value))
+                string sname = vv.Item1;
+                if (!string.IsNullOrEmpty(vv.Item3))
                 {
-                    sname = sname.Substring(sname.IndexOf(vv.Value) + vv.Value.Length + 1);
+                    sname = sname.Substring(sname.IndexOf(vv.Item3) + vv.Item3.Length + 1);
                 }
-                TagGroupViewModel groupViewModel = new TagGroupViewModel() { mName = sname, Database = Database };
+                TagGroupViewModel groupViewModel = new TagGroupViewModel() { mName = sname, Database = Database,mDescription=vv.Item2 };
                 groupViewModel.Parent = this;
                 this.Children.Add(groupViewModel);
             }

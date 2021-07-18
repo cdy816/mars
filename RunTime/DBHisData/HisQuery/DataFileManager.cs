@@ -46,7 +46,15 @@ namespace Cdy.Tag
         /// </summary>
         public const string DataFileExtends = ".dbd";
 
+        /// <summary>
+        /// 
+        /// </summary>
         public const string HisDataFileExtends = ".his";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string ZipHisDataFileExtends = ".zhis";
 
         /// <summary>
         /// 

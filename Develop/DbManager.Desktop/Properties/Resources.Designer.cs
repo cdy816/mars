@@ -934,6 +934,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 SetDescription 的本地化字符串。
+        /// </summary>
+        internal static string SetDescription {
+            get {
+                return ResourceManager.GetString("SetDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 set password fail. 的本地化字符串。
         /// </summary>
         internal static string SetPasswordfail {

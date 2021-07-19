@@ -59,7 +59,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class HisDataFileInfo4:DataFileInfo4
+    public class HisDataFileInfo4 : DataFileInfo4
     {
 
         #region ... Variables  ...
@@ -93,6 +93,8 @@ namespace Cdy.Tag
     public static unsafe class HisDataFileInfo4Extend
     {
 
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -100,10 +102,55 @@ namespace Cdy.Tag
         /// <returns></returns>
         public static DataFileSeriserbase GetFileSeriser(this HisDataFileInfo4 file)
         {
+            //判断是否为压缩文件
+            if (file.IsZipFile && (System.IO.Path.GetExtension(file.FileName) == DataFileManager.ZipHisDataFileExtends || !System.IO.File.Exists(file.FileName)))
+            {
+                if (!System.IO.File.Exists(file.FileName)&&!string.IsNullOrEmpty(file.BackFileName)) file.FileName = file.BackFileName;
+
+                string spath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(file.FileName), "tmp");
+                if (!System.IO.Directory.Exists(spath))
+                {
+                    System.IO.Directory.CreateDirectory(spath);
+                }
+                spath = System.IO.Path.Combine(spath, file.FileName.Replace(DataFileManager.ZipHisDataFileExtends, DataFileManager.HisDataFileExtends));
+                UnZipFile(file.FileName, spath);
+                file.BackFileName = file.FileName;
+                file.FileName = spath;
+            }
             var re = DataFileSeriserManager.manager.GetDefaultFileSersie();
             re.FileName = file.FileName;
             re.OpenForReadOnly(file.FileName);
             return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sfile"></param>
+        /// <param name="targetfile"></param>
+        private static void UnZipFile(string sfile,string targetfile)
+        {
+            try
+            {
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                using (System.IO.Compression.BrotliStream bs = new System.IO.Compression.BrotliStream(System.IO.File.Open(sfile, System.IO.FileMode.Open), System.IO.Compression.CompressionMode.Decompress))
+                {
+                    using (var vss = System.IO.File.Open(targetfile, System.IO.FileMode.OpenOrCreate, System.IO.FileAccess.ReadWrite))
+                    {
+                        bs.CopyTo(vss);
+                        vss.Flush();
+                    }
+                    bs.Close();
+                }
+
+                sw.Stop();
+                LoggerService.Service.Info(" HisDataFileInfo4", "Zip 解压文件文件 " + targetfile + " 耗时:" + sw.ElapsedMilliseconds);
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Service.Info(" HisDataFileInfo4", "Zip 解压文件文件 " +ex.Message);
+            }
         }
 
         #region 读取所有值

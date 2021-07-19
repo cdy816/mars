@@ -546,7 +546,7 @@ namespace Cdy.Tag
                 SeriseEnginer4.HisDataPathPrimary = mHisDatabase.Setting.HisDataPathPrimary;
                 SeriseEnginer4.HisDataPathBack = mHisDatabase.Setting.HisDataPathBack;
                 SeriseEnginer4.HisDataKeepTimeInPrimaryPath = mHisDatabase.Setting.HisDataKeepTimeInPrimaryPath;
-
+                SeriseEnginer4.KeepNoZipFileDays = mHisDatabase.Setting.KeepNoZipFileDays;
                 seriseEnginer.Init();
                 ServiceLocator.Locator.Registor<IDataSerialize3>(seriseEnginer);
 

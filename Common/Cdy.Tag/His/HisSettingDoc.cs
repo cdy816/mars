@@ -71,6 +71,11 @@ namespace Cdy.Tag
         /// </summary>
         public int HisDataKeepTimeInPrimaryPath { get; set; } = 360;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public int KeepNoZipFileDays { get; set; } = -1;
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -104,6 +109,8 @@ namespace Cdy.Tag
             if (!string.IsNullOrEmpty(doc.HisDataPathBack))
                 xe.SetAttributeValue("HisDataPathBack", doc.HisDataPathBack);
             xe.SetAttributeValue("HisDataKeepTimeInPrimaryPath", doc.HisDataKeepTimeInPrimaryPath);
+
+            xe.SetAttributeValue("KeepNoZipFileDays", doc.KeepNoZipFileDays);
 
             return xe;
         }
@@ -139,6 +146,12 @@ namespace Cdy.Tag
             if (element.Attribute("HisDataKeepTimeInPrimaryPath") != null)
             {
                 re.HisDataKeepTimeInPrimaryPath = int.Parse(element.Attribute("HisDataKeepTimeInPrimaryPath").Value);
+            }
+
+
+            if (element.Attribute("KeepNoZipFileDays") != null)
+            {
+                re.KeepNoZipFileDays = int.Parse(element.Attribute("KeepNoZipFileDays").Value);
             }
 
             return re;

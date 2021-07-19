@@ -149,6 +149,10 @@ namespace Cdy.Tag
         /// </summary>
         public string DataSeriser { get; set; }
 
+        /// <summary>
+        /// 保持历史文件不执行 Zip 压缩的时间
+        /// </summary>
+        public static int KeepNoZipFileDays { get; set; } = -1;
 
         /// <summary>
         /// 主历史记录路径
@@ -454,8 +458,11 @@ namespace Cdy.Tag
                                     HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(vv.FullName);
                                 }
                             }
+                            if (KeepNoZipFileDays >= 0)
+                                CheckAndZipHisFile(wpath);
+
                         }
-                        catch(Exception ex)
+                        catch (Exception ex)
                         {
                             LoggerService.Service.Erro("SeriseEnginer4", "DataFileReArrangeThreadPro: " + ex.Message);
                         }
@@ -469,6 +476,36 @@ namespace Cdy.Tag
         }
 
         /// <summary>
+        /// Zip .his file to save disk
+        /// </summary>
+        /// <param name="wpath"></param>
+        private void CheckAndZipHisFile(string wpath)
+        {
+            foreach (var vv in new System.IO.DirectoryInfo(wpath).GetFiles("*.his"))
+            {
+                if (mIsClosed) break;
+                while (mIsBusy) Thread.Sleep(1000);
+
+                if (mIsClosed) break;
+
+                string file = vv.FullName;
+
+                if (System.IO.File.Exists(file))
+                {
+                    System.IO.FileInfo finfo = new System.IO.FileInfo(file);
+
+                    if((DateTime.Now - finfo.LastWriteTime).TotalDays> KeepNoZipFileDays)
+                    {
+                        //保留7天的His格式的数据
+                        ZipFile(finfo.FullName);
+                    }
+
+                }
+                
+            }
+        }
+
+        /// <summary>
         /// 压缩文件
         /// </summary>
         /// <param name="sfile"></param>
@@ -476,18 +513,24 @@ namespace Cdy.Tag
         {
             try
             {
-                string tfile = System.IO.Path.GetFileNameWithoutExtension(sfile) + ".z" + System.IO.Path.GetExtension(sfile);
-                using (System.IO.Compression.BrotliStream bs = new System.IO.Compression.BrotliStream(System.IO.File.Create(tfile), System.IO.Compression.CompressionLevel.Optimal))
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                string tfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(sfile), System.IO.Path.GetFileNameWithoutExtension(sfile) + ".z" + System.IO.Path.GetExtension(sfile).Replace(".", ""));
+                using (System.IO.Compression.BrotliStream bs = new System.IO.Compression.BrotliStream(System.IO.File.Create(tfile),System.IO.Compression.CompressionLevel.Optimal))
                 {
                     using (var vss = System.IO.File.Open(sfile, System.IO.FileMode.Open, System.IO.FileAccess.Read))
                     {
                         vss.CopyTo(bs);
-                        vss.Flush();
+                        vss.Close();
                     }
+                    bs.Flush();
+                    bs.Close();
                 }
                 System.IO.File.Delete(sfile);
                 HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(sfile);
                 HisQueryManager.Instance.GetFileManager(DatabaseName).UpdateFile(tfile);
+                sw.Stop();
+                LoggerService.Service.Info("SeriseEnginer4", "Zip 压缩文件 " +tfile +" 耗时:"+sw.ElapsedMilliseconds);
             }
             catch(Exception ex)
             {

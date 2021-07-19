@@ -553,7 +553,7 @@ namespace Cdy.Tag
                 System.IO.FileInfo finfo = new FileInfo(fileName);
                 if (finfo != null)
                 {
-                    if (finfo.Extension == DataFileExtends || finfo.Extension == HisDataFileExtends)
+                    if (finfo.Extension == DataFileExtends || finfo.Extension == HisDataFileExtends || finfo.Extension == ZipHisDataFileExtends)
                     {
                         ParseFileName(finfo);
                     }
@@ -690,9 +690,9 @@ namespace Cdy.Tag
             {
                 yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new DataFileInfo4() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName, FId = mDatabaseName + id });
             }
-            else if (file.Extension==HisDataFileExtends)
+            else if (file.Extension==HisDataFileExtends || file.Extension== ZipHisDataFileExtends)
             {
-                yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new HisDataFileInfo4() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName, FId = mDatabaseName + id });
+                yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new HisDataFileInfo4() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName, FId = mDatabaseName + id ,IsZipFile= file.Extension == ZipHisDataFileExtends });
             }
         }
 

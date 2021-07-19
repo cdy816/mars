@@ -95,6 +95,11 @@ namespace Cdy.Tag
         public string FileName { get; set; }
 
         /// <summary>
+        /// 
+        /// </summary>
+        public string BackFileName { get; set; }
+
+        /// <summary>
         /// 开始时间
         /// </summary>
         public DateTime StartTime { get; set; }
@@ -119,6 +124,11 @@ namespace Cdy.Tag
         /// </summary>
         public TimeSpan Duration { get; set; }
 
+        /// <summary>
+        /// 是否为压缩文件
+        /// </summary>
+        public bool IsZipFile { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -131,6 +141,9 @@ namespace Cdy.Tag
 
             lock (mLockObj)
             {
+                //对于压缩文件，说明很老的文件，不需要更新
+                if (IsZipFile) return;
+
                 //mTimeOffsets.Clear();
                 GetFileLastUpdateTime();
 
@@ -138,7 +151,8 @@ namespace Cdy.Tag
                 {
                     if (DataFileManager.CurrentDateTime.ContainsKey(FId))
                     {
-                        DataFileManager.CurrentDateTime[FId] = mLastTime;
+                        if (DataFileManager.CurrentDateTime[FId] < mLastTime)
+                            DataFileManager.CurrentDateTime[FId] = mLastTime;
                     }
                     else
                     {
@@ -226,7 +240,7 @@ namespace Cdy.Tag
                                 else
                                 {
                                     LoggerService.Service.Warn("DataFileInfo", this.FileName + ": " + offset + " " + vtmps + "  遇到无效数据!");
-                                    Debug.Print(this.FileName + ": " + offset + " " + vtmps+"  无效数据!");
+                                    //Debug.Print(this.FileName + ": " + offset + " " + vtmps+"  无效数据!");
                                 }
                                 tmp = dt2;
                             }

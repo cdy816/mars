@@ -260,7 +260,7 @@ namespace Cdy.Tag
             }
 
             
-            if(logFiles.Count>9)
+            if(logFiles.Count>6)
             {
                 foreach(var vv in logFiles.OrderBy(e=>e.Key).Take(5))
                 {

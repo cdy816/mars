@@ -68,6 +68,7 @@
             <RowDefinition Height="36"/>
             <RowDefinition Height="36"/>
             <RowDefinition Height="36"/>
+            <RowDefinition Height="36"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Border Margin="5,0" Grid.ColumnSpan="2" BorderThickness="0,0,0,0.5" SnapsToDevicePixels="True" UseLayoutRounding="True" BorderBrush="{DynamicResource Window.Forground}">
@@ -88,9 +89,10 @@
 
         <TextBlock Text="{local:ResMarker ServerBackupDataPath,:}" HorizontalAlignment="Left" Margin="10,0,10,0" Grid.Row="3" VerticalAlignment="Center"/>
         <TextBox CaretBrush="{DynamicResource Window.Forground}" Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" Height="24" VerticalContentAlignment="Center" Grid.Column="1" Grid.Row="3" HorizontalAlignment="Left" Margin="10,0,0,0" Text="{Binding DataBackupPath,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" TextWrapping="Wrap" VerticalAlignment="Center" Width="420"/>
-        
-        
-        <ListBox HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,10" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" Background="{x:Null}" BorderThickness="0" Grid.Row="4" Grid.ColumnSpan="2"  ItemsSource="{Binding Children}">
+
+        <TextBlock Text="{local:ResMarker EnableZipFile,:}" HorizontalAlignment="Left" Margin="10,0,10,0" Grid.Row="4" VerticalAlignment="Center"/>
+        <CheckBox IsChecked="{Binding IsEnableZipFile,Mode=TwoWay}" Foreground="White"  Background="Transparent" BorderBrush="White" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Left"/>
+        <ListBox HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,10" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" Background="{x:Null}" BorderThickness="0" Grid.Row="5" Grid.ColumnSpan="2"  ItemsSource="{Binding Children}">
 
         </ListBox>
 

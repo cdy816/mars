@@ -316,6 +316,32 @@ namespace DBDevelopService.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
+        public object  UpdateGroupDescription(WebApiUpdateGroupDescriptionRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                DbManager.Instance.CheckAndContinueLoadDatabase(db);
+                var vtg = db.RealDatabase.Groups.ContainsKey(request.GroupName) ? db.RealDatabase.Groups[request.GroupName] : null;
+                if (vtg != null)
+                {
+                    vtg.Description = request.Desc;
+                }
+                return Task.FromResult(new BoolResultReplay() { Result = true });
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = false, ErroMessage = "database not exist!" });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
         public object RemoveTagGroup(WebApiRemoveGroupRequest request)
         {
             if (!CheckLoginId(request.Id, request.Database))
@@ -888,6 +914,7 @@ namespace DBDevelopService.Controllers
                 db.HisDatabase.Setting.HisDataPathPrimary = request.DataPath;
                 db.HisDatabase.Setting.HisDataPathBack = request.DataPathBackup;
                 db.HisDatabase.Setting.HisDataKeepTimeInPrimaryPath = request.KeepTimeInDataPath;
+                db.HisDatabase.Setting.KeepNoZipFileDays = request.KeepNoZipFileDays;
                 return new ResultResponse() { Result = true };
             }
             return new ResultResponse() { Result = false };

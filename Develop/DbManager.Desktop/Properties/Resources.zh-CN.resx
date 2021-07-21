@@ -190,6 +190,9 @@
   <data name="EnableWrite" xml:space="preserve">
     <value>写可用</value>
   </data>
+  <data name="EnableZipFile" xml:space="preserve">
+    <value>二次压缩</value>
+  </data>
   <data name="EndPort" xml:space="preserve">
     <value>结束服务端口</value>
   </data>

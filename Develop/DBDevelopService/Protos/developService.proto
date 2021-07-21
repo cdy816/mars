@@ -783,6 +783,7 @@ message GetDatabaseHisSettingReplay
     string DataPath=3;
     string BackDataPath=4;
     int32 KeepTime=5;
+    int32 KeepNoZipFileDays=6;
 }
 
 //更新历史数据存放路径
@@ -793,4 +794,5 @@ message UpdateDatabaseHisSettingRequest
     string DataPath=3;
     string BackDataPath=4;
     int32 KeepTime=5;
+    int32 KeepNoZipFileDays=6;
 }

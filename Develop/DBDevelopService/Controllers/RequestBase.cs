@@ -55,6 +55,11 @@ namespace DBDevelopService.Controllers
         /// 
         /// </summary>
         public int KeepTimeInDataPath { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int KeepNoZipFileDays { get; set; }
     }
 
 
@@ -150,6 +155,15 @@ namespace DBDevelopService.Controllers
         /// 
         /// </summary>
         public string ParentName { get; set; }
+    }
+
+    public class WebApiUpdateGroupDescriptionRequest : WebApiDatabaseRequest
+    {
+        public string GroupName { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Desc { get; set; }
     }
 
     /// <summary>

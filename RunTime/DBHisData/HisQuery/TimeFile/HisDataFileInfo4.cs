@@ -112,7 +112,7 @@ namespace Cdy.Tag
                 {
                     System.IO.Directory.CreateDirectory(spath);
                 }
-                spath = System.IO.Path.Combine(spath, file.FileName.Replace(DataFileManager.ZipHisDataFileExtends, DataFileManager.HisDataFileExtends));
+                spath = System.IO.Path.Combine(spath, System.IO.Path.GetFileName(file.FileName).Replace(DataFileManager.ZipHisDataFileExtends, DataFileManager.HisDataFileExtends));
                 UnZipFile(file.FileName, spath);
                 file.BackFileName = file.FileName;
                 file.FileName = spath;
@@ -169,9 +169,12 @@ namespace Cdy.Tag
             //long ltmp = 0, ltmp1 = 0;
             //Stopwatch sw = new Stopwatch();
             //sw.Start();
-            var offset = file.GetFileOffsets(startTime, endTime);
 
             var vff = file.GetFileSeriser();
+
+            var offset = file.GetFileOffsets(startTime, endTime);
+
+            //var vff = file.GetFileSeriser();
             //ltmp = sw.ElapsedMilliseconds;
 
             foreach (var vv in offset)

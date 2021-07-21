@@ -464,7 +464,7 @@ namespace Cdy.Tag
             {
                 foreach (var vv in dir.GetFiles())
                 {
-                    if (vv.Extension == DataFileExtends || vv.Extension == HisDataFileExtends)
+                    if (vv.Extension == DataFileExtends || vv.Extension == HisDataFileExtends || vv.Extension == ZipHisDataFileExtends)
                     {
                         ParseFileName(vv);
                     }
@@ -627,7 +627,7 @@ namespace Cdy.Tag
         /// <param name="fileName"></param>
         private void ParseFileName(System.IO.FileInfo file)
         {
-            string sname = file.Name.Replace(DataFileExtends, "").Replace(HisDataFileExtends, "");
+            string sname = file.Name.Replace(DataFileExtends, "").Replace(HisDataFileExtends, "").Replace(ZipHisDataFileExtends, "");
             string stime = sname.Substring(sname.Length - 12, 12);
             int yy=0, mm=0, dd=0;
 

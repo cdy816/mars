@@ -190,6 +190,9 @@
   <data name="EnableWrite" xml:space="preserve">
     <value>EnableWrite</value>
   </data>
+  <data name="EnableZipFile" xml:space="preserve">
+    <value>Enable double compression</value>
+  </data>
   <data name="EndPort" xml:space="preserve">
     <value>End port</value>
   </data>

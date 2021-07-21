@@ -499,6 +499,42 @@ namespace DBDevelopClientWebApi
         }
 
         /// <summary>
+        /// 更新变量组描述
+        /// </summary>
+        /// <param name="groupName"></param>
+        /// <param name="desc"></param>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public bool UpdateTagGroupDescription(string groupName,string desc,string database)
+        {
+            if (string.IsNullOrEmpty(mLoginId))
+            {
+                LastErroMessage = "未登录";
+                return false;
+            }
+            try
+            {
+                WebApiUpdateGroupDescriptionRequest request = new WebApiUpdateGroupDescriptionRequest() { Database = database, Id = mLoginId, GroupName = groupName, Desc = desc };
+                var sval = Post("AddTagGroup", JsonConvert.SerializeObject(request));
+                var result = JsonConvert.DeserializeObject<ResultResponse<bool>>(sval);
+                if (result.HasErro)
+                {
+                    LastErroMessage = result.ErroMsg;
+                    return false;
+                }
+                else
+                {
+                    return result.Result;
+                }
+            }
+            catch (Exception ex)
+            {
+                LastErroMessage = ex.Message;
+                return false;
+            }
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="fullName"></param>

@@ -277,6 +277,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Enable double compression 的本地化字符串。
+        /// </summary>
+        internal static string EnableZipFile {
+            get {
+                return ResourceManager.GetString("EnableZipFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 End port 的本地化字符串。
         /// </summary>
         internal static string EndPort {

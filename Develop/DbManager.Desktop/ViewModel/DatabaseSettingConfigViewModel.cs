@@ -37,6 +37,8 @@ namespace DBInStudio.Desktop.ViewModel
 
         private int mKeepTime;
 
+        private int mKeepNoZipFileDays = -1;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -48,6 +50,8 @@ namespace DBInStudio.Desktop.ViewModel
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+
 
         /// <summary>
         /// 
@@ -67,6 +71,50 @@ namespace DBInStudio.Desktop.ViewModel
                 }
             }
         }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool IsEnableZipFile
+        {
+            get
+            {
+                return mKeepNoZipFileDays>=0;
+            }
+            set
+            {
+                if (value)
+                {
+                    KeepNoZipFileDays = 7;
+                }
+                else
+                {
+                    KeepNoZipFileDays = -1;
+                }
+                OnPropertyChanged("IsEnableZipFile");
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int KeepNoZipFileDays
+        {
+            get
+            {
+                return mKeepNoZipFileDays;
+            }
+            set
+            {
+                if (mKeepNoZipFileDays != value)
+                {
+                    mKeepNoZipFileDays = value;
+                    OnPropertyChanged("KeepNoZipFileDays");
+                }
+            }
+        }
+
 
 
 
@@ -212,6 +260,7 @@ namespace DBInStudio.Desktop.ViewModel
             HisDataPathIsCustom = !HisDataPathIsDefault;
 
             KeepTime = setting.Item3;
+            KeepNoZipFileDays = setting.Item4;
 
             foreach (var vv in dds)
             {
@@ -250,7 +299,7 @@ namespace DBInStudio.Desktop.ViewModel
                 DevelopServiceHelper.Helper.UpdateDriverSetting(this.Database, vv.Name, item);
             }
 
-            DevelopServiceHelper.Helper.UpdateHisSetting(this.Database, DataPath, DataBackupPath, KeepTime);
+            DevelopServiceHelper.Helper.UpdateHisSetting(this.Database, DataPath, DataBackupPath, KeepTime,KeepNoZipFileDays);
         }
     }
 

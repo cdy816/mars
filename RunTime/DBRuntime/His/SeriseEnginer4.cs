@@ -499,10 +499,37 @@ namespace Cdy.Tag
                         //保留7天的His格式的数据
                         ZipFile(finfo.FullName);
                     }
-
                 }
                 
             }
+
+            //清空临时文件目录的文件
+            string spath = System.IO.Path.Combine(wpath, "tmp");
+            foreach(var vv in new System.IO.DirectoryInfo(spath).GetFiles())
+            {
+                if (mIsClosed) break;
+                while (mIsBusy) Thread.Sleep(1000);
+
+                string file = vv.FullName;
+
+                if (System.IO.File.Exists(file))
+                {
+                    System.IO.FileInfo finfo = new System.IO.FileInfo(file);
+                    if ((DateTime.Now - finfo.LastWriteTime).TotalDays > 7)
+                    {
+                        try
+                        {
+                            finfo.Delete();
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+
+                }
+            }
+
         }
 
         /// <summary>
@@ -516,7 +543,7 @@ namespace Cdy.Tag
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
                 string tfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(sfile), System.IO.Path.GetFileNameWithoutExtension(sfile) + ".z" + System.IO.Path.GetExtension(sfile).Replace(".", ""));
-                using (System.IO.Compression.BrotliStream bs = new System.IO.Compression.BrotliStream(System.IO.File.Create(tfile),System.IO.Compression.CompressionLevel.Optimal))
+                using (System.IO.Compression.BrotliStream bs = new System.IO.Compression.BrotliStream(System.IO.File.Create(tfile),System.IO.Compression.CompressionLevel.Fastest))
                 {
                     using (var vss = System.IO.File.Open(sfile, System.IO.FileMode.Open, System.IO.FileAccess.Read))
                     {

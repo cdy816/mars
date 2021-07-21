@@ -168,6 +168,18 @@ namespace DBDevelopClientWebApi
     /// <summary>
     /// 
     /// </summary>
+    public class WebApiUpdateGroupDescriptionRequest : WebApiDatabaseRequest
+    {
+        public string GroupName { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Desc { get; set; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
     public class WebApiRemoveGroupRequest : WebApiDatabaseRequest
     {
         public string FullName { get; set; }

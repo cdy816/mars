@@ -1310,16 +1310,16 @@ namespace DBDevelopClientApi
         /// </summary>
         /// <param name="database"></param>
         /// <returns></returns>
-        public Tuple<string,string,int> GetHisSetting(string database)
+        public Tuple<string,string,int,int> GetHisSetting(string database)
         {
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
                 var res = mCurrentClient.GetDatabaseHisSetting(new DBDevelopService.DatabasesRequest() { Database = database, LoginId = mLoginId });
-                return new Tuple<string, string, int>(res.DataPath,res.BackDataPath,res.KeepTime);
+                return new Tuple<string, string, int, int>(res.DataPath,res.BackDataPath,res.KeepTime,res.KeepNoZipFileDays);
             }
             else
             {
-                return new Tuple<string, string, int>("", "", -1);
+                return new Tuple<string, string, int, int>("", "", -1,-1);
             }
         }
 
@@ -1330,12 +1330,13 @@ namespace DBDevelopClientApi
         /// <param name="datapath"></param>
         /// <param name="backdatapath"></param>
         /// <param name="keeptime"></param>
+        /// <param name="keepNoZipFileDays"></param>
         /// <returns></returns>
-        public bool UpdateHisSetting(string database,string datapath,string backdatapath,int keeptime)
+        public bool UpdateHisSetting(string database,string datapath,string backdatapath,int keeptime,int keepNoZipFileDays=-1)
         {
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
-                return mCurrentClient.UpdateDatabaseHisSetting(new DBDevelopService.UpdateDatabaseHisSettingRequest() { Database = database, LoginId = mLoginId,DataPath=database,BackDataPath=backdatapath,KeepTime=keeptime }).Result;
+                return mCurrentClient.UpdateDatabaseHisSetting(new DBDevelopService.UpdateDatabaseHisSettingRequest() { Database = database, LoginId = mLoginId,DataPath=database,BackDataPath=backdatapath,KeepTime=keeptime,KeepNoZipFileDays= keepNoZipFileDays }).Result;
             }
             else
             {

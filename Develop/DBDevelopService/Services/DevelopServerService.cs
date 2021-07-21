@@ -2173,7 +2173,7 @@ namespace DBDevelopService
             var db = DbManager.Instance.GetDatabase(request.Database);
             if (db != null)
             {
-                GetDatabaseHisSettingReplay re = new GetDatabaseHisSettingReplay() { DataPath = db.HisDatabase.Setting.HisDataPathPrimary, BackDataPath = db.HisDatabase.Setting.HisDataPathBack, KeepTime = db.HisDatabase.Setting.HisDataKeepTimeInPrimaryPath };
+                GetDatabaseHisSettingReplay re = new GetDatabaseHisSettingReplay() { DataPath = db.HisDatabase.Setting.HisDataPathPrimary, BackDataPath = db.HisDatabase.Setting.HisDataPathBack, KeepTime = db.HisDatabase.Setting.HisDataKeepTimeInPrimaryPath,KeepNoZipFileDays=db.HisDatabase.Setting.KeepNoZipFileDays };
                 return Task.FromResult(re);
             }
             return Task.FromResult(new GetDatabaseHisSettingReplay() { Result = false });
@@ -2197,6 +2197,7 @@ namespace DBDevelopService
                 db.HisDatabase.Setting.HisDataPathPrimary = request.DataPath;
                 db.HisDatabase.Setting.HisDataPathBack = request.BackDataPath;
                 db.HisDatabase.Setting.HisDataKeepTimeInPrimaryPath = request.KeepTime;
+                db.HisDatabase.Setting.KeepNoZipFileDays = request.KeepNoZipFileDays;
                 return Task.FromResult(new BoolResultReplay() { Result = true });
             }
             return Task.FromResult(new BoolResultReplay() { Result = false });

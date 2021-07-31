@@ -21,7 +21,7 @@ namespace DBDevelopService
         /// <summary>
         /// 
         /// </summary>
-        private Dictionary<string, string> mLogins = new Dictionary<string, string>();
+        private Dictionary<string, List<string>> mLogins = new Dictionary<string, List<string>>();
 
         /// <summary>
         /// 
@@ -115,7 +115,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public string GetUserName(string loginId)
         {
-            var users = mLogins.Where(e => e.Value == loginId).FirstOrDefault().Key;
+            var users = mLogins.Where(e => e.Value.Contains(loginId)).FirstOrDefault().Key;
             return users;
         }
 
@@ -126,7 +126,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public User GetUser(string loginId)
         {
-            var user = mLogins.Where(e => e.Value == loginId).FirstOrDefault().Key;
+            var user = mLogins.Where(e => e.Value.Contains(loginId)).FirstOrDefault().Key;
             if (Securitys.User.Users.ContainsKey(user))
             {
                 return Securitys.User.Users[user];
@@ -143,7 +143,7 @@ namespace DBDevelopService
         public bool CheckDatabase(string key,string database)
         {
             if (string.IsNullOrEmpty(database)) return true;
-            var users = mLogins.Where(e => e.Value == key).FirstOrDefault().Key;
+            var users = mLogins.Where(e => e.Value.Contains(key)).FirstOrDefault().Key;
             if (Securitys.User.Users.ContainsKey(users))
             {
                 var us = Securitys.User.Users[users];
@@ -159,7 +159,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public List<string> GetDatabase(string key)
         {
-            var users = mLogins.Where(e => e.Value == key).FirstOrDefault().Key;
+            var users = mLogins.Where(e => e.Value.Contains(key)).FirstOrDefault().Key;
             if (Securitys.User.Users.ContainsKey(users))
             {
                 return Securitys.User.Users[users].Databases;
@@ -174,7 +174,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public bool IsAdmin(string key)
         {
-            var users = mLogins.Where(e => e.Value == key).FirstOrDefault().Key;
+            var users = mLogins.Where(e => e.Value.Contains(key)).FirstOrDefault().Key;
             if (Securitys.User.Users.ContainsKey(users))
             {
                 var us = Securitys.User.Users[users];
@@ -190,7 +190,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public bool HasNewDatabasePermission(string key)
         {
-            var users = mLogins.Where(e => e.Value == key).FirstOrDefault().Key;
+            var users = mLogins.Where(e => e.Value.Contains(key)).FirstOrDefault().Key;
             if (Securitys.User.Users.ContainsKey(users))
             {
                 var us = Securitys.User.Users[users];
@@ -206,7 +206,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public bool HasDeleteDatabasePermission(string key)
         {
-            var users = mLogins.Where(e => e.Value == key).FirstOrDefault().Key;
+            var users = mLogins.Where(e => e.Value.Contains(key)).FirstOrDefault().Key;
             if (Securitys.User.Users.ContainsKey(users))
             {
                 var us = Securitys.User.Users[users];
@@ -242,14 +242,18 @@ namespace DBDevelopService
             {
                 string sid = Guid.NewGuid().ToString();
                 string skey = userName;
-                if (!mLogins.ContainsKey(userName))
+                lock (mLogins)
                 {
-                    mLogins.Add(userName, sid);
-                    mAvaiableKey.Add(sid);
-                }
-                else
-                {
-                    sid = mLogins[userName];
+                    if (!mLogins.ContainsKey(userName))
+                    {
+                        mLogins.Add(userName, new List<string>() { sid });
+                        mAvaiableKey.Add(sid);
+                    }
+                    else
+                    {
+                        mLogins[userName].Add(sid);
+                        mAvaiableKey.Add(sid);
+                    }
                 }
                 return sid;
             }
@@ -262,18 +266,22 @@ namespace DBDevelopService
         /// <param name="userName"></param>
         public void Logout(string id)
         {
-            var user = mLogins.Where(e => e.Value == id);
-            if(user.Count()>0)
+            lock (mLogins)
             {
-               var userName = user.FirstOrDefault().Key;
-                if (mLogins.ContainsKey(userName))
+                var user = mLogins.Where(e => e.Value.Contains(id));
+                if (user.Count() > 0)
                 {
-                    var ids = mLogins[userName];
-                    if (mAvaiableKey.Contains(ids))
+                    var userName = user.FirstOrDefault().Key;
+                    if (mLogins.ContainsKey(userName))
                     {
-                        mAvaiableKey.Remove(ids);
+                        //var ids = mLogins[userName];
+                        if (mAvaiableKey.Contains(id))
+                        {
+                            mAvaiableKey.Remove(id);
+                        }
+                        mLogins[userName].Remove(id);
+                        //mLogins.Remove(userName);
                     }
-                    mLogins.Remove(userName);
                 }
             }
         }

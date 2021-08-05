@@ -588,6 +588,11 @@
             <param name="args"></param>
             <returns></returns>
         </member>
+        <member name="T:DbInRunWebApi.SecurityManager">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="F:DbInRunWebApi.SecurityManager.Manager">
             <summary>
             

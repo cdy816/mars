@@ -23,6 +23,7 @@ namespace DBDevelopService
         /// </summary>
         public static GrpcDBService Service = new GrpcDBService();
         private IHost mhost;
+        private int mPort=5001;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -73,12 +74,23 @@ namespace DBDevelopService
         public async void StartAsync(string ip, int port)
         {
             string sip = ip;
-            if (!sip.StartsWith("https://"))
+            mPort = port;
+            if (!IsWin7)
             {
-                sip = "https://" + ip;
+                if (!sip.StartsWith("https://"))
+                {
+                    sip = "https://" + ip;
+                }
+            }
+            else
+            {
+                if (!sip.StartsWith("http://"))
+                {
+                    sip = "http://" + ip;
+                }
             }
             sip += ":" + port;
-            mhost = CreateHostBuilder(sip).Build();
+            mhost = CreateHostBuilder(sip,port).Build();
            
             LoggerService.Service.Info("GrpcDBService", "启动服务:"+ sip);
             try
@@ -104,9 +116,20 @@ namespace DBDevelopService
         /// <summary>
         /// 
         /// </summary>
+        public static bool IsWin7
+        {
+            get
+            {
+                return Environment.OSVersion.Version.Major < 8 && Environment.OSVersion.Platform == PlatformID.Win32NT;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="serverUrl"></param>
         /// <returns></returns>
-        public static IHostBuilder CreateHostBuilder(string serverUrl) =>
+        public static IHostBuilder CreateHostBuilder(string serverUrl,int mPort) =>
            Host.CreateDefaultBuilder()
                 .ConfigureLogging(logging =>
                 {
@@ -115,8 +138,20 @@ namespace DBDevelopService
                 })
                .ConfigureWebHostDefaults(webBuilder =>
                {
+                   if (IsWin7)
+                   {
+                       //Win 7 的情况下使用 不支持TLS 的 HTTP/2
+                       webBuilder.ConfigureKestrel(options =>
+                       {
+                           options.Listen(System.Net.IPAddress.Parse("0.0.0.0"), mPort, a => a.Protocols =
+                                Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2);
+                       });
+                   }
+                   else
+                   {
+                       webBuilder.UseUrls(serverUrl);
+                   }
                    webBuilder.UseStartup<Startup>();
-                   webBuilder.UseUrls(serverUrl);
                });
 
         #endregion ...Methods...

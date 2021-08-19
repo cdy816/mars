@@ -1150,6 +1150,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 UseTls 的本地化字符串。
+        /// </summary>
+        internal static string UseTls {
+            get {
+                return ResourceManager.GetString("UseTls", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 ValueChanged 的本地化字符串。
         /// </summary>
         internal static string ValueChanged {

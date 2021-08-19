@@ -52,6 +52,8 @@ namespace DBGrpcApi
 
         #region ... Properties ...
 
+        public bool UseTls { get; set; } = true;
+
         public string Ip { get; set; }
 
         /// <summary>
@@ -95,9 +97,12 @@ namespace DBGrpcApi
                 httpClientHandler.ServerCertificateCustomValidationCallback =
                     HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
                 var httpClient = new HttpClient(httpClientHandler);
-
+                if(UseTls)
                 grpcChannel = Grpc.Net.Client.GrpcChannel.ForAddress(@"https://" + Ip + ":"+ Port, new GrpcChannelOptions { HttpClient = httpClient });
-
+                else
+                {
+                    grpcChannel = Grpc.Net.Client.GrpcChannel.ForAddress(@"http://" + Ip + ":" + Port, new GrpcChannelOptions { HttpClient = httpClient });
+                }
                 mRealDataClient = new RealData.RealDataClient(grpcChannel);
 
                 mHisDataClient = new HislData.HislDataClient(grpcChannel);

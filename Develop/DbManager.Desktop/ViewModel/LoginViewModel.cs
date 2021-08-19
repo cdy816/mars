@@ -148,6 +148,26 @@ namespace DBInStudio.Desktop.ViewModel
         /// <summary>
         /// 
         /// </summary>
+        public bool UseTls
+        {
+            get
+            {
+                return DevelopServiceHelper.Helper.UseTls;
+            }
+            set
+            {
+                if (DevelopServiceHelper.Helper.UseTls != value)
+                {
+                    DevelopServiceHelper.Helper.UseTls = value;
+                    OnPropertyChanged("UseTls");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
         private bool Login()
         {

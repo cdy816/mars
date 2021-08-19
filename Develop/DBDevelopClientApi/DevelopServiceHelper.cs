@@ -44,6 +44,16 @@ namespace DBDevelopClientApi
 
         #region ... Properties ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool UseTls
+        {
+            get;
+            set;
+        } = true;
+
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -56,12 +66,26 @@ namespace DBDevelopClientApi
         {
             try
             {
+               
+
                 var httpClientHandler = new HttpClientHandler();
                 httpClientHandler.ServerCertificateCustomValidationCallback =
                     HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+                
                 var httpClient = new HttpClient(httpClientHandler);
 
-                Grpc.Net.Client.GrpcChannel grpcChannel = Grpc.Net.Client.GrpcChannel.ForAddress(@"https://" + ip + ":5001", new GrpcChannelOptions { HttpClient = httpClient });
+                Grpc.Net.Client.GrpcChannel grpcChannel;
+                if (UseTls)
+                {
+                    grpcChannel = Grpc.Net.Client.GrpcChannel.ForAddress(@"https://" + ip + ":5001", new GrpcChannelOptions { HttpClient = httpClient });
+                }
+                else
+                {
+
+                    //AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                    grpcChannel = Grpc.Net.Client.GrpcChannel.ForAddress(@"http://" + ip + ":5001", new GrpcChannelOptions { HttpClient = httpClient });
+                    //grpcChannel = Grpc.Net.Client.GrpcChannel.ForAddress(@"http://" + ip + ":5001");
+                }
                 return new DBDevelopService.DevelopServer.DevelopServerClient(grpcChannel);
             }
             catch(Exception ex)
@@ -218,8 +242,9 @@ namespace DBDevelopClientApi
                         return lres.LoginId;
                     }
                 }
-                catch
+                catch(Exception ex)
                 {
+                    LoggerService.Service.Erro("DevelopService", ex.Message);
                 }
             }
             return string.Empty;

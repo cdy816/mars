@@ -86,6 +86,14 @@ namespace Cdy.Tag
         /// <param name="user"></param>
         /// <param name="pass"></param>
         /// <returns></returns>
+        bool LoginOnce(string user, string pass);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="pass"></param>
+        /// <returns></returns>
         long Login(string user, string pass,string clientId);
 
         /// <summary>

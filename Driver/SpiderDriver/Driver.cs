@@ -30,6 +30,8 @@ namespace SpiderDriver
 
         public static HashSet<int> AllowTagIds = new HashSet<int>();
 
+        public static Dictionary<string,int> AllowTagNames = new Dictionary<string, int>();
+
 
         private void Load()
         {
@@ -151,7 +153,15 @@ namespace SpiderDriver
             Load();
             mService = new List<DataService>();
 
-            AllowTagIds = new HashSet<int>(tagQuery.GetTagIdsByLinkAddress(this.Name+":"));
+            var vdds = tagQuery.GetTagByLinkAddress(this.Name + ":");
+            foreach (var vv in vdds)
+            {
+                if (!AllowTagNames.ContainsKey(vv.FullName))
+                    AllowTagNames.Add(vv.FullName, vv.Id);
+                AllowTagIds.Add(vv.Id);
+            }
+
+          //  AllowTagIds = new HashSet<int>(tagQuery.GetTagIdsByLinkAddress(this.Name+":"));
             
             for (int i = mPort; i <= mEndPort; i++)
             {

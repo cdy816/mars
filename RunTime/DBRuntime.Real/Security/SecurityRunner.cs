@@ -357,6 +357,17 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="pass"></param>
+        /// <returns></returns>
+        public bool LoginOnce(string user, string pass)
+        {
+            return mDocument != null && mDocument.User.Users.ContainsKey(user) && mDocument.User.Users[user].Password == pass;
+        }
+
 
 
         #endregion ...Methods...

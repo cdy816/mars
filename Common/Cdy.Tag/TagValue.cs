@@ -108,6 +108,56 @@ namespace Cdy.Tag
         #endregion ...Interfaces...
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    public struct RealTagValue2
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Id { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public object Value { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public byte ValueType { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public byte Quality { get; set; }
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
 
     /// <summary>
     /// 

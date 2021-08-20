@@ -104,5 +104,32 @@ namespace SpiderDriver
 
         public const byte TagInfoServerBusy = 35;
         public const byte TagINfoServerNoBusy = 36;
+
+        //数据中带有账户信息
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte SetTagValueWithUserFun = 111;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte SetTagValueAndQualityWithUserFun = 112;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte SetTagRealAndHisValueWithUserFun = 113;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte SetTagHisValueWithUser = 161;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte SetTagHisValueWithUser2 = 162;
+
     }
 }

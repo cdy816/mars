@@ -58,6 +58,16 @@ namespace SpiderDriver.ClientApi
         public bool IsLogin { get { return mLoginId > 0; } }
 
         /// <summary>
+        /// 
+        /// </summary>
+        public string UserName { get { return mUser; } set { mUser = value; } }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Password { get { return mPass; } set { mPass = value; } }
+
+        /// <summary>
         /// 变量的值改变回调
         /// </summary>
         public ProcessDataPushDelegate ValueChanged { get; set; }
@@ -727,7 +737,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="data"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetTagRealAndHisValue2(RealDataBuffer data, int timeout = 5000)
+        public bool SetTagRealAndHisValue2(RealDataBuffer data)
         {
             //CheckLogin();
 
@@ -744,24 +754,24 @@ namespace SpiderDriver.ClientApi
             //System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
             //mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
 
-            realRequreEvent.Reset();
+            //realRequreEvent.Reset();
             SendData(mb);
+            return IsConnected;
+            //if (realRequreEvent.WaitOne(timeout))
+            //{
+            //    try
+            //    {
+            //        return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
+            //    }
+            //    catch
+            //    {
+            //        mRealRequreData?.UnlockAndReturn();
+            //    }
 
-            if (realRequreEvent.WaitOne(timeout))
-            {
-                try
-                {
-                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
-                }
-                catch
-                {
-                    mRealRequreData?.UnlockAndReturn();
-                }
-
-            }
+            //}
 
 
-            return false;
+            //return false;
         }
 
         ///// <summary>
@@ -817,7 +827,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="data"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetTagRealAndHisValueAsync2(RealDataBuffer data, int timeout = 5000)
+        public bool SetTagRealAndHisValueAsync2(RealDataBuffer data)
         {
             //CheckLogin();
 
@@ -886,38 +896,38 @@ namespace SpiderDriver.ClientApi
         /// <param name="data"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetTagValueAndQuality2(RealDataBuffer data, int timeout = 5000)
+        public bool SetTagValueAndQuality2(RealDataBuffer data)
         {
             //CheckLogin();
 
             if (mIsRealDataBusy) return false;
 
             var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position+64);
-            mb.Write(ApiFunConst.SetTagValueAndQualityFun);
+            mb.Write(ApiFunConst.SetTagValueAndQualityWithUserFun);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
             mb.Write(data.ValueCount);
 
             mb.Write(data.Buffers, (int)data.Position);
 
-            realRequreEvent.Reset();
+            //realRequreEvent.Reset();
 
             //long ltmp = sw.ElapsedMilliseconds;
 
             SendData(mb);
-
-            if (realRequreEvent.WaitOne(timeout))
-            {
-                try
-                {
-                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
-                }
-                finally
-                {
-                    mRealRequreData?.UnlockAndReturn();
-                }
-            }
-            return false;
+            return IsConnected;
+            //if (realRequreEvent.WaitOne(timeout))
+            //{
+            //    try
+            //    {
+            //        return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
+            //    }
+            //    finally
+            //    {
+            //        mRealRequreData?.UnlockAndReturn();
+            //    }
+            //}
+            //return false;
         }
 
         /// <summary>
@@ -954,20 +964,20 @@ namespace SpiderDriver.ClientApi
         /// <param name="data"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetTagValueAndQualityAsync2(RealDataBuffer data, int timeout = 5000)
+        public bool SetTagValueAndQualityAsync2(RealDataBuffer data)
         {
             //CheckLogin();
             if (mIsRealDataBusy) return false;
 
             var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position+64);
-            mb.Write(ApiFunConst.SetTagValueAndQualityFun);
+            mb.Write(ApiFunConst.SetTagValueAndQualityWithUserFun);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
             mb.Write(data.ValueCount);
 
             mb.Write(data.Buffers, (int)data.Position);
 
-            realRequreEvent.Reset();
+            //realRequreEvent.Reset();
             SendData(mb);
 
             return true;
@@ -1063,13 +1073,13 @@ namespace SpiderDriver.ClientApi
         /// <param name="ids"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetTagRealAndHisValue2(List<RealTagValue2> ids, int timeout = 5000)
+        public bool SetTagRealAndHisValue2(List<RealTagValue2> ids)
         {
             //CheckLogin();
             if (mIsRealDataBusy) return false;
 
             var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count * (32+64)+64);
-            mb.Write(ApiFunConst.SetTagRealAndHisValueFun);
+            mb.Write(ApiFunConst.SetTagRealAndHisValueWithUserFun);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
             mb.Write(ids.Count);
@@ -1078,24 +1088,24 @@ namespace SpiderDriver.ClientApi
                 mb.Write(vv.Id);
                 SetTagValueToBuffer((TagType)vv.ValueType, vv.Value, vv.Quality, mb);
             }
-            realRequreEvent.Reset();
+            //realRequreEvent.Reset();
             SendData(mb);
+            return IsConnected;
+            //if (realRequreEvent.WaitOne(timeout))
+            //{
+            //    try
+            //    {
+            //        return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
+            //    }
+            //    catch
+            //    {
+            //        mRealRequreData?.UnlockAndReturn();
+            //    }
 
-            if (realRequreEvent.WaitOne(timeout))
-            {
-                try
-                {
-                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
-                }
-                catch
-                {
-                    mRealRequreData?.UnlockAndReturn();
-                }
-
-            }
+            //}
 
 
-            return false;
+            //return false;
         }
 
         /// <summary>
@@ -1105,13 +1115,13 @@ namespace SpiderDriver.ClientApi
         /// <param name="values">ID，值类型，值，质量</param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetTagValueAndQuality2(List<RealTagValue2> values, int timeout = 5000)
+        public bool SetTagValueAndQuality2(List<RealTagValue2> values)
         {
             //CheckLogin();
             if (mIsRealDataBusy) return false;
 
             var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * (32+64)+64);
-            mb.Write(ApiFunConst.SetTagValueAndQualityFun);
+            mb.Write(ApiFunConst.SetTagValueAndQualityWithUserFun);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
             mb.Write(values.Count);
@@ -1120,25 +1130,25 @@ namespace SpiderDriver.ClientApi
                 mb.Write(vv.Id);
                 SetTagValueToBuffer((TagType)vv.ValueType, vv.Value, vv.Quality, mb);
             }
-            realRequreEvent.Reset();
+            //realRequreEvent.Reset();
             SendData(mb);
+            return IsConnected;
+            //if (realRequreEvent.WaitOne(timeout))
+            //{
+            //    try
+            //    {
+            //        return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
+            //    }
+            //    catch
+            //    {
+            //        mRealRequreData?.UnlockAndReturn();
 
-            if (realRequreEvent.WaitOne(timeout))
-            {
-                try
-                {
-                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
-                }
-                catch
-                {
-                    mRealRequreData?.UnlockAndReturn();
+            //    }
 
-                }
-
-            }
+            //}
 
 
-            return false;
+            //return false;
         }
 
         /// <summary>
@@ -1173,14 +1183,13 @@ namespace SpiderDriver.ClientApi
         /// 立即返回
         /// </summary>
         /// <param name="values">ID，值类型，值，质量</param>
-        /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetTagValueAndQualityAsync2(List<RealTagValue2> values, int timeout = 5000)
+        public bool SetTagValueAndQualityAsync2(List<RealTagValue2> values)
         {
             //CheckLogin();
             if (mIsRealDataBusy) return false;
             var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * (32+64)+64);
-            mb.Write(ApiFunConst.SetTagValueAndQualityFun);
+            mb.Write(ApiFunConst.SetTagValueAndQualityWithUserFun);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
             mb.Write(values.Count);
@@ -1189,7 +1198,7 @@ namespace SpiderDriver.ClientApi
                 mb.Write(vv.Id);
                 SetTagValueToBuffer((TagType)vv.ValueType, vv.Value, vv.Quality, mb);
             }
-            realRequreEvent.Reset();
+            //realRequreEvent.Reset();
             SendData(mb);
             return true;
         }
@@ -1350,7 +1359,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="values">值集合</param>
         /// <param name="timeout">超时</param>
         /// <returns></returns>
-        public bool SetTagHisValue2(string tagName, TagType type, IEnumerable<TagValue> values, int timeout = 5000)
+        public bool SetTagHisValue2(string tagName, TagType type, IEnumerable<TagValue> values)
         {
             //CheckLogin();
             if (mIsHisDataBusy) return false;
@@ -1368,24 +1377,24 @@ namespace SpiderDriver.ClientApi
                 mb.Write(vv.Time.ToBinary());
                 SetTagValueToBuffer2(type, vv.Value, vv.Quality, mb);
             }
-            hisRequreEvent.Reset();
+            //hisRequreEvent.Reset();
             SendData(mb);
+            return IsConnected;
+            //if (this.hisRequreEvent.WaitOne(timeout))
+            //{
+            //    try
+            //    {
+            //        return mHisRequreData != null && mHisRequreData.ReadableCount > 1;
+            //    }
+            //    catch
+            //    {
+            //        mHisRequreData?.UnlockAndReturn();
+            //    }
 
-            if (this.hisRequreEvent.WaitOne(timeout))
-            {
-                try
-                {
-                    return mHisRequreData != null && mHisRequreData.ReadableCount > 1;
-                }
-                catch
-                {
-                    mHisRequreData?.UnlockAndReturn();
-                }
-
-            }
+            //}
 
 
-            return false;
+            //return false;
         }
 
         /// <summary>
@@ -1443,7 +1452,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="data"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetTagHisValue2(string tagName, TagType type, HisDataBuffer data, int timeout = 5000)
+        public bool SetTagHisValue2(string tagName, TagType type, HisDataBuffer data)
         {
             //CheckLogin();
             if (mIsHisDataBusy) return false;
@@ -1461,25 +1470,25 @@ namespace SpiderDriver.ClientApi
 
             mb.Write(data.Buffers, (int)data.Position);
 
-            hisRequreEvent.Reset();
+            //hisRequreEvent.Reset();
             SendData(mb);
+            return IsConnected;
+            //if (this.hisRequreEvent.WaitOne(timeout))
+            //{
+            //    try
+            //    {
+            //        return mHisRequreData != null && mHisRequreData.ReadableCount > 1;
+            //    }
+            //    catch
+            //    {
+            //        mHisRequreData?.UnlockAndReturn();
+            //    }
 
-            if (this.hisRequreEvent.WaitOne(timeout))
-            {
-                try
-                {
-                    return mHisRequreData != null && mHisRequreData.ReadableCount > 1;
-                }
-                catch
-                {
-                    mHisRequreData?.UnlockAndReturn();
-                }
-
-            }
+            //}
 
 
 
-            return false;
+            //return false;
         }
 
         /// <summary>
@@ -1534,7 +1543,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="idvalues">ID，值集合</param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetMutiTagHisValue2(Dictionary<string, TagValueAndType> idvalues, int timeout = 5000)
+        public bool SetMutiTagHisValue2(Dictionary<string, TagValueAndType> idvalues)
         {
             if (idvalues == null && idvalues.Count == 0) return false;
             if (mIsHisDataBusy) return false;
@@ -1554,24 +1563,25 @@ namespace SpiderDriver.ClientApi
                 SetTagValueToBuffer2(vv.Value.ValueType, vv.Value.Value, vv.Value.Quality, mb);
             }
 
-            hisRequreEvent.Reset();
+            //hisRequreEvent.Reset();
             SendData(mb);
+            return IsConnected;
 
-            if (this.hisRequreEvent.WaitOne(timeout))
-            {
-                try
-                {
-                    return mHisRequreData != null && mHisRequreData.ReadableCount > 1;
-                }
-                catch
-                {
-                    mHisRequreData?.UnlockAndReturn();
-                }
+            //if (this.hisRequreEvent.WaitOne(timeout))
+            //{
+            //    try
+            //    {
+            //        return mHisRequreData != null && mHisRequreData.ReadableCount > 1;
+            //    }
+            //    catch
+            //    {
+            //        mHisRequreData?.UnlockAndReturn();
+            //    }
 
-            }
+            //}
 
 
-            return false;
+            //return false;
         }
 
         /// <summary>
@@ -1619,7 +1629,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="idvalues">ID，值集合</param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetMutiTagHisValue2(HisDataBuffer data, int timeout = 5000)
+        public bool SetMutiTagHisValue2(HisDataBuffer data)
         {
             if (data == null && data.ValueCount == 0) return false;
             if (mIsHisDataBusy) return false;
@@ -1636,21 +1646,21 @@ namespace SpiderDriver.ClientApi
 
             mb.Write(data.Buffers, (int)data.Position);
 
-            hisRequreEvent.Reset();
+            //hisRequreEvent.Reset();
             SendData(mb);
-
-            if (this.hisRequreEvent.WaitOne(timeout))
-            {
-                try
-                {
-                    return mHisRequreData != null && mHisRequreData.ReadableCount > 1;
-                }
-                finally
-                {
-                    mHisRequreData?.UnlockAndReturn();
-                }
-            }
-            return false;
+            return IsConnected;
+            //if (this.hisRequreEvent.WaitOne(timeout))
+            //{
+            //    try
+            //    {
+            //        return mHisRequreData != null && mHisRequreData.ReadableCount > 1;
+            //    }
+            //    finally
+            //    {
+            //        mHisRequreData?.UnlockAndReturn();
+            //    }
+            //}
+            //return false;
         }
 
         /// <summary>
@@ -1703,7 +1713,7 @@ namespace SpiderDriver.ClientApi
         /// <param name="values">值</param>
         /// <param name="timeout">超时</param>
         /// <returns></returns>
-        public bool SetTagHisValue2(string tagName, TagValueAndType values, int timeout = 5000)
+        public bool SetTagHisValue2(string tagName, TagValueAndType values)
         {
             //CheckLogin();
 
@@ -1719,24 +1729,24 @@ namespace SpiderDriver.ClientApi
             mb.Write((byte)values.ValueType);
             SetTagValueToBuffer2(values.ValueType, values.Value, values.Quality, mb);
 
-            hisRequreEvent.Reset();
+            //hisRequreEvent.Reset();
             SendData(mb);
+            return IsConnected;
+            //if (this.hisRequreEvent.WaitOne(timeout))
+            //{
+            //    try
+            //    {
+            //        return mHisRequreData != null && mHisRequreData.ReadableCount > 1;
+            //    }
+            //    catch
+            //    {
+            //        mHisRequreData?.UnlockAndReturn();
+            //    }
 
-            if (this.hisRequreEvent.WaitOne(timeout))
-            {
-                try
-                {
-                    return mHisRequreData != null && mHisRequreData.ReadableCount > 1;
-                }
-                catch
-                {
-                    mHisRequreData?.UnlockAndReturn();
-                }
-
-            }
+            //}
 
 
-            return false;
+            //return false;
         }
 
         /// <summary>

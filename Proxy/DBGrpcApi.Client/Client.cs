@@ -52,6 +52,9 @@ namespace DBGrpcApi
 
         #region ... Properties ...
 
+        /// <summary>
+        /// 使用TLS加密
+        /// </summary>
         public bool UseTls { get; set; } = true;
 
         public string Ip { get; set; }

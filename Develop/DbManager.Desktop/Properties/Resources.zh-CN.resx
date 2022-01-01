@@ -126,6 +126,9 @@
   <data name="AddTagFail" xml:space="preserve">
     <value>添加变量 {0} 失败!</value>
   </data>
+  <data name="Alarm" xml:space="preserve">
+    <value>报警</value>
+  </data>
   <data name="AllGroup" xml:space="preserve">
     <value>所有组</value>
   </data>
@@ -164,6 +167,9 @@
   </data>
   <data name="Database" xml:space="preserve">
     <value>数据库</value>
+  </data>
+  <data name="databaseexist" xml:space="preserve">
+    <value>数据库 {0} 已经存在!</value>
   </data>
   <data name="databaseSelect" xml:space="preserve">
     <value>数据库选择</value>

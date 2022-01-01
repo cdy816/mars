@@ -91,12 +91,12 @@ namespace Cdy.Tag
         /// <param name="sname"></param>
         /// <param name="database"></param>
         /// <returns></returns>
-        public Database LoadDifference(string name, Database database)
+        public Database LoadDifference(string name, Database database, out List<int> mRemovedRealTags, out List<long> mRemovedHisTags)
         {
             var Dbase = LoadDatabaseSelf(PathHelper.helper.GetDataPath(name, name + ".db"));
             Dbase.Security = new SecuritySerise().LoadByName(name);
-            Dbase.RealDatabase = new RealDatabaseSerise().LoadDifferenceByName(name, database.RealDatabase);
-            Dbase.HisDatabase = new HisDatabaseSerise().LoadDifferenceByName(name, database.HisDatabase);
+            Dbase.RealDatabase = new RealDatabaseSerise().LoadDifferenceByName(name, database.RealDatabase,out mRemovedRealTags);
+            Dbase.HisDatabase = new HisDatabaseSerise().LoadDifferenceByName(name, database.HisDatabase,out mRemovedHisTags);
             return Dbase;
         }
 
@@ -107,11 +107,11 @@ namespace Cdy.Tag
         /// <param name="database"></param>
         /// <param name="hiscompareaction"></param>
         /// <returns></returns>
-        public Database LoadDifference(string name, RealDatabase database,Func<HisTag,bool> hiscompareaction)
+        public Database LoadDifference(string name, RealDatabase database,Func<HisTag,bool> hiscompareaction,out List<int> mRemovedRealTags)
         {
             var Dbase = LoadDatabaseSelf(PathHelper.helper.GetDataPath(name, name + ".db"));
             Dbase.Security = new SecuritySerise().LoadByName(name);
-            Dbase.RealDatabase = new RealDatabaseSerise().LoadDifferenceByName(name, database);
+            Dbase.RealDatabase = new RealDatabaseSerise().LoadDifferenceByName(name, database,out mRemovedRealTags);
             Dbase.HisDatabase = new HisDatabaseSerise().LoadDifferenceByName(name, hiscompareaction);
             return Dbase;
         }

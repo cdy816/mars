@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Cdy.Tag;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -35,7 +36,23 @@ namespace DBGrpcApi
         public static void Main(string[] args)
         {
             Port = ReadServerPort();
+            Console.Title = "DBGrpcApi";
+            if (args.Contains("/m"))
+            {
+                WindowConsolHelper.MinWindow("DBGrpcApi");
+            }
             CreateHostBuilder(args).Build().Run();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static bool IsWin7
+        {
+            get
+            {
+                return Environment.OSVersion.Version.Major < 8 && Environment.OSVersion.Platform == PlatformID.Win32NT;
+            }
         }
 
         // Additional configuration is required to successfully run gRPC on macOS.
@@ -50,7 +67,20 @@ namespace DBGrpcApi
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseUrls("https://0.0.0.0:"+ Port);
+                    if (IsWin7)
+                    {
+                        //Win 7 的情况下使用 不支持TLS 的 HTTP/2
+                        webBuilder.ConfigureKestrel(options =>
+                        {
+                            options.Listen(System.Net.IPAddress.Parse("0.0.0.0"), Port, a => a.Protocols =
+                                 Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2);
+                        });
+                    }
+                    else
+                    {
+                        webBuilder.UseUrls("https://0.0.0.0:" + Port);
+                    }
+
                     webBuilder.UseStartup<Startup>();
                 });
     }

@@ -17,6 +17,24 @@ service HislData {
 
   //读取统计值
   rpc GetNumberValueStatisticsData (NumberValueStatisticsDataRequest) returns (StatisticsDataCollectionReplay);
+
+  //查找指定时间内是否包含指定的值，包含则返回对应的时间
+  rpc FindTagValue (FindTagValueRequest) returns (FindTagValueDateTimeReplay);
+
+  //查找指定时间内是否包含指定的值，包含则返回对应的时间集合
+  rpc FindTagValues (FindTagValueRequest) returns (FindTagValueDateTimeReplay);
+
+  //计算在某个时间段内满足指定的值条件的持续时间
+  rpc CalTagValueKeepTime (FindTagValueRequest) returns (FindTagValueDoubleReplay);
+
+  //计算数值型变量平均值
+  rpc CalNumberTagAvgValue (FindTagValueRequest) returns (FindTagValueDoubleReplay);
+
+  //查找在某个时间段内数值型变量的最大值
+  rpc FindNumberTagMaxValue (FindTagValueRequest) returns (FindTagValueDoubleDateTimeReplay);
+
+  //查找在某个时间段内数值型变量的最小值
+  rpc FindNumberTagMinValue (FindTagValueRequest) returns (FindTagValueDoubleDateTimeReplay);
 }
 
 message HisDataRequest{
@@ -88,4 +106,37 @@ int64 MaxTime=3;
 double MaxValue=4;
 int64 MinTime=5;
 double MinValue=6;
+}
+
+//查找值统计请求
+message FindTagValueRequest
+{
+	string Token=1;
+	string Tag=2;
+	int64 StartTime=3;
+	int64 EndTime=4;
+	int32 CompareType=5;
+	string Value=6;
+	string Interval=7;
+}
+
+message FindTagValueDateTimeReplay
+{
+	bool Result=1;
+	repeated int64 Time=2;
+	repeated double Value=3;
+}
+
+message FindTagValueDoubleDateTimeReplay
+{
+	bool Result=1;
+	double Values=2;
+	repeated int64 Times=3;
+	
+}
+
+message FindTagValueDoubleReplay
+{
+	bool Result=1;
+	double Values=2;
 }

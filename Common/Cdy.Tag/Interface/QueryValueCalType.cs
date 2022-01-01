@@ -13,7 +13,8 @@ using System.Text;
 namespace Cdy.Tag
 {
     /// <summary>
-    /// 
+    /// 值的拟合方式
+    /// 0:取前一个值,1:取后一个值,2:取较近的值,3:线性插值
     /// </summary>
     public enum QueryValueMatchType
     {
@@ -34,4 +35,40 @@ namespace Cdy.Tag
         /// </summary>
         Linear
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public enum NumberStatisticsType
+    {
+        /// <summary>
+        /// 大于某个值的值
+        /// </summary>
+        GreatValue,
+        /// <summary>
+        /// 小于某个值的值
+        /// </summary>
+        LowValue,
+
+        /// <summary>
+        /// 是否有等于某个值的值
+        /// </summary>
+        EqualsValue,
+        /// <summary>
+        /// 最大值
+        /// </summary>
+        Max,
+        /// <summary>
+        /// 最小值
+        /// </summary>
+        Min,
+        /// <summary>
+        /// 平均值
+        /// </summary>
+        Avg,
+        
+
+    }
+
+
 }

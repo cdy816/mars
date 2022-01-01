@@ -18,6 +18,11 @@ namespace Cdy.Tag.Driver
         /// 
         /// </summary>
         public Dictionary<int,string> ChangedTags { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Dictionary<int, string> RemoveTags { get; set; }
     }
 
     /// <summary>
@@ -28,6 +33,11 @@ namespace Cdy.Tag.Driver
         public IEnumerable<int> AddedTags { get; set; }
 
         public IEnumerable<int> ChangedTags { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public IEnumerable<int> RemoveTags { get; set; }
     }
 
 
@@ -83,6 +93,18 @@ namespace Cdy.Tag.Driver
         /// </summary>
         /// <returns></returns>
         bool Stop();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        bool Pause();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        bool Resume();
 
         /// <summary>
         /// 获取某个数据库参数配置

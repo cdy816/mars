@@ -306,7 +306,7 @@ namespace DBRuntime.Proxy
             }
             else
             {
-                LoggerService.Service.Info("DatabaseRunner", "开始从远程加载数据库");
+                LoggerService.Service.Info("DatabaseRunner", "开始从远程加载数据库:" + mDatabaseName);
                 this.mRealDatabase = mProxy.LoadRealDatabase();
                 mSecurityRunner = new SecurityRunner() { Document = mProxy.LoadSecurity() };
                 LoggerService.Service.Info("DatabaseRunner", "从远程加载数据库完成");
@@ -377,7 +377,7 @@ namespace DBRuntime.Proxy
                     {
                         mDriver.Stop();
 
-                        LoggerService.Service.Info("DatabaseRunner", "开始从远程加载数据库");
+                        LoggerService.Service.Info("DatabaseRunner", "开始从远程加载数据库:" + mDatabaseName);
                         //通过远程下载数据库
                         this.mRealDatabase = mProxy.LoadRealDatabase();
 

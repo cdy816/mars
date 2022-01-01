@@ -1364,6 +1364,26 @@ namespace Cdy.Tag
             return count;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="qa"></param>
+        /// <returns></returns>
+        protected bool IsBadQuality(byte qa)
+        {
+            return qa >= (byte)QualityConst.Bad && qa <= (byte)QualityConst.Bad + 20;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="qa"></param>
+        /// <returns></returns>
+        protected bool IsGoodQuality(byte qa)
+        {
+            return !IsBadQuality(qa);
+        }
+
 
         /// <summary>
         /// 
@@ -1461,7 +1481,7 @@ namespace Cdy.Tag
                         case QueryValueMatchType.Linear:
                             if (val.HasValue)
                             {
-                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                if ( IsGoodQuality( qq[findex]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
                                     var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
@@ -1472,11 +1492,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[findex] < 20)
+                                else if (IsGoodQuality(qq[findex]))
                                 {
                                     result.Add(valtmp, vtime, qq[findex]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -1566,7 +1586,7 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                 {
                                     var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                     var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -1575,12 +1595,12 @@ namespace Cdy.Tag
                                     var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
                                     result.Add(val1, time1, 0);
                                 }
-                                else if (qq[skey.Key] < 20)
+                                else if (IsGoodQuality(qq[skey.Key]))
                                 {
                                     val = source.ReadByte(valaddr + icount * 8);
                                     result.Add(val, time1, qq[skey.Key]);
                                 }
-                                else if (qq[snext.Key] < 20)
+                                else if (IsGoodQuality(qq[snext.Key]))
                                 {
                                     val = source.ReadByte(valaddr + icount1 * 8);
                                     result.Add(val, time1, qq[snext.Key]);
@@ -1649,7 +1669,8 @@ namespace Cdy.Tag
                         case QueryValueMatchType.Linear:
                             if (val.HasValue)
                             {
-                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
+                                    //if ( qq[flast] < 20 && val.Value.Quality < 20)
                                 {
                                     var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
                                     var tval1 = (val.Value.Time-vv[flast].Value.Item1).TotalMilliseconds;
@@ -1660,11 +1681,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[flast] < 20)
+                                else if (IsGoodQuality(qq[flast]))
                                 {
                                     result.Add(valtmp, vtime, qq[flast]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -2109,7 +2130,7 @@ namespace Cdy.Tag
                                 var ppval = (vtime - val.Value.Time).TotalMilliseconds;
                                 var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
 
-                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
                                     var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
@@ -2120,11 +2141,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[findex] < 20)
+                                else if (IsGoodQuality(qq[findex]))
                                 {
                                     result.Add(valtmp, vtime, qq[findex]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -2214,7 +2235,7 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                 {
                                     var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                     var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -2223,12 +2244,12 @@ namespace Cdy.Tag
                                     var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
                                     result.Add(val1, time1, 0);
                                 }
-                                else if (qq[skey.Key] < 20)
+                                else if (IsGoodQuality(qq[skey.Key]))
                                 {
                                     val = source.ReadDouble(valaddr + icount * 8);
                                     result.Add(val, time1, qq[skey.Key]);
                                 }
-                                else if (qq[snext.Key] < 20)
+                                else if (IsGoodQuality(qq[snext.Key]))
                                 {
                                     val = source.ReadDouble(valaddr + icount1 * 8);
                                     result.Add(val, time1, qq[snext.Key]);
@@ -2298,7 +2319,7 @@ namespace Cdy.Tag
                         case QueryValueMatchType.Linear:
                             if (val.HasValue)
                             {
-                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
                                     var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
@@ -2309,11 +2330,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[flast] < 20)
+                                else if (IsGoodQuality(qq[flast]))
                                 {
                                     result.Add(valtmp, vtime, qq[flast]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -2454,7 +2475,7 @@ namespace Cdy.Tag
                                 var ppval = (vtime - val.Value.Time).TotalMilliseconds;
                                 var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
 
-                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
                                     var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
@@ -2465,11 +2486,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[findex] < 20)
+                                else if (IsGoodQuality(qq[findex]))
                                 {
                                     result.Add(valtmp, vtime, qq[findex]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value, vtime, val.Value.Quality);
                                 }
@@ -2558,7 +2579,7 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                 {
                                     var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                     var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -2567,12 +2588,12 @@ namespace Cdy.Tag
                                     var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
                                     result.Add((float)val1, time1, 0);
                                 }
-                                else if (qq[skey.Key] < 20)
+                                else if (IsGoodQuality(qq[skey.Key]))
                                 {
                                     val = source.ReadFloat(valaddr + icount * 4);
                                     result.Add(val, time1, qq[skey.Key]);
                                 }
-                                else if (qq[snext.Key] < 20)
+                                else if (IsGoodQuality(qq[snext.Key]))
                                 {
                                     val = source.ReadFloat(valaddr + icount1 * 4);
                                     result.Add(val, time1, qq[snext.Key]);
@@ -2640,7 +2661,7 @@ namespace Cdy.Tag
                         case QueryValueMatchType.Linear:
                             if (val.HasValue)
                             {
-                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
                                     var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
@@ -2651,11 +2672,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[flast] < 20)
+                                else if (IsGoodQuality(qq[flast]))
                                 {
                                     result.Add(valtmp, vtime, qq[flast]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -2790,8 +2811,7 @@ namespace Cdy.Tag
                             {
                                 var ppval = (vtime - val.Value.Time).TotalMilliseconds;
                                 var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
-
-                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
                                     var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
@@ -2802,11 +2822,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[findex] < 20)
+                                else if (IsGoodQuality(qq[findex]))
                                 {
                                     result.Add(valtmp, vtime, qq[findex]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -2895,7 +2915,7 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                 {
                                     var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                     var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -2904,12 +2924,12 @@ namespace Cdy.Tag
                                     var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
                                     result.Add((int)val1, time1, 0);
                                 }
-                                else if (qq[skey.Key] < 20)
+                                else if (IsGoodQuality(qq[skey.Key]))
                                 {
                                     val = source.ReadInt(valaddr + icount * 4);
                                     result.Add(val, time1, qq[skey.Key]);
                                 }
-                                else if (qq[snext.Key] < 20)
+                                else if (IsGoodQuality(qq[snext.Key]))
                                 {
                                     val = source.ReadInt(valaddr + icount1 * 4);
                                     result.Add(val, time1, qq[snext.Key]);
@@ -2978,7 +2998,7 @@ namespace Cdy.Tag
                         case QueryValueMatchType.Linear:
                             if (val.HasValue)
                             {
-                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
                                     var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
@@ -2989,11 +3009,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[flast] < 20)
+                                else if (IsGoodQuality(qq[flast]))
                                 {
                                     result.Add(valtmp, vtime, qq[flast]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -3132,7 +3152,7 @@ namespace Cdy.Tag
                                 var ppval = (vtime - val.Value.Time).TotalMilliseconds;
                                 var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
 
-                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
                                     var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
@@ -3143,11 +3163,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[findex] < 20)
+                                else if (IsGoodQuality(qq[findex]))
                                 {
                                     result.Add(valtmp, vtime, qq[findex]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -3238,7 +3258,7 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                 {
                                     var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                     var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -3247,12 +3267,12 @@ namespace Cdy.Tag
                                     var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
                                     result.Add(val1, time1, 0);
                                 }
-                                else if (qq[skey.Key] < 20)
+                                else if (IsGoodQuality(qq[skey.Key]))
                                 {
                                     val = source.ReadLong(valaddr + icount * 8);
                                     result.Add(val, time1, qq[skey.Key]);
                                 }
-                                else if (qq[snext.Key] < 20)
+                                else if (IsGoodQuality(qq[snext.Key]))
                                 {
                                     val = source.ReadLong(valaddr + icount1 * 8);
                                     result.Add(val, time1, qq[snext.Key]);
@@ -3321,7 +3341,7 @@ namespace Cdy.Tag
                         case QueryValueMatchType.Linear:
                             if (val.HasValue)
                             {
-                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
                                     var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
@@ -3332,11 +3352,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[flast] < 20)
+                                else if (IsGoodQuality(qq[flast]))
                                 {
                                     result.Add(valtmp, vtime, qq[flast]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -3501,7 +3521,7 @@ namespace Cdy.Tag
                                 var ppval = (vtime - val.Value.Time).TotalMilliseconds;
                                 var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
 
-                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
                                     var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
@@ -3512,11 +3532,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[findex] < 20)
+                                else if (IsGoodQuality(qq[findex]))
                                 {
                                     result.Add(valtmp, vtime, qq[findex]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -3607,7 +3627,7 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                 {
                                     var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                     var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -3616,12 +3636,12 @@ namespace Cdy.Tag
                                     var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
                                     result.Add(val1, time1, 0);
                                 }
-                                else if (qq[skey.Key] < 20)
+                                else if (IsGoodQuality(qq[skey.Key]))
                                 {
                                     val = source.ReadShort(valaddr + icount * 2);
                                     result.Add(val, time1, qq[skey.Key]);
                                 }
-                                else if (qq[snext.Key] < 20)
+                                else if (IsGoodQuality(qq[snext.Key]))
                                 {
                                     val = source.ReadShort(valaddr + icount1 * 2);
                                     result.Add(val, time1, qq[snext.Key]);
@@ -3690,7 +3710,7 @@ namespace Cdy.Tag
                         case QueryValueMatchType.Linear:
                             if (val.HasValue)
                             {
-                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
                                     var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
@@ -3701,11 +3721,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[flast] < 20)
+                                else if (IsGoodQuality(qq[flast]))
                                 {
                                     result.Add(valtmp, vtime, qq[flast]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -4147,7 +4167,7 @@ namespace Cdy.Tag
                                 var ppval = (vtime - val.Value.Time).TotalMilliseconds;
                                 var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
 
-                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
                                     var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
@@ -4158,11 +4178,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[findex] < 20)
+                                else if (IsGoodQuality(qq[findex]))
                                 {
                                     result.Add(valtmp, vtime, qq[findex]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -4252,7 +4272,7 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                 {
                                     var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                     var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -4261,12 +4281,12 @@ namespace Cdy.Tag
                                     var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
                                     result.Add((uint)val1, time1, 0);
                                 }
-                                else if (qq[skey.Key] < 20)
+                                else if (IsGoodQuality(qq[skey.Key]))
                                 {
                                     val = source.ReadUInt(valaddr + icount * 4);
                                     result.Add(val, time1, qq[skey.Key]);
                                 }
-                                else if (qq[snext.Key] < 20)
+                                else if (IsGoodQuality(qq[snext.Key]))
                                 {
                                     val = source.ReadUInt(valaddr + icount1 * 4);
                                     result.Add(val, time1, qq[snext.Key]);
@@ -4335,7 +4355,7 @@ namespace Cdy.Tag
                         case QueryValueMatchType.Linear:
                             if (val.HasValue)
                             {
-                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
                                     var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
@@ -4346,11 +4366,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[flast] < 20)
+                                else if (IsGoodQuality(qq[flast]))
                                 {
                                     result.Add(valtmp, vtime, qq[flast]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -4490,7 +4510,7 @@ namespace Cdy.Tag
                                 var ppval = (vtime - val.Value.Time).TotalMilliseconds;
                                 var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
 
-                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
                                     var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
@@ -4501,11 +4521,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[findex] < 20)
+                                else if (IsGoodQuality(qq[findex]))
                                 {
                                     result.Add(valtmp, vtime, qq[findex]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -4595,8 +4615,8 @@ namespace Cdy.Tag
                                 result.Add(val, time1, qq[snext.Key]);
                                 count++;
                                 break;
-                            case QueryValueMatchType.Linear:
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                            case QueryValueMatchType.Linear: 
+                                if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                 {
                                     var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                     var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -4605,12 +4625,12 @@ namespace Cdy.Tag
                                     var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
                                     result.Add(val1, time1, 0);
                                 }
-                                else if (qq[skey.Key] < 20)
+                                else if (IsGoodQuality(qq[skey.Key]))
                                 {
                                     val = source.ReadULong(valaddr + icount * 8);
                                     result.Add(val, time1, qq[skey.Key]);
                                 }
-                                else if (qq[snext.Key] < 20)
+                                else if (IsGoodQuality(qq[snext.Key]))
                                 {
                                     val = source.ReadULong(valaddr + icount1 * 8);
                                     result.Add(val, time1, qq[snext.Key]);
@@ -4679,7 +4699,7 @@ namespace Cdy.Tag
                         case QueryValueMatchType.Linear:
                             if (val.HasValue)
                             {
-                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
                                     var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
@@ -4690,11 +4710,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[flast] < 20)
+                                else if (IsGoodQuality(qq[flast]))
                                 {
                                     result.Add(valtmp, vtime, qq[flast]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -4831,7 +4851,7 @@ namespace Cdy.Tag
                                 var ppval = (vtime - val.Value.Time).TotalMilliseconds;
                                 var ffval = (vv[findex].Value.Item1 - vtime).TotalMilliseconds;
 
-                                if (qq[findex] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
                                     var tval1 = (vv[findex].Value.Item1 - val.Value.Time).TotalMilliseconds;
@@ -4842,11 +4862,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[findex] < 20)
+                                else if (IsGoodQuality(qq[findex]))
                                 {
                                     result.Add(valtmp, vtime, qq[findex]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -4936,7 +4956,7 @@ namespace Cdy.Tag
                                 count++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                 {
                                     var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                     var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -4945,12 +4965,12 @@ namespace Cdy.Tag
                                     var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
                                     result.Add(val1, time1, 0);
                                 }
-                                else if (qq[skey.Key] < 20)
+                                else if (IsGoodQuality(qq[skey.Key]))
                                 {
                                     val = source.ReadUShort(valaddr + icount * 2);
                                     result.Add(val, time1, qq[skey.Key]);
                                 }
-                                else if (qq[snext.Key] < 20)
+                                else if (IsGoodQuality(qq[snext.Key]))
                                 {
                                     val = source.ReadUShort(valaddr + icount1 * 2);
                                     result.Add(val, time1, qq[snext.Key]);
@@ -5019,7 +5039,7 @@ namespace Cdy.Tag
                         case QueryValueMatchType.Linear:
                             if (val.HasValue)
                             {
-                                if (qq[flast] < 20 && val.Value.Quality < 20)
+                                if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                 {
                                     var pval1 = (vtime - vv[flast].Value.Item1).TotalMilliseconds;
                                     var tval1 = (val.Value.Time - vv[flast].Value.Item1).TotalMilliseconds;
@@ -5030,11 +5050,11 @@ namespace Cdy.Tag
 
                                     result.Add((object)val1, vtime, 0);
                                 }
-                                else if (qq[flast] < 20)
+                                else if (IsGoodQuality(qq[flast]))
                                 {
                                     result.Add(valtmp, vtime, qq[flast]);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, vtime, val.Value.Quality);
                                 }
@@ -6248,15 +6268,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[findex] < 20)
+                                    else if (IsGoodQuality(qq[findex]))
                                     {
                                         result.Add(valtmp, time1, qq[findex]);
                                     }
@@ -6329,7 +6349,7 @@ namespace Cdy.Tag
                                     count++;
                                     break;
                                 case QueryValueMatchType.Linear:
-                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                     {
                                         var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                         var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -6341,17 +6361,17 @@ namespace Cdy.Tag
                                         var x2 = (int)(pval1 / tval1 * (sval22 - sval12) + sval12);
                                         result.AddPoint(x1, x2, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[skey.Key] < 20)
+                                    else if (IsGoodQuality(qq[skey.Key]))
                                     {
                                         val = source.ReadInt(valaddr + i * 4);
                                         val2 = source.ReadInt(valaddr + (i + 1) * 4);
                                         result.AddPoint(val, val2, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[snext.Key] < 20)
+                                    else if (IsGoodQuality(qq[snext.Key]))
                                     {
                                         val = source.ReadInt(valaddr + (i + 2) * 4);
                                         val2 = source.ReadInt(valaddr + (i + 3) * 4);
-                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                        result.AddPoint(val, val2, time1, qq[snext.Key]);
                                     }
                                     else
                                     {
@@ -6422,15 +6442,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[flast] < 20)
+                                    else if (IsGoodQuality(qq[flast]))
                                     {
                                         result.Add(valtmp, time1, qq[flast]);
                                     }
@@ -6506,15 +6526,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[findex] < 20)
+                                    else if (IsGoodQuality(qq[findex]))
                                     {
                                         result.Add(valtmp, time1, qq[findex]);
                                     }
@@ -6591,7 +6611,7 @@ namespace Cdy.Tag
                                     count++;
                                     break;
                                 case QueryValueMatchType.Linear:
-                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                     {
                                         var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                         var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -6608,19 +6628,19 @@ namespace Cdy.Tag
                                         var x3 = (int)(pval1 / tval1 * (sval23 - sval13) + sval12);
                                         result.AddPoint(x1, x2, x3, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[skey.Key] < 20)
+                                    else if (IsGoodQuality(qq[skey.Key]))
                                     {
                                         val = source.ReadInt(valaddr + i * 4);
                                         val2 = source.ReadInt(valaddr + (i + 1) * 4);
                                         val3 = source.ReadInt(valaddr + (i + 2) * 4);
                                         result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[snext.Key] < 20)
+                                    else if (IsGoodQuality(qq[snext.Key]))
                                     {
                                         val = source.ReadInt(valaddr + (i + 3) * 4);
                                         val2 = source.ReadInt(valaddr + (i + 4) * 4);
                                         val3 = source.ReadInt(valaddr + (i + 5) * 4);
-                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                        result.AddPoint(val, val2, val3, time1, qq[snext.Key]);
                                     }
                                     else
                                     {
@@ -6693,15 +6713,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[flast] < 20)
+                                    else if (IsGoodQuality(qq[flast]))
                                     {
                                         result.Add(valtmp, time1, qq[flast]);
                                     }
@@ -6776,15 +6796,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[findex] < 20)
+                                    else if (IsGoodQuality(qq[findex]))
                                     {
                                         result.Add(valtmp, time1, qq[findex]);
                                     }
@@ -6861,7 +6881,7 @@ namespace Cdy.Tag
                                     count++;
                                     break;
                                 case QueryValueMatchType.Linear:
-                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                     {
                                         var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                         var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -6878,19 +6898,19 @@ namespace Cdy.Tag
                                         var x3 = (uint)(pval1 / tval1 * (sval23 - sval13) + sval12);
                                         result.AddPoint(x1, x2, x3, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[skey.Key] < 20)
+                                    else if (IsGoodQuality(qq[skey.Key]))
                                     {
                                         val = source.ReadUInt(valaddr + i * 4);
                                         val2 = source.ReadUInt(valaddr + (i + 1) * 4);
                                         val3 = source.ReadUInt(valaddr + (i + 2) * 4);
                                         result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[snext.Key] < 20)
+                                    else if (IsGoodQuality(qq[snext.Key]))
                                     {
                                         val = source.ReadUInt(valaddr + (i + 3) * 4);
                                         val2 = source.ReadUInt(valaddr + (i + 4) * 4);
                                         val3 = source.ReadUInt(valaddr + (i + 5) * 4);
-                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                        result.AddPoint(val, val2, val3, time1, qq[snext.Key]);
                                     }
                                     else
                                     {
@@ -6963,15 +6983,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[flast] < 20)
+                                    else if (IsGoodQuality(qq[flast]))
                                     {
                                         result.Add(valtmp, time1, qq[flast]);
                                     }
@@ -7047,15 +7067,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[findex] < 20)
+                                    else if (IsGoodQuality(qq[findex]))
                                     {
                                         result.Add(valtmp, time1, qq[findex]);
                                     }
@@ -7128,7 +7148,7 @@ namespace Cdy.Tag
                                     count++;
                                     break;
                                 case QueryValueMatchType.Linear:
-                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                     {
                                         var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                         var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -7140,17 +7160,17 @@ namespace Cdy.Tag
                                         var x2 = (uint)(pval1 / tval1 * (sval22 - sval12) + sval12);
                                         result.AddPoint(x1, x2, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[skey.Key] < 20)
+                                    else if (IsGoodQuality(qq[skey.Key]))
                                     {
                                         val = source.ReadUInt(valaddr + i * 4);
                                         val2 = source.ReadUInt(valaddr + (i + 1) * 4);
                                         result.AddPoint(val, val2, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[snext.Key] < 20)
+                                    else if (IsGoodQuality(qq[snext.Key]))
                                     {
                                         val = source.ReadUInt(valaddr + (i + 2) * 4);
                                         val2 = source.ReadUInt(valaddr + (i + 3) * 4);
-                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                        result.AddPoint(val, val2, time1, qq[snext.Key]);
                                     }
                                     else
                                     {
@@ -7220,15 +7240,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[flast] < 20)
+                                    else if (IsGoodQuality(qq[flast]))
                                     {
                                         result.Add(valtmp, time1, qq[flast]);
                                     }
@@ -7303,15 +7323,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[findex] < 20)
+                                    else if (IsGoodQuality(qq[findex]))
                                     {
                                         result.Add(valtmp, time1, qq[findex]);
                                     }
@@ -7384,7 +7404,7 @@ namespace Cdy.Tag
                                     count++;
                                     break;
                                 case QueryValueMatchType.Linear:
-                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                     {
                                         var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                         var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -7396,17 +7416,17 @@ namespace Cdy.Tag
                                         var x2 = (long)(pval1 / tval1 * (sval22 - sval12) + sval12);
                                         result.AddPoint(x1, x2, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[skey.Key] < 20)
+                                    else if (IsGoodQuality(qq[skey.Key]))
                                     {
                                         val = source.ReadLong(valaddr + i * 8);
                                         val2 = source.ReadLong(valaddr + (i + 1) * 8);
                                         result.AddPoint(val, val2, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[snext.Key] < 20)
+                                    else if (IsGoodQuality(qq[snext.Key]))
                                     {
                                         val = source.ReadLong(valaddr + (i + 2) * 8);
                                         val2 = source.ReadLong(valaddr + (i + 3) * 8);
-                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                        result.AddPoint(val, val2, time1, qq[snext.Key]);
                                     }
                                     else
                                     {
@@ -7476,15 +7496,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[flast] < 20)
+                                    else if (IsGoodQuality(qq[flast]))
                                     {
                                         result.Add(valtmp, time1, qq[flast]);
                                     }
@@ -7559,15 +7579,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[findex] < 20)
+                                    else if (IsGoodQuality(qq[findex]))
                                     {
                                         result.Add(valtmp, time1, qq[findex]);
                                     }
@@ -7640,7 +7660,7 @@ namespace Cdy.Tag
                                     count++;
                                     break;
                                 case QueryValueMatchType.Linear:
-                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                     {
                                         var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                         var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -7652,17 +7672,17 @@ namespace Cdy.Tag
                                         var x2 = (long)(pval1 / tval1 * (sval22 - sval12) + sval12);
                                         result.AddPoint(x1, x2, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[skey.Key] < 20)
+                                    else if (IsGoodQuality(qq[skey.Key]))
                                     {
                                         val = source.ReadULong(valaddr + i * 8);
                                         val2 = source.ReadULong(valaddr + (i + 1) * 8);
                                         result.AddPoint(val, val2, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[snext.Key] < 20)
+                                    else if (IsGoodQuality(qq[snext.Key]))
                                     {
                                         val = source.ReadULong(valaddr + (i + 2) * 8);
                                         val2 = source.ReadULong(valaddr + (i + 3) * 8);
-                                        result.AddPoint(val, val2, time1, qq[skey.Key]);
+                                        result.AddPoint(val, val2, time1, qq[snext.Key]);
                                     }
                                     else
                                     {
@@ -7734,15 +7754,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[flast] < 20)
+                                    else if (IsGoodQuality(qq[flast]))
                                     {
                                         result.Add(valtmp, time1, qq[flast]);
                                     }
@@ -7817,15 +7837,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[findex] < 20)
+                                    else if (IsGoodQuality(qq[findex]))
                                     {
                                         result.Add(valtmp, time1, qq[findex]);
                                     }
@@ -7902,7 +7922,7 @@ namespace Cdy.Tag
                                     count++;
                                     break;
                                 case QueryValueMatchType.Linear:
-                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                     {
                                         var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                         var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -7919,19 +7939,19 @@ namespace Cdy.Tag
                                         var x3 = (uint)(pval1 / tval1 * (sval23 - sval13) + sval12);
                                         result.AddPoint(x1, x2, x3, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[skey.Key] < 20)
+                                    else if (IsGoodQuality(qq[skey.Key]))
                                     {
                                         val = source.ReadLong(valaddr + i * 8);
                                         val2 = source.ReadLong(valaddr + (i + 1) * 8);
                                         val3 = source.ReadLong(valaddr + (i + 2) * 8);
                                         result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[snext.Key] < 20)
+                                    else if (IsGoodQuality(qq[snext.Key]))
                                     {
                                         val = source.ReadLong(valaddr + (i + 3) * 8);
                                         val2 = source.ReadLong(valaddr + (i + 4) * 8);
                                         val3 = source.ReadLong(valaddr + (i + 5) * 8);
-                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                        result.AddPoint(val, val2, val3, time1, qq[snext.Key]);
                                     }
                                     else
                                     {
@@ -8003,15 +8023,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[flast] < 20)
+                                    else if (IsGoodQuality(qq[flast]))
                                     {
                                         result.Add(valtmp, time1, qq[flast]);
                                     }
@@ -8086,15 +8106,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[findex] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[findex]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(val.Value.Time, qs[findex].Item1, time1, val.Value.Value, (T)((object)valtmp)), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[findex] < 20)
+                                    else if (IsGoodQuality(qq[findex]))
                                     {
                                         result.Add(valtmp, time1, qq[findex]);
                                     }
@@ -8171,7 +8191,7 @@ namespace Cdy.Tag
                                     count++;
                                     break;
                                 case QueryValueMatchType.Linear:
-                                    if (qq[skey.Key] < 20 && qq[snext.Key] < 20)
+                                    if (IsGoodQuality(qq[skey.Key]) && IsGoodQuality(qq[snext.Key]))
                                     {
                                         var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                         var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
@@ -8188,19 +8208,19 @@ namespace Cdy.Tag
                                         var x3 = (uint)(pval1 / tval1 * (sval23 - sval13) + sval12);
                                         result.AddPoint(x1, x2, x3, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[skey.Key] < 20)
+                                    else if (IsGoodQuality(qq[skey.Key]))
                                     {
                                         val = source.ReadULong(valaddr + i * 8);
                                         val2 = source.ReadULong(valaddr + (i + 1) * 8);
                                         val3 = source.ReadULong(valaddr + (i + 2) * 8);
                                         result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
                                     }
-                                    else if (qq[snext.Key] < 20)
+                                    else if (IsGoodQuality(qq[snext.Key]))
                                     {
                                         val = source.ReadULong(valaddr + (i + 3) * 8);
                                         val2 = source.ReadULong(valaddr + (i + 4) * 8);
                                         val3 = source.ReadULong(valaddr + (i + 5) * 8);
-                                        result.AddPoint(val, val2, val3, time1, qq[skey.Key]);
+                                        result.AddPoint(val, val2, val3, time1, qq[snext.Key]);
                                     }
                                     else
                                     {
@@ -8272,15 +8292,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.Linear:
                                 if (val.HasValue)
                                 {
-                                    if (qq[flast] < 20 && val.Value.Quality < 20)
+                                    if (IsGoodQuality(qq[flast]) && IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(LinerValue(qs[flast].Item1, val.Value.Time, time1, (T)((object)valtmp), val.Value.Value), time1, 0);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (IsGoodQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, time1, val.Value.Quality);
                                     }
-                                    else if (qq[flast] < 20)
+                                    else if (IsGoodQuality(qq[flast]))
                                     {
                                         result.Add(valtmp, time1, qq[flast]);
                                     }

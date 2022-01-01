@@ -31,6 +31,10 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="isConnected"></param>
         public override void OnConnected(bool isConnected)
         {
             base.OnConnected(isConnected);

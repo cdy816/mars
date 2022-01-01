@@ -41,6 +41,10 @@ namespace DbInRunWebApi.Controllers
                         var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
                         response.Datas.Add(new RealValue() { Quality = quality, Time = time.ToLocalTime(), Value = val });
                     }
+                    else
+                    {
+                        response.Datas.Add(new RealValue() { Quality = (byte)QualityConst.Null });
+                    }
                 }
                 return response;
             }
@@ -71,6 +75,10 @@ namespace DbInRunWebApi.Controllers
                         var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
                         response.Datas.Add(val);
                     }
+                    else
+                    {
+                        response.Datas.Add(new RealValue() { Quality = (byte)QualityConst.Null });
+                    }
                 }
                 return response;
             }
@@ -100,6 +108,10 @@ namespace DbInRunWebApi.Controllers
                         byte tagtype = 0;
                         var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
                         response.Datas.Add(new RealValueAndQuality() { Quality = quality, Value = val });
+                    }
+                    else
+                    {
+                        response.Datas.Add(new RealValueAndQuality() { Quality = (byte)QualityConst.Null });
                     }
                 }
                 return response;

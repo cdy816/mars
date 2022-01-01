@@ -47,6 +47,8 @@ namespace Cdy.Tag
 
         private object mLocker = new object();
 
+        private string mLastFile;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -139,6 +141,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Start()
         {
+            mIsExit = false;
             mSaveThread = new Thread(SaveProcess);
             mSaveThread.IsBackground = true;
             mSaveThread.Start();
@@ -239,6 +242,26 @@ namespace Cdy.Tag
             sw.Stop();
             LoggerService.Service.Info("LogManager", "日志文件：" + fileName + " 记录完成! 耗时:" + sw.ElapsedMilliseconds);
 
+            mLastFile = fileName;
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void RemoveLastLogFile()
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(mLastFile) && System.IO.File.Exists(mLastFile))
+                {
+                    System.IO.File.Delete(mLastFile);
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("LogManager3", ex.Message);
+            }
         }
 
         /// <summary>

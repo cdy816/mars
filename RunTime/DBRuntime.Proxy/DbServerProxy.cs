@@ -683,8 +683,11 @@ namespace DBRuntime.Proxy
             if (IsConnected)
             {
                 var res = mUsedHisClient.QueryStatisticsHisValueAtTimes(id, times);
-                TagType tp = (TagType)res.ReadByte();
-                return ProcessStatisticsResult(res, tp);
+                if (res != null)
+                {
+                    TagType tp = (TagType)res.ReadByte();
+                    return ProcessStatisticsResult(res, tp);
+                }
             }
             return null;
         }
@@ -876,6 +879,145 @@ namespace DBRuntime.Proxy
                         return ProcessHisResultByMemory<ULongPoint3Data>(res, tp) as HisQueryResult<T>;
                 }
 
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public double? StatisticsTagAvgValue(int id,DateTime startTime,DateTime endTime)
+        {
+            if (IsConnected)
+            {
+              return mUsedHisClient.FindNumberTagAvgValue(id, startTime, endTime);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 查找最大、小值
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public Tuple<double, List<DateTime>> StatisticsTagMaxMinValue(int id, DateTime startTime, DateTime endTime, NumberStatisticsType type)
+        {
+            if (IsConnected)
+            {
+                return mUsedHisClient.FindNumberTagMaxMinValue(id, startTime, endTime, type);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public Tuple<DateTime,object> FindNumberTagValue(int id, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, object interval)
+        {
+            if(IsConnected)
+            {
+                return mUsedHisClient.FindNumberTagValue(id, startTime, endTime,type,value,interval);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public double? FindNumberTagValueDuration(int id, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, object interval)
+        {
+            if (IsConnected)
+            {
+                return mUsedHisClient.FindNumberTagValueDuration(id, startTime, endTime, type, value,interval);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public Dictionary<DateTime,object> FindNumberTagValues(int id, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, object interval)
+        {
+            if (IsConnected)
+            {
+                return mUsedHisClient.FindNumberTagValues(id, startTime, endTime, type, value,interval);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public DateTime? FindNoNumberTagValue(int id, DateTime startTime, DateTime endTime, object value)
+        {
+            if (IsConnected)
+            {
+                return mUsedHisClient.FindNoNumberTagValue(id, startTime, endTime, value);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public IEnumerable<DateTime> FindNoNumberTagValues(int id, DateTime startTime, DateTime endTime, object value)
+        {
+            if (IsConnected)
+            {
+                return mUsedHisClient.FindNoNumberTagValues(id, startTime, endTime, value);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public double? FindNoNumberTagValueDuration(int id, DateTime startTime, DateTime endTime, object value)
+        {
+            if (IsConnected)
+            {
+                return mUsedHisClient.FindNoNumberTagValueDuration(id, startTime, endTime, value);
             }
             return null;
         }

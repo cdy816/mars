@@ -226,6 +226,8 @@ namespace DBInStudio.Desktop.ViewModel
 
         private bool mIsNew = false;
 
+        private bool mIsSelected = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -254,6 +256,26 @@ namespace DBInStudio.Desktop.ViewModel
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool IsSelected
+        {
+            get
+            {
+                return mIsSelected;
+            }
+            set
+            {
+                if (mIsSelected != value)
+                {
+                    mIsSelected = value;
+                    OnPropertyChanged("IsSelected");
+                }
+            }
+        }
+
 
         /// <summary>
         /// 

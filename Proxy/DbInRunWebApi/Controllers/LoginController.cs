@@ -63,8 +63,15 @@ namespace DbInRunWebApi.Controllers
             //{
 
             //}
-
-            return new ResponseBase() { Result = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().FreshUserId(token.Token) };
+            var service = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>();
+            if (service != null)
+            {
+                return new ResponseBase() { Result = service.FreshUserId(token.Token) };
+            }
+            else
+            {
+                return new ResponseBase() { Result = false };
+            }
         }
 
         /// <summary>
@@ -75,7 +82,15 @@ namespace DbInRunWebApi.Controllers
         [HttpPost("Logout")]
         public ResponseBase Logout([FromBody] Requestbase token)
         {
-            return new ResponseBase() { Result = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().Logout(token.Token) };
+            var service = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>();
+            if (service != null)
+            {
+                return new ResponseBase() { Result = service.Logout(token.Token) };
+            }
+            else
+            {
+                return new ResponseBase() { Result = false };
+            }
         }
 
     }

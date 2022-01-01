@@ -67,6 +67,8 @@ namespace DbInRunWebApi
         {
             var securityService = ServiceLocator.Locator.Resolve<IRuntimeSecurity>();
 
+            if (securityService == null) return false;
+
             var user = securityService.GetUserByLoginId(token);
             lock (mSuperUsers)
             {
@@ -114,6 +116,9 @@ namespace DbInRunWebApi
         {
 
             var securityService = ServiceLocator.Locator.Resolve<IRuntimeSecurity>();
+
+            if (securityService == null) return false;
+
             var user = securityService.GetUserByLoginId(token);
 
             lock (mSuperUsers)

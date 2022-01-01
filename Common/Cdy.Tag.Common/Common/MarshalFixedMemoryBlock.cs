@@ -217,6 +217,10 @@ namespace Cdy.Tag
             mHandleValue = mHandles.ToInt64();
         }
 
+        /// <summary>
+        /// 检查并扩展内存大小
+        /// </summary>
+        /// <param name="size"></param>
         public void CheckAndResize(long size)
         {
             if (size > mAllocSize)

@@ -2,6 +2,7 @@
 using DBHighApi.Api;
 using DBRuntime.Proxy;
 using System;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace DBHighApi
@@ -34,6 +35,13 @@ namespace DBHighApi
             Console.CancelKeyPress += Console_CancelKeyPress;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
             WindowConsolHelper.DisbleQuickEditMode();
+
+            Console.Title = "DBHighApi";
+            if (args.Contains("/m"))
+            {
+                WindowConsolHelper.MinWindow("DBHighApi");
+            }
+
             Start();
             while (!mIsClosed)
             {

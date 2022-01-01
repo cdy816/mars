@@ -18,6 +18,17 @@
     <DocumentationFile>C:\Users\cdy81\source\repos\mars\Proxy\DbInRunWebApi\DbWebApi.xml</DocumentationFile>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>C:\Users\cdy81\Dev\Gitee\mars\Proxy\DbInRunWebApi\DbWebApi.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="wwwroot\**" />
+    <Content Remove="wwwroot\**" />
+    <EmbeddedResource Remove="wwwroot\**" />
+    <None Remove="wwwroot\**" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="NSwag.AspNetCore" Version="13.11.1" />
   </ItemGroup>
@@ -50,12 +61,6 @@
 
   <ItemGroup>
     <None Update="Config\DbWebApi.cfg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="wwwroot\Index.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

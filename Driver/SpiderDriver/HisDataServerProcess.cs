@@ -76,6 +76,15 @@ namespace SpiderDriver
                 LoggerService.Service.Warn("SpiderDriver_HisDataServerProcess", "invailed data buffer in HisDataServerProcess");
                 return;
             }
+
+            //如果暂停，则不处理数据
+            if (IsPause)
+            {
+                //to do 需要通知采集端，系统已经暂停
+                //Parent.AsyncCallback(client, FunId, new byte[1], 0);
+                return;
+            }
+
             byte cmd = data.ReadByte();
             if (cmd < 100)
             {

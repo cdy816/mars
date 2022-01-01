@@ -1,0 +1,287 @@
+1.  用户登录
+Post URL地址：https://localhost:14331/login/TryLogin
+Json 内容：
+{
+	"UserName":"Admin",
+	"Password":"Admin"
+}
+
+回复内容：
+{
+    "loginTime": 5249108429118833214,
+    "timeOut": 10,
+    "result": true,
+    "token": "7730c241d557479e9f9b2e56c3358fe9"
+}
+
+2.获取实时数据:
+Get Url地址：https://localhost:14331/realdata
+请求内容：
+{
+	"Token":"7730c241d557479e9f9b2e56c3358fe9",
+	"TagNames":["Double.Double1","Double.Double2","Double.Double9","Double.Double0","Double.Double3","Double.Double4","Double.Double5","Double.Double6","Double.Double7","Double.Double8"]
+}
+
+回复内容：
+{
+    "datas": [
+        {
+            "time": "2020-11-29T10:38:26.3218555Z",
+            "quality": 0,
+            "value": -0.34202
+        },
+        {
+            "time": "2020-11-29T10:38:26.3219544Z",
+            "quality": 0,
+            "value": 250
+        },
+        {
+            "time": "2020-11-29T10:38:26.3219424Z",
+            "quality": 0,
+            "value": -0.939693
+        },
+        {
+            "time": "2020-11-29T10:38:26.3219338Z",
+            "quality": 0,
+            "value": -0.939693
+        },
+        {
+            "time": "2020-11-29T10:38:26.3219405Z",
+            "quality": 0,
+            "value": -0.939693
+        },
+        {
+            "time": "2020-11-29T10:38:26.3218604Z",
+            "quality": 0,
+            "value": -0.34202
+        },
+        {
+            "time": "2020-11-29T10:38:26.3219571Z",
+            "quality": 0,
+            "value": 250
+        },
+        {
+            "time": "2020-11-29T10:38:26.3219415Z",
+            "quality": 0,
+            "value": -0.939693
+        },
+        {
+            "time": "2020-11-29T10:38:26.3218613Z",
+            "quality": 0,
+            "value": -0.34202
+        },
+        {
+            "time": "2020-11-29T10:38:26.3219581Z",
+            "quality": 0,
+            "value": 250
+        }
+    ],
+    "result": true,
+    "erroMessage": null
+}
+
+3.设置实时数据:
+Post Url地址：https://localhost:14331/realdata
+请求内容:
+{
+	"Token":"6e5ed8debf804ca8bc507770d618be93",
+    	"Time":"2020-11-29 18:44:00",
+	"Values":{"Double.Double1":"10","Double.Double2":"9.8"}
+}
+
+返回内容：
+{
+    "setResults": {
+        "Double.Double1": true,
+        "Double.Double2": true
+    },
+    "result": true,
+    "erroMessage": null
+}
+
+4.读取某个时间段内所有历史值
+Get Url地址：https://localhost:14331/HisData/GetAllValue
+请求内容：
+{
+	"Token":"e2f94e87bcc14972b47e56fe081d9dd1",
+    	"StartTime":"2020-11-29 18:44:00",
+    	"EndTime":"2020-11-30 18:44:00",
+	"TagName":"Double.Double1"
+}
+返回内容：
+{
+    "tagName": "Double.Double1",
+    "values": [
+        {
+            "time": "2020-11-29T19:41:00.7+08:00",
+            "value": "-0.87462",
+            "quality": 0
+        },
+        {
+            "time": "2020-11-29T19:41:01.7+08:00",
+            "value": "-0.866025",
+            "quality": 0
+        },
+        {
+            "time": "2020-11-29T19:41:02.7+08:00",
+            "value": "-0.857167",
+            "quality": 0
+        }]
+}
+
+5.读取一系列时间点的历史值
+Get Url地址：https://localhost:14331/HisData
+请求内容：
+{
+	"Token":"e2f94e87bcc14972b47e56fe081d9dd1",
+    	"Times":["2020-11-29 18:44:00","2020-11-29 18:44:01"],
+    	"MatchType":"Previous",
+	"TagName":"Double.Double1"
+}
+MathType 表示插值的方式， 取值有:Previous,After,Closed,Linear
+
+6.以固定间隔读取某个时间段内历史值
+Get Url地址：https://localhost:14331/HisData/GetByTimeSpan
+请求内容:
+{
+	"Token":"e2f94e87bcc14972b47e56fe081d9dd1",
+    	"StartTime":"2020-11-29 18:44:00",
+    	"EndTime":"2020-11-30 18:44:00",
+	"TagName":"Double.Double1",
+	"Duration":"1"
+}
+Duration:表示时间间隔，单位为秒
+
+7.查找某段时间(等于\大于\小于)某个值是否存在,返回第一个匹配的时间
+Get Url地址：http://localhost:14331/HisData/FindTagValue
+请求内容:
+{
+	"Token":"e2f94e87bcc14972b47e56fe081d9dd1",
+    	"StartTime":"2020-11-29 18:44:00",
+    	"EndTime":"2020-11-30 18:44:00",
+	"TagName":"Double.Double1",
+	"ValueCompareType":0,
+	"Value":"0.2"
+}
+返回值:
+{
+    "tagName": "Double.Double0",
+    "value": {
+        "time": "2021-12-11 13:20:18.168",
+        "value": 0.20791
+    },
+    "result": true,
+    "erroMessage": null
+}
+
+8.查找某段时间(等于\大于\小于)某个值是否存在,返回所有匹配的时间
+Get Url地址：http://localhost:14331/HisData/FindTagValues
+请求内容:
+{
+	"Token":"e2f94e87bcc14972b47e56fe081d9dd1",
+    	"StartTime":"2020-11-29 18:44:00",
+    	"EndTime":"2020-11-30 18:44:00",
+	"TagName":"Double.Double1",
+	"ValueCompareType":0,
+	"Value":"0.2"
+}
+返回值:
+{
+"tagName": "Double.Double0",
+   "value": [
+        {
+            "time": "2021-12-11 13:20:18.168",
+            "value": 0.20791
+        },
+        {
+            "time": "2021-12-11 13:20:19.168",
+            "value": 0.224949
+        }],
+    "result": true,
+    "erroMessage": null
+}
+
+
+9.计算某段时间(等于\大于\小于)某个值存在的持续时间,返回持续时间
+Get Url地址：http://localhost:14331/HisData/CalTagValueKeepTime
+请求内容:
+{
+	"Token":"e2f94e87bcc14972b47e56fe081d9dd1",
+    	"StartTime":"2020-11-29 18:44:00",
+    	"EndTime":"2020-11-30 18:44:00",
+	"TagName":"Double.Double1",
+	"ValueCompareType":0,
+	"Value":"0.2"
+}
+返回值:
+{
+    "tagName": "Double.Double0",
+    "value": 2669.3636566,
+    "result": true,
+    "erroMessage": null
+}
+
+10.统计出最大值
+Get Url地址：http://localhost:14331/HisData/FindNumberTagMaxValue
+请求内容:
+{
+	"Token":"737d66a915774d3c8568c4c144cb3574",
+    	"StartTime":"2021-12-11 0:00:00",
+   	 "EndTime":"2021-12-11 23:00:00",
+	"TagName":"Double.Double0"
+}
+返回值:
+{
+    "tagName": "Double.Double0",
+    "value": {
+        "value": 1,
+        "times": [
+            "2021-12-11 13:21:36",
+            "2021-12-11 14:03:36",
+            "2021-12-11 15:03:36"
+        ]
+    },
+    "result": true,
+    "erroMessage": null
+}
+
+11.统计出最小值
+Get Url地址：http://localhost:14331/HisData/FindNumberTagMinValue
+请求内容:
+{
+	"Token":"737d66a915774d3c8568c4c144cb3574",
+    	"StartTime":"2021-12-11 0:00:00",
+   	 "EndTime":"2021-12-11 23:00:00",
+	"TagName":"Double.Double0"
+}
+返回值:
+{
+    "tagName":  "Double.Double0",
+    "value": {
+        "value": -1,
+        "times": [
+            "2021-12-11 13:24:36",
+            "2021-12-11 14:00:36",
+            "2021-12-11 15:00:36"
+        ]
+    },
+    "result": true,
+    "erroMessage": null
+}
+
+12.统计出平均值
+Get Url地址：http://localhost:14331/HisData/CalNumberTagAvgValue
+请求内容:
+{
+	"Token":"737d66a915774d3c8568c4c144cb3574",
+    	"StartTime":"2021-12-11 0:00:00",
+   	 "EndTime":"2021-12-11 23:00:00",
+	"TagName":"Double.Double0"
+}
+返回值:
+{
+    "tagName":  "Double.Double0",
+    "value": -0.0019652867190430093,
+    "result": true,
+    "erroMessage": null
+}

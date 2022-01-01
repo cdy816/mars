@@ -47,7 +47,7 @@ namespace DbInRunWebApi
                     document.Info.Title = "Mars Web api";
                     document.Info.Description = "Mars Web api";
                     document.Info.Version = "v1";
-                    document.Info.TermsOfService = "None";
+                    document.Info.TermsOfService = "https://github.com/cdy816/mars";
                     document.Info.Contact = new NSwag.OpenApiContact() { Url = "https://github.com/cdy816/mars", Email = "cdy816@hotmail.com" };
                 };
                 

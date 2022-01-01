@@ -138,6 +138,11 @@ service DevelopServer {
   //获取所有实时变量
   rpc GetRealAllTag(GetRequest) returns (GetRealTagMessageReply);
 
+  //获取一个未被使用的名称
+  rpc GetAvaiableTagName(GetAvaiableTagNameRequest) returns (GetAvaiableTagNameReply);
+
+  //判断一个变量的名称可用
+  rpc CheckTagNameExist(GetAvaiableTagNameRequest) returns (BoolResultReplay);
 
   //变量组操作
   //获取变量组
@@ -490,7 +495,7 @@ message LogoutRequest
 message AddTagRequestMessage
 {
     string loginId =1;
-     string Database=2;
+    string Database=2;
     RealTagMessage realTag = 3;
     HisTagMessage hisTag = 4;
 }
@@ -657,6 +662,22 @@ message GetTagByGroupRequest
     repeated FilterMessageItem Filters=5;
 }
 
+message GetAvaiableTagNameRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string Group=3;
+    string Name=4;
+}
+
+message GetAvaiableTagNameReply
+{
+    bool Result =1;
+    string ErroMessage=2;
+    string Name=3;
+}
+
+
 message SetRealDataServerPortRequest
 {
     string LoginId=1;
@@ -677,7 +698,7 @@ message BoolResultReplay
     string ErroMessage=2;
 }
 
-
+//
 message IntResultReplay
 {
     bool Result =1;

@@ -10,9 +10,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Cdy.Tag;
+using Cdy.Tag.Driver;
 using Cheetah;
 
 namespace SpiderDriver
@@ -32,7 +34,7 @@ namespace SpiderDriver
 
         public const byte Login = 1;
 
-        private List<string> mClients = new List<string>();
+        private Dictionary<string,int[]> mClients = new Dictionary<string, int[]>();
 
         #endregion ...Variables...
 
@@ -67,13 +69,32 @@ namespace SpiderDriver
             {
                 case GetTagIdByNameFun:
                     long loginId = data.ReadLong();
-                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
+                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId)||loginId<1)
                     {
                         int count = data.ReadInt();
                         if (count > 0)
                         {
-                            var re = Parent.Allocate(APIConst.TagInfoRequestFun, (count+1) * 4);
+                            var re = Parent.Allocate(APIConst.TagInfoRequestFun, (count+1) * 4+1);
+                            re.Write(GetTagIdByNameFun);
                             re.Write(count);
+
+                            //首先删除旧的缓冲
+                            //Span<int> sp=null;
+                            int[] sp;
+                            lock (mClients)
+                            {
+                                
+                                sp = new int[count];
+                                if(mClients.ContainsKey(client))
+                                {
+                                    mClients[client] = sp;
+                                }
+                                else
+                                {
+                                    mClients.Add(client, sp);
+                                }
+                            }
+
                             for (int i = 0; i < count; i++)
                             {
                                // string stag = data.ReadString();
@@ -81,15 +102,22 @@ namespace SpiderDriver
                                 if (ival.HasValue)
                                 {
                                     re.Write(ival.Value);
+                                    sp[i] = ival.Value;
                                 }
                                 else
                                 {
                                     re.Write((int)-1);
+                                    sp[i] = -1;
                                 }
                             }
+                            
                             Parent.AsyncCallback(client, re);
                         }
                     }
+                    //else
+                    //{
+                    //    LoggerService.Service.Info("Spider", loginId+"  at client " + client + " is invailed id. ");
+                    //}
                     break;
                 case QueryAllTagNameAndIds:
                     loginId = data.ReadLong();
@@ -185,19 +213,23 @@ namespace SpiderDriver
 
                         if (result > 0)
                         {
-                            mClients.Add(client);
-                            LoggerService.Service.Info("Spider", user + " at client " + client + " login sucessfull.");
+                            lock (mClients)
+                            {
+                                if (!mClients.ContainsKey(client))
+                                    mClients.Add(client, null);
+                            }
+                            LoggerService.Service.Info("Spider", user + " at client " + client + " login sucessfull " + result);
                         }
                         else
                         {
                             LoggerService.Service.Warn("Spider", user + " at client " + client + " login failed.");
                         }
 
-                        Parent.AsyncCallback(client, ToByteBuffer(APIConst.TagInfoRequestFun, result));
+                        Parent.AsyncCallback(client, ToByteBuffer(APIConst.TagInfoRequestFun,Login, result));
                     }
                     catch(Exception eex)
                     {
-                        LoggerService.Service.Erro("SpiderDriver", eex.Message);
+                        LoggerService.Service.Erro("SpiderDriver",$"{eex.Message}:{eex.StackTrace}" );
                     }
 
                     break;
@@ -218,10 +250,10 @@ namespace SpiderDriver
            
             if (val > 0)
             {
-                ByteBuffer data = ToByteBuffer(APIConst.TagInfoRequestFun, APIConst.DatabaseChangedNotify, val);
+                ByteBuffer data = ToByteBuffer(APIConst.DatabaseChangedNotify, val);
                 foreach (var vv in mClients)
                 {
-                    Parent.AsyncCallback(vv, data);
+                    Parent.AsyncCallback(vv.Key, data);
                 }
             }
         }
@@ -249,6 +281,13 @@ namespace SpiderDriver
             return re;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tags"></param>
+        /// <param name="bcount"></param>
+        /// <param name="totalcount"></param>
+        /// <returns></returns>
         private ByteBuffer GetRecordTypeBuffer(IEnumerable<HisTag> tags, short bcount, short totalcount)
         {
             ByteBuffer re = Parent.Allocate(APIConst.TagInfoRequestFun, tags.Count() * 4 + 9);
@@ -267,11 +306,35 @@ namespace SpiderDriver
         /// 
         /// </summary>
         /// <param name="id"></param>
-        public override void OnClientDisconnected(string id)
+        public unsafe override void OnClientDisconnected(string id)
         {
-            if (mClients.Contains(id))
+            if (mClients.ContainsKey(id))
             {
-                mClients.Remove(id);
+                //Tuple<IntPtr,int> pp = mClients[id];
+                var pp = mClients[id];
+
+                lock (mClients)
+                    mClients.Remove(id);
+                
+                //to do update bad quality
+                if(pp!=null)
+                {
+                    var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
+                    //Span<int> sp = new Span<int>((byte*)pp.Item1, pp.Item2*4);
+                    DateTime dtime = DateTime.Now;
+                    //for(int i=0;i<pp.Item2;i++)
+                    for(int i=0;i<pp.Length;i++)
+                    {
+                        int ip = pp[i];
+                        if (ip > -1)
+                        {
+                            service.SetTagQuality(ip, (byte)QualityConst.Offline, dtime);
+                        }
+                    }
+
+                    //Marshal.FreeHGlobal(pp.Item1);
+
+                }
             }
             base.OnClientDisconnected(id);
         }

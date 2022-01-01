@@ -88,6 +88,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Alarm 的本地化字符串。
+        /// </summary>
+        internal static string Alarm {
+            get {
+                return ResourceManager.GetString("Alarm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 All group 的本地化字符串。
         /// </summary>
         internal static string AllGroup {
@@ -201,6 +210,17 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Database {
             get {
                 return ResourceManager.GetString("Database", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The database {0} already exists
+        ///
+        ///! 的本地化字符串。
+        /// </summary>
+        internal static string databaseexist {
+            get {
+                return ResourceManager.GetString("databaseexist", resourceCulture);
             }
         }
         
@@ -493,7 +513,7 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Mars database developer 的本地化字符串。
+        ///   查找类似 Mars database development platforms 的本地化字符串。
         /// </summary>
         internal static string MainwindowTitle {
             get {

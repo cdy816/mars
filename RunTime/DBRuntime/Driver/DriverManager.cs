@@ -116,14 +116,24 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="addTags"></param>
-        /// <param name="changedTags"></param>
-        public void NotifyRealTagChanged(Dictionary<int,string> addTags,Dictionary<int,string> changedTags)
+        public void Pause()
         {
-            TagChangedArg tca = new TagChangedArg() { AddedTags = addTags, ChangedTags = changedTags };
-            foreach(var vv in mDrivers)
+            LoggerService.Service.Info("DriverManager", "开始暂停");
+            foreach (var vv in mDrivers.Values)
             {
-                vv.Value.OnRealTagChanged(tca);
+                vv.Pause();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Resume()
+        {
+            LoggerService.Service.Info("DriverManager", "开始恢复");
+            foreach (var vv in mDrivers.Values)
+            {
+                vv.Resume();
             }
         }
 
@@ -132,12 +142,40 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addTags"></param>
         /// <param name="changedTags"></param>
-        public void NotifyHisTagChanged(IEnumerable<int> addTags, IEnumerable<int> changedTags)
+        public void NotifyRealTagChanged(Dictionary<int,string> addTags,Dictionary<int,string> changedTags,Dictionary<int,string> removeChanged)
         {
-            HisTagChangedArg tca = new HisTagChangedArg() { AddedTags = addTags, ChangedTags = changedTags };
+            TagChangedArg tca = new TagChangedArg() { AddedTags = addTags, ChangedTags = changedTags,RemoveTags=removeChanged };
+            foreach(var vv in mDrivers)
+            {
+                try
+                {
+                    vv.Value.OnRealTagChanged(tca);
+                }
+                catch(Exception ex)
+                {
+                    LoggerService.Service.Warn("DriverManager", $"NotifyRealTagChanged { vv.Key } { ex.Message }");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addTags"></param>
+        /// <param name="changedTags"></param>
+        public void NotifyHisTagChanged(IEnumerable<int> addTags, IEnumerable<int> changedTags, IEnumerable<int> removedTags)
+        {
+            HisTagChangedArg tca = new HisTagChangedArg() { AddedTags = addTags, ChangedTags = changedTags,RemoveTags= removedTags };
             foreach (var vv in mDrivers)
             {
-                vv.Value.OnHisTagChanged(tca);
+                try
+                {
+                    vv.Value.OnHisTagChanged(tca);
+                }
+                catch(Exception ex)
+                {
+                    LoggerService.Service.Warn("DriverManager", $"NotifyHisTagChanged { vv.Key } { ex.Message }");
+                }
             }
         }
 

@@ -99,7 +99,7 @@ namespace DBInStudio.Desktop
             }
             set
             {
-                if (mName != value && !string.IsNullOrEmpty(value))
+                if (mName != value && !string.IsNullOrEmpty(value) && CheckAvaiableName(value))
                 {
                     string oldName = mName;
                     if(OnRename(oldName, value))
@@ -230,6 +230,16 @@ namespace DBInStudio.Desktop
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        private bool CheckAvaiableName(string name)
+        {
+            return !name.Contains(".");
+        }
 
         /// <summary>
         /// 

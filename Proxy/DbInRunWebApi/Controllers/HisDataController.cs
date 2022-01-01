@@ -575,7 +575,7 @@ namespace DbInRunWebApi.Controllers
             try
             {
                 var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
-                if (tag == null) return null;
+                if (tag == null) return new HisValue() { Result = false, ErroMessage = "tag not exist" } ;
                 object res;
                 HisValue revals = null;
                 switch (tag.Type)
@@ -899,5 +899,324 @@ namespace DbInRunWebApi.Controllers
             }
         }
 
+        /// <summary>
+        /// 查找在某个时间段内是否包括指定的值
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>返回找到的第一个值的时间，未找到返回 空</returns>
+        [HttpGet("FindTagValue")]
+        public FindTagValueResult FindTagValue([FromBody] FindTagValueEqualRequest request)
+        {
+            FindTagValueResult re = new FindTagValueResult() { Result = true, TagName = request.TagName };
+            if (!DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))
+            {
+                return new FindTagValueResult() { Result = false, ErroMessage = "not login",TagName=request.TagName };
+            }
+            try
+            {
+                var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
+                if (tag == null) return new FindTagValueResult() { Result = false, ErroMessage = "tag not exist", TagName = request.TagName };
+                DateTime? dres=null;
+                Tuple<DateTime, object> res = null;
+                switch (tag.Type)
+                {
+                    case Cdy.Tag.TagType.DateTime:
+                    case Cdy.Tag.TagType.Bool:
+                    case Cdy.Tag.TagType.String:
+                    case Cdy.Tag.TagType.IntPoint:
+                    case Cdy.Tag.TagType.UIntPoint:
+                    case Cdy.Tag.TagType.IntPoint3:
+                    case Cdy.Tag.TagType.UIntPoint3:
+                    case Cdy.Tag.TagType.LongPoint:
+                    case Cdy.Tag.TagType.ULongPoint:
+                    case Cdy.Tag.TagType.LongPoint3:
+                    case Cdy.Tag.TagType.ULongPoint3:
+                        dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValue(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime),Convert.ToByte(request.Value));
+                        re.Value = dres.HasValue ? dres.Value : "";
+                        break;
+                    case Cdy.Tag.TagType.Double:
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValue(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), (NumberStatisticsType)(byte)request.ValueCompareType, Convert.ToDouble(request.Value), request.Interval);
+                        re.Value = new { time = res.Item1.ToString("yyyy-MM-dd HH:mm:ss.fff"), value = res.Item2 };
+                        break;
+                    case Cdy.Tag.TagType.Float:
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValue(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), (NumberStatisticsType)(byte)request.ValueCompareType, Convert.ToSingle(request.Value), request.Interval);
+                        re.Value = new { time = res.Item1.ToString("yyyy-MM-dd HH:mm:ss.fff"), value = res.Item2 };
+                        break;
+                    case Cdy.Tag.TagType.Byte:
+                    case Cdy.Tag.TagType.Int:
+                    case Cdy.Tag.TagType.Long:
+                    case Cdy.Tag.TagType.UInt:
+                    case Cdy.Tag.TagType.Short:
+                    case Cdy.Tag.TagType.ULong:
+                    case Cdy.Tag.TagType.UShort:
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValue(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), (NumberStatisticsType)(byte)request.ValueCompareType, Convert.ToInt64(request.Value), request.Interval);
+                        re.Value = new { time = res.Item1.ToString("yyyy-MM-dd HH:mm:ss.fff"), value = res.Item2 };
+                        break;                   
+
+                }
+                
+            }
+            catch(Exception ex)
+            {
+                re.Result = false;
+                re.Value = ex.Message;
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 查找在某个时间段内是否包括指定的值
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>返回所有满足条件的时间的集合</returns>
+        [HttpGet("FindTagValues")]
+        public FindTagValueResult FindTagValues([FromBody] FindTagValueEqualRequest request)
+        {
+            FindTagValueResult re = new FindTagValueResult() { Result = true, TagName = request.TagName };
+            if (!DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))
+            {
+                return new FindTagValueResult() { Result = false, ErroMessage = "not login", TagName = request.TagName };
+            }
+            try
+            {
+                var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
+                if (tag == null) return new FindTagValueResult() { Result = false, ErroMessage = "tag not exist", TagName = request.TagName };
+                Dictionary<DateTime,object> res = null;
+                IEnumerable<DateTime> nres = null;
+                switch (tag.Type)
+                {
+                    case Cdy.Tag.TagType.DateTime:
+                    case Cdy.Tag.TagType.Bool:
+                    case Cdy.Tag.TagType.String:
+                    case Cdy.Tag.TagType.IntPoint:
+                    case Cdy.Tag.TagType.UIntPoint:
+                    case Cdy.Tag.TagType.IntPoint3:
+                    case Cdy.Tag.TagType.UIntPoint3:
+                    case Cdy.Tag.TagType.LongPoint:
+                    case Cdy.Tag.TagType.ULongPoint:
+                    case Cdy.Tag.TagType.LongPoint3:
+                    case Cdy.Tag.TagType.ULongPoint3:
+                        nres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValues(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), Convert.ToByte(request.Value));
+                        re.Value = nres;
+                        break;
+                    case Cdy.Tag.TagType.Double:
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValues(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), (NumberStatisticsType)(byte)request.ValueCompareType, Convert.ToDouble(request.Value), request.Interval);
+                        re.Value = res.Select(e => new { time = e.Key.ToString("yyyy-MM-dd HH:mm:ss.fff"), value = e.Value });
+                        break;
+                    case Cdy.Tag.TagType.Float:
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValues(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), (NumberStatisticsType)(byte)request.ValueCompareType, Convert.ToSingle(request.Value), request.Interval);
+                        re.Value =res.Select(e=> new { time = e.Key.ToString("yyyy-MM-dd HH:mm:ss.fff"), value = e.Value });
+                        break;
+                    case Cdy.Tag.TagType.Byte:
+                    case Cdy.Tag.TagType.Int:
+                    case Cdy.Tag.TagType.Long:
+                    case Cdy.Tag.TagType.UInt:
+                    case Cdy.Tag.TagType.Short:
+                    case Cdy.Tag.TagType.ULong:
+                    case Cdy.Tag.TagType.UShort:
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValues(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), (NumberStatisticsType)(byte)request.ValueCompareType, Convert.ToInt64(request.Value), request.Interval);
+                        re.Value = res.Select(e => new { time = e.Key.ToString("yyyy-MM-dd HH:mm:ss.fff"), value = e.Value });
+                        break;
+
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                re.Result = false;
+                re.Value = ex.Message;
+            }
+            return re;
+        }
+
+
+        /// <summary>
+        /// 计算在某个时间段内满足指定的值条件的持续时间
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>累计时长</returns>
+        [HttpGet("CalTagValueKeepTime")]
+        public FindTagValueResult CalTagValueKeepTime([FromBody] FindTagValueEqualRequest request)
+        {
+            FindTagValueResult re = new FindTagValueResult() { Result = true,TagName=request.TagName };
+            if (!DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))
+            {
+                return new FindTagValueResult() { Result = false, ErroMessage = "not login", TagName = request.TagName };
+            }
+            try
+            {
+                var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
+                if (tag == null) return new FindTagValueResult() { Result = false, ErroMessage = "tag not exist", TagName = request.TagName };
+                double? res = null;
+                switch (tag.Type)
+                {
+                    case Cdy.Tag.TagType.DateTime:
+                    case Cdy.Tag.TagType.Bool:
+                    case Cdy.Tag.TagType.String:
+                    case Cdy.Tag.TagType.IntPoint:
+                    case Cdy.Tag.TagType.UIntPoint:
+                    case Cdy.Tag.TagType.IntPoint3:
+                    case Cdy.Tag.TagType.UIntPoint3:
+                    case Cdy.Tag.TagType.LongPoint:
+                    case Cdy.Tag.TagType.ULongPoint:
+                    case Cdy.Tag.TagType.LongPoint3:
+                    case Cdy.Tag.TagType.ULongPoint3:
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValueDuration(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), Convert.ToByte(request.Value));
+                        break;
+                    case Cdy.Tag.TagType.Double:
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValueDuration(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), (NumberStatisticsType)(byte)request.ValueCompareType, Convert.ToDouble(request.Value),request.Interval);
+                        break;
+                    case Cdy.Tag.TagType.Float:
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValueDuration(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), (NumberStatisticsType)(byte)request.ValueCompareType, Convert.ToSingle(request.Value), request.Interval);
+                        break;
+                    case Cdy.Tag.TagType.Byte:
+                    case Cdy.Tag.TagType.Int:
+                    case Cdy.Tag.TagType.Long:
+                    case Cdy.Tag.TagType.UInt:
+                    case Cdy.Tag.TagType.Short:
+                    case Cdy.Tag.TagType.ULong:
+                    case Cdy.Tag.TagType.UShort:
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValueDuration(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), (NumberStatisticsType)(byte)request.ValueCompareType, Convert.ToInt64(request.Value), request.Interval);
+                        break;
+
+                }
+                re.Value = res;
+            }
+            catch (Exception ex)
+            {
+                re.Result = false;
+                re.Value = ex.Message;
+            }
+            return re;
+        }
+
+
+        /// <summary>
+        /// 计算在某个时间段内数值型变量的平均值
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>平均值</returns>
+        [HttpGet("CalNumberTagAvgValue")]
+        public FindTagValueResult CalNumberTagAvgValue([FromBody] FindTagValueEqualRequest request)
+        {
+            FindTagValueResult re = new FindTagValueResult() { Result = true,TagName=request.TagName };
+            if (!DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))
+            {
+                return new FindTagValueResult() { Result = false, ErroMessage = "not login", TagName = request.TagName };
+            }
+            try
+            {
+                var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
+                if (tag == null) return new FindTagValueResult() { Result = false, ErroMessage = "tag not exist", TagName = request.TagName };
+                double? res = null;
+                switch (tag.Type)
+                {
+                    case Cdy.Tag.TagType.Double:
+                    case Cdy.Tag.TagType.Float:
+                    case Cdy.Tag.TagType.Byte:
+                    case Cdy.Tag.TagType.Int:
+                    case Cdy.Tag.TagType.Long:
+                    case Cdy.Tag.TagType.UInt:
+                    case Cdy.Tag.TagType.Short:
+                    case Cdy.Tag.TagType.ULong:
+                    case Cdy.Tag.TagType.UShort:
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.StatisticsTagAvgValue(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime));
+                        break;
+                }
+                re.Value = res;
+            }
+            catch (Exception ex)
+            {
+                re.Result = false;
+                re.Value = ex.Message;
+            }
+            return re;
+        }
+
+
+        /// <summary>
+        /// 查找在某个时间段内数值型变量的最大值
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>最大值和等于最大值的时间的集合</returns>
+        [HttpGet("FindNumberTagMaxValue")]
+        public FindTagValueResult FindNumberTagMaxValue([FromBody] FindTagValueEqualRequest request)
+        {
+            FindTagValueResult re = new FindTagValueResult() { Result = true,TagName=request.TagName };
+            if (!DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))
+            {
+                return new FindTagValueResult() { Result = false, ErroMessage = "not login", TagName = request.TagName };
+            }
+            try
+            {
+                var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
+                if (tag == null) return new FindTagValueResult() { Result = false, ErroMessage = "tag not exist", TagName = request.TagName };
+               Tuple<double,List<DateTime>> res = null;
+                switch (tag.Type)
+                {
+                    case Cdy.Tag.TagType.Double:
+                    case Cdy.Tag.TagType.Float:
+                    case Cdy.Tag.TagType.Byte:
+                    case Cdy.Tag.TagType.Int:
+                    case Cdy.Tag.TagType.Long:
+                    case Cdy.Tag.TagType.UInt:
+                    case Cdy.Tag.TagType.Short:
+                    case Cdy.Tag.TagType.ULong:
+                    case Cdy.Tag.TagType.UShort:
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.StatisticsTagMaxMinValue(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime),NumberStatisticsType.Max);
+                        break;
+                }
+                re.Value = new { Value = res.Item1, Times = res.Item2 };
+            }
+            catch (Exception ex)
+            {
+                re.Result = false;
+                re.Value = ex.Message;
+            }
+            return re;
+        }
+
+
+        /// <summary>
+        /// 查找在某个时间段内数值型变量的最小值
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>最小值和等于最小值的时间的集合</returns>
+        [HttpGet("FindNumberTagMinValue")]
+        public FindTagValueResult FindNumberTagMinValue([FromBody] FindTagValueEqualRequest request)
+        {
+            FindTagValueResult re = new FindTagValueResult() { Result = true, TagName = request.TagName };
+            if (!DbInRunWebApi.SecurityManager.Manager.IsLogin(request.Token))
+            {
+                return new FindTagValueResult() { Result = false, ErroMessage = "not login", TagName = request.TagName };
+            }
+            try
+            {
+                var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.TagName);
+                if (tag == null) return new FindTagValueResult() { Result = false, ErroMessage = "tag not exist", TagName = request.TagName };
+                Tuple<double, List<DateTime>> res = null;
+                switch (tag.Type)
+                {
+                    case Cdy.Tag.TagType.Double:
+                    case Cdy.Tag.TagType.Float:
+                    case Cdy.Tag.TagType.Byte:
+                    case Cdy.Tag.TagType.Int:
+                    case Cdy.Tag.TagType.Long:
+                    case Cdy.Tag.TagType.UInt:
+                    case Cdy.Tag.TagType.Short:
+                    case Cdy.Tag.TagType.ULong:
+                    case Cdy.Tag.TagType.UShort:
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.StatisticsTagMaxMinValue(tag.Id, ConvertToDateTime(request.StartTime), ConvertToDateTime(request.EndTime), NumberStatisticsType.Min);
+                        break;
+                }
+                re.Value = new { Value = res.Item1, Times = res.Item2 };
+            }
+            catch (Exception ex)
+            {
+                re.Result = false;
+                re.Value = ex.Message;
+            }
+            return re;
+        }
     }
 }

@@ -48,6 +48,11 @@ namespace DbInRunWebApi
         {
              ReadServerParameter();
             WindowConsolHelper.DisbleQuickEditMode();
+            Console.Title = "DbWebApi";
+            if (args.Contains("/m"))
+            {
+                WindowConsolHelper.MinWindow("DbWebApi");
+            }
             CreateHostBuilder(args).Build().Run();
         }
 

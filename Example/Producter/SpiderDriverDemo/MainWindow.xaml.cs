@@ -55,6 +55,9 @@ namespace SpiderDriverDemo
                         Debug.Print("收到数据下发指令:"+ vv.Key + "," + vv.Value.ToString());
                     }
                 });
+                driverProxy.DatabaseChanged = new SpiderDriver.ClientApi.DriverProxy.DatabaseChangedDelegate((real, his) => {
+                    Debug.Print(real+ ","+his);
+                });
             }
 
             mScanThread = new Thread(RealValueThreadPro);
@@ -103,6 +106,18 @@ namespace SpiderDriverDemo
                 {
                     ProcessSetRealTagValue();
                 }
+                Thread.Sleep(500);
+            }
+        }
+
+
+        private void RealValueUpdateByNameThreadPro()
+        {
+            driverProxy.UserName = "Admin";
+            driverProxy.Password = "Admin";
+            while (true)
+            {
+                ProcessSetRealTagValueWithTagName();
                 Thread.Sleep(500);
             }
         }
@@ -271,6 +286,63 @@ namespace SpiderDriverDemo
             }
 
             var vvd = driverProxy.CheckRecordTypeByTagId(new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+        }
+
+        private void ProcessSetRealTagValueWithTagName()
+        {
+            mCount++;
+            if (mCount > 3600) mCount = 0;
+            double sin = Math.Sin(mCount / 180.0 * Math.PI);
+            double cos = Math.Cos(mCount / 180.0 * Math.PI);
+            bool bval = mCount % 300 == 0;
+            byte btmp = (byte)(mCount % 256);
+            DateTime dnow = DateTime.UtcNow;
+
+            CountValue = mCount.ToString();
+            SimValue = sin.ToString("f4");
+            CosValue = cos.ToString("f4");
+            BoolValue = bval.ToString();
+            DateTimeValue = dnow.ToString();
+            if (rdb == null)
+            {
+                rdb = new SpiderDriver.ClientApi.RealDataBuffer(100*(64+32));
+            }
+
+            rdb.Clear();
+
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            //int i = 0;
+            StringBuilder sb = new StringBuilder();
+            sb.Append(" : ");
+            //方法1
+            for (int i = 0; i < 100; i++)
+            {
+                rdb.AppendValue("tag" + i, sin, 0);
+            }
+
+            //driverProxy.SetTagValueAndQuality2(rdb);
+
+            //方法2
+            List<RealTagValue2> rvals = new List<RealTagValue2>();
+            for(int i=0;i<100;i++)
+            {
+                rvals.Add(new RealTagValue2() { Id = "tag" + i, Value = sin, ValueType = 8, Quality = 0 });
+            }
+            //driverProxy.SetTagValueAndQuality2(rvals);
+
+            //方法3
+            driverProxy.SetTagRealAndHisValue2(rdb);
+
+            //方法4
+            //driverProxy.SetTagRealAndHisValue2(rvals);
+
+            this.Dispatcher.BeginInvoke(new Action(() => {
+
+                this.fshs.Content = "发送耗时:" + sw.ElapsedMilliseconds + sb.ToString();
+            }));
+
+            // Debug.Print("发送耗时:" + sw.ElapsedMilliseconds +sb.ToString());
         }
 
         private void ProcessSetRealTagValue()
@@ -510,6 +582,17 @@ namespace SpiderDriverDemo
 
         }
 
-
+        private void StartPushOnly_Click(object sender, RoutedEventArgs e)
+        {
+            this.StartPushOnly.IsEnabled = false;
+            if (driverProxy == null)
+            {
+                driverProxy = new SpiderDriver.ClientApi.DriverProxy();
+                driverProxy.Open(this.ipt.Text, int.Parse(portt.Text));
+            }
+            mScanThread = new Thread(RealValueUpdateByNameThreadPro);
+            mScanThread.IsBackground = true;
+            mScanThread.Start();
+        }
     }
 }

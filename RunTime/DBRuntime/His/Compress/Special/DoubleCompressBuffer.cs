@@ -61,7 +61,7 @@ namespace DBRuntime.His.Compress
         /// <summary>
         /// 
         /// </summary>
-        public int Precision { get { return mPrecision; } set { mPrecision = value; if (value > 0) { mPrecisionValue = (long)Math.Pow(10, value); mMaxValue = long.MaxValue / mPrecisionValue; } } }
+        public int Precision { get { return mPrecision; } set { mPrecision = value; if (value >= 0) { mPrecisionValue = (long)Math.Pow(10, value); mMaxValue = long.MaxValue / mPrecisionValue; } } }
 
         /// <summary>
         /// 

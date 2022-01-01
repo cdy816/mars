@@ -1,8 +1,7 @@
 {
   "profiles": {
     "SpiderDriverDemo": {
-      "commandName": "Executable",
-      "executablePath": "C:\\Users\\chongdaoyang\\source\\repos\\mars\\Output\\APIExample\\SpiderDriverDemo\\SpiderDriverDemo.exe"
+      "commandName": "Project"
     }
   }
 }

@@ -1361,7 +1361,45 @@ namespace DBDevelopClientApi
         {
             if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
             {
-                return mCurrentClient.UpdateDatabaseHisSetting(new DBDevelopService.UpdateDatabaseHisSettingRequest() { Database = database, LoginId = mLoginId,DataPath=database,BackDataPath=backdatapath,KeepTime=keeptime,KeepNoZipFileDays= keepNoZipFileDays }).Result;
+                return mCurrentClient.UpdateDatabaseHisSetting(new DBDevelopService.UpdateDatabaseHisSettingRequest() { Database = database, LoginId = mLoginId,DataPath= datapath, BackDataPath=backdatapath,KeepTime=keeptime,KeepNoZipFileDays= keepNoZipFileDays }).Result;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="group"></param>
+        /// <param name="baseTagName"></param>
+        /// <returns></returns>
+        public string GetAvaiableTagName(string database,string group="",string baseTagName="")
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.GetAvaiableTagName(new DBDevelopService.GetAvaiableTagNameRequest() { Database = database, LoginId = mLoginId, Group=group,Name=baseTagName }).Name;
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="group"></param>
+        /// <param name="tagname"></param>
+        /// <returns></returns>
+        public bool CheckTagNameExits(string database,string group,string tagname)
+        {
+            if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                return mCurrentClient.CheckTagNameExist(new DBDevelopService.GetAvaiableTagNameRequest() { Database = database, LoginId = mLoginId, Group = group, Name = tagname }).Result;
             }
             else
             {

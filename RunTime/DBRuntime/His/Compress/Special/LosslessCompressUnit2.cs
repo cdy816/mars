@@ -2258,6 +2258,26 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="qa"></param>
+        /// <returns></returns>
+        protected bool IsBadQuality(byte qa)
+        {
+            return qa >= (byte)QualityConst.Bad && qa <= (byte)QualityConst.Bad+20;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="qa"></param>
+        /// <returns></returns>
+        protected bool IsGoodQuality(byte qa)
+        {
+            return !IsBadQuality(qa);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source"></param>
         /// <param name="sourceAddr"></param>
@@ -2300,7 +2320,7 @@ namespace Cdy.Tag
                 //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
                 if(val.HasValue && val.Value.IsEmpty())
                 {
-                    val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = timers[0].AddMilliseconds(-timers[0].Millisecond) };
+                    val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = lowfirst.First() };
                 }
 
                 foreach (var vtime in lowfirst)
@@ -2343,7 +2363,7 @@ namespace Cdy.Tag
                                 }
                                 else
                                 {
-                                    if ((qulityes[0] < 20 || qulityes[0] == 100) && (val.Value.Quality < 20 || val.Value.Quality==100))
+                                    if (!IsBadQuality(qulityes[0]) && !IsBadQuality(val.Value.Quality))
                                     {
                                         var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
                                         var tval1 = (timers[0] - val.Value.Time).TotalMilliseconds;
@@ -2352,13 +2372,21 @@ namespace Cdy.Tag
 
                                         var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
 
-                                        result.Add((object)val1, vtime, 0);
+                                        if (pval1 <= 0)
+                                        {
+                                            //说明数据有异常，则取第一个值
+                                            result.Add((object)sval1, vtime, val.Value.Quality);
+                                        }
+                                        else
+                                        {
+                                            result.Add((object)val1, vtime, pval1<tval1?val.Value.Quality:qulityes[0]);
+                                        }
                                     }
-                                    else if (qulityes[0] < 20)
+                                    else if (!IsBadQuality(qulityes[0]))
                                     {
                                         result.Add(value[0], vtime, qulityes[0]);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (!IsBadQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, vtime, val.Value.Quality);
                                     }
@@ -2452,7 +2480,7 @@ namespace Cdy.Tag
                                 }
                                 else
                                 {
-                                    if (qulityes[i] < 20 && qulityes[i + 1] < 20)
+                                    if (!IsBadQuality(qulityes[i]) && !IsBadQuality(qulityes[i + 1]))
                                     {
                                         var pval1 = (time1 - skey).TotalMilliseconds;
                                         var tval1 = (snext - skey).TotalMilliseconds;
@@ -2461,14 +2489,14 @@ namespace Cdy.Tag
 
                                         var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
                                         
-                                        result.Add((object)val1, time1, 0);
+                                        result.Add((object)val1, time1, pval1<tval1?qulityes[i]:qulityes[i+1]);
                                     }
-                                    else if (qulityes[i] < 20)
+                                    else if (!IsBadQuality(qulityes[i]))
                                     {
                                         val = value[i];
                                         result.Add(val, time1, qulityes[i]);
                                     }
-                                    else if (qulityes[i + 1] < 20)
+                                    else if (!IsBadQuality(qulityes[i + 1]))
                                     {
                                         val = value[i + 1];
                                         result.Add(val, time1, qulityes[i + 1]);
@@ -2521,7 +2549,7 @@ namespace Cdy.Tag
                 //如果为空值，则说明跨数据文件了，则取第最后一个有效值用作后一个值
                 if (val.HasValue && val.Value.IsEmpty())
                 {
-                    val = new TagHisValue<T>() { Value = value[value.Count - 1], Quality = qulityes[qulityes.Count - 1], Time = timers[timers.Count-1].AddMilliseconds(-timers[timers.Count - 1].Millisecond) };
+                    val = new TagHisValue<T>() { Value = value[value.Count - 1], Quality = qulityes[qulityes.Count - 1], Time = greatlast.Last() };
                 }
 
               
@@ -2566,7 +2594,7 @@ namespace Cdy.Tag
                                 }
                                 else
                                 {
-                                    if ((qulityes[qulityes.Count - 1] < 20|| qulityes[qulityes.Count - 1]==100) && (val.Value.Quality < 20 || val.Value.Quality==100))
+                                    if (!IsBadQuality(qulityes[qulityes.Count - 1]) && !IsBadQuality(val.Value.Quality))
                                     {
                                         var pval1 = (val.Value.Time - vtime).TotalMilliseconds;
                                         var tval1 = (val.Value.Time - timers[timers.Count - 1]).TotalMilliseconds;
@@ -2575,13 +2603,13 @@ namespace Cdy.Tag
 
                                         var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
 
-                                        result.Add((object)val1, vtime, 0);
+                                        result.Add((object)val1, vtime, pval1<tval1?qulityes[qulityes.Count-1]:val.Value.Quality);
                                     }
-                                    else if (qulityes[qulityes.Count - 1] < 20)
+                                    else if (!IsBadQuality(qulityes[qulityes.Count - 1]))
                                     {
                                         result.Add(value[value.Count - 1], vtime, qulityes[qulityes.Count - 1]);
                                     }
-                                    else if (val.Value.Quality < 20)
+                                    else if (!IsBadQuality(val.Value.Quality))
                                     {
                                         result.Add(val.Value.Value, vtime, val.Value.Quality);
                                     }
@@ -2660,7 +2688,7 @@ namespace Cdy.Tag
                 //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
                 if (val.HasValue && val.Value.IsEmpty())
                 {
-                    val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = timers[0].AddMilliseconds(-timers[0].Millisecond) };
+                    val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = time };
                 }
 
                 //  var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
@@ -2694,7 +2722,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            if ((val.Value.Quality < 20 || val.Value.Quality == 100) && (qulityes[0] < 20|| qulityes[0]==100))
+                            if (!IsBadQuality(qulityes[0]) && !IsBadQuality(val.Value.Quality))
                             {
                                 var pval1 = (time - val.Value.Time).TotalMilliseconds;
                                 var tval1 = (timers[0] - val.Value.Time).TotalMilliseconds;
@@ -2703,6 +2731,7 @@ namespace Cdy.Tag
 
                                 var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
 
+                                if (pval1 < 0) val1 = Convert.ToDouble(sval1);
                               
                                 switch (typeof(T).Name)
                                 {
@@ -2763,11 +2792,11 @@ namespace Cdy.Tag
                                 //    return (byte)val1;
                                 //}
                             }
-                            else if (val.Value.Quality < 20)
+                            else if (!IsBadQuality(val.Value.Quality))
                             {
                                 return val.Value.Value;
                             }
-                            else if (qulityes[0] < 20)
+                            else if (!IsBadQuality(qulityes[0]))
                             {
                                 return value[0];
                             }
@@ -2830,7 +2859,7 @@ namespace Cdy.Tag
                         }
                         else
                         {
-                            if ((val.Value.Quality < 20 || val.Value.Quality ==100) && (qtmp < 20 || qtmp==100))
+                            if ((!IsBadQuality(val.Value.Quality)) && (!IsBadQuality(qtmp)))
                             {
                                 var pval1 = (time - timetmp).TotalMilliseconds;
                                 var tval1 = (val.Value.Time - timetmp).TotalMilliseconds;
@@ -2899,11 +2928,11 @@ namespace Cdy.Tag
                                 //    return (byte)val1;
                                 //}
                             }
-                            else if (val.Value.Quality < 20)
+                            else if (!IsBadQuality(val.Value.Quality))
                             {
                                 return val.Value.Value;
                             }
-                            else if (qtmp < 20)
+                            else if (!IsBadQuality(qtmp))
                             {
                                 return valtmp;
                             }
@@ -2971,7 +3000,7 @@ namespace Cdy.Tag
                                 }
                                 else
                                 {
-                                    if (qulityes[i] < 20 && qulityes[i + 1] < 20)
+                                    if (!IsBadQuality(qulityes[i]) && !IsBadQuality(qulityes[i + 1]))
                                     {
                                         var pval1 = (time - skey).TotalMilliseconds;
                                         var tval1 = (snext - skey).TotalMilliseconds;
@@ -3003,11 +3032,11 @@ namespace Cdy.Tag
                                                 return (float)val1;
                                         }
                                     }
-                                    else if (qulityes[i] < 20)
+                                    else if (!IsBadQuality(qulityes[i]))
                                     {
                                         return value[i];
                                     }
-                                    else if (qulityes[i + 1] < 20)
+                                    else if (!IsBadQuality(qulityes[i + 1]))
                                     {
                                         return value[i + 1];
                                     }
@@ -3086,7 +3115,7 @@ namespace Cdy.Tag
                 //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
                 if (val.HasValue && val.Value.IsEmpty())
                 {
-                    val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = timers[0].AddMilliseconds(-timers[0].Millisecond) };
+                    val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = time1 };
                 }
 
                 switch (type)
@@ -3099,15 +3128,16 @@ namespace Cdy.Tag
                     case QueryValueMatchType.Linear:
                         if (!val.HasValue) return null;
 
-                        if ((qulityes[0] < 20 || qulityes[0]==100) && (val.Value.Quality < 20 || val.Value.Quality==100))
+                        //if ((qulityes[0] < 20 || qulityes[0]==100) && (val.Value.Quality < 20 || val.Value.Quality==100))
+                        if (IsGoodQuality(qulityes[0]) && IsGoodQuality(val.Value.Quality))
                         {
                             return (T)LinerValue(val.Value.Time, timers[0], time1, val.Value.Value, value[0]);
                         }
-                        else if (val.Value.Quality < 20)
+                        else if (IsGoodQuality(val.Value.Quality))
                         {
                             return val.Value.Value;
                         }
-                        else if (qulityes[0] < 20)
+                        else if (IsGoodQuality(qulityes[0]))
                         {
                             return value[0];
                         }
@@ -3144,15 +3174,15 @@ namespace Cdy.Tag
                     case QueryValueMatchType.Linear:
                         if (!val.HasValue) return null;
 
-                        if ((qulityes[qulityes.Count-1] < 20 || qulityes[qulityes.Count - 1] ==100) && (val.Value.Quality < 20 || val.Value.Quality==100))
+                        if ((IsGoodQuality(qulityes[qulityes.Count-1])) && IsGoodQuality(val.Value.Quality))
                         {
                             return (T)LinerValue(timers[timers.Count-1], val.Value.Time, time1, value[value.Count - 1], val.Value.Value);
                         }
-                        else if (val.Value.Quality < 20)
+                        else if (IsGoodQuality(val.Value.Quality))
                         {
                             return val.Value.Value;
                         }
-                        else if (qulityes[qulityes.Count - 1] < 20)
+                        else if (IsGoodQuality(qulityes[qulityes.Count - 1]))
                         {
                             return value[value.Count-1];
                         }
@@ -3196,15 +3226,15 @@ namespace Cdy.Tag
                             case QueryValueMatchType.After:
                                 return value[i + 1];
                             case QueryValueMatchType.Linear:
-                                if (qulityes[i] < 20 && qulityes[i + 1] < 20)
+                                if (IsGoodQuality(qulityes[i]) && IsGoodQuality(qulityes[i + 1]))
                                 {
                                     return (T)LinerValue(skey, snext, time1, value[i], value[i + 1]);
                                 }
-                                else if (qulityes[i] < 20)
+                                else if (IsGoodQuality(qulityes[i]))
                                 {
                                     return value[i];
                                 }
-                                else if (qulityes[i + 1] < 20)
+                                else if (IsGoodQuality(qulityes[i + 1]))
                                 {
                                     return value[i + 1];
                                 }
@@ -3347,7 +3377,7 @@ namespace Cdy.Tag
 
 
             int j = 0;
-
+            byte qua = 0;
             if (lowfirst.Count() > 0)
             {
                 var vtmp = ReadOtherDatablockAction(0);
@@ -3356,8 +3386,9 @@ namespace Cdy.Tag
                 //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
                 if (val.HasValue && val.Value.IsEmpty())
                 {
-                    val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = timers[0].AddMilliseconds(-timers[0].Millisecond) };
+                    val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = lowfirst.First() };
                 }
+                
 
                 foreach (var time1 in lowfirst)
                 {
@@ -3381,15 +3412,27 @@ namespace Cdy.Tag
                         case QueryValueMatchType.Linear:
                             if (val.HasValue)
                             {
-                                if ((qulityes[0] < 20 || qulityes[0] ==100) && (val.Value.Quality < 20 || val.Value.Quality==100))
+                                if ((IsGoodQuality(qulityes[0])) && (IsGoodQuality(val.Value.Quality)))
                                 {
-                                    result.Add(LinerValue(val.Value.Time, timers[0], time1, val.Value.Value, value[0]), time1, 0);
+                                    var pval = (time1 - val.Value.Time).TotalMilliseconds;
+                                    var fval = (timers[0] - time1).TotalMilliseconds;
+                                 
+                                    if (pval < fval)
+                                    {
+                                        qua = val.Value.Quality;
+                                    }
+                                    else
+                                    {
+                                        qua = qulityes[0];
+                                    }
+
+                                    result.Add(LinerValue(val.Value.Time, timers[0], time1, val.Value.Value, value[0]), time1, qua);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value, time1, val.Value.Quality);
                                 }
-                                else if (qulityes[0] < 20)
+                                else if ( IsGoodQuality(qulityes[0]))
                                 {
                                     result.Add(value[0], time1, qulityes[0]);
                                 }
@@ -3460,16 +3503,27 @@ namespace Cdy.Tag
                                 resultCount++;
                                 break;
                             case QueryValueMatchType.Linear:
-                                if (qulityes[i] < 20 && qulityes[i + 1] < 20)
+                                if ( IsGoodQuality(qulityes[i]) &&  IsGoodQuality(qulityes[i + 1]))
                                 {
-                                    result.Add(LinerValue(skey, snext, time1, value[i], value[i + 1]), time1, 0);
+                                    var tpval = (time1 - skey).TotalMilliseconds;
+                                    var tfval = (snext - time1).TotalMilliseconds;
+
+                                    if (tpval < tfval)
+                                    {
+                                        qua = qulityes[i];
+                                    }
+                                    else
+                                    {
+                                        qua = qulityes[i + 1];
+                                    }
+                                    result.Add(LinerValue(skey, snext, time1, value[i], value[i + 1]), time1, qua);
                                 }
-                                else if (qulityes[i] < 20)
+                                else if ( IsGoodQuality(qulityes[i]))
                                 {
                                     val = value[i];
                                     result.Add(val, time1, qulityes[i]);
                                 }
-                                else if (qulityes[i + 1] < 20)
+                                else if ( IsGoodQuality(qulityes[i + 1]))
                                 {
                                     val = value[i + 1];
                                     result.Add(val, time1, qulityes[i + 1]);
@@ -3539,15 +3593,26 @@ namespace Cdy.Tag
                         case QueryValueMatchType.Linear:
                             if (val.HasValue)
                             {
-                                if ((qulityes[qulityes.Count - 1] < 20 || qulityes[qulityes.Count - 1] ==100) && (val.Value.Quality < 20 || val.Value.Quality==100))
+                                if (IsGoodQuality(qulityes[qulityes.Count - 1]) && IsGoodQuality(val.Value.Quality))
                                 {
-                                    result.Add(LinerValue(timers[timers.Count - 1], val.Value.Time, time1, value[value.Count - 1], val.Value.Value), time1, 0);
+                                    var pval = (time1 - timers[timers.Count - 1]).TotalMilliseconds;
+                                    var fval = (val.Value.Time - time1).TotalMilliseconds;
+
+                                    if (pval < fval)
+                                    {
+                                        qua = qulityes[qulityes.Count - 1];
+                                    }
+                                    else
+                                    {
+                                        qua = val.Value.Quality;
+                                    }
+                                    result.Add(LinerValue(timers[timers.Count - 1], val.Value.Time, time1, value[value.Count - 1], val.Value.Value), time1, qua);
                                 }
-                                else if (val.Value.Quality < 20)
+                                else if (IsGoodQuality(val.Value.Quality))
                                 {
                                     result.Add(val.Value.Value, time1, val.Value.Quality);
                                 }
-                                else if (qulityes[qulityes.Count - 1] < 20)
+                                else if (IsGoodQuality(qulityes[qulityes.Count - 1]))
                                 {
                                     result.Add(value[value.Count - 1], time1, qulityes[qulityes.Count - 1]);
                                 }

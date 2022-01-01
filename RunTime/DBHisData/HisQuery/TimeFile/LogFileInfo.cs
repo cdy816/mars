@@ -425,11 +425,15 @@ namespace Cdy.Tag
                 var vals = ReadValueInner<T>(datafile,tindex.Keys.ToList(), 0, aid.Address + tagcount * 2,out datasize);
                 var qus = datafile.ReadBytes(aid.Address + 0 + tagcount * (2 + datasize), tagcount);
                 int i = 0;
+                var pretime = DateTime.MinValue;
                 foreach(var vv in tindex)
                 {
-                    if(qus[vv.Key]<100)
-                    result.Add(vals[i], vv.Value, qus[vv.Key]);
-                    i++;
+                    if (qus[vv.Key] < 100 && vv.Value > pretime)
+                    {
+                        pretime = vv.Value;
+                        result.Add(vals[i], vv.Value, qus[vv.Key]);
+                        i++;
+                    }
                 }
             }
         }
@@ -764,8 +768,8 @@ namespace Cdy.Tag
                                             {
                                                 var pval1 = (time1 - skey.Value.Item1).TotalMilliseconds;
                                                 var tval1 = (snext.Value.Item1 - skey.Value.Item1).TotalMilliseconds;
-                                                var sval1 = (double)vals[i];
-                                                var sval2 = (double)vals[i + 1];
+                                                var sval1 = Convert.ToDouble(vals[i]);
+                                                var sval2 = Convert.ToDouble(vals[i + 1]);
                                                 var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
                                                 result.Add((object)val1, time1, 0);
                                             }

@@ -317,6 +317,23 @@ namespace SpiderDriver
                 mHisProcess = null;
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Pause()
+        {
+            mHisProcess.IsPause = mInfoProcess.IsPause = mRealProcess.IsPause = true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Resume()
+        {
+            mHisProcess.IsPause = mInfoProcess.IsPause = mRealProcess.IsPause = false;
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

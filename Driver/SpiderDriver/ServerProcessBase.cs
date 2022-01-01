@@ -55,7 +55,10 @@ namespace SpiderDriver
         /// </summary>
         public DataService Parent { get; set; }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsPause { get; set; } = false;
 
         #endregion ...Properties...
 
@@ -96,6 +99,21 @@ namespace SpiderDriver
         protected ByteBuffer ToByteBuffer(byte id, long value)
         {
             var re = Parent.Allocate(id, 8);
+            re.Write(value);
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="cid"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        protected ByteBuffer ToByteBuffer(byte id, byte cid,long value)
+        {
+            var re = Parent.Allocate(id, 8+1);
+            re.Write(cid);
             re.Write(value);
             return re;
         }

@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Cdy.Tag
@@ -310,8 +311,9 @@ namespace Cdy.Tag
                 {
                     realEnginer.UpdateTags(changedrealtag);
                     realEnginer.AddTags(ltmp);
+                   
 
-                    DriverManager.Manager.NotifyRealTagChanged(ltmp.ToDictionary(e => e.Id, e => e.LinkAddress), changedrealtag.ToDictionary(e => e.Id, e => e.LinkAddress));
+                    DriverManager.Manager.NotifyRealTagChanged(ltmp.ToDictionary(e => e.Id, e => e.LinkAddress), changedrealtag.ToDictionary(e => e.Id, e => e.LinkAddress),null);
                 }
             }
 
@@ -345,9 +347,12 @@ namespace Cdy.Tag
                     //hisEnginer.Pause();
                     hisEnginer.AddTags(htmp);
                     hisEnginer.UpdateTags(changedhistag);
+
+                    compressEnginer.ReInitCompress(hisEnginer.CurrentMemory);
+
                     //hisEnginer.Resume();
 
-                    DriverManager.Manager.NotifyHisTagChanged(htmp.Select(e => e.Id), changedhistag.Select(e => e.Id));
+                    DriverManager.Manager.NotifyHisTagChanged(htmp.Select(e => e.Id), changedhistag.Select(e => e.Id),null);
                 }
             }
 
@@ -376,17 +381,23 @@ namespace Cdy.Tag
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
+            List<int> mRemoveRealTags;
+            List<long> mRemovedHisTags = hisEnginer.Tags.Keys.ToList();
+
             var db = new DatabaseSerise().LoadDifference(mDatabaseName,this.Database.RealDatabase,new Func<HisTag, bool>((tag)=> { 
                 
                 if(this.hisEnginer.Tags.ContainsKey(tag.Id))
                 {
+                    mRemovedHisTags.Remove(tag.Id);
                     return this.hisEnginer.Tags[tag.Id].EqualsTo(tag);
                 }
                 else
                 {
                     return false;
                 }
-             }));
+             }),out mRemoveRealTags);
+
+            bool mNeedPause = false;
 
             List<Tagbase> ltmp = new List<Tagbase>();
 
@@ -395,17 +406,16 @@ namespace Cdy.Tag
             List<HisTag> htmp = new List<HisTag>();
             List<HisTag> changedhistag = new List<HisTag>();
 
+            Dictionary<int, string> mRemoveTagAddress = new Dictionary<int, string>();
+
             //
             foreach (var vv in db.RealDatabase.Tags)
             {
                 if (mRealDatabase.Tags.ContainsKey(vv.Key))
                 {
-                    var tag = mRealDatabase.Tags[vv.Key];
-                    if (tag.Type == vv.Value.Type)
-                    {
-                        changedrealtag.Add(vv.Value);
-                        ischanged = true;
-                    }
+                    changedrealtag.Add(vv.Value);
+                    ischanged = true;
+                    mNeedPause = true;
                 }
                 else
                 {
@@ -414,17 +424,22 @@ namespace Cdy.Tag
                 }
             }
 
+            foreach(var vv in mRemoveRealTags)
+            {
+                if(mRealDatabase.Tags.ContainsKey(vv))
+                {
+                    mRemoveTagAddress.Add(vv, mRealDatabase.Tags[vv].LinkAddress);
+                }
+            }
+
             //
             foreach (var vv in db.HisDatabase.HisTags)
             {
                 if (this.hisEnginer.Tags.ContainsKey(vv.Key))
                 {
-                    var tag = this.hisEnginer.Tags[vv.Key];
-                    if (tag.TagType == vv.Value.TagType)
-                    {
-                        changedhistag.Add(vv.Value);
-                        hischanged = true;
-                    }
+                    changedhistag.Add(vv.Value);
+                    hischanged = true;
+                    mNeedPause = true;
                 }
                 else
                 {
@@ -432,9 +447,25 @@ namespace Cdy.Tag
                     hischanged = true;
                 }
             }
+
+            if (mRemovedHisTags.Count > 0) { mNeedPause = true; hischanged = true; }
+            if (mRemoveRealTags.Count > 0) ischanged = true;
             
             LoggerService.Service.Info("ReStartDatabase", "加载 " + mDatabaseName + " 耗时: " + sw.ElapsedMilliseconds.ToString() + " ms");
-            compressEnginer.WaitForReady();
+
+            if (mNeedPause)
+            {
+                //如果变量内容有变动,或者变量有被删除，则需要暂停,将已经记录的数据进行保存到磁盘
+                DriverManager.Manager.Pause();
+                //Thread.Sleep(100);
+                hisEnginer.Stop();
+                compressEnginer.Stop();
+               
+            }
+            else
+            {
+                compressEnginer.WaitForReady();
+            }
 
             sw.Reset();
             sw.Start();
@@ -442,6 +473,13 @@ namespace Cdy.Tag
             var vids = htmp.Select(e => e.Id);
 
             compressEnginer.ReSizeTagCompress(vids);
+
+            if(mNeedPause)
+            {
+                //确保之前的数据写入到磁盘，新的变动后的数据在写入磁盘后，会使用新的文件头部
+                seriseEnginer.Stop();
+            }
+
             seriseEnginer.CheckAndAddSeriseFile(vids);
 
             
@@ -449,8 +487,18 @@ namespace Cdy.Tag
             realEnginer.UpdateTags(changedrealtag);
             realEnginer.AddTags(ltmp);
 
+            if (mRemoveRealTags.Count > 0)
+            {
+                realEnginer.RemoveTags(mRemoveRealTags);
+            }
+
             hisEnginer.AddTags(htmp);
             hisEnginer.UpdateTags(changedhistag);
+
+            if(mRemovedHisTags.Count>0)
+            {
+                hisEnginer.RemoveTags(mRemovedHisTags);
+            }
 
             if(db.HisDatabase!=null)
             mHisDatabase.Setting = db.HisDatabase.Setting;
@@ -468,15 +516,28 @@ namespace Cdy.Tag
             //CurrentDatabase = db.Name;
             CurrentDatabaseLastUpdateTime = mRealDatabase.UpdateTime;
 
+            if(mNeedPause)
+            {
+                compressEnginer.ReInitCompress(hisEnginer.CurrentMemory);
+                hisEnginer.Start();
+                DriverManager.Manager.Resume();
+                compressEnginer.Start();
+                seriseEnginer.Start();
+            }
+            else
+            {
+                hisEnginer.CheckStartProcess();
+            }
+
             //RegistorInterface();
             sw.Stop();
             LoggerService.Service.Info("ReStartDatabase", "初始化数据库" + mDatabaseName + " 耗时: " + sw.ElapsedMilliseconds.ToString() + " ms");
-
             
             NotifyDatabaseChanged(ischanged,hischanged, issecuritychanged);
 
-            DriverManager.Manager.NotifyRealTagChanged(ltmp.ToDictionary(e => e.Id, e => e.LinkAddress), changedrealtag.ToDictionary(e => e.Id, e => e.LinkAddress));
-            DriverManager.Manager.NotifyHisTagChanged(htmp.Select(e => e.Id), changedhistag.Select(e => e.Id));
+            DriverManager.Manager.NotifyRealTagChanged(ltmp.ToDictionary(e => e.Id, e => e.LinkAddress), changedrealtag.ToDictionary(e => e.Id, e => e.LinkAddress), mRemoveTagAddress);
+
+            DriverManager.Manager.NotifyHisTagChanged(htmp.Select(e => e.Id), changedhistag.Select(e => e.Id),mRemovedHisTags.Select(e=>(int)e));
 
 
             LoggerService.Service.Info("ReStartDatabase", "热启动数据库完成", ConsoleColor.DarkYellow);

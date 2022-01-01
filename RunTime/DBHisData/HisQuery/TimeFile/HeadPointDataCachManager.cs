@@ -107,8 +107,9 @@ namespace Cdy.Tag
                                             if ((dnow - vv.LastAccessTime).TotalDays >= 1)
                                             {
                                                 mCacheDatas.Remove(vv.Name);
+                                                vv.DataBlock.Dispose();
                                             }
-                                            vv.DataBlock.Dispose();
+                                            
                                         }
                                     }
                                 }

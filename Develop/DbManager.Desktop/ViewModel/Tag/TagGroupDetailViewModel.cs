@@ -899,9 +899,9 @@ namespace DBInStudio.Desktop.ViewModel
         {
             SaveFileDialog ofd = new SaveFileDialog();
             ofd.Filter = "csv|*.csv";
-            if(ofd.ShowDialog().Value)
+            if(ofd.ShowDialog().Value && !string.IsNullOrEmpty(ofd.FileName))
             {
-                var stream = new StreamWriter(File.Open(ofd.FileName, FileMode.OpenOrCreate, FileAccess.ReadWrite));
+                var stream = new StreamWriter(File.Open(ofd.FileName, FileMode.Create, FileAccess.ReadWrite));
 
                 Task.Run(() => {
                     ServiceLocator.Locator.Resolve<IProcessNotify>().BeginShowNotify();
@@ -931,7 +931,7 @@ namespace DBInStudio.Desktop.ViewModel
             ofd.Filter = "csv|*.csv";
             List<TagViewModel> ltmp = new List<TagViewModel>();
 
-            if (ofd.ShowDialog().Value)
+            if (ofd.ShowDialog().Value&&!string.IsNullOrEmpty(ofd.FileName))
             {
                 var stream = new StreamReader(File.Open(ofd.FileName, FileMode.OpenOrCreate, FileAccess.ReadWrite));
                 while (!stream.EndOfStream)
@@ -940,10 +940,15 @@ namespace DBInStudio.Desktop.ViewModel
                     if (!string.IsNullOrEmpty(sval))
                     {
                         TagViewModel tm = TagViewModel.LoadFromCSVString(sval);
+                        tm.Database = GroupModel.Database;
                         ltmp.Add(tm);
                     }
                 }
                 stream.Close();
+            }
+            else
+            {
+                return;
             }
 
             int mode = 0;
@@ -957,10 +962,7 @@ namespace DBInStudio.Desktop.ViewModel
                 return;
             }
 
-
-
             StringBuilder sb = new StringBuilder();
-
             Task.Run(() =>
             {
                 ServiceLocator.Locator.Resolve<IProcessNotify>().BeginShowNotify();
@@ -1004,7 +1006,7 @@ namespace DBInStudio.Desktop.ViewModel
                     {
                         try
                         {
-                            Process.Start(Path.GetDirectoryName(errofile));
+                            Process.Start("explorer.exe", Path.GetDirectoryName(errofile));
                         }
                         catch
                         {
@@ -1071,7 +1073,7 @@ namespace DBInStudio.Desktop.ViewModel
                 {
                     foreach (var vvv in vv)
                     {
-                        TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2);
+                        TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2) { Database = GroupModel.Database };
                         Application.Current?.Dispatcher.Invoke(new Action(() => {
                             SelectGroupTags.Add(model);
                         }));
@@ -1094,7 +1096,7 @@ namespace DBInStudio.Desktop.ViewModel
                         {
                             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
                             {
-                                TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2);
+                                TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2) { Database = GroupModel.Database };
                                 SelectGroupTags.Add(model);
                             }));
                         }
@@ -1170,6 +1172,7 @@ namespace DBInStudio.Desktop.ViewModel
                 }
                 else
                 {
+                    if(mSelectGroupTags.Count>0)
                     CurrentSelectTag = mSelectGroupTags.Last();
                 }
 
@@ -1236,7 +1239,8 @@ namespace DBInStudio.Desktop.ViewModel
                 {
                     var vtag = vv.Clone();
                     vtag.RealTagMode.Id = -1;
-                    vtag.Name = GetNewName(vv.Name);
+                    //vtag.Name = GetNewName(vv.Name);
+                    vtag.SetTagNane(GetNewName(vv.Name));
                     vtag.IsNew = true;
                     if (UpdateTag(vtag))
                     {
@@ -1268,35 +1272,35 @@ namespace DBInStudio.Desktop.ViewModel
                         TagViewModel tm = vv.Item as TagViewModel;
                         switch (mPropertyCopy.Item2)
                         {
-                            case 1:
+                            case 2:
                                 tm.Type = mPropertyCopy.Item1.Type;
                                 break;
-                            case 2:
+                            case 3:
                                 tm.ReadWriteMode = mPropertyCopy.Item1.ReadWriteMode;
                                 break;
-                            case 3:
+                            case 4:
                                 tm.Convert = mPropertyCopy.Item1.Convert.Clone();
                                 break;
-                            case 4:
+                            case 5:
                                 tm.MaxValue = mPropertyCopy.Item1.MaxValue;
                                 break;
-                            case 5:
+                            case 6:
                                 tm.MinValue = mPropertyCopy.Item1.MinValue;
                                 break;
-                            case 6:
+                            case 7:
                                 tm.Precision = mPropertyCopy.Item1.Precision;
                                 break;
-                            case 7:
+                            case 8:
                                 tm.HisTagMode = mPropertyCopy.Item1.HisTagMode.Clone();
                                 tm.RefreshHisTag();
                                 break;
-                            case 8:
+                            case 9:
                                 tm.DriverName = mPropertyCopy.Item1.DriverName;
                                 break;
-                            case 9:
+                            case 10:
                                 tm.RegistorName = mPropertyCopy.Item1.RegistorName;
                                 break;
-                            case 10:
+                            case 11:
                                 tm.Desc = mPropertyCopy.Item1.Desc;
                                 break;
 
@@ -1332,7 +1336,9 @@ namespace DBInStudio.Desktop.ViewModel
                 if (vtag.HisTagMode != null)
                     vtag.HisTagMode.Id = vtag.RealTagMode.Id;
 
-                vtag.Name = GetNewName();
+                // vtag.Name = GetNewName();
+                vtag.SetTagNane(GetNewName());
+
                 vtag.IsNew = true;
                 if (UpdateTag(vtag))
                 {
@@ -1347,7 +1353,7 @@ namespace DBInStudio.Desktop.ViewModel
                 {
                     tag.Group = (GroupModel as TagGroupViewModel).FullName;
                 }
-                var vtag = new TagViewModel(tag, null) { IsNew = true };
+                var vtag = new TagViewModel(tag, null) { IsNew = true,Database=GroupModel.Database };
                 if (UpdateTag(vtag))
                 {
                     this.SelectGroupTags.Add(vtag);
@@ -1392,27 +1398,29 @@ namespace DBInStudio.Desktop.ViewModel
         /// <returns></returns>
         private string GetNewName(string baseName="tag")
         {
-            var vtmps = mSelectGroupTags.Select(e => e.Name).ToList();
-            string tagName = baseName;
+            
+           return DevelopServiceHelper.Helper.GetAvaiableTagName(GroupModel.Database, this.GroupModel.FullName, baseName);
+            //var vtmps = mSelectGroupTags.Select(e => e.Name).ToList();
+            //string tagName = baseName;
 
-            int number = GetNumberInt(baseName);
-            if(number>=0)
-            {
-                if(tagName.EndsWith(number.ToString()))
-                {
-                    tagName = tagName.Substring(0, tagName.IndexOf(number.ToString()));
-                }
-            }
-            string sname = tagName;
-            for (int i = 1; i < int.MaxValue; i++)
-            {
-                tagName = sname + i;
-                if (!vtmps.Contains(tagName))
-                {
-                    return tagName;
-                }
-            }
-            return tagName;
+            //int number = GetNumberInt(baseName);
+            //if(number>=0)
+            //{
+            //    if(tagName.EndsWith(number.ToString()))
+            //    {
+            //        tagName = tagName.Substring(0, tagName.IndexOf(number.ToString()));
+            //    }
+            //}
+            //string sname = tagName;
+            //for (int i = 1; i < int.MaxValue; i++)
+            //{
+            //    tagName = sname + i;
+            //    if (!vtmps.Contains(tagName))
+            //    {
+            //        return tagName;
+            //    }
+            //}
+            //return tagName;
         }
 
 

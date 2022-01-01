@@ -125,6 +125,25 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        public void ReInitCompress(HisDataMemoryBlockCollection3 memory)
+        {
+            foreach (var vv in mTargetMemorys)
+            {
+                if (memory != null)
+                {
+                    vv.Value.Init(memory);
+                }
+                else
+                {
+                    vv.Value.Init(ServiceLocator.Locator.Resolve<IHisEngine3>().CurrentMergeMemory);
+                }
+                LoggerService.Service.Info("CompressEnginer", "分配内存大小:" + (vv.Value.Length / 1024.0 / 1024).ToString("f1") + " M");
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="tags"></param>
         public void ReSizeTagCompress(IEnumerable<int> tagids)
         {
@@ -241,6 +260,18 @@ namespace Cdy.Tag
         /// </summary>
         public void WaitForReady()
         {
+            lock (resetEvent)
+            {
+                try
+                {
+                    resetEvent.Set();
+                }
+                catch
+                {
+
+                }
+            }
+
             while (CheckIsBusy())
             {
                 Thread.Sleep(10);
@@ -266,6 +297,8 @@ namespace Cdy.Tag
                         resetEvent.Reset();
                     }
 
+
+
                     //#if DEBUG 
                     Stopwatch sw = new Stopwatch();
                     sw.Start();
@@ -286,22 +319,22 @@ namespace Cdy.Tag
                                 Thread.Sleep(500);
                             }
 
-                            System.Threading.Tasks.Parallel.ForEach(mTargetMemorys,new ParallelOptions() { MaxDegreeOfParallelism = CPUAssignHelper.Helper.CPUArray2.Length }, (mm) =>
-                            {
-                                ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
-                                mm.Value.Compress(sm);
-                            });
+                            System.Threading.Tasks.Parallel.ForEach(mTargetMemorys, new ParallelOptions() { MaxDegreeOfParallelism = CPUAssignHelper.Helper.CPUArray2.Length }, (mm) =>
+                             {
+                                 ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+                                 mm.Value.Compress(sm);
+                             });
 
                             HisDataMemoryQueryService3.Service.ClearMemoryTime(sm.CurrentDatetime);
                             sm.Clear();
                             sm.MakeMemoryNoBusy();
 
 
-                            System.Threading.Tasks.Parallel.ForEach(mTargetMemorys.Where(e => e.Value.HasManualCompressItems),new ParallelOptions() { MaxDegreeOfParallelism = CPUAssignHelper.Helper.CPUArray2.Length },(mm) =>
-                            {
-                                ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
-                                mm.Value.ManualCompress();
-                            });
+                            System.Threading.Tasks.Parallel.ForEach(mTargetMemorys.Where(e => e.Value.HasManualCompressItems), new ParallelOptions() { MaxDegreeOfParallelism = CPUAssignHelper.Helper.CPUArray2.Length }, (mm) =>
+                              {
+                                  ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
+                                  mm.Value.ManualCompress();
+                              });
                         }
                     }
                     else
@@ -321,9 +354,9 @@ namespace Cdy.Tag
                     ServiceLocator.Locator.Resolve<IDataSerialize3>().RequestToSave();
 
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
-                    LoggerService.Service.Erro("Compress", ex.Message+ex.StackTrace);
+                    LoggerService.Service.Erro("Compress", ex.Message + ex.StackTrace);
                 }
 
                 if (mIsClosed)

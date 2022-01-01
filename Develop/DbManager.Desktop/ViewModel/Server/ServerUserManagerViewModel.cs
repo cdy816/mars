@@ -82,7 +82,7 @@ namespace DBInStudio.Desktop.ViewModel
                 {
                     mRemoveCommand = new RelayCommand(() => {
                         RemoveUser();
-                    },()=> { return mCurrentSelectedUser != null; });
+                    },()=> { return mCurrentSelectedUser != null && mCurrentSelectedUser.Name!= "Admin" && mCurrentSelectedUser.Name!=ServerHelper.Helper.UserName; });
                 }
                 return mRemoveCommand;
             }
@@ -193,7 +193,7 @@ namespace DBInStudio.Desktop.ViewModel
         private void AddUser()
         {
             string newUserName = GetAvailableName("user");
-            var umode = new ServerUserItemViewModel(newUserName) { IsNew = true, IsEdit = true,  ParentModel = this };
+            var umode = new ServerUserItemViewModel(newUserName,false) { IsNew = true, IsEdit = true,  ParentModel = this };
             umode.IntDatabase(mPermissionCach);
             Users.Add(umode);
             CurrentSelectedUser = umode;
@@ -240,7 +240,7 @@ namespace DBInStudio.Desktop.ViewModel
             {
                 foreach (var vv in users)
                 {
-                    var uu = new ServerUserItemViewModel(vv.Key) { ParentModel = this, Database = vv.Value.Item3, IsAdmin = vv.Value.Item1, CanNewDatabase = vv.Value.Item2 };
+                    var uu = new ServerUserItemViewModel(vv.Key, vv.Value.Item1) { ParentModel = this, Database = vv.Value.Item3,  CanNewDatabase = vv.Value.Item2 };
                     utmp.Add(uu);
                 }
             }
@@ -315,9 +315,10 @@ namespace DBInStudio.Desktop.ViewModel
         /// <summary>
         /// 
         /// </summary>
-        public ServerUserItemViewModel(string name)
+        public ServerUserItemViewModel(string name,bool isadmin)
         {
             mName = name;
+            mIsAdmin = isadmin;
         }
         #endregion ...Constructor...
 
@@ -414,6 +415,10 @@ namespace DBInStudio.Desktop.ViewModel
                         Update();
                     }
                 }
+                else
+                {
+                    IsEdit = false;
+                }
                 OnPropertyChanged("Name");
             }
         }
@@ -447,9 +452,10 @@ namespace DBInStudio.Desktop.ViewModel
             }
             set
             {
-                if (mIsAdmin != value)
+                if (mIsAdmin != value && Name != "Admin")
                 {
                     mIsAdmin = value;
+                    SelectAllPermission();
                     IsChanged = true;
                     OnPropertyChanged("IsAdmin");
                 }
@@ -478,6 +484,7 @@ namespace DBInStudio.Desktop.ViewModel
 
 
 
+
         private List<string> mDatabase=new List<string>();
 
         /// <summary>
@@ -500,13 +507,34 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
-        bool IsStringListEquals(List<string> ll,List<string>tt)
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ServerUserManagerViewModel ParentModel { get; set; }
+
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void SelectAllPermission()
+        {
+            foreach(var vv in PermissionModel)
+            {
+                vv.AppendSelect = IsAdmin;
+            }
+        }
+
+        bool IsStringListEquals(List<string> ll, List<string> tt)
         {
             if ((ll == null && tt == null) || (ll.Count == 0 && tt.Count == 0)) return true;
             if ((ll == null && tt != null) || (ll != null && tt == null)) return false;
             StringBuilder sb1 = new StringBuilder();
             StringBuilder sb2 = new StringBuilder();
-            foreach(var vv in ll)
+            foreach (var vv in ll)
             {
                 sb1.Append(vv);
             }
@@ -517,15 +545,6 @@ namespace DBInStudio.Desktop.ViewModel
             }
             return sb1.ToString().Equals(sb2.ToString());
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public ServerUserManagerViewModel ParentModel { get; set; }
-
-        #endregion ...Properties...
-
-        #region ... Methods    ...
 
         /// <summary>
         /// 

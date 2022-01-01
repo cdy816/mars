@@ -38,13 +38,14 @@ namespace SimDriver
 
         //private int mBusyCount = 0;
 
-        private bool mIsSecond = false;
+        //private bool mIsSecond = false;
 
         //private int mTickCount = 0;
 
         private Thread mScanThread;
 
         private bool mIsClosed = false;
+        private bool mIsPaused = false;
 
         private ManualResetEvent mCosEvent;
         private ManualResetEvent mSinEvent;
@@ -211,6 +212,7 @@ namespace SimDriver
             //mCosStopwatch = new Stopwatch();
             while (!mIsClosed)
             {
+                
                 mCosEvent.WaitOne();
                 mCosEvent.Reset();
 
@@ -511,6 +513,13 @@ namespace SimDriver
             bool isNeedRepeat = false;
             while (!mIsClosed)
             {
+
+                if (mIsPaused)
+                {
+                    Thread.Sleep(100);
+                    continue;
+                }
+
                 DateTime time = DateTime.Now;
 
                 if(mFinishCount>5 && mLastProcessTime.Second != time.Second)
@@ -560,7 +569,7 @@ namespace SimDriver
 
                 mNumber++;
                 mNumber = mNumber >= (short)360 ? (short)0 : mNumber;
-                mIsSecond = true;
+                //mIsSecond = true;
                 if (mNumber % 60 == 0)
                 {
                     mBoolNumber = !mBoolNumber;
@@ -663,6 +672,22 @@ namespace SimDriver
                 }
             }
 
+            //
+            if (arg.RemoveTags != null)
+            {
+                tags = arg.RemoveTags.Where(e => e.Value.StartsWith("Sim"));
+
+                foreach (var vv in tags)
+                {
+                    var vtag = mTagService.GetTagById(vv.Key);
+                    if (mTagIdCach.ContainsKey(vv.Value) && mTagIdCach[vv.Value].Contains(vtag))
+                    {
+                        mTagIdCach[vv.Value].Remove(vtag);
+                    }
+                }
+
+            }
+
             mCosNeedReload = true;
             mSinNeedReload = true;
             mStepPointNeedReload = true;
@@ -677,7 +702,7 @@ namespace SimDriver
         /// <param name="arg"></param>
         public void OnHisTagChanged(HisTagChangedArg arg)
         {
-            if (arg.ChangedTags != null && arg.ChangedTags.Count()>0)
+            if ((arg.ChangedTags != null && arg.ChangedTags.Count()>0)|| (arg.RemoveTags != null && arg.RemoveTags.Count() > 0))
             {
                 mManualRecordTagCach.Clear();
                 mTagHisValueService = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
@@ -708,6 +733,32 @@ namespace SimDriver
                     }
                 }
             }
+            mCosNeedReload = true;
+            mSinNeedReload = true;
+            mStepPointNeedReload = true;
+            mStepNeedReload = true;
+            mSquareNeedReload = true;
+            mDatetimeReload = true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool Pause()
+        {
+            mIsPaused = true;
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool Resume()
+        {
+            mIsPaused = false;
+            return true;
         }
 
 

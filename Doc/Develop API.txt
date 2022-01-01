@@ -1,0 +1,88 @@
+1. 用户登录，
+URL地址：http://localhost:9000/DevelopServer/Login
+Post 请求Json字符串
+{
+	"UserName":"Admin",
+	"Password":"Admin"
+}
+返回Json字符串
+{
+    "hasErro": false,
+    "result": "827355ef-7097-4759-b9b3-99b5e6c8e7bc",
+    "erroMsg": null
+}
+
+2.查询数据库
+URL地址：http://localhost:9000/DevelopServer/QueryDatabase
+Post 请求Json字符串
+{
+    "Id":"ccfb3358-0c31-495f-8aa0-9d34255bafd4"
+}
+返回Json字符串
+[
+    {
+        "name": "test",
+        "desc": ""
+    }
+]
+
+3.查询某个组内的变量集合
+URL地址：http://localhost:9000/DevelopServer/GetTagByGroup
+Post 请求Json字符串
+{
+    "Id":"ccfb3358-0c31-495f-8aa0-9d34255bafd4",
+    "Database":"test",
+    "GroupName":"Double",
+    "Filters":{},
+    "Index":0
+}
+返回Json字符串
+[
+ {
+        "realTag": {
+            "id": 0,
+            "type": 8,
+            "name": "Double0",
+            "fullName": "Double.Double0",
+            "group": "Double",
+            "desc": "",
+            "linkAddress": "Sim:sin",
+            "valueAddress": 0,
+            "valueSize": 17,
+            "conveter": null,
+            "readWriteType": 0
+        },
+        "hisTag": {
+            "id": 0,
+            "type": 0,
+            "tagType": 8,
+            "compressType": 1,
+            "parameters": {},
+            "circle": 1000
+        }
+    },
+    {
+        "realTag": {
+            "id": 1,
+            "type": 8,
+            "name": "Double1",
+            "fullName": "Double.Double1",
+            "group": "Double",
+            "desc": "",
+            "linkAddress": "Sim:cos",
+            "valueAddress": 0,
+            "valueSize": 17,
+            "conveter": null,
+            "readWriteType": 0
+        },
+        "hisTag": {
+            "id": 1,
+            "type": 0,
+            "tagType": 8,
+            "compressType": 1,
+            "parameters": {},
+            "circle": 1000
+        }
+    }
+]
+

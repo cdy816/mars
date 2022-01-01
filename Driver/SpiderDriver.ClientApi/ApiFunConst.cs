@@ -72,6 +72,11 @@ namespace SpiderDriver.ClientApi
         /// <summary>
         /// 
         /// </summary>
+        public const byte DatabaseChangedNotify = 5;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public const byte RegistorTag = 41;
 
         /// <summary>

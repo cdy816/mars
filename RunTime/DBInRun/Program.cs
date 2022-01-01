@@ -6,6 +6,7 @@ using System.IO.Pipes;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace DBInRun
 {
@@ -31,6 +32,8 @@ namespace DBInRun
 
             if (args.Length>0 && args[0]== "start")
             {
+                string stile = "";
+
                 Task.Run(() => {
                     StartMonitor(args.Length > 1 ? args[1] : "local");
                 });
@@ -43,12 +46,21 @@ namespace DBInRun
                         int.TryParse(args[2], out port);
                     }
                     Cdy.Tag.Runner3.RunInstance.StartAsync(args[1], port);
-                    Console.Title = "DbInRun-" + args[1];
+                    stile = "DbInRun-" + args[1];
                 }
                 else
                 {
                     Cdy.Tag.Runner3.RunInstance.Start();
+                    stile = "DbInRun-local";
                 }
+
+                Console.Title = stile;
+
+                if(args.Contains("/m"))
+                {
+                    WindowConsolHelper.MinWindow(stile);
+                }
+
             }
          
             while (!mIsClosed)
@@ -180,7 +192,7 @@ namespace DBInRun
 
         private static void CurrentDomain_FirstChanceException(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
         {
-            //Console.WriteLine(e.Exception.StackTrace);
+            Console.WriteLine(e.Exception.StackTrace);
             e.Exception.HResult = 0;
         }
 
@@ -262,6 +274,7 @@ namespace DBInRun
                                         server.FlushAsync();
                                         //server.WaitForPipeDrain();
                                         Console.WriteLine(Res.Get("AnyKeyToExit") + ".....");
+                                       
                                         break;
                                         //退出系统
                                     }

@@ -188,8 +188,11 @@ namespace DBRuntime.Api
         public virtual void Stop()
         {
             mIsClosed = true;
-            resetEvent.Set();
-            resetEvent.Close();
+            if (resetEvent != null)
+            {
+                resetEvent.Set();
+                resetEvent.Close();
+            }
         }
 
         /// <summary>

@@ -112,6 +112,9 @@ namespace DBRunTime.ServiceApi
         /// </summary>
         public const byte RequestNumberStatistics = 3;
 
+        //值统计
+        public const byte RequestValueStatistics = 5;
+
         /// <summary>
         /// 读取某个时间点的统计值
         /// </summary>
@@ -149,7 +152,7 @@ namespace DBRunTime.ServiceApi
 
         private ByteBuffer mRealSyncData;
 
-        private ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
+        //private ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
 
         private ByteBuffer mHisRequreData;
 
@@ -213,6 +216,19 @@ namespace DBRunTime.ServiceApi
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="isConnected"></param>
+        public override void OnConnected(bool isConnected)
+        {
+            base.OnConnected(isConnected);
+            if (!isConnected)
+            {
+                LoginId = 0;
+            }
+        }
 
         /// <summary>
         /// 
@@ -347,7 +363,7 @@ namespace DBRunTime.ServiceApi
                 mb.Write(username);
                 mb.Write(password);
                 SendData(mb);
-                if (infoRequreEvent.WaitOne(timeount) && (mInfoRequreData.WriteIndex - mInfoRequreData.ReadIndex) > 4)
+                if (infoRequreEvent.WaitOne(timeount) && mInfoRequreData != null && (mInfoRequreData.WriteIndex - mInfoRequreData.ReadIndex) > 4)
                 {
 
                     try
@@ -515,24 +531,27 @@ namespace DBRunTime.ServiceApi
         public string GetRunnerDatabase(int timeout = 5000)
         {
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.TagInfoRequest, 8 + 1);
-            mb.Write(ApiFunConst.GetRunnerDatabase);
-            mb.Write(LoginId);
-            infoRequreEvent.Reset();
-            SendData(mb);
-
-            if (infoRequreEvent.WaitOne(timeout))
+            if (IsLogin)
             {
-                try
-                {
-                    return mInfoRequreData.ReadString();
-                }
-                finally
-                {
-                    mInfoRequreData.UnlockAndReturn();
-                    mInfoRequreData = null;
-                }
+                var mb = GetBuffer(ApiFunConst.TagInfoRequest, 8 + 1);
+                mb.Write(ApiFunConst.GetRunnerDatabase);
+                mb.Write(LoginId);
+                infoRequreEvent.Reset();
+                SendData(mb);
 
+                if (infoRequreEvent.WaitOne(timeout))
+                {
+                    try
+                    {
+                        return mInfoRequreData.ReadString();
+                    }
+                    finally
+                    {
+                        mInfoRequreData.UnlockAndReturn();
+                        mInfoRequreData = null;
+                    }
+
+                }
             }
 
             return string.Empty;
@@ -1204,7 +1223,7 @@ namespace DBRunTime.ServiceApi
         public ByteBuffer QueryHisValueAtTimes(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType matchType, int timeout = 5000)
         {
             var vid = 0;
-            ByteBuffer re=null;
+            ByteBuffer re = null;
             lock (mHisDataLock)
             {
                 vid = mHisRequreCount;
@@ -1212,7 +1231,7 @@ namespace DBRunTime.ServiceApi
                 CheckLogin();
             }
 
-            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + times.Count * 8 + 5+4);
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + times.Count * 8 + 5 + 4);
             mb.Write(ApiFunConst.RequestHisDatasByTimePoint);
             mb.Write(this.LoginId);
             mb.Write(id);
@@ -1244,7 +1263,7 @@ namespace DBRunTime.ServiceApi
                     });
                 }
                 SendData(mb);
-                if (hisRequreEvent.WaitOne(timeout) && re!=null && re.WriteIndex - re.ReadIndex > 1)
+                if (hisRequreEvent.WaitOne(timeout) && re != null && re.WriteIndex - re.ReadIndex > 1)
                 {
                     return re;
                 }
@@ -1270,7 +1289,7 @@ namespace DBRunTime.ServiceApi
             }
         }
 
-        
+
 
         /// <summary>
         /// 
@@ -1279,7 +1298,7 @@ namespace DBRunTime.ServiceApi
         /// <param name="times"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public ByteBuffer QueryStatisticsHisValueAtTimes(int id, List<DateTime> times,  int timeout = 5000)
+        public ByteBuffer QueryStatisticsHisValueAtTimes(int id, List<DateTime> times, int timeout = 5000)
         {
             var vid = 0;
             ByteBuffer re = null;
@@ -1290,8 +1309,8 @@ namespace DBRunTime.ServiceApi
                 CheckLogin();
             }
 
-            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + times.Count * 8 + 5+4);
-            mb.Write(ApiFunConst.RequestHisDatasByTimePoint);
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + times.Count * 8 + 5 + 4);
+            mb.Write(ApiFunConst.RequestNumberStatisticsByTimePoint);
             mb.Write(this.LoginId);
             mb.Write(id);
             mb.Write(times.Count);
@@ -1373,7 +1392,7 @@ namespace DBRunTime.ServiceApi
         /// <param name="span"></param>
         /// <param name="matchType"></param>
         /// <returns></returns>
-        public ByteBuffer QueryHisValueForTimeSpan(int id,DateTime startTime,DateTime endTime,TimeSpan span,QueryValueMatchType matchType, int timeout = 5000)
+        public ByteBuffer QueryHisValueForTimeSpan(int id, DateTime startTime, DateTime endTime, TimeSpan span, QueryValueMatchType matchType, int timeout = 5000)
         {
             var vid = 0;
             ByteBuffer re = null;
@@ -1384,7 +1403,7 @@ namespace DBRunTime.ServiceApi
                 CheckLogin();
             }
 
-            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 24+ 5+4);
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 24 + 5 + 4);
             mb.Write(ApiFunConst.RequestHisDataByTimeSpan);
             mb.Write(this.LoginId);
             mb.Write(id);
@@ -1455,6 +1474,689 @@ namespace DBRunTime.ServiceApi
             //return null;
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public Tuple<DateTime,object> FindNumberTagValue(int id, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, object interval, int timeout = 60000)
+        {
+            var vid = 0;
+            ByteBuffer re = null;
+            lock (mHisDataLock)
+            {
+                vid = mHisRequreCount;
+                mHisRequreCount++;
+                CheckLogin();
+            }
+
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
+            mb.Write(ApiFunConst.RequestValueStatistics);
+            mb.Write(this.LoginId);
+            mb.Write(id);
+            mb.Write(startTime.Ticks);
+            mb.Write(endTime.Ticks);
+            mb.Write(vid);
+            mb.WriteByte((byte)0);
+            mb.Write(((byte)type).ToString() + "|" + value.ToString() +"|"+interval);
+
+            ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
+            hisRequreEvent.Reset();
+
+            lock (mHisDataCallBack)
+            {
+                mHisDataCallBack.Add(vid, (data) =>
+                {
+                    re = data;
+                    try
+                    {
+                        hisRequreEvent.Set();
+                    }
+                    catch
+                    {
+                        data?.UnlockAndReturn();
+                    }
+                });
+            }
+            SendData(mb);
+            try
+            {
+                if (hisRequreEvent.WaitOne(timeout) && re != null && re.WriteIndex - re.ReadIndex > 1)
+                {
+                    var dt = re.ReadDateTime();
+                    var dd = re.ReadDouble();
+                    return new Tuple<DateTime, object>(dt, dd);
+                }
+                else
+                {
+                    lock (mHisDataCallBack)
+                    {
+                        if (mHisDataCallBack.ContainsKey(vid))
+                        {
+                            mHisDataCallBack.Remove(vid);
+                        }
+                        else
+                        {
+                            var dt = re.ReadDateTime();
+                            var dd = re.ReadDouble();
+                            return new Tuple<DateTime, object>(dt, dd);
+                        }
+                    }
+                }
+                return new Tuple<DateTime, object>(DateTime.MinValue,0);
+            }
+            finally
+            {
+                hisRequreEvent.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public Dictionary<DateTime,object> FindNumberTagValues(int id, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, object interval, int timeout = 60000)
+        {
+            Dictionary<DateTime,object> red = new Dictionary<DateTime,object>();
+            var vid = 0;
+            ByteBuffer re = null;
+            lock (mHisDataLock)
+            {
+                vid = mHisRequreCount;
+                mHisRequreCount++;
+                CheckLogin();
+            }
+
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
+            mb.Write(ApiFunConst.RequestValueStatistics);
+            mb.Write(this.LoginId);
+            mb.Write(id);
+            mb.Write(startTime.Ticks);
+            mb.Write(endTime.Ticks);
+            mb.Write(vid);
+            mb.WriteByte((byte)1);
+            mb.Write(((byte)type).ToString() + "|" + value.ToString() + "|" + interval);
+
+            ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
+            hisRequreEvent.Reset();
+
+            lock (mHisDataCallBack)
+            {
+                mHisDataCallBack.Add(vid, (data) =>
+                {
+                    re = data;
+                    try
+                    {
+                        hisRequreEvent.Set();
+                    }
+                    catch
+                    {
+                        data?.UnlockAndReturn();
+                    }
+                });
+            }
+            SendData(mb);
+            try
+            {
+                if (hisRequreEvent.WaitOne(timeout) && re != null && re.WriteIndex - re.ReadIndex > 1)
+                {
+                    var cc = re.ReadInt();
+                    for(int i=0;i<cc;i++)
+                    {
+                        red.Add(re.ReadDateTime(),re.ReadDouble());
+                    }
+                }
+                else
+                {
+                    lock (mHisDataCallBack)
+                    {
+                        if (mHisDataCallBack.ContainsKey(vid))
+                        {
+                            mHisDataCallBack.Remove(vid);
+                        }
+                        else
+                        {
+                            var cc = re.ReadInt();
+                            for (int i = 0; i < cc; i++)
+                            {
+                                red.Add(re.ReadDateTime(),re.ReadDouble());
+                            }
+                        }
+                    }
+                }
+                return red;
+            }
+            finally
+            {
+                hisRequreEvent.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public double FindNumberTagValueDuration(int id, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, object interval, int timeout = 60000)
+        {
+            var vid = 0;
+            ByteBuffer re = null;
+            lock (mHisDataLock)
+            {
+                vid = mHisRequreCount;
+                mHisRequreCount++;
+                CheckLogin();
+            }
+
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
+            mb.Write(ApiFunConst.RequestValueStatistics);
+            mb.Write(this.LoginId);
+            mb.Write(id);
+            mb.Write(startTime.Ticks);
+            mb.Write(endTime.Ticks);
+            mb.Write(vid);
+            mb.WriteByte((byte)2);
+            mb.Write(((byte)type).ToString() + "|" + value.ToString() + "|" + interval);
+
+            ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
+            hisRequreEvent.Reset();
+
+            lock (mHisDataCallBack)
+            {
+                mHisDataCallBack.Add(vid, (data) =>
+                {
+                    re = data;
+                    try
+                    {
+                        hisRequreEvent.Set();
+                    }
+                    catch
+                    {
+                        data?.UnlockAndReturn();
+                    }
+                });
+            }
+            SendData(mb);
+            try
+            {
+                if (hisRequreEvent.WaitOne(timeout) && re != null && re.WriteIndex - re.ReadIndex > 1)
+                {
+                    return re.ReadDouble();
+                }
+                else
+                {
+                    lock (mHisDataCallBack)
+                    {
+                        if (mHisDataCallBack.ContainsKey(vid))
+                        {
+                            mHisDataCallBack.Remove(vid);
+                        }
+                        else
+                        {
+                            return re.ReadDouble();
+                        }
+                    }
+                }
+                return double.MinValue;
+            }
+            finally
+            {
+                hisRequreEvent.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="type"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public Tuple<double,List<DateTime>> FindNumberTagMaxMinValue(int id, DateTime startTime, DateTime endTime, NumberStatisticsType type,int timeout = 60000)
+        {
+            List<DateTime> red = new List<DateTime>();
+            var vid = 0;
+            ByteBuffer re = null;
+            lock (mHisDataLock)
+            {
+                vid = mHisRequreCount;
+                mHisRequreCount++;
+                CheckLogin();
+            }
+
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
+            mb.Write(ApiFunConst.RequestValueStatistics);
+            mb.Write(this.LoginId);
+            mb.Write(id);
+            mb.Write(startTime.Ticks);
+            mb.Write(endTime.Ticks);
+            mb.Write(vid);
+            mb.WriteByte((byte)3);
+            mb.Write(((byte)type).ToString());
+
+            ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
+            hisRequreEvent.Reset();
+
+            lock (mHisDataCallBack)
+            {
+                mHisDataCallBack.Add(vid, (data) =>
+                {
+                    re = data;
+                    try
+                    {
+                        hisRequreEvent.Set();
+                    }
+                    catch
+                    {
+                        data?.UnlockAndReturn();
+                    }
+                });
+            }
+            SendData(mb);
+            try
+            {
+                double dval = double.MinValue;
+                if (hisRequreEvent.WaitOne(timeout) && re != null && re.WriteIndex - re.ReadIndex > 1)
+                {
+                    dval = re.ReadDouble();
+                    var cc = re.ReadInt();
+                    for (int i = 0; i < cc; i++)
+                    {
+                        red.Add(re.ReadDateTime());
+                    }
+                }
+                else
+                {
+                    lock (mHisDataCallBack)
+                    {
+                        if (mHisDataCallBack.ContainsKey(vid))
+                        {
+                            mHisDataCallBack.Remove(vid);
+                        }
+                        else
+                        {
+                            dval = re.ReadDouble();
+                            var cc = re.ReadInt();
+                            for (int i = 0; i < cc; i++)
+                            {
+                                red.Add(re.ReadDateTime());
+                            }
+                        }
+                    }
+                }
+                return new Tuple<double, List<DateTime>>(dval,red);
+            }
+            finally
+            {
+                hisRequreEvent.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public double FindNumberTagAvgValue(int id, DateTime startTime, DateTime endTime, int timeout = 60000)
+        {
+            var vid = 0;
+            ByteBuffer re = null;
+            lock (mHisDataLock)
+            {
+                vid = mHisRequreCount;
+                mHisRequreCount++;
+                CheckLogin();
+            }
+
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
+            mb.Write(ApiFunConst.RequestValueStatistics);
+            mb.Write(this.LoginId);
+            mb.Write(id);
+            mb.Write(startTime.Ticks);
+            mb.Write(endTime.Ticks);
+            mb.Write(vid);
+            mb.WriteByte((byte)4);
+            mb.Write("4");
+
+            ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
+            hisRequreEvent.Reset();
+
+            lock (mHisDataCallBack)
+            {
+                mHisDataCallBack.Add(vid, (data) =>
+                {
+                    re = data;
+                    try
+                    {
+                        hisRequreEvent.Set();
+                    }
+                    catch
+                    {
+                        data?.UnlockAndReturn();
+                    }
+                });
+            }
+            SendData(mb);
+            try
+            {
+                if (hisRequreEvent.WaitOne(timeout) && re != null && re.WriteIndex - re.ReadIndex > 1)
+                {
+                    return re.ReadDouble();
+                }
+                else
+                {
+                    lock (mHisDataCallBack)
+                    {
+                        if (mHisDataCallBack.ContainsKey(vid))
+                        {
+                            mHisDataCallBack.Remove(vid);
+                        }
+                        else
+                        {
+                            return re.ReadDouble();
+                        }
+                    }
+                }
+                return double.MinValue;
+            }
+            finally
+            {
+                hisRequreEvent.Dispose();
+            }
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public DateTime FindNoNumberTagValue(int id, DateTime startTime, DateTime endTime, object value, int timeout = 60000)
+        {
+            var vid = 0;
+            ByteBuffer re = null;
+            lock (mHisDataLock)
+            {
+                vid = mHisRequreCount;
+                mHisRequreCount++;
+                CheckLogin();
+            }
+
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
+            mb.Write(ApiFunConst.RequestValueStatistics);
+            mb.Write(this.LoginId);
+            mb.Write(id);
+            mb.Write(startTime.Ticks);
+            mb.Write(endTime.Ticks);
+            mb.Write(vid);
+            mb.WriteByte((byte)10);
+            if (value is bool)
+            {
+                mb.Write(Convert.ToByte(value).ToString());
+            }
+            else if (value is DateTime)
+            {
+                mb.Write((Convert.ToDateTime(value).Ticks).ToString());
+            }
+            else
+            {
+                mb.Write(value.ToString());
+            }
+
+
+            ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
+            hisRequreEvent.Reset();
+
+            lock (mHisDataCallBack)
+            {
+                mHisDataCallBack.Add(vid, (data) =>
+                {
+                    re = data;
+                    try
+                    {
+                        hisRequreEvent.Set();
+                    }
+                    catch
+                    {
+                        data?.UnlockAndReturn();
+                    }
+                });
+            }
+            SendData(mb);
+            try
+            {
+                if (hisRequreEvent.WaitOne(timeout) && re != null && re.WriteIndex - re.ReadIndex > 1)
+                {
+                    return re.ReadDateTime();
+                }
+                else
+                {
+                    lock (mHisDataCallBack)
+                    {
+                        if (mHisDataCallBack.ContainsKey(vid))
+                        {
+                            mHisDataCallBack.Remove(vid);
+                        }
+                        else
+                        {
+                            return re.ReadDateTime();
+                        }
+                    }
+                }
+                return DateTime.MinValue;
+            }
+            finally
+            {
+                hisRequreEvent.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public List<DateTime> FindNoNumberTagValues(int id, DateTime startTime, DateTime endTime, object value, int timeout = 60000)
+        {
+            List<DateTime> red = new List<DateTime>();
+            var vid = 0;
+            ByteBuffer re = null;
+            lock (mHisDataLock)
+            {
+                vid = mHisRequreCount;
+                mHisRequreCount++;
+                CheckLogin();
+            }
+
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
+            mb.Write(ApiFunConst.RequestValueStatistics);
+            mb.Write(this.LoginId);
+            mb.Write(id);
+            mb.Write(startTime.Ticks);
+            mb.Write(endTime.Ticks);
+            mb.Write(vid);
+            mb.WriteByte((byte)11);
+            if (value is bool)
+            {
+                mb.Write(Convert.ToByte(value).ToString());
+            }
+            else if (value is DateTime)
+            {
+                mb.Write((Convert.ToDateTime(value).Ticks).ToString());
+            }
+            else
+            {
+                mb.Write(value.ToString());
+            }
+
+            ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
+            hisRequreEvent.Reset();
+
+            lock (mHisDataCallBack)
+            {
+                mHisDataCallBack.Add(vid, (data) =>
+                {
+                    re = data;
+                    try
+                    {
+                        hisRequreEvent.Set();
+                    }
+                    catch
+                    {
+                        data?.UnlockAndReturn();
+                    }
+                });
+            }
+            SendData(mb);
+            try
+            {
+                if (hisRequreEvent.WaitOne(timeout) && re != null && re.WriteIndex - re.ReadIndex > 1)
+                {
+                    var cc = re.ReadInt();
+                    for (int i = 0; i < cc; i++)
+                    {
+                        red.Add(re.ReadDateTime());
+                    }
+                }
+                else
+                {
+                    lock (mHisDataCallBack)
+                    {
+                        if (mHisDataCallBack.ContainsKey(vid))
+                        {
+                            mHisDataCallBack.Remove(vid);
+                        }
+                        else
+                        {
+                            var cc = re.ReadInt();
+                            for (int i = 0; i < cc; i++)
+                            {
+                                red.Add(re.ReadDateTime());
+                            }
+                        }
+                    }
+                }
+                return red;
+            }
+            finally
+            {
+                hisRequreEvent.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public double FindNoNumberTagValueDuration(int id, DateTime startTime, DateTime endTime, object value, int timeout = 60000)
+        {
+            var vid = 0;
+            ByteBuffer re = null;
+            lock (mHisDataLock)
+            {
+                vid = mHisRequreCount;
+                mHisRequreCount++;
+                CheckLogin();
+            }
+
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
+            mb.Write(ApiFunConst.RequestValueStatistics);
+            mb.Write(this.LoginId);
+            mb.Write(id);
+            mb.Write(startTime.Ticks);
+            mb.Write(endTime.Ticks);
+            mb.Write(vid);
+            mb.WriteByte((byte)12);
+            if (value is bool)
+            {
+                mb.Write(Convert.ToByte(value).ToString());
+            }
+            else if (value is DateTime)
+            {
+                mb.Write((Convert.ToDateTime(value).Ticks).ToString());
+            }
+            else
+            {
+                mb.Write(value.ToString());
+            }
+
+            ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
+            hisRequreEvent.Reset();
+
+            lock (mHisDataCallBack)
+            {
+                mHisDataCallBack.Add(vid, (data) =>
+                {
+                    re = data;
+                    try
+                    {
+                        hisRequreEvent.Set();
+                    }
+                    catch
+                    {
+                        data?.UnlockAndReturn();
+                    }
+                });
+            }
+            SendData(mb);
+            try
+            {
+                if (hisRequreEvent.WaitOne(timeout) && re != null && re.WriteIndex - re.ReadIndex > 1)
+                {
+                    return re.ReadDouble();
+                }
+                else
+                {
+                    lock (mHisDataCallBack)
+                    {
+                        if (mHisDataCallBack.ContainsKey(vid))
+                        {
+                            mHisDataCallBack.Remove(vid);
+                        }
+                        else
+                        {
+                            return re.ReadDouble();
+                        }
+                    }
+                }
+                return double.MinValue;
+            }
+            finally
+            {
+                hisRequreEvent.Dispose();
+            }
+        }
         #endregion
 
         #endregion ...Methods...

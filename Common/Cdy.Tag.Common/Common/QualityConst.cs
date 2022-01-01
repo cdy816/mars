@@ -22,13 +22,26 @@ namespace Cdy.Tag
         /// </summary>
         Good= 0,
         /// <summary>
-        /// 不可靠值
+        /// 不可靠值,20~40 范围内都是坏值
+        /// 其他都是好值
         /// </summary>
         Bad= 20,
         /// <summary>
         /// 超出范围
         /// </summary>
         OutOfRang = 30,
+        /// <summary>
+        /// 
+        /// </summary>
+        BelowLowerLimit = 31,
+        /// <summary>
+        /// 
+        /// </summary>
+        AboveUpperLimit = 32,
+        /// <summary>
+        /// 离线
+        /// </summary>
+        Offline=33,
         /// <summary>
         ///  初始状态
         /// </summary>
@@ -44,6 +57,6 @@ namespace Cdy.Tag
         /// <summary>
         /// 空值
         /// </summary>
-        Null= 255
+        Null= 255,
     }
 }

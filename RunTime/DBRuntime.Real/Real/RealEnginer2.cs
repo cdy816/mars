@@ -22,7 +22,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public unsafe class RealEnginer: IRealDataNotify, IRealDataNotifyForProducter, IRealData, IRealTagProduct, IRealTagConsumer,IDisposable
+    public unsafe class RealEnginer2: IRealDataNotify, IRealDataNotifyForProducter, IRealData, IRealTagProduct, IRealTagConsumer,IDisposable
     {
 
         #region ... Variables  ...
@@ -71,7 +71,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public RealEnginer()
+        public RealEnginer2()
         {
             //mLockEvent = new ManualResetEvent(true);
         }
@@ -80,7 +80,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="database"></param>
-        public RealEnginer(RealDatabase database):this()
+        public RealEnginer2(RealDatabase database):this()
         {
             this.mConfigDatabase = database;
         }
@@ -242,6 +242,7 @@ namespace Cdy.Tag
                     case TagType.Long:
                     case TagType.ULong:
                     case TagType.Double:
+                    case TagType.DateTime:
                     case TagType.IntPoint:
                     case TagType.UIntPoint:
                         MemoryHelper.WriteByte(mMHandle, vv.Value.ValueAddress + 16, unknowQuality);
@@ -269,28 +270,287 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="values"></param>
-        private void Clear(byte[] values)
+        public unsafe void ReAllocDatabase(RealDatabase databse)
         {
-            Array.Clear(values, 0, values.Length);
+            long msize = 0;
+            byte unknowQuality = (byte)QualityConst.Init;
+            Dictionary<int, long> _mIdAndAddr = new Dictionary<int, long>();
+            foreach (var vv in databse.Tags)
+            {
+                vv.Value.ValueAddress = msize;
+                _mIdAndAddr.Add(vv.Value.Id, vv.Value.ValueAddress);
+                switch (vv.Value.Type)
+                {
+                    case TagType.Bool:
+                    case TagType.Byte:
+                        msize += 10;
+                        break;
+                    case TagType.Short:
+                    case TagType.UShort:
+                        msize += 11;
+                        break;
+                    case TagType.Int:
+                    case TagType.UInt:
+                    case TagType.Float:
+                        msize += 13;
+                        break;
+                    case TagType.Long:
+                    case TagType.ULong:
+                    case TagType.Double:
+                    case TagType.DateTime:
+                        msize += 17;
+                        break;
+                    case TagType.IntPoint:
+                    case TagType.UIntPoint:
+                        msize += 17;
+                        break;
+                    case TagType.IntPoint3:
+                    case TagType.UIntPoint3:
+                        msize += 21;
+                        break;
+                    case TagType.LongPoint:
+                    case TagType.ULongPoint:
+                        msize += 25;
+                        break;
+                    case TagType.LongPoint3:
+                    case TagType.ULongPoint3:
+                        msize += 33;
+                        break;
+                    case TagType.String:
+                        msize += (Const.StringSize + 9);
+                        break;
+                }
+            }
+            //留50%的余量
+            mUsedSize = msize;
+            var fsize = ((long)(msize * 1.5 / 1024) + 1) * 1024;
+            var _mMemory = new byte[fsize];
+            var _mGCHandle = GCHandle.Alloc(mMemory, GCHandleType.Pinned);
+
+            var _mMHandle = (void*)mGCHandle.AddrOfPinnedObject();
+            _mMemory.AsSpan().Clear();
+
+            LoggerService.Service.Info("RealEnginer", "分配内存大小:" + (fsize / 1024.0 / 1024).ToString("f1") + " M");
+
+            foreach (var vv in databse.Tags)
+            {
+                switch (vv.Value.Type)
+                {
+                    case TagType.Bool:
+                    case TagType.Byte:
+                        if (CheckTagTypeChanged(databse, mConfigDatabase, vv.Value.Id))
+                        {
+                            Buffer.MemoryCopy((void*)((IntPtr)mMHandle + (int)mIdAndAddr[vv.Value.Id]), (void*)((IntPtr)_mMHandle + (int)vv.Value.ValueAddress), 10, 10);
+                        }
+                        else if (mIdAndAddr.ContainsKey(vv.Value.Id))
+                        {
+                            //如果变量的类型被改变
+                        }
+                        else
+                        {
+                            //新建变量
+                            MemoryHelper.WriteByte(_mMHandle, vv.Value.ValueAddress + 9, unknowQuality);
+                        }
+                        break;
+                    case TagType.Short:
+                    case TagType.UShort:
+                        if (CheckTagTypeChanged(databse, mConfigDatabase, vv.Value.Id))
+                        {
+                            Buffer.MemoryCopy((void*)((IntPtr)mMHandle + (int)mIdAndAddr[vv.Value.Id]), (void*)((IntPtr)_mMHandle + (int)vv.Value.ValueAddress), 11, 11);
+                        }
+                        else if (mIdAndAddr.ContainsKey(vv.Value.Id))
+                        {
+                            //如果变量的类型被改变
+                        }
+                        else
+                        {
+                            //新建变量
+                            MemoryHelper.WriteByte(_mMHandle, vv.Value.ValueAddress + 10, unknowQuality);
+                        }
+                        //
+                        break;
+                    case TagType.Int:
+                    case TagType.UInt:
+                    case TagType.Float:
+                        if (CheckTagTypeChanged(databse, mConfigDatabase, vv.Value.Id))
+                        {
+                            Buffer.MemoryCopy((void*)((IntPtr)mMHandle + (int)mIdAndAddr[vv.Value.Id]), (void*)((IntPtr)_mMHandle + (int)vv.Value.ValueAddress), 13, 13);
+                        }
+                        else if (mIdAndAddr.ContainsKey(vv.Value.Id))
+                        {
+                            //如果变量的类型被改变
+                        }
+                        else
+                        {
+                            //新建变量
+                            MemoryHelper.WriteByte(_mMHandle, vv.Value.ValueAddress + 12, unknowQuality);
+                        }
+                      
+                        break;
+                    case TagType.Long:
+                    case TagType.ULong:
+                    case TagType.Double:
+                    case TagType.DateTime:
+                        if (CheckTagTypeChanged(databse, mConfigDatabase, vv.Value.Id))
+                        {
+                            Buffer.MemoryCopy((void*)((IntPtr)mMHandle + (int)mIdAndAddr[vv.Value.Id]), (void*)((IntPtr)_mMHandle + (int)vv.Value.ValueAddress), 17, 17);
+                        }
+                        else if (mIdAndAddr.ContainsKey(vv.Value.Id))
+                        {
+                            //如果变量的类型被改变
+                        }
+                        else
+                        {
+                            //新建变量
+                            MemoryHelper.WriteByte(_mMHandle, vv.Value.ValueAddress + 16, unknowQuality);
+                        }
+
+                        break;
+                    case TagType.IntPoint:
+                    case TagType.UIntPoint:
+                        if (CheckTagTypeChanged(databse, mConfigDatabase, vv.Value.Id))
+                        {
+                            Buffer.MemoryCopy((void*)((IntPtr)mMHandle + (int)mIdAndAddr[vv.Value.Id]), (void*)((IntPtr)_mMHandle + (int)vv.Value.ValueAddress), 17, 17);
+                        }
+                        else
+                        {
+                            //新建变量
+                            MemoryHelper.WriteByte(_mMHandle, vv.Value.ValueAddress + 16, unknowQuality);
+                        }
+                       
+                        break;
+                    case TagType.IntPoint3:
+                    case TagType.UIntPoint3:
+                        if (CheckTagTypeChanged(databse, mConfigDatabase, vv.Value.Id))
+                        {
+                            Buffer.MemoryCopy((void*)((IntPtr)mMHandle + (int)mIdAndAddr[vv.Value.Id]), (void*)((IntPtr)_mMHandle + (int)vv.Value.ValueAddress), 21, 21);
+                        }
+                        else if (mIdAndAddr.ContainsKey(vv.Value.Id))
+                        {
+                            //如果变量的类型被改变
+                        }
+                        else
+                        {
+                            //新建变量
+                            MemoryHelper.WriteByte(_mMHandle, vv.Value.ValueAddress + 20, unknowQuality);
+                        }
+                       
+                        break;
+                    case TagType.LongPoint:
+                    case TagType.ULongPoint:
+                        //MemoryHelper.WriteByte(_mMHandle, vv.Value.ValueAddress + 24, unknowQuality);
+                        if (CheckTagTypeChanged(databse, mConfigDatabase, vv.Value.Id))
+                        {
+                            Buffer.MemoryCopy((void*)((IntPtr)mMHandle + (int)mIdAndAddr[vv.Value.Id]), (void*)((IntPtr)_mMHandle + (int)vv.Value.ValueAddress), 25, 25);
+                        }
+                        else
+                        {
+                            //新建变量
+                            MemoryHelper.WriteByte(_mMHandle, vv.Value.ValueAddress + 24, unknowQuality);
+                        }
+                        break;
+                    case TagType.LongPoint3:
+                    case TagType.ULongPoint3:
+                        //MemoryHelper.WriteByte(_mMHandle, vv.Value.ValueAddress + 32, unknowQuality);
+                        if (CheckTagTypeChanged(databse, mConfigDatabase, vv.Value.Id))
+                        {
+                            Buffer.MemoryCopy((void*)((IntPtr)mMHandle + (int)mIdAndAddr[vv.Value.Id]), (void*)((IntPtr)_mMHandle + (int)vv.Value.ValueAddress), 33, 33);
+                        }
+                        else
+                        {
+                            //新建变量
+                            MemoryHelper.WriteByte(_mMHandle, vv.Value.ValueAddress + 32, unknowQuality);
+                        }
+                        break;
+                    case TagType.String:
+                        if (CheckTagTypeChanged(databse, mConfigDatabase, vv.Value.Id))
+                        {
+                            Buffer.MemoryCopy((void*)((IntPtr)mMHandle + (int)mIdAndAddr[vv.Value.Id]), (void*)((IntPtr)_mMHandle + (int)vv.Value.ValueAddress), Const.StringSize + 9, Const.StringSize + 9);
+                        }
+                        else if (mIdAndAddr.ContainsKey(vv.Value.Id))
+                        {
+                            //如果变量的类型被改变
+                        }
+                        else
+                        {
+                            //新建变量
+                            MemoryHelper.WriteByte(_mMHandle, vv.Value.ValueAddress + Const.StringSize + 8, unknowQuality);
+                        }
+                     
+                        break;
+                }
+            }
+
+            //将数值拷贝进来
+
+        }
+
+        private bool CheckTagTypeChanged(RealDatabase olddatabase,RealDatabase newdatabase,int id)
+        {
+            if(newdatabase.Tags.ContainsKey(id) && olddatabase.Tags.ContainsKey(id))
+            {
+                return newdatabase.Tags[id].Type == olddatabase.Tags[id].Type;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        
+
+        private bool ReadValue(int id,out object value,out DateTime time,out byte quality)
+        {
+            var tag = mConfigDatabase.GetTagById(id);
+            if(tag!=null)
+            {
+                switch(tag.Type)
+                {
+                    case TagType.Bool:
+                    case TagType.Byte:
+                        value = ReadByteValueByAddr(mIdAndAddr[id],out time, out quality);
+                        return true;
+                    case TagType.Short:
+                        value = ReadShortValueByAddr(mIdAndAddr[id], out time, out quality);
+                        return true;
+                    case TagType.UShort:
+                        value = ReadUShortValueByAddr(mIdAndAddr[id], out time, out quality);
+                        return true;
+                    case TagType.Int:
+                        value = ReadIntValueByAddr(mIdAndAddr[id], out time, out quality);
+                        return true;
+                    case TagType.UInt:
+                        value = ReadUIntValueByAddr(mIdAndAddr[id], out time, out quality);
+                        return true;
+                    case TagType.Long:
+                        value = ReadInt64ValueByAddr(mIdAndAddr[id], out time, out quality);
+                        return true;
+                    case TagType.ULong:
+                        value = ReadUInt64ValueByAddr(mIdAndAddr[id], out time, out quality);
+                        return true;
+                    case TagType.DateTime:
+                        value = ReadDateTimeValueByAddr(mIdAndAddr[id], out time, out quality);
+                        return true;
+                    case TagType.String:
+                        value = ReadStringValueByAddr(mIdAndAddr[id], out time, out quality);
+                        return true;
+
+
+                }
+                
+            }
+            value = null;
+            time = DateTime.Now;
+            quality = (byte)QualityConst.Null;
+            return false;
         }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="tags"></param>
-        public void RemoveTags(IEnumerable<int> tags)
+        /// <param name="values"></param>
+        private void Clear(byte[] values)
         {
-            Lock();
-            foreach (var vv in tags)
-            {
-                mConfigDatabase.Remove(vv);
-                if(mIdAndAddr.ContainsKey(vv))
-                {
-                    mIdAndAddr.Remove(vv);
-                }
-            }
-            UnLock();
+            Array.Clear(values, 0, values.Length);
         }
 
         /// <summary>
@@ -300,143 +560,88 @@ namespace Cdy.Tag
         /// <param name="mNewDb"></param>
         public void AddTags(IEnumerable<Tag.Tagbase> tags)
         {
-            Lock();
-            try
+            long msize = 0;
+            foreach (var vv in tags)
             {
-                long msize = 0;
-                foreach (var vv in tags)
+                vv.ValueAddress = mUsedSize + msize;
+                mIdAndAddr.Add(vv.Id, vv.ValueAddress);
+                switch (vv.Type)
                 {
-                    vv.ValueAddress = mUsedSize + msize;
-                    mIdAndAddr.Add(vv.Id, vv.ValueAddress);
-                    switch (vv.Type)
-                    {
-                        case TagType.Bool:
-                        case TagType.Byte:
-                            msize += 10;
-                            break;
-                        case TagType.Short:
-                        case TagType.UShort:
-                            msize += 11;
-                            break;
-                        case TagType.Int:
-                        case TagType.UInt:
-                        case TagType.Float:
-                            msize += 13;
-                            break;
-                        case TagType.Long:
-                        case TagType.ULong:
-                        case TagType.Double:
-                            msize += 17;
-                            break;
-                        case TagType.IntPoint:
-                        case TagType.UIntPoint:
-                            msize += 17;
-                            break;
-                        case TagType.IntPoint3:
-                        case TagType.UIntPoint3:
-                            msize += 21;
-                            break;
-                        case TagType.LongPoint:
-                        case TagType.ULongPoint:
-                            msize += 25;
-                            break;
-                        case TagType.LongPoint3:
-                        case TagType.ULongPoint3:
-                            msize += 33;
-                            break;
-                        case TagType.String:
-                            msize += (Const.StringSize + 9);
-                            break;
-                    }
-
-                    mConfigDatabase.Add(vv);
+                    case TagType.Bool:
+                    case TagType.Byte:
+                        msize += 10;
+                        break;
+                    case TagType.Short:
+                    case TagType.UShort:
+                        msize += 11;
+                        break;
+                    case TagType.Int:
+                    case TagType.UInt:
+                    case TagType.Float:
+                        msize += 13;
+                        break;
+                    case TagType.Long:
+                    case TagType.ULong:
+                    case TagType.Double:
+                        msize += 17;
+                        break;
+                    case TagType.IntPoint:
+                    case TagType.UIntPoint:
+                        msize += 17;
+                        break;
+                    case TagType.IntPoint3:
+                    case TagType.UIntPoint3:
+                        msize += 21;
+                        break;
+                    case TagType.LongPoint:
+                    case TagType.ULongPoint:
+                        msize += 25;
+                        break;
+                    case TagType.LongPoint3:
+                    case TagType.ULongPoint3:
+                        msize += 33;
+                        break;
+                    case TagType.String:
+                        msize += (Const.StringSize + 9);
+                        break;
                 }
 
-                //分配新的内存
-                var fsize = mUsedSize + msize;
-                if (fsize > mMemory.Length)
-                {
-                    var vsize = ((long)(fsize * 1.5 / 1024) + 1) * 1024;
-                    var men = new byte[vsize];
-
-                    var gch = GCHandle.Alloc(men, GCHandleType.Pinned);
-                    var hmen = (void*)gch.AddrOfPinnedObject();
-                    men.AsSpan().Clear();
-
-                    Array.Copy(mMemory, men, mMemory.Length);
-
-                    mGCHandle.Free();
-
-                    mMemory = men;
-                    mGCHandle = gch;
-                    mMHandle = hmen;
-                }
-                mUsedSize = fsize;
-
-                //初始化质量戳
-                byte unknowQuality = (byte)QualityConst.Init;
-                foreach (var vv in tags)
-                {
-                    switch (vv.Type)
-                    {
-                        case TagType.Bool:
-                        case TagType.Byte:
-                            MemoryHelper.WriteByte(mMHandle, vv.ValueAddress + 9, unknowQuality);
-                            break;
-                        case TagType.Short:
-                        case TagType.UShort:
-                            MemoryHelper.WriteByte(mMHandle, vv.ValueAddress + 10, unknowQuality);
-                            break;
-                        case TagType.Int:
-                        case TagType.UInt:
-                        case TagType.Float:
-                            MemoryHelper.WriteByte(mMHandle, vv.ValueAddress + 12, unknowQuality);
-                            break;
-                        case TagType.Long:
-                        case TagType.ULong:
-                        case TagType.Double:
-                        case TagType.IntPoint:
-                        case TagType.UIntPoint:
-                            MemoryHelper.WriteByte(mMHandle, vv.ValueAddress + 16, unknowQuality);
-                            break;
-                        case TagType.IntPoint3:
-                        case TagType.UIntPoint3:
-                            MemoryHelper.WriteByte(mMHandle, vv.ValueAddress + 20, unknowQuality);
-                            break;
-                        case TagType.LongPoint:
-                        case TagType.ULongPoint:
-                            MemoryHelper.WriteByte(mMHandle, vv.ValueAddress + 24, unknowQuality);
-                            break;
-                        case TagType.LongPoint3:
-                        case TagType.ULongPoint3:
-                            MemoryHelper.WriteByte(mMHandle, vv.ValueAddress + 32, unknowQuality);
-                            break;
-                        case TagType.String:
-                            MemoryHelper.WriteByte(mMHandle, vv.ValueAddress + Const.StringSize + 8, unknowQuality);
-                            break;
-                    }
-                }
-
-                //通知接口，变量发生了改变
-                foreach (var vv in ComsumerValueChangedNotifyManager.Manager.ListNotifiers())
-                {
-                    vv.UpdateBlock(mConfigDatabase.MaxId, (id) =>
-                    {
-                        var itmp = (int)GetDataAddr(id);
-                        if (itmp < 0)
-                            return (int)(mIdAndAddr.Last().Value);
-                        else
-                        {
-                            return itmp;
-                        }
-                    });
-                }
+                mConfigDatabase.Add(vv);
             }
-            catch(Exception ex)
+            var fsize = mUsedSize + msize;
+            if (fsize > mMemory.Length)
             {
-                LoggerService.Service.Warn("RealEnginer", $"AddTags {ex.Message}");
+                var vsize = ((long)(fsize * 1.5 / 1024) + 1) * 1024;
+                var men = new byte[vsize];
+
+                var gch = GCHandle.Alloc(men, GCHandleType.Pinned);
+                var hmen = (void*)gch.AddrOfPinnedObject();
+                men.AsSpan().Clear();
+
+                Array.Copy(mMemory, men,mMemory.Length);
+                
+                mGCHandle.Free();
+
+                mMemory = men;
+                mGCHandle = gch;
+                mMHandle = hmen;
             }
-            UnLock();
+            mUsedSize = fsize;
+
+            foreach(var vv in ComsumerValueChangedNotifyManager.Manager.ListNotifiers())
+            {
+                vv.UpdateBlock(mConfigDatabase.MaxId, (id) =>
+                {
+                    var itmp = (int)GetDataAddr(id);
+                    if (itmp < 0)
+                        return (int)(mIdAndAddr.Last().Value);
+                    else
+                    {
+                        return itmp;
+                    }
+                });
+            }
+
             //mConfigDatabase = mNewDb;
         }
 
@@ -534,349 +739,67 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         public void UpdateTag(Tag.Tagbase tag)
         {
-            try
-            {
-                var oldtag = mConfigDatabase.GetTagById(tag.Id);
-                if (oldtag != null)
-                {
-                    if (oldtag.Type != tag.Type)
-                    {
-                        //如果数据类型发生了改变,则新分配一块内存
-                        tag.ValueAddress = mUsedSize;
-                        Lock();
-                        switch (tag.Type)
-                        {
-                            case TagType.Bool:
-                            case TagType.Byte:
-                                mUsedSize += 10;
-                                break;
-                            case TagType.Short:
-                            case TagType.UShort:
-                                mUsedSize += 11;
-                                break;
-                            case TagType.Int:
-                            case TagType.UInt:
-                            case TagType.Float:
-                                mUsedSize += 13;
-                                break;
-                            case TagType.Long:
-                            case TagType.ULong:
-                            case TagType.Double:
-                                mUsedSize += 17;
-                                break;
-                            case TagType.IntPoint:
-                            case TagType.UIntPoint:
-                                mUsedSize += 17;
-                                break;
-                            case TagType.IntPoint3:
-                            case TagType.UIntPoint3:
-                                mUsedSize += 21;
-                                break;
-                            case TagType.LongPoint:
-                            case TagType.ULongPoint:
-                                mUsedSize += 25;
-                                break;
-                            case TagType.LongPoint3:
-                            case TagType.ULongPoint3:
-                                mUsedSize += 33;
-                                break;
-                            case TagType.String:
-                                mUsedSize += (Const.StringSize + 9);
-                                break;
-                        }
+            //var oldtag = mConfigDatabase.GetTagById(tag.Id);
 
-                        if (mUsedSize > mMemory.Length)
-                        {
-                            var vsize = ((long)(mUsedSize * 1.5 / 1024) + 1) * 1024;
-                            var men = new byte[vsize];
+            //if(oldtag!=null)
+            //{
+            //    if(oldtag.Type != tag.Type)
+            //    {
+            //        int msize = GetTagRealValueSize(tag.Type);
 
-                            var gch = GCHandle.Alloc(men, GCHandleType.Pinned);
-                            var hmen = (void*)gch.AddrOfPinnedObject();
-                            men.AsSpan().Clear();
+            //        int osize = GetTagRealValueSize(oldtag.Type);
 
-                            Array.Copy(mMemory, men, mMemory.Length);
+            //        var fsize = mUsedSize + msize - osize;
 
-                            mGCHandle.Free();
+            //        var oldaddress = mIdAndAddr[tag.Id];
 
-                            mMemory = men;
-                            mGCHandle = gch;
-                            mMHandle = hmen;
-                        }
-                        //写入转换后的值
-                        var re = ReadValueAndConvertTo(oldtag.Type, tag.Type, oldtag.ValueAddress, out DateTime time, out byte quality);
+            //        if(fsize> mMemory.Length)
+            //        {
+            //            var vsize = ((long)(fsize * 1.5 / 1024) + 1) * 1024;
+            //            var men = new byte[vsize];
+
+            //            var gch = GCHandle.Alloc(men, GCHandleType.Pinned);
+            //            var hmen = (void*)gch.AddrOfPinnedObject();
+            //            men.AsSpan().Clear();
+
+            //            Array.Copy(mMemory,0, men,0, oldaddress);
+
+            //            Array.Copy
                         
-                        mIdAndAddr[tag.Id] = tag.ValueAddress;
-                        mConfigDatabase.Update(tag);
-                        UnLock();
-                        SetTagValue(tag, re, time, quality);
 
-                    }
-                    else if (mIdAndAddr.ContainsKey(tag.Id))
-                    {
-                        tag.ValueAddress = mIdAndAddr[tag.Id];
-                        mConfigDatabase.Update(tag);
-                    }
-                    else
-                    {
-                        mConfigDatabase.Update(tag);
-                    }
-                }
-                else
-                {
-                    mConfigDatabase.Update(tag);
-                }
-            }
-            catch(Exception ex)
-            {
-                LoggerService.Service.Warn("RealEnginer", $"UpdateTag {ex.Message}");
-            }
+            //            mGCHandle.Free();
+
+            //            mMemory = men;
+            //            mGCHandle = gch;
+            //            mMHandle = hmen;
+            //        }
+            //        else
+            //        {
+
+            //        }
+            //        mUsedSize = fsize;
+                    
+            //        tag.ValueAddress = mUsedSize;
+            //        mUsedSize += msize;
+            //        if (mIdAndAddr.ContainsKey(tag.Id))
+            //        {
+            //            mIdAndAddr[tag.Id] = tag.ValueAddress;
+            //        }
+            //        else
+            //        {
+            //            mIdAndAddr.Add(tag.Id, tag.ValueAddress);
+            //        }
+            //    }
+            //}
             
-        }
-
-        private object ConvertNumberValue(TagType targettype,object tmp,byte oldquality,out byte qulity)
-        {
-            qulity = oldquality;
-            switch (targettype)
+            if(mIdAndAddr.ContainsKey(tag.Id))
             {
-                case TagType.Byte:
-                    return Convert.ToByte(tmp);
-                case TagType.Bool:
-                    return Convert.ToBoolean(tmp);
-                case TagType.Short:
-                    return Convert.ToInt16(tmp);
-                case TagType.UShort:
-                    return Convert.ToUInt16(tmp);
-                case TagType.Int:
-                    return Convert.ToInt32(tmp);
-                case TagType.UInt:
-                    return Convert.ToUInt32(tmp);
-                case TagType.Long:
-                    return Convert.ToInt64(tmp);
-                case TagType.ULong:
-                    return Convert.ToUInt64(tmp);
-                case TagType.Double:
-                    return Convert.ToDouble(tmp);
-                case TagType.Float:
-                    return Convert.ToSingle(tmp);
-                case TagType.String:
-                    return Convert.ToString(tmp);
-                case TagType.DateTime:
-                    qulity = (byte)QualityConst.Init;
-                    return DateTime.MinValue;
-                case TagType.IntPoint:
-                    qulity = (byte)QualityConst.Init;
-                    return IntPointData.Empty;
-                case TagType.IntPoint3:
-                    qulity = (byte)QualityConst.Init;
-                    return IntPoint3Data.Empty;
-                case TagType.LongPoint:
-                    qulity = (byte)QualityConst.Init;
-                    return LongPointData.Empty;
-                case TagType.LongPoint3:
-                    qulity = (byte)QualityConst.Init;
-                    return LongPoint3Data.Empty;
-                case TagType.UIntPoint:
-                    qulity = (byte)QualityConst.Init;
-                    return UIntPointData.Empty;
-                case TagType.UIntPoint3:
-                    qulity = (byte)QualityConst.Init;
-                    return UIntPoint3Data.Empty;
-                case TagType.ULongPoint:
-                    qulity = (byte)QualityConst.Init;
-                    return ULongPointData.Empty;
-                case TagType.ULongPoint3:
-                    qulity = (byte)QualityConst.Init;
-                    return ULongPoint3Data.Empty;
-                default:
-                    return tmp;
+                tag.ValueAddress = mIdAndAddr[tag.Id];
             }
+
+
+            mConfigDatabase.Update(tag);
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="TT"></typeparam>
-        /// <param name="addr"></param>
-        /// <returns></returns>
-        private object ReadValueAndConvertTo(TagType type,TagType targettype,long addr,out DateTime time,out byte qulity)
-        {
-            object tmp;
-            try
-            {
-                switch (type)
-                {
-                    case TagType.Bool:
-                    case TagType.Byte:
-                        tmp = ReadByteValueByAddr(addr, out time, out qulity);
-                        return ConvertNumberValue(targettype, tmp, qulity, out qulity);
-                    case TagType.UShort:
-                        tmp = ReadUShortValueByAddr(addr, out time, out qulity);
-                        return ConvertNumberValue(targettype, tmp, qulity, out qulity);
-                    case TagType.Short:
-                        tmp = ReadShortValueByAddr(addr, out time, out qulity);
-                        return ConvertNumberValue(targettype, tmp, qulity, out qulity);
-                    case TagType.Int:
-                        tmp = ReadIntValueByAddr(addr, out time, out qulity);
-                        return ConvertNumberValue(targettype, tmp, qulity, out qulity);
-                    case TagType.UInt:
-                        tmp = ReadUIntValueByAddr(addr, out time, out qulity);
-                        return ConvertNumberValue(targettype, tmp, qulity, out qulity);
-                    case TagType.Long:
-                        tmp = ReadInt64ValueByAddr(addr, out time, out qulity);
-                        return ConvertNumberValue(targettype, tmp, qulity, out qulity);
-                    case TagType.ULong:
-                        tmp = ReadUInt64ValueByAddr(addr, out time, out qulity);
-                        return ConvertNumberValue(targettype, tmp, qulity, out qulity);
-                    case TagType.Double:
-                        tmp = ReadDoubleValueByAddr(addr, out time, out qulity);
-                        return ConvertNumberValue(targettype, tmp, qulity, out qulity);
-                    case TagType.Float:
-                        tmp = ReadFloatValueByAddr(addr, out time, out qulity);
-                        return ConvertNumberValue(targettype, tmp, qulity, out qulity);
-                    case TagType.String:
-                        tmp = ReadStringValueByAddr(addr, out time, out qulity);
-                        return ConvertNumberValue(targettype, tmp, qulity, out qulity);
-                    case TagType.DateTime:
-                        time = DateTime.Now;
-                        qulity = (int)QualityConst.Init;
-                        return DateTime.MinValue;
-                    case TagType.IntPoint:
-                        var rip = ReadIntPointValueByAddr(addr, out qulity, out time);
-                        switch(targettype)
-                        {
-                            case TagType.IntPoint:
-                                return rip;
-                            case TagType.UIntPoint:
-                                return new UIntPointData(rip.X, rip.Y);
-                            case TagType.LongPoint:
-                                return new LongPointData(rip.X, rip.Y);
-                            case TagType.ULongPoint:
-                                return new ULongPointData(rip.X, rip.Y);
-                            default:
-                                return new UIntPointData();
-                        }
-                    case TagType.UIntPoint:
-                        var urip = ReadUIntPointValueByAddr(addr, out qulity, out time);
-                        switch (targettype)
-                        {
-                            case TagType.IntPoint:
-                                return new IntPointData(urip.X, urip.Y);
-                            case TagType.UIntPoint:
-                                return new UIntPointData(urip.X, urip.Y);
-                            case TagType.LongPoint:
-                                return new LongPointData(urip.X, urip.Y);
-                            case TagType.ULongPoint:
-                                return new ULongPointData(urip.X, urip.Y);
-                            default:
-                                return new UIntPointData();
-                        }
-                    case TagType.LongPoint:
-                        var lip = ReadLongPointValueByAddr(addr, out qulity, out time);
-                        switch (targettype)
-                        {
-                            case TagType.IntPoint:
-                                return new IntPointData((int)lip.X, (int)lip.Y);
-                            case TagType.UIntPoint:
-                                return new UIntPointData((uint)lip.X, (uint)lip.Y);
-                            case TagType.LongPoint:
-                                return new LongPointData(lip.X, lip.Y);
-                            case TagType.ULongPoint:
-                                return new ULongPointData(lip.X, lip.Y);
-                            default:
-                                return new LongPointData();
-                        }
-                    case TagType.ULongPoint:
-                        var ulip = ReadULongPointValueByAddr(addr, out qulity, out time);
-                        switch (targettype)
-                        {
-                            case TagType.IntPoint:
-                                return new IntPointData((int)ulip.X, (int)ulip.Y);
-                            case TagType.UIntPoint:
-                                return new UIntPointData((uint)ulip.X, (uint)ulip.Y);
-                            case TagType.LongPoint:
-                                return new LongPointData(ulip.X, ulip.Y);
-                            case TagType.ULongPoint:
-                                return new ULongPointData(ulip.X, ulip.Y);
-                            default:
-                                return new ULongPointData();
-                        }
-                    case TagType.IntPoint3:
-                        var rip3 = ReadIntPoint3ValueByAddr(addr, out qulity, out time);
-                        switch (targettype)
-                        {
-                            case TagType.IntPoint3:
-                                return rip3;
-                            case TagType.UIntPoint3:
-                                return new UIntPoint3Data((uint)rip3.X, (uint)rip3.Y, (uint)rip3.Z);
-                            case TagType.LongPoint3:
-                                return new LongPoint3Data(rip3.X, rip3.Y,rip3.Z);
-                            case TagType.ULongPoint3:
-                                return new ULongPoint3Data(rip3.X, rip3.Y, rip3.Z);
-                            default:
-                                return new IntPoint3Data();
-                        }
-                    case TagType.UIntPoint3:
-                        var urip3 = ReadUIntPoint3ValueByAddr(addr, out qulity, out time);
-                        switch (targettype)
-                        {
-                            case TagType.UIntPoint3:
-                                return urip3;
-                            case TagType.IntPoint3:
-                                return new IntPoint3Data(urip3.X, urip3.Y,urip3.Z);
-                            case TagType.LongPoint3:
-                                return new LongPoint3Data(urip3.X, urip3.Y, urip3.Z);
-                            case TagType.ULongPoint3:
-                                return new ULongPoint3Data(urip3.X, urip3.Y, urip3.Z);
-                            default:
-                                return new UIntPoint3Data();
-                        }
-                    case TagType.LongPoint3:
-                        var lrip3 = ReadLongPoint3ValueByAddr(addr, out qulity, out time);
-                        switch (targettype)
-                        {
-                            case TagType.LongPoint3:
-                                return lrip3;
-                            case TagType.IntPoint3:
-                                return new IntPoint3Data((int)lrip3.X, (int)lrip3.Y, (int)lrip3.Z);
-                            case TagType.UIntPoint3:
-                                return new UIntPoint3Data((uint)lrip3.X, (uint)lrip3.Y, (uint)lrip3.Z);
-                            case TagType.ULongPoint:
-                                return new ULongPoint3Data(lrip3.X, lrip3.Y, lrip3.Z);
-                            default:
-                                return new LongPoint3Data();
-                        }
-                    case TagType.ULongPoint3:
-                        var ulrip3 = ReadLongPoint3ValueByAddr(addr, out qulity, out time);
-                        switch (targettype)
-                        {
-                            case TagType.ULongPoint3:
-                                return ulrip3;
-                            case TagType.IntPoint3:
-                                return new IntPoint3Data((int)ulrip3.X, (int)ulrip3.Y, (int)ulrip3.Z);
-                            case TagType.UIntPoint3:
-                                return new UIntPoint3Data((uint)ulrip3.X, (uint)ulrip3.Y, (uint)ulrip3.Z);
-                            case TagType.LongPoint:
-                                return new LongPoint3Data(ulrip3.X, ulrip3.Y, ulrip3.Z);
-                            default:
-                                return new ULongPoint3Data();
-                        }
-
-                    default:
-                        time = DateTime.Now;
-                        qulity = (int)QualityConst.Init;
-                        return null;
-                }
-
-            }
-            catch
-            {
-                time = DateTime.Now;
-                qulity = (int)QualityConst.Init;
-                return 0;
-            }
-        }
-
 
         /// <summary>
         /// 

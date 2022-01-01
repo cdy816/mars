@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Cdy.Tag;
 using System.Text;
 using System.Data.Common;
+using System.Text.RegularExpressions;
 
 namespace DBDevelopService
 {
@@ -535,20 +536,22 @@ namespace DBDevelopService
         public override Task<BoolResultReplay> ModifyPassword(ModifyPasswordRequest request, ServerCallContext context)
         {
             var userName = SecurityManager.Manager.GetUserName(request.LoginId);
-            if (!SecurityManager.Manager.CheckKeyAvaiable(request.LoginId))
+            if (SecurityManager.Manager.CheckKeyAvaiable(request.LoginId))
             {
                 if(!(userName == request.UserName && SecurityManager.Manager.CheckPasswordIsCorrect(userName, request.Password)))
                 {
                     return Task.FromResult(new BoolResultReplay() { Result = false });
                 }
+
+                var user = SecurityManager.Manager.Securitys.User.GetUser(request.UserName);
+                if (user != null)
+                {
+                    user.Password = request.Newpassword;
+                    SecurityManager.Manager.Save();
+                    return Task.FromResult(new BoolResultReplay() { Result = true });
+                }
             }
-            var user = SecurityManager.Manager.Securitys.User.GetUser(request.UserName);
-            if (user != null)
-            {
-                user.Password = request.Newpassword;
-                SecurityManager.Manager.Save();
-            }
-            return Task.FromResult(new BoolResultReplay() { Result = true });
+            return Task.FromResult(new BoolResultReplay() { Result = false });
         }
 
         /// <summary>
@@ -1838,6 +1841,107 @@ namespace DBDevelopService
             {
                 return Task.FromResult(new AddTagReplyMessage() { Result = false, ErroMessage=ex.Message });
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<GetAvaiableTagNameReply> GetAvaiableTagName(GetAvaiableTagNameRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, request.Database))
+            {
+                return Task.FromResult(new GetAvaiableTagNameReply() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                lock (db)
+                {
+                    string baseName = "tag";
+                    if(!string.IsNullOrEmpty(request.Name))
+                    {
+                        baseName = request.Name;
+                    }
+                    var vtmps = db.RealDatabase.GetTagsByGroup(request.Group).Select(e => e.Name).ToList();
+                    string tagName = baseName;
+
+                    int number = GetNumberInt(baseName);
+                    if (number >= 0)
+                    {
+                        if (tagName.EndsWith(number.ToString()))
+                        {
+                            tagName = tagName.Substring(0, tagName.IndexOf(number.ToString()));
+                        }
+                    }
+                    string sname = tagName;
+                    for (int i = 1; i < int.MaxValue; i++)
+                    {
+                        tagName = sname + i;
+                        if (!vtmps.Contains(tagName))
+                        {
+                            return Task.FromResult(new GetAvaiableTagNameReply() { Name = tagName, Result = true });
+                        }
+                    }
+                    return Task.FromResult(new GetAvaiableTagNameReply() { Name = tagName, Result = true });
+                }
+            }
+            return Task.FromResult(new GetAvaiableTagNameReply() { Result = false });
+        }
+
+        /// <summary>
+        /// 获取字符串中的数字
+        /// </summary>
+        /// <param name="str">字符串</param>
+        /// <returns>数字</returns>
+        public static int GetNumberInt(string str)
+        {
+            int result = -1;
+            if (str != null && str != string.Empty)
+            {
+                // 正则表达式剔除非数字字符（不包含小数点.）
+                str = Regex.Replace(str, @"[^\d.\d]", "");
+                // 如果是数字，则转换为decimal类型
+                if (Regex.IsMatch(str, @"^[+-]?\d*[.]?\d*$"))
+                {
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(str))
+                            result = int.Parse(str);
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> CheckTagNameExist(GetAvaiableTagNameRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, request.Database))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                lock (db)
+                {
+                    var vtmps = db.RealDatabase.GetTagsByGroup(request.Group).Select(e => e.Name).ToList();
+                    return Task.FromResult(new BoolResultReplay() { Result = vtmps != null & vtmps.Contains(request.Name) });
+                }
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = false });
         }
 
 

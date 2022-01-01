@@ -29,7 +29,8 @@ namespace DbWebApiProxy.Controllers
         /// <param name="context"></param>
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            context.HttpContext.Response.Redirect("index.html");
+            // context.HttpContext.Response.Redirect("index.html");
+            context.HttpContext.Response.Redirect("swagger/index.html");
             base.OnActionExecuting(context);
         }
 

@@ -609,8 +609,8 @@ namespace SpiderDriver.ClientApi
             var sdata = encode.GetBytes(value);
             //WriteByte(offset, (byte)sdata.Length);
             WriteInt(offset, sdata.Length);
-            WriteBytes(offset + 1, sdata);
-            Position = offset + sdata.Length + 1;
+            WriteBytes(offset + 4, sdata);
+            Position = offset + sdata.Length + 4;
         }
 
         /// <summary>
@@ -1131,6 +1131,38 @@ namespace SpiderDriver.ClientApi
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public RealDataBuffer AppendValue(string tagname, bool value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 6 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.Bool);
+            this.WriteByte(Position, value ? (byte)1 : (byte)0);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, bool value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 7 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.Bool);
+            this.WriteByte(Position, value ? (byte)1 : (byte)0);
+            this.WriteByte(Position, quality);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
         public RealDataBuffer AppendValue(double value)
@@ -1159,6 +1191,22 @@ namespace SpiderDriver.ClientApi
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="tagName"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public RealDataBuffer AppendValue(string tagName, double value)
+        {
+            ValueCount++;
+            CheckAndResize(Position + 13 + tagName.Length*2+4);
+            this.WriteString(Position, tagName,Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.Double);
+            this.WriteDouble(Position, value);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="value"></param>
         /// <param name="quality"></param>
         public RealDataBuffer AppendValue(int id,double value,byte quality)
@@ -1172,6 +1220,23 @@ namespace SpiderDriver.ClientApi
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public RealDataBuffer AppendValue(string tagName, double value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 14 + tagName.Length * 2 + 4);
+            this.WriteString(Position, tagName,Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.Double);
+            this.WriteDouble(Position, value);
+            this.WriteByte(Position, quality);
+            return this;
+        }
 
         /// <summary>
         /// 
@@ -1204,6 +1269,22 @@ namespace SpiderDriver.ClientApi
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="tagname"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public RealDataBuffer AppendValue(string tagname, float value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 9 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname,Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.Float);
+            this.WriteFloat(Position, value);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="value"></param>
         /// <param name="quality"></param>
         public RealDataBuffer AppendValue(int id, float value, byte quality)
@@ -1217,6 +1298,23 @@ namespace SpiderDriver.ClientApi
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagname"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public RealDataBuffer AppendValue(string tagName, float value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 10 + tagName.Length * 2 + 4);
+            this.WriteString(Position, tagName, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.Float);
+            this.WriteFloat(Position, value);
+            this.WriteByte(Position, quality);
+            return this;
+        }
 
 
         /// <summary>
@@ -1263,6 +1361,35 @@ namespace SpiderDriver.ClientApi
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, int value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 9 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname,Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.Int);
+            this.WriteInt(Position, value);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, int value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 10 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.Int);
+            this.WriteInt(Position, value);
+            this.WriteByte(Position, quality);
+            return this;
+        }
 
         /// <summary>
         /// 
@@ -1309,6 +1436,36 @@ namespace SpiderDriver.ClientApi
         }
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, uint value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 9+ tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.Int);
+            this.WriteUInt(Position, value);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, uint value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 10 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.Int);
+            this.WriteUInt(Position, value);
+            this.WriteByte(Position, quality);
+            return this;
+        }
+
 
         /// <summary>
         /// 
@@ -1348,6 +1505,36 @@ namespace SpiderDriver.ClientApi
             ValueCount++;
             CheckAndResize(mPosition + 8);
             this.WriteInt(Position, id);
+            this.WriteByte(Position, (byte)TagType.Short);
+            this.WriteShort(Position, value);
+            this.WriteByte(Position, quality);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, short value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 7 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.Short);
+            this.WriteShort(Position, value);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, short value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 8 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
             this.WriteByte(Position, (byte)TagType.Short);
             this.WriteShort(Position, value);
             this.WriteByte(Position, quality);
@@ -1404,6 +1591,37 @@ namespace SpiderDriver.ClientApi
         /// 
         /// </summary>
         /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, ushort value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 7+tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.UShort);
+            this.WriteUShort(Position, value);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, ushort value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 8 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.UShort);
+            this.WriteUShort(Position, value);
+            this.WriteByte(Position, quality);
+            return this;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
         /// <returns></returns>
         public RealDataBuffer AppendValue(byte value)
         {
@@ -1444,7 +1662,35 @@ namespace SpiderDriver.ClientApi
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, byte value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 6 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.Byte);
+            this.WriteByte(Position, value);
+            return this;
+        }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, byte value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 7 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.Byte);
+            this.WriteByte(Position, value);
+            this.WriteByte(Position, quality);
+            return this;
+        }
 
         /// <summary>
         /// 
@@ -1484,6 +1730,37 @@ namespace SpiderDriver.ClientApi
             ValueCount++;
             CheckAndResize(mPosition + 14);
             this.WriteInt(Position, id);
+            this.WriteByte(Position, (byte)TagType.Long);
+            this.WriteLong(Position, value);
+            this.WriteByte(Position, quality);
+            return this;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, long value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 13 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.Long);
+            this.WriteLong(Position, value);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, long value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 14 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
             this.WriteByte(Position, (byte)TagType.Long);
             this.WriteLong(Position, value);
             this.WriteByte(Position, quality);
@@ -1540,6 +1817,37 @@ namespace SpiderDriver.ClientApi
         /// 
         /// </summary>
         /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, ulong value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 13 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.ULong);
+            this.WriteULong(Position, value);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, ulong value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 14 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.ULong);
+            this.WriteULong(Position, value);
+            this.WriteByte(Position, quality);
+            return this;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
         /// <returns></returns>
         public RealDataBuffer AppendValue(DateTime value)
         {
@@ -1580,6 +1888,35 @@ namespace SpiderDriver.ClientApi
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, DateTime value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 13 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.DateTime);
+            this.WriteDatetime(Position, value);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, DateTime value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 14 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.DateTime);
+            this.WriteDatetime(Position, value);
+            this.WriteByte(Position, quality);
+            return this;
+        }
 
         /// <summary>
         /// 
@@ -1602,7 +1939,7 @@ namespace SpiderDriver.ClientApi
         public RealDataBuffer AppendValue(int id, string value)
         {
             ValueCount++;
-            CheckAndResize(mPosition + value.Length + 5);
+            CheckAndResize(mPosition + value.Length*2 + 5);
             this.WriteInt(Position, id);
             this.WriteByte(Position, (byte)TagType.String);
             this.WriteString(Position, value, Encoding.Unicode);
@@ -1617,8 +1954,39 @@ namespace SpiderDriver.ClientApi
         public RealDataBuffer AppendValue(int id, string value, byte quality)
         {
             ValueCount++;
-            CheckAndResize(mPosition + value.Length + 6);
+            CheckAndResize(mPosition + value.Length*2 + 6);
             this.WriteInt(Position, id);
+            this.WriteByte(Position, (byte)TagType.String);
+            this.WriteString(Position, value, Encoding.Unicode);
+            this.WriteByte(Position, quality);
+            return this;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, string value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + value.Length*2 + 5 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.String);
+            this.WriteString(Position, value, Encoding.Unicode);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, string value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + value.Length*2 + 6 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
             this.WriteByte(Position, (byte)TagType.String);
             this.WriteString(Position, value, Encoding.Unicode);
             this.WriteByte(Position, quality);
@@ -1678,6 +2046,39 @@ namespace SpiderDriver.ClientApi
         /// 
         /// </summary>
         /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, IntPointData value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 13 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.IntPoint);
+            this.WriteInt(Position, value.X);
+            this.WriteInt(Position, value.Y);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, IntPointData value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 14 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.IntPoint);
+            this.WriteInt(Position, value.X);
+            this.WriteInt(Position, value.Y);
+            this.WriteByte(Position, quality);
+            return this;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
         /// <returns></returns>
         public RealDataBuffer AppendValue(UIntPointData value)
         {
@@ -1714,6 +2115,38 @@ namespace SpiderDriver.ClientApi
             ValueCount++;
             CheckAndResize(mPosition + 14);
             this.WriteInt(Position, id);
+            this.WriteByte(Position, (byte)TagType.UIntPoint);
+            this.WriteUInt(Position, value.X);
+            this.WriteUInt(Position, value.Y);
+            this.WriteByte(Position, quality);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, UIntPointData value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 13 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.UIntPoint);
+            this.WriteUInt(Position, value.X);
+            this.WriteUInt(Position, value.Y);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, UIntPointData value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 14 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
             this.WriteByte(Position, (byte)TagType.UIntPoint);
             this.WriteUInt(Position, value.X);
             this.WriteUInt(Position, value.Y);
@@ -1772,6 +2205,39 @@ namespace SpiderDriver.ClientApi
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, IntPoint3Data value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 17 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.IntPoint3);
+            this.WriteInt(Position, value.X);
+            this.WriteInt(Position, value.Y);
+            this.WriteInt(Position, value.Z);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, IntPoint3Data value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 18 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.IntPoint3);
+            this.WriteInt(Position, value.X);
+            this.WriteInt(Position, value.Y);
+            this.WriteInt(Position, value.Z);
+            this.WriteByte(Position, quality);
+            return this;
+        }
 
 
         /// <summary>
@@ -1824,6 +2290,39 @@ namespace SpiderDriver.ClientApi
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, UIntPoint3Data value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 17 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.UIntPoint3);
+            this.WriteUInt(Position, value.X);
+            this.WriteUInt(Position, value.Y);
+            this.WriteUInt(Position, value.Z);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, UIntPoint3Data value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 18 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.UIntPoint3);
+            this.WriteUInt(Position, value.X);
+            this.WriteUInt(Position, value.Y);
+            this.WriteUInt(Position, value.Z);
+            this.WriteByte(Position, quality);
+            return this;
+        }
 
         /// <summary>
         /// 
@@ -1865,6 +2364,38 @@ namespace SpiderDriver.ClientApi
             ValueCount++;
             CheckAndResize(mPosition + 22);
             this.WriteInt(Position, id);
+            this.WriteByte(Position, (byte)TagType.LongPoint);
+            this.WriteLong(Position, value.X);
+            this.WriteLong(Position, value.Y);
+            this.WriteByte(Position, quality);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, LongPointData value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 21 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.LongPoint);
+            this.WriteLong(Position, value.X);
+            this.WriteLong(Position, value.Y);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, LongPointData value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 22 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
             this.WriteByte(Position, (byte)TagType.LongPoint);
             this.WriteLong(Position, value.X);
             this.WriteLong(Position, value.Y);
@@ -1920,6 +2451,37 @@ namespace SpiderDriver.ClientApi
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, ULongPointData value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 21 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.ULongPoint);
+            this.WriteULong(Position, value.X);
+            this.WriteULong(Position, value.Y);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, ULongPointData value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 22 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.ULongPoint);
+            this.WriteULong(Position, value.X);
+            this.WriteULong(Position, value.Y);
+            this.WriteByte(Position, quality);
+            return this;
+        }
 
         /// <summary>
         /// 
@@ -1971,6 +2533,39 @@ namespace SpiderDriver.ClientApi
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, LongPoint3Data value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 29 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.LongPoint3);
+            this.WriteLong(Position, value.X);
+            this.WriteLong(Position, value.Y);
+            this.WriteLong(Position, value.Z);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, LongPoint3Data value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 30 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.LongPoint3);
+            this.WriteLong(Position, value.X);
+            this.WriteLong(Position, value.Y);
+            this.WriteLong(Position, value.Z);
+            this.WriteByte(Position, quality);
+            return this;
+        }
 
         /// <summary>
         /// 
@@ -2014,6 +2609,41 @@ namespace SpiderDriver.ClientApi
             ValueCount++;
             CheckAndResize(mPosition + 30);
             this.WriteInt(Position, id);
+            this.WriteByte(Position, (byte)TagType.ULongPoint3);
+            this.WriteULong(Position, value.X);
+            this.WriteULong(Position, value.Y);
+            this.WriteULong(Position, value.Z);
+            this.WriteByte(Position, quality);
+            return this;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public RealDataBuffer AppendValue(string tagname, ULongPoint3Data value)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 29 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
+            this.WriteByte(Position, (byte)TagType.ULongPoint3);
+            this.WriteULong(Position, value.X);
+            this.WriteULong(Position, value.Y);
+            this.WriteULong(Position, value.Z);
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        public RealDataBuffer AppendValue(string tagname, ULongPoint3Data value, byte quality)
+        {
+            ValueCount++;
+            CheckAndResize(mPosition + 30 + tagname.Length * 2 + 4);
+            this.WriteString(Position, tagname, Encoding.Unicode);
             this.WriteByte(Position, (byte)TagType.ULongPoint3);
             this.WriteULong(Position, value.X);
             this.WriteULong(Position, value.Y);

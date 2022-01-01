@@ -8,6 +8,7 @@
 //==============================================================
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -88,9 +89,9 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         /// <param name="target"></param>
         /// <returns></returns>
-        public HisDatabase LoadDifferenceByName(string name, HisDatabase target)
+        public HisDatabase LoadDifferenceByName(string name, HisDatabase target, out List<long> mRemoved)
         {
-            return LoadDifference(PathHelper.helper.GetDataPath(name, name + ".hdb"), target);
+            return LoadDifference(PathHelper.helper.GetDataPath(name, name + ".hdb"), target,out mRemoved);
         }
 
         /// <summary>
@@ -110,12 +111,15 @@ namespace Cdy.Tag
         /// <param name="file"></param>
         /// <param name="target"></param>
         /// <returns></returns>
-        public HisDatabase LoadDifference(string file,HisDatabase target)
+        public HisDatabase LoadDifference(string file,HisDatabase target,out List<long> mRemoved)
         {
             HisDatabase db = new HisDatabase();
+            List<long> mRemovedIds = null;
             if (System.IO.File.Exists(file))
             {
                 XElement xe = XElement.Load(file);
+
+                mRemovedIds = target.HisTags.Keys.ToList();
 
                 db.Name = xe.Attribute("Name").Value;
                 db.Version = xe.Attribute("Version").Value;
@@ -135,6 +139,11 @@ namespace Cdy.Tag
                         
                         if (!target.HisTags.ContainsKey(tag.Id) || !tag.Equals(target.HisTags[tag.Id]))
                             db.HisTags.Add(tag.Id, tag);
+
+                        if(target.HisTags.ContainsKey(tag.Id))
+                        {
+                            mRemovedIds.Remove(tag.Id);
+                        }
                     }
                 }
 
@@ -144,6 +153,7 @@ namespace Cdy.Tag
                 }
             }
             this.Database = db;
+            mRemoved = mRemovedIds;
             return db;
         }
 

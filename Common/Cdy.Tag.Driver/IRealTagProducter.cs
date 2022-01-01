@@ -53,13 +53,8 @@ namespace Cdy.Tag.Driver
         /// <returns></returns>
         bool SetTagByGroup(string group, params object[] values);
 
-        ///// <summary>
-        ///// 设置变量的值
-        ///// </summary>
-        ///// <param name="id">Id</param>
-        ///// <param name="value">值</param>
-        ///// <returns></returns>
-        //bool SetTagValue(int id, object value);
+
+        #region Set by Id
 
         /// <summary>
         /// 设置变量的值
@@ -231,6 +226,25 @@ namespace Cdy.Tag.Driver
         /// <returns></returns>
         bool SetTagValue<T>(int id,ref T value,DateTime time,byte quality);
 
+        /// <summary>
+        /// 将一组变量设置成一个值
+        /// </summary>
+        /// <param name="ids">变量Id集合</param>
+        /// <param name="value">值</param>
+        /// <returns></returns>
+        bool SetTagValue<T>(List<int> ids, T value, byte quality);
+
+        /// <summary>
+        /// 设置变量的质量戳
+        /// </summary>
+        /// <param name="id">Id</param>
+        /// <param name="quality">质量戳</param>
+        /// <param name="time">时间</param>
+        void SetTagQuality(int id, byte quality, DateTime time);
+
+        #endregion
+
+        #region Set by Tag instance
 
         /// <summary>
         /// 设置变量的值
@@ -607,67 +621,17 @@ namespace Cdy.Tag.Driver
         /// <returns></returns>
         bool SetTagValue(List<Tagbase> tag, ref ULongPoint3Data value, byte quality);
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="tag"></param>
-        ///// <param name="value"></param>
-        ///// <returns></returns>
-        //bool SetTagValue<T>(List<Tagbase> tag,ref T value, byte quality);
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <typeparam name="T"></typeparam>
-        ///// <param name="tag"></param>
-        ///// <param name="value"></param>
-        ///// <param name="quality"></param>
-        ///// <returns></returns>
-        //bool SetTagValue<T>(List<Tagbase> tag, T value, byte quality);
 
         /// <summary>
-        /// 将一组变量设置成一个值
+        /// 设置变量的质量戳
         /// </summary>
-        /// <param name="ids">变量Id集合</param>
-        /// <param name="value">值</param>
-        /// <returns></returns>
-        bool SetTagValue<T>(List<int> ids, T value, byte quality);
+        /// <param name="tag">变量实例</param>
+        /// <param name="quality">质量戳</param>
+        /// <param name="time">时间</param>
+        void SetTagQuality(Tagbase tag, byte quality, DateTime time);
+        #endregion
 
-
-
-        ///// <summary>
-        ///// 设置Point类型的变量的值
-        ///// </summary>
-        ///// <param name="id">Id</param>
-        ///// <param name="values">值列表</param>
-        ///// <returns></returns>
-        //bool SetPointValue<T>(int id, params T[] values);
-
-        ///// <summary>
-        ///// 设置Point类型的变量的值
-        ///// </summary>
-        ///// <param name="tag">变量实例</param>
-        ///// <param name="values">值列表</param>
-        ///// <returns></returns>
-        //bool SetPointValue<T>(Tagbase tag, params T[] values);
-
-
-        ///// <summary>
-        ///// 设置一组Point类型的变量的值为同一个值
-        ///// </summary>
-        ///// <param name="ids">Id集合</param>
-        ///// <param name="values">值列表</param>
-        ///// <returns></returns>
-
-        //bool SetPointValue(List<int> ids, params object[] values);
-
-        ///// <summary>
-        ///// 设置一组Point类型的变量的值为同一个值
-        ///// </summary>
-        ///// <param name="tags">变量实例集合</param>
-        ///// <param name="values">值列表</param>
-        ///// <returns></returns>
-        //bool SetPointValue(List<Tagbase> tags, params object[] values);
 
         /// <summary>
         /// 通过变量的连接地址获取变量实例

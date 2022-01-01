@@ -113,6 +113,8 @@ namespace DBStudio
         {
             LogoHelper.Print();
 
+            Console.Title = "DBInStudioServer";
+
             //注册日志
             ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
 
@@ -127,9 +129,19 @@ namespace DBStudio
 
             int port = Config.Instance.GrpcPort;
             int webPort = Config.Instance.WebApiPort;
+
+            bool isNeedMinMode = false;
+
             if (args.Length > 0)
             {
-                port = int.Parse(args[0]);
+                if (args[0] == "/m")
+                {
+                    isNeedMinMode = true;
+                }
+                else
+                {
+                    port = int.Parse(args[0]);
+                }
             }
 
             if (args.Length > 1)
@@ -137,6 +149,11 @@ namespace DBStudio
                 webPort = int.Parse(args[1]);
             }
             WindowConsolHelper.DisbleQuickEditMode();
+
+            if (isNeedMinMode)
+            {
+                WindowConsolHelper.MinWindow("DBInStudioServer");
+            }
 
             Console.CancelKeyPress += Console_CancelKeyPress;
 
@@ -732,7 +749,7 @@ namespace DBStudio
                 sfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location), sfile);
             }
 
-            var stream = new StreamWriter(File.Open(sfile, FileMode.OpenOrCreate, FileAccess.ReadWrite));
+            var stream = new StreamWriter(File.Open(sfile, FileMode.Create, FileAccess.ReadWrite));
             foreach(var vv in database.RealDatabase.Tags)
             {
                 if(database.HisDatabase.HisTags.ContainsKey(vv.Key))

@@ -22,10 +22,11 @@
         <Label Content="{Binding CosValue}" HorizontalAlignment="Left" Margin="102,164,0,0" VerticalAlignment="Top" Width="106"/>
         <Label Content="{Binding BoolValue}" HorizontalAlignment="Left" Margin="102,207,0,0" VerticalAlignment="Top" Width="106"/>
         <Label Content="{Binding DateTimeValue}" HorizontalAlignment="Left" Margin="102,247,0,0" VerticalAlignment="Top" Width="136"/>
-        <Button x:Name="hisDataWrite" Content="手动历史数据写入" HorizontalAlignment="Left" Margin="502,149,0,0" VerticalAlignment="Top" Width="107" Click="hisDataWrite_Click"/>
-        <Button x:Name="HisStart" Content="实时历史数据" HorizontalAlignment="Left" Margin="502,71,0,0" VerticalAlignment="Top" Width="107" Click="HisStart_Click"/>
+        <Button x:Name="hisDataWrite" Content="手动历史数据写入" HorizontalAlignment="Left" Margin="502,178,0,0" VerticalAlignment="Top" Width="107" Click="hisDataWrite_Click"/>
+        <Button x:Name="HisStart" Content="实时历史数据" HorizontalAlignment="Left" Margin="502,100,0,0" VerticalAlignment="Top" Width="107" Click="HisStart_Click"/>
         <Label x:Name="fshs" Content="发送耗时:" HorizontalAlignment="Left" Margin="16,292,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="Hid" HorizontalAlignment="Left" Margin="502,118,0,0" Text="1" TextWrapping="Wrap" VerticalAlignment="Top" Width="107"/>
+        <TextBox x:Name="Hid" HorizontalAlignment="Left" Margin="502,147,0,0" Text="1" TextWrapping="Wrap" VerticalAlignment="Top" Width="107"/>
+        <Button x:Name="StartPushOnly" Content="单向传输实时数据" HorizontalAlignment="Left" Margin="502,66,0,0" VerticalAlignment="Top" Width="107" Click="StartPushOnly_Click"/>
 
     </Grid>
 </Window>

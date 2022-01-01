@@ -203,14 +203,19 @@ namespace DBInStudio.Desktop
             }
             set
             {
-                if (mRealTagMode != null && mRealTagMode.Name != value)
+                if (mRealTagMode != null && mRealTagMode.Name != value && CheckAvaiableName(value))
                 {
                     mRealTagMode.Name = value;
                     IsChanged = true;
-                    OnPropertyChanged("Name");
                 }
+                OnPropertyChanged("Name");
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Database { get; set; }
 
         /// <summary>
         /// 描述
@@ -832,6 +837,25 @@ namespace DBInStudio.Desktop
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        private bool CheckAvaiableName(string name)
+        {
+            return !name.Contains(".") && !DevelopServiceHelper.Helper.CheckTagNameExits(this.Database, this.Group, name);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        public void SetTagNane(string name)
+        {
+            mRealTagMode.Name = name;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public void RefreshHisTag()
         {
             OnPropertyChanged("CompressType");
@@ -1228,7 +1252,7 @@ namespace DBInStudio.Desktop
                 (ntag as FloatingTagBase).Precision = (mRealTagMode as FloatingTagBase).Precision;
             }
 
-            return new TagViewModel(ntag,htag);
+            return new TagViewModel(ntag, htag) { Database = this.Database };
         }
 
         /// <summary>

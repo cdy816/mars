@@ -70,7 +70,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public Databuffer():this(1024)
+        public Databuffer() : this(1024)
         {
 
         }
@@ -95,13 +95,13 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         public void AppendValue(int value)
         {
-            if(Length<Buffer.Length-1)
+            if (Length < Buffer.Length - 1)
             {
                 Buffer[Length++] = value;
             }
             else
             {
-                ReSize((int)(Buffer.Length * 1.2));
+                ReSize(Length + (int)(Length * 1.5));
                 Buffer[Length++] = value;
             }
         }
@@ -395,6 +395,7 @@ namespace Cdy.Tag
                     if (ValueChanged != null && mChangedIds.Length > 0)
                     {
                         var vids = mChangedIds;
+                        int len = vids.Length;
                         lock (mLockObject)
                         {
                             if (mChangedIds == mChangedId1)
@@ -405,9 +406,10 @@ namespace Cdy.Tag
                             {
                                 mChangedIds = mChangedId1;
                             }
+                            vids.Length = 0;
                         }
-                        ValueChanged?.Invoke(vids.Buffer, vids.Length);
-                        vids.Length = 0;
+                        ValueChanged?.Invoke(vids.Buffer, len);
+                        
                     }
                 }
 

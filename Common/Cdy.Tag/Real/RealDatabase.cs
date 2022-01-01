@@ -441,7 +441,11 @@ namespace Cdy.Tag
             {
                 return this.Groups[group].Tags;
             }
-            return null;
+            else if(string.IsNullOrEmpty(group))
+            {
+                return this.Tags.Values.Where(e => string.IsNullOrEmpty(e.Group)).ToList();
+            }
+            return new List<Tagbase>();
         }
 
         /// <summary>

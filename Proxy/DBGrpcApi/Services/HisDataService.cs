@@ -417,5 +417,418 @@ namespace DBGrpcApi
             result.Values.Add(hdp);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<FindTagValueDateTimeReplay> FindTagValue(FindTagValueRequest request, ServerCallContext context)
+        {
+            if (SecurityManager.Manager.IsLogin(request.Token))
+            {
+                FindTagValueDateTimeReplay re = new FindTagValueDateTimeReplay() { Result = true };
+                var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.Tag);
+                if(tag != null)
+                {
+                    DateTime? dres = null;
+                    Tuple<DateTime, object> res=null;
+                    switch (tag.Type)
+                    {
+                        case Cdy.Tag.TagType.DateTime:
+                        case Cdy.Tag.TagType.Bool:
+                        case Cdy.Tag.TagType.String:
+                        case Cdy.Tag.TagType.IntPoint:
+                        case Cdy.Tag.TagType.UIntPoint:
+                        case Cdy.Tag.TagType.IntPoint3:
+                        case Cdy.Tag.TagType.UIntPoint3:
+                        case Cdy.Tag.TagType.LongPoint:
+                        case Cdy.Tag.TagType.ULongPoint:
+                        case Cdy.Tag.TagType.LongPoint3:
+                        case Cdy.Tag.TagType.ULongPoint3:
+                            dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValue(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), Convert.ToByte(request.Value));
+                            if (dres != null)
+                            {
+                                re.Time.Add(dres.Value.Ticks);
+                            }
+                            else
+                            {
+                                re.Result = false;
+                            }
+                            break;
+                        case Cdy.Tag.TagType.Double:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValue(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), (NumberStatisticsType)(byte)request.CompareType, Convert.ToDouble(request.Value),request.Interval);
+                            if (res != null)
+                            {
+                                re.Time.Add(res.Item1.Ticks);
+                                re.Value.Add(Convert.ToDouble(res.Item2));
+                            }
+                            else
+                            {
+                                re.Result = false;
+                            }
+                            break;
+                        case Cdy.Tag.TagType.Float:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValue(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), (NumberStatisticsType)(byte)request.CompareType, Convert.ToSingle(request.Value), request.Interval);
+                            if (res != null)
+                            {
+                                re.Time.Add(res.Item1.Ticks);
+                                re.Value.Add(Convert.ToDouble(res.Item2));
+                            }
+                            else
+                            {
+                                re.Result = false;
+                            }
+                            break;
+                        case Cdy.Tag.TagType.Byte:
+                        case Cdy.Tag.TagType.Int:
+                        case Cdy.Tag.TagType.Long:
+                        case Cdy.Tag.TagType.UInt:
+                        case Cdy.Tag.TagType.Short:
+                        case Cdy.Tag.TagType.ULong:
+                        case Cdy.Tag.TagType.UShort:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValue(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), (NumberStatisticsType)(byte)request.CompareType, Convert.ToInt64(request.Value), request.Interval);
+                            if (res != null)
+                            {
+                                re.Time.Add(res.Item1.Ticks);
+                                re.Value.Add(Convert.ToDouble(res.Item2));
+                            }
+                            else
+                            {
+                                re.Result = false;
+                            }
+                            break;
+
+                    }
+                    
+                }
+                else
+                {
+                    re.Result = false;
+                }
+                return Task.FromResult(re);
+            }
+            else
+            {
+                return Task.FromResult(new FindTagValueDateTimeReplay() { Result = false });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<FindTagValueDateTimeReplay> FindTagValues(FindTagValueRequest request, ServerCallContext context)
+        {
+            if (SecurityManager.Manager.IsLogin(request.Token))
+            {
+                FindTagValueDateTimeReplay re = new FindTagValueDateTimeReplay() { Result = true };
+                var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.Tag);
+                if (tag != null)
+                {
+                    Dictionary<DateTime,object> res = null;
+                    IEnumerable<DateTime> dres;
+                    switch (tag.Type)
+                    {
+                        case Cdy.Tag.TagType.DateTime:
+                        case Cdy.Tag.TagType.Bool:
+                        case Cdy.Tag.TagType.String:
+                        case Cdy.Tag.TagType.IntPoint:
+                        case Cdy.Tag.TagType.UIntPoint:
+                        case Cdy.Tag.TagType.IntPoint3:
+                        case Cdy.Tag.TagType.UIntPoint3:
+                        case Cdy.Tag.TagType.LongPoint:
+                        case Cdy.Tag.TagType.ULongPoint:
+                        case Cdy.Tag.TagType.LongPoint3:
+                        case Cdy.Tag.TagType.ULongPoint3:
+                            dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValues(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), Convert.ToByte(request.Value));
+                            if (res != null)
+                            {
+                                foreach (var vv in dres)
+                                {
+                                    re.Time.Add(vv.Ticks);
+                                }
+                            }
+                            break;
+                        case Cdy.Tag.TagType.Double:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValues(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), (NumberStatisticsType)(byte)request.CompareType, Convert.ToDouble(request.Value), request.Interval);
+                            if (res != null)
+                            {
+                                foreach (var vv in res)
+                                {
+                                    re.Time.Add(vv.Key.Ticks);
+                                    re.Value.Add(Convert.ToDouble(vv.Value));
+                                }
+                            }
+                            break;
+                        case Cdy.Tag.TagType.Float:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValues(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), (NumberStatisticsType)(byte)request.CompareType, Convert.ToSingle(request.Value), request.Interval);
+                            if (res != null)
+                            {
+                                foreach (var vv in res)
+                                {
+                                    re.Time.Add(vv.Key.Ticks);
+                                    re.Value.Add(Convert.ToDouble(vv.Value));
+                                }
+                            }
+                            break;
+                        case Cdy.Tag.TagType.Byte:
+                        case Cdy.Tag.TagType.Int:
+                        case Cdy.Tag.TagType.Long:
+                        case Cdy.Tag.TagType.UInt:
+                        case Cdy.Tag.TagType.Short:
+                        case Cdy.Tag.TagType.ULong:
+                        case Cdy.Tag.TagType.UShort:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValues(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), (NumberStatisticsType)(byte)request.CompareType, Convert.ToInt64(request.Value), request.Interval);
+                            if (res != null)
+                            {
+                                foreach (var vv in res)
+                                {
+                                    re.Time.Add(vv.Key.Ticks);
+                                    re.Value.Add(Convert.ToDouble(vv.Value));
+                                }
+                            }
+                            break;
+
+                    }
+                   
+                }
+                else
+                {
+                    re.Result = false;
+                }
+                return Task.FromResult(re);
+            }
+            else
+            {
+                return Task.FromResult(new FindTagValueDateTimeReplay() { Result = false });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<FindTagValueDoubleReplay> CalTagValueKeepTime(FindTagValueRequest request, ServerCallContext context)
+        {
+            if (SecurityManager.Manager.IsLogin(request.Token))
+            {
+                FindTagValueDoubleReplay re = new FindTagValueDoubleReplay() { Result = true };
+                var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.Tag);
+                if (tag != null)
+                {
+                    double? res = null;
+                    switch (tag.Type)
+                    {
+                        case Cdy.Tag.TagType.DateTime:
+                        case Cdy.Tag.TagType.Bool:
+                        case Cdy.Tag.TagType.String:
+                        case Cdy.Tag.TagType.IntPoint:
+                        case Cdy.Tag.TagType.UIntPoint:
+                        case Cdy.Tag.TagType.IntPoint3:
+                        case Cdy.Tag.TagType.UIntPoint3:
+                        case Cdy.Tag.TagType.LongPoint:
+                        case Cdy.Tag.TagType.ULongPoint:
+                        case Cdy.Tag.TagType.LongPoint3:
+                        case Cdy.Tag.TagType.ULongPoint3:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValueDuration(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), Convert.ToByte(request.Value));
+                            break;
+                        case Cdy.Tag.TagType.Double:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValueDuration(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), (NumberStatisticsType)(byte)request.CompareType, Convert.ToDouble(request.Value),request.Interval);
+                            break;
+                        case Cdy.Tag.TagType.Float:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValueDuration(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), (NumberStatisticsType)(byte)request.CompareType, Convert.ToSingle(request.Value), request.Interval);
+                            break;
+                        case Cdy.Tag.TagType.Byte:
+                        case Cdy.Tag.TagType.Int:
+                        case Cdy.Tag.TagType.Long:
+                        case Cdy.Tag.TagType.UInt:
+                        case Cdy.Tag.TagType.Short:
+                        case Cdy.Tag.TagType.ULong:
+                        case Cdy.Tag.TagType.UShort:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValueDuration(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), (NumberStatisticsType)(byte)request.CompareType, Convert.ToInt64(request.Value), request.Interval);
+                            break;
+
+                    }
+                    if (res!=null)
+                    {
+                        re.Values = res.Value;
+                    }
+                    else
+                    {
+                        re.Result = false;
+                    }
+                }
+                else
+                {
+                    re.Result = false;
+                }
+                return Task.FromResult(re);
+            }
+            else
+            {
+                return Task.FromResult(new FindTagValueDoubleReplay() { Result = false });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<FindTagValueDoubleReplay> CalNumberTagAvgValue(FindTagValueRequest request, ServerCallContext context)
+        {
+            if (SecurityManager.Manager.IsLogin(request.Token))
+            {
+                FindTagValueDoubleReplay re = new FindTagValueDoubleReplay() { Result = true };
+                var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.Tag);
+                if (tag != null)
+                {
+                    double? res = null;
+                    switch (tag.Type)
+                    {
+                        case Cdy.Tag.TagType.Double:
+                        case Cdy.Tag.TagType.Float:
+                        case Cdy.Tag.TagType.Byte:
+                        case Cdy.Tag.TagType.Int:
+                        case Cdy.Tag.TagType.Long:
+                        case Cdy.Tag.TagType.UInt:
+                        case Cdy.Tag.TagType.Short:
+                        case Cdy.Tag.TagType.ULong:
+                        case Cdy.Tag.TagType.UShort:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.StatisticsTagAvgValue(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime));
+                            break;
+
+                    }
+                    if (res != null)
+                    {
+                        re.Values = res.Value;
+                    }
+                    else
+                    {
+                        re.Result = false;
+                    }
+                }
+                else
+                {
+                    re.Result = false;
+                }
+                return Task.FromResult(re);
+            }
+            else
+            {
+                return Task.FromResult(new FindTagValueDoubleReplay() { Result = false });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<FindTagValueDoubleDateTimeReplay> FindNumberTagMaxValue(FindTagValueRequest request, ServerCallContext context)
+        {
+            if (SecurityManager.Manager.IsLogin(request.Token))
+            {
+                FindTagValueDoubleDateTimeReplay re = new FindTagValueDoubleDateTimeReplay() { Result = true };
+                var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.Tag);
+                if (tag != null)
+                {
+                    Tuple<double,List<DateTime>> res = null;
+                    switch (tag.Type)
+                    {
+                        case Cdy.Tag.TagType.Double:
+                        case Cdy.Tag.TagType.Float:
+                        case Cdy.Tag.TagType.Byte:
+                        case Cdy.Tag.TagType.Int:
+                        case Cdy.Tag.TagType.Long:
+                        case Cdy.Tag.TagType.UInt:
+                        case Cdy.Tag.TagType.Short:
+                        case Cdy.Tag.TagType.ULong:
+                        case Cdy.Tag.TagType.UShort:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.StatisticsTagMaxMinValue(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime),NumberStatisticsType.Max);
+                            break;
+
+                    }
+                    if (res != null)
+                    {
+                        re.Values = res.Item1;
+                        re.Times.Add(res.Item2.Select(e=>e.Ticks));
+                    }
+                    else
+                    {
+                        re.Result = false;
+                    }
+                }
+                else
+                {
+                    re.Result = false;
+                }
+                return Task.FromResult(re);
+            }
+            else
+            {
+                return Task.FromResult(new FindTagValueDoubleDateTimeReplay() { Result = false });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<FindTagValueDoubleDateTimeReplay> FindNumberTagMinValue(FindTagValueRequest request, ServerCallContext context)
+        {
+            if (SecurityManager.Manager.IsLogin(request.Token))
+            {
+                FindTagValueDoubleDateTimeReplay re = new FindTagValueDoubleDateTimeReplay() { Result = true };
+                var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(request.Tag);
+                if (tag != null)
+                {
+                    Tuple<double, List<DateTime>> res = null;
+                    switch (tag.Type)
+                    {
+                        case Cdy.Tag.TagType.Double:
+                        case Cdy.Tag.TagType.Float:
+                        case Cdy.Tag.TagType.Byte:
+                        case Cdy.Tag.TagType.Int:
+                        case Cdy.Tag.TagType.Long:
+                        case Cdy.Tag.TagType.UInt:
+                        case Cdy.Tag.TagType.Short:
+                        case Cdy.Tag.TagType.ULong:
+                        case Cdy.Tag.TagType.UShort:
+                            res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.StatisticsTagMaxMinValue(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), NumberStatisticsType.Min);
+                            break;
+
+                    }
+                    if (res != null)
+                    {
+                        re.Values = res.Item1;
+                        re.Times.Add(res.Item2.Select(e => e.Ticks));
+                    }
+                    else
+                    {
+                        re.Result = false;
+                    }
+                }
+                else
+                {
+                    re.Result = false;
+                }
+                return Task.FromResult(re);
+            }
+            else
+            {
+                return Task.FromResult(new FindTagValueDoubleDateTimeReplay() { Result = false });
+            }
+        }
+
     }
 }

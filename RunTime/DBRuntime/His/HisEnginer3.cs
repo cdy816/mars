@@ -629,14 +629,22 @@ namespace Cdy.Tag
 
             //this.mManager = mHisDatabase;
 
-            foreach (var vv in mRecordTimerProcesser) { if (!vv.IsStarted) vv.Start();}
-
-            foreach (var vv in mValueChangedProcesser) { if (!vv.IsStarted) vv.Start(); }
+            
 
             //mLogManager.InitHeadData();
 
             //SwitchMemoryCach(mCurrentMemory.Id);
 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void CheckStartProcess()
+        {
+            foreach (var vv in mRecordTimerProcesser) { if (!vv.IsStarted) vv.Start(); }
+
+            foreach (var vv in mValueChangedProcesser) { if (!vv.IsStarted) vv.Start(); }
         }
 
         /// <summary>
@@ -652,35 +660,137 @@ namespace Cdy.Tag
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        public void RemoveTags(IEnumerable<long> ids)
+        {
+            foreach(var vv in ids)
+            {
+                if(Tags.ContainsKey(vv))
+                {
+                    RemoveTag(Tags[vv]);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 删除变量
+        /// </summary>
+        /// <param name="tags"></param>
+        public void RemoveTags(IEnumerable<HisTag> tags)
+        {
+            foreach(var vv in tags)
+            {
+                RemoveTag(vv);
+            }
+        }
+
+        /// <summary>
+        /// 删除变量
+        /// </summary>
+        /// <param name="tag"></param>
+        private void RemoveTag(HisTag tag)
+        {
+            //var oldtag = this.mManager.GetHisTagById(tag.Id);
+            try
+            {
+                var oldruntag = this.mHisTags.ContainsKey(tag.Id) ? this.mHisTags[tag.Id] : null;
+
+                if (oldruntag.Type == RecordType.Timer)
+                {
+                    foreach (var vvt in mRecordTimerProcesser)
+                    {
+                        vvt.Remove(oldruntag);
+                    }
+                }
+                else if (oldruntag.Type == RecordType.ValueChanged)
+                {
+                    foreach (var vvt in mValueChangedProcesser)
+                    {
+                        vvt.Remove(oldruntag);
+                    }
+                }
+                else if (oldruntag.Type == RecordType.Driver)
+                {
+                    if (mManualHisDataCach.ContainsKey(oldruntag.Id))
+                    {
+                        var vvm = mManualHisDataCach[oldruntag.Id];
+                        mManualHisDataCach.Remove(oldruntag.Id);
+                        if (vvm != null)
+                        {
+                            foreach (var vvv in vvm)
+                            {
+                                ManualHisDataMemoryBlockPool.Pool.Release(vvv.Value);
+                            }
+                            vvm.Clear();
+                        }
+                    }
+                }
+
+                this.mHisTags.Remove(tag.Id);
+                mManager.RemoveHisTag(tag.Id);
+
+                mCachMemory1.RemoveTagAdress(tag.Id);
+                mCachMemory2.RemoveTagAdress(tag.Id);
+                mMergeMemory1.RemoveTagAdress(tag.Id);
+                mMergeMemory2.RemoveTagAdress(tag.Id);
+
+                oldruntag.Dispose();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Erro("HisEnginer3", $"RemoveTag {ex.Message} {ex.StackTrace}");
+            }
+
+
+        }
+
+        /// <summary>
         /// 修改变量
         /// </summary>
         /// <param name="tag"></param>
         public void UpdateTag(Tag.HisTag tag)
         {
-            var oldtag = this.mManager.GetHisTagById(tag.Id);
+            //var oldtag = this.mManager.GetHisTagById(tag.Id);
             var oldruntag = this.mHisTags.ContainsKey(tag.Id) ? this.mHisTags[tag.Id] : null;
             var targettag = oldruntag;
 
-            if(oldtag!=null)
+            if(oldruntag != null)
             {
-                if(tag.TagType != oldtag.TagType)
+                if(tag.TagType != oldruntag.TagType)
                 {
+                    //整个变量的类型都发生了改变
                     int qulityOffset = 0;
                     int valueOffset = 0;
                     int blockheadsize = 0;
+                    HisRunTag vv = GetHisRunTag(tag);
+                    if (oldruntag.DataMemoryPointer1 == 0)
+                    {
+                        //说明之前是驱动类型的记录
+                        CalSignleTagMemory(vv);
+                    }
+                    else if (tag.Type != RecordType.Driver)
+                    {
+                        var ss = CalMergeBlockSize(tag.TagType, blockheadsize, out valueOffset, out qulityOffset);
+                        mMergeMemory1.ReAllocTagAddress(tag.Id, 0, valueOffset, qulityOffset, ss, 2);
+                        mMergeMemory2.ReAllocTagAddress(tag.Id, 0, valueOffset, qulityOffset, ss, 2);
 
-                    var ss = CalMergeBlockSize(tag.TagType, blockheadsize, out valueOffset, out qulityOffset);
-                    mMergeMemory1.ReAllocTagAddress(tag.Id, 0, valueOffset, qulityOffset, ss, 2);
-                    mMergeMemory2.ReAllocTagAddress(tag.Id, 0, valueOffset, qulityOffset, ss, 2);
+                        var css = CalCachDatablockSize(tag.TagType, blockheadsize, out valueOffset, out qulityOffset);
+                        vv.DataMemoryPointer1 = mCachMemory1.ReAllocTagAddress(vv.Id, 0, valueOffset, qulityOffset, css, 2);
+                        vv.DataMemoryPointer2 = mCachMemory2.ReAllocTagAddress(vv.Id, 0, valueOffset, qulityOffset, css, 2);
+                        vv.DataSize = css;
 
-                    var css = CalCachDatablockSize(tag.TagType, blockheadsize, out valueOffset, out qulityOffset);
-
-                    var vv = GetHisRunTag(tag);
-
-                    vv.DataMemoryPointer1 = mCachMemory1.ReAllocTagAddress(vv.Id, 0, valueOffset, qulityOffset, css, 2);
-                    vv.DataMemoryPointer2 = mCachMemory2.ReAllocTagAddress(vv.Id, 0, valueOffset, qulityOffset, css, 2);
-                    vv.DataSize = css;
-
+                        if (mCurrentMemory.Id == 1)
+                        {
+                            vv.CurrentMemoryPointer = vv.DataMemoryPointer1;
+                        }
+                        else
+                        {
+                            vv.CurrentMemoryPointer = vv.DataMemoryPointer2;
+                        }
+                    }
+                    
                     targettag = vv;
 
                     if (mHisTags.ContainsKey(tag.Id))
@@ -699,13 +809,29 @@ namespace Cdy.Tag
                             vvt.Remove(oldruntag);
                         }
                     }
-                    else if(oldruntag.Type == RecordType.Driver)
+                    else if(oldruntag.Type == RecordType.ValueChanged)
                     {
                         foreach(var vvt in mValueChangedProcesser)
                         {
                             vvt.Remove(oldruntag);
                         }
                     }
+                    else if(oldruntag.Type == RecordType.Driver)
+                    {
+                        if(mManualHisDataCach.ContainsKey(oldruntag.Id))
+                        {
+                            var vvm = mManualHisDataCach[oldruntag.Id];
+                            mManualHisDataCach.Remove(oldruntag.Id);
+                            if(vvm!=null)
+                            {
+                                foreach(var vvv in vvm)
+                                {
+                                    ManualHisDataMemoryBlockPool.Pool.Release(vvv.Value);
+                                }
+                                vvm.Clear();
+                            }
+                        }
+                    }    
 
                     if(tag.Type == RecordType.Timer)
                     {
@@ -716,6 +842,7 @@ namespace Cdy.Tag
                                 break;
                             }
                         }
+
                     }
                     else if(tag.Type == RecordType.ValueChanged)
                     {
@@ -727,30 +854,59 @@ namespace Cdy.Tag
                             }
                         }
                     }
+                    
                 }
                 else
                 {
-                    if (tag.Type != oldtag.Type)
+                   
+                    if (tag.Type != oldruntag.Type)
                     {
-                        oldruntag.Type = tag.Type;
-                        if (oldtag.Type == RecordType.Timer)
+                        
+                        //释放旧的缓冲数据
+                        if (oldruntag.Type == RecordType.Timer)
                         {
                             foreach (var vvt in mRecordTimerProcesser)
                             {
                                 vvt.Remove(oldruntag);
                             }
                         }
-                        else if(oldtag.Type == RecordType.ValueChanged)
+                        else if(oldruntag.Type == RecordType.ValueChanged)
                         {
                             foreach (var vvt in mValueChangedProcesser)
                             {
                                 vvt.Remove(oldruntag);
+                            }
+                        }
+                        else if(oldruntag.Type == RecordType.Driver)
+                        {
+                            //释放驱动记录的使用的内存
+                            if (mManualHisDataCach.ContainsKey(oldruntag.Id))
+                            {
+                                var vvm = mManualHisDataCach[oldruntag.Id];
+                                mManualHisDataCach.Remove(oldruntag.Id);
+                                if (vvm != null)
+                                {
+                                    foreach (var vvv in vvm)
+                                    {
+                                        ManualHisDataMemoryBlockPool.Pool.Release(vvv.Value);
+                                    }
+                                    vvm.Clear();
+                                }
+
                             }
                         }
 
+                        oldruntag.Type = tag.Type;
                         oldruntag.Circle = tag.Circle;
+
+                        //分配新的内存
                         if (tag.Type == RecordType.Timer)
                         {
+                            if (oldruntag.DataMemoryPointer2 == 0)
+                            {
+                                CalSignleTagMemory(oldruntag);
+                            }
+
                             foreach (var vvt in mRecordTimerProcesser)
                             {
                                 if (vvt.AddTag(oldruntag))
@@ -758,9 +914,15 @@ namespace Cdy.Tag
                                     break;
                                 }
                             }
+                            
                         }
                         else if (tag.Type == RecordType.ValueChanged)
                         {
+                            if (oldruntag.DataMemoryPointer2 == 0)
+                            {
+                                CalSignleTagMemory(oldruntag);
+                            }
+
                             foreach (var vvt in mValueChangedProcesser)
                             {
                                 if (vvt.AddTag(oldruntag))
@@ -769,16 +931,40 @@ namespace Cdy.Tag
                                 }
                             }
                         }
+                        else
+                        {
+                            mMergeMemory1.RemoveTagAdress(oldruntag.Id);
+                            mMergeMemory2.RemoveTagAdress(oldruntag.Id);
+                            mCachMemory1.RemoveTagAdress(oldruntag.Id);
+                            mCachMemory2.RemoveTagAdress(oldruntag.Id);
+                            oldruntag.DataMemoryPointer1 = oldruntag.DataMemoryPointer2 = 0;
+                            oldruntag.MaxValueCountPerSecond = tag.MaxValueCountPerSecond;
+
+                        }
                     }
-                    else if(tag.Circle != oldtag.Circle)
+                    else if(tag.Circle != oldruntag.Circle)
                     {
-                        oldruntag.Circle = tag.Circle;
+                        //定时记录时，修改定时周期
+                       
                         if(oldruntag.Type == RecordType.Timer)
                         {
                             foreach(var vvt in mRecordTimerProcesser)
                             {
-                                vvt.UpdateCircle(oldruntag, oldtag.Circle);
+                                vvt.UpdateCircle(oldruntag, tag.Circle);
                             }
+                        }
+                        oldruntag.Circle = tag.Circle;
+                    }
+                    else if(tag.MaxValueCountPerSecond!= oldruntag.MaxValueCountPerSecond)
+                    {
+                        //更新驱动记录时内存最大缓冲
+                        if(tag.MaxValueCountPerSecond> oldruntag.MaxValueCountPerSecond && mManualHisDataCach.ContainsKey(tag.Id) && mManualHisDataCach[tag.Id].Count>0)
+                        {
+                            var hb = mManualHisDataCach[tag.Id].Last().Value;
+                            
+                            var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * tag.MaxValueCountPerSecond + 2, out int valueOffset, out int qulityOffset);
+
+                            hb.CheckAndResize(css);
                         }
                     }
                 }
@@ -790,6 +976,38 @@ namespace Cdy.Tag
                     targettag.CompressType = tag.CompressType;
                     targettag.Parameters = tag.Parameters;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="vv"></param>
+        private void CalSignleTagMemory(HisRunTag vv)
+        {
+            int blockheadsize = 0;
+
+            var ss = CalMergeBlockSize(vv.TagType, blockheadsize, out int valueOffset, out int qulityOffset);
+
+            mMergeMemory1.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, ss, 2);
+            mMergeMemory2.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, ss, 2);
+
+            var css = CalCachDatablockSize(vv.TagType, blockheadsize, out valueOffset, out qulityOffset);
+
+            vv.DataMemoryPointer1 = mCachMemory1.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, css, 2);
+            vv.DataMemoryPointer2 = mCachMemory2.AddTagAddress(vv.Id, 0, valueOffset, qulityOffset, css, 2);
+            vv.DataSize = css;
+            vv.TimerValueStartAddr = 0;
+            vv.HisValueStartAddr = valueOffset;
+            vv.HisQulityStartAddr = qulityOffset;
+
+            if (mCurrentMemory.Id == 1)
+            {
+                vv.CurrentMemoryPointer = vv.DataMemoryPointer1;
+            }
+            else
+            {
+                vv.CurrentMemoryPointer = vv.DataMemoryPointer2;
             }
         }
 
@@ -1116,6 +1334,11 @@ namespace Cdy.Tag
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="datetime"></param>
+        /// <returns></returns>
         private string FormateDatetime(DateTime datetime)
         {
             return datetime.ToString("yyyy-MM-dd HH:mm:ss.fff");
@@ -1468,22 +1691,22 @@ namespace Cdy.Tag
                 //if (vv.Value == null) continue;
 
                 var baseaddress = mCurrentMergeMemory.ReadDataBaseAddressByIndex(vv.Value);
+                if (mHisTags.ContainsKey(vv.Key))
+                {
+                    var tag = mHisTags[vv.Key];
 
-                var tag = mHisTags[vv.Key];
+                    //vv.Value.WriteShort(0, 0);
+                    mCurrentMergeMemory.WriteShortDirect(baseaddress, 0, 0);
 
+                    //写入数值
+                    //vv.Value.WriteBytesDirect((int)vv.Value.ValueAddress,tag.ValueSnape);
 
+                    mCurrentMergeMemory.WriteBytesDirect(baseaddress, mCurrentMergeMemory.ReadValueOffsetAddressByIndex(vv.Value), tag.ValueSnape);
 
-                //vv.Value.WriteShort(0, 0);
-                mCurrentMergeMemory.WriteShortDirect(baseaddress, 0, 0);
-
-                //写入数值
-                //vv.Value.WriteBytesDirect((int)vv.Value.ValueAddress,tag.ValueSnape);
-
-                mCurrentMergeMemory.WriteBytesDirect(baseaddress,mCurrentMergeMemory.ReadValueOffsetAddressByIndex(vv.Value),tag.ValueSnape);
-
-                //更新质量戳,在现有质量戳的基础添加100，用于表示这是一个强制更新的值
-                //vv.Value.WriteByteDirect((int)vv.Value.QualityAddress, (byte)(tag.QulitySnape+100));
-                mCurrentMergeMemory.WriteByteDirect(baseaddress, mCurrentMergeMemory.ReadQualityOffsetAddressByIndex(vv.Value), (byte)(tag.QulitySnape + 100));
+                    //更新质量戳,在现有质量戳的基础添加100，用于表示这是一个强制更新的值
+                    //vv.Value.WriteByteDirect((int)vv.Value.QualityAddress, (byte)(tag.QulitySnape+100));
+                    mCurrentMergeMemory.WriteByteDirect(baseaddress, mCurrentMergeMemory.ReadQualityOffsetAddressByIndex(vv.Value), (byte)(tag.QulitySnape + 100));
+                }
             }
         }
 
@@ -1504,21 +1727,23 @@ namespace Cdy.Tag
                 //if (vv.Value == null) continue;
 
                 var baseaddress = mCurrentMergeMemory.ReadDataBaseAddressByIndex(vv.Value);
+                if (mHisTags.ContainsKey(vv.Key))
+                {
+                    var tag = mHisTags[vv.Key];
 
-                var tag = mHisTags[vv.Key];
+                    long timeraddr = mCurrentMergeMemory.ReadValueOffsetAddressByIndex(vv.Value) - 2;
+                    long valueaddr = mCurrentMergeMemory.ReadQualityOffsetAddressByIndex(vv.Value) - tag.SizeOfValue;
+                    long qaddr = mCurrentMergeMemory.ReadDataSizeByIndex(vv.Value) - 1;
 
-                long timeraddr = mCurrentMergeMemory.ReadValueOffsetAddressByIndex(vv.Value) -2;
-                long valueaddr = mCurrentMergeMemory.ReadQualityOffsetAddressByIndex(vv.Value) - tag.SizeOfValue;
-                long qaddr = mCurrentMergeMemory.ReadDataSizeByIndex(vv.Value) - 1;
+                    //
+                    mCurrentMergeMemory.WriteUShortDirect(baseaddress, (int)timeraddr, timespan);
 
-                //
-                mCurrentMergeMemory.WriteUShortDirect(baseaddress,(int)timeraddr, timespan);
+                    //写入数值
+                    mCurrentMergeMemory.WriteBytesDirect(baseaddress, (int)valueaddr, tag.ValueSnape);
 
-                //写入数值
-                mCurrentMergeMemory.WriteBytesDirect(baseaddress, (int)valueaddr,tag.ValueSnape);
-
-                //更新质量戳
-                mCurrentMergeMemory.WriteByteDirect(baseaddress, (int)qaddr, (byte)(tag.QulitySnape+100));
+                    //更新质量戳
+                    mCurrentMergeMemory.WriteByteDirect(baseaddress, (int)qaddr, (byte)(tag.QulitySnape + 100));
+                }
             }
         }
 
@@ -1884,10 +2109,12 @@ namespace Cdy.Tag
                     else
                     {
                         if(hb!=null)
-                            HisDataMemoryQueryService3.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
+                           HisDataMemoryQueryService3.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
                         var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * tag.MaxValueCountPerSecond + 2, out valueOffset, out qulityOffset);
                         hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
                         hb.Time = time;
+                        hb.RealTime = vv.Time;
+
                         hb.MaxCount = MergeMemoryTime * tag.MaxValueCountPerSecond + 2;
                         hb.TimeUnit = 1;
                         hb.TimeLen = 4;
@@ -2092,6 +2319,7 @@ namespace Cdy.Tag
                     var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * tag.MaxValueCountPerSecond + 2, out valueOffset, out qulityOffset);
                     hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
                     hb.Time = time;
+                    hb.RealTime = datetime;
                     hb.MaxCount = MergeMemoryTime * tag.MaxValueCountPerSecond + 2;
                     hb.TimeUnit = 1;
                     hb.TimeLen = 4;
@@ -2207,6 +2435,7 @@ namespace Cdy.Tag
                     hb.CurrentCount++;
                     hb.Relase();
                     HisDataMemoryQueryService3.Service.RegistorManual(id, hb.Time, hb.EndTime, hb);
+                    //LoggerService.Service.Info("ManualRecordHisValues", $" {hb.Time} {vtime}");
                 }
                 else
                 {
@@ -2270,6 +2499,7 @@ namespace Cdy.Tag
                     var css = CalCachDatablockSizeForManualRecord(tag.TagType, 0, MergeMemoryTime * tag.MaxValueCountPerSecond + 2, out valueOffset, out qulityOffset);
                     hb = ManualHisDataMemoryBlockPool.Pool.Get(css);
                     hb.Time = time;
+                    hb.RealTime = datetime;
                     hb.MaxCount = MergeMemoryTime * tag.MaxValueCountPerSecond + 2;
                     hb.TimeUnit = 1;
                     hb.TimeLen = 4;

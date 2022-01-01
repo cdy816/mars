@@ -229,16 +229,18 @@ namespace SpiderDriver
             Load();
             return true;
         }
-
+        private bool mIsRealChanged = false;
         /// <summary>
         /// 
         /// </summary>
         /// <param name="arg"></param>
         public void OnRealTagChanged(TagChangedArg arg)
         {
+            mIsRealChanged = false;
             foreach (var vv in arg.AddedTags.Where(e => e.Value.StartsWith(this.Name) && !AllowTagIds.Contains(e.Key)))
             {
                 AllowTagIds.Add(vv.Key);
+                mIsRealChanged = true;
             }
 
             foreach(var vv in arg.ChangedTags)
@@ -257,6 +259,20 @@ namespace SpiderDriver
                         AllowTagIds.Remove(vv.Key);
                     }
                 }
+                mIsRealChanged = true;
+            }
+
+            
+            if(arg.RemoveTags!=null)
+            {
+                foreach(var vv in arg.RemoveTags)
+                {
+                    if (AllowTagIds.Contains(vv.Key))
+                    {
+                        AllowTagIds.Remove(vv.Key);
+                    }
+                    mIsRealChanged = true;
+                }
             }
         }
 
@@ -268,8 +284,35 @@ namespace SpiderDriver
         {
             foreach(var vv in mService)
             {
-                vv.NotifyDatabaseChangd(false, true);
+                bool mchanged = arg.AddedTags != null && arg.AddedTags.Count() > 0 || (arg.RemoveTags != null && arg.RemoveTags.Count() > 0) || (arg.ChangedTags!=null && arg.ChangedTags.Count()>0);
+                vv.NotifyDatabaseChangd(mIsRealChanged, mchanged);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool Pause()
+        {
+            foreach(var vv in mService)
+            {
+                vv.Pause();
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool Resume()
+        {
+            foreach (var vv in mService)
+            {
+                vv.Resume();
+            }
+            return true;
         }
     }
 }

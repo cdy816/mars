@@ -278,6 +278,18 @@
                                 </DataTemplate>
                             </Button.ContentTemplate>
                         </Button>
+
+                        <Border BorderBrush="LightGray" BorderThickness="1,0,0,0" Width="2" VerticalAlignment="Stretch" Margin="2,4" Visibility="{Binding HasAlarmStudioConfig,Converter={StaticResource btv}}" />
+                        <Button BorderThickness="0"  ToolTip="{local:ResMarker Alarm}" Visibility="{Binding HasAlarmStudioConfig,Converter={StaticResource btv}}"  Command="{Binding AlarmConfigCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                            <Button.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="/Image/alarm.png" Height="24" RenderOptions.BitmapScalingMode="HighQuality" />
+                                        <TextBlock Text="{local:ResMarker Alarm}"  FontWeight="Bold" VerticalAlignment="Center" Margin="5,0"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </Button.ContentTemplate>
+                        </Button>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
                         <Label Content="{Binding UserName}" Foreground="{DynamicResource Window.Forground}" />
@@ -290,10 +302,10 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <TreeView x:Name="tv" Foreground="{DynamicResource Window.Forground}" ItemContainerStyle="{DynamicResource TreeViewItemStyle1}" ItemsSource="{Binding TagGroup}"  SelectedItemChanged="TreeView_SelectedItemChanged" BorderThickness="0,0,1,1" Margin="0,0,0,32" Background="#7F000000">
-                    <TreeView.InputBindings>
+                    <!--<TreeView.InputBindings>
                         <KeyBinding Key="F2" Command="{Binding ReNameCommand}" />
                         <KeyBinding Key="Delete" Command="{Binding RemoveCommand}" />
-                    </TreeView.InputBindings>
+                    </TreeView.InputBindings>-->
                     <TreeView.Resources>
 
                         <!--<Style TargetType="{x:Type TreeViewItem}" >
@@ -323,7 +335,7 @@
                         <HierarchicalDataTemplate  DataType="{x:Type local:TagGroupViewModel}"  ItemsSource="{Binding Children}" >
                             <StackPanel Orientation="Horizontal" Height="24"  Background="Transparent">
                                 <Image Focusable="False" Source="/Image/文件夹.png"  Margin="0,0,4,0" Height="18" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                                <Grid ContextMenu="{StaticResource groupMenu}"  Background="{Binding Background}" VerticalAlignment="Center" Focusable="False"  Name="spanel"    >
+                                <Grid ContextMenu="{StaticResource groupMenu}"  VerticalAlignment="Center" Focusable="False"  Name="spanel"    >
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />

@@ -52,6 +52,9 @@ namespace DBGrpcApi
 
         #region ... Properties ...
 
+        /// <summary>
+        /// 使用TLS加密
+        /// </summary>
         public bool UseTls { get; set; } = true;
 
         public string Ip { get; set; }
@@ -606,6 +609,165 @@ namespace DBGrpcApi
                 return res.Result;
             }
             return false;
+        }
+
+        /// <summary>
+        /// 查找某个值对应的时间
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public Tuple<DateTime, object> FindNumberTagValue(string tag, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, double interval=0)
+        {
+            if (mRealDataClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                FindTagValueRequest req = new FindTagValueRequest() { Token = mLoginId, CompareType = (byte)type, StartTime = startTime.Ticks, EndTime = endTime.Ticks, Interval = interval.ToString(), Tag = tag, Value = value.ToString() };
+                var res = mHisDataClient.FindTagValue(req);
+                if(res!=null)
+                {
+                    if(res.Value.Count>0)
+                    return new Tuple<DateTime, object>( DateTime.FromBinary(res.Time[0]), res.Value[0]);
+                    else
+                    {
+                        return new Tuple<DateTime, object>(DateTime.FromBinary(res.Time[0]), value);
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 查找某个值保持的时间
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public double? CalTagValueKeepTime(string tag, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, object interval)
+        {
+            if (mRealDataClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                FindTagValueRequest req = new FindTagValueRequest() { Token = mLoginId, CompareType = (byte)type, StartTime = startTime.Ticks, EndTime = endTime.Ticks, Interval = interval.ToString(), Tag = tag, Value = value.ToString() };
+                var res = mHisDataClient.CalTagValueKeepTime(req);
+                if (res != null)
+                {
+                    return res.Values;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 查找某个值对应的时间
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public Dictionary<DateTime, object> FindTagValues(string tag, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, object interval)
+        {
+            if (mRealDataClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                Dictionary<DateTime, object> re = new Dictionary<DateTime, object>();
+                FindTagValueRequest req = new FindTagValueRequest() { Token = mLoginId, CompareType = (byte)type, StartTime = startTime.Ticks, EndTime = endTime.Ticks, Interval = interval.ToString(), Tag = tag, Value = value.ToString() };
+                var res = mHisDataClient.FindTagValues(req);
+                if (res != null)
+                {
+                    if (res.Value.Count > 0)
+                    {
+                        for (int i = 0; i < res.Value.Count; i++)
+                            re.Add(DateTime.FromBinary(res.Time[i]), res.Value[i]);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < res.Value.Count; i++)
+                            re.Add(DateTime.FromBinary(res.Time[i]), value);
+                    }
+                }
+                return re;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 查找最大值
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public Tuple<double,List<DateTime>> FindNumberTagMaxValue(string tag,DateTime startTime,DateTime endTime)
+        {
+            if (mRealDataClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                FindTagValueRequest req = new FindTagValueRequest() { Token = mLoginId, CompareType = (byte)NumberStatisticsType.Max, StartTime = startTime.Ticks, EndTime = endTime.Ticks, Interval = "0", Tag = tag, Value = "0" };
+                var res = mHisDataClient.FindNumberTagMaxValue(req);
+                if (res != null)
+                {
+                    List<DateTime> dt = new List<DateTime>();
+                    foreach(var vv in res.Times)
+                    {
+                        dt.Add(DateTime.FromBinary(vv));
+                    }
+                    return new Tuple<double, List<DateTime>>(res.Values, dt);
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 查找最小值
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <returns></returns>
+        public Tuple<double, List<DateTime>> FindNumberTagMinValue(string tag, DateTime startTime, DateTime endTime)
+        {
+            if (mRealDataClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                FindTagValueRequest req = new FindTagValueRequest() { Token = mLoginId, CompareType = (byte)NumberStatisticsType.Min, StartTime = startTime.Ticks, EndTime = endTime.Ticks, Interval = "0", Tag = tag, Value = "0" };
+                var res = mHisDataClient.FindNumberTagMaxValue(req);
+                if (res != null)
+                {
+                    List<DateTime> dt = new List<DateTime>();
+                    foreach (var vv in res.Times)
+                    {
+                        dt.Add(DateTime.FromBinary(vv));
+                    }
+                    return new Tuple<double, List<DateTime>>(res.Values, dt);
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 计算平均值
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <returns></returns>
+        public double FindNumberTagAvgValue(string tag, DateTime startTime, DateTime endTime)
+        {
+            if (mRealDataClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                FindTagValueRequest req = new FindTagValueRequest() { Token = mLoginId, CompareType = (byte)NumberStatisticsType.Min, StartTime = startTime.Ticks, EndTime = endTime.Ticks, Interval = "0", Tag = tag, Value = "0" };
+                var res = mHisDataClient.CalNumberTagAvgValue(req);
+                if (res != null)
+                {
+                    return res.Values;
+                }
+            }
+            return double.MinValue;
         }
 
         /// <summary>

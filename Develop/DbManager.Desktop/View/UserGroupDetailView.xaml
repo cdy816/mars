@@ -44,7 +44,7 @@
                 <DataTemplate>
                     <Grid HorizontalAlignment="Stretch" Height="26">
                         <TextBlock Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Text="{Binding Name}" VerticalAlignment="Center" Visibility="{Binding IsEdit,Converter={StaticResource bic}}"/>
-                        <TextBox Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="-3,-1" BorderThickness="0" Loaded="TextBox_Loaded" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalContentAlignment="Center" Visibility="{Binding IsEdit,Converter={StaticResource btv}}" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" Keyboard.KeyDown="TextBox_KeyDown" />
+                        <TextBox CaretBrush="White" Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="-3,-1" BorderThickness="0" Loaded="TextBox_Loaded" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalContentAlignment="Center" Visibility="{Binding IsEdit,Converter={StaticResource btv}}" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" Keyboard.KeyDown="TextBox_KeyDown" />
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>

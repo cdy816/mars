@@ -496,6 +496,8 @@ namespace Cdy.Tag
 
         private DataFileInfo4 CheckAndGetDataFile(string file)
         {
+            try
+            {
             string sname = file.Replace(DataFileExtends, "");
             string stime = sname.Substring(sname.Length - 12, 12);
             int yy = 0, mm = 0, dd = 0;
@@ -528,8 +530,7 @@ namespace Cdy.Tag
 
 
             DateTime startTime = new DateTime(yy, mm, dd, hh, 0, 0);
-            try
-            {
+            
                 if (mTimeFileMaps.ContainsKey(id)&& mTimeFileMaps[id].ContainsKey(yy))
                 {
                     return mTimeFileMaps[id][yy].GetDataFile(startTime);

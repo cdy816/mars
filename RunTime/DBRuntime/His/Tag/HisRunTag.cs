@@ -369,7 +369,9 @@ namespace Cdy.Tag
         /// </summary>
         public void Dispose()
         {
-            
+            HisValueMemory1 = null;
+            HisValueMemory2 = null;
+            HisValueMemoryStartAddr = null;
         }
 
 

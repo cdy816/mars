@@ -54,6 +54,10 @@ namespace Cdy.Tag
 
         private bool mIsStarted = false;
 
+        private object mLockObj = new object();
+
+        //private bool NeedReInit = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -135,6 +139,7 @@ namespace Cdy.Tag
         /// </summary>
         public void Start()
         {
+            mIsClosed = false;
             mRecordThread = new Thread(ThreadProcess);
             mRecordThread.IsBackground=true;
             mRecordThread.Priority = ThreadPriority.Highest;
@@ -161,24 +166,27 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool AddTag(HisRunTag tag)
         {
-            if (mCurrentCount < MaxTagCount)
+            lock (mLockObj)
             {
-                var cc = tag.Circle;
-                if (mTimerTags.ContainsKey(cc))
+                if (mCurrentCount < MaxTagCount)
                 {
-                    mTimerTags[cc].Add(tag);
+                    var cc = tag.Circle;
+                    if (mTimerTags.ContainsKey(cc))
+                    {
+                        mTimerTags[cc].Add(tag);
+                    }
+                    else
+                    {
+                        mTimerTags.Add(cc, new List<HisRunTag>() { tag });
+                        mCount.Add(cc, DateTime.UtcNow);
+                    }
+                    mCurrentCount++;
+                    return true;
                 }
                 else
                 {
-                    mTimerTags.Add(cc, new List<HisRunTag>() { tag });
-                    mCount.Add(cc, DateTime.UtcNow);
+                    return false;
                 }
-                mCurrentCount++;
-                return true;
-            }
-            else
-            {
-                return false;
             }
         }
 
@@ -188,10 +196,13 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         public void Remove(HisRunTag tag)
         {
-            if(mTimerTags.ContainsKey(tag.Circle))
+            lock (mLockObj)
             {
-                mTimerTags[tag.Circle].Remove(tag);
-                mCurrentCount--;
+                if (mTimerTags.ContainsKey(tag.Circle))
+                {
+                    mTimerTags[tag.Circle].Remove(tag);
+                    mCurrentCount--;
+                }
             }
         }
 
@@ -208,16 +219,18 @@ namespace Cdy.Tag
                 {
                     mTimerTags[oldcircle].Remove(tag);
                 }
-
-                var cc = tag.Circle;
-                if (mTimerTags.ContainsKey(cc))
+                lock (mLockObj)
                 {
-                    mTimerTags[cc].Add(tag);
-                }
-                else
-                {
-                    mTimerTags.Add(cc, new List<HisRunTag>() { tag });
-                    mCount.Add(cc, DateTime.UtcNow);
+                    var cc = tag.Circle;
+                    if (mTimerTags.ContainsKey(cc))
+                    {
+                        mTimerTags[cc].Add(tag);
+                    }
+                    else
+                    {
+                        mTimerTags.Add(cc, new List<HisRunTag>() { tag });
+                        mCount.Add(cc, DateTime.UtcNow);
+                    }
                 }
             }
         }
@@ -259,60 +272,67 @@ namespace Cdy.Tag
 
             mLastProcessTime = DateTime.Now;
 
-            while (!mIsClosed)
+            try
             {
-                resetEvent.WaitOne();
-                resetEvent.Reset();
-                if (mIsClosed) 
-                    break;
-
-                //if(NeedReInit)
-                //{
-                //    NeedReInit = false;
-                //    vkeys = mCount.Keys.ToArray();
-                //    vdd = DateTime.UtcNow;
-                //    foreach (var vv in vkeys)
-                //    {
-                //        mCount[vv] = vdd.AddMilliseconds(vv);
-                //    }
-                //}
-
-                var dnow = DateTime.Now;
-
-                if ((mLastProcessTime - dnow).TotalMilliseconds > 900)
+                while (!mIsClosed)
                 {
-                    LoggerService.Service.Warn("TimerMemoryCacheProcesser", "定时记录超时 "+ (mLastProcessTime - dnow).TotalMilliseconds);
-                }
+                    resetEvent.WaitOne();
+                    resetEvent.Reset();
+                    if (mIsClosed)
+                        break;
 
-                mLastProcessTime = dnow;
+                    //if (NeedReInit)
+                    //{
+                    //    NeedReInit = false;
+                    //    vkeys = mCount.Keys.ToArray();
+                    //    //vdd = DateTime.UtcNow;
+                    //    //foreach (var vv in vkeys)
+                    //    //{
+                    //    //    mCount[vv] = vdd.AddMilliseconds(vv);
+                    //    //}
+                    //}
 
-                try
-                {
-                    mIsBusy = true;
-                    var vdata = mLastUpdateTime;
-                    foreach (var vv in vkeys)
+                    var dnow = DateTime.Now;
+
+                    if ((mLastProcessTime - dnow).TotalMilliseconds > 900)
                     {
-                        if (vdata >= mCount[vv])
-                        {
-                            do
-                            {
-                                mCount[vv] = mCount[vv].AddMilliseconds(vv);
-                            }
-                            while (mCount[vv] <= vdata);
-                            ProcessTags(mTimerTags[vv]);
-                        }
+                        LoggerService.Service.Warn("TimerMemoryCacheProcesser", "定时记录超时 " + (mLastProcessTime - dnow).TotalMilliseconds);
                     }
-                    
-                    mIsBusy = false;
-                }
-                catch
-                {
 
+                    mLastProcessTime = dnow;
+
+                    try
+                    {
+                        mIsBusy = true;
+                        var vdata = mLastUpdateTime;
+                        foreach (var vv in vkeys)
+                        {
+                            if (vdata >= mCount[vv])
+                            {
+                                do
+                                {
+                                    mCount[vv] = mCount[vv].AddMilliseconds(vv);
+                                }
+                                while (mCount[vv] <= vdata);
+                                ProcessTags(mTimerTags[vv]);
+                            }
+                        }
+
+                        mIsBusy = false;
+                    }
+                    catch
+                    {
+
+                    }
+                    resetEvent.Reset();
                 }
-                resetEvent.Reset();
+                closedEvent.Set();
+                LoggerService.Service.Info("TimerMemoryCacheProcesser", Id + " 退出");
             }
-            closedEvent.Set();
-            LoggerService.Service.Info("TimerMemoryCacheProcesser",  Id + " 退出");
+            catch(Exception ex)
+            {
+                LoggerService.Service.Erro("TimerMemoryCacheProcesser", $"{ex.Message} {ex.StackTrace}");
+            }
 
         }
 

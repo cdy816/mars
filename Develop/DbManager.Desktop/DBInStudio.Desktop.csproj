@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <None Remove="Image\add.png" />
+    <None Remove="Image\alarm.png" />
     <None Remove="Image\AllSelect.png" />
     <None Remove="Image\cancel.png" />
     <None Remove="Image\cancelSave.png" />
@@ -66,6 +67,7 @@
 
   <ItemGroup>
     <Resource Include="Image\add.png" />
+    <Resource Include="Image\alarm.png" />
     <Resource Include="Image\AllSelect.png" />
     <Resource Include="Image\cancel.png" />
     <Resource Include="Image\cancelSave.png" />

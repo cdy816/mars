@@ -126,6 +126,9 @@
   <data name="AddTagFail" xml:space="preserve">
     <value>Add tag {0} failed!</value>
   </data>
+  <data name="Alarm" xml:space="preserve">
+    <value>Alarm</value>
+  </data>
   <data name="AllGroup" xml:space="preserve">
     <value>All group</value>
   </data>
@@ -164,6 +167,11 @@
   </data>
   <data name="Database" xml:space="preserve">
     <value>Database</value>
+  </data>
+  <data name="databaseexist" xml:space="preserve">
+    <value>The database {0} already exists
+
+!</value>
   </data>
   <data name="databaseSelect" xml:space="preserve">
     <value>Database select</value>
@@ -264,7 +272,7 @@
     <value>Lossless</value>
   </data>
   <data name="MainwindowTitle" xml:space="preserve">
-    <value>Mars database developer</value>
+    <value>Mars database development platforms</value>
   </data>
   <data name="Manual" xml:space="preserve">
     <value>Manual</value>

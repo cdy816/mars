@@ -267,7 +267,11 @@ namespace Cdy.Tag
                     var did = tagId / TagCountOneFile;
                     if (!mSeriserFiles.ContainsKey(did))
                     {
-                        mSeriserFiles.Add(did, new SeriseFileItem4() { FileDuration = FileDuration, BlockDuration = BlockDuration, TagCountOneFile = TagCountOneFile, DatabaseName = DatabaseName, Id = did, StatisticsMemory = mStatisticsMemory }.Init());
+                        var sf = new SeriseFileItem4() { FileDuration = FileDuration, BlockDuration = BlockDuration, TagCountOneFile = TagCountOneFile, DatabaseName = DatabaseName, Id = did, StatisticsMemory = mStatisticsMemory };
+                        sf.FileWriter = DataFileSeriserManager.manager.GetSeriser(DataSeriser).New();
+                        sf.FileWriter2 = DataFileSeriserManager.manager.GetSeriser(DataSeriser).New();
+                        sf.Init();
+                        mSeriserFiles.Add(did, sf);
                     }
                 }
             }
@@ -503,30 +507,33 @@ namespace Cdy.Tag
                 
             }
 
-            //清空临时文件目录的文件
+            //清空二次压缩后，在进行查询时产生的临时文件目录的文件
             string spath = System.IO.Path.Combine(wpath, "tmp");
-            foreach(var vv in new System.IO.DirectoryInfo(spath).GetFiles())
+            if (System.IO.Directory.Exists(spath))
             {
-                if (mIsClosed) break;
-                while (mIsBusy) Thread.Sleep(1000);
-
-                string file = vv.FullName;
-
-                if (System.IO.File.Exists(file))
+                foreach (var vv in new System.IO.DirectoryInfo(spath).GetFiles())
                 {
-                    System.IO.FileInfo finfo = new System.IO.FileInfo(file);
-                    if ((DateTime.Now - finfo.LastWriteTime).TotalDays > 7)
+                    if (mIsClosed) break;
+                    while (mIsBusy) Thread.Sleep(1000);
+
+                    string file = vv.FullName;
+
+                    if (System.IO.File.Exists(file))
                     {
-                        try
+                        System.IO.FileInfo finfo = new System.IO.FileInfo(file);
+                        if ((DateTime.Now - finfo.LastWriteTime).TotalDays > 7)
                         {
-                            finfo.Delete();
-                        }
-                        catch
-                        {
+                            try
+                            {
+                                finfo.Delete();
+                            }
+                            catch
+                            {
 
+                            }
                         }
+
                     }
-
                 }
             }
 
@@ -1130,7 +1137,7 @@ namespace Cdy.Tag
             DataFileSeriserbase dfs;
             bool isuserhisfile = false;
 
-            if ((time > mCurrentTime && mCurrentTime!=DateTime.MinValue)||(sfile == GetFileName(DateTime.UtcNow)))
+            if ((time > mCurrentTime && mCurrentTime!=DateTime.MinValue)||(sfile == GetFileName(DateTime.UtcNow))|| mNeedRecordDataHeader)
             {
                 //如果需要新建的文件，影响到自动记录存储要用到的文件，
                 //则转到自动记录存储逻辑进行处理
@@ -1248,6 +1255,7 @@ namespace Cdy.Tag
 
                         if (mLastRegionStartTime == DateTime.MaxValue || vvv < mLastRegionStartTime || vvv > mLastRegionEndTime)
                         {
+                            //搜索指定时间所在区域的地址
                             regionOffset = SearchDataRegionToDatetime(dfs, vvv, out mLastRegionStartTime, out mLastRegionEndTime);
                             ltmp = regionOffset;
                         }
@@ -1286,7 +1294,7 @@ namespace Cdy.Tag
 
 
         /// <summary>
-        /// 
+        /// 找到指定时间，所在的区域，并返回区域的开始位置
         /// </summary>
         /// <param name="time"></param>
         /// <returns></returns>
@@ -1384,21 +1392,39 @@ namespace Cdy.Tag
                 //56 是统计数据区的长度
                 foreach (var vvv in vv.Value)
                 {
-                    int id = vvv.ReadInt(0+56);
-                    int size = vvv.ReadInt(20 + 56);
-                    DateTime time = vvv.ReadDateTime(4 + 56);
+                    //int id = vvv.ReadInt(0+56);
+                    //int size = vvv.ReadInt(20 + 56);
+                    //DateTime time = vvv.ReadDateTime(4 + 56);
 
-                    DateTime endTime = vvv.ReadDateTime(12 + 56);
-                   
-                    if(times.ContainsKey(id))
+                    //DateTime endTime = vvv.ReadDateTime(12 + 56);
+
+                    //if(times.ContainsKey(id))
+                    //{
+                    //    times[id].Add(time);
+                    //}
+                    //else
+                    //{
+                    //    times.Add(id, new List<DateTime>() { time });
+                    //}
+                    //maxTime = time > maxTime ? time : maxTime;
+                    //mLastModifyTime = endTime > mLastModifyTime ? endTime : mLastModifyTime;
+
+                    int id = vvv.ReadInt(0 + 56);
+                    int size = vvv.ReadInt(28 + 56);
+                    DateTime time = vvv.ReadDateTime(4 + 56);
+                    DateTime realtime = vvv.ReadDateTime(12 + 56);
+                    DateTime endTime = vvv.ReadDateTime(20 + 56);
+                    if (times.ContainsKey(id))
                     {
-                        times[id].Add(time);
+                        times[id].Add(realtime);
                     }
                     else
                     {
-                        times.Add(id, new List<DateTime>() { time });
+                        times.Add(id, new List<DateTime>() { realtime });
                     }
-                    maxTime = time > maxTime ? time : maxTime;
+                    maxTime = realtime > maxTime ? realtime : maxTime;
+
+
                     mLastModifyTime = endTime > mLastModifyTime ? endTime : mLastModifyTime;
 
                     //datasize += (size - 28-56);
@@ -1417,8 +1443,11 @@ namespace Cdy.Tag
                 //写入数据，同时获取数据块地址
                 foreach (var vvv in vv.Value)
                 {
+                    //int id = vvv.ReadInt(0 + 56);
+                    //int size = vvv.ReadInt(20 + 56);
                     int id = vvv.ReadInt(0 + 56);
-                    int size = vvv.ReadInt(20 + 56);
+                    int size = vvv.ReadInt(28 + 56);
+
                     if (mHeadValue.ContainsKey(id))
                     {
                         mHeadValue[id].Add(vpointer);
@@ -1427,9 +1456,13 @@ namespace Cdy.Tag
                     {
                         mHeadValue.Add(id, new List<long>() { vpointer });
                     }
-                    vvv.WriteToStream(mwriter.GetStream(), 28 + 56, size - 28 - 56);//直接拷贝数据块
-                    vpointer += (size - 28 - 56);
-                    datasize += (size - 28 - 56);
+                    //vvv.WriteToStream(mwriter.GetStream(), 28 + 56, size - 28 - 56);//直接拷贝数据块
+                    //vpointer += (size - 28 - 56);
+                    //datasize += (size - 28 - 56);
+
+                    vvv.WriteToStream(mwriter.GetStream(), 36 + 56, size - 36 - 56);//直接拷贝数据块
+                    vpointer += (size - 36 - 56);
+                    datasize += (size - 36 - 56);
                 }
 
                 //更新数据块指针

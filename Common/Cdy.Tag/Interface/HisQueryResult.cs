@@ -183,6 +183,349 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="value"></param>
+        /// <returns></returns>
+        public object GetTargetValue(object value)
+        {
+            switch (mDataType)
+            {
+                case 0:
+                    return BoolValueConvert(value);
+                case 1:
+                    return ByteValueConvert(value);
+                case 2:
+                    return ShortValueConvert(value);
+                case 3:
+                    return UShortValueConvert(value);
+                case 4:
+                    return IntValueConvert(value);
+                case 5:
+                    return UIntValueConvert(value);
+                case 6:
+                    return LongValueConvert(value);
+                case 7:
+                    return ULongValueConvert(value);
+                case 8:
+                    return FloatValueConvert(value);
+                case 9:
+                    return DoubleValueConvert(value);
+                case 10:
+                    return DatetimeValueConvert(value);
+                case 11:
+                    return StringValueConvert(value);
+                case 12:
+                    return IntPointData.ToIntPointData(value);
+                case 13:
+                    return UIntPointData.ToPointData(value);
+                case 14:
+                    return IntPoint3Data.ToPointData(value);
+                case 15:
+                    return UIntPoint3Data.ToPointData(value);
+                case 16:
+                    return LongPointData.ToPointData(value);
+                case 17:
+                    return ULongPointData.ToPointData(value);
+                case 18:
+                    return LongPoint3Data.ToPointData(value);
+                case 19:
+                    return ULongPoint3Data.ToPointData(value);
+            }
+            return value;
+        }
+
+        public bool BoolValueConvert(object value)
+        {
+            var code = Convert.GetTypeCode(value);
+            switch(code)
+            {
+                
+                case TypeCode.Empty:
+                case TypeCode.Object:
+                case TypeCode.DateTime:
+                    return false;
+                case TypeCode.Byte:
+                    try
+                    {
+                        return Convert.ToBoolean(value);
+                    }
+                    catch
+                    {
+                    }
+                    break;
+            }
+           return  false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public byte ByteValueConvert(object value)
+        {
+            var code = Convert.GetTypeCode(value);
+            switch (code)
+            {
+
+                case TypeCode.Empty:
+                case TypeCode.Object:
+                case TypeCode.DateTime:
+                    return 0;
+                case TypeCode.Byte:
+                    try
+                    {
+                        return Convert.ToByte(value);
+                    }
+                    catch
+                    {
+                    }
+                    break;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public short ShortValueConvert(object value)
+        {
+            var code = Convert.GetTypeCode(value);
+            switch (code)
+            {
+
+                case TypeCode.Empty:
+                case TypeCode.Object:
+                case TypeCode.DateTime:
+                    return 0;
+                case TypeCode.Byte:
+                    try
+                    {
+                        return Convert.ToInt16(value);
+                    }
+                    catch
+                    {
+                    }
+                    break;
+            }
+            return 0;
+        }
+
+        public ushort UShortValueConvert(object value)
+        {
+            var code = Convert.GetTypeCode(value);
+            switch (code)
+            {
+
+                case TypeCode.Empty:
+                case TypeCode.Object:
+                case TypeCode.DateTime:
+                    return 0;
+                case TypeCode.Byte:
+                    try
+                    {
+                        return Convert.ToUInt16(value);
+                    }
+                    catch
+                    {
+                    }
+                    break;
+            }
+            return 0;
+        }
+
+
+        public int IntValueConvert(object value)
+        {
+            var code = Convert.GetTypeCode(value);
+            switch (code)
+            {
+
+                case TypeCode.Empty:
+                case TypeCode.Object:
+                case TypeCode.DateTime:
+                    return 0;
+                case TypeCode.Byte:
+                    try
+                    {
+                        return Convert.ToInt32(value);
+                    }
+                    catch
+                    {
+                    }
+                    break;
+            }
+            return 0;
+        }
+
+        public uint UIntValueConvert(object value)
+        {
+            var code = Convert.GetTypeCode(value);
+            switch (code)
+            {
+
+                case TypeCode.Empty:
+                case TypeCode.Object:
+                case TypeCode.DateTime:
+                    return 0;
+                case TypeCode.Byte:
+                    try
+                    {
+                        return Convert.ToUInt32(value);
+                    }
+                    catch
+                    {
+                    }
+                    break;
+            }
+            return 0;
+        }
+
+        public long LongValueConvert(object value)
+        {
+            var code = Convert.GetTypeCode(value);
+            switch (code)
+            {
+
+                case TypeCode.Empty:
+                case TypeCode.Object:
+                    return 0;
+                case TypeCode.DateTime:
+                    return ((DateTime)(value)).Ticks;
+                case TypeCode.Byte:
+                    try
+                    {
+                        return Convert.ToInt64(value);
+                    }
+                    catch
+                    {
+                    }
+                    break;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public ulong ULongValueConvert(object value)
+        {
+            var code = Convert.GetTypeCode(value);
+            switch (code)
+            {
+
+                case TypeCode.Empty:
+                case TypeCode.Object:
+                    return 0;
+                case TypeCode.DateTime:
+                    return (ulong)((DateTime)(value)).Ticks;
+                case TypeCode.Byte:
+                    try
+                    {
+                        return Convert.ToUInt64(value);
+                    }
+                    catch
+                    {
+                    }
+                    break;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public double DoubleValueConvert(object value)
+        {
+            var code = Convert.GetTypeCode(value);
+            switch (code)
+            {
+
+                case TypeCode.Empty:
+                case TypeCode.Object:
+                case TypeCode.DateTime:
+                    return 0;
+                case TypeCode.Byte:
+                    try
+                    {
+                        return Convert.ToDouble(value);
+                    }
+                    catch
+                    {
+                    }
+                    break;
+            }
+            return 0;
+        }
+
+        public double FloatValueConvert(object value)
+        {
+            var code = Convert.GetTypeCode(value);
+            switch (code)
+            {
+
+                case TypeCode.Empty:
+                case TypeCode.Object:
+                case TypeCode.DateTime:
+                    return 0;
+                case TypeCode.Byte:
+                    try
+                    {
+                        return Convert.ToSingle(value);
+                    }
+                    catch
+                    {
+                    }
+                    break;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public string StringValueConvert(object value)
+        {
+            if (value == null) return string.Empty;
+
+            return Convert.ToString(value);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public DateTime DatetimeValueConvert(object value)
+        {
+            var code = Convert.GetTypeCode(value);
+            switch (code)
+            {
+
+                case TypeCode.Empty:
+                case TypeCode.Object:
+                    return DateTime.MinValue;
+                case TypeCode.DateTime:
+                case TypeCode.String:
+                    return Convert.ToDateTime(value);
+                case TypeCode.Int64:
+                case TypeCode.UInt64:
+                    return DateTime.FromBinary(Convert.ToInt64(value));
+            }
+            return DateTime.MinValue;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
         /// <param name="time"></param>
         /// <param name="qulity"></param>
         public void Add(object value,DateTime time,byte qulity)
@@ -198,11 +541,11 @@ namespace Cdy.Tag
             switch(mDataType)
             {
                 case 0:
-                    Marshal.WriteByte(handle + mPosition, (byte)(((bool)value)?1:0));
+                    Marshal.WriteByte(handle + mPosition, (byte)(Convert.ToBoolean(value)?1:0));
                     mPosition++;
                     break;
                 case 1:
-                    Marshal.WriteByte(handle+mPosition, (byte)value);
+                    Marshal.WriteByte(handle+mPosition,Convert.ToByte(value));
                     //mDataBuffer[mPosition] = (byte)value;
                     mPosition++;
                     break;
@@ -241,7 +584,7 @@ namespace Cdy.Tag
                 case 10:
                     try
                     {
-                        MemoryHelper.WriteDateTime((void*)handle, mPosition, (DateTime)value);
+                        MemoryHelper.WriteDateTime((void*)handle, mPosition, Convert.ToDateTime(value));
                     }
                     catch
                     {
@@ -300,6 +643,7 @@ namespace Cdy.Tag
             }
             return this;
         }
+
 
         /// <summary>
         /// 

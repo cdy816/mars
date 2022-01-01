@@ -7,21 +7,20 @@
 //  种道洋
 //==============================================================
 
+using Cdy.Tag;
+using DBDevelopClientApi;
+using DBInStudio.Desktop.ViewModel;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Windows.Input;
-using DBInStudio.Desktop.ViewModel;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Windows;
-using DBDevelopClientApi;
-using Microsoft.Win32;
-using System.IO;
-using Cdy.Tag;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Timers;
+using System.Windows;
+using System.Windows.Input;
 
 namespace DBInStudio.Desktop
 {
@@ -57,6 +56,8 @@ namespace DBInStudio.Desktop
         private ICommand mNewDatabaseCommand;
 
         private ICommand mCancelCommand;
+
+        private ICommand mAlarmConfigCommand;
 
         private TreeItemViewModel mCurrentSelectTreeItem;
 
@@ -198,6 +199,9 @@ namespace DBInStudio.Desktop
                         if(MessageBox.Show(Res.Get("canceltosavemsg"),"",MessageBoxButton.YesNo)== MessageBoxResult.Yes)
                         {
                             DevelopServiceHelper.Helper.CancelToSaveDatabase(mDatabase);
+
+                          
+                            ReloadDatabase();
 
                             if (ContentViewModel is IModeSwitch)
                             {
@@ -556,6 +560,31 @@ namespace DBInStudio.Desktop
         }
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand AlarmConfigCommand
+        {
+            get
+            {
+                if(mAlarmConfigCommand==null)
+                {
+                    mAlarmConfigCommand = new RelayCommand(() => {
+                        RunAlarmConfig();
+                    }, () => { return IsLogin && !string.IsNullOrEmpty(Database) && HasAlarmStudio(); });
+                }
+                return mAlarmConfigCommand;
+            }
+        }
+
+        public bool HasAlarmStudioConfig
+        {
+            get
+            {
+                return HasAlarmStudio();
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -591,6 +620,25 @@ namespace DBInStudio.Desktop
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private bool HasAlarmStudio()
+        {
+            string sfile = System.IO.Path.Combine(PathHelper.helper.AppPath, "InAntStudio.exe");
+            return System.IO.File.Exists(sfile);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void RunAlarmConfig()
+        {
+            string arg = ServerHelper.Helper.Server + " " + ServerHelper.Helper.UserName + " " + ServerHelper.Helper.Password + " " + ServerHelper.Helper.Database;
+            Process.Start(new ProcessStartInfo() { FileName = System.IO.Path.Combine(PathHelper.helper.AppPath, "InAntStudio.exe"), Arguments = arg });
+        }
 
         /// <summary>
         /// 
@@ -702,6 +750,7 @@ namespace DBInStudio.Desktop
                     if (!string.IsNullOrEmpty(sval))
                     {
                         TagViewModel tm = TagViewModel.LoadFromCSVString(sval);
+                        tm.Database = this.Database;
                         ltmp.Add(tm);
                     }
                 }
@@ -792,7 +841,7 @@ namespace DBInStudio.Desktop
             if (ofd.ShowDialog().Value)
             {
 
-                var stream = new StreamWriter(File.Open(ofd.FileName, FileMode.OpenOrCreate, FileAccess.ReadWrite));
+                var stream = new StreamWriter(File.Open(ofd.FileName, FileMode.Create, FileAccess.ReadWrite));
 
                 Task.Run(() => {
                     BeginShowNotify();
@@ -815,6 +864,40 @@ namespace DBInStudio.Desktop
             }
 
           
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void ReloadDatabase()
+        {
+            foreach (var vv in this.TagGroup) vv.Dispose();
+
+            this.TagGroup.Clear();
+            var dbitem = new DatabaseViewModel() { Name = mDatabase, IsSelected = true, IsExpanded = true };
+            this.TagGroup.Add(dbitem);
+
+            var sec = new ServerSecurityTreeViewModel();
+            sec.Children.Add(new ServerUserEditorTreeViewModel());
+
+            if (DevelopServiceHelper.Helper.IsAdmin())
+            {
+                sec.Children.Add(new ServerUserManagerTreeViewModel());
+            }
+
+            this.TagGroup.Add(sec);
+            dbitem.Children.Add(mRootTagGroupModel);
+            mRootTagGroupModel.Database = mDatabase;
+            dbitem.Children.Add(securityModel);
+            securityModel.Database = mDatabase;
+            securityModel.Init();
+
+            dbitem.Children.Add(new DatabaseSettingViewModel() { Database = this.Database });
+
+            Task.Run(() => {
+                TagViewModel.Drivers = DevelopServiceHelper.Helper.GetRegistorDrivers(mDatabase);
+                QueryGroups();
+            });
         }
 
         /// <summary>
@@ -929,13 +1012,12 @@ namespace DBInStudio.Desktop
                 ListDatabaseViewModel ldm = new ListDatabaseViewModel();
                 if (ldm.ShowDialog().Value)
                 {
-
-                   
-
                     this.TagGroup.Clear();
                     
                     CurrentUserManager.Manager.UserName = login.UserName;
                     Database = ldm.SelectDatabase.Name;
+                    ServerHelper.Helper.Database = Database;
+
                     OnPropertyChanged("MainwindowTitle");
                     OnPropertyChanged("UserName");
                     IsLogin = true;

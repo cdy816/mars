@@ -189,6 +189,10 @@ namespace DBDevelopService
             Cdy.Tag.Database db = new Cdy.Tag.DatabaseSerise().Load(database);
             if (!mDatabase.ContainsKey(db.Name))
                 mDatabase.Add(db.Name, db);
+            else
+            {
+                mDatabase[db.Name] = db;
+            }
 
         }
 
@@ -206,6 +210,7 @@ namespace DBDevelopService
             {
                 mDatabase.Add(name, new Cdy.Tag.Database() { Name = name,Desc=desc });
             }
+            Save(mDatabase[name]);
             return mDatabase[name];
         }
 

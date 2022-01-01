@@ -225,9 +225,22 @@ namespace DBInStudio.Desktop.ViewModel
            
             mCurrentSelectedUser = null;
 
-            if (Users.Count > id) CurrentSelectedUser = Users[id];
+            if (Users.Count > id)
+            {
+                CurrentSelectedUser = Users[id];
+            }
 
-            else CurrentSelectedUser = Users[Users.Count - 1];
+            else
+            {
+                if (Users.Count > 0)
+                {
+                    CurrentSelectedUser = Users[Users.Count - 1];
+                }
+                else
+                {
+                    CurrentSelectedUser = null;
+                }
+            }
 
 
         }
@@ -498,6 +511,7 @@ namespace DBInStudio.Desktop.ViewModel
         #region ... Variables  ...
         private bool mIsSelected = false;
         private string mName = "";
+        private bool mAppendSelect = false;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -509,6 +523,28 @@ namespace DBInStudio.Desktop.ViewModel
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool AppendSelect
+        {
+            get
+            {
+                return mAppendSelect;
+            }
+            set
+            {
+                if (mAppendSelect != value)
+                {
+                    mAppendSelect = value;
+                    OnPropertyChanged("AppendSelect");
+                    OnPropertyChanged("IsSelected");
+                }
+            }
+        }
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -516,7 +552,7 @@ namespace DBInStudio.Desktop.ViewModel
         {
             get
             {
-                return mIsSelected;
+                return mIsSelected| AppendSelect;
             }
             set
             {

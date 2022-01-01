@@ -49,12 +49,17 @@ namespace DBRuntime.His
         #region ... Properties ...
 
         /// <summary>
-        /// 
+        /// 被格对齐的开始时间
         /// </summary>
         public DateTime Time { get; set; }
 
         /// <summary>
-        /// 
+        /// 真实的开始时间
+        /// </summary>
+        public DateTime RealTime { get; set; }
+
+        /// <summary>
+        /// 结束时间
         /// </summary>
         public DateTime EndTime { get; set; }
 

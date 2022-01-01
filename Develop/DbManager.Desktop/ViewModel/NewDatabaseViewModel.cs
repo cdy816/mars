@@ -32,6 +32,7 @@ namespace DBInStudio.Desktop.ViewModel
             DefaultWidth = 400;
             DefaultHeight = 120;
             Title = Res.Get("NewDatabase");
+            
             IsEnableMax = false;
         }
         #endregion ...Constructor...
@@ -53,6 +54,15 @@ namespace DBInStudio.Desktop.ViewModel
                     string oldvalue = mName;
                     mName = value;
                     if (oldvalue == mDesc) Desc = value;
+
+                    if(ExistDatabase.Contains(value))
+                    {
+                        this.Message = string.Format(Res.Get("databaseexist"),value);
+                    }
+                    else
+                    {
+                        this.Message = "";
+                    }
                 }
                 OnPropertyChanged("Name");
             }

@@ -74,6 +74,48 @@
             <param name="request"></param>
             <returns></returns>
         </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.FindTagValue(DbInRunWebApi.Model.FindTagValueEqualRequest)">
+            <summary>
+            查找在某个时间段内是否包括指定的值
+            </summary>
+            <param name="request"></param>
+            <returns>返回找到的第一个值的时间，未找到返回 空</returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.FindTagValues(DbInRunWebApi.Model.FindTagValueEqualRequest)">
+            <summary>
+            查找在某个时间段内是否包括指定的值
+            </summary>
+            <param name="request"></param>
+            <returns>返回所有满足条件的时间的集合</returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.CalTagValueKeepTime(DbInRunWebApi.Model.FindTagValueEqualRequest)">
+            <summary>
+            计算在某个时间段内满足指定的值条件的持续时间
+            </summary>
+            <param name="request"></param>
+            <returns>累计时长</returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.CalNumberTagAvgValue(DbInRunWebApi.Model.FindTagValueEqualRequest)">
+            <summary>
+            计算在某个时间段内数值型变量的平均值
+            </summary>
+            <param name="request"></param>
+            <returns>平均值</returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.FindNumberTagMaxValue(DbInRunWebApi.Model.FindTagValueEqualRequest)">
+            <summary>
+            查找在某个时间段内数值型变量的最大值
+            </summary>
+            <param name="request"></param>
+            <returns>最大值和等于最大值的时间的集合</returns>
+        </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.FindNumberTagMinValue(DbInRunWebApi.Model.FindTagValueEqualRequest)">
+            <summary>
+            查找在某个时间段内数值型变量的最小值
+            </summary>
+            <param name="request"></param>
+            <returns>最小值和等于最小值的时间的集合</returns>
+        </member>
         <member name="T:DbInRunWebApi.Controllers.LoginController">
             <summary>
             
@@ -142,202 +184,207 @@
         </member>
         <member name="T:DbInRunWebApi.Model.LoginUser">
             <summary>
-            
+            登录请求
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.LoginUser.UserName">
             <summary>
-            
+            用户名
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.LoginUser.Password">
             <summary>
-            
+            密码
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.RealValue">
             <summary>
-            实时值
+            实时值(时间、质量戳、值)
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.RealValue.Time">
             <summary>
-            
+            时间
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.RealValue.Quality">
             <summary>
-            
+            质量戳
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.RealValue.Value">
             <summary>
-            
+            值
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.RealValueAndQuality">
             <summary>
-            
+            实时值包括质量戳
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.RealValueAndQuality.Quality">
             <summary>
-            
+            质量戳
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.RealValueAndQuality.Value">
             <summary>
-            
+            值
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.HisValue">
             <summary>
-            
+            历史值
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.HisValue.tagName">
             <summary>
-            
+            变量
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.HisValue.Values">
             <summary>
-            
+            历史数据值的集合
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.ValueItem">
             <summary>
-            
+            值
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.ValueItem.Time">
             <summary>
-            
+            时间
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.ValueItem.Value">
             <summary>
-            
+            值
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.ValueItem.Quality">
             <summary>
-            
+            质量戳
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.StatisticsValue">
             <summary>
-            
+            统计值
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.StatisticsValue.tagName">
             <summary>
-            
+            变量名
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.StatisticsValue.Values">
             <summary>
-            
+            统计值集合
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.StatisticsValueItem">
             <summary>
-            
+            单个统计点的值
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.StatisticsValueItem.Time">
             <summary>
-            
+            时间
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.StatisticsValueItem.AvgValue">
             <summary>
-            
+            平均值
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.StatisticsValueItem.MaxValueTime">
             <summary>
-            
+            最大值时间
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.StatisticsValueItem.MaxValue">
             <summary>
-            
+            最大值
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.StatisticsValueItem.MinValueTime">
             <summary>
-            
+            最小值时间
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.StatisticsValueItem.MinValue">
             <summary>
-            
+            最小值
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.RealValueQueryResponse">
             <summary>
-            
+            实时值请求返回
+            包括时间、值、质量
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.RealValueQueryResponse.Datas">
             <summary>
-            
+            实时值集合
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.RealValueAndQualityQueryResponse">
             <summary>
-            
+            实时值请求返回
+            仅包括值、质量
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.RealValueAndQualityQueryResponse.Datas">
             <summary>
-            
+            实时值集合
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.RealValueOnlyQueryResponse">
             <summary>
-            
+            实时值请求返回
+            仅包括值
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.RealValueOnlyQueryResponse.Datas">
             <summary>
-            
+            值集合
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.RealDataSetResponse">
             <summary>
-            
+            实时值设置返回
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.RealDataSetResponse.SetResults">
             <summary>
-            
+            返回是否成功结果
+            True：成功，False：失败
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.HisValueQueryResponse">
             <summary>
-            
+            历史值请求返回结果
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.HisValueQueryResponse.Datas">
             <summary>
-            
+            历史值
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.ResponseBase">
             <summary>
-            
+            请求返回结果基类
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.ResponseBase.Result">
             <summary>
-            
+            操作结果
+            True：请求成功
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.ResponseBase.ErroMessage">
             <summary>
-            
+            错误消息
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.ReponseBase">
@@ -347,7 +394,7 @@
         </member>
         <member name="P:DbInRunWebApi.Model.ReponseBase.Token">
             <summary>
-            
+            登录Token
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.LoginResponse">
@@ -357,7 +404,7 @@
         </member>
         <member name="P:DbInRunWebApi.Model.LoginResponse.LoginTime">
             <summary>
-            
+            登录时间
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.LoginResponse.TimeOut">
@@ -377,197 +424,267 @@
         </member>
         <member name="P:DbInRunWebApi.Model.Requestbase.Token">
             <summary>
-            
+            登录Token
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.RealDataRequest">
             <summary>
-            
+            实时数据请求
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.RealDataRequest.Group">
             <summary>
-            
+            变量组
+            不为空时，请求组+变量名组合而成的变量的全名的变量的值
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.RealDataRequest.TagNames">
             <summary>
-            
+            变量名集合
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.RealDataSetRequest">
             <summary>
-            
+            设置实时变量的的值
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.RealDataSetRequest.Values">
             <summary>
-            
+            多个变量的值的集合
+            键值对 [变量-值]
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.HisDataRequest">
             <summary>
-            
+            单个变量的历史数据请求
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.HisDataRequest.MatchType">
             <summary>
             值的拟合方式
+            当指定的时间点，没有记录值，采用改时间点前后两个时刻的值进行拟合时，所采用的拟合方式
+            0:取前一个值,1:取后一个值,2:取较近的值,3:线性插值
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.HisDataRequest.TagName">
             <summary>
-            
+            变量名称
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.HisDataRequest.Times">
             <summary>
-            
+            时间点集合
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.MutiTagHisDataRequest">
             <summary>
-            
+            多个变量的历史数据请求
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest.MatchType">
             <summary>
-            
+            值的拟合方式
+            当指定的时间点，没有记录值，采用改时间点前后两个时刻的值进行拟合时，所采用的拟合方式
+            0:取前一个值,1:取后一个值,2:取较近的值,3:线性插值
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest.TagNames">
             <summary>
-            
+            变量的集合
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest.Times">
             <summary>
-            
+            时间点集合
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.HisDataRequest2">
             <summary>
-            
+            单个变量的历史数据请求
+            指定开始、结束时间，时间间隔
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.HisDataRequest2.MatchType">
             <summary>
-            
+            值的拟合方式
+            当指定的时间点，没有记录值，采用改时间点前后两个时刻的值进行拟合时，所采用的拟合方式
+            0:取前一个值,1:取后一个值,2:取较近的值,3:线性插值
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.HisDataRequest2.TagName">
             <summary>
-            
+            变量名称
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.HisDataRequest2.StartTime">
             <summary>
-            
+            开始时间
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.HisDataRequest2.EndTime">
             <summary>
-            
+            结束时间
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.HisDataRequest2.Duration">
             <summary>
-            
+            时间间隔：单位秒
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.MutiTagHisDataRequest2">
             <summary>
-            
+            多个变量的历史数据请求
+            指定开始、结束时间，时间间隔
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest2.MatchType">
             <summary>
-            
+            值的拟合方式
+            当指定的时间点，没有记录值，采用改时间点前后两个时刻的值进行拟合时，所采用的拟合方式
+            0:取前一个值,1:取后一个值,2:取较近的值,3:线性插值
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest2.TagNames">
             <summary>
-            
+            变量的集合
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest2.StartTime">
             <summary>
-            
+            开始时间
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest2.EndTime">
             <summary>
-            
+            结束时间
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.MutiTagHisDataRequest2.Duration">
             <summary>
-            
+            时间间隔：单位秒
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.StatisticsDataRequest">
             <summary>
-            
+            获取统计信息
+            统计信息是单独记录的，查询速度要优于查询出所有值再做统计的方式
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.StatisticsDataRequest.TagName">
             <summary>
-            
+            变量名称
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.StatisticsDataRequest.StartTime">
             <summary>
-            
+            开始时间
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.StatisticsDataRequest.EndTime">
             <summary>
-            
+            结束时间
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.StatisticsDataRequest.Duration">
             <summary>
-            
+            时间间隔：单位秒
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.AllHisDataRequest">
             <summary>
+            获取某个变量的在某个时间段内历史记录的原始值
             
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.AllHisDataRequest.TagName">
             <summary>
-            
+            变量
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.AllHisDataRequest.StartTime">
             <summary>
-            
+            开始时间
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.AllHisDataRequest.EndTime">
             <summary>
-            
+            结束时间
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.AllMutiTagHisDataRequest">
             <summary>
-            
+            获取多个变量在一段时间内历史记录的原始值
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.AllMutiTagHisDataRequest.TagNames">
             <summary>
-            
+            变量集合
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.AllMutiTagHisDataRequest.StartTime">
             <summary>
-            
+            开始时间
             </summary>
         </member>
         <member name="P:DbInRunWebApi.Model.AllMutiTagHisDataRequest.EndTime">
             <summary>
+            结束时间
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.CompareType">
+            <summary>
+            比较类型
+            </summary>
+        </member>
+        <member name="F:DbInRunWebApi.Model.CompareType.Great">
+            <summary>
+            大于
+            </summary>
+        </member>
+        <member name="F:DbInRunWebApi.Model.CompareType.Low">
+            <summary>
+            小于
+            </summary>
+        </member>
+        <member name="F:DbInRunWebApi.Model.CompareType.Equal">
+            <summary>
+            等于
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.FindTagValueEqualRequest">
+            <summary>
             
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.FindTagValueEqualRequest.ValueCompareType">
+            <summary>
+            值比较类型
+            0:大于，1:小于，2:等于
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.FindTagValueEqualRequest.Value">
+            <summary>
+            值
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.FindTagValueEqualRequest.Interval">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.FindTagValueResult">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.FindTagValueResult.TagName">
+            <summary>
+            变量名
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.FindTagValueResult.Value">
+            <summary>
+            结果值
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Program">

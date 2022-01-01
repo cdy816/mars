@@ -50,7 +50,8 @@ namespace Cdy.Tag
 
         private bool mIsStarted = false;
 
-        private object mLockObj = new object();
+        //private object mLockObj = new object();
+        private object mLockObj2 = new object();
 
         private ValueChangedNotifyProcesser mValueChangedNotifier;
 
@@ -131,11 +132,19 @@ namespace Cdy.Tag
         {
             //注册值改变处理
             mValueChangedNotifier = ServiceLocator.Locator.Resolve<IRealDataNotify>().SubscribeValueChangedForConsumer(this.Name, new ValueChangedNotifyProcesser.ValueChangedDelegate((ids,len) => {
-                for(int i=0;i<len;i++)
+
+                for (int i = 0; i < len; i++)
                 {
-                    lock(mLockObj)
-                    mChangedTags[ids[i]] = true;
+                    try
+                    {
+                        mChangedTags[ids[i]] = true;
+                    }
+                    catch
+                    {
+
+                    }
                 }
+                
                 //LoggerService.Service.Info("TagChanged", "变化变量数:"+ids.Length);
             }),null,new Func<IEnumerable<int>>(() => { return  mTags.Keys; }),RealDataNotifyType.Tag);
 
@@ -144,6 +153,7 @@ namespace Cdy.Tag
                 mChangedTags.TryAdd(vv, false);
             }
 
+            mIsClosed = false;
             mRecordThread = new Thread(ThreadProcess);
             mRecordThread.IsBackground=true;
             mRecordThread.Priority = ThreadPriority.Highest;
@@ -161,7 +171,7 @@ namespace Cdy.Tag
             try{
                 resetEvent.Set();
                 closedEvent.WaitOne();
-                Clear();
+                //Clear();
                 mIsStarted = false;
             }
             catch
@@ -178,19 +188,22 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool AddTag(HisRunTag tag)
         {
-            if (mCurrentCount < MaxTagCount)
+            lock (mLockObj2)
             {
-                mTags.Add(tag.Id,tag);
-                mCurrentCount++;
+                if (mCurrentCount < MaxTagCount)
+                {
+                    mTags.Add(tag.Id, tag);
+                    mCurrentCount++;
 
-                mChangedTags.TryAdd(tag.Id, false);
-                mValueChangedNotifier?.Registor(tag.Id);
+                    mChangedTags.TryAdd(tag.Id, false);
+                    mValueChangedNotifier?.Registor(tag.Id);
 
-                return true;
-            }
-            else
-            {
-                return false;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
 
@@ -200,17 +213,20 @@ namespace Cdy.Tag
         /// <param name="tag"></param>
         public void Remove(HisRunTag tag)
         {
-            if(mTags.ContainsKey(tag.Id))
+            lock (mLockObj2)
             {
-                mTags.Remove(tag.Id);
-                mCurrentCount--;
+                if (mTags.ContainsKey(tag.Id))
+                {
+                    mTags.Remove(tag.Id);
+                    mCurrentCount--;
+                }
+                bool btmp = false;
+                if (mChangedTags.ContainsKey(tag.Id))
+                {
+                    mChangedTags.Remove(tag.Id, out btmp);
+                }
+                mValueChangedNotifier?.UnRegistor(tag.Id);
             }
-            bool btmp = false;
-            if(mChangedTags.ContainsKey(tag.Id))
-            {
-                mChangedTags.Remove(tag.Id, out btmp);
-            }
-            mValueChangedNotifier?.UnRegistor(tag.Id);
         }
 
         /// <summary>
@@ -218,9 +234,12 @@ namespace Cdy.Tag
         /// </summary>
         public void Clear()
         {
-            mTags.Clear();
-            mChangedTags.Clear();
-            mCurrentCount = 0;
+            lock (mLockObj2)
+            {
+                mTags.Clear();
+                mChangedTags.Clear();
+                mCurrentCount = 0;
+            }
         }
 
         /// <summary>
@@ -229,40 +248,47 @@ namespace Cdy.Tag
         private void ThreadProcess()
         {
             ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray1);
-
-            closedEvent.Reset();
-            while (!mIsClosed)
+            try
             {
-                resetEvent.WaitOne();
-                resetEvent.Reset();
-                if (mIsClosed) break;
-                
-                try
+                closedEvent.Reset();
+                while (!mIsClosed)
                 {
-                    int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
-                    if (mChangedTags.Count > 0)
+                    resetEvent.WaitOne();
+                    resetEvent.Reset();
+                    if (mIsClosed) break;
+
+                    try
                     {
-                        foreach (var vv in mChangedTags)
+                        lock (mLockObj2)
                         {
-                            if (vv.Value)
+                            int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
+                            if (mChangedTags.Count > 0)
                             {
-                                lock (mLockObj)
+                                foreach (var vv in mChangedTags)
                                 {
-                                    mTags[vv.Key].UpdateChangedValue3(tim);
-                                    mChangedTags[vv.Key] = false;
+                                    if (vv.Value)
+                                    {
+                                        mTags[vv.Key].UpdateChangedValue3(tim);
+
+                                        mChangedTags[vv.Key] = false;
+                                    }
                                 }
                             }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        LoggerService.Service.Erro("ValueChangedMemoryCacheProcesser", ex.Message);
+                    }
+                    resetEvent.Reset();
                 }
-                catch(Exception ex)
-                {
-                    LoggerService.Service.Erro("ValueChangedMemoryCacheProcesser", ex.Message);
-                }
-                resetEvent.Reset();
+                closedEvent.Set();
+                LoggerService.Service.Info("ValueChangedMemoryCacheProcesser", Name + " 退出");
             }
-            closedEvent.Set();
-            LoggerService.Service.Info("ValueChangedMemoryCacheProcesser", Name + " 退出");
+            catch(Exception ex)
+            {
+                LoggerService.Service.Erro("ValueChangedMemoryCacheProcesser",$"{ex.Message} { ex.StackTrace}");
+            }
         }
 
         /// <summary>

@@ -193,7 +193,7 @@
                             <Image Margin="5,0"  Source="{Binding Icon,RelativeSource={RelativeSource AncestorType=Window}}" Height="16" HorizontalAlignment="Left" Width="24" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" Stretch="Fill" />
                             <Label Margin="30,0,115,0" VerticalContentAlignment="Center" Content="{Binding Title,RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Window}}"/>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Style="{DynamicResource ButtonStyle1}" x:Name="minB" BorderThickness="0" Background="Transparent"   Command="{Binding ReloadCommand}" HorizontalAlignment="Left"  Margin="1,0,0,0"   VerticalAlignment="Stretch" Width="32"  >
+                                <Button Style="{DynamicResource ButtonStyle1}" x:Name="minB" BorderThickness="0" Background="Transparent"   HorizontalAlignment="Left"  Margin="1,0,0,0"   VerticalAlignment="Stretch" Width="32"  >
                                     <Button.ContentTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
@@ -203,7 +203,7 @@
                                     </Button.ContentTemplate>
                                 </Button>
 
-                                <Button Style="{DynamicResource ButtonStyle1}" x:Name="maxB" BorderThickness="0"  Background="Transparent" Command="{Binding ReloadCommand}" HorizontalAlignment="Left"  Margin="0,0,0,0"   VerticalAlignment="Stretch" Width="32"  >
+                                <Button Style="{DynamicResource ButtonStyle1}" x:Name="maxB" BorderThickness="0"  Background="Transparent"  HorizontalAlignment="Left"  Margin="0,0,0,0"   VerticalAlignment="Stretch" Width="32"  >
                                     <Button.ContentTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
@@ -230,7 +230,7 @@
                             
                         <Border   Height="32"  Grid.Row="2" BorderBrush="Gray" BorderThickness="0,1,0,0"  Visibility="{Binding IsOkCancel,Converter={StaticResource bvc}}">
                             <Grid  Margin="0" >
-                                <Label  Content="{Binding Message}" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,0,200,0" />
+                                <Label  Content="{Binding Message}" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,0,200,0" />
                                     <Button  Style="{DynamicResource ButtonStyle1}" Name="btn_Cancel" BorderBrush="IndianRed" BorderThickness="0,0,0,2" IsCancel="{Binding IsEnableDefault}" Content="{local:ResMarker Cancel}" Height="22" Width="75" Margin="0,0,10,0" Command="{Binding CancelCommand}" HorizontalAlignment="Right" VerticalAlignment="Center"   >
                                     <Button.ContentTemplate>
                                         <DataTemplate>

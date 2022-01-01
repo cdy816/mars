@@ -178,6 +178,9 @@ namespace DBInStudio.Desktop.ViewModel
                     mIPList.Add(mServer);
                 }
                 CheckLocalServerRun();
+                ServerHelper.Helper.Server = Server;
+                ServerHelper.Helper.UserName = UserName;
+                ServerHelper.Helper.Password = Password;
                 LoginUserId = DevelopServiceHelper.Helper.Login(Server, UserName, Password);
             }
             catch(Exception ex)
@@ -202,7 +205,10 @@ namespace DBInStudio.Desktop.ViewModel
                     try
                     {
                         var vfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "DBInStudioServer.exe");
-                        Process.Start(vfile).WaitForExit(5000);
+                        ProcessStartInfo pinfo = new ProcessStartInfo();
+                        pinfo.FileName = vfile;
+                        pinfo.Arguments = "/m";
+                        Process.Start(pinfo).WaitForInputIdle(50000);
                     }
                     catch
                     {

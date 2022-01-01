@@ -135,6 +135,8 @@ namespace Cdy.Tag
     /// </summary>
     public struct IntPoint3Data
     {
+        public static IntPoint3Data Empty = new IntPoint3Data();
+
         public IntPoint3Data(int x, int y,int z)
         {
             X = x;
@@ -212,6 +214,24 @@ namespace Cdy.Tag
         {
             return base.GetHashCode();
         }
+
+        // <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static IntPoint3Data ToPointData(object value)
+        {
+            if (value is IntPoint3Data) return (IntPoint3Data)value;
+            else if (value is UIntPoint3Data) return new IntPoint3Data(((UIntPoint3Data)value).X, ((UIntPoint3Data)value).Y, ((UIntPoint3Data)value).Z);
+            else if (value is IntPointData) return new IntPoint3Data(((IntPointData)value).X, ((IntPointData)value).Y, 0);
+            else if (value is UIntPointData) return new IntPoint3Data(((UIntPointData)value).X, ((UIntPointData)value).Y, 0);
+            else if (value is LongPointData) return new IntPoint3Data((int)(((LongPointData)value).X), (int)(((LongPointData)value).Y), 0);
+            else if (value is ULongPointData) return new IntPoint3Data((int)(((ULongPointData)value).X), (int)(((ULongPointData)value).Y), 0);
+            else if (value is LongPoint3Data) return new IntPoint3Data((int)(((LongPoint3Data)value).X), (int)(((LongPoint3Data)value).Y), (int)(((LongPoint3Data)value).Z));
+            else if (value is ULongPoint3Data) return new IntPoint3Data((int)(((ULongPoint3Data)value).X), (int)(((ULongPoint3Data)value).Y), (int)(((ULongPoint3Data)value).Z));
+            return Empty;
+        }
     }
 
     /// <summary>
@@ -219,6 +239,8 @@ namespace Cdy.Tag
     /// </summary>
     public struct UIntPointData
     {
+        public static UIntPointData Empty = new UIntPointData();
+
         public UIntPointData(uint x, uint y)
         {
             X = x;
@@ -285,6 +307,24 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static UIntPointData ToPointData(object value)
+        {
+            if (value is UIntPointData) return (UIntPointData)value;
+            else if (value is IntPointData) return new UIntPointData(((IntPointData)value).X, ((IntPointData)value).Y);
+            else if (value is IntPoint3Data) return new UIntPointData(((IntPoint3Data)value).X, ((IntPoint3Data)value).Y);
+            else if (value is UIntPoint3Data) return new UIntPointData(((UIntPoint3Data)value).X, ((UIntPoint3Data)value).Y);
+            else if (value is LongPointData) return new UIntPointData((int)(((LongPointData)value).X), (int)(((LongPointData)value).Y));
+            else if (value is ULongPointData) return new UIntPointData((int)(((ULongPointData)value).X), (int)(((ULongPointData)value).Y));
+            else if (value is LongPoint3Data) return new UIntPointData((int)(((LongPoint3Data)value).X), (int)(((LongPoint3Data)value).Y));
+            else if (value is ULongPoint3Data) return new UIntPointData((int)(((ULongPoint3Data)value).X), (int)(((ULongPoint3Data)value).Y));
+            return Empty;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
         public override int GetHashCode()
         {
@@ -296,6 +336,7 @@ namespace Cdy.Tag
     /// </summary>
     public struct UIntPoint3Data
     {
+        public static UIntPoint3Data Empty = new UIntPoint3Data();
         public UIntPoint3Data(uint x, uint y, uint z)
         {
             X = x;
@@ -377,6 +418,25 @@ namespace Cdy.Tag
         {
             return base.GetHashCode();
         }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static UIntPoint3Data ToPointData(object value)
+        {
+            if (value is UIntPoint3Data) return (UIntPoint3Data)value;
+            else if (value is IntPoint3Data) return new UIntPoint3Data(((IntPoint3Data)value).X, ((IntPoint3Data)value).Y, ((IntPoint3Data)value).Z);
+            else if (value is IntPointData) return new UIntPoint3Data(((IntPointData)value).X, ((IntPointData)value).Y,0);
+            else if (value is UIntPointData) return new UIntPoint3Data(((UIntPointData)value).X, ((UIntPointData)value).Y,0);
+            else if (value is LongPointData) return new UIntPoint3Data((int)(((LongPointData)value).X), (int)(((LongPointData)value).Y),0);
+            else if (value is ULongPointData) return new UIntPoint3Data((int)(((ULongPointData)value).X), (int)(((ULongPointData)value).Y),0);
+            else if (value is LongPoint3Data) return new UIntPoint3Data((int)(((LongPoint3Data)value).X), (int)(((LongPoint3Data)value).Y), (int)(((LongPoint3Data)value).Z));
+            else if (value is ULongPoint3Data) return new UIntPoint3Data((int)(((ULongPoint3Data)value).X), (int)(((ULongPoint3Data)value).Y), (int)(((ULongPoint3Data)value).Z));
+            return Empty;
+        }
     }
 
     /// <summary>
@@ -384,6 +444,7 @@ namespace Cdy.Tag
     /// </summary>
     public struct LongPointData
     {
+        public static LongPointData Empty = new LongPointData();
         public LongPointData(long x, long y)
         {
             X = x;
@@ -465,6 +526,24 @@ namespace Cdy.Tag
         {
             return base.GetHashCode();
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static LongPointData ToPointData(object value)
+        {
+            if (value is LongPointData) return (LongPointData)value;
+            else if (value is UIntPointData) return new LongPointData(((UIntPointData)value).X, ((UIntPointData)value).Y);
+            else if (value is IntPoint3Data) return new LongPointData(((IntPoint3Data)value).X, ((IntPoint3Data)value).Y);
+            else if (value is UIntPoint3Data) return new LongPointData(((UIntPoint3Data)value).X, ((UIntPoint3Data)value).Y);
+            else if (value is IntPointData) return new LongPointData((((IntPointData)value).X), (int)(((IntPointData)value).Y));
+            else if (value is ULongPointData) return new LongPointData(((ULongPointData)value).X, ((ULongPointData)value).Y);
+            else if (value is LongPoint3Data) return new LongPointData((int)(((LongPoint3Data)value).X), (int)(((LongPoint3Data)value).Y));
+            else if (value is ULongPoint3Data) return new LongPointData((int)(((ULongPoint3Data)value).X), (int)(((ULongPoint3Data)value).Y));
+            return Empty;
+        }
+
     }
 
     /// <summary>
@@ -472,6 +551,7 @@ namespace Cdy.Tag
     /// </summary>
     public struct LongPoint3Data
     {
+        public static LongPoint3Data Empty = new LongPoint3Data();
         public LongPoint3Data(long x, long y, long z)
         {
             X = x;
@@ -562,6 +642,25 @@ namespace Cdy.Tag
         {
             return base.GetHashCode();
         }
+
+
+        // <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static LongPoint3Data ToPointData(object value)
+        {
+            if (value is LongPoint3Data) return (LongPoint3Data)value;
+            else if (value is UIntPoint3Data) return new LongPoint3Data(((UIntPoint3Data)value).X, ((UIntPoint3Data)value).Y, ((UIntPoint3Data)value).Z);
+            else if (value is IntPointData) return new LongPoint3Data(((IntPointData)value).X, ((IntPointData)value).Y, 0);
+            else if (value is UIntPointData) return new LongPoint3Data(((UIntPointData)value).X, ((UIntPointData)value).Y, 0);
+            else if (value is LongPointData) return new LongPoint3Data((int)(((LongPointData)value).X), (int)(((LongPointData)value).Y), 0);
+            else if (value is ULongPointData) return new LongPoint3Data((int)(((ULongPointData)value).X), (int)(((ULongPointData)value).Y), 0);
+            else if (value is IntPoint3Data) return new LongPoint3Data((int)(((IntPoint3Data)value).X), (int)(((IntPoint3Data)value).Y), (int)(((IntPoint3Data)value).Z));
+            else if (value is ULongPoint3Data) return new LongPoint3Data((int)(((ULongPoint3Data)value).X), (int)(((ULongPoint3Data)value).Y), (int)(((ULongPoint3Data)value).Z));
+            return Empty;
+        }
     }
 
     /// <summary>
@@ -569,6 +668,7 @@ namespace Cdy.Tag
     /// </summary>
     public struct ULongPointData
     {
+        public static ULongPointData Empty = new ULongPointData();
         /// <summary>
         /// 
         /// </summary>
@@ -656,6 +756,25 @@ namespace Cdy.Tag
             return base.GetHashCode();
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static ULongPointData ToPointData(object value)
+        {
+            if (value is ULongPointData) return (ULongPointData)value;
+            else if (value is UIntPointData) return new ULongPointData(((UIntPointData)value).X, ((UIntPointData)value).Y);
+            else if (value is IntPoint3Data) return new ULongPointData(((IntPoint3Data)value).X, ((IntPoint3Data)value).Y);
+            else if (value is UIntPoint3Data) return new ULongPointData(((UIntPoint3Data)value).X, ((UIntPoint3Data)value).Y);
+            else if (value is IntPointData) return new ULongPointData((((IntPointData)value).X), (int)(((IntPointData)value).Y));
+            else if (value is LongPointData) return new ULongPointData(((LongPointData)value).X, ((LongPointData)value).Y);
+            else if (value is LongPoint3Data) return new ULongPointData((int)(((LongPoint3Data)value).X), (int)(((LongPoint3Data)value).Y));
+            else if (value is ULongPoint3Data) return new ULongPointData((int)(((ULongPoint3Data)value).X), (int)(((ULongPoint3Data)value).Y));
+            return Empty;
+        }
+
     }
 
     /// <summary>
@@ -663,6 +782,7 @@ namespace Cdy.Tag
     /// </summary>
     public struct ULongPoint3Data
     {
+        public static ULongPoint3Data Empty = new ULongPoint3Data();
         public ULongPoint3Data(ulong x, ulong y, ulong z)
         {
             X = x;
@@ -737,6 +857,25 @@ namespace Cdy.Tag
         {
             return base.GetHashCode();
         }
+
+        // <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static ULongPoint3Data ToPointData(object value)
+        {
+            if (value is ULongPoint3Data) return (ULongPoint3Data)value;
+            else if (value is UIntPoint3Data) return new ULongPoint3Data(((UIntPoint3Data)value).X, ((UIntPoint3Data)value).Y, ((UIntPoint3Data)value).Z);
+            else if (value is IntPointData) return new ULongPoint3Data(((IntPointData)value).X, ((IntPointData)value).Y, 0);
+            else if (value is UIntPointData) return new ULongPoint3Data(((UIntPointData)value).X, ((UIntPointData)value).Y, 0);
+            else if (value is LongPointData) return new ULongPoint3Data((int)(((LongPointData)value).X), (int)(((LongPointData)value).Y), 0);
+            else if (value is ULongPointData) return new ULongPoint3Data((int)(((ULongPointData)value).X), (int)(((ULongPointData)value).Y), 0);
+            else if (value is IntPoint3Data) return new ULongPoint3Data((int)(((IntPoint3Data)value).X), (int)(((IntPoint3Data)value).Y), (int)(((IntPoint3Data)value).Z));
+            else if (value is LongPoint3Data) return new ULongPoint3Data((int)(((LongPoint3Data)value).X), (int)(((LongPoint3Data)value).Y), (int)(((LongPoint3Data)value).Z));
+            return Empty;
+        }
+
     }
 
 }

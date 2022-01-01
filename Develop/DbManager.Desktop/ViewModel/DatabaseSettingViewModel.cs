@@ -48,6 +48,15 @@ namespace DBInStudio.Desktop
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        public override bool CanAddChild()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
         public override ViewModelBase GetModel(ViewModelBase model)

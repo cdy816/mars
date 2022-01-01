@@ -71,9 +71,9 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         /// <param name="target"></param>
         /// <returns></returns>
-        public RealDatabase LoadDifferenceByName(string name, RealDatabase target)
+        public RealDatabase LoadDifferenceByName(string name, RealDatabase target,out List<int> mRemoved)
         {
-            return LoadDifference(PathHelper.helper.GetDataPath(name, name + ".xdb"),target);
+            return LoadDifference(PathHelper.helper.GetDataPath(name, name + ".xdb"),target,out mRemoved);
         }
 
         /// <summary>
@@ -82,9 +82,10 @@ namespace Cdy.Tag
         /// <param name="path"></param>
         /// <param name="target"></param>
         /// <returns></returns>
-        public RealDatabase LoadDifference(string path,RealDatabase target)
+        public RealDatabase LoadDifference(string path,RealDatabase target,out List<int> mRemoved)
         {
             RealDatabase db = new RealDatabase();
+            List<int> mRemovedIds=null;
             if (System.IO.File.Exists(path))
             {
                 db.UpdateTime = new System.IO.FileInfo(path).LastWriteTimeUtc.ToString();
@@ -93,7 +94,10 @@ namespace Cdy.Tag
 
                 db.Name = xe.Attribute("Name").Value;
                 db.Version = xe.Attribute("Version").Value;
-                                
+
+
+                mRemovedIds = target.Tags.Keys.ToList();
+
                 if (xe.Element("Tags") != null)
                 {
                     foreach (var vv in xe.Element("Tags").Elements())
@@ -104,14 +108,22 @@ namespace Cdy.Tag
                         {
                             db.Tags.Add(tag.Id, tag);
                         }
+
+                        if(target.Tags.ContainsKey(tag.Id))
+                        {
+                            mRemovedIds.Remove(tag.Id);
+                        }
+                        
                     }
                     db.BuildNameMap();
                 }
                 if(db.Tags.Count>0)
                 db.MaxId = db.Tags.Keys.Max();
+
             }
             db.IsDirty = false;
             this.Database = db;
+            mRemoved = mRemovedIds;
             return db;
         }
 

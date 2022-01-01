@@ -683,10 +683,62 @@ namespace Cdy.Tag
             //MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
+            ctype = GetCompressType(ctype, out byte tagtype);
             var tp = CompressUnitManager2.Manager.GetCompress(ctype);
             if (tp != null)
             {
-                return tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type,ReadOtherDatablockAction);
+                if (!CheckTagTypeChanged<T>(tagtype))
+                {
+                    return tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                }
+                else
+                {
+                    //如果记录的类型发生了改变，则需要转换
+                    TagType tpp = (TagType)ctype;
+                    switch (tpp)
+                    {
+                        case TagType.Bool:
+                            return tp.DeCompressValue<bool>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.Byte:
+                            return tp.DeCompressValue<byte>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.Short:
+                            return tp.DeCompressValue<short>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.UShort:
+                            return tp.DeCompressValue<ushort>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.Int:
+                            return tp.DeCompressValue<int>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.UInt:
+                            return tp.DeCompressValue<uint>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.Long:
+                            return tp.DeCompressValue<long>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.ULong:
+                            return tp.DeCompressValue<ulong>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.DateTime:
+                            return tp.DeCompressValue<DateTime>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.Float:
+                            return tp.DeCompressValue<float>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.Double:
+                            return tp.DeCompressValue<double>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.String:
+                            return tp.DeCompressValue<string>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.IntPoint:
+                            return tp.DeCompressValue<IntPointData>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.IntPoint3:
+                            return tp.DeCompressValue<IntPoint3Data>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.UIntPoint:
+                            return tp.DeCompressValue<UIntPointData>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.UIntPoint3:
+                            return tp.DeCompressValue<UIntPoint3Data>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.LongPoint:
+                            return tp.DeCompressValue<LongPointData>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.ULongPoint:
+                            return tp.DeCompressValue<ULongPointData>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.LongPoint3:
+                            return tp.DeCompressValue<LongPoint3Data>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                        case TagType.ULongPoint3:
+                            return tp.DeCompressValue<ULongPoint3Data>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                    }
+                }
             }
             return null;
         }
@@ -705,10 +757,204 @@ namespace Cdy.Tag
             //MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
+            ctype = GetCompressType(ctype, out byte tagtype);
             var tp = CompressUnitManager2.Manager.GetCompress(ctype);
             if (tp != null)
             {
-                tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type, result, ReadOtherDatablockAction);
+                if (!CheckTagTypeChanged<T>(tagtype))
+                {
+                    tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type, result, ReadOtherDatablockAction);
+                }
+                else
+                {
+                    DateTime time;
+                    byte qu;
+                    //如果记录的类型发生了改变，则需要转换
+                    TagType tpp = (TagType)ctype;
+                    switch (tpp)
+                    {
+                        case TagType.Bool:
+                            var htmp = new HisQueryResult<bool>(600);
+                            tp.DeCompressValue<bool>(memory, 1, datatime, timeTick, type, htmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < htmp.Count; i++)
+                            {
+                                var bval = htmp.GetTargetValue(htmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.Byte:
+                            var btmp = new HisQueryResult<byte>(600);
+                            tp.DeCompressValue<byte>(memory, 1, datatime, timeTick, type, btmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < btmp.Count; i++)
+                            {
+                                var bval = btmp.GetTargetValue(btmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.Short:
+                            var stmp = new HisQueryResult<short>(600);
+                            tp.DeCompressValue<short>(memory, 1, datatime, timeTick, type, stmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < stmp.Count; i++)
+                            {
+                                var bval = stmp.GetTargetValue(stmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.UShort:
+                            var ustmp = new HisQueryResult<ushort>(600);
+                            tp.DeCompressValue<ushort>(memory, 1, datatime, timeTick, type, ustmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < ustmp.Count; i++)
+                            {
+                                var bval = ustmp.GetTargetValue(ustmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.Int:
+                            var itmp = new HisQueryResult<int>(600);
+                            tp.DeCompressValue<int>(memory, 1, datatime, timeTick, type, itmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < itmp.Count; i++)
+                            {
+                                var bval = itmp.GetTargetValue(itmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.UInt:
+                            var uitmp = new HisQueryResult<uint>(600);
+                            tp.DeCompressValue<uint>(memory, 1, datatime, timeTick, type, uitmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < uitmp.Count; i++)
+                            {
+                                var bval = uitmp.GetTargetValue(uitmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.Long:
+                            var ltmp = new HisQueryResult<long>(600);
+                            tp.DeCompressValue<long>(memory, 1, datatime, timeTick, type, ltmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < ltmp.Count; i++)
+                            {
+                                var bval = ltmp.GetTargetValue(ltmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.ULong:
+                            var ultmp = new HisQueryResult<ulong>(600);
+                            tp.DeCompressValue<ulong>(memory, 1, datatime, timeTick, type, ultmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < ultmp.Count; i++)
+                            {
+                                var bval = ultmp.GetTargetValue(ultmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.DateTime:
+                            var dttmp = new HisQueryResult<DateTime>(600);
+                            tp.DeCompressValue<DateTime>(memory, 1, datatime, timeTick, type, dttmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < dttmp.Count; i++)
+                            {
+                                var bval = dttmp.GetTargetValue(dttmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.Float:
+                            var ftmp = new HisQueryResult<float>(600);
+                            tp.DeCompressValue<float>(memory, 1, datatime, timeTick, type, ftmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < ftmp.Count; i++)
+                            {
+                                var bval = ftmp.GetTargetValue(ftmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.Double:
+                            var dtmp = new HisQueryResult<double>(600);
+                            tp.DeCompressValue<double>(memory, 1, datatime, timeTick, type, dtmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < dtmp.Count; i++)
+                            {
+                                var bval = dtmp.GetTargetValue(dtmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.String:
+                            var sstmp = new HisQueryResult<string>(600);
+                            tp.DeCompressValue<string>(memory, 1, datatime, timeTick, type, sstmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < sstmp.Count; i++)
+                            {
+                                var bval = sstmp.GetTargetValue(sstmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.IntPoint:
+                            var iptmp = new HisQueryResult<IntPointData>(600);
+                            tp.DeCompressValue<IntPointData>(memory, 1, datatime, timeTick, type, iptmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < iptmp.Count; i++)
+                            {
+                                var bval = iptmp.GetTargetValue(iptmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.IntPoint3:
+                            var ip3tmp = new HisQueryResult<IntPoint3Data>(600);
+                            tp.DeCompressValue<IntPoint3Data>(memory, 1, datatime, timeTick, type, ip3tmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < ip3tmp.Count; i++)
+                            {
+                                var bval = ip3tmp.GetTargetValue(ip3tmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.UIntPoint:
+                            var uptmp = new HisQueryResult<UIntPointData>(600);
+                            tp.DeCompressValue<UIntPointData>(memory, 1, datatime, timeTick, type, uptmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < uptmp.Count; i++)
+                            {
+                                var bval = uptmp.GetTargetValue(uptmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.UIntPoint3:
+                            var uip3tmp = new HisQueryResult<UIntPoint3Data>(600);
+                            tp.DeCompressValue<UIntPoint3Data>(memory, 1, datatime, timeTick, type, uip3tmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < uip3tmp.Count; i++)
+                            {
+                                var bval = uip3tmp.GetTargetValue(uip3tmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.LongPoint:
+                            var liptmp = new HisQueryResult<LongPointData>(600);
+                            tp.DeCompressValue<LongPointData>(memory, 1, datatime, timeTick, type, liptmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < liptmp.Count; i++)
+                            {
+                                var bval = liptmp.GetTargetValue(liptmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.ULongPoint:
+                            var uliptmp = new HisQueryResult<ULongPointData>(600);
+                            tp.DeCompressValue<ULongPointData>(memory, 1, datatime, timeTick, type, uliptmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < uliptmp.Count; i++)
+                            {
+                                var bval = uliptmp.GetTargetValue(uliptmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.LongPoint3:
+                            var lip3tmp = new HisQueryResult<LongPoint3Data>(600);
+                            tp.DeCompressValue<LongPoint3Data>(memory, 1, datatime, timeTick, type, lip3tmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < lip3tmp.Count; i++)
+                            {
+                                var bval = lip3tmp.GetTargetValue(lip3tmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.ULongPoint3:
+                            var ulip3tmp = new HisQueryResult<ULongPoint3Data>(600);
+                            tp.DeCompressValue<ULongPoint3Data>(memory, 1, datatime, timeTick, type, ulip3tmp, ReadOtherDatablockAction);
+                            for (int i = 0; i < ulip3tmp.Count; i++)
+                            {
+                                var bval = ulip3tmp.GetTargetValue(ulip3tmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                    }
+                }
             }
         }
 
@@ -721,14 +967,178 @@ namespace Cdy.Tag
         private static TagHisValue<T> DeCompressDataBlockRawValue<T>(MarshalMemoryBlock memory,byte readValueType)
         {
             var ctype = memory.ReadByte();
+            ctype = GetCompressType(ctype, out byte tagtype);
             var tp = CompressUnitManager2.Manager.GetCompress(ctype);
             if (tp != null)
             {
-               return  tp.DeCompressRawValue<T>(memory,1 ,readValueType);
+                if (!CheckTagTypeChanged<T>(tagtype))
+                {
+                    return tp.DeCompressRawValue<T>(memory, 1, readValueType);
+                }
+                else
+                {
+                    //DateTime time;
+                    //byte qu;
+                    ////如果记录的类型发生了改变，则需要转换
+                    //TagType tpp = (TagType)ctype;
+                    //switch (tpp)
+                    //{
+                    //    case TagType.Bool:
+                           
+                    //        return tp.DeCompressRawValue<bool>(memory, 1, readValueType);
+                            
+                    //    case TagType.Byte:
+                           
+                    //        res = tp.DeCompressRawValue<byte>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.Short:
+                           
+                    //        res = tp.DeCompressRawValue<short>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.UShort:
+                           
+                    //        res = tp.DeCompressRawValue<ushort>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.Int:
+                          
+                    //        res = tp.DeCompressRawValue<int>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.UInt:
+                         
+                    //        res = tp.DeCompressRawValue<uint>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.Long:
+                          
+                    //        res = tp.DeCompressRawValue<long>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.ULong:
+                       
+                    //        res = tp.DeCompressRawValue<ulong>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.DateTime:
+                            
+                    //        res = tp.DeCompressRawValue<DateTime>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.Float:
+                            
+                    //        res = tp.DeCompressRawValue<float>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.Double:
+                            
+                    //        res = tp.DeCompressRawValue<double>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.String:
+                            
+                    //        res = tp.DeCompressRawValue<string>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.IntPoint:
+                          
+                    //        res = tp.DeCompressRawValue<IntPointData>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.IntPoint3:
+                           
+                    //        res = tp.DeCompressRawValue<IntPoint3Data>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.UIntPoint:
+                            
+                    //        res = tp.DeCompressRawValue<UIntPointData>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.UIntPoint3:
+                            
+                    //        res = tp.DeCompressRawValue<UIntPoint3Data>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.LongPoint:
+                          
+                    //        res = tp.DeCompressRawValue<LongPointData>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.ULongPoint:
+                            
+                    //        res = tp.DeCompressRawValue<bool>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.LongPoint3:
+                          
+                    //        res = tp.DeCompressRawValue<bool>(memory, 1, readValueType);
+                    //        break;
+                    //    case TagType.ULongPoint3:
+                          
+                    //        res = tp.DeCompressRawValue<bool>(memory, 1, readValueType);
+                    //        break;
+                    //}
+                }
             }
             return TagHisValue<T>.Empty;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="val"></param>
+        /// <param name="tagType"></param>
+        /// <returns></returns>
+        private static byte GetCompressType(byte val,out byte tagType)
+        {
+            tagType =  (byte)((val >> 3)-1);
+            return (byte)(val & 0x03);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="tagtype"></param>
+        /// <returns></returns>
+        private static bool CheckTagTypeChanged<T>(byte tagtype)
+        {
+            if (tagtype == 255) return false;
+
+            string sname = typeof(T).Name.ToLower();
+            TagType tp = (TagType)tagtype;
+            switch (sname)
+            {
+                case "bool":
+                    return tp != TagType.Bool;
+                case "byte":
+                    return tp != TagType.Byte;
+                case "short":
+                    return tp != TagType.Short;
+                case "ushort":
+                    return tp != TagType.UShort;
+                case "int":
+                    return tp != TagType.Int;
+                case "uint":
+                    return tp != TagType.UInt;
+                case "long":
+                    return tp != TagType.Long;
+                case "ulong":
+                    return tp != TagType.ULong;
+                case "double":
+                    return tp != TagType.Double;
+                case "float":
+                    return tp != TagType.Float;
+                case "datetime":
+                    return tp != TagType.DateTime;
+                case "string":
+                    return tp != TagType.String;
+                case "intpoint":
+                    return tp != TagType.IntPoint;
+                case "intpoint3":
+                    return tp != TagType.IntPoint3;
+                case "uintpoint":
+                    return tp != TagType.UIntPoint;
+                case "uintpoint3":
+                    return tp != TagType.UIntPoint3;
+                case "longpoint":
+                    return tp != TagType.LongPoint;
+                case "longpoint3":
+                    return tp != TagType.LongPoint3;
+                case "ulongpoint":
+                    return tp != TagType.ULongPoint;
+                case "ulongpoint3":
+                    return tp != TagType.ULongPoint3;
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// 
@@ -743,10 +1153,205 @@ namespace Cdy.Tag
             //MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
+            ctype = GetCompressType(ctype, out byte tagtype);
             var tp = CompressUnitManager2.Manager.GetCompress(ctype);
             if (tp != null)
             {
-                tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+                //如果变量类型没有改变
+                if (!CheckTagTypeChanged<T>(tagtype))
+                {
+                    tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, result);
+                }
+                else
+                {
+                    DateTime time;
+                    byte qu;
+                    //如果记录的类型发生了改变，则需要转换
+                    TagType tpp = (TagType)ctype;
+                    switch(tpp)
+                    {
+                        case TagType.Bool:
+                            var htmp = new HisQueryResult<bool>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, htmp);
+                            for(int i=0;i<htmp.Count;i++)
+                            {
+                                var bval = htmp.GetTargetValue(htmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.Byte:
+                            var btmp = new HisQueryResult<byte>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, btmp);
+                            for (int i = 0; i < btmp.Count; i++)
+                            {
+                                var bval = btmp.GetTargetValue(btmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.Short:
+                            var stmp = new HisQueryResult<short>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, stmp);
+                            for (int i = 0; i < stmp.Count; i++)
+                            {
+                                var bval = stmp.GetTargetValue(stmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.UShort:
+                            var ustmp = new HisQueryResult<ushort>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, ustmp);
+                            for (int i = 0; i < ustmp.Count; i++)
+                            {
+                                var bval = ustmp.GetTargetValue(ustmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.Int:
+                            var itmp = new HisQueryResult<int>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, itmp);
+                            for (int i = 0; i < itmp.Count; i++)
+                            {
+                                var bval = itmp.GetTargetValue(itmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.UInt:
+                            var uitmp = new HisQueryResult<uint>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, uitmp);
+                            for (int i = 0; i < uitmp.Count; i++)
+                            {
+                                var bval = uitmp.GetTargetValue(uitmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.Long:
+                            var ltmp = new HisQueryResult<long>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, ltmp);
+                            for (int i = 0; i < ltmp.Count; i++)
+                            {
+                                var bval = ltmp.GetTargetValue(ltmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.ULong:
+                            var ultmp = new HisQueryResult<ulong>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, ultmp);
+                            for (int i = 0; i < ultmp.Count; i++)
+                            {
+                                var bval = ultmp.GetTargetValue(ultmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.DateTime:
+                            var dttmp = new HisQueryResult<DateTime>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, dttmp);
+                            for (int i = 0; i < dttmp.Count; i++)
+                            {
+                                var bval = dttmp.GetTargetValue(dttmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.Float:
+                            var ftmp = new HisQueryResult<float>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, ftmp);
+                            for (int i = 0; i < ftmp.Count; i++)
+                            {
+                                var bval = ftmp.GetTargetValue(ftmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.Double:
+                            var dtmp = new HisQueryResult<double>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, dtmp);
+                            for (int i = 0; i < dtmp.Count; i++)
+                            {
+                                var bval = dtmp.GetTargetValue(dtmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.String:
+                            var sstmp = new HisQueryResult<string>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, sstmp);
+                            for (int i = 0; i < sstmp.Count; i++)
+                            {
+                                var bval = sstmp.GetTargetValue(sstmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.IntPoint:
+                            var iptmp = new HisQueryResult<IntPointData>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, iptmp);
+                            for (int i = 0; i < iptmp.Count; i++)
+                            {
+                                var bval = iptmp.GetTargetValue(iptmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.IntPoint3:
+                            var ip3tmp = new HisQueryResult<IntPoint3Data>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, ip3tmp);
+                            for (int i = 0; i < ip3tmp.Count; i++)
+                            {
+                                var bval = ip3tmp.GetTargetValue(ip3tmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.UIntPoint:
+                            var uptmp = new HisQueryResult<UIntPointData>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, uptmp);
+                            for (int i = 0; i < uptmp.Count; i++)
+                            {
+                                var bval = uptmp.GetTargetValue(uptmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.UIntPoint3:
+                            var uip3tmp = new HisQueryResult<UIntPoint3Data>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, uip3tmp);
+                            for (int i = 0; i < uip3tmp.Count; i++)
+                            {
+                                var bval = uip3tmp.GetTargetValue(uip3tmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.LongPoint:
+                            var liptmp = new HisQueryResult<LongPointData>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, liptmp);
+                            for (int i = 0; i < liptmp.Count; i++)
+                            {
+                                var bval = liptmp.GetTargetValue(liptmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.ULongPoint:
+                            var uliptmp = new HisQueryResult<ULongPointData>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, uliptmp);
+                            for (int i = 0; i < uliptmp.Count; i++)
+                            {
+                                var bval = uliptmp.GetTargetValue(uliptmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.LongPoint3:
+                            var lip3tmp = new HisQueryResult<LongPoint3Data>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, lip3tmp);
+                            for (int i = 0; i < lip3tmp.Count; i++)
+                            {
+                                var bval = lip3tmp.GetTargetValue(lip3tmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                        case TagType.ULongPoint3:
+                            var ulip3tmp = new HisQueryResult<ULongPoint3Data>(600);
+                            tp.DeCompressAllValue(memory, 1, startTime, endTime, timeTick, ulip3tmp);
+                            for (int i = 0; i < ulip3tmp.Count; i++)
+                            {
+                                var bval = ulip3tmp.GetTargetValue(ulip3tmp.GetValue(i, out time, out qu));
+                                result.Add(bval, time, qu);
+                            }
+                            break;
+                    }
+                }
             }
         }
 

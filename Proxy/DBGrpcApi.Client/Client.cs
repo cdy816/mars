@@ -24,6 +24,8 @@ namespace DBGrpcApi
 
         private Security.SecurityClient mSecurityClient;
 
+        private TagInfo.TagInfoClient mTagInfoClient;
+
         private Grpc.Net.Client.GrpcChannel grpcChannel;
 
         #endregion ...Variables...
@@ -112,6 +114,8 @@ namespace DBGrpcApi
 
                 mSecurityClient = new Security.SecurityClient(grpcChannel);
 
+                mTagInfoClient = new TagInfo.TagInfoClient(grpcChannel);
+
             }
             catch (Exception ex)
             {
@@ -124,8 +128,8 @@ namespace DBGrpcApi
         /// <summary>
         /// 登录
         /// </summary>
-        /// <param name="username"></param>
-        /// <param name="password"></param>
+        /// <param name="username">用户名</param>
+        /// <param name="password">密码</param>
         /// <returns></returns>
         public bool Login(string username,string password)
         {
@@ -289,7 +293,7 @@ namespace DBGrpcApi
         /// <summary>
         /// 读取实时值
         /// </summary>
-        /// <param name="tags"></param>
+        /// <param name="tags">变量名称集合</param>
         /// <returns></returns>
         public Dictionary<string,object> ReadRealValue(List<string> tags)
         {
@@ -325,10 +329,10 @@ namespace DBGrpcApi
         }
 
         /// <summary>
-        /// 
+        /// 读取实时值
         /// </summary>
-        /// <param name="tagIds"></param>
-        /// <param name="group"></param>
+        /// <param name="tagIds">变量ID集合</param>
+        /// <param name="group">请求变量所在的组名</param>
         /// <returns></returns>
         public Dictionary<int, object> ReadRealValueById(List<int> tagIds,string group)
         {
@@ -358,7 +362,7 @@ namespace DBGrpcApi
         /// <summary>
         /// 读取实时值，质量戳
         /// </summary>
-        /// <param name="tags"></param>
+        /// <param name="tags">变量名称集合</param>
         /// <returns></returns>
         public Dictionary<string, Tuple<int, object>> ReadRealValueAndQuality(List<string> tags)
         {
@@ -394,10 +398,10 @@ namespace DBGrpcApi
         }
 
         /// <summary>
-        /// 
+        /// 读取实时值，质量戳
         /// </summary>
-        /// <param name="tagIds"></param>
-        /// <param name="group"></param>
+        /// <param name="tagIds">变量ID集合</param>
+        /// <param name="group">请求变量所在的组名</param>
         /// <returns></returns>
         public Dictionary<int, Tuple<int, object>> ReadRealValueAndQualityById(List<int> tagIds, string group)
         {
@@ -428,7 +432,7 @@ namespace DBGrpcApi
         /// <summary>
         /// 读取实时值，质量戳，时间
         /// </summary>
-        /// <param name="tags"></param>
+        /// <param name="tags">变量名称集合</param>
         /// <returns></returns>
         public Dictionary<string, Tuple<int,DateTime, object>> ReadRealValueAndQualityTime(List<string> tags)
         {
@@ -464,10 +468,10 @@ namespace DBGrpcApi
         }
 
         /// <summary>
-        /// 
+        /// 读取实时值，质量戳，时间
         /// </summary>
-        /// <param name="tagIds"></param>
-        /// <param name="group"></param>
+        /// <param name="tagIds">变量ID集合</param>
+        /// <param name="group">请求变量所在的组名</param>
         /// <returns></returns>
         public Dictionary<int, Tuple<int, DateTime, object>> ReadRealValueAndQualityTimeById(List<int> tagIds, string group)
         {
@@ -493,15 +497,15 @@ namespace DBGrpcApi
             }
             return null;
         }
-        
+
         /// <summary>
         /// 读取历史记录
         /// </summary>
-        /// <param name="tags"></param>
-        /// <param name="starttime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="duration"></param>
-        /// <param name="type"></param>
+        /// <param name="tags">变量名称集合</param>
+        /// <param name="starttime">开始时间</param>
+        /// <param name="endTime">结束时间</param>
+        /// <param name="duration">时间间隔</param>
+        /// <param name="type">值拟合类型<see cref="QueryValueMatchType"/></param>
         /// <returns></returns>
         public Dictionary<string, HisDataValueCollection> ReadHisValue(List<string> tags,DateTime starttime,DateTime endTime,TimeSpan duration,Cdy.Tag.QueryValueMatchType type)
         {
@@ -532,9 +536,9 @@ namespace DBGrpcApi
         /// <summary>
         /// 读取记录的所有值
         /// </summary>
-        /// <param name="tags"></param>
-        /// <param name="starttime"></param>
-        /// <param name="endTime"></param>
+        /// <param name="tags">变量名称集合</param>
+        /// <param name="starttime">开始时间</param>
+        /// <param name="endTime">结束时间</param>
         /// <returns></returns>
         public Dictionary<string, HisDataValueCollection> ReadAllHisValue(List<string> tags, DateTime starttime, DateTime endTime)
         {
@@ -562,11 +566,11 @@ namespace DBGrpcApi
         }
 
         /// <summary>
-        /// 
+        /// 请求统计值
         /// </summary>
-        /// <param name="tags"></param>
-        /// <param name="starttime"></param>
-        /// <param name="endtime"></param>
+        /// <param name="tags">变量名称集合</param>
+        /// <param name="starttime">开始时间</param>
+        /// <param name="endtime">结束时间</param>
         /// <returns></returns>
         public Dictionary<string,StatisticsValueCollection > ReadStatisticsValue(List<string> tags,DateTime starttime,DateTime endtime)
         {
@@ -594,10 +598,10 @@ namespace DBGrpcApi
         }
 
         /// <summary>
-        /// 
+        /// 设置变量的值
         /// </summary>
-        /// <param name="tag"></param>
-        /// <param name="value"></param>
+        /// <param name="tag">变量名称</param>
+        /// <param name="value">值</param>
         /// <returns></returns>
         public bool SetTagValue(string tag,object value)
         {
@@ -611,16 +615,36 @@ namespace DBGrpcApi
             return false;
         }
 
+
+        /// <summary>
+        /// 设置变量的值
+        /// </summary>
+        /// <param name="value">变量名称和值的集合</param>
+        /// <returns></returns>
+        public bool SetTagValue(Dictionary<string,string> values)
+        {
+            if (mRealDataClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                SetRealValueRequest svr = new SetRealValueRequest() { Token = mLoginId };
+                foreach(var vv in values)
+                svr.Values.Add(new SetRealValueItem() { TagName = vv.Key, Value = vv.Value });
+                var res = mRealDataClient.SetRealValue(svr);
+                return res.Result;
+            }
+            return false;
+        }
+
         /// <summary>
         /// 查找某个值对应的时间
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="type"></param>
-        /// <param name="value"></param>
+        /// <param name="tag">变量名称</param>
+        /// <param name="startTime">开始时间</param>
+        /// <param name="endTime">结束时间</param>
+        /// <param name="type">数值型变量值比较方式<see cref="NumberStatisticsType"/></param>
+        /// <param name="value">值</param>
+        /// <param name="interval">偏差,默认:0</param>
         /// <returns></returns>
-        public Tuple<DateTime, object> FindNumberTagValue(string tag, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, double interval=0)
+        public Tuple<DateTime, object> FindTagValue(string tag, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, double interval=0)
         {
             if (mRealDataClient != null && !string.IsNullOrEmpty(mLoginId))
             {
@@ -642,11 +666,12 @@ namespace DBGrpcApi
         /// <summary>
         /// 查找某个值保持的时间
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="type"></param>
-        /// <param name="value"></param>
+        /// <param name="tag">变量名称</param>
+        /// <param name="startTime">开始时间</param>
+        /// <param name="endTime">结束时间</param>
+        /// <param name="type">数值型变量值比较方式<see cref="NumberStatisticsType"/></param>
+        /// <param name="value">值</param>
+        /// <param name="interval">偏差,默认:0</param>
         /// <returns></returns>
         public double? CalTagValueKeepTime(string tag, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, object interval)
         {
@@ -665,11 +690,12 @@ namespace DBGrpcApi
         /// <summary>
         /// 查找某个值对应的时间
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="type"></param>
-        /// <param name="value"></param>
+        /// <param name="tag">变量名称</param>
+        /// <param name="startTime">开始时间</param>
+        /// <param name="endTime">结束时间</param>
+        /// <param name="type">数值型变量值比较方式<see cref="NumberStatisticsType"/></param>
+        /// <param name="value">值</param>
+        /// <param name="interval">偏差,默认:0</param>
         /// <returns></returns>
         public Dictionary<DateTime, object> FindTagValues(string tag, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, object interval)
         {
@@ -699,10 +725,9 @@ namespace DBGrpcApi
         /// <summary>
         /// 查找最大值
         /// </summary>
-        /// <param name="tag"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        /// <param name="type"></param>
+        /// <param name="tag">变量名称</param>
+        /// <param name="startTime">开始时间</param>
+        /// <param name="endTime">结束时间</param>
         /// <returns></returns>
         public Tuple<double,List<DateTime>> FindNumberTagMaxValue(string tag,DateTime startTime,DateTime endTime)
         {
@@ -726,9 +751,9 @@ namespace DBGrpcApi
         /// <summary>
         /// 查找最小值
         /// </summary>
-        /// <param name="tag"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
+        /// <param name="tag">变量名称</param>
+        /// <param name="startTime">开始时间</param>
+        /// <param name="endTime">结束时间</param>
         /// <returns></returns>
         public Tuple<double, List<DateTime>> FindNumberTagMinValue(string tag, DateTime startTime, DateTime endTime)
         {
@@ -752,9 +777,9 @@ namespace DBGrpcApi
         /// <summary>
         /// 计算平均值
         /// </summary>
-        /// <param name="tag"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
+        /// <param name="tag">变量名称</param>
+        /// <param name="startTime">开始时间</param>
+        /// <param name="endTime">结束时间</param>
         /// <returns></returns>
         public double FindNumberTagAvgValue(string tag, DateTime startTime, DateTime endTime)
         {
@@ -768,6 +793,168 @@ namespace DBGrpcApi
                 }
             }
             return double.MinValue;
+        }
+
+        /// <summary>
+        /// 枚举所有变量组
+        /// </summary>
+        /// <returns></returns>
+        public List<string> ListTagGroups()
+        {
+            if(mTagInfoClient!=null&&!string.IsNullOrEmpty(mLoginId))
+            {
+                List<string> rre = new List<string>();
+                var re = mTagInfoClient.ListTagGroup(new ListTagGroupRequest() { Token = mLoginId }).Group;
+                if(re!=null)
+                {
+                    rre.AddRange(re);
+                }
+                return rre;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 根据变量名称获取变量配置
+        /// </summary>
+        /// <param name="tagnames">变量名称的集合</param>
+        /// <returns></returns>
+        public List<Tagbase> GetTagByNameRequest(IEnumerable<string> tagnames)
+        {
+            if (mTagInfoClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                List<Tagbase> rre = new List<Tagbase>();
+                var vv = new DBGrpcApi.GetTagByNameRequest() { Token = mLoginId };
+                vv.TagNames.AddRange(tagnames);
+
+                var re = mTagInfoClient.GetTagByName(vv).Tags;
+                if (re != null)
+                {
+                    foreach(var vvv in re)
+                    {
+                        rre.Add(ConvertTo(vvv));
+                    }
+                }
+                return rre;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 通过变量组获取变量配置
+        /// </summary>
+        /// <param name="group">变量组</param>
+        /// <returns></returns>
+        public List<Tagbase> GetTagByGroup(string group)
+        {
+            if (mTagInfoClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                List<Tagbase> rre = new List<Tagbase>();
+                var vv = new DBGrpcApi.GetTagByGroupRequest() { Token = mLoginId,Group=group };
+
+                var re = mTagInfoClient.GetTagByGroup(vv).Tags;
+                if (re != null)
+                {
+                    foreach (var vvv in re)
+                    {
+                        rre.Add(ConvertTo(vvv));
+                    }
+                }
+                return rre;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <returns></returns>
+        private Tagbase ConvertTo(TagBase tag)
+        {
+            Cdy.Tag.TagType tp = (TagType) Enum.Parse(typeof(Cdy.Tag.TagType), tag.Type);
+            Cdy.Tag.Tagbase re=null;
+            switch (tp)
+            {
+                case TagType.Bool:
+                    re = new Cdy.Tag.BoolTag();
+                    break;
+                case TagType.Byte:
+                    re = new Cdy.Tag.ByteTag();
+                    break;
+                case TagType.DateTime:
+                    re = new Cdy.Tag.DateTimeTag();
+                    break;
+                case TagType.String:
+                    re = new Cdy.Tag.StringTag();
+                    break;
+                case TagType.IntPoint3:
+                    re = new Cdy.Tag.IntPoint3Tag();
+                    break;
+                case TagType.IntPoint:
+                    re = new Cdy.Tag.IntPointTag();
+                    break;
+                case TagType.UIntPoint3:
+                    re = new Cdy.Tag.UIntPoint3Tag();
+                    break;
+                case TagType.UIntPoint:
+                    re = new Cdy.Tag.UIntPointTag();
+                    break;
+                case TagType.LongPoint3:
+                    re = new Cdy.Tag.LongPoint3Tag();
+                    break;
+                case TagType.LongPoint:
+                    re = new Cdy.Tag.LongPointTag();
+                    break;
+                case TagType.ULongPoint3:
+                    re = new Cdy.Tag.ULongPoint3Tag();
+                    break;
+                case TagType.ULongPoint:
+                    re = new Cdy.Tag.ULongPointTag();
+                    break;
+                case TagType.Double:
+                    re = new Cdy.Tag.DoubleTag();
+                    (re as Cdy.Tag.DoubleTag).MaxValue = double.Parse(tag.MaxValue);
+                    (re as Cdy.Tag.DoubleTag).MinValue = double.Parse(tag.MinValue);
+                    (re as Cdy.Tag.DoubleTag).Precision = byte.Parse(tag.Precision);
+                    break;
+                case TagType.Float:
+                    re = new Cdy.Tag.FloatTag();
+                    (re as Cdy.Tag.FloatTag).MaxValue = double.Parse(tag.MaxValue);
+                    (re as Cdy.Tag.FloatTag).MinValue = double.Parse(tag.MinValue);
+                    (re as Cdy.Tag.FloatTag).Precision = byte.Parse(tag.Precision);
+                    break;
+                case TagType.Int:
+                    re = new Cdy.Tag.IntTag();
+                    (re as Cdy.Tag.IntTag).MaxValue = double.Parse(tag.MaxValue);
+                    (re as Cdy.Tag.IntTag).MinValue = double.Parse(tag.MinValue);
+                    break;
+                case TagType.UInt:
+                    re = new Cdy.Tag.UIntTag();
+                    (re as Cdy.Tag.UIntTag).MaxValue = double.Parse(tag.MaxValue);
+                    (re as Cdy.Tag.UIntTag).MinValue = double.Parse(tag.MinValue);
+                    break;
+                case TagType.Long:
+                    re = new Cdy.Tag.LongTag();
+                    (re as Cdy.Tag.LongTag).MaxValue = double.Parse(tag.MaxValue);
+                    (re as Cdy.Tag.LongTag).MinValue = double.Parse(tag.MinValue);
+                    break;
+                case TagType.ULong:
+                    re = new Cdy.Tag.ULongTag();
+                    (re as Cdy.Tag.ULongTag).MaxValue = double.Parse(tag.MaxValue);
+                    (re as Cdy.Tag.ULongTag).MinValue = double.Parse(tag.MinValue);
+                    break;
+            }
+            if (re != null)
+            {
+                re.Id = tag.Id;
+                re.Name = tag.Name;
+                re.Group = tag.Group;
+                re.Desc = tag.Desc;
+                re.LinkAddress = tag.LinkAddress;
+                re.ReadWriteType = (ReadWriteMode)(Enum.Parse(typeof(ReadWriteMode), tag.ReadWriteType));
+            }
+            return re;
         }
 
         /// <summary>

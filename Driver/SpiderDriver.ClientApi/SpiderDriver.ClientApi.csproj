@@ -6,10 +6,10 @@
     <Authors>chongdaoyang</Authors>
     <Product>Mars</Product>
     <PackageProjectUrl>https://github.com/cdy816/mars</PackageProjectUrl>
-    <Version>1.2.0</Version>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>
-    <FileVersion>1.2.0.0</FileVersion>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.3.1</Version>
+    <AssemblyVersion>1.3.1.0</AssemblyVersion>
+    <FileVersion>1.3.1.0</FileVersion>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Description>Spider driver develop api of mars database.</Description>
   </PropertyGroup>

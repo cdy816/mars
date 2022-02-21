@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+option csharp_namespace = "DBGrpcApi";
+
+package GrpcService;
+
+// The greeting service definition.
+service TagInfo {
+  rpc GetTagByName (GetTagByNameRequest) returns (TagResultReply);
+  rpc GetTagByGroup (GetTagByGroupRequest) returns (TagResultReply);
+  rpc ListTagGroup (ListTagGroupRequest) returns (ListTagGroupReply);
+}
+
+message GetTagByNameRequest{
+	string Token = 1;
+	repeated string TagNames=2;
+}
+
+message GetTagByGroupRequest{
+	string Token = 1;
+	string Group=2;
+}
+
+message TagBase
+{
+	int32 Id=1;
+	string Type=2;
+	string Name=3;
+	string Group=4;
+	string Desc=5;
+	string LinkAddress=6;
+	string Convert=7;
+	string ReadWriteType=8;
+	string MaxValue=9;
+	string MinValue=10;
+	string Precision=11;
+}
+
+//
+message ListTagGroupRequest{
+	string Token = 1;
+}
+
+
+message ListTagGroupReply{
+	bool Result=1;
+	repeated string Group=2;
+}
+
+
+message TagResultReply{
+	bool result=1;
+	repeated TagBase Tags=2;
+}
+

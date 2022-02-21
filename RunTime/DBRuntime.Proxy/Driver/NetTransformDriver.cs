@@ -440,14 +440,27 @@ namespace DBRuntime.Proxy
         /// <param name="values"></param>
         private void ProcessValueChanged(Dictionary<int, object> values)
         {
+            List<int> ids = new List<int>(values.Count);
+            List<byte> typs = new List<byte>(values.Count);
+            List<object> vals = new List<object>();
             foreach (var vv in values)
             {
                 var vatg = mServier.GetTagById(vv.Key);
-                if (Client != null)
-                {
-                    Client.SetTagValue(vv.Key, (byte)vatg.Type, vv.Value, 2000);
-                }
+                ids.Add(vv.Key);
+                typs.Add((byte)vatg.Type);
+                vals.Add(vv.Value);
+                //var vatg = mServier.GetTagById(vv.Key);
+                //if (Client != null)
+                //{
+                //    Client.SetTagValue(vv.Key, (byte)vatg.Type, vv.Value, 2000);
+                //}
             }
+
+            if(Client!=null && ids.Count>0)
+            {
+                Client.SetTagValue(ids, typs, vals, 5000);
+            }
+
         }
         /// <summary>
         /// 

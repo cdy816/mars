@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -23,6 +24,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Xml.Linq;
 
 namespace DBInStudio.Desktop.ViewModel
 {
@@ -95,6 +97,10 @@ namespace DBInStudio.Desktop.ViewModel
 
         private DataGridSelectionUnit mSelectMode = DataGridSelectionUnit.FullRow;
 
+        private bool mIsMonitMode = false;
+
+        private ICommand mStartMonitCommand;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -106,6 +112,50 @@ namespace DBInStudio.Desktop.ViewModel
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsMonitMode
+        {
+            get
+            {
+                return mIsMonitMode;
+            }
+            set
+            {
+                if (mIsMonitMode != value)
+                {
+                    mIsMonitMode = value;
+                    OnPropertyChanged("IsMonitMode");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand StartMonitCommand
+        {
+            get
+            {
+                if (mStartMonitCommand == null)
+                {
+                    mStartMonitCommand = new RelayCommand(() => {
+                        if (!mIsMonitMode)
+                        {
+                            StartRealDataMonitor();
+                        }
+                        else
+                        {
+                            StopRealDataMonitor();
+                        }
+                    });
+                }
+                return mStartMonitCommand;
+            }
+        }
+
 
         public bool RowSelectMode
         {
@@ -1485,13 +1535,288 @@ namespace DBInStudio.Desktop.ViewModel
         public void DeActive()
         {
             UpdateAll();
+            StopRealDataMonitor();
         }
 
+        private bool mIsMonitorStoped = false;
+        private Thread mMonitorScan;
+        private DBGrpcApi.Client mClient;
+        //private WebClient mClient;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void CheckStartLocal()
+        {
+            if (MonitorParameter.Parameter.Server.Contains("127.0.0.1") || (MonitorParameter.Parameter.Server.Contains("local")))
+            {
+                var vss = Process.GetProcessesByName("DBGrpcApi");
+                if (vss != null && vss.Length > 0)
+                {
+                    return;
+                }
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    var info = new ProcessStartInfo() { FileName = "DBGrpcApi.exe" };
+                    info.UseShellExecute = true;
+                    info.Arguments = ServerHelper.Helper.Server +" /m";
+                    info.WorkingDirectory = System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location);
+                    Process.Start(info).WaitForExit(1000);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void StartRealDataMonitor()
+        {
+            IsMonitMode = true;
+            mIsMonitorStoped = false;
+            mMonitorScan = new Thread(RealDataMonitorProcess);
+            mMonitorScan.IsBackground = true;
+            mMonitorScan.Start();
+            CheckStartLocal();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void StopRealDataMonitor()
+        {
+            mIsMonitorStoped = true;
+            IsMonitMode = false;
+
+            if(mClient!=null)
+            {
+                mClient.Dispose();
+                mClient = null;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void RealDataMonitorProcess()
+        {
+            IEnumerable<TagViewModel> mtagquery = null;
+            int pagecount = 200;
+            int count = 0;
+            int pp;
+
+            while (!mIsMonitorStoped)
+            {
+                lock (mSelectGroupTags)
+                {
+                    count = mSelectGroupTags.Count / pagecount;
+                    pp = mSelectGroupTags.Count % pagecount;
+                    if (pp > 0) count++;
+                }
+
+                for (int i = 0; i < count; i++)
+                {
+                    lock (mSelectGroupTags)
+                    {
+                        try
+                        {
+                            var vstart = i * pagecount;
+                            var len = pagecount;
+
+                            if (vstart + pagecount > mSelectGroupTags.Count)
+                            {
+                                len = mSelectGroupTags.Count - vstart;
+                            }
+                            if (len > 0)
+                            {
+                                mtagquery = mSelectGroupTags.Skip(vstart).Take(len);
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        catch
+                        {
+                            mtagquery = null;
+                        }
+                    }
+
+                    if (mtagquery != null)
+                        GetRealData(mtagquery);
+
+                    Thread.Sleep(10);
+                }
+
+                Thread.Sleep(MonitorParameter.Parameter.ScanCircle);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tags"></param>
+        private void GetRealData(IEnumerable<TagViewModel> tags)
+        {
+            try
+            {
+                if (mClient == null)
+                {
+                    mClient = new DBGrpcApi.Client(MonitorParameter.Parameter.Server, MonitorParameter.Parameter.Port);
+                    mClient.UseTls = !IsWin7;
+                }
+
+                if(!mClient.IsLogined)
+                {
+                    mClient.Login(MonitorParameter.Parameter.UserName, MonitorParameter.Parameter.Password);
+                }
+
+                if (!mClient.IsLogined) return;
+
+                var vals = mClient.ReadRealValueAndQualityById(tags.Select(e=>e.Id).ToList(), this.GroupModel!=null?this.GroupModel.FullName:"");
+
+                if(vals!=null)
+                {
+                    int i = 0;
+                    foreach(var vv in tags)
+                    {
+                        var vval = vals[i];
+                        vv.Value = vval.Item2;
+                        vv.Quality = (byte)vval.Item1;
+                        i++;
+                    }
+                    //foreach(var vvv in vals)
+                    //{
+                    //    var vv = vkeytags[vvv.Key];
+                    //    vv.Value = vvv.Value.Item2;
+                    //    vv.Quality = (byte)vvv.Value.Item1;
+                    //}
+                }
+
+            }
+            catch
+            {
+
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static bool IsWin7
+        {
+            get
+            {
+                return Environment.OSVersion.Version.Major < 8 && Environment.OSVersion.Platform == PlatformID.Win32NT;
+            }
+        }
 
         #endregion ...Methods...
 
         #region ... Interfaces ...
 
         #endregion ...Interfaces...
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class MonitorParameter : ViewModelBase
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public static MonitorParameter Parameter = new MonitorParameter();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public MonitorParameter()
+        {
+            Init();
+        }
+
+        private string mServer = "127.0.0.1";
+        private int mPort = 14333;
+        private string mUserName = "Admin";
+        private string mPassword = "Admin";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Server { get { return mServer; } set { mServer = value; OnPropertyChanged("Server"); } }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string UserName { get { return mUserName; } set { mUserName = value; OnPropertyChanged("UserName"); } }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Password { get { return mPassword; } set { mPassword = value; OnPropertyChanged("Password"); } }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public int Port
+        {
+            get
+            {
+                return mPort;
+            }
+            set
+            {
+                if (mPort != value)
+                {
+                    mPort = value;
+                    OnPropertyChanged("Port");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int ScanCircle { get; set; } = 1000;
+
+       
+
+
+        public void Init()
+        {
+            string sfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Config", "DbStudioMonitorConfig.cfg");
+            if (System.IO.File.Exists(sfile))
+            {
+                XElement xe = XElement.Load(sfile);
+                if (xe.Attribute("Password") != null)
+                {
+                    Password = xe.Attribute("Password").Value;
+                   
+                }
+                if (xe.Attribute("Password") != null)
+                {
+                    UserName = xe.Attribute("UserName").Value;
+                }
+               
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Save()
+        {
+            string sfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Config", "DbStudioMonitorConfig.cfg");
+            if (System.IO.File.Exists(sfile))
+            {
+                XElement xx = new XElement("Config");
+                //xx.SetAttributeValue("Server", Server);
+                xx.SetAttributeValue("UserName", UserName);
+                xx.SetAttributeValue("Password", Password);
+                xx.Save(sfile);
+            }
+        }
     }
 }

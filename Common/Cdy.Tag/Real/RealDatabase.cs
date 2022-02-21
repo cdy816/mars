@@ -190,6 +190,16 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="tagnames"></param>
+        /// <returns></returns>
+        public IEnumerable<Tagbase> GetTagsByName(IEnumerable<string> tagnames)
+        {
+            return Tags.Values.Where(e => tagnames.Contains(e.FullName));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
         public Tagbase GetTagByName(string name)
@@ -452,33 +462,38 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="group"></param>
-        public void RemoveByGroup(string group)
+        public List<int> RemoveByGroup(string group)
         {
+            List<int> re = new List<int>();
             if (this.Groups.ContainsKey(group))
             {
                 var vv = this.Groups[group].Tags;
                 foreach (var vvv in vv)
                 {
                     Tags.Remove(vvv.Id);
+                    re.Add(vvv.Id);
                 }                
                 vv.Clear();
                 MinId = Tags.Keys.Count > 0 ? Tags.Keys.Min() : 0;
                 IsDirty = true;
             }
+            return re;
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="group"></param>
-        public void RemoveGroup(string group)
+        public List<int> RemoveGroup(string group)
         {
+            List<int> re = new List<int>();
             if (this.Groups.ContainsKey(group))
             {
                 var vv = this.Groups[group].Tags;
                 foreach (var vvv in vv)
                 {
                     Tags.Remove(vvv.Id);
+                    re.Add(vvv.Id);
                 }
 
                 //获取改组的所有子组
@@ -489,6 +504,7 @@ namespace Cdy.Tag
                     foreach (var vvv in vvg.Tags)
                     {
                         Tags.Remove(vvv.Id);
+                        re.Add(vvv.Id);
                     }
                     vvg.Tags.Clear();
                 }
@@ -503,6 +519,7 @@ namespace Cdy.Tag
 
                 IsDirty = true;
             }
+            return re;
         }
 
         /// <summary>
@@ -762,6 +779,17 @@ namespace Cdy.Tag
         public IEnumerable<Tagbase> ListAllTags()
         {
             return Tags.Values;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<string> ListTagGroups()
+        {
+            var re = Groups.Keys.ToList();
+            re.Add("");
+            return re;
         }
 
         /// <summary>

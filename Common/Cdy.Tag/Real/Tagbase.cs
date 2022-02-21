@@ -222,7 +222,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 小数位数
         /// </summary>
-        public byte Precision { get; set; } = 6;
+        public byte Precision { get; set; } = 2;
         #endregion ...Properties...
 
         #region ... Methods    ...

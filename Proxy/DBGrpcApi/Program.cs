@@ -41,6 +41,14 @@ namespace DBGrpcApi
             {
                 WindowConsolHelper.MinWindow("DBGrpcApi");
             }
+            foreach(var vv in args)
+            {
+                if(vv!="/m")
+                {
+                    Startup.Server = vv;
+                    break;
+                }
+            }
             CreateHostBuilder(args).Build().Run();
         }
 

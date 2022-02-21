@@ -13,6 +13,9 @@ namespace DBGrpcApi
 {
     public class Startup
     {
+
+        public static string Server = "";
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
@@ -43,6 +46,10 @@ namespace DBGrpcApi
             });
 
             DatabaseRunner.Manager.Load();
+            if(!string.IsNullOrEmpty(Server))
+            {
+                DatabaseRunner.Manager.Ip = Server;
+            }
             DatabaseRunner.Manager.Start();
         }
     }

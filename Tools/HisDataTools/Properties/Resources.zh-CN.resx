@@ -192,6 +192,9 @@
   <data name="Query" xml:space="preserve">
     <value>查询</value>
   </data>
+  <data name="QueryValueMatchType" xml:space="preserve">
+    <value>值拟合方式</value>
+  </data>
   <data name="SelectDatabase" xml:space="preserve">
     <value>选择一个数据库</value>
   </data>

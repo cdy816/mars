@@ -995,7 +995,14 @@ namespace DBDevelopService
                 lock (db)
                 {
                     DbManager.Instance.CheckAndContinueLoadDatabase(db);
-                    db.RealDatabase.RemoveGroup(request.Name);
+                    var reids = db.RealDatabase.RemoveGroup(request.Name);
+                    if (reids != null && reids.Count > 0)
+                    {
+                        foreach (var vv in reids)
+                        {
+                            db.HisDatabase.RemoveHisTag(vv);
+                        }
+                    }
                 }
                 return Task.FromResult(new BoolResultReplay() { Result = true });
             }

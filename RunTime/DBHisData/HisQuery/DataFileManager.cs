@@ -168,34 +168,35 @@ namespace Cdy.Tag
         public async Task Int()
         {
             string datapath = GetPrimaryHisDataPath();
-            
-            await Scan(datapath);
 
-            string backuppath = GetBackHisDataPath();
-            if (!string.IsNullOrEmpty(backuppath))
-                await Scan(backuppath);
+            if (!System.IO.Directory.Exists(datapath))
+            {
+                try
+                {
+                    System.IO.Directory.CreateDirectory(datapath);
+                }
+                catch
+                {
+
+                }
+            }
+
+            await Scan(datapath);
 
             if (System.IO.Directory.Exists(datapath))
             {
-                if (!System.IO.Directory.Exists(datapath))
-                {
-                    try
-                    {
-                        System.IO.Directory.CreateDirectory(datapath);
-                    }
-                    catch
-                    {
-
-                    }
-                }
-
                 hisDataWatcher = new System.IO.FileSystemWatcher(datapath);
                 hisDataWatcher.Changed += HisDataWatcher_Changed;
                 hisDataWatcher.EnableRaisingEvents = true;
             }
 
-            if(!string.IsNullOrEmpty(backuppath))
+
+            string backuppath = GetBackHisDataPath();
+
+            if (!string.IsNullOrEmpty(backuppath))
             {
+                await Scan(backuppath);
+
                 if (!System.IO.Directory.Exists(backuppath))
                 {
                     try
@@ -207,7 +208,7 @@ namespace Cdy.Tag
 
                     }
                 }
-                
+
                 if (System.IO.Directory.Exists(backuppath))
                 {
                     backhisDataWatcher = new System.IO.FileSystemWatcher(backuppath);
@@ -221,6 +222,19 @@ namespace Cdy.Tag
             {
                 string logpath = GetPrimaryLogDataPath();
                 ScanLogFile(logpath);
+
+                if (!System.IO.Directory.Exists(logpath))
+                {
+                    try
+                    {
+                        System.IO.Directory.CreateDirectory(logpath);
+                    }
+                    catch
+                    {
+
+                    }
+                }
+
                 if (System.IO.Directory.Exists(logpath))
                 {
                     logDataWatcher = new System.IO.FileSystemWatcher(logpath);
@@ -489,6 +503,12 @@ namespace Cdy.Tag
             if(!mLogFileMaps.ContainsKey(sfileName))
             {
                 var ddt = dt.AddSeconds(timelen);
+
+                if(dt.Minute == ddt.Minute)
+                {
+                    ddt= ddt.AddMilliseconds(999);
+                }
+
                 mLogFileMaps.Add(sfileName, new LogFileInfo() { FileName = sfileName, StartTime = dt, EndTime = ddt });
                 LastLogTime = ddt > LastLogTime ? ddt : LastLogTime;
             }
@@ -749,6 +769,10 @@ namespace Cdy.Tag
                 {
                     return mTimeFileMaps[id][time.Year].GetDataFile(time);
                 }
+                else
+                {
+                    return null;
+                }
             }
             return null;
         }
@@ -818,7 +842,7 @@ namespace Cdy.Tag
         public SortedDictionary<DateTime, DataFileInfo4> GetDataFiles(List<DateTime> times, List<DateTime> logFileTimes,int Id)
         {
             SortedDictionary<DateTime, DataFileInfo4> re = new SortedDictionary<DateTime, DataFileInfo4>();
-            foreach(var vv in times)
+            foreach (var vv in times)
             {
                 if (CheckDataInLogFile(vv, Id))
                 {
@@ -826,7 +850,13 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    re.Add(vv, GetDataFile(vv, Id));
+                    var df = GetDataFile(vv, Id);
+                    if (df != null)
+                        re.Add(vv, df);
+                    else
+                    {
+                        logFileTimes.Add(vv);
+                    }
                 }
             }
             return re;

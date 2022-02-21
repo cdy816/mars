@@ -59,6 +59,8 @@ namespace DBInStudio.Desktop
 
         private ICommand mAlarmConfigCommand;
 
+        private ICommand mStartMonitorCommand;
+
         private TreeItemViewModel mCurrentSelectTreeItem;
 
         private System.Collections.ObjectModel.ObservableCollection<TreeItemViewModel> mTagGroup = new System.Collections.ObjectModel.ObservableCollection<TreeItemViewModel>();
@@ -113,6 +115,22 @@ namespace DBInStudio.Desktop
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        public ICommand StartMonitorCommand
+        {
+            get
+            {
+                if(mStartMonitorCommand==null)
+                {
+                    mStartMonitorCommand = new RelayCommand(() => {
+
+                        (ContentViewModel as TagGroupDetailViewModel).StartMonitCommand.Execute(null);
+
+                    }, () => { return IsDatabaseRunning && (ContentViewModel is TagGroupDetailViewModel) && !(ContentViewModel as TagGroupDetailViewModel).IsMonitMode; });
+                }
+                return mStartMonitorCommand;
+            }
+        }
 
         /// <summary>
         /// 

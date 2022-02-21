@@ -10,6 +10,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace Cdy.Tag
 {
@@ -78,6 +79,16 @@ namespace Cdy.Tag
         public bool Contains(DateTime time)
         {
             return time >= Start & time < End;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="times"></param>
+        /// <returns></returns>
+        public IEnumerable<DateTime> GetCrossTime(IEnumerable<DateTime> times)
+        {
+            return times.Where(e => Contains(e));
         }
 
         /// <summary>

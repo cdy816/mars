@@ -576,6 +576,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Monitor 的本地化字符串。
+        /// </summary>
+        internal static string Monitor {
+            get {
+                return ResourceManager.GetString("Monitor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Name 的本地化字符串。
         /// </summary>
         internal static string Name {
@@ -725,6 +734,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string PropertyPaste {
             get {
                 return ResourceManager.GetString("PropertyPaste", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Quality 的本地化字符串。
+        /// </summary>
+        internal static string Quality {
+            get {
+                return ResourceManager.GetString("Quality", resourceCulture);
             }
         }
         
@@ -1175,6 +1193,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string UseTls {
             get {
                 return ResourceManager.GetString("UseTls", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Value 的本地化字符串。
+        /// </summary>
+        internal static string Value {
+            get {
+                return ResourceManager.GetString("Value", resourceCulture);
             }
         }
         

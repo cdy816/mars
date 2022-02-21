@@ -91,6 +91,7 @@ message HisDataPointCollection{
 message HisDataPoint{
 	string Value=1;
 	int64 Time=2;
+	int32 Quality=3;
 }
 
 

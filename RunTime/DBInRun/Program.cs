@@ -192,7 +192,7 @@ namespace DBInRun
 
         private static void CurrentDomain_FirstChanceException(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
         {
-            Console.WriteLine(e.Exception.StackTrace);
+            Console.WriteLine(e.Exception.Message +" -> "+ e.Exception.StackTrace);
             e.Exception.HResult = 0;
         }
 
@@ -281,10 +281,13 @@ namespace DBInRun
                                     else if (cmd == 1)
                                     {
                                         Console.WriteLine("Start to restart database.......");
-                                        Task.Run(() =>
+                                        if (!Cdy.Tag.Runner3.RunInstance.IsRestartBusy)
                                         {
-                                            Cdy.Tag.Runner3.RunInstance.ReStartDatabase();
-                                        });
+                                            Task.Run(() =>
+                                            {
+                                                Cdy.Tag.Runner3.RunInstance.ReStartDatabase();
+                                            });
+                                        }
                                         server.WriteByte(1);
                                         server.FlushAsync();
                                         // server.WaitForPipeDrain();

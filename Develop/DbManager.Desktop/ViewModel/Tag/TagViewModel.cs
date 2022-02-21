@@ -53,6 +53,9 @@ namespace DBInStudio.Desktop
 
         private bool mIsSelected;
 
+        private object mValue;
+        private byte mQuality;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -524,6 +527,9 @@ namespace DBInStudio.Desktop
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsDriverRecord
         {
             get
@@ -828,6 +834,47 @@ namespace DBInStudio.Desktop
                 }
             }
         }
+
+       
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public object Value
+        {
+            get
+            {
+                return mValue;
+            }
+            set
+            {
+                if (mValue != value)
+                {
+                    mValue = value;
+                    OnPropertyChanged("Value");
+                }
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public byte Quality
+        {
+            get
+            {
+                return mQuality;
+            }
+            set
+            {
+                if (mQuality != value)
+                {
+                    mQuality = value;
+                    OnPropertyChanged("Quality");
+                }
+            }
+        }
+
 
 
         #endregion ...Properties....

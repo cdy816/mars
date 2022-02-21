@@ -37,7 +37,7 @@ namespace Cdy.Tag
     }
 
     /// <summary>
-    /// 
+    /// 数字型变量比较类型
     /// </summary>
     public enum NumberStatisticsType
     {

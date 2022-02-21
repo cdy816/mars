@@ -11,10 +11,12 @@
   <ItemGroup>
     <None Remove="Protos\HisData.proto" />
     <None Remove="Protos\Security.proto" />
+    <None Remove="Protos\TagInfo.proto" />
   </ItemGroup>
 
   <ItemGroup>
     <Protobuf Include="Protos\HisData.proto" GrpcServices="Server" />
+    <Protobuf Include="Protos\TagInfo.proto" GrpcServices="Server" />
     <Protobuf Include="Protos\Security.proto" GrpcServices="Server" />
     <Protobuf Include="Protos\RealData.proto" GrpcServices="Server" />
   </ItemGroup>

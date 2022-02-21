@@ -8,6 +8,7 @@
     <None Remove="Protos\HisData.proto" />
     <None Remove="Protos\RealData.proto" />
     <None Remove="Protos\Security.proto" />
+    <None Remove="Protos\TagInfo.proto" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,6 +29,11 @@
     <Protobuf Include="Protos\HisData.proto" GrpcServices="Client" />
     <Protobuf Include="Protos\RealData.proto" GrpcServices="Client" />
     <Protobuf Include="Protos\Security.proto" GrpcServices="Client" />
+    <Protobuf Include="Protos\TagInfo.proto" GrpcServices="Client" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).XML&quot; copy &quot;$(TargetDir)$(TargetName).XML&quot; &quot;$(SolutionDir)\Output\Xml&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).pdb&quot;  copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)zh-CN&quot;  copy &quot;$(TargetDir)zh-CN\*.dll&quot; &quot;$(SolutionDir)\Output\zh-CN&quot; /y" />
+  </Target>
 
 </Project>

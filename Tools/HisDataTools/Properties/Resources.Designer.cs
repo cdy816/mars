@@ -286,6 +286,15 @@ namespace HisDataTools.Properties {
         }
         
         /// <summary>
+        ///   查找类似 QueryValueMatchType 的本地化字符串。
+        /// </summary>
+        internal static string QueryValueMatchType {
+            get {
+                return ResourceManager.GetString("QueryValueMatchType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Select a database 的本地化字符串。
         /// </summary>
         internal static string SelectDatabase {

@@ -303,6 +303,27 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        public bool FreshUserId(long id)
+        {
+            lock (mLockObj)
+            {
+                if (mLastLogin2.ContainsKey(id))
+                {
+                    mLastLogin2[id] = DateTime.Now;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public DateTime GetLastAccessTime(string id)
         {
             lock (mLockObj)

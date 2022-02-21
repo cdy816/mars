@@ -12,6 +12,7 @@ using Google.Protobuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -91,16 +92,23 @@ namespace DBRuntime.His
         {
             lock (mHisMemorys)
             {
-                if (mHisMemorys.ContainsKey(startTime))
+                //去掉毫秒，取整
+                DateTime stime = new DateTime(startTime.Year, startTime.Month, startTime.Day, startTime.Hour, startTime.Minute, startTime.Second);// startTime.AddMilliseconds(-startTime.Millisecond);
+                DateTime etime = new DateTime(endtime.Year, endtime.Month, endtime.Day, endtime.Hour, endtime.Minute, endtime.Second);// startTime.AddMilliseconds(-startTime.Millisecond);
+                LoggerService.Service.Debug("HisEnginer", "注册内存历史数据块 Id:" + memory.Id + " Name:" + memory.Name + " 开始时间:" + stime.ToString("yyyy-MM-dd HH:mm:ss.ffff") + " 结束时间:" + etime.ToString("yyyy-MM-dd HH:mm:ss.ffff"));
+
+
+                if (mHisMemorys.ContainsKey(stime))
                 {
-                    var vitem = mHisMemorys[startTime];
-                    vitem.End = endtime;
+                    var vitem = mHisMemorys[stime];
+                    vitem.End = etime;
                     vitem.Memory = memory;
                 }
                 else
                 {
-                    var vitem = new TimeSpanMemory3() { Start = startTime, End = endtime, Memory = memory };
-                    mHisMemorys.Add(startTime, vitem);
+                    
+                    var vitem = new TimeSpanMemory3() { Start = stime, End = etime, Memory = memory };
+                    mHisMemorys.Add(stime, vitem);
                 }
             }
         }
@@ -113,9 +121,11 @@ namespace DBRuntime.His
         {
             lock (mHisMemorys)
             {
-                if (mHisMemorys.ContainsKey(startTime))
+                //去掉毫秒，取整
+                var stime = new DateTime(startTime.Year, startTime.Month, startTime.Day, startTime.Hour, startTime.Minute, startTime.Second);
+                if (mHisMemorys.ContainsKey(stime))
                 {
-                    mHisMemorys.Remove(startTime);
+                    mHisMemorys.Remove(stime);
                 }
             }
         }
@@ -382,6 +392,41 @@ namespace DBRuntime.His
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="block"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        private Dictionary<int, int> ReadAllTimer(HisDataMemoryBlockCollection3 block, int index)
+        {
+            Dictionary<int, int> re = new Dictionary<int, int>();
+            bool isStart = false;
+            var vcount = block.ReadValueOffsetAddressByIndex(index) / 2;
+            var basedata = block.ReadDataBaseAddressByIndex(index);
+
+            var disval = (int)((block.CurrentDatetime - block.BaseTime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
+
+            for (int i = 0; i < vcount; i++)
+            {
+                var val = block.ReadShort(basedata, i * 2) - disval;
+
+                if (i != 0 && val <= 0) continue;
+
+                if (!isStart)
+                {
+                    isStart = true;
+                    re.Add(i, val);
+                }
+                else
+                {
+
+                    re.Add(i, val);
+                }
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <param name="block"></param>
@@ -444,21 +489,66 @@ namespace DBRuntime.His
             return new Tuple<int, int>(-1, -1);
         }
 
+        private Tuple<int, int> ReadTimeToFit(int time, Dictionary<int,int> block)
+        {
+            
+            short prev = (short)block.First().Value;
+            if (prev == time) return new Tuple<int, int>(0, 0);
+            else if (time < prev) return new Tuple<int, int>(-1, -1);
 
+            foreach(var vv in block)
+            {
+                var after = (short)(vv.Value);
+                if (time == after)
+                {
+                    return new Tuple<int, int>(vv.Key, vv.Key);
+                }
+                else if (time < after)
+                {
+                    return new Tuple<int, int>(vv.Key-1, vv.Key);
+                }
+                prev = after;
+            }
+            return new Tuple<int, int>(-1, -1);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="time"></param>
+        /// <param name="block"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
         private Tuple<int, int> ReadTimeToFit(int time, HisDataMemoryBlockCollection3 block, int id)
         {
             var vcount = block.ReadValueOffsetAddressByIndex(id) / 2;
             var basedata = block.ReadDataBaseAddressByIndex(id);
-            short prev = block.ReadShort(basedata, 0);
+
+            var disval = (int)((block.CurrentDatetime - block.BaseTime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
+
+            short prev = (short)(block.ReadShort(basedata, 0) - disval);
             if (prev == time) return new Tuple<int, int>(0, 0);
-            else if (time < prev) return new Tuple<int, int>(-1, -1);
+            else if (time < prev)
+            {
+                //排除时间的误差，误差在1秒内，则取值
+                if((prev-time)*HisEnginer3.MemoryTimeTick<1000)
+                {
+                    return new Tuple<int, int>(0, 0);
+                }
+                else
+                {
+                    return new Tuple<int, int>(-1, -1);
+                }
+                
+            }
 
             for (int i = 1; i < vcount; i++)
             {
-                var after = block.ReadShort(basedata, i * 2);
+                var after = (short)(block.ReadShort(basedata, i * 2) - disval);
                 if (time == after)
                 {
-                    return new Tuple<int, int>(after, after);
+                    //return new Tuple<int, int>(after, after);
+                    return new Tuple<int, int>(i, i);
                 }
                 else if (time < after)
                 {
@@ -466,6 +556,9 @@ namespace DBRuntime.His
                 }
                 prev = after;
             }
+
+           
+
             return new Tuple<int, int>(-1, -1);
         }
 
@@ -804,6 +897,16 @@ namespace DBRuntime.His
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="qa"></param>
+        /// <returns></returns>
+        protected bool IsBadQuality(byte qa)
+        {
+            return qa >= (byte)QualityConst.Bad && qa <= (byte)QualityConst.Bad + 20;
+        }
+
+        /// <summary>
         /// 查询指定时刻的值
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -813,115 +916,161 @@ namespace DBRuntime.His
         /// <param name="result"></param>
         public void ReadValue<T>(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             if (!IsManualRecord(id))
             {
                 KeyValuePair<DateTime, TimeSpanMemory3>[] vhh;
-                lock (mHisMemorys)
-                    vhh = mHisMemorys.ToArray();
 
-                foreach (var vtime in times)
+                Dictionary<TimeSpanMemory3, IEnumerable<DateTime>> mm = new Dictionary<TimeSpanMemory3, IEnumerable<DateTime>>();
+
+                //Dictionary<DateTime, Tuple<object, byte>> res = new Dictionary<DateTime, Tuple<object, byte>>();
+
+                int count = 0;
+
+                lock (mHisMemorys)
                 {
+                    vhh = mHisMemorys.ToArray();
                     foreach (var vv in vhh)
                     {
-                        if (vv.Value.Contains(vtime))
-                        {
-                            if (vv.Value.Memory.TagAddress.ContainsKey(id))
-                            {
-                                var tim = (int)((vtime - vv.Value.Memory.CurrentDatetime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
-                                var vmm = vv.Value.Memory.TagAddress[id];
-                                var timeindx = ReadTimeToFit(tim, vv.Value.Memory, vmm);
-                                if (timeindx.Item1 > -1 && timeindx.Item2 > -1)
-                                {
-                                    if (timeindx.Item1 == timeindx.Item2)
-                                    {
-                                        var vals = ReadValueInner<T>(vv.Value.Memory, new List<int>() { timeindx.Item1 }, 0, vv.Value.Memory.ReadValueOffsetAddressByIndex(vmm), vv.Value.Memory.ReadDataBaseAddressByIndex(vmm));
-                                        var qua = vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddressByIndex(vmm), vv.Value.Memory.ReadQualityOffsetAddressByIndex(vmm) + timeindx.Item1);
-                                        result.Add(vals[0], vtime, qua);
-                                    }
-                                    else
-                                    {
-                                        var vals = ReadValueInner<T>(vv.Value.Memory, new List<int>() { timeindx.Item1, timeindx.Item2 }, 0, vv.Value.Memory.ReadValueOffsetAddressByIndex(vmm), vv.Value.Memory.ReadDataBaseAddressByIndex(vmm));
-                                        var qua1 = vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddressByIndex(vmm), vv.Value.Memory.ReadQualityOffsetAddressByIndex(vmm) + timeindx.Item1);
-                                        var qua2 = vv.Value.Memory.ReadByte(vv.Value.Memory.ReadDataBaseAddressByIndex(vmm), vv.Value.Memory.ReadQualityOffsetAddressByIndex(vmm) + timeindx.Item2);
-                                        var time1 = vv.Value.Memory.CurrentDatetime.AddMilliseconds(vv.Value.Memory.ReadShort(vv.Value.Memory.ReadDataBaseAddressByIndex(vmm), timeindx.Item1) * HisEnginer3.MemoryTimeTick);
-                                        var time2 = vv.Value.Memory.CurrentDatetime.AddMilliseconds(vv.Value.Memory.ReadShort(vv.Value.Memory.ReadDataBaseAddressByIndex(vmm), timeindx.Item2) * HisEnginer3.MemoryTimeTick);
-                                        switch (type)
-                                        {
-                                            case QueryValueMatchType.Previous:
-                                                result.Add(vals[0], vtime, qua1);
-                                                break;
-                                            case QueryValueMatchType.After:
-                                                result.Add(vals[1], vtime, qua2);
-                                                break;
-                                            case QueryValueMatchType.Linear:
-                                                if (typeof(T) == typeof(bool) || typeof(T) == typeof(string) || typeof(T) == typeof(DateTime))
-                                                {
-                                                    var ppval = (vtime - time1).TotalMilliseconds;
-                                                    var ffval = (time2 - vtime).TotalMilliseconds;
+                        vv.Value.Memory.MakeMemoryBusy();
+                    }
+                }
 
-                                                    if (ppval < ffval)
-                                                    {
-                                                        result.Add(vals[0], vtime, qua1);
-                                                    }
-                                                    else
-                                                    {
-                                                        result.Add(vals[1], vtime, qua2);
-                                                    }
+                foreach(var vv in vhh)
+                {
+                    mm.Add(vv.Value, vv.Value.GetCrossTime(times));
+                }
+
+                foreach(var vv in mm)
+                {
+                    if(vv.Key.Memory.TagAddress.ContainsKey(id) && vv.Value.Count()>0)
+                    {
+                        foreach (var vtime in vv.Value)
+                        {
+                            var tim = (int)((vtime - vv.Key.Memory.CurrentDatetime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
+                            var vmm = vv.Key.Memory.TagAddress[id];
+                            var timeindx = ReadTimeToFit(tim, vv.Key.Memory, vmm);
+                            if (timeindx.Item1 > -1 && timeindx.Item2 > -1)
+                            {
+                                if (timeindx.Item1 == timeindx.Item2)
+                                {
+                                    var vals = ReadValueInner<T>(vv.Key.Memory, new List<int>() { timeindx.Item1 }, 0, vv.Key.Memory.ReadValueOffsetAddressByIndex(vmm), vv.Key.Memory.ReadDataBaseAddressByIndex(vmm));
+                                    var qua = vv.Key.Memory.ReadByte(vv.Key.Memory.ReadDataBaseAddressByIndex(vmm), vv.Key.Memory.ReadQualityOffsetAddressByIndex(vmm) + timeindx.Item1);
+                                    result.Add(vals[0], vtime, qua);
+                                }
+                                else
+                                {
+                                    var vals = ReadValueInner<T>(vv.Key.Memory, new List<int>() { timeindx.Item1, timeindx.Item2 }, 0, vv.Key.Memory.ReadValueOffsetAddressByIndex(vmm), vv.Key.Memory.ReadDataBaseAddressByIndex(vmm));
+                                    var qua1 = vv.Key.Memory.ReadByte(vv.Key.Memory.ReadDataBaseAddressByIndex(vmm), vv.Key.Memory.ReadQualityOffsetAddressByIndex(vmm) + timeindx.Item1);
+                                    var qua2 = vv.Key.Memory.ReadByte(vv.Key.Memory.ReadDataBaseAddressByIndex(vmm), vv.Key.Memory.ReadQualityOffsetAddressByIndex(vmm) + timeindx.Item2);
+                                    var time1 = vv.Key.Memory.CurrentDatetime.AddMilliseconds(vv.Key.Memory.ReadShort(vv.Key.Memory.ReadDataBaseAddressByIndex(vmm), timeindx.Item1) * HisEnginer3.MemoryTimeTick);
+                                    var time2 = vv.Key.Memory.CurrentDatetime.AddMilliseconds(vv.Key.Memory.ReadShort(vv.Key.Memory.ReadDataBaseAddressByIndex(vmm), timeindx.Item2) * HisEnginer3.MemoryTimeTick);
+                                    switch (type)
+                                    {
+                                        case QueryValueMatchType.Previous:
+                                            result.Add(vals[0], vtime, qua1);
+                                            //res.Add(vtime, new Tuple<object, byte>(vals[0], qua1));
+                                            break;
+                                        case QueryValueMatchType.After:
+                                            result.Add(vals[1], vtime, qua2);
+                                            //res.Add(vtime, new Tuple<object, byte>(vals[1], qua1));
+                                            break;
+                                        case QueryValueMatchType.Linear:
+                                            if (typeof(T) == typeof(bool) || typeof(T) == typeof(string) || typeof(T) == typeof(DateTime))
+                                            {
+                                                var ppval = (vtime - time1).TotalMilliseconds;
+                                                var ffval = (time2 - vtime).TotalMilliseconds;
+
+                                                if (ppval < ffval)
+                                                {
+                                                    result.Add(vals[0], vtime, qua1);
+                                                    //res.Add(vtime, new Tuple<object, byte>(vals[0], qua1));
                                                 }
                                                 else
                                                 {
+                                                    result.Add(vals[1], vtime, qua2);
+                                                    //res.Add(vtime, new Tuple<object, byte>(vals[1], qua2));
+                                                }
+                                            }
+                                            else
+                                            {
 
-                                                    if (qua1 < 20 && qua2 < 20)
+                                                if (!IsBadQuality(qua1) && !IsBadQuality(qua2))
+                                                {
+                                                    if (CheckTypeIsPointData(typeof(T)))
                                                     {
-                                                        if (CheckTypeIsPointData(typeof(T)))
+                                                        result.Add(LinerValue(time1, time2, vtime, vals[0], vals[1]), vtime, 0);
+                                                        //res.Add(vtime, new Tuple<object, byte>(LinerValue(time1, time2, vtime, vals[0], vals[1]), 0));
+                                                    }
+                                                    else
+                                                    {
+                                                        var pval1 = (vtime - time1).TotalMilliseconds;
+                                                        var tval1 = (time2 - time1).TotalMilliseconds;
+                                                        var sval1 = (double)vals[0];
+                                                        var sval2 = (double)vals[1];
+                                                        var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
+                                                        //result.Add((object)val1, vtime, 0);
+                                                        if (pval1 <= 0)
                                                         {
-                                                            result.Add(LinerValue(time1, time2, vtime, vals[0], vals[1]), vtime, 0);
+                                                            //说明数据有异常，则取第一个值
+                                                            result.Add((object)sval1, vtime, qua1);
+                                                            //res.Add(vtime,new Tuple<object, byte>((object)sval1, qua1));
                                                         }
                                                         else
                                                         {
-                                                            var pval1 = (vtime - time1).TotalMilliseconds;
-                                                            var tval1 = (time2 - time1).TotalMilliseconds;
-                                                            var sval1 = (double)vals[0];
-                                                            var sval2 = (double)vals[1];
-                                                            var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
-                                                            result.Add((object)val1, vtime, 0);
+                                                            result.Add((object)val1, vtime, pval1 < tval1 ? qua1 : qua2);
+                                                            // res.Add(vtime, new Tuple<object, byte>(val1, pval1 < tval1 ? qua1 : qua2));
                                                         }
                                                     }
-                                                    else if (qua1 < 20)
-                                                    {
-                                                        result.Add(vals[0], vtime, qua1);
-                                                    }
-                                                    else if (qua2 < 20)
-                                                    {
-                                                        result.Add(vals[1], vtime, qua2);
-                                                    }
-                                                    else
-                                                    {
-                                                        result.Add(default(T), time1, (byte)QualityConst.Null);
-                                                    }
                                                 }
-                                                break;
-                                            case QueryValueMatchType.Closed:
-                                                var pval = (vtime - time1).TotalMilliseconds;
-                                                var fval = (time2 - vtime).TotalMilliseconds;
-
-                                                if (pval < fval)
+                                                else if (!IsBadQuality(qua1))
                                                 {
-                                                    result.Add(vals[0], time1, qua1);
+                                                    result.Add(vals[0], vtime, qua1);
+                                                    //res.Add(vtime, new Tuple<object, byte>(vals[0], qua1));
+                                                }
+                                                else if (!IsBadQuality(qua2))
+                                                {
+                                                    //res.Add(vtime, new Tuple<object, byte>(vals[0], qua2));
+                                                    result.Add(vals[1], vtime, qua2);
                                                 }
                                                 else
                                                 {
-                                                    result.Add(vals[1], time1, qua2);
+                                                    //res.Add(vtime, new Tuple<object, byte>(default(T), (byte)QualityConst.Null));
+                                                    result.Add(default(T), vtime, (byte)QualityConst.Null);
                                                 }
-                                                break;
-                                        }
+                                            }
+                                            break;
+                                        case QueryValueMatchType.Closed:
+                                            var pval = (vtime - time1).TotalMilliseconds;
+                                            var fval = (time2 - vtime).TotalMilliseconds;
+
+                                            if (pval < fval)
+                                            {
+                                                result.Add(vals[0],vtime, qua1);
+                                                //res.Add(vtime,new Tuple<object,byte>( vals[0],  qua1));
+                                            }
+                                            else
+                                            {
+                                                //res.Add(vtime, new Tuple<object, byte>(vals[1], qua2));
+                                                result.Add(vals[1], vtime, qua2);
+                                            }
+                                            break;
                                     }
                                 }
+
+                                count++;
                             }
-                            break;
                         }
                     }
                 }
+                
+                foreach (var vv in vhh)
+                {
+                    vv.Value.Memory.MakeMemoryNoBusy();
+                }
+                sw.Stop();
+                LoggerService.Service.Debug("HisDataMemoryQueryService", $" 从内存中读取到的数据有 {count} 个 耗时:"+sw.ElapsedMilliseconds);
             }
             else
             {

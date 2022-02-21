@@ -292,6 +292,9 @@
   <data name="Modify" xml:space="preserve">
     <value>Modify</value>
   </data>
+  <data name="Monitor" xml:space="preserve">
+    <value>Monitor</value>
+  </data>
   <data name="Name" xml:space="preserve">
     <value>Name</value>
   </data>
@@ -342,6 +345,9 @@
   </data>
   <data name="PropertyPaste" xml:space="preserve">
     <value>PropertyPaste</value>
+  </data>
+  <data name="Quality" xml:space="preserve">
+    <value>Quality</value>
   </data>
   <data name="Read" xml:space="preserve">
     <value>Read</value>
@@ -493,6 +499,9 @@
   </data>
   <data name="UseTls" xml:space="preserve">
     <value>UseTls</value>
+  </data>
+  <data name="Value" xml:space="preserve">
+    <value>Value</value>
   </data>
   <data name="ValueChanged" xml:space="preserve">
     <value>ValueChanged</value>

@@ -1,0 +1,32 @@
+﻿<Window x:Class="DriectAccessDriverDemo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DriectAccessDriverDemo"
+        mc:Ignorable="d"
+        
+        Title="DirectAccess GRPC Demo" Height="450" Width="800">
+    <Grid>
+
+        <Label Content="IP:" HorizontalAlignment="Left" Margin="25,9,0,0" VerticalAlignment="Top"  Width="24"/>
+        <TextBox x:Name="ipt" HorizontalAlignment="Left" Margin="74,13,0,0" Text="127.0.0.1" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Height="17"/>
+        <Label Content="Port:" HorizontalAlignment="Left" Margin="14,50,0,0" VerticalAlignment="Top" Height="25" Width="37"/>
+        <TextBox x:Name="portt" HorizontalAlignment="Left" Margin="75,53,0,0" Text="14338" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Height="17"/>
+        <Label Content="Tag:" HorizontalAlignment="Left" Margin="15,157,0,0" VerticalAlignment="Top"  />
+        <TextBox x:Name="tagt" HorizontalAlignment="Left" Margin="74,161,0,0" Text="tag1" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Height="17"/>
+        <Button x:Name="realvaluewrite" Content="写入实时值" HorizontalAlignment="Left" Margin="74,203,0,0" VerticalAlignment="Top" Click="realvaluewrite_Click"/>
+        <Button x:Name="hisvaluewrite" Content="写入历史值" HorizontalAlignment="Left" Margin="75,243,0,0" VerticalAlignment="Top" Click="hisvaluewrite_Click"/>
+        <Label Content="用户名:" HorizontalAlignment="Left" Margin="15,83,0,0" VerticalAlignment="Top"  />
+        <Label Content="密码:" HorizontalAlignment="Left" Margin="15,121,0,0" VerticalAlignment="Top"  />
+        <TextBox x:Name="username" HorizontalAlignment="Left" Margin="74,90,0,0" Text="Admin" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Height="17"/>
+        <TextBox x:Name="password" HorizontalAlignment="Left" Margin="74,124,0,0" Text="Admin" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Height="17"/>
+        <Label Content="开始时间:" HorizontalAlignment="Left" Margin="172,240,0,0" VerticalAlignment="Top"  />
+        <TextBox x:Name="hisvaluetime" HorizontalAlignment="Left" Margin="238,245,0,0" Text="" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Height="17"/>
+        <Label Content="时间间隔(s):" HorizontalAlignment="Left" Margin="370,240,0,0" VerticalAlignment="Top"  />
+        <TextBox x:Name="hisvaluetimespan" HorizontalAlignment="Left" Margin="442,245,0,0" Text="1" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Height="17"/>
+        <Label Content="个数:" HorizontalAlignment="Left" Margin="610,239,0,0" VerticalAlignment="Top"  />
+        <TextBox x:Name="hisvaluecount" HorizontalAlignment="Left" Margin="651,244,0,0" Text="60" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Height="17"/>
+
+    </Grid>
+</Window>

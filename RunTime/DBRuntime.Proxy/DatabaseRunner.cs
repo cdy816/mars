@@ -80,6 +80,25 @@ namespace DBRuntime.Proxy
 
         #region ... Properties ...
 
+        /// <summary>
+            /// 
+            /// </summary>
+        public string Ip
+        {
+            get
+            {
+                return mIp;
+            }
+            set
+            {
+                if (mIp != value)
+                {
+                    mIp = value;
+                }
+            }
+        }
+
+
         public bool IsReady { get; set; } = false;
 
         /// <summary>
@@ -386,6 +405,9 @@ namespace DBRuntime.Proxy
                         realEnginer.Init();
                         
                         mDriver.Start(realEnginer);
+
+                        ServiceLocator.Locator.Registor<ITagManager>(mRealDatabase);
+
                         oldeng.Dispose();
                         LoggerService.Service.Info("DatabaseRunner", "从远程加载数据库完成");
                     }

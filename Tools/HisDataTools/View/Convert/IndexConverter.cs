@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Windows.Data;
 
@@ -76,6 +77,41 @@ namespace HisDataTools
         {
             throw new NotImplementedException();
         }
+        #endregion ...Interfaces ...
+
+    }
+
+    public class BoolInverterConverter :IValueConverter
+    {
+        #region ...Variables  ...
+        
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return !System.Convert.ToBoolean(value);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return !System.Convert.ToBoolean(value);
+        }
+        #endregion ...Variables  ...
+
+        #region ...Constructor...
+        #endregion ...Constructor...
+
+        #region ...Properties ...
+        #endregion ...Properties ...
+
+        #region ...Methods    ...
+
+        #endregion ...Methods    ...
+
+        #region ...Events     ...
+        #endregion ...Events     ...
+
+        #region ...Interfaces ...
+
         #endregion ...Interfaces ...
 
     }

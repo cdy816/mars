@@ -52,7 +52,7 @@ namespace DBInStudio.Desktop.ViewModel
                 if(mModifyCommand==null)
                 {
                     mModifyCommand = new RelayCommand(() => { 
-                        if(DBDevelopClientApi.DevelopServiceHelper.Helper.ModifyUserPassword(UserName, mPassword,mNewPassword))
+                        if(DBDevelopClientApi.DevelopServiceHelper.Helper.ModifyUserPassword(UserName==null?"":UserName, mPassword==null?"":mPassword,mNewPassword==null?"":mNewPassword))
                         {
                             System.Windows.MessageBox.Show(Res.Get("SetPasswordSeccussful"));
                         }

@@ -30,7 +30,7 @@ namespace Cdy.Tag
 
     HisDataRegion Structor: RegionHead + DataBlockPoint Area + DataBlock Area
 
-    RegionHead:          PreDataRegionPoint(8) + NextDataRegionPoint(8) + Datatime(8)+ tagcount(4)+ tagid sum(8)+file duration(4)+block duration(4)+Time tick duration(4)
+    RegionHead:          PreDataRegion(8) + NextDataRegion(8) + Datatime(8)+file duration(4)+ block duration(4)+Time tick duration(4)  + tagcount(4)
     DataBlockPoint Area: [ID]+[block Point]
     [block point]:       [[tag1 block1 point,tag2 block1 point,....][tag1 block2 point(12),tag2 block2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
     [tag block point]:   offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
@@ -236,6 +236,12 @@ namespace Cdy.Tag
                                 if (vtmps <= 30 && vtmps >= 0)
                                 {
                                     mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(dt2 - time, oset, dt2));
+                                }
+                                else if(dt2 ==DateTime.MinValue)
+                                {
+                                    var tspan = StartTime + Duration - time;
+                                    if (tspan.TotalMilliseconds >= 0 && !mTimeOffsets.ContainsKey(time))
+                                        mTimeOffsets.Add(time, new Tuple<TimeSpan, long, DateTime>(tspan, oset, time + tspan));
                                 }
                                 else
                                 {
@@ -1372,7 +1378,8 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         public static void ReadRegionHead(DataFileSeriserbase datafile, long offset, out int tagCount, out int fileDuration, out int blockDuration, out int timetick, out long blockPointer, out DateTime time)
         {
-            //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+tagcount(4)+ tagid sum(8) +file duration(4)+ block duration(4)+Time tick duration(4)+ { + tagid1+tagid2+...+tagidn }+ {[tag1 block point1(8) + tag2 block point1+ tag3 block point1+...] + [tag1 block point2(8) + tag2 block point2+ tag3 block point2+...]....}
+            //文件头部结构:Pre DataRegion(8) + Next DataRegion(8) + Datatime(8)+file duration(4)+ block duration(4)+Time tick duration(4)+ tagcount(4)+{ + tagid1+tagid2+...+tagidn }+ {[tag1 block point1(8) + tag2 block point1+ tag3 block point1+...] + [tag1 block point2(8) + tag2 block point2+ tag3 block point2+...]....}
+           
             var dataoffset = offset + 16;
 
             //读取时间

@@ -33,7 +33,7 @@ namespace DbInRunWebApi.Controllers
             }
             else
             {
-                return new LoginResponse() { Result = false };
+                return new LoginResponse() { Result = false,ErroMessage= "tag service not ready" };
             }
         }
 
@@ -70,7 +70,7 @@ namespace DbInRunWebApi.Controllers
             }
             else
             {
-                return new ResponseBase() { Result = false };
+                return new ResponseBase() { Result = false, ErroMessage = "tag service not ready" };
             }
         }
 
@@ -89,7 +89,7 @@ namespace DbInRunWebApi.Controllers
             }
             else
             {
-                return new ResponseBase() { Result = false };
+                return new ResponseBase() { Result = false, ErroMessage = "tag service not ready" };
             }
         }
 

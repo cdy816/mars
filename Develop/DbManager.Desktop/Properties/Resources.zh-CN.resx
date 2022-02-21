@@ -290,6 +290,9 @@
   <data name="Modify" xml:space="preserve">
     <value>修改</value>
   </data>
+  <data name="Monitor" xml:space="preserve">
+    <value>监视</value>
+  </data>
   <data name="Name" xml:space="preserve">
     <value>名称</value>
   </data>
@@ -340,6 +343,9 @@
   </data>
   <data name="PropertyPaste" xml:space="preserve">
     <value>粘贴属性</value>
+  </data>
+  <data name="Quality" xml:space="preserve">
+    <value>质量</value>
   </data>
   <data name="Read" xml:space="preserve">
     <value>读</value>
@@ -491,6 +497,9 @@
   </data>
   <data name="UseTls" xml:space="preserve">
     <value>加密传输</value>
+  </data>
+  <data name="Value" xml:space="preserve">
+    <value>值</value>
   </data>
   <data name="ValueChanged" xml:space="preserve">
     <value>值改变</value>

@@ -89,7 +89,8 @@ namespace Cdy.Tag
         public object Value { get; set; }
 
         /// <summary>
-        /// 
+        /// 值类型
+        /// <see cref="Cdy.Tag.TagType"/>
         /// </summary>
         public byte ValueType { get; set; }
 
@@ -139,7 +140,8 @@ namespace Cdy.Tag
         public object Value { get; set; }
 
         /// <summary>
-        /// 
+        /// 值类型
+        /// <see cref="Cdy.Tag.TagType"/>
         /// </summary>
         public byte ValueType { get; set; }
 

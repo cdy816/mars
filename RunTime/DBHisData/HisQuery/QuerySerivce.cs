@@ -156,11 +156,25 @@ namespace Cdy.Tag
                     mPreFile.Read<T>(id, mtime, type, result);
             }
 
-            //从日志文件中读取数据
-            ReadLogFile(id, mLogTimes, type, result);
+            if (IsCanQueryFromMemory())
+            {
+                //从内存中读取数据
+                ReadFromMemory(id, mMemoryTimes, type, result);
 
-            //从内存中读取数据
-            ReadFromMemory(id, mMemoryTimes, type, result);
+                if(mLogTimes.Count>0)
+                {
+                    foreach(var vv in mLogTimes)
+                    {
+                        result.Add(default(T), vv, (byte)QualityConst.Null);
+                    }
+                }
+
+            }
+            else
+            {
+                //从日志文件中读取数据
+                ReadLogFile(id, mLogTimes, type, result);
+            }
         }
 
         /// <summary>

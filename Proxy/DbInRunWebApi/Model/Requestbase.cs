@@ -6,44 +6,11 @@ using System.Threading.Tasks;
 
 namespace DbInRunWebApi.Model
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public class ReponseBase
-    {
-
-        #region ... Variables  ...
-
-        #endregion ...Variables...
-
-        #region ... Events     ...
-
-        #endregion ...Events...
-
-        #region ... Constructor...
-
-        #endregion ...Constructor...
-
-        #region ... Properties ...
-        /// <summary>
-        /// 登录Token
-        /// </summary>
-        public string Token { get; set; }
-        #endregion ...Properties...
-
-        #region ... Methods    ...
-
-        #endregion ...Methods...
-
-        #region ... Interfaces ...
-
-        #endregion ...Interfaces...
-    }
 
     /// <summary>
     /// 
     /// </summary>
-    public class LoginResponse:ReponseBase
+    public class LoginResponse: ResponseBase
     {
 
         #region ... Variables  ...
@@ -71,9 +38,9 @@ namespace DbInRunWebApi.Model
         public long TimeOut { get; set; }
 
         /// <summary>
-        /// 结果
+        /// 登录Token
         /// </summary>
-        public bool Result { get; set; }
+        public string Token { get; set; }
 
         #endregion ...Properties...
 
@@ -164,6 +131,100 @@ namespace DbInRunWebApi.Model
 
     //    #endregion ...Interfaces...
     //}
+
+    /// <summary>
+    /// 变量信息请求
+    /// </summary>
+    public class TagInfoRequest : Requestbase
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 变量名集合
+        /// </summary>
+        public List<string> TagNames { get; set; }
+
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+   /// <summary>
+   /// 
+   /// </summary>
+    public class TagInfoGroupRequest : Requestbase
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 变量组
+        /// </summary>
+        public string Group { get; set; } = "";
+
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class TagInfoResponse:ResponseBase
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public IEnumerable<object> Tags { get; set; }
+    }
+
+    /// <summary>
+    /// 请求变量组返回
+    /// </summary>
+    public class TagInfoGroupResponse:ResponseBase
+    {
+        /// <summary>
+        /// 变量组集合
+        /// </summary>
+        public IEnumerable<string> Groups { get; set; }
+    }
 
     /// <summary>
     /// 实时数据请求
@@ -268,7 +329,7 @@ namespace DbInRunWebApi.Model
         /// 当指定的时间点，没有记录值，采用改时间点前后两个时刻的值进行拟合时，所采用的拟合方式
         /// 0:取前一个值,1:取后一个值,2:取较近的值,3:线性插值
         /// </summary>
-        public QueryValueMatchType MatchType { get; set; }
+        public QueryValueMatchType MatchType { get; set; } = QueryValueMatchType.Closed;
 
         /// <summary>
         /// 变量名称
@@ -316,7 +377,7 @@ namespace DbInRunWebApi.Model
         /// 当指定的时间点，没有记录值，采用改时间点前后两个时刻的值进行拟合时，所采用的拟合方式
         /// 0:取前一个值,1:取后一个值,2:取较近的值,3:线性插值
         /// </summary>
-        public QueryValueMatchType MatchType { get; set; }
+        public QueryValueMatchType MatchType { get; set; } = QueryValueMatchType.Closed;
 
         /// <summary>
         /// 变量的集合
@@ -365,7 +426,7 @@ namespace DbInRunWebApi.Model
         /// 当指定的时间点，没有记录值，采用改时间点前后两个时刻的值进行拟合时，所采用的拟合方式
         /// 0:取前一个值,1:取后一个值,2:取较近的值,3:线性插值
         /// </summary>
-        public QueryValueMatchType MatchType { get; set; }
+        public QueryValueMatchType MatchType { get; set; } = QueryValueMatchType.Closed;
 
         /// <summary>
         /// 变量名称
@@ -426,7 +487,7 @@ namespace DbInRunWebApi.Model
         /// 当指定的时间点，没有记录值，采用改时间点前后两个时刻的值进行拟合时，所采用的拟合方式
         /// 0:取前一个值,1:取后一个值,2:取较近的值,3:线性插值
         /// </summary>
-        public QueryValueMatchType MatchType { get; set; }
+        public QueryValueMatchType MatchType { get; set; } = QueryValueMatchType.Closed;
 
         /// <summary>
         /// 变量的集合

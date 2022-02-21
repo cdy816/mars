@@ -235,7 +235,13 @@ namespace DBGrpcApiDemo
                 {
                     mSetTagValueCommand = new RelayCommand(() => {
 
-                        clinet.SetTagValue(Id,  Value);
+                        Dictionary<string, string> values = new Dictionary<string, string>();
+                        string[] ss = Id.Split(",");
+                        foreach(var vv in ss)
+                        {
+                            values.Add(vv, Value.ToString());
+                        }
+                        clinet.SetTagValue(values);
                     });
                 }
                 return mSetTagValueCommand;

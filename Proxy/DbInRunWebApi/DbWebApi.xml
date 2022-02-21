@@ -18,6 +18,16 @@
             <param name="datas"></param>
             <returns></returns>
         </member>
+        <member name="M:DbInRunWebApi.Controllers.HisDataController.ProcessResult``1(System.String,System.Object,System.Collections.Generic.List{System.DateTime})">
+            <summary>
+            
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="tagname"></param>
+            <param name="datas"></param>
+            <param name="times"></param>
+            <returns></returns>
+        </member>
         <member name="M:DbInRunWebApi.Controllers.HisDataController.Get(DbInRunWebApi.Model.HisDataRequest)">
             <summary>
             获取变量指定时间点上的历史值
@@ -387,16 +397,6 @@
             错误消息
             </summary>
         </member>
-        <member name="T:DbInRunWebApi.Model.ReponseBase">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="P:DbInRunWebApi.Model.ReponseBase.Token">
-            <summary>
-            登录Token
-            </summary>
-        </member>
         <member name="T:DbInRunWebApi.Model.LoginResponse">
             <summary>
             
@@ -412,9 +412,9 @@
             超时时间
             </summary>
         </member>
-        <member name="P:DbInRunWebApi.Model.LoginResponse.Result">
+        <member name="P:DbInRunWebApi.Model.LoginResponse.Token">
             <summary>
-            结果
+            登录Token
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.Requestbase">
@@ -425,6 +425,46 @@
         <member name="P:DbInRunWebApi.Model.Requestbase.Token">
             <summary>
             登录Token
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.TagInfoRequest">
+            <summary>
+            变量信息请求
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.TagInfoRequest.TagNames">
+            <summary>
+            变量名集合
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.TagInfoGroupRequest">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.TagInfoGroupRequest.Group">
+            <summary>
+            变量组
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.TagInfoResponse">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.TagInfoResponse.Tags">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:DbInRunWebApi.Model.TagInfoGroupResponse">
+            <summary>
+            请求变量组返回
+            </summary>
+        </member>
+        <member name="P:DbInRunWebApi.Model.TagInfoGroupResponse.Groups">
+            <summary>
+            变量组集合
             </summary>
         </member>
         <member name="T:DbInRunWebApi.Model.RealDataRequest">
@@ -798,6 +838,127 @@
             
             </summary>
             <param name="context"></param>
+        </member>
+        <member name="T:DbWebApi.Controllers.TagInfoController">
+            <summary>
+            变量
+            </summary>
+        </member>
+        <member name="M:DbWebApi.Controllers.TagInfoController.Get(DbInRunWebApi.Model.TagInfoRequest)">
+            <summary>
+            获取变量配置信息
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbWebApi.Controllers.TagInfoController.GetByGroup(DbInRunWebApi.Model.TagInfoGroupRequest)">
+            <summary>
+            获取某个变量组下所有变量
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbWebApi.Controllers.TagInfoController.ListTagGroup(DbInRunWebApi.Model.Requestbase)">
+            <summary>
+            枚举变量组的集合
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DbWebApi.Controllers.TagInfoController.ConvertToLocalTag(Cdy.Tag.Tagbase)">
+            <summary>
+            
+            </summary>
+            <param name="tag"></param>
+            <returns></returns>
+        </member>
+        <member name="T:DbWebApi.Controllers.LocalTagBase">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbWebApi.Controllers.LocalTagBase.Id">
+            <summary>
+            编号
+            </summary>
+        </member>
+        <member name="P:DbWebApi.Controllers.LocalTagBase.Type">
+            <summary>
+            类型
+            </summary>
+        </member>
+        <member name="P:DbWebApi.Controllers.LocalTagBase.Name">
+            <summary>
+            名称
+            </summary>
+        </member>
+        <member name="P:DbWebApi.Controllers.LocalTagBase.Group">
+            <summary>
+            组
+            </summary>
+        </member>
+        <member name="P:DbWebApi.Controllers.LocalTagBase.Desc">
+            <summary>
+            描述
+            </summary>
+        </member>
+        <member name="P:DbWebApi.Controllers.LocalTagBase.LinkAddress">
+            <summary>
+            外部管理IO的地址
+            </summary>
+        </member>
+        <member name="P:DbWebApi.Controllers.LocalTagBase.Conveter">
+            <summary>
+            值转换函数
+            </summary>
+        </member>
+        <member name="P:DbWebApi.Controllers.LocalTagBase.ReadWriteType">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:DbWebApi.Controllers.LocalTagBase.CloneFrom(Cdy.Tag.Tagbase)">
+            <summary>
+            
+            </summary>
+            <param name="tag"></param>
+        </member>
+        <member name="T:DbWebApi.Controllers.LocalNumberTag">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbWebApi.Controllers.LocalNumberTag.MaxValue">
+            <summary>
+            最大值
+            </summary>
+        </member>
+        <member name="P:DbWebApi.Controllers.LocalNumberTag.MinValue">
+            <summary>
+            最小值
+            </summary>
+        </member>
+        <member name="M:DbWebApi.Controllers.LocalNumberTag.CloneFrom(Cdy.Tag.Tagbase)">
+            <summary>
+            
+            </summary>
+            <param name="tag"></param>
+        </member>
+        <member name="T:DbWebApi.Controllers.LocalFloatTag">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:DbWebApi.Controllers.LocalFloatTag.Precision">
+            <summary>
+            小数位数
+            </summary>
+        </member>
+        <member name="M:DbWebApi.Controllers.LocalFloatTag.CloneFrom(Cdy.Tag.Tagbase)">
+            <summary>
+            
+            </summary>
+            <param name="tag"></param>
         </member>
         <member name="T:DbWebApi.Properties.Resources">
             <summary>

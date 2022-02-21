@@ -13,6 +13,7 @@
         <local:QualityValueConvert x:Key="qvc" />
         <local:ResultValueConvert x:Key="rvc" />
         <BooleanToVisibilityConverter x:Key="btv" />
+        <res:BoolInverterConverter x:Key="biv" />
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -38,12 +39,23 @@
             <Label Content="{res:ResMarker Tag,:}" HorizontalAlignment="Left" Margin="5,10,0,0" VerticalAlignment="Top"/>
             <DatePicker SelectedDate="{Binding EndTime,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Margin="5,10,0,0" Grid.Column="3"/>
             <ComboBox ItemsSource="{Binding HourItems}" SelectedIndex="{Binding EndTimeHour,UpdateSourceTrigger=PropertyChanged}" IsEditable="True"  HorizontalAlignment="Left" Margin="170,10,0,0" VerticalAlignment="Top" Width="60" Grid.Column="3"/>
-            <Label Content="{res:ResMarker TimeSpan, :}" HorizontalAlignment="Left" Margin="5,32,0,0" VerticalAlignment="Top"/>
-            <ComboBox  IsEditable="True" Text="{Binding TimeSpan,UpdateSourceTrigger=PropertyChanged}"   HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" Width="154" Grid.Column="1"/>
+            <Label Content="{res:ResMarker TimeSpan, :}" HorizontalAlignment="Left" Margin="5,37,0,0" VerticalAlignment="Top"/>
+            <ComboBox  IsEditable="True" Text="{Binding TimeSpan,UpdateSourceTrigger=PropertyChanged}"   HorizontalAlignment="Left" Margin="10,39,0,0" VerticalAlignment="Top" Width="154" Grid.Column="1"/>
             <CheckBox IsEnabled="{Binding IsChecked,ElementName=oname}" IsChecked="{Binding AllValue,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Content="{res:ResMarker AllValue}" Grid.Column="2" HorizontalAlignment="Left" Margin="5,42,0,0" VerticalAlignment="Top"/>
             <Label Content="{Binding OpMessage}" Grid.Column="3" Margin="0,40,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
-            <RadioButton x:Name="oname" GroupName="gg" IsChecked="{Binding IsOriginalValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="{res:ResMarker OriginalValue}" Grid.Column="2" HorizontalAlignment="Left" Margin="101,42,0,0" VerticalAlignment="Top"/>
-            <RadioButton GroupName="gg" IsChecked="{Binding IsStatisticsValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="{res:ResMarker StatisticsValue}" Grid.Column="2" HorizontalAlignment="Left" Margin="207,42,0,0" VerticalAlignment="Top"/>
+            <RadioButton x:Name="oname" GroupName="gg" IsChecked="{Binding IsOriginalValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="{res:ResMarker OriginalValue}" Grid.Column="3" HorizontalAlignment="Left" Margin="5,44,0,0" VerticalAlignment="Top"/>
+            <RadioButton GroupName="gg" IsChecked="{Binding IsStatisticsValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="{res:ResMarker StatisticsValue}" Grid.Column="3" HorizontalAlignment="Left" Margin="94,44,0,0" VerticalAlignment="Top"/>
+
+            <Label Content="{res:ResMarker QueryValueMatchType,:}" HorizontalAlignment="Left" Margin="97,36,0,0" VerticalAlignment="Top" Grid.Column="2"/>
+
+
+            <ComboBox SelectedIndex="{Binding TagValueQueryModel,Mode=TwoWay}" IsEnabled="{Binding AllValue,Converter={StaticResource biv}}" Grid.Column="2" HorizontalAlignment="Left" Margin="170,38,0,0" VerticalAlignment="Top" Width="120">
+                <ComboBoxItem Content="Previous" />
+                <ComboBoxItem Content="After" />
+                <ComboBoxItem Content="Closer" />
+                <ComboBoxItem Content="Linear" />
+            </ComboBox>
+
 
 
         </Grid>

@@ -201,9 +201,11 @@ namespace Cdy.Tag
         private static Dictionary<int,Tuple<DateTime,bool>> ReadTimeIndex(this DataFileSeriserbase datafile, long offset, long timeraddr,  DateTime time, int count)
         {
             Dictionary<int, Tuple<DateTime, bool>> re = new Dictionary<int, Tuple<DateTime, bool>>();
+            var basetime = DateTime.FromBinary(datafile.ReadLong(2));
             for (int i = 0; i < count; i++)
             {
-                var vf = time.AddMilliseconds(datafile.ReadShort(offset + timeraddr + i * 2) * 100);
+                //var vf = time.AddMilliseconds(datafile.ReadShort(offset + timeraddr + i * 2) * 100);
+                var vf = basetime.AddMilliseconds(datafile.ReadShort(offset + timeraddr + i * 2) * 100);
                 if (vf != time || i == 0)
                 {
                     re.Add(i, new Tuple<DateTime, bool>(vf, true));
@@ -810,6 +812,12 @@ namespace Cdy.Tag
                         else if (time1 == snext.Value.Item1)
                         {
                             result.Add(vals[i + 1], time1, qq[snext.Key]);
+                            count++;
+                            break;
+                        }
+                        else if(time1<skey.Value.Item1 && (skey.Value.Item1 - time1).TotalMilliseconds<1000)
+                        {
+                            result.Add(vals[i], time1, qq[skey.Key]);
                             count++;
                             break;
                         }

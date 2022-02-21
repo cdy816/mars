@@ -76,6 +76,8 @@ namespace DBGrpcApi
                         var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
                         if (val != null)
                             response.Values.Add(new ValueQualityTime() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype,Time=time.ToBinary()});
+                        else
+                            response.Values.Add(new ValueQualityTime() { Id = i, Quality = (byte)QualityConst.Null, Value = "", ValueType = tagtype, Time = 0 });
                     }
                 }
                 return Task.FromResult(response);
@@ -106,6 +108,8 @@ namespace DBGrpcApi
                     var val = service.GetTagValue(request.Ids[i], out quality, out time, out tagtype);
                     if(val!=null)
                     response.Values.Add(new ValueQualityTime() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype, Time = time.ToBinary() });
+                    else
+                        response.Values.Add(new ValueQualityTime() { Id = i, Quality = (byte)QualityConst.Null, Value = "", ValueType = tagtype, Time = 0 });
                 }
                 return Task.FromResult(response);
             }
@@ -138,6 +142,8 @@ namespace DBGrpcApi
                         var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
                         if (val != null)
                             response.Values.Add(new ValueAndQuality() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype });
+                        else
+                            response.Values.Add(new ValueAndQuality() { Id = i, Quality = (int)QualityConst.Null, Value = "", ValueType = tagtype });
                     }
                 }
                 return Task.FromResult(response);
@@ -165,9 +171,12 @@ namespace DBGrpcApi
                     byte quality;
                     DateTime time;
                     byte tagtype = 0;
-                    var val = service.GetTagValue(request.Ids[i], out quality, out time, out tagtype);
+                    var vid = request.Ids[i];
+                    var val = service.GetTagValue(vid, out quality, out time, out tagtype);
                     if (val != null)
                         response.Values.Add(new ValueAndQuality() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype });
+                    else
+                        response.Values.Add(new ValueAndQuality() { Id = i, Quality = (int)QualityConst.Null, Value = "", ValueType = tagtype });
                 }
                 return Task.FromResult(response);
             }
@@ -200,6 +209,8 @@ namespace DBGrpcApi
                         var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
                         if(val!=null)
                         response.Values.Add(new ValueOnly() { Id = i, Value = val.ToString(), ValueType = tagtype });
+                        else
+                            response.Values.Add(new ValueOnly() { Id = i, Value = "", ValueType = tagtype });
                     }
                 }
                 return Task.FromResult(response);
@@ -228,9 +239,12 @@ namespace DBGrpcApi
                     byte quality;
                     DateTime time;
                     byte tagtype = 0;
-                    var val = service.GetTagValue(request.Ids[i], out quality, out time, out tagtype);
+                    var vid = request.Ids[i];
+                    var val = service.GetTagValue(vid, out quality, out time, out tagtype);
                     if (val != null)
-                        response.Values.Add(new ValueOnly() { Id = i, Value = val.ToString(), ValueType = tagtype });
+                        response.Values.Add(new ValueOnly() { Id = vid, Value = val.ToString(), ValueType = tagtype });
+                    else
+                        response.Values.Add(new ValueOnly() { Id = vid, Value = "", ValueType = tagtype });
                 }
                 return Task.FromResult(response);
             }

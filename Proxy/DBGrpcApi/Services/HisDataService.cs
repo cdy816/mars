@@ -10,8 +10,8 @@ namespace DBGrpcApi
 {
     public class HisDataService : HislData.HislDataBase
     {
-        private readonly ILogger<RealDataService> _logger;
-        public HisDataService(ILogger<RealDataService> logger)
+        private readonly ILogger<HisDataService> _logger;
+        public HisDataService(ILogger<HisDataService> logger)
         {
             _logger = logger;
         }
@@ -165,10 +165,70 @@ namespace DBGrpcApi
                     byte qu;
                     DateTime time;
                     var val = vdata.GetValue(i, out time, out qu);
-                    hdp.Values.Add(new HisDataPoint() {  Time = time.ToBinary(), Value = val.ToString() });
+                    hdp.Values.Add(new HisDataPoint() {  Time = time.ToBinary(), Value = val.ToString(),Quality=qu });
                 }
             }
             result.Values.Add(hdp);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <param name="result"></param>
+        /// <param name="valueType"></param>
+        /// <param name="times"></param>
+        private void ProcessResult<T>(string tag, object value, HisDataCollectionReplay result, int valueType, List<DateTime> times)
+        {
+            HisDataPointCollection hdp = new HisDataPointCollection() { Tag = tag, ValueType = valueType };
+            var vdata = value as HisQueryResult<T>;
+            if (vdata != null)
+            {
+                SortedDictionary<DateTime, HisDataPoint> rtmp = new SortedDictionary<DateTime, HisDataPoint>();
+                for (int i = 0; i < vdata.Count; i++)
+                {
+                    byte qu;
+                    DateTime time;
+                    var val = vdata.GetValue(i, out time, out qu);
+                    rtmp.Add(time, new HisDataPoint() { Time = time.ToBinary(), Value = val.ToString(),Quality=qu });
+                    //hdp.Values.Add(new HisDataPoint() { Time = time.ToBinary(), Value = val.ToString() });
+                }
+
+                foreach (var vv in times)
+                {
+                    if (!rtmp.ContainsKey(vv))
+                    {
+                        rtmp.Add(vv, new HisDataPoint() { Time = vv.ToBinary(), Value = default(T).ToString(),Quality=(byte)QualityConst.Null });
+                    }
+                }
+
+                foreach(var vv in rtmp)
+                {
+                    hdp.Values.Add(vv.Value);
+                }
+            }
+            result.Values.Add(hdp);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="starttime"></param>
+        /// <param name="endtime"></param>
+        /// <param name="timespan"></param>
+        /// <returns></returns>
+        private List<DateTime> GetTimes(DateTime starttime, DateTime endtime, TimeSpan timespan)
+        {
+            List<DateTime> re = new List<DateTime>();
+            DateTime dt = starttime;
+            while (dt < endtime)
+            {
+                re.Add(dt);
+                dt = dt.Add(timespan);
+            }
+            return re;
         }
 
         /// <summary>
@@ -185,87 +245,88 @@ namespace DBGrpcApi
             var tgs = ServiceLocator.Locator.Resolve<ITagManager>().GetTagByName(tag);
             if (tgs == null) return;
             object res;
+            var times = GetTimes(startTime, endTime, TimeSpan.FromMilliseconds(duration));
             switch (tgs.Type)
             {
                 case Cdy.Tag.TagType.Bool:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<bool>(tgs.Id,startTime,endTime,TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<bool>(tag, res,result,(int)tgs.Type);
+                     ProcessResult<bool>(tag, res,result,(int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.Byte:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<byte>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<byte>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<byte>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.DateTime:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<DateTime>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<DateTime>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<DateTime>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.Double:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<double>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<double>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<double>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.Float:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<float>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<float>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<float>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.Int:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<int>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<int>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<int>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.Long:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<long>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<long>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<long>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.Short:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<short>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<short>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<short>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.String:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<string>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<string>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<string>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.UInt:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<uint>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<uint>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<uint>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.ULong:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<ulong>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<ulong>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<ulong>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.UShort:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<ushort>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<ushort>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<ushort>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.IntPoint:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<IntPointData>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<IntPointData>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<IntPointData>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.UIntPoint:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<UIntPointData>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<UIntPointData>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<UIntPointData>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.IntPoint3:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<IntPoint3Data>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<IntPoint3Data>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<IntPoint3Data>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.UIntPoint3:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<UIntPoint3Data>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<UIntPoint3Data>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<UIntPoint3Data>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.LongPoint:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<LongPointData>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<LongPointData>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<LongPointData>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.ULongPoint:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<ULongPointData>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<ULongPointData>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<ULongPointData>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.LongPoint3:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<LongPoint3Data>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<LongPoint3Data>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<LongPoint3Data>(tag, res, result, (int)tgs.Type, times);
                     break;
                 case Cdy.Tag.TagType.ULongPoint3:
                     res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData<ULongPoint3Data>(tgs.Id, startTime, endTime, TimeSpan.FromMilliseconds(duration), (QueryValueMatchType)(type));
-                     ProcessResult<ULongPoint3Data>(tag, res, result, (int)tgs.Type);
+                     ProcessResult<ULongPoint3Data>(tag, res, result, (int)tgs.Type, times);
                     break;
             }
         }
@@ -436,7 +497,27 @@ namespace DBGrpcApi
                     switch (tag.Type)
                     {
                         case Cdy.Tag.TagType.DateTime:
+                            dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValue(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), Convert.ToDateTime(request.Value));
+                            if (dres != null)
+                            {
+                                re.Time.Add(dres.Value.Ticks);
+                            }
+                            else
+                            {
+                                re.Result = false;
+                            }
+                            break;
                         case Cdy.Tag.TagType.Bool:
+                            dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValue(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), Convert.ToBoolean(request.Value));
+                            if (dres != null)
+                            {
+                                re.Time.Add(dres.Value.Ticks);
+                            }
+                            else
+                            {
+                                re.Result = false;
+                            }
+                            break;
                         case Cdy.Tag.TagType.String:
                         case Cdy.Tag.TagType.IntPoint:
                         case Cdy.Tag.TagType.UIntPoint:
@@ -446,7 +527,7 @@ namespace DBGrpcApi
                         case Cdy.Tag.TagType.ULongPoint:
                         case Cdy.Tag.TagType.LongPoint3:
                         case Cdy.Tag.TagType.ULongPoint3:
-                            dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValue(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), Convert.ToByte(request.Value));
+                            dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValue(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), request.Value);
                             if (dres != null)
                             {
                                 re.Time.Add(dres.Value.Ticks);
@@ -533,7 +614,25 @@ namespace DBGrpcApi
                     switch (tag.Type)
                     {
                         case Cdy.Tag.TagType.DateTime:
+                            dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValues(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), Convert.ToDateTime(request.Value));
+                            if (res != null)
+                            {
+                                foreach (var vv in dres)
+                                {
+                                    re.Time.Add(vv.Ticks);
+                                }
+                            }
+                            break;
                         case Cdy.Tag.TagType.Bool:
+                            dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValues(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), Convert.ToByte(request.Value));
+                            if (res != null)
+                            {
+                                foreach (var vv in dres)
+                                {
+                                    re.Time.Add(vv.Ticks);
+                                }
+                            }
+                            break;
                         case Cdy.Tag.TagType.String:
                         case Cdy.Tag.TagType.IntPoint:
                         case Cdy.Tag.TagType.UIntPoint:
@@ -543,7 +642,7 @@ namespace DBGrpcApi
                         case Cdy.Tag.TagType.ULongPoint:
                         case Cdy.Tag.TagType.LongPoint3:
                         case Cdy.Tag.TagType.ULongPoint3:
-                            dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValues(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), Convert.ToByte(request.Value));
+                            dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValues(tag.Id, DateTime.FromBinary(request.StartTime), DateTime.FromBinary(request.EndTime), request.Value);
                             if (res != null)
                             {
                                 foreach (var vv in dres)

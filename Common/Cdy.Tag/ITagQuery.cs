@@ -41,6 +41,20 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        List<Tagbase> GetTagsByGroup(string group);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagnames"></param>
+        /// <returns></returns>
+        IEnumerable<Tagbase> GetTagsByName(IEnumerable<string> tagnames);
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
         Tagbase GetTagById(int id);
@@ -62,6 +76,12 @@ namespace Cdy.Tag
         /// </summary>
         /// <returns></returns>
         IEnumerable<Tagbase> ListAllTags();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<string> ListTagGroups();
 
         /// <summary>
         /// 

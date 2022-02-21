@@ -279,6 +279,20 @@
                             </Button.ContentTemplate>
                         </Button>
 
+                        <Border BorderBrush="LightGray" BorderThickness="1,0,0,0" Width="2" VerticalAlignment="Stretch" Margin="2,4"  />
+
+                        <Button  BorderThickness="0"  ToolTip="{local:ResMarker Monitor}"   Command="{Binding StartMonitorCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalContentAlignment="Center" VerticalAlignment="Center" Width="80" >
+                            <Button.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="/Image/monitor.png" Height="18" RenderOptions.BitmapScalingMode="HighQuality" />
+                                        <TextBlock Text="{local:ResMarker Monitor}"  FontWeight="Bold" VerticalAlignment="Center" Margin="5,0"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </Button.ContentTemplate>
+                        </Button>
+
+
                         <Border BorderBrush="LightGray" BorderThickness="1,0,0,0" Width="2" VerticalAlignment="Stretch" Margin="2,4" Visibility="{Binding HasAlarmStudioConfig,Converter={StaticResource btv}}" />
                         <Button BorderThickness="0"  ToolTip="{local:ResMarker Alarm}" Visibility="{Binding HasAlarmStudioConfig,Converter={StaticResource btv}}"  Command="{Binding AlarmConfigCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
                             <Button.ContentTemplate>

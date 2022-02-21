@@ -94,6 +94,19 @@ namespace SpiderDriver.ClientApi
         #region ... Methods    ...
 
         /// <summary>
+        /// 心跳
+        /// </summary>
+        public void Hart()
+        {
+            lock (mTagInfoLockObj)
+            {
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 2);
+                mb.Write(ApiFunConst.Hart);
+                SendData(mb);
+            }
+        }
+
+        /// <summary>
         /// 退出登录
         /// </summary>
         public void Logout()
@@ -280,6 +293,19 @@ namespace SpiderDriver.ClientApi
         }
 
         /// <summary>
+        /// 删除并释放缓存
+        /// </summary>
+        /// <param name="datas"></param>
+        private void ClearData(Queue<ByteBuffer> datas)
+        {
+            while(mInfoRequreData.Count>0)
+            {
+                var vdata = mInfoRequreData.Dequeue();
+                vdata?.UnlockAndReturn();
+            }
+        }
+
+        /// <summary>
         /// 登录
         /// </summary>
         /// <param name="username"></param>
@@ -290,7 +316,7 @@ namespace SpiderDriver.ClientApi
         {
             lock (mTagInfoLockObj)
             {
-                mInfoRequreData.Clear();
+                ClearData(mInfoRequreData);
                 mUser = username;
                 mPass = password;
                 int size = username.Length + password.Length + 9;
@@ -353,6 +379,8 @@ namespace SpiderDriver.ClientApi
                 Login(mUser, mPass);
             }
         }
+
+        #region 实时值相关
 
         ///// <summary>
         ///// 
@@ -871,31 +899,127 @@ namespace SpiderDriver.ClientApi
             return true;
         }
 
+        ///// <summary>
+        ///// 设置变量的实时、历史值
+        ///// 历史值只有在变量的记录类型为：驱动时起作用
+        ///// </summary>
+        ///// <param name="data"></param>
+        ///// <param name="timeout"></param>
+        ///// <returns></returns>
+        //public bool SetTagRealAndHisValueAsync2(RealDataBuffer data)
+        //{
+        //    //CheckLogin();
+
+        //    if (data.Position <= 0 || mIsRealDataBusy) return false;
+
+        //    var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position+64);
+        //    mb.Write(ApiFunConst.SetTagRealAndHisValueWithUserFun);
+        //    mb.Write(this.mUser);
+        //    mb.Write(this.mPass);
+        //    mb.Write(data.ValueCount);
+
+        //    mb.Write(data.Buffers, (int)data.Position);
+        //    //System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
+        //    //mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
+        //    SendData(mb);
+        //    return true;
+        //}
+
         /// <summary>
         /// 设置变量的实时、历史值
         /// 历史值只有在变量的记录类型为：驱动时起作用
         /// </summary>
-        /// <param name="data"></param>
+        /// <param name="ids"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public bool SetTagRealAndHisValueAsync2(RealDataBuffer data)
+        public bool SetTagRealAndHisValue(List<RealTagValue> ids, int timeout = 5000)
+        {
+            CheckLogin();
+            if (mIsRealDataBusy) return false;
+
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count * 32);
+            mb.Write(ApiFunConst.SetTagRealAndHisValueFun);
+            mb.Write(this.mLoginId);
+            mb.Write(ids.Count);
+            foreach (var vv in ids)
+            {
+                mb.Write(vv.Id);
+                SetTagValueToBuffer((TagType)vv.ValueType, vv.Value, vv.Quality, mb);
+            }
+            realRequreEvent.Reset();
+            SendData(mb);
+
+            if (realRequreEvent.WaitOne(timeout))
+            {
+                try
+                {
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
+                }
+                catch
+                {
+                    mRealRequreData?.UnlockAndReturn();
+                }
+
+            }
+
+
+            return false;
+        }
+
+        /// <summary>
+        /// 设置变量的实时、历史值
+        /// 历史值只有在变量的记录类型为：驱动时起作用
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool SetTagRealAndHisValueAsync(List<RealTagValue> ids, int timeout = 5000)
+        {
+            CheckLogin();
+            if (mIsRealDataBusy) return false;
+
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count * 32);
+            mb.Write(ApiFunConst.SetTagRealAndHisValueFun);
+            mb.Write(this.mLoginId);
+            mb.Write(ids.Count);
+            foreach (var vv in ids)
+            {
+                mb.Write(vv.Id);
+                SetTagValueToBuffer((TagType)vv.ValueType, vv.Value, vv.Quality, mb);
+            }
+            realRequreEvent.Reset();
+            SendData(mb);
+            
+            return IsConnected;
+        }
+
+        /// <summary>
+        /// 设置变量的实时、历史值
+        /// 历史值只有在变量的记录类型为：驱动时起作用
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool SetTagRealAndHisValue2(List<RealTagValue2> ids)
         {
             //CheckLogin();
+            if (mIsRealDataBusy) return false;
 
-            if (data.Position <= 0 || mIsRealDataBusy) return false;
-
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position+64);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count * (32 + 64) + 64);
             mb.Write(ApiFunConst.SetTagRealAndHisValueWithUserFun);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
-            mb.Write(data.ValueCount);
-
-            mb.Write(data.Buffers, (int)data.Position);
-            //System.Runtime.InteropServices.Marshal.Copy(data.Buffers, mb.Array, mb.ArrayOffset + mb.WriterIndex, (int)data.Position);
-            //mb.SetWriterIndex((int)(mb.WriterIndex + data.Position));
+            mb.Write(ids.Count);
+            foreach (var vv in ids)
+            {
+                mb.Write(vv.Id);
+                SetTagValueToBuffer((TagType)vv.ValueType, vv.Value, vv.Quality, mb);
+            }
             SendData(mb);
-            return true;
+            return IsConnected;
         }
+
+
 
         /// <summary>
         /// 设置一组变量的实时值
@@ -1008,77 +1132,33 @@ namespace SpiderDriver.ClientApi
             return true;
         }
 
-        /// <summary>
-        /// 设置一组变量的实时值,
-        /// 立即返回
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public bool SetTagValueAndQualityAsync2(RealDataBuffer data)
-        {
-            //CheckLogin();
-            if (mIsRealDataBusy) return false;
+        ///// <summary>
+        ///// 设置一组变量的实时值,
+        ///// </summary>
+        ///// <param name="data"></param>
+        ///// <param name="timeout"></param>
+        ///// <returns></returns>
+        //public bool SetTagValueAndQualityAsync2(RealDataBuffer data)
+        //{
+        //    //CheckLogin();
+        //    if (mIsRealDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position+64);
-            mb.Write(ApiFunConst.SetTagValueAndQualityWithUserFun);
-            mb.Write(this.mUser);
-            mb.Write(this.mPass);
-            mb.Write(data.ValueCount);
+        //    var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position+64);
+        //    mb.Write(ApiFunConst.SetTagValueAndQualityWithUserFun);
+        //    mb.Write(this.mUser);
+        //    mb.Write(this.mPass);
+        //    mb.Write(data.ValueCount);
 
-            mb.Write(data.Buffers, (int)data.Position);
+        //    mb.Write(data.Buffers, (int)data.Position);
 
-            //realRequreEvent.Reset();
-            SendData(mb);
+        //    //realRequreEvent.Reset();
+        //    SendData(mb);
 
-            return true;
-        }
-                
+        //    return true;
+        //}
 
         /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="ids"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public bool SetTagRealAndHisValue(List<RealTagValue> ids, int timeout = 5000)
-        {
-            CheckLogin();
-            if (mIsRealDataBusy) return false;
-
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count * 32);
-            mb.Write(ApiFunConst.SetTagRealAndHisValueFun);
-            mb.Write(this.mLoginId);
-            mb.Write(ids.Count);
-            foreach (var vv in ids)
-            {
-                mb.Write(vv.Id);
-                SetTagValueToBuffer((TagType)vv.ValueType, vv.Value,vv.Quality, mb);
-            }
-            realRequreEvent.Reset();
-            SendData(mb);
-
-            if (realRequreEvent.WaitOne(timeout))
-            {
-                try
-                {
-                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
-                }
-                catch
-                {
-                    mRealRequreData?.UnlockAndReturn();
-                }
-               
-            }
-
-            
-            return false;
-        }
-
-
-        /// <summary>
-        /// 设置变量的实时、历史值
-        /// 历史值只有在变量的记录类型为：驱动时起作用
+        /// 设置变量的实时
         /// </summary>
         /// <param name="values">ID，值类型，值，质量</param>
         /// <param name="timeout"></param>
@@ -1095,7 +1175,7 @@ namespace SpiderDriver.ClientApi
             foreach (var vv in values)
             {
                 mb.Write(vv.Id);
-                SetTagValueToBuffer((TagType)vv.ValueType, vv.Value,vv.Quality, mb);
+                SetTagValueToBuffer((TagType)vv.ValueType, vv.Value, vv.Quality, mb);
             }
             realRequreEvent.Reset();
             SendData(mb);
@@ -1109,59 +1189,19 @@ namespace SpiderDriver.ClientApi
                 catch
                 {
                     mRealRequreData?.UnlockAndReturn();
-                    
+
                 }
-               
+
             }
 
-            
+
             return false;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="ids"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public bool SetTagRealAndHisValue2(List<RealTagValue2> ids)
-        {
-            //CheckLogin();
-            if (mIsRealDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count * (32+64)+64);
-            mb.Write(ApiFunConst.SetTagRealAndHisValueWithUserFun);
-            mb.Write(this.mUser);
-            mb.Write(this.mPass);
-            mb.Write(ids.Count);
-            foreach (var vv in ids)
-            {
-                mb.Write(vv.Id);
-                SetTagValueToBuffer((TagType)vv.ValueType, vv.Value, vv.Quality, mb);
-            }
-            //realRequreEvent.Reset();
-            SendData(mb);
-            return IsConnected;
-            //if (realRequreEvent.WaitOne(timeout))
-            //{
-            //    try
-            //    {
-            //        return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
-            //    }
-            //    catch
-            //    {
-            //        mRealRequreData?.UnlockAndReturn();
-            //    }
-
-            //}
-
-
-            //return false;
-        }
 
         /// <summary>
-        /// 设置变量的实时、历史值
-        /// 历史值只有在变量的记录类型为：驱动时起作用
+        /// 设置变量的实时
         /// </summary>
         /// <param name="values">ID，值类型，值，质量</param>
         /// <param name="timeout"></param>
@@ -1171,7 +1211,7 @@ namespace SpiderDriver.ClientApi
             //CheckLogin();
             if (mIsRealDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * (32+64)+64);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * (32 + 64) + 64);
             mb.Write(ApiFunConst.SetTagValueAndQualityWithUserFun);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
@@ -1202,9 +1242,9 @@ namespace SpiderDriver.ClientApi
             //return false;
         }
 
+
         /// <summary>
-        /// 设置变量的实时、历史值.
-        /// 历史值只有在变量的记录类型为：驱动时起作用
+        /// 设置变量的实时
         /// 立即返回
         /// </summary>
         /// <param name="values">ID，值类型，值，质量</param>
@@ -1228,31 +1268,31 @@ namespace SpiderDriver.ClientApi
             return true;
         }
 
-        /// <summary>
-        /// 设置变量的实时、历史值.
-        /// 历史值只有在变量的记录类型为：驱动时起作用
-        /// 立即返回
-        /// </summary>
-        /// <param name="values">ID，值类型，值，质量</param>
-        /// <returns></returns>
-        public bool SetTagValueAndQualityAsync2(List<RealTagValue2> values)
-        {
-            //CheckLogin();
-            if (mIsRealDataBusy) return false;
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * (32+64)+64);
-            mb.Write(ApiFunConst.SetTagValueAndQualityWithUserFun);
-            mb.Write(this.mUser);
-            mb.Write(this.mPass);
-            mb.Write(values.Count);
-            foreach (var vv in values)
-            {
-                mb.Write(vv.Id);
-                SetTagValueToBuffer((TagType)vv.ValueType, vv.Value, vv.Quality, mb);
-            }
-            //realRequreEvent.Reset();
-            SendData(mb);
-            return true;
-        }
+        ///// <summary>
+        ///// 设置变量的实时、历史值.
+        ///// 历史值只有在变量的记录类型为：驱动时起作用
+        ///// 立即返回
+        ///// </summary>
+        ///// <param name="values">ID，值类型，值，质量</param>
+        ///// <returns></returns>
+        //public bool SetTagValueAndQualityAsync2(List<RealTagValue2> values)
+        //{
+        //    //CheckLogin();
+        //    if (mIsRealDataBusy) return false;
+        //    var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * (32+64)+64);
+        //    mb.Write(ApiFunConst.SetTagValueAndQualityWithUserFun);
+        //    mb.Write(this.mUser);
+        //    mb.Write(this.mPass);
+        //    mb.Write(values.Count);
+        //    foreach (var vv in values)
+        //    {
+        //        mb.Write(vv.Id);
+        //        SetTagValueToBuffer((TagType)vv.ValueType, vv.Value, vv.Quality, mb);
+        //    }
+        //    //realRequreEvent.Reset();
+        //    SendData(mb);
+        //    return true;
+        //}
 
         /// <summary>
         /// 订购指定变量的值改变通知信息
@@ -1292,7 +1332,7 @@ namespace SpiderDriver.ClientApi
         /// <summary>
         /// 取消订购指定变量的值改变通知信息
         /// </summary>
-        /// <param name="ids"></param>
+        /// <param name="ids">变量Id的集合</param>
         /// <param name="timeout"></param>
         /// <returns></returns>
         public bool UnRegistorDataChangedCallBack(IEnumerable<int> ids, int timeout = 5000)
@@ -1356,6 +1396,7 @@ namespace SpiderDriver.ClientApi
             return false;
         }
 
+        #endregion
 
         /// <summary>
         /// 设置变量的一组历史值
@@ -1810,7 +1851,7 @@ namespace SpiderDriver.ClientApi
         {
             lock (mTagInfoLockObj)
             {
-                mInfoRequreData.Clear();
+                ClearData(mInfoRequreData);
                 List<int> re = new List<int>();
                 CheckLogin();
                 var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 13 + tags.Count() * 256);
@@ -1888,6 +1929,7 @@ namespace SpiderDriver.ClientApi
         {
             lock (mTagInfoLockObj)
             {
+                ClearData(mInfoRequreData);
                 Dictionary<int, Tuple<string, byte>> re = new Dictionary<int, Tuple<string, byte>>();
                 CheckLogin();
                 var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 9);
@@ -1983,6 +2025,7 @@ namespace SpiderDriver.ClientApi
         {
             lock (mTagInfoLockObj)
             {
+                ClearData(mInfoRequreData);
                 List<int> re = new List<int>();
                 CheckLogin();
                 var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 9);
@@ -2065,6 +2108,7 @@ namespace SpiderDriver.ClientApi
         {
             lock (mTagInfoLockObj)
             {
+                ClearData(mInfoRequreData);
                 List<bool> re = new List<bool>();
                 CheckLogin();
                 var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 13 + ids.Count() * 4);

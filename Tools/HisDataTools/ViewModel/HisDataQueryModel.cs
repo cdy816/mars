@@ -70,6 +70,8 @@ namespace HisDataTools.ViewModel
         private bool mIsStatisticsValue=false;
         private bool mIsOriginalValue = true;
 
+        private int mTagValueQueryModel;
+
         //private bool mIsFilterBusy = false;
 
         #endregion ...Variables...
@@ -503,6 +505,26 @@ namespace HisDataTools.ViewModel
         }
 
 
+        /// <summary>
+            /// 
+            /// </summary>
+        public int TagValueQueryModel
+        {
+            get
+            {
+                return mTagValueQueryModel;
+            }
+            set
+            {
+                if (mTagValueQueryModel != value)
+                {
+                    mTagValueQueryModel = value;
+                    OnPropertyChanged("TagValueQueryModel");
+                }
+            }
+        }
+
+
 
         #endregion ...Properties...
 
@@ -753,7 +775,7 @@ namespace HisDataTools.ViewModel
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            var result = HisDataManager.Manager.GetQueryService(mDatabase).ReadValue<T>(id,times,Cdy.Tag.QueryValueMatchType.Linear);
+            var result = HisDataManager.Manager.GetQueryService(mDatabase).ReadValue<T>(id,times,(Cdy.Tag.QueryValueMatchType)TagValueQueryModel);
 
             sw.Stop();
 
@@ -787,7 +809,7 @@ namespace HisDataTools.ViewModel
             i = 0;
             foreach (var vv in times)
             {
-                object value=0;
+                object value=default(T);
                 DateTime time=vv;
                 byte qu = 255;
                 if(vtmps.ContainsKey(vv))

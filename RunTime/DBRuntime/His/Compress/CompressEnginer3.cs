@@ -182,11 +182,15 @@ namespace Cdy.Tag
             LoggerService.Service.Info("CompressEnginer", "开始停止");
 
             mIsClosed = true;
-            resetEvent.Set();
-            closedEvent.WaitOne();
 
-            resetEvent.Dispose();
-            closedEvent.Dispose();
+            if (!resetEvent.SafeWaitHandle.IsClosed)
+            {
+                resetEvent.Set();
+                closedEvent.WaitOne();
+
+                resetEvent.Dispose();
+                closedEvent.Dispose();
+            }
 
             foreach(var vv in mTargetMemorys)
             {
@@ -210,8 +214,11 @@ namespace Cdy.Tag
                 vv.Value.CurrentTime = dataMemory.CurrentDatetime;
                 vv.Value.EndTime = dataMemory.EndDateTime;
             }
-            lock (resetEvent)
-                resetEvent.Set();
+            if (resetEvent!=null && !resetEvent.SafeWaitHandle.IsClosed)
+            {
+                lock (resetEvent)
+                    resetEvent.Set();
+            }
         }
 
         /// <summary>
@@ -235,8 +242,11 @@ namespace Cdy.Tag
         /// </summary>
         public void SubmitManualToCompress()
         {
-            lock (resetEvent)
-                resetEvent.Set();
+            if (resetEvent != null && !resetEvent.SafeWaitHandle.IsClosed)
+            {
+                lock (resetEvent)
+                    resetEvent.Set();
+            }
         }
 
         /// <summary>
@@ -264,7 +274,8 @@ namespace Cdy.Tag
             {
                 try
                 {
-                    resetEvent.Set();
+                    if (resetEvent != null && !resetEvent.SafeWaitHandle.IsClosed)
+                        resetEvent.Set();
                 }
                 catch
                 {
@@ -291,10 +302,13 @@ namespace Cdy.Tag
             {
                 try
                 {
-                    resetEvent.WaitOne();
-                    lock (resetEvent)
+                    if (resetEvent != null && !resetEvent.SafeWaitHandle.IsClosed)
                     {
-                        resetEvent.Reset();
+                        resetEvent.WaitOne();
+                        lock (resetEvent)
+                        {
+                            resetEvent.Reset();
+                        }
                     }
 
 

@@ -15,6 +15,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Cdy.Tag
 {
@@ -30,7 +31,7 @@ namespace Cdy.Tag
 
     HisDataRegion Structor: RegionHead + DataBlockPoint Area + DataBlock Area
 
-    RegionHead:          PreDataRegionPoint(8) + NextDataRegionPoint(8) + Datatime(8)+ tagcount(4)+ tagid sum(8)+file duration(4)+block duration(4)+Time tick duration(4)
+    RegionHead:          PreDataRegion(8) + NextDataRegion(8) + Datatime(8)+file duration(4)+ block duration(4)+Time tick duration(4)  + tagcount(4)
     DataBlockPoint Area: [ID]+[block Point]
     [block point]:       [[tag1 block1 point,tag2 block1 point,....][tag1 block2 point(12),tag2 block2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
     [tag block point]:   offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
@@ -125,6 +126,57 @@ namespace Cdy.Tag
         }
 
         /// <summary>
+        /// 获取磁盘剩余空间
+        /// </summary>
+        /// <returns></returns>
+        private static double GetDiskFree(string file)
+        {
+            string dir = System.IO.Path.GetDirectoryName(file);
+            if(System.IO.Directory.Exists(dir))
+            {
+                var vd = new System.IO.DirectoryInfo(dir);
+                foreach(var vv in System.IO.DriveInfo.GetDrives())
+                {
+                    if(vv.RootDirectory.FullName==vd.Root.FullName)
+                    {
+                        return vv.AvailableFreeSpace;
+                    }
+                }
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private static void CheckAndFreeDisk(string file)
+        {
+            double lsize = GetDiskFree(file)/1024/1024;
+            double minisize = 4096;
+            if(lsize< minisize)
+            {
+                var dir = new System.IO.DirectoryInfo(System.IO.Path.GetDirectoryName(file));
+                if(dir.Exists)
+                {
+                    try
+                    {
+                        foreach (var vv in dir.GetFiles().OrderBy(e => e.LastWriteTime))
+                        {
+                            //优先删除较早的文件
+                            vv.Delete();
+                            lsize = GetDiskFree(file) / 1024 / 1024;
+                            if (lsize > minisize) break;
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        LoggerService.Service.Info(" HisDataFileInfo4", "删除文件错误： " + ex.Message);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="sfile"></param>
@@ -135,6 +187,7 @@ namespace Cdy.Tag
             {
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
+                CheckAndFreeDisk(targetfile);
                 using (System.IO.Compression.BrotliStream bs = new System.IO.Compression.BrotliStream(System.IO.File.Open(sfile, System.IO.FileMode.Open), System.IO.Compression.CompressionMode.Decompress))
                 {
                     using (var vss = System.IO.File.Open(targetfile, System.IO.FileMode.OpenOrCreate, System.IO.FileAccess.ReadWrite))

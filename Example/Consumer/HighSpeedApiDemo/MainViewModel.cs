@@ -37,6 +37,8 @@ namespace HighSpeedApiDemo
 
         private ICommand mSetTagValueCommand;
 
+        private List<int> mIds;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -157,9 +159,11 @@ namespace HighSpeedApiDemo
         /// </summary>
         private void Init()
         {
-            for(int i=1;i<1000;i++)
+            mIds = new List<int>();
+            for(int i=1;i<100000;i++)
             {
                 mTags.Add(new TagItemInfo() { Id = i, Value = "0" });
+                mIds.Add(i);
             }
             clinet = new DBHighApi.ApiClient();
             clinet.TagValueChangedCallBack = (val) =>
@@ -179,13 +183,25 @@ namespace HighSpeedApiDemo
             {
                 if(clinet.IsConnected)
                 {
-                    clinet.Login("Admin", "Admin");
-                    clinet.RegistorTagValueCallBack(500, 999);
-                    mScanThread = new Thread(ScanProcess);
-                    mScanThread.IsBackground = true;
-                    mScanThread.Start();
+                    Task.Run(() => {
+                        clinet.Login("Admin", "Admin");
+                        clinet.RegistorTagValueCallBack(500, 999);
+                        InitFunTest();
+                        mScanThread = new Thread(ScanProcess);
+                        mScanThread.IsBackground = true;
+                        mScanThread.Start();
+                    });
+                   
                 }
             }
+        }
+
+        private void InitFunTest()
+        {
+            clinet.GetTagIds(new List<string>() { "Double.Double1" });
+            clinet.ListAllTag();
+            var grps = clinet.ListALlTagGroup();
+            clinet.ListTagByGroup("Double");
         }
 
         /// <summary>
@@ -205,7 +221,7 @@ namespace HighSpeedApiDemo
             while (!mExited)
             {
                 UpdateValue();
-                Thread.Sleep(1000);
+                Thread.Sleep(500);
             }
         }
 
@@ -214,14 +230,52 @@ namespace HighSpeedApiDemo
         /// </summary>
         private void UpdateValue()
         {
-            if (!clinet.IsLogin) return;
-            var vals = clinet.GetRealDataValueOnly(0, 500);
+            if (!clinet.IsLogin)
+            {
+                clinet.Login("Admin", "Admin");
+                return;
+            }
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+          
+            var vals = clinet.GetRealDataValueOnly(mIds,true);
+            sw.Stop();
+            Debug.WriteLine($"time : { sw.ElapsedMilliseconds }");
             if (vals != null)
             {
-                for (int i = 0; i < 500; i++)
+                for (int i = 0; i < 50000; i++)
                 {
                     if(vals.ContainsKey(i))
-                    mTags[i].Value = vals[i].ToString();
+                    mTags[i].Value = vals[i]?.ToString();
+                }
+            }
+
+            sw.Restart();
+
+            var avals = clinet.GetRealData(mIds, true);
+            sw.Stop();
+            Debug.WriteLine($"time : { sw.ElapsedMilliseconds }");
+            if (avals != null)
+            {
+                for (int i = 0; i < 50000; i++)
+                {
+                    if (avals.ContainsKey(i))
+                        mTags[i].Value = avals[i].Item1?.ToString();
+                }
+            }
+
+
+            sw.Restart();
+
+            var aqvals = clinet.GetRealDataValueAndQualityOnly(mIds, true);
+            sw.Stop();
+            Debug.WriteLine($"time : { sw.ElapsedMilliseconds }");
+            if (aqvals != null)
+            {
+                for (int i = 0; i < 50000; i++)
+                {
+                    if (aqvals.ContainsKey(i))
+                        mTags[i].Value = aqvals[i].Item1?.ToString();
                 }
             }
         }

@@ -192,6 +192,9 @@
   <data name="Query" xml:space="preserve">
     <value>Query</value>
   </data>
+  <data name="QueryValueMatchType" xml:space="preserve">
+    <value>QueryValueMatchType</value>
+  </data>
   <data name="SelectDatabase" xml:space="preserve">
     <value>Select a database</value>
   </data>

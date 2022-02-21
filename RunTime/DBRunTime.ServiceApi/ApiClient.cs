@@ -168,6 +168,8 @@ namespace DBRunTime.ServiceApi
 
         private object mRealDataLock = new object();
 
+        private object mRealSetDataLock = new object();
+
         private object mLoginLock = new object();
 
         /// <summary>
@@ -559,6 +561,8 @@ namespace DBRunTime.ServiceApi
 
         #region RealData
 
+       
+
         /// <summary>
         /// 
         /// </summary>
@@ -569,25 +573,28 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public bool RegistorTagValueCallBack(int minid, int maxid, int timeout = 5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
-            mb.Write(ApiFunConst.RegistorValueCallback);
-            mb.Write(this.LoginId);
-            mb.Write(minid);
-            mb.Write(maxid);
-            this.realRequreEvent.Reset();
-            SendData(mb);
-
-            if (realRequreEvent.WaitOne(timeout))
+            lock (mRealDataLock)
             {
-                try
+                CheckLogin();
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
+                mb.Write(ApiFunConst.RegistorValueCallback);
+                mb.Write(this.LoginId);
+                mb.Write(minid);
+                mb.Write(maxid);
+                this.realRequreEvent.Reset();
+                SendData(mb);
+
+                if (realRequreEvent.WaitOne(timeout))
                 {
-                    return mRealRequreData.ReadByte() > 0;
-                }
-                finally
-                {
-                    mRealRequreData?.UnlockAndReturn();
-                    mRealRequreData = null;
+                    try
+                    {
+                        return mRealRequreData.ReadByte() > 0;
+                    }
+                    finally
+                    {
+                        mRealRequreData?.UnlockAndReturn();
+                        mRealRequreData = null;
+                    }
                 }
             }
             return true;
@@ -600,25 +607,28 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public bool RegistorTagBlockValueCallBack(int timeout = 5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8);
-            mb.Write(ApiFunConst.BlockValueChangeNotify);
-            mb.Write(this.LoginId);
-            this.realRequreEvent.Reset();
-            SendData(mb);
-
-            if (realRequreEvent.WaitOne(timeout))
+            lock (mRealDataLock)
             {
-                try
-                {
-                    return mRealRequreData.ReadByte() > 0;
-                }
-                finally
-                {
-                    mRealRequreData?.UnlockAndReturn();
-                    mRealRequreData = null;
-                }
+                CheckLogin();
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8);
+                mb.Write(ApiFunConst.BlockValueChangeNotify);
+                mb.Write(this.LoginId);
+                this.realRequreEvent.Reset();
+                SendData(mb);
 
+                if (realRequreEvent.WaitOne(timeout))
+                {
+                    try
+                    {
+                        return mRealRequreData.ReadByte() > 0;
+                    }
+                    finally
+                    {
+                        mRealRequreData?.UnlockAndReturn();
+                        mRealRequreData = null;
+                    }
+
+                }
             }
 
             return true;
@@ -631,23 +641,26 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public bool ClearRegistorTagValueCallBack(int timeout = 5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
-            mb.Write(ApiFunConst.ResetValueChangeNotify);
-            mb.Write(this.LoginId);
-            realRequreEvent.Reset();
-            SendData(mb);
-
-            if (realRequreEvent.WaitOne(timeout))
+            lock (mRealDataLock)
             {
-                try
+                CheckLogin();
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
+                mb.Write(ApiFunConst.ResetValueChangeNotify);
+                mb.Write(this.LoginId);
+                realRequreEvent.Reset();
+                SendData(mb);
+
+                if (realRequreEvent.WaitOne(timeout))
                 {
-                    return mRealRequreData.ReadByte() > 0;
-                }
-                finally
-                {
-                    mRealRequreData?.UnlockAndReturn();
-                    mRealRequreData = null;
+                    try
+                    {
+                        return mRealRequreData.ReadByte() > 0;
+                    }
+                    finally
+                    {
+                        mRealRequreData?.UnlockAndReturn();
+                        mRealRequreData = null;
+                    }
                 }
             }
 
@@ -660,30 +673,32 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public ByteBuffer GetRealData(List<int> ids, int timeout = 5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + ids.Count * 4);
-            mb.Write(ApiFunConst.RequestRealData);
-            mb.Write(this.LoginId);
-            mb.Write(ids.Count);
-            for (int i = 0; i < ids.Count; i++)
+            lock (mRealDataLock)
             {
-                mb.Write(ids[i]);
-            }
-            realRequreEvent.Reset();
-            SendData(mb);
-
-            try
-            {
-                if (realRequreEvent.WaitOne(timeout))
+                CheckLogin();
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + ids.Count * 4);
+                mb.Write(ApiFunConst.RequestRealData);
+                mb.Write(this.LoginId);
+                mb.Write(ids.Count);
+                for (int i = 0; i < ids.Count; i++)
                 {
-                    return mRealRequreData;
+                    mb.Write(ids[i]);
+                }
+                realRequreEvent.Reset();
+                SendData(mb);
+
+                try
+                {
+                    if (realRequreEvent.WaitOne(timeout))
+                    {
+                        return mRealRequreData;
+                    }
+                }
+                finally
+                {
+                    mRealRequreData = null;
                 }
             }
-            finally
-            {
-                mRealRequreData = null;
-            }
-
             return null;
         }
 
@@ -695,30 +710,32 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public ByteBuffer GetRealDataByMemoryCopy(List<int> ids, int timeout = 5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + ids.Count * 4);
-            mb.Write(ApiFunConst.RequestRealDataByMemoryCopy);
-            mb.Write(this.LoginId);
-            mb.Write(ids.Count);
-            for (int i = 0; i < ids.Count; i++)
+            lock (mRealDataLock)
             {
-                mb.Write(ids[i]);
-            }
-            realRequreEvent.Reset();
-            SendData(mb);
-
-            try
-            {
-                if (realRequreEvent.WaitOne(timeout))
+                CheckLogin();
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + ids.Count * 4);
+                mb.Write(ApiFunConst.RequestRealDataByMemoryCopy);
+                mb.Write(this.LoginId);
+                mb.Write(ids.Count);
+                for (int i = 0; i < ids.Count; i++)
                 {
-                    return mRealRequreData;
+                    mb.Write(ids[i]);
+                }
+                realRequreEvent.Reset();
+                SendData(mb);
+
+                try
+                {
+                    if (realRequreEvent.WaitOne(timeout))
+                    {
+                        return mRealRequreData;
+                    }
+                }
+                finally
+                {
+                    mRealRequreData = null;
                 }
             }
-            finally
-            {
-                mRealRequreData = null;
-            }
-
 
             return null;
         }
@@ -732,25 +749,28 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public ByteBuffer GetRealData(int ids, int ide, int timeout = 5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
-            mb.Write(ApiFunConst.RequestRealData2);
-            mb.Write(this.LoginId);
-            mb.Write(ids);
-            mb.Write(ide);
-            realRequreEvent.Reset();
-            SendData(mb);
+            lock (mRealDataLock)
+            {
+                CheckLogin();
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
+                mb.Write(ApiFunConst.RequestRealData2);
+                mb.Write(this.LoginId);
+                mb.Write(ids);
+                mb.Write(ide);
+                realRequreEvent.Reset();
+                SendData(mb);
 
-            try
-            {
-                if (realRequreEvent.WaitOne(timeout))
+                try
                 {
-                    return mRealRequreData;
+                    if (realRequreEvent.WaitOne(timeout))
+                    {
+                        return mRealRequreData;
+                    }
                 }
-            }
-            finally
-            {
-                mRealRequreData = null;
+                finally
+                {
+                    mRealRequreData = null;
+                }
             }
             return null;
         }
@@ -764,33 +784,35 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public ByteBuffer SyncRealMemory(int startaddress, int endaddress, int timeout = 5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 4);
-            mb.Write(ApiFunConst.RealMemorySync);
-            mb.Write(this.LoginId);
-            mb.Write((endaddress - startaddress));
-            mb.Write(startaddress);
-            realRequreEvent.Reset();
-            SendData(mb);
-            if (realRequreEvent.WaitOne(timeout))
+            lock (mRealDataLock)
             {
-                if (mRealRequreData.WriteIndex - mRealRequreData.ReadIndex == (endaddress - startaddress))
-                    try
-                    {
-                        return mRealRequreData;
-                    }
-                    finally
-                    {
-                        mRealRequreData = null;
-                    }
+                CheckLogin();
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 4);
+                mb.Write(ApiFunConst.RealMemorySync);
+                mb.Write(this.LoginId);
+                mb.Write((endaddress - startaddress));
+                mb.Write(startaddress);
+                realRequreEvent.Reset();
+                SendData(mb);
+                if (realRequreEvent.WaitOne(timeout))
+                {
+                    if (mRealRequreData.WriteIndex - mRealRequreData.ReadIndex == (endaddress - startaddress))
+                        try
+                        {
+                            return mRealRequreData;
+                        }
+                        finally
+                        {
+                            mRealRequreData = null;
+                        }
+                    else
+                        return null;
+                }
                 else
+                {
                     return null;
+                }
             }
-            else
-            {
-                return null;
-            }
-
         }
 
         /// <summary>
@@ -802,24 +824,27 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public ByteBuffer GetRealDataByMemoryCopy(int ids, int ide, int timeout = 5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + (ide - ids) * 4);
-            mb.Write(ApiFunConst.RequestRealData2ByMemoryCopy);
-            mb.Write(this.LoginId);
-            mb.Write(ids);
-            mb.Write(ide);
-            realRequreEvent.Reset();
-            SendData(mb);
-
-            if (realRequreEvent.WaitOne(timeout))
+            lock (mRealDataLock)
             {
-                try
+                CheckLogin();
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + (ide - ids) * 4);
+                mb.Write(ApiFunConst.RequestRealData2ByMemoryCopy);
+                mb.Write(this.LoginId);
+                mb.Write(ids);
+                mb.Write(ide);
+                realRequreEvent.Reset();
+                SendData(mb);
+
+                if (realRequreEvent.WaitOne(timeout))
                 {
-                    return mRealRequreData;
-                }
-                finally
-                {
-                    mRealRequreData = null;
+                    try
+                    {
+                        return mRealRequreData;
+                    }
+                    finally
+                    {
+                        mRealRequreData = null;
+                    }
                 }
             }
             //mRealRequreData?.ReleaseBuffer();
@@ -835,107 +860,111 @@ namespace DBRunTime.ServiceApi
         /// <param name="value"></param>
         public bool SetTagValue(int id, byte valueType, object value, int timeout = 5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 30);
-            mb.Write(ApiFunConst.SetDataValue);
-            mb.Write(this.LoginId);
-            mb.Write(1);
-            mb.Write(id);
-            mb.WriteByte(valueType);
-            switch (valueType)
+            lock (mRealSetDataLock)
             {
-                case (byte)TagType.Bool:
-                    mb.Write((byte)value);
-                    break;
-                case (byte)TagType.Byte:
-                    mb.Write((byte)value);
-                    break;
-                case (byte)TagType.Short:
-                    mb.Write((short)value);
-                    break;
-                case (byte)TagType.UShort:
-                    mb.Write((ushort)value);
-                    break;
-                case (byte)TagType.Int:
-                    mb.Write((int)value);
-                    break;
-                case (byte)TagType.UInt:
-                    mb.Write((int)value);
-                    break;
-                case (byte)TagType.Long:
-                case (byte)TagType.ULong:
-                    mb.Write((long)value);
-                    break;
-                case (byte)TagType.Float:
-                    mb.Write((float)value);
-                    break;
-                case (byte)TagType.Double:
-                    mb.Write((double)value);
-                    break;
-                case (byte)TagType.String:
-                    string sval = value.ToString();
-                    //mb.Write(sval.Length);
-                    mb.Write(sval, Encoding.Unicode);
-                    break;
-                case (byte)TagType.DateTime:
-                    mb.Write(((DateTime)value).Ticks);
-                    break;
-                case (byte)TagType.IntPoint:
-                    mb.Write(((IntPointData)value).X);
-                    mb.Write(((IntPointData)value).Y);
-                    break;
-                case (byte)TagType.UIntPoint:
-                    mb.Write((int)((UIntPointData)value).X);
-                    mb.Write((int)((UIntPointData)value).Y);
-                    break;
-                case (byte)TagType.IntPoint3:
-                    mb.Write(((IntPoint3Data)value).X);
-                    mb.Write(((IntPoint3Data)value).Y);
-                    mb.Write(((IntPoint3Data)value).Z);
-                    break;
-                case (byte)TagType.UIntPoint3:
-                    mb.Write((int)((UIntPoint3Data)value).X);
-                    mb.Write((int)((UIntPoint3Data)value).Y);
-                    mb.Write((int)((UIntPoint3Data)value).Z);
-                    break;
-                case (byte)TagType.LongPoint:
-                    mb.Write(((LongPointData)value).X);
-                    mb.Write(((LongPointData)value).Y);
-                    break;
-                case (byte)TagType.ULongPoint:
-                    mb.Write((long)((ULongPointData)value).X);
-                    mb.Write((long)((ULongPointData)value).Y);
-                    break;
-                case (byte)TagType.LongPoint3:
-                    mb.Write(((LongPoint3Data)value).X);
-                    mb.Write(((LongPoint3Data)value).Y);
-                    mb.Write(((LongPoint3Data)value).Z);
-                    break;
-                case (byte)TagType.ULongPoint3:
-                    mb.Write((long)((ULongPoint3Data)value).X);
-                    mb.Write((long)((ULongPoint3Data)value).Y);
-                    mb.Write((long)((ULongPoint3Data)value).Z);
-                    break;
-            }
-            realSetRequreEvent.Reset();
-            SendData(mb);
-
-            if (realSetRequreEvent.WaitOne(timeout))
-            {
-                if (this.mRealSetResponseData.WriteIndex - mRealSetResponseData.ReadIndex > 0)
+                CheckLogin();
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 30);
+                mb.Write(ApiFunConst.SetDataValue);
+                mb.Write(this.LoginId);
+                mb.Write(1);
+                mb.Write(id);
+                mb.WriteByte(valueType);
+                switch (valueType)
                 {
-                    try
-                    {
-                        return mRealSetResponseData.ReadByte() > 0;
-                    }
-                    finally
-                    {
-                        mRealSetResponseData?.UnlockAndReturn();
-                    }
+                    case (byte)TagType.Bool:
+                        mb.Write((byte)value);
+                        break;
+                    case (byte)TagType.Byte:
+                        mb.Write((byte)value);
+                        break;
+                    case (byte)TagType.Short:
+                        mb.Write((short)value);
+                        break;
+                    case (byte)TagType.UShort:
+                        mb.Write((ushort)value);
+                        break;
+                    case (byte)TagType.Int:
+                        mb.Write((int)value);
+                        break;
+                    case (byte)TagType.UInt:
+                        mb.Write((int)value);
+                        break;
+                    case (byte)TagType.Long:
+                    case (byte)TagType.ULong:
+                        mb.Write((long)value);
+                        break;
+                    case (byte)TagType.Float:
+                        mb.Write((float)value);
+                        break;
+                    case (byte)TagType.Double:
+                        mb.Write((double)value);
+                        break;
+                    case (byte)TagType.String:
+                        string sval = value.ToString();
+                        //mb.Write(sval.Length);
+                        mb.Write(sval, Encoding.Unicode);
+                        break;
+                    case (byte)TagType.DateTime:
+                        mb.Write(((DateTime)value).Ticks);
+                        break;
+                    case (byte)TagType.IntPoint:
+                        mb.Write(((IntPointData)value).X);
+                        mb.Write(((IntPointData)value).Y);
+                        break;
+                    case (byte)TagType.UIntPoint:
+                        mb.Write((int)((UIntPointData)value).X);
+                        mb.Write((int)((UIntPointData)value).Y);
+                        break;
+                    case (byte)TagType.IntPoint3:
+                        mb.Write(((IntPoint3Data)value).X);
+                        mb.Write(((IntPoint3Data)value).Y);
+                        mb.Write(((IntPoint3Data)value).Z);
+                        break;
+                    case (byte)TagType.UIntPoint3:
+                        mb.Write((int)((UIntPoint3Data)value).X);
+                        mb.Write((int)((UIntPoint3Data)value).Y);
+                        mb.Write((int)((UIntPoint3Data)value).Z);
+                        break;
+                    case (byte)TagType.LongPoint:
+                        mb.Write(((LongPointData)value).X);
+                        mb.Write(((LongPointData)value).Y);
+                        break;
+                    case (byte)TagType.ULongPoint:
+                        mb.Write((long)((ULongPointData)value).X);
+                        mb.Write((long)((ULongPointData)value).Y);
+                        break;
+                    case (byte)TagType.LongPoint3:
+                        mb.Write(((LongPoint3Data)value).X);
+                        mb.Write(((LongPoint3Data)value).Y);
+                        mb.Write(((LongPoint3Data)value).Z);
+                        break;
+                    case (byte)TagType.ULongPoint3:
+                        mb.Write((long)((ULongPoint3Data)value).X);
+                        mb.Write((long)((ULongPoint3Data)value).Y);
+                        mb.Write((long)((ULongPoint3Data)value).Z);
+                        break;
                 }
-                else
+                realSetRequreEvent.Reset();
+                SendData(mb);
+
+                if (realSetRequreEvent.WaitOne(timeout))
                 {
-                    return true;
+                    if (this.mRealSetResponseData.WriteIndex - mRealSetResponseData.ReadIndex > 0)
+                    {
+                        try
+                        {
+                            return mRealSetResponseData.ReadByte() > 0;
+                        }
+                        finally
+                        {
+                            mRealSetResponseData?.UnlockAndReturn();
+                            mRealSetResponseData = null;
+                        }
+                    }
+                    else
+                    {
+                        return true;
+                    }
                 }
             }
             return false;
@@ -951,105 +980,109 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public bool SetTagValue(List<int> id, List<byte> valueType, List<object> value, int timeout = 5000)
         {
-            CheckLogin();
-            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 30);
-            mb.Write(ApiFunConst.SetDataValue);
-            mb.Write(this.LoginId);
-            mb.Write(1);
-            for (int i = 0; i < id.Count; i++)
+            lock (mRealSetDataLock)
             {
-                mb.Write(id[i]);
-                switch (valueType[i])
+                CheckLogin();
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 30);
+                mb.Write(ApiFunConst.SetDataValue);
+                mb.Write(this.LoginId);
+                mb.Write(id.Count);
+                for (int i = 0; i < id.Count; i++)
                 {
-                    case (byte)TagType.Bool:
-                        mb.Write((byte)value[i]);
-                        break;
-                    case (byte)TagType.Byte:
-                        mb.Write((byte)value[i]);
-                        break;
-                    case (byte)TagType.Short:
-                        mb.Write((short)value[i]);
-                        break;
-                    case (byte)TagType.UShort:
-                        mb.Write((ushort)value[i]);
-                        break;
-                    case (byte)TagType.Int:
-                        mb.Write((int)value[i]);
-                        break;
-                    case (byte)TagType.UInt:
-                        mb.Write((int)value[i]);
-                        break;
-                    case (byte)TagType.Long:
-                    case (byte)TagType.ULong:
-                        mb.Write((long)value[i]);
-                        break;
-                    case (byte)TagType.Float:
-                        mb.Write((float)value[i]);
-                        break;
-                    case (byte)TagType.Double:
-                        mb.Write((double)value[i]);
-                        break;
-                    case (byte)TagType.String:
-                        string sval = value[i].ToString();
-                        //mb.Write(sval.Length);
-                        mb.Write(sval, Encoding.Unicode);
-                        break;
-                    case (byte)TagType.DateTime:
-                        mb.Write(((DateTime)value[i]).Ticks);
-                        break;
-                    case (byte)TagType.IntPoint:
-                        mb.Write(((IntPointData)value[i]).X);
-                        mb.Write(((IntPointData)value[i]).Y);
-                        break;
-                    case (byte)TagType.UIntPoint:
-                        mb.Write((int)((UIntPointData)value[i]).X);
-                        mb.Write((int)((UIntPointData)value[i]).Y);
-                        break;
-                    case (byte)TagType.IntPoint3:
-                        mb.Write(((IntPoint3Data)value[i]).X);
-                        mb.Write(((IntPoint3Data)value[i]).Y);
-                        mb.Write(((IntPoint3Data)value[i]).Z);
-                        break;
-                    case (byte)TagType.UIntPoint3:
-                        mb.Write((int)((UIntPoint3Data)value[i]).X);
-                        mb.Write((int)((UIntPoint3Data)value[i]).Y);
-                        mb.Write((int)((UIntPoint3Data)value[i]).Z);
-                        break;
-                    case (byte)TagType.LongPoint:
-                        mb.Write(((LongPointData)value[i]).X);
-                        mb.Write(((LongPointData)value[i]).Y);
-                        break;
-                    case (byte)TagType.ULongPoint:
-                        mb.Write((long)((ULongPointData)value[i]).X);
-                        mb.Write((long)((ULongPointData)value[i]).Y);
-                        break;
-                    case (byte)TagType.LongPoint3:
-                        mb.Write(((LongPoint3Data)value[i]).X);
-                        mb.Write(((LongPoint3Data)value[i]).Y);
-                        mb.Write(((LongPoint3Data)value[i]).Z);
-                        break;
-                    case (byte)TagType.ULongPoint3:
-                        mb.Write((long)((ULongPoint3Data)value[i]).X);
-                        mb.Write((long)((ULongPoint3Data)value[i]).Y);
-                        mb.Write((long)((ULongPoint3Data)value[i]).Z);
-                        break;
+                    mb.Write(id[i]);
+                    mb.WriteByte(valueType[i]);
+                    switch (valueType[i])
+                    {
+                        case (byte)TagType.Bool:
+                            mb.Write((byte)value[i]);
+                            break;
+                        case (byte)TagType.Byte:
+                            mb.Write((byte)value[i]);
+                            break;
+                        case (byte)TagType.Short:
+                            mb.Write((short)value[i]);
+                            break;
+                        case (byte)TagType.UShort:
+                            mb.Write((ushort)value[i]);
+                            break;
+                        case (byte)TagType.Int:
+                            mb.Write((int)value[i]);
+                            break;
+                        case (byte)TagType.UInt:
+                            mb.Write((int)value[i]);
+                            break;
+                        case (byte)TagType.Long:
+                        case (byte)TagType.ULong:
+                            mb.Write((long)value[i]);
+                            break;
+                        case (byte)TagType.Float:
+                            mb.Write((float)value[i]);
+                            break;
+                        case (byte)TagType.Double:
+                            mb.Write((double)value[i]);
+                            break;
+                        case (byte)TagType.String:
+                            string sval = value[i].ToString();
+                            //mb.Write(sval.Length);
+                            mb.Write(sval, Encoding.Unicode);
+                            break;
+                        case (byte)TagType.DateTime:
+                            mb.Write(((DateTime)value[i]).Ticks);
+                            break;
+                        case (byte)TagType.IntPoint:
+                            mb.Write(((IntPointData)value[i]).X);
+                            mb.Write(((IntPointData)value[i]).Y);
+                            break;
+                        case (byte)TagType.UIntPoint:
+                            mb.Write((int)((UIntPointData)value[i]).X);
+                            mb.Write((int)((UIntPointData)value[i]).Y);
+                            break;
+                        case (byte)TagType.IntPoint3:
+                            mb.Write(((IntPoint3Data)value[i]).X);
+                            mb.Write(((IntPoint3Data)value[i]).Y);
+                            mb.Write(((IntPoint3Data)value[i]).Z);
+                            break;
+                        case (byte)TagType.UIntPoint3:
+                            mb.Write((int)((UIntPoint3Data)value[i]).X);
+                            mb.Write((int)((UIntPoint3Data)value[i]).Y);
+                            mb.Write((int)((UIntPoint3Data)value[i]).Z);
+                            break;
+                        case (byte)TagType.LongPoint:
+                            mb.Write(((LongPointData)value[i]).X);
+                            mb.Write(((LongPointData)value[i]).Y);
+                            break;
+                        case (byte)TagType.ULongPoint:
+                            mb.Write((long)((ULongPointData)value[i]).X);
+                            mb.Write((long)((ULongPointData)value[i]).Y);
+                            break;
+                        case (byte)TagType.LongPoint3:
+                            mb.Write(((LongPoint3Data)value[i]).X);
+                            mb.Write(((LongPoint3Data)value[i]).Y);
+                            mb.Write(((LongPoint3Data)value[i]).Z);
+                            break;
+                        case (byte)TagType.ULongPoint3:
+                            mb.Write((long)((ULongPoint3Data)value[i]).X);
+                            mb.Write((long)((ULongPoint3Data)value[i]).Y);
+                            mb.Write((long)((ULongPoint3Data)value[i]).Z);
+                            break;
+                    }
                 }
-            }
-            realRequreEvent.Reset();
-            SendData(mb);
-            try
-            {
-                if (realRequreEvent.WaitOne(timeout))
+                realSetRequreEvent.Reset();
+                SendData(mb);
+                try
                 {
-                    return mRealRequreData.ReadByte() > 0;
+                    if (realSetRequreEvent.WaitOne(timeout))
+                    {
+                        return mRealSetResponseData.ReadByte() > 0;
+                    }
                 }
+                finally
+                {
+                    mRealSetResponseData?.UnlockAndReturn();
+                    mRealSetResponseData = null;
+                }
+                return false;
             }
-            finally
-            {
-                mRealRequreData?.UnlockAndReturn();
-                mRealRequreData = null;
-            }
-            return false;
         }
 
 

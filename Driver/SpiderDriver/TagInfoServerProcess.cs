@@ -34,6 +34,8 @@ namespace SpiderDriver
 
         public const byte Login = 1;
 
+        public const byte Hart = 255;
+
         private Dictionary<string,int[]> mClients = new Dictionary<string, int[]>();
 
         #endregion ...Variables...
@@ -231,7 +233,8 @@ namespace SpiderDriver
                     {
                         LoggerService.Service.Erro("SpiderDriver",$"{eex.Message}:{eex.StackTrace}" );
                     }
-
+                    break;
+                case Hart:
                     break;
 
             }

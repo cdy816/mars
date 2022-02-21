@@ -586,6 +586,35 @@ namespace DBRuntime.Proxy
         }
 
         /// <summary>
+        /// 读取实时值
+        /// </summary>
+        /// <param name="startid"></param>
+        /// <param name="endid"></param>
+        /// <returns></returns>
+        public ByteBuffer GetRealData(int startid,int endid)
+        {
+            if (IsConnected)
+            {
+                return this.dbClient.GetRealData(startid,endid);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 读取实时值
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <returns></returns>
+        public ByteBuffer GetRealData(List<int> ids)
+        {
+            if (IsConnected)
+            {
+                return this.dbClient.GetRealData(ids);
+            }
+            return null;
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="id"></param>

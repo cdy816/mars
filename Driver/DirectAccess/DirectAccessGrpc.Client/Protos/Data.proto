@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+option csharp_namespace = "DirectAccess";
+
+package GrpcService;
+
+// The greeting service definition.
+service Data {
+  // 更新历史数据
+  rpc UpdateHisValue (HisDataRequest) returns (BoolReply);
+  //更新实时数据
+  rpc UpdateValue (DataRequest) returns (BoolReply);
+
+  rpc Login (LoginRequest) returns (LoginReply);
+  rpc Hart (HartRequest) returns (BoolReply);
+  rpc Logout (LogoutRequest) returns (BoolReply);
+}
+
+//
+message DataRequest
+{
+	string Token=1;
+	repeated TagValue Value=2;
+}
+
+//
+message TagValue
+{
+	string Tag=1;
+	string Value=2;
+	int32 Quality=3;
+}
+
+//
+message HisDataRequest{
+	string Token=1;
+	repeated TagHisDataValue Value=2;
+}
+
+//
+message TagHisDataValue
+{
+	string Tag=1;
+	repeated HisValue Value=2;
+}
+
+//
+message HisValue
+{
+	int64 Time=1;
+	string Value=2;
+	int32 Quality=3;
+}
+
+// The request message containing the user's name.
+message LoginRequest {
+  string name = 1;
+  string password=2;
+}
+
+// The response message containing the Data.
+message LoginReply {
+  string Token = 1;
+  int64  Time=2;
+  int32 Timeout=3;
+}
+
+message HartRequest {
+  string Token = 1;
+  int64 Time=2;
+}
+
+
+message LogoutRequest {
+  string Token = 1;
+}
+
+
+message BoolReply {
+  bool Result = 1;
+  string ErroMessage=2;
+}
+
+

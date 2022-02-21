@@ -84,7 +84,7 @@ namespace DBHighApi
                 int port = ReadServerPort();
 
                 Cdy.Tag.LoggerService.Service.Info("DBHighAPI", string.Format(Res.Get("serverstartmsg"), port));
-                DataService.Service.Start("127.0.0.1", port);
+                DataService.Service.Start(port);
             }
             else
             {

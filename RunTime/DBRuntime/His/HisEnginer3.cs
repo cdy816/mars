@@ -484,8 +484,10 @@ namespace Cdy.Tag
 
             foreach (var vv in tags)
             {
-                var realaddr = (int)mRealEnginer.GetDataAddr((int)vv.Id);
                 mRealTag = mRealEnginer.GetTagById(vv.Id);
+                if (mRealTag == null) continue;
+                var realaddr = (int)mRealEnginer.GetDataAddr((int)vv.Id);
+
                 switch (vv.TagType)
                 {
                     case Cdy.Tag.TagType.Bool:
@@ -1407,7 +1409,9 @@ namespace Cdy.Tag
             CurrentMemory.CurrentDatetime = mLastProcessTime;
             CurrentMemory.BaseTime = HisRunTag.StartTime;
 
-            HisDataMemoryQueryService3.Service.RegistorMemory(CurrentMemory.CurrentDatetime, mLastProcessTime.AddSeconds(CachMemoryTime), CurrentMemory);
+            var vtt = new DateTime(mLastProcessTime.Year, mLastProcessTime.Month, mLastProcessTime.Day, mLastProcessTime.Hour, mLastProcessTime.Minute, 0).AddMinutes(1);
+
+            HisDataMemoryQueryService3.Service.RegistorMemory(CurrentMemory.CurrentDatetime, vtt, CurrentMemory);
 
             mCurrentMergeMemory = mMergeMemory1;
             mCurrentMergeMemory.CurrentDatetime = CurrentMemory.CurrentDatetime;
@@ -1615,11 +1619,14 @@ namespace Cdy.Tag
 
             CurrentMemory.CurrentDatetime = dateTime;
 
-            
+
 
             //long ltmp = sw.ElapsedMilliseconds;
 
-            HisDataMemoryQueryService3.Service.RegistorMemory(CurrentMemory.CurrentDatetime,dateTime.AddSeconds(CachMemoryTime), CurrentMemory);
+            var vtt = new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, dateTime.Minute, 0).AddMinutes(1);
+
+            HisDataMemoryQueryService3.Service.RegistorMemory(CurrentMemory.CurrentDatetime, vtt, CurrentMemory);
+            // HisDataMemoryQueryService3.Service.RegistorMemory(CurrentMemory.CurrentDatetime,dateTime.AddSeconds(CachMemoryTime), CurrentMemory);
             //long ltmp21 = sw.ElapsedMilliseconds;
             if (mMergeCount==0)
             {
@@ -1939,6 +1946,11 @@ namespace Cdy.Tag
                     ServiceLocator.Locator.Resolve<IDataCompress3>().RequestManualToCompress(vvv.Value);
                 }
                 ServiceLocator.Locator.Resolve<IDataCompress3>().SubmitManualToCompress();
+            }
+
+            foreach(var vv in mManualHisDataCach)
+            {
+                vv.Value.Clear();
             }
         }
 

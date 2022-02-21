@@ -16,6 +16,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="DataMonitor\**" />
+    <EmbeddedResource Remove="DataMonitor\**" />
+    <None Remove="DataMonitor\**" />
+    <Page Remove="DataMonitor\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Image\add.png" />
     <None Remove="Image\alarm.png" />
     <None Remove="Image\AllSelect.png" />
@@ -36,6 +43,7 @@
     <None Remove="Image\log-out.png" />
     <None Remove="Image\max.png" />
     <None Remove="Image\minus.png" />
+    <None Remove="Image\monitor.png" />
     <None Remove="Image\mrdbd.ico" />
     <None Remove="Image\ok.png" />
     <None Remove="Image\permissions.png" />
@@ -62,6 +70,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Common\Cdy.Tag\Cdy.Tag.csproj" />
+    <ProjectReference Include="..\..\Proxy\DBGrpcApi.Client\DBGrpcApi.Client.csproj" />
     <ProjectReference Include="..\DBDevelopClientApi\DBDevelopClientApi.csproj" />
   </ItemGroup>
 
@@ -85,6 +94,7 @@
     <Resource Include="Image\log-out.png" />
     <Resource Include="Image\max.png" />
     <Resource Include="Image\minus.png" />
+    <Resource Include="Image\monitor.png" />
     <Resource Include="Image\mrdbd.ico" />
     <Resource Include="Image\ok.png" />
     <Resource Include="Image\permissions.png" />

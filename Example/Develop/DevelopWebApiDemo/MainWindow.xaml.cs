@@ -86,5 +86,24 @@ namespace DevelopWebApiDemo
         {
             mTagGroup = groupList.SelectedItem.ToString();
         }
+
+        private void newdtag_Click(object sender, RoutedEventArgs e)
+        {
+            var vtag = new Cdy.Tag.DoubleTag() { Name = dtagname.Text, Desc = dtagname.Text, LinkAddress = "DirectAccess", ReadWriteType = Cdy.Tag.ReadWriteMode.ReadWrite };
+            var htag = new Cdy.Tag.HisTag() { CompressType = 0, Type = Cdy.Tag.RecordType.Timer };
+            var vid = mHelper.AddTag(vtag, htag, mCurrentDatabase);
+        }
+
+        private void newitag_Click(object sender, RoutedEventArgs e)
+        {
+            var vtag = new Cdy.Tag.IntTag() { Name = itagname.Text, Desc = dtagname.Text, LinkAddress = "DirectAccess", ReadWriteType = Cdy.Tag.ReadWriteMode.ReadWrite };
+            var htag = new Cdy.Tag.HisTag() { CompressType = 0, Type = Cdy.Tag.RecordType.Timer };
+            var vid = mHelper.AddTag(vtag, htag, mCurrentDatabase);
+        }
+
+        private void saveb_Click(object sender, RoutedEventArgs e)
+        {
+            mHelper.Save(mCurrentDatabase);
+        }
     }
 }

@@ -19,6 +19,8 @@ namespace Cdy.Tag
         {
             Setting = new SettingDoc();
             Security = new SecurityDocument() { Name = this.Name };
+            RealDatabase.Owner = this;
+            HisDatabase.Owner = this;
         }
 
         /// <summary>
@@ -36,6 +38,7 @@ namespace Cdy.Tag
                     RealDatabase.Name = value;
                 if (HisDatabase != null)
                     HisDatabase.Name = value;
+                ComplexTagClass.Name = value;
             }
         }
 
@@ -64,7 +67,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public RealDatabase RealDatabase { get; set; } = new RealDatabase();
+        public RealDatabase RealDatabase { get; set; } = new RealDatabase() ;
 
         /// <summary>
         /// 
@@ -76,6 +79,10 @@ namespace Cdy.Tag
         /// </summary>
         public SettingDoc Setting { get; set; } = new SettingDoc();
 
+        /// <summary>
+        /// 复杂变量类型定义
+        /// </summary>
+        public ComplexTagClassDocument ComplexTagClass { get; set; } = new ComplexTagClassDocument();
 
         /// <summary>
         /// 

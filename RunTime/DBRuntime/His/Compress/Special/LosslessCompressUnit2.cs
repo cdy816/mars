@@ -65,6 +65,66 @@ namespace Cdy.Tag
         /// <param name="target"></param>
         /// <param name="targetAddr"></param>
         /// <param name="size"></param>
+        /// <param name="statisticTarget"></param>
+        /// <param name="statisticAddr"></param>
+        /// <returns></returns>
+        public override long CompressWithNoStatistic(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size)
+        {
+            target.WriteDatetime(targetAddr, this.StartTime);
+            target.Write(TimeTick);
+            switch (TagType)
+            {
+                case TagType.Bool:
+                    return Compress<bool>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.Byte:
+                    return Compress<byte>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.UShort:
+                    return Compress<ushort>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.Short:
+                    return Compress<short>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.UInt:
+                    return Compress<uint>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.Int:
+                    return Compress<int>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.ULong:
+                    return Compress<ulong>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.Long:
+                    return Compress<long>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.Double:
+                    return Compress<double>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.DateTime:
+                    return Compress<DateTime>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.Float:
+                    return Compress<float>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.String:
+                    return Compress<string>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.IntPoint:
+                    return Compress<IntPointData>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.UIntPoint:
+                    return Compress<UIntPointData>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.LongPoint:
+                    return Compress<LongPointData>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.ULongPoint:
+                    return Compress<ULongPointData>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.IntPoint3:
+                    return Compress<IntPoint3Data>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.UIntPoint3:
+                    return Compress<UIntPoint3Data>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.LongPoint3:
+                    return Compress<LongPoint3Data>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+                case TagType.ULongPoint3:
+                    return Compress<ULongPoint3Data>(source, sourceAddr, target, targetAddr + 12, size, TagType) + 12;
+            }
+            return 12;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="target"></param>
+        /// <param name="targetAddr"></param>
+        /// <param name="size"></param>
         /// <param name="statisticTarget">统计值内存地址</param>
         /// <param name="statisticAddr">统计值起始地址偏移</param>
         /// <returns></returns>
@@ -1261,7 +1321,7 @@ namespace Cdy.Tag
         /// <param name="totalcount"></param>
         /// <param name="emptyIds"></param>
         /// <returns></returns>
-        protected Memory<byte> CompressQulitys(IMemoryFixedBlock source, long offset, int totalcount, CustomQueue<int> emptyIds)
+        protected Memory<byte> CompressQualitys(IMemoryFixedBlock source, long offset, int totalcount, CustomQueue<int> emptyIds)
         {
             int count = 1;
             byte qus = source.ReadByte((int)offset);
@@ -1305,7 +1365,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="qulitys"></param>
         /// <returns></returns>
-        protected Memory<byte> CompressQulitys(byte[] qulitys, CustomQueue<int> emptyIds)
+        protected Memory<byte> CompressQualitys(byte[] qulitys, CustomQueue<int> emptyIds)
         {
             int count = 1;
             byte qus = qulitys[0];
@@ -1411,9 +1471,18 @@ namespace Cdy.Tag
             {
                 mMarshalMemory = new MemoryBlock(count * 10);
             }
+            else 
+            {
+                mMarshalMemory.CheckAndResize(count * 10);
+            }
 
             if(mVarintMemory==null)
             {
+                mVarintMemory = new ProtoMemory(count * 10);
+            }
+            else if(mVarintMemory.DataBuffer.Length<count*10)
+            {
+                mVarintMemory.Dispose();
                 mVarintMemory = new ProtoMemory(count * 10);
             }
 
@@ -1440,7 +1509,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += cval.Length;
                     emptys.ReadIndex = 0;
-                    var cqus = CompressQulitys(source, count * (tlen+1) + sourceAddr, count, emptys);
+                    var cqus = CompressQualitys(source, count * (tlen+1) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1453,7 +1522,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += cval.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 1) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 1) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1466,7 +1535,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += ures.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 2) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 2) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1479,7 +1548,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += res.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 2) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 2) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1492,7 +1561,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += uires.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 4) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 4) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1505,7 +1574,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += ires.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 4) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 4) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1518,7 +1587,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += ulres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1531,7 +1600,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += lres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1544,7 +1613,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += dres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1558,6 +1627,11 @@ namespace Cdy.Tag
                     }
                     else
                     {
+                        
+                        if(mDCompress.VarintMemory==null || mDCompress.VarintMemory.DataBuffer==null)
+                        {
+                            mDCompress.VarintMemory = mVarintMemory;
+                        }
                         mDCompress.CheckAndResizeTo(count);
                     }
 
@@ -1567,7 +1641,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += ddres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen+8) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen+8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1581,6 +1655,10 @@ namespace Cdy.Tag
                     }
                     else
                     {
+                        if(mFCompress.VarintMemory==null || mFCompress.VarintMemory.DataBuffer == null)
+                        {
+                            mFCompress.VarintMemory = mVarintMemory;
+                        }
                         mFCompress.CheckAndResizeTo(count);
                     }
 
@@ -1590,7 +1668,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += fres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen+4) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen+4) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1609,7 +1687,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += sres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(qus, emptys);
+                    cqus = CompressQualitys(qus, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1622,7 +1700,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen+8) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen+8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1635,7 +1713,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1648,7 +1726,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 16) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 16) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1661,7 +1739,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 16) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 16) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1674,7 +1752,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 12) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 12) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1687,7 +1765,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 12) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 12) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1700,7 +1778,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 24) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 24) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1713,7 +1791,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += ipres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen+24) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen+24) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -1787,6 +1865,7 @@ namespace Cdy.Tag
             string tname = typeof(T).Name;
             switch (tname)
             {
+                case "bool":
                 case "Boolean":
                     using (MemorySpan block = new MemorySpan(value))
                     {
@@ -2116,7 +2195,15 @@ namespace Cdy.Tag
 
             for (int i = 0; i < timers.Count; i++)
             {
-                var vtime = sTime.AddMilliseconds(timers[i] * timeTick);
+                DateTime vtime;
+                if (timeTick == 100)
+                {
+                    vtime = sTime.AddMilliseconds((short)timers[i] * timeTick);
+                }
+                else
+                {
+                    vtime = sTime.AddMilliseconds(timers[i] * timeTick);
+                }
 
                 if (vtime < preTimer) continue;
                 if (vtime >= startTime && vtime < endTime)
@@ -2129,6 +2216,7 @@ namespace Cdy.Tag
                 {
                     re.Add(i, vtime);
                 }
+                if(i>0)
                 preTimer = vtime;
             }
             valueCount = count;
@@ -2156,10 +2244,47 @@ namespace Cdy.Tag
 
             for (int i = 0; i < timers.Count; i++)
             {
-                re.Add(i, sTime.AddMilliseconds(timers[i] * timeTick));
+                if (timeTick == 100)
+                {
+                    re.Add(i, sTime.AddMilliseconds((short)timers[i] * timeTick));
+                }
+                else
+                {
+                    re.Add(i, sTime.AddMilliseconds(timers[i] * timeTick));
+                }
             }
             valueCount = count;
             return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <returns></returns>
+        protected DateTime GetForceWriteTimers(MarshalMemoryBlock source, int sourceAddr)
+        {
+            DateTime sTime = source.ReadDateTime(sourceAddr);
+            int timeTick = source.ReadInt(sourceAddr + 8);
+
+            var count = source.ReadInt();
+            var datasize = source.ReadInt();
+            byte[] datas = source.ReadBytes(datasize);
+                       
+            var timers = DeCompressTimers(datas, count);
+
+            if (timeTick == 100)
+            {
+                int min = timers[0] * 5;
+                double sec = timers[1] / 10;
+
+                return sTime.AddMinutes(-min).AddSeconds(-sec);
+            }
+            else
+            {
+                return sTime.AddMilliseconds(timers[0]);
+            }
         }
 
         /// <summary>
@@ -2196,9 +2321,31 @@ namespace Cdy.Tag
 
                 var qulityes = DeCompressQulity(source.ReadBytes(qusize));
                 int resultCount = 0;
+
+                if(qulityes.Count>0)
+                {
+
+                    if (qulityes[0] >= 100)
+                    {
+                        //对于由于单位时间内，没有记录而导致系统强制记录的值，读取所有值时忽略不做处理
+                        return 0;
+                    }
+                    else
+                    {
+                        if (qulityes[0] >= 100 && timers.ContainsKey(0))
+                        {
+                            if (timers[1] < timers[0])
+                            {
+                                timers[0] = timers[1].AddMilliseconds(-10);
+                            }
+                        }
+                    }
+                }
+
                 for (int i = 0; i < count; i++)
                 {
-                    if (qulityes[i] < 100 && timers.ContainsKey(i))
+                    //if (qulityes.Count>i && qulityes[i] < 100 && timers.ContainsKey(i) && qulityes[i]!=(byte)QualityConst.Close)
+                    if (qulityes.Count > i && (qulityes[i] < 100 || qulityes[i] == (100 + (byte)QualityConst.Init)) && timers.ContainsKey(i))
                     {
                         result.Add<T>(value[i], timers[i], qulityes[i]);
                         resultCount++;
@@ -2217,7 +2364,7 @@ namespace Cdy.Tag
         /// <param name="sourceAddr"></param>
         /// <param name="tp"></param>
         /// <returns></returns>
-        public override TagHisValue<T> DeCompressRawValue<T>(MarshalMemoryBlock source, int sourceAddr, byte tp)
+        public override TagHisValue<T> DeCompressRawValue<T>(MarshalMemoryBlock source, int sourceAddr, byte tp,QueryContext context)
         {
             int count = 0;
             var timers = GetTimers(source, sourceAddr, out count);
@@ -2228,31 +2375,175 @@ namespace Cdy.Tag
                 var value = DeCompressValue<T>(source.ReadBytes(valuesize), count);
                 var qusize = source.ReadInt();
                 var qulityes = DeCompressQulity(source.ReadBytes(qusize));
-                if (tp == 0)
+
+                //对于只有一个值得情况,需要进行重新读取时间内容。
+
+                if (qulityes[0] >= 100)
                 {
-                    //读取最后一个
-                    for (int i = count-1; i >=0; i--)
+                    var vtim = GetForceWriteTimers(source, sourceAddr);
+                    timers.Clear();
+                    timers.Add(0, vtim);
+
+                    var vv = value[0];
+                    value.Clear();
+                    value.Add(vv);
+
+                    var qu = (byte)(qulityes[0]-100);
+                    qulityes.Clear();
+                    qulityes.Add(qu);
+
+                    count = 1;
+                }
+                try
+                {
+                    if (tp == 0)
                     {
-                        if (timers.ContainsKey(i))
+                        //读取最后一个
+                        //查找最后一个非辅助记录点
+                        for (int i = count - 1; i >= 0; i--)
                         {
-                            return new TagHisValue<T>() { Time = timers[i], Quality = qulityes[i], Value = value[i] };
+                            if (qulityes[i] == (byte)QualityConst.Close || qulityes[i] == (byte)QualityConst.Start)
+                            {
+                                return TagHisValue<T>.MinValue;
+                            }
+                            else if (timers.ContainsKey(i))
+                            {
+                                return new TagHisValue<T>() { Time = timers[i], Quality = (qulityes[i] >= 100) ? (byte)(qulityes[i] - 100) : qulityes[i], Value = value[i] };
+                            }
+                            //else if (timers.ContainsKey(i) && (qulityes[i] < 100) )
+                            //{
+                            //    return new TagHisValue<T>() { Time = timers[i], Quality = qulityes[i], Value = value[i] };
+                            //}
+
                         }
+                        //辅助记录只有在整个数据段数据都为空的情况下，才会记录所以这里进行优化 ,2022/07/01
+                        ////查找最后一个点
+                        //for (int i = count - 1; i >= 0; i--)
+                        //{
+                        //    if (timers.ContainsKey(i))
+                        //    {
+                        //        return new TagHisValue<T>() { Time = timers[i], Quality = (qulityes[i] >= 100 ) ? (byte)(qulityes[i] - 100) : qulityes[i], Value = value[i] };
+                        //    }
+                        //}
+                    }
+                    else
+                    {
+                        //读取第一个非辅助记录点
+                        for (int i = 0; i < count; i++)
+                        {
+                            if (qulityes[i] == (byte)QualityConst.Close || qulityes[i] == (byte)QualityConst.Start)
+                            {
+                                return TagHisValue<T>.MinValue;
+                            }
+                            else if (timers.ContainsKey(i))
+                            {
+                                return new TagHisValue<T>() { Time = timers[i], Quality = (qulityes[i] >= 100) ? (byte)(qulityes[i] - 100) : qulityes[i], Value = value[i] };
+                            }
+                            //else if (timers.ContainsKey(i) && (qulityes[i] < 100))
+                            //{
+                            //    return new TagHisValue<T>() { Time = timers[i], Quality = qulityes[i], Value = value[i] };
+                            //}
+
+                        }
+                        ////读取第一个点的值
+                        //for (int i = 0; i < count; i++)
+                        //{
+                        //    if (timers.ContainsKey(i))
+                        //    {
+                        //        return new TagHisValue<T>() { Time = timers[i], Quality = (qulityes[i] >= 100) ? (byte)(qulityes[i] - 100) : qulityes[i], Value = value[i] };
+                        //    }
+                        //}
+
                     }
                 }
-                else
+                catch
                 {
-                    //读取第一个
-                    for (int i = 0; i < count; i++)
-                    {
-                        if (timers.ContainsKey(i))
-                        {
-                            return new TagHisValue<T>() { Time = timers[i], Quality = qulityes[i], Value = value[i] };
-                        }
-                    }
-                    
+
+                }
+                finally
+                {
+                    FillFirstLastValue(value, timers, qulityes, context, count);
                 }
             }
             return TagHisValue<T>.Empty;
+        }
+
+        private void FillFirstLastValue<T>(List<T> value,Dictionary<int,DateTime> timers,List<byte> qulityes,QueryContext context,int count)
+        {
+            bool islasthase = false;
+            for (int i = count - 1; i >= 0; i--)
+            {
+                if (qulityes[i] == (byte)QualityConst.Close|| qulityes[i] == (byte)QualityConst.Start)
+                {
+                    context.LastValue = null;
+                    context.LastTime = timers[i];
+                    context.LastQuality = qulityes[i];
+                    islasthase = true;
+                    break;
+                }
+                else if (timers.ContainsKey(i) && (qulityes[i] < 100))
+                {
+                    context.LastValue = value[i];
+                    context.LastTime = timers[i];
+                    context.LastQuality = qulityes[i];
+                    islasthase = true;
+                    break;
+                }
+
+            }
+            if (!islasthase)
+            {
+                //查找最后一个点
+                for (int i = count - 1; i >= 0; i--)
+                {
+                    if (timers.ContainsKey(i))
+                    {
+                        context.LastValue = value[i];
+                        context.LastTime = timers[i];
+                        context.LastQuality = (qulityes[i] >= 100) ? (byte)(qulityes[i] - 100) : qulityes[i];
+                        islasthase = true;
+                        break;
+                    }
+                }
+            }
+
+            bool isfirsthas = false;
+
+            //读取第一个非辅助记录点
+            for (int i = 0; i < count; i++)
+            {
+                if (qulityes[i] == (byte)QualityConst.Close || qulityes[i] == (byte)QualityConst.Start)
+                {
+                    context.FirstValue = null;
+                    context.FirstTime = timers[i];
+                    context.FirstQuality = qulityes[i];
+                    isfirsthas = true;
+                    break;
+                }
+                else if (timers.ContainsKey(i) && (qulityes[i] < 100))
+                {
+                    context.FirstValue = value[i];
+                    context.FirstTime = timers[i];
+                    context.FirstQuality = qulityes[i];
+                    isfirsthas = true;
+                    break;
+                }
+
+            }
+            if (!isfirsthas)
+            {
+                //读取第一个点的值
+                for (int i = 0; i < count; i++)
+                {
+                    if (timers.ContainsKey(i))
+                    {
+                        context.FirstValue = value[i];
+                        context.FirstTime = timers[i];
+                        context.FirstQuality = (qulityes[i] >= 100) ? (byte)(qulityes[i] - 100) : qulityes[i];
+                        isfirsthas = true;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -2262,7 +2553,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         protected bool IsBadQuality(byte qa)
         {
-            return qa >= (byte)QualityConst.Bad && qa <= (byte)QualityConst.Bad+20;
+            return (qa >= (byte)QualityConst.Bad && qa <= (byte)QualityConst.Bad+20) || qa == (byte)QualityConst.Close||qa== (byte)QualityConst.Start;
         }
 
         /// <summary>
@@ -2286,13 +2577,14 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result, Func<byte, object> ReadOtherDatablockAction)
+        public override int DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result, Func<byte, QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             if (CheckTypeIsPointData(typeof(T)))
             {
-                return DeCompressPointValue<T>(source, sourceAddr, time, timeTick, type, result, ReadOtherDatablockAction);
+                return DeCompressPointValue<T>(source, sourceAddr, time, timeTick, type, result, ReadOtherDatablockAction,context);
             }
 
+            var hasnext = (bool)context["hasnext"];
             int count = 0;
             var timers = GetTimers(source, sourceAddr, out count);
 
@@ -2303,24 +2595,54 @@ namespace Cdy.Tag
 
             var qulityes = DeCompressQulity(source.ReadBytes(qusize));
 
-            var lowfirst = time.Where(e=>e<timers[0]);
-            var greatlast = time.Where(e => e > timers[timers.Count - 1]);
-            var times = time.Where(e => e >= timers[0] && e <= timers[timers.Count - 1]);
+            //对于只有一个值得情况,需要进行重新读取时间内容。
+            if (qulityes[0] >= 100)
+            {
+                timers.Clear();
+                timers.Add(0,GetForceWriteTimers(source, sourceAddr));
+
+                var vv = value[0];
+                value.Clear();
+                value.Add(vv);
+
+                var qu = (byte)(qulityes[0]-100);
+                qulityes.Clear();
+                qulityes.Add(qu);
+
+                count = 1;
+
+            }
+
+            DateTime endtime = DateTime.MaxValue;
+            if (qulityes.Count > 0)
+            {
+                //说明此段数据系统退出
+                if (qulityes[qulityes.Count - 1] == (byte)QualityConst.Close)
+                {
+                    endtime = timers.Last().Value;
+                }
+            }
+
+            var lowfirst = time.Where(e=>e<timers[0] && e<endtime);
+            var greatlast = time.Where(e => e<endtime && e > timers[timers.Count - 1]);
+            var times = time.Where(e => e >= timers[0] && e <= timers[timers.Count - 1] && e<endtime);
             int resultCount = 0;
+
 
             int j = 0;
 
             if (lowfirst.Count() > 0)
             {
                 //如果读取的时间小于，当前数据段的起始时间
-                var vtmp = ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0,context);
 
                 TagHisValue<T>? val = vtmp!=null?(TagHisValue<T>)vtmp:null;
 
                 //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
-                if(val.HasValue && val.Value.IsEmpty())
+                if(val.HasValue && (val.Value.IsEmpty() || val.Value.Quality == (byte)QualityConst.Close || val.Value.Quality == (byte)QualityConst.Start))
                 {
-                    val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = lowfirst.First() };
+                    val = null;
+                    //val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = lowfirst.First() };
                 }
 
                 foreach (var vtime in lowfirst)
@@ -2340,7 +2662,15 @@ namespace Cdy.Tag
                             }
                             break;
                         case QueryValueMatchType.After:
-                            result.Add(value[0], vtime, qulityes[0]);
+                            if (val.HasValue && val.Value.Quality!= (byte)QualityConst.Close)
+                            {
+                                //如果前置不为空，说明中间没有中断，该数据区域不是第一个，否则为重启后第一个
+                                result.Add(value[0], vtime, qulityes[0]);
+                            }
+                            else
+                            {
+                                result.Add(default(T), vtime, (byte)QualityConst.Null);
+                            }
                             resultCount++;
                             break;
                         case QueryValueMatchType.Linear:
@@ -2538,27 +2868,36 @@ namespace Cdy.Tag
                 }
             }
 
-            if (greatlast.Count() > 0)
+            if (greatlast.Count() > 0 && !hasnext)
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var vtmp = ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1,context);
 
                 TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                 //如果为空值，则说明跨数据文件了，则取第最后一个有效值用作后一个值
-                if (val.HasValue && val.Value.IsEmpty())
+                if (val.HasValue && (val.Value.IsEmpty() || (val.Value.Quality == (byte)QualityConst.Close) || val.Value.Quality == (byte)QualityConst.Start))
                 {
                     val = new TagHisValue<T>() { Value = value[value.Count - 1], Quality = qulityes[qulityes.Count - 1], Time = greatlast.Last() };
                 }
 
+                T pval = value[value.Count-1];
+                byte qua = qulityes[qulityes.Count - 1];
+                DateTime ptime = timers[timers.Count - 1];
+                if(qua >= 100 && value.Count>1)
+                {
+                    pval = value[value.Count-2];
+                    qua = qulityes[qulityes.Count - 2];
+                    ptime = timers[timers.Count - 2];
+                }
               
                 foreach (var vtime in greatlast)
                 {
                     switch (type)
                     {
                         case QueryValueMatchType.Previous:
-                            result.Add(value[value.Count-1], vtime, qulityes[qulityes.Count-1]);
+                            result.Add(pval, vtime, qua);
                             resultCount++;
                             break;
                         case QueryValueMatchType.After:
@@ -2578,12 +2917,12 @@ namespace Cdy.Tag
                             {
                                 if (typeof(T) == typeof(bool) || typeof(T) == typeof(string) || typeof(T) == typeof(DateTime))
                                 {
-                                    var ppval = (vtime - timers[timers.Count - 1]).TotalMilliseconds;
+                                    var ppval = (vtime - ptime).TotalMilliseconds;
                                     var ffval = (val.Value.Time - vtime).TotalMilliseconds;
 
                                     if (ppval < ffval)
                                     {
-                                        result.Add(value[value.Count - 1], vtime, qulityes[qulityes.Count - 1]);
+                                        result.Add(pval, vtime, qua);
                                     }
                                     else
                                     {
@@ -2594,20 +2933,20 @@ namespace Cdy.Tag
                                 }
                                 else
                                 {
-                                    if (!IsBadQuality(qulityes[qulityes.Count - 1]) && !IsBadQuality(val.Value.Quality))
+                                    if (!IsBadQuality(qua) && !IsBadQuality(val.Value.Quality))
                                     {
                                         var pval1 = (val.Value.Time - vtime).TotalMilliseconds;
                                         var tval1 = (val.Value.Time - timers[timers.Count - 1]).TotalMilliseconds;
-                                        var sval1 = value[value.Count - 1];
+                                        var sval1 = pval;
                                         var sval2 = val.Value.Value;
 
                                         var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
 
-                                        result.Add((object)val1, vtime, pval1<tval1?qulityes[qulityes.Count-1]:val.Value.Quality);
+                                        result.Add((object)val1, vtime, pval1<tval1?qua:val.Value.Quality);
                                     }
-                                    else if (!IsBadQuality(qulityes[qulityes.Count - 1]))
+                                    else if (!IsBadQuality(qua))
                                     {
-                                        result.Add(value[value.Count - 1], vtime, qulityes[qulityes.Count - 1]);
+                                        result.Add(pval, vtime, qua);
                                     }
                                     else if (!IsBadQuality(val.Value.Quality))
                                     {
@@ -2629,12 +2968,12 @@ namespace Cdy.Tag
                         case QueryValueMatchType.Closed:
                             if (val.HasValue)
                             {
-                                var pval = (vtime - timers[timers.Count - 1]).TotalMilliseconds;
+                                var ppval = (vtime - ptime).TotalMilliseconds;
                                 var fval = (val.Value.Time - vtime).TotalMilliseconds;
 
-                                if (pval < fval)
+                                if (ppval < fval)
                                 {
-                                    result.Add(value[value.Count - 1], vtime, qulityes[qulityes.Count - 1]);
+                                    result.Add(pval, vtime, qua);
                                 }
                                 else
                                 {
@@ -2649,6 +2988,12 @@ namespace Cdy.Tag
                             break;
                     }
                 }
+            }
+
+
+            if (qulityes.Count > 0)
+            {
+                FillFirstLastValue(value, timers, qulityes, context, count);
             }
             return resultCount;
         }
@@ -2665,13 +3010,13 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override object DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public override object DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             if (CheckTypeIsPointData(typeof(T)))
             {
-                return DeCompressPointValue<T>(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction);
+                return DeCompressPointValue<T>(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction,context);
             }
-
+            var hasnext = (bool)context["hasnext"];
             int count = 0;
             var timers = GetTimers(source, sourceAddr + 8,  out count);
             var valuesize = source.ReadInt();
@@ -2679,408 +3024,365 @@ namespace Cdy.Tag
             var qusize = source.ReadInt();
             var qulityes = DeCompressQulity(source.ReadBytes(qusize));
 
-            if (timers.Count > 0 && time < timers[0])
+            //对于只有一个值得情况,需要进行重新读取时间内容。
+            if (qulityes[0] >= 100)
             {
-                //如果读取的时间小于，当前数据段的起始时间
-                var vtmp = ReadOtherDatablockAction(0);
-                TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
+                timers.Clear();
+                timers.Add(0, GetForceWriteTimers(source, sourceAddr));
 
-                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
-                if (val.HasValue && val.Value.IsEmpty())
-                {
-                    val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = time };
-                }
+                var vv = value[0];
+                value.Clear();
+                value.Add(vv);
 
-                //  var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
-                switch (type)
-                {
-                    case QueryValueMatchType.Previous:
-                        if(val.HasValue)
-                        return val.Value.Value;
-                        else
-                        {
-                            return null;
-                        }
-                    case QueryValueMatchType.After:
-                        return value[0];
-                    case QueryValueMatchType.Linear:
-                        if (!val.HasValue) return null;
+                var qu = (byte)(qulityes[0] - 100);
+                qulityes.Clear();
+                qulityes.Add(qu);
 
-                        if (typeof(T) == typeof(bool) || typeof(T) == typeof(string) || typeof(T) == typeof(DateTime))
-                        {
-                            var ppval = (time - val.Value.Time).TotalMilliseconds;
-                            var ffval = (timers[0] - time).TotalMilliseconds;
-
-                            if (ppval < ffval)
-                            {
-                                return val.Value.Value;
-                            }
-                            else
-                            {
-                                return value[0];
-                            }
-                        }
-                        else
-                        {
-                            if (!IsBadQuality(qulityes[0]) && !IsBadQuality(val.Value.Quality))
-                            {
-                                var pval1 = (time - val.Value.Time).TotalMilliseconds;
-                                var tval1 = (timers[0] - val.Value.Time).TotalMilliseconds;
-                                var sval1 = val.Value.Value;
-                                var sval2 = value[0];
-
-                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-
-                                if (pval1 < 0) val1 = Convert.ToDouble(sval1);
-                              
-                                switch (typeof(T).Name)
-                                {
-                                    case "Byte":
-                                        return (byte)val1;
-                                    case "Int16":
-                                        return (short)val1;
-                                    case "UInt16":
-                                        return (ushort)val1;
-                                    case "Int32":
-                                        return (int)val1;
-                                    case "UInt32":
-                                        return (uint)val1;
-                                    case "Int64":
-                                        return (long)val1;
-                                    case "UInt64":
-                                        return (ulong)val1;
-                                    case "Double":
-                                        return val1;
-                                    case "Single":
-                                        return (float)val1;
-                                }
-
-                                //if (typeof(T) == typeof(double))
-                                //{
-                                //    return val1;
-                                //}
-                                //else if (typeof(T) == typeof(float))
-                                //{
-                                //    return (float)val1;
-                                //}
-                                //else if (typeof(T) == typeof(short))
-                                //{
-                                //    return (short)val1;
-                                //}
-                                //else if (typeof(T) == typeof(ushort))
-                                //{
-                                //    return (ushort)val1;
-                                //}
-                                //else if (typeof(T) == typeof(int))
-                                //{
-                                //    return (int)val1;
-                                //}
-                                //else if (typeof(T) == typeof(uint))
-                                //{
-                                //    return (uint)val1;
-                                //}
-                                //else if (typeof(T) == typeof(long))
-                                //{
-                                //    return (long)val1;
-                                //}
-                                //else if (typeof(T) == typeof(ulong))
-                                //{
-                                //    return (ulong)val1;
-                                //}
-                                //else if (typeof(T) == typeof(byte))
-                                //{
-                                //    return (byte)val1;
-                                //}
-                            }
-                            else if (!IsBadQuality(val.Value.Quality))
-                            {
-                                return val.Value.Value;
-                            }
-                            else if (!IsBadQuality(qulityes[0]))
-                            {
-                                return value[0];
-                            }
-                            else
-                            {
-                                return null;
-                            }
-                        }
-                        break;
-                    case QueryValueMatchType.Closed:
-                        if (!val.HasValue) return null;
-
-                        var pval = (time - val.Value.Time).TotalMilliseconds;
-                        var fval = (timers[0] - time).TotalMilliseconds;
-
-                        if (pval < fval)
-                        {
-                            return val.Value.Value;
-                        }
-                        else
-                        {
-                            return value[0];
-                        }
-                }
-                return null;
+                count = 1;
             }
-            else if(timers.Count>0 && time>timers[timers.Count-1])
+
+            DateTime endtime = DateTime.MaxValue;
+            if (qulityes.Count > 0)
             {
-                var vtmp = ReadOtherDatablockAction(1);
-                TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
-
-                //var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
-                var valtmp = value[value.Count - 1];
-                var timetmp = timers[timers.Count - 1];
-                var qtmp = qulityes[qulityes.Count - 1];
-
-                switch (type)
+                //说明此段数据系统退出
+                if (qulityes[qulityes.Count - 1] == (byte)QualityConst.Close)
                 {
-                    case QueryValueMatchType.Previous:
-                        return valtmp;
-                    case QueryValueMatchType.After:
-                        if (!val.HasValue) return null;
-                        return val.Value.Value;
-                    case QueryValueMatchType.Linear:
-                        if (!val.HasValue) return null;
-
-                        if (typeof(T) == typeof(bool) || typeof(T) == typeof(string) || typeof(T) == typeof(DateTime))
-                        {
-                            var ppval = (time - timetmp).TotalMilliseconds;
-                            var ffval = (val.Value.Time - time).TotalMilliseconds;
-
-                            if (ppval < ffval)
-                            {
-                                return valtmp;
-                            }
-                            else
-                            {
-                                return val.Value.Value;
-                            }
-                        }
-                        else
-                        {
-                            if ((!IsBadQuality(val.Value.Quality)) && (!IsBadQuality(qtmp)))
-                            {
-                                var pval1 = (time - timetmp).TotalMilliseconds;
-                                var tval1 = (val.Value.Time - timetmp).TotalMilliseconds;
-                                var sval1 = valtmp;
-                                var sval2 = val.Value.Value;
-
-                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
-
-                                string tname = typeof(T).Name;
-                                switch (tname)
-                                {
-                                    case "Byte":
-                                        return (byte)val1;
-                                    case "Int16":
-                                        return (short)val1;
-                                    case "UInt16":
-                                        return (ushort)val1;
-                                    case "Int32":
-                                        return (int)val1;
-                                    case "UInt32":
-                                        return (uint)val1;
-                                    case "Int64":
-                                        return (long)val1;
-                                    case "UInt64":
-                                        return (ulong)val1;
-                                    case "Double":
-                                        return val1;
-                                    case "Single":
-                                        return (float)val1;
-                                }
-
-                                //if (typeof(T) == typeof(double))
-                                //{
-                                //    return val1;
-                                //}
-                                //else if (typeof(T) == typeof(float))
-                                //{
-                                //    return (float)val1;
-                                //}
-                                //else if (typeof(T) == typeof(short))
-                                //{
-                                //    return (short)val1;
-                                //}
-                                //else if (typeof(T) == typeof(ushort))
-                                //{
-                                //    return (ushort)val1;
-                                //}
-                                //else if (typeof(T) == typeof(int))
-                                //{
-                                //    return (int)val1;
-                                //}
-                                //else if (typeof(T) == typeof(uint))
-                                //{
-                                //    return (uint)val1;
-                                //}
-                                //else if (typeof(T) == typeof(long))
-                                //{
-                                //    return (long)val1;
-                                //}
-                                //else if (typeof(T) == typeof(ulong))
-                                //{
-                                //    return (ulong)val1;
-                                //}
-                                //else if (typeof(T) == typeof(byte))
-                                //{
-                                //    return (byte)val1;
-                                //}
-                            }
-                            else if (!IsBadQuality(val.Value.Quality))
-                            {
-                                return val.Value.Value;
-                            }
-                            else if (!IsBadQuality(qtmp))
-                            {
-                                return valtmp;
-                            }
-                            else
-                            {
-                                return null;
-                            }
-                        }
-                        break;
-                    case QueryValueMatchType.Closed:
-                        if (!val.HasValue) return null;
-
-                        var pval = (time - timetmp).TotalMilliseconds;
-                        var fval = (val.Value.Time - time).TotalMilliseconds;
-
-                        if (pval < fval)
-                        {
-                            return valtmp;
-                        }
-                        else
-                        {
-                            return val.Value.Value;
-                        }
+                    endtime = timers.Last().Value;
                 }
-                return null;
             }
-            else
+            try
             {
-               
+                //如果超出停止时间
+                if (time >= endtime) return null;
 
-                int j = 0;
-
-                for (int i = j; i < timers.Count - 1; i++)
+                if (timers.Count > 0 && time < timers[0])
                 {
-                    var skey = timers[i];
+                    //如果读取的时间小于，当前数据段的起始时间
+                    var vtmp = ReadOtherDatablockAction(0, context);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
-                    var snext = timers[i + 1];
-
-                    if ((time == skey) || (time < skey && (skey - time).TotalSeconds < 1))
+                    //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                    if (val.HasValue && val.Value.IsEmpty())
                     {
-                        return value[i];
+                        val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = time };
                     }
-                    else if (time > skey && time < snext)
-                    {
-                        switch (type)
-                        {
-                            case QueryValueMatchType.Previous:
-                                return value[i];
-                            case QueryValueMatchType.After:
-                                return value[i + 1];
-                            case QueryValueMatchType.Linear:
-                                if (typeof(T) == typeof(bool) || typeof(T) == typeof(string) || typeof(T) == typeof(DateTime))
-                                {
-                                    var ppval = (time - skey).TotalMilliseconds;
-                                    var ffval = (snext - time).TotalMilliseconds;
 
-                                    if (ppval < ffval)
-                                    {
-                                        return value[i];
-                                    }
-                                    else
-                                    {
-                                        return value[i + 1];
-                                    }
+                    //  var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            if (val.HasValue)
+                                return val.Value.Value;
+                            else
+                            {
+                                return null;
+                            }
+                        case QueryValueMatchType.After:
+                            return value[0];
+                        case QueryValueMatchType.Linear:
+                            if (!val.HasValue) return null;
+
+                            if (typeof(T) == typeof(bool) || typeof(T) == typeof(string) || typeof(T) == typeof(DateTime))
+                            {
+                                var ppval = (time - val.Value.Time).TotalMilliseconds;
+                                var ffval = (timers[0] - time).TotalMilliseconds;
+
+                                if (ppval < ffval)
+                                {
+                                    return val.Value.Value;
                                 }
                                 else
                                 {
-                                    if (!IsBadQuality(qulityes[i]) && !IsBadQuality(qulityes[i + 1]))
+                                    return value[0];
+                                }
+                            }
+                            else
+                            {
+                                if (!IsBadQuality(qulityes[0]) && !IsBadQuality(val.Value.Quality))
+                                {
+                                    var pval1 = (time - val.Value.Time).TotalMilliseconds;
+                                    var tval1 = (timers[0] - val.Value.Time).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = value[0];
+
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                    if (pval1 < 0) val1 = Convert.ToDouble(sval1);
+
+                                    switch (typeof(T).Name)
                                     {
-                                        var pval1 = (time - skey).TotalMilliseconds;
-                                        var tval1 = (snext - skey).TotalMilliseconds;
-                                        var sval1 = value[i];
-                                        var sval2 = value[i + 1];
+                                        case "Byte":
+                                            return (byte)val1;
+                                        case "Int16":
+                                            return (short)val1;
+                                        case "UInt16":
+                                            return (ushort)val1;
+                                        case "Int32":
+                                            return (int)val1;
+                                        case "UInt32":
+                                            return (uint)val1;
+                                        case "Int64":
+                                            return (long)val1;
+                                        case "UInt64":
+                                            return (ulong)val1;
+                                        case "Double":
+                                            return val1;
+                                        case "Single":
+                                            return (float)val1;
+                                    }
+                                }
+                                else if (!IsBadQuality(val.Value.Quality))
+                                {
+                                    return val.Value.Value;
+                                }
+                                else if (!IsBadQuality(qulityes[0]))
+                                {
+                                    return value[0];
+                                }
+                                else
+                                {
+                                    return null;
+                                }
+                            }
+                            break;
+                        case QueryValueMatchType.Closed:
+                            if (!val.HasValue) return null;
 
-                                        var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+                            var pval = (time - val.Value.Time).TotalMilliseconds;
+                            var fval = (timers[0] - time).TotalMilliseconds;
 
-                                        string tname = typeof(T).Name;
-                                        switch (tname)
+                            if (pval < fval)
+                            {
+                                return val.Value.Value;
+                            }
+                            else
+                            {
+                                return value[0];
+                            }
+                    }
+                    return null;
+                }
+                else if (timers.Count > 0 && time > timers[timers.Count - 1])
+                {
+                    if (hasnext) return null;
+
+                    var vtmp = ReadOtherDatablockAction(1, context);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
+
+                    //var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var valtmp = value[value.Count - 1];
+                    var timetmp = timers[timers.Count - 1];
+                    var qtmp = qulityes[qulityes.Count - 1];
+
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            return valtmp;
+                        case QueryValueMatchType.After:
+                            if (!val.HasValue) return null;
+                            return val.Value.Value;
+                        case QueryValueMatchType.Linear:
+                            if (!val.HasValue) return null;
+
+                            if (typeof(T) == typeof(bool) || typeof(T) == typeof(string) || typeof(T) == typeof(DateTime))
+                            {
+                                var ppval = (time - timetmp).TotalMilliseconds;
+                                var ffval = (val.Value.Time - time).TotalMilliseconds;
+
+                                if (ppval < ffval)
+                                {
+                                    return valtmp;
+                                }
+                                else
+                                {
+                                    return val.Value.Value;
+                                }
+                            }
+                            else
+                            {
+                                if ((!IsBadQuality(val.Value.Quality)) && (!IsBadQuality(qtmp)))
+                                {
+                                    var pval1 = (time - timetmp).TotalMilliseconds;
+                                    var tval1 = (val.Value.Time - timetmp).TotalMilliseconds;
+                                    var sval1 = valtmp;
+                                    var sval2 = val.Value.Value;
+
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                    string tname = typeof(T).Name;
+                                    switch (tname)
+                                    {
+                                        case "Byte":
+                                            return (byte)val1;
+                                        case "Int16":
+                                            return (short)val1;
+                                        case "UInt16":
+                                            return (ushort)val1;
+                                        case "Int32":
+                                            return (int)val1;
+                                        case "UInt32":
+                                            return (uint)val1;
+                                        case "Int64":
+                                            return (long)val1;
+                                        case "UInt64":
+                                            return (ulong)val1;
+                                        case "Double":
+                                            return val1;
+                                        case "Single":
+                                            return (float)val1;
+                                    }
+                                                                      
+                                }
+                                else if (!IsBadQuality(val.Value.Quality))
+                                {
+                                    return val.Value.Value;
+                                }
+                                else if (!IsBadQuality(qtmp))
+                                {
+                                    return valtmp;
+                                }
+                                else
+                                {
+                                    return null;
+                                }
+                            }
+                            break;
+                        case QueryValueMatchType.Closed:
+                            if (!val.HasValue) return null;
+
+                            var pval = (time - timetmp).TotalMilliseconds;
+                            var fval = (val.Value.Time - time).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                return valtmp;
+                            }
+                            else
+                            {
+                                return val.Value.Value;
+                            }
+                    }
+                    return null;
+                }
+                else
+                {
+
+
+                    int j = 0;
+
+                    for (int i = j; i < timers.Count - 1; i++)
+                    {
+                        var skey = timers[i];
+
+                        var snext = timers[i + 1];
+
+                        if ((time == skey) || (time < skey && (skey - time).TotalSeconds < 1))
+                        {
+                            return value[i];
+                        }
+                        else if (time > skey && time < snext)
+                        {
+                            switch (type)
+                            {
+                                case QueryValueMatchType.Previous:
+                                    return value[i];
+                                case QueryValueMatchType.After:
+                                    return value[i + 1];
+                                case QueryValueMatchType.Linear:
+                                    if (typeof(T) == typeof(bool) || typeof(T) == typeof(string) || typeof(T) == typeof(DateTime))
+                                    {
+                                        var ppval = (time - skey).TotalMilliseconds;
+                                        var ffval = (snext - time).TotalMilliseconds;
+
+                                        if (ppval < ffval)
                                         {
-                                            case "Byte":
-                                                return (byte)val1;
-                                            case "Int16":
-                                                return (short)val1;
-                                            case "UInt16":
-                                                return (ushort)val1;
-                                            case "Int32":
-                                                return (int)val1;
-                                            case "UInt32":
-                                                return (uint)val1;
-                                            case "Int64":
-                                                return (long)val1;
-                                            case "UInt64":
-                                                return (ulong)val1;
-                                            case "Double":
-                                                return val1;
-                                            case "Single":
-                                                return (float)val1;
+                                            return value[i];
+                                        }
+                                        else
+                                        {
+                                            return value[i + 1];
                                         }
                                     }
-                                    else if (!IsBadQuality(qulityes[i]))
+                                    else
+                                    {
+                                        if (!IsBadQuality(qulityes[i]) && !IsBadQuality(qulityes[i + 1]))
+                                        {
+                                            var pval1 = (time - skey).TotalMilliseconds;
+                                            var tval1 = (snext - skey).TotalMilliseconds;
+                                            var sval1 = value[i];
+                                            var sval2 = value[i + 1];
+
+                                            var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                            string tname = typeof(T).Name;
+                                            switch (tname)
+                                            {
+                                                case "Byte":
+                                                    return (byte)val1;
+                                                case "Int16":
+                                                    return (short)val1;
+                                                case "UInt16":
+                                                    return (ushort)val1;
+                                                case "Int32":
+                                                    return (int)val1;
+                                                case "UInt32":
+                                                    return (uint)val1;
+                                                case "Int64":
+                                                    return (long)val1;
+                                                case "UInt64":
+                                                    return (ulong)val1;
+                                                case "Double":
+                                                    return val1;
+                                                case "Single":
+                                                    return (float)val1;
+                                            }
+                                        }
+                                        else if (!IsBadQuality(qulityes[i]))
+                                        {
+                                            return value[i];
+                                        }
+                                        else if (!IsBadQuality(qulityes[i + 1]))
+                                        {
+                                            return value[i + 1];
+                                        }
+                                        else
+                                        {
+                                            return null;
+                                        }
+                                    }
+                                    break;
+                                case QueryValueMatchType.Closed:
+                                    var pval = (time - skey).TotalMilliseconds;
+                                    var fval = (snext - time).TotalMilliseconds;
+
+                                    if (pval < fval)
                                     {
                                         return value[i];
                                     }
-                                    else if (!IsBadQuality(qulityes[i + 1]))
+                                    else
                                     {
                                         return value[i + 1];
                                     }
-                                    else
-                                    {
-                                        return null;
-                                    }
-                                }
-                                break;
-                            case QueryValueMatchType.Closed:
-                                var pval = (time - skey).TotalMilliseconds;
-                                var fval = (snext - time).TotalMilliseconds;
-
-                                if (pval < fval)
-                                {
-                                    return value[i];
-                                }
-                                else
-                                {
-                                    return value[i + 1];
-                                }
+                            }
+                            break;
                         }
-                        break;
-                    }
-                    else if (time == snext)
-                    {
-                        return value[i + 1];
+                        else if (time == snext)
+                        {
+                            return value[i + 1];
+                        }
+
                     }
 
+                    return null;
                 }
-
-                return null;
             }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        private T ReadPreBlockTagValue<T>(int id)
-        {
-            return default(T);
+            finally
+            {
+                if (qulityes.Count > 0)
+                {
+                    FillFirstLastValue(value, timers, qulityes, context, count);
+                }
+            }
         }
         
 
@@ -3094,7 +3396,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  object DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time1, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public  object DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time1, int timeTick, QueryValueMatchType type, Func<byte, QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             int count = 0;
             var timers = GetTimers(source, sourceAddr + 8,out count);
@@ -3105,165 +3407,206 @@ namespace Cdy.Tag
 
             var qulityes = DeCompressQulity(source.ReadBytes(qusize));
 
-            //如果查询的日期，小于开始时间
-            if (timers.Count>0 && time1<timers[0])
+            //对于只有一个值得情况,需要进行重新读取时间内容。
+            if (qulityes[0] >= 100)
             {
-                //var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
-                var vtmp = ReadOtherDatablockAction(0);
-                TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
+                timers.Clear();
+                timers.Add(0, GetForceWriteTimers(source, sourceAddr));
 
-                //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
-                if (val.HasValue && val.Value.IsEmpty())
-                {
-                    val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = time1 };
-                }
+                var vv = value[0];
+                value.Clear();
+                value.Add(vv);
 
-                switch (type)
-                {
-                    case QueryValueMatchType.Previous:
-                        if (!val.HasValue) return null;
-                        return val.Value.Value;
-                    case QueryValueMatchType.After:
-                        return value[0];
-                    case QueryValueMatchType.Linear:
-                        if (!val.HasValue) return null;
+                var qu = (byte)(qulityes[0] - 100);
+                qulityes.Clear();
+                qulityes.Add(qu);
 
-                        //if ((qulityes[0] < 20 || qulityes[0]==100) && (val.Value.Quality < 20 || val.Value.Quality==100))
-                        if (IsGoodQuality(qulityes[0]) && IsGoodQuality(val.Value.Quality))
-                        {
-                            return (T)LinerValue(val.Value.Time, timers[0], time1, val.Value.Value, value[0]);
-                        }
-                        else if (IsGoodQuality(val.Value.Quality))
-                        {
-                            return val.Value.Value;
-                        }
-                        else if (IsGoodQuality(qulityes[0]))
-                        {
-                            return value[0];
-                        }
-                        return null;
-                    case QueryValueMatchType.Closed:
-                        if (!val.HasValue) return null;
-                        var pval = (time1 - val.Value.Time).TotalMilliseconds;
-                        var fval = (timers[0] - time1).TotalMilliseconds;
-
-                        if (pval < fval)
-                        {
-                            return val.Value.Value;
-                        }
-                        else
-                        {
-                            return value[0];
-                        }
-
-                }
-
+                count = 1;
             }
-            else if(timers.Count>0 && time1>timers[timers.Count-1])
+
+            DateTime endtime = DateTime.MaxValue;
+            if (qulityes.Count > 0)
             {
-                //var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
-                var vtmp = ReadOtherDatablockAction(1);
-                TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
-                switch (type)
+                //说明此段数据系统退出
+                if (qulityes[qulityes.Count - 1] == (byte)QualityConst.Close)
                 {
-                    case QueryValueMatchType.Previous:
-                        return value[value.Count-1];
-                    case QueryValueMatchType.After:
-                        if (!val.HasValue) return null;
-                        return val.Value.Value;
-                    case QueryValueMatchType.Linear:
-                        if (!val.HasValue) return null;
+                    endtime = timers.Last().Value;
+                }
+            }
+            try
+            {
+                //如果超出停止时间
+                if (time1 >= endtime) return null;
 
-                        if ((IsGoodQuality(qulityes[qulityes.Count-1])) && IsGoodQuality(val.Value.Quality))
-                        {
-                            return (T)LinerValue(timers[timers.Count-1], val.Value.Time, time1, value[value.Count - 1], val.Value.Value);
-                        }
-                        else if (IsGoodQuality(val.Value.Quality))
-                        {
+                bool hasnext = (bool)context["hasnext"];
+                //如果查询的日期，小于开始时间
+                if (timers.Count > 0 && time1 < timers[0])
+                {
+                    //var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0, context);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
+
+                    //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
+                    if (val.HasValue && val.Value.IsEmpty())
+                    {
+                        val = new TagHisValue<T>() { Value = value[0], Quality = qulityes[0], Time = time1 };
+                    }
+
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+                            if (!val.HasValue) return null;
                             return val.Value.Value;
-                        }
-                        else if (IsGoodQuality(qulityes[qulityes.Count - 1]))
-                        {
-                            return value[value.Count-1];
-                        }
-                        return null;
-                    case QueryValueMatchType.Closed:
-                        if (!val.HasValue) return null;
+                        case QueryValueMatchType.After:
+                            return value[0];
+                        case QueryValueMatchType.Linear:
+                            if (!val.HasValue) return null;
 
-                        var pval = (time1 - timers[timers.Count-1]).TotalMilliseconds;
-                        var fval = (val.Value.Time - time1).TotalMilliseconds;
+                            //if ((qulityes[0] < 20 || qulityes[0]==100) && (val.Value.Quality < 20 || val.Value.Quality==100))
+                            if (IsGoodQuality(qulityes[0]) && IsGoodQuality(val.Value.Quality))
+                            {
+                                return (T)LinerValue(val.Value.Time, timers[0], time1, val.Value.Value, value[0]);
+                            }
+                            else if (IsGoodQuality(val.Value.Quality))
+                            {
+                                return val.Value.Value;
+                            }
+                            else if (IsGoodQuality(qulityes[0]))
+                            {
+                                return value[0];
+                            }
+                            return null;
+                        case QueryValueMatchType.Closed:
+                            if (!val.HasValue) return null;
+                            var pval = (time1 - val.Value.Time).TotalMilliseconds;
+                            var fval = (timers[0] - time1).TotalMilliseconds;
 
-                        if (pval < fval)
-                        {
+                            if (pval < fval)
+                            {
+                                return val.Value.Value;
+                            }
+                            else
+                            {
+                                return value[0];
+                            }
+
+                    }
+
+                }
+                else if (timers.Count > 0 && time1 > timers[timers.Count - 1])
+                {
+                    if (hasnext) return null;
+
+                    //var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1, context);
+                    TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
                             return value[value.Count - 1];
-                        }
-                        else
-                        {
+                        case QueryValueMatchType.After:
+                            if (!val.HasValue) return null;
                             return val.Value.Value;
-                        }
+                        case QueryValueMatchType.Linear:
+                            if (!val.HasValue) return null;
 
+                            if ((IsGoodQuality(qulityes[qulityes.Count - 1])) && IsGoodQuality(val.Value.Quality))
+                            {
+                                return (T)LinerValue(timers[timers.Count - 1], val.Value.Time, time1, value[value.Count - 1], val.Value.Value);
+                            }
+                            else if (IsGoodQuality(val.Value.Quality))
+                            {
+                                return val.Value.Value;
+                            }
+                            else if (IsGoodQuality(qulityes[qulityes.Count - 1]))
+                            {
+                                return value[value.Count - 1];
+                            }
+                            return null;
+                        case QueryValueMatchType.Closed:
+                            if (!val.HasValue) return null;
+
+                            var pval = (time1 - timers[timers.Count - 1]).TotalMilliseconds;
+                            var fval = (val.Value.Time - time1).TotalMilliseconds;
+
+                            if (pval < fval)
+                            {
+                                return value[value.Count - 1];
+                            }
+                            else
+                            {
+                                return val.Value.Value;
+                            }
+
+                    }
                 }
-            }
-            else
-            {
-                for (int i = 0; i < timers.Count - 1; i++)
+                else
                 {
-                    var skey = timers[i];
-
-                    var snext = timers[i + 1];
-
-                    if ((time1 == skey) || (time1 < skey && (skey - time1).TotalSeconds < 1))
+                    for (int i = 0; i < timers.Count - 1; i++)
                     {
-                        return value[i];
+                        var skey = timers[i];
 
-                    }
-                    else if (time1 > skey && time1 < snext)
-                    {
-                        switch (type)
+                        var snext = timers[i + 1];
+
+                        if ((time1 == skey) || (time1 < skey && (skey - time1).TotalSeconds < 1))
                         {
-                            case QueryValueMatchType.Previous:
-                                return value[i];
-                            case QueryValueMatchType.After:
-                                return value[i + 1];
-                            case QueryValueMatchType.Linear:
-                                if (IsGoodQuality(qulityes[i]) && IsGoodQuality(qulityes[i + 1]))
-                                {
-                                    return (T)LinerValue(skey, snext, time1, value[i], value[i + 1]);
-                                }
-                                else if (IsGoodQuality(qulityes[i]))
-                                {
-                                    return value[i];
-                                }
-                                else if (IsGoodQuality(qulityes[i + 1]))
-                                {
-                                    return value[i + 1];
-                                }
-                                return null;
-                            case QueryValueMatchType.Closed:
-                                var pval = (time1 - skey).TotalMilliseconds;
-                                var fval = (snext - time1).TotalMilliseconds;
-
-                                if (pval < fval)
-                                {
-                                    return value[i];
-                                }
-                                else
-                                {
-                                    return value[i + 1];
-                                }
+                            return value[i];
 
                         }
-                        break;
-                    }
-                    else if (time1 == snext)
-                    {
-                        return value[i + 1];
-                    }
+                        else if (time1 > skey && time1 < snext)
+                        {
+                            switch (type)
+                            {
+                                case QueryValueMatchType.Previous:
+                                    return value[i];
+                                case QueryValueMatchType.After:
+                                    return value[i + 1];
+                                case QueryValueMatchType.Linear:
+                                    if (IsGoodQuality(qulityes[i]) && IsGoodQuality(qulityes[i + 1]))
+                                    {
+                                        return (T)LinerValue(skey, snext, time1, value[i], value[i + 1]);
+                                    }
+                                    else if (IsGoodQuality(qulityes[i]))
+                                    {
+                                        return value[i];
+                                    }
+                                    else if (IsGoodQuality(qulityes[i + 1]))
+                                    {
+                                        return value[i + 1];
+                                    }
+                                    return null;
+                                case QueryValueMatchType.Closed:
+                                    var pval = (time1 - skey).TotalMilliseconds;
+                                    var fval = (snext - time1).TotalMilliseconds;
 
+                                    if (pval < fval)
+                                    {
+                                        return value[i];
+                                    }
+                                    else
+                                    {
+                                        return value[i + 1];
+                                    }
+
+                            }
+                            break;
+                        }
+                        else if (time1 == snext)
+                        {
+                            return value[i + 1];
+                        }
+
+                    }
+                }
+                return null;
+            }
+            finally
+            {
+                if (qulityes.Count > 0)
+                {
+                    FillFirstLastValue(value, timers, qulityes, context, count);
                 }
             }
-            return null;
-            
         }
 
 
@@ -3358,7 +3701,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result, Func<byte, object> ReadOtherDatablockAction)
+        public  int DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result, Func<byte, QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             int count = 0;
             var timers = GetTimers(source, sourceAddr + 8,out count);
@@ -3369,18 +3712,46 @@ namespace Cdy.Tag
             var qusize = source.ReadInt();
 
             var qulityes = DeCompressQulity(source.ReadBytes(qusize));
+
+            //对于只有一个值得情况,需要进行重新读取时间内容。
+            if (qulityes[0] >= 100)
+            {
+                timers.Clear();
+                timers.Add(0, GetForceWriteTimers(source, sourceAddr));
+
+                var vv = value[0];
+                value.Clear();
+                value.Add(vv);
+
+                var qu = (byte)(qulityes[0] - 100);
+                qulityes.Clear();
+                qulityes.Add(qu);
+
+                count = 1;
+            }
+
+            DateTime endtime = DateTime.MaxValue;
+            if (qulityes.Count > 0)
+            {
+                //说明此段数据系统退出
+                if (qulityes[qulityes.Count - 1] == (byte)QualityConst.Close)
+                {
+                    endtime = timers.Last().Value;
+                }
+            }
+
             int resultCount = 0;
 
-            var lowfirst = time.Where(e => e < timers[0]);
-            var greatlast = time.Where(e => e > timers[timers.Count - 1]);
-            var times = time.Where(e => e >= timers[0] && e <= timers[timers.Count - 1]);
-
+            var lowfirst = time.Where(e => e < timers[0] && e < endtime);
+            var greatlast = time.Where(e => e > timers[timers.Count - 1] && e < endtime);
+            var times = time.Where(e => e >= timers[0] && e <= timers[timers.Count - 1] && e < endtime);
+            
 
             int j = 0;
             byte qua = 0;
             if (lowfirst.Count() > 0)
             {
-                var vtmp = ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0,context);
                 TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                 //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
@@ -3568,7 +3939,7 @@ namespace Cdy.Tag
             {
                 //var val = (TagHisValue<T>)ReadOtherDatablockAction(1);
 
-                var vtmp = ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1,context);
                 TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                 foreach (var time1 in greatlast)

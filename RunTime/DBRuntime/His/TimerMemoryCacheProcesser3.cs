@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Linq;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Cdy.Tag
 {
@@ -154,8 +155,11 @@ namespace Cdy.Tag
         public void Stop()
         {
             mIsClosed = true;
-            resetEvent.Set();
-            closedEvent.WaitOne();
+            if (mRecordThread != null && mRecordThread.IsAlive)
+            {
+                resetEvent.Set();
+                closedEvent.WaitOne();
+            }
             mIsStarted = false;
         }
 
@@ -272,6 +276,8 @@ namespace Cdy.Tag
 
             mLastProcessTime = DateTime.Now;
 
+            var tdatetime = DateTime.Now;
+
             try
             {
                 while (!mIsClosed)
@@ -281,16 +287,8 @@ namespace Cdy.Tag
                     if (mIsClosed)
                         break;
 
-                    //if (NeedReInit)
-                    //{
-                    //    NeedReInit = false;
-                    //    vkeys = mCount.Keys.ToArray();
-                    //    //vdd = DateTime.UtcNow;
-                    //    //foreach (var vv in vkeys)
-                    //    //{
-                    //    //    mCount[vv] = vdd.AddMilliseconds(vv);
-                    //    //}
-                    //}
+                    //Stopwatch sw = new Stopwatch();
+                    //sw.Start();
 
                     var dnow = DateTime.Now;
 
@@ -298,6 +296,8 @@ namespace Cdy.Tag
                     {
                         LoggerService.Service.Warn("TimerMemoryCacheProcesser", "定时记录超时 " + (mLastProcessTime - dnow).TotalMilliseconds);
                     }
+                    
+                    
 
                     mLastProcessTime = dnow;
 
@@ -305,6 +305,7 @@ namespace Cdy.Tag
                     {
                         mIsBusy = true;
                         var vdata = mLastUpdateTime;
+                        //var vdata = DateTime.UtcNow;
                         foreach (var vv in vkeys)
                         {
                             if (vdata >= mCount[vv])
@@ -314,7 +315,7 @@ namespace Cdy.Tag
                                     mCount[vv] = mCount[vv].AddMilliseconds(vv);
                                 }
                                 while (mCount[vv] <= vdata);
-                                ProcessTags(mTimerTags[vv]);
+                                ProcessTags(mTimerTags[vv],vdata);
                             }
                         }
 
@@ -325,6 +326,14 @@ namespace Cdy.Tag
 
                     }
                     resetEvent.Reset();
+                    //sw.Stop();
+
+                    //if (Id == 0 && sw.ElapsedMilliseconds>10)
+                    //{
+                    //    //tdatetime = dnow;
+                    //    LoggerService.Service.Info("TimerMemoryCacheProcesser", "TimerMemoryCacheProcesser" + Id + " CPU ID:" + ThreadHelper.GetCurrentProcessorNumber() + " 耗时:" + sw.ElapsedMilliseconds + " Thread Priority:" + Thread.CurrentThread.Priority);
+                    //}
+
                 }
                 closedEvent.Set();
                 LoggerService.Service.Info("TimerMemoryCacheProcesser", Id + " 退出");
@@ -341,12 +350,14 @@ namespace Cdy.Tag
         /// 记录一组变量
         /// </summary>
         /// <param name="tags"></param>
-        private void ProcessTags(List<HisRunTag> tags)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ProcessTags(List<HisRunTag> tags,DateTime time)
         {            
-            int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
+            int tim = (int)((time - HisRunTag.StartTime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
+            var log = LogStorageManager.Instance.GetSystemLog(mLastUpdateTime,this.Id);
             foreach (var vv in tags)
             {
-                vv.UpdateValue3(tim);
+                HisRunTag.UpdateValue(vv, tim,log);
             }
         }
 

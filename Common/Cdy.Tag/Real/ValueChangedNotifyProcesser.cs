@@ -86,6 +86,9 @@ namespace Cdy.Tag
                 int[] ltmp = new int[len];
                 Array.Copy(Buffer, 0, ltmp, 0, Buffer.Length);
                 Buffer = ltmp;
+
+                LoggerService.Service.Info("ValueChangedNotifyProcesser_Databuffer", "resize buffer to:"+ltmp.Length);
+
             }
         }
 
@@ -104,6 +107,16 @@ namespace Cdy.Tag
                 ReSize(Length + (int)(Length * 1.5));
                 Buffer[Length++] = value;
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="len"></param>
+        public void Clear(int len)
+        {
+            Length = 0;
+            Buffer.AsSpan(0,len).Clear();
         }
 
     }
@@ -174,7 +187,7 @@ namespace Cdy.Tag
 
         private bool mIsClosed = false;
 
-        public const int BlockSize = 500000;
+        public const int BlockSize = 100000;
 
         #endregion ...Variables...
 
@@ -254,8 +267,8 @@ namespace Cdy.Tag
             }
             else
             {
-                mChangedId1 = new Databuffer((int)(mRegistorTagIds.Count * 1.2));
-                mChangedId2 = new Databuffer((int)(mRegistorTagIds.Count * 1.2));
+                mChangedId1 = new Databuffer(Math.Max((int)(mRegistorTagIds.Count * 1.2),102400));
+                mChangedId2 = new Databuffer(Math.Max((int)(mRegistorTagIds.Count * 1.2), 102400));
                 mChangedIds = mChangedId1;
             }
             mProcessThread = new Thread(ThreadProcess);
@@ -278,21 +291,28 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         public void UpdateValue(int id)
         {
-            if (this.NotifyType == RealDataNotifyType.All || this.NotifyType == RealDataNotifyType.Block)
+            try
             {
-                lock (mBlockChangeds)
-                    mBlockChangeds[id / BlockSize].IsDirty = true;
-            }
-
-            if ((this.NotifyType == RealDataNotifyType.All || this.NotifyType == RealDataNotifyType.Tag))
-            {
-                if (mIsAll || mRegistorTagIds.ContainsKey(id))
+                if (this.NotifyType == RealDataNotifyType.All || this.NotifyType == RealDataNotifyType.Block)
                 {
-                    lock (mLockObject)
+                    //lock (mBlockChangeds)
+                        mBlockChangeds[(id+1) / BlockSize].IsDirty = true;
+                }
+
+                if ((this.NotifyType == RealDataNotifyType.All || this.NotifyType == RealDataNotifyType.Tag)&& mRegistorTagIds.Count>0)
+                {
+                    if (mIsAll || mRegistorTagIds.ContainsKey(id))
                     {
-                        mChangedIds.AppendValue(id);
+                        lock (mLockObject)
+                        {
+                            mChangedIds.AppendValue(id);
+                        }
                     }
                 }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("ValueChangedNotifyProcesser", ex.Message);
             }
         }
 
@@ -374,7 +394,7 @@ namespace Cdy.Tag
         /// </summary>
         public void NotifyChanged()
         {
-            resetEvent.Set();
+            resetEvent?.Set();
         }
 
         /// <summary>
@@ -382,13 +402,15 @@ namespace Cdy.Tag
         /// </summary>
         private void ThreadProcess()
         {
-            int i = 0;
+            //int i = 0;
             while (!mIsClosed)
             {
                 resetEvent.WaitOne();
                 if (mIsClosed) break;
 
                 resetEvent.Reset();
+
+                //LoggerService.Service.Info("", "值改变开始推动推送"+DateTime.Now);
 
                 if (NotifyType == RealDataNotifyType.Tag || NotifyType == RealDataNotifyType.All)
                 {
@@ -408,16 +430,20 @@ namespace Cdy.Tag
                             }
                             vids.Length = 0;
                         }
-                        ValueChanged?.Invoke(vids.Buffer, len);
+                        if (len > 0)
+                        {
+                            ValueChanged?.Invoke(vids.Buffer, len);
+                            vids.Clear(len);   
+                        }
                         
                     }
                 }
 
                 if (NotifyType == RealDataNotifyType.All || NotifyType == RealDataNotifyType.Block)
                 {
-                    if ((BlockChanged != null) && i % 10 == 0)
+                    if ((BlockChanged != null))
                     {
-                        i = 0;
+                        //i = 0;
                         lock (mBlockChangeds)
                         {
                             foreach (var vv in mBlockChangeds)
@@ -431,8 +457,8 @@ namespace Cdy.Tag
                         }
                     }
                 }
-                i++;
-
+                //i++;
+                //LoggerService.Service.Info("", "值改变开始推动完成!!!!!!!!!!!!!!" + DateTime.Now,ConsoleColor.Red);
                 Thread.Sleep(10);
             }
         }
@@ -442,17 +468,17 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="maxid"></param>
         /// <param name="getAddress"></param>
-        public void BuildBlock(int maxid,Func<int,int> getAddress)
+        public void BuildBlock(int maxid, Func<int,bool, int> getAddress)
         {
             lock (mBlockChangeds)
             {
                 mBlockChangeds.Clear();
-                int count = maxid / BlockSize;
-                count = maxid % BlockSize > 0 ? count + 1 : count;
-                for (int i = 0; i <= count; i++)
+                int count = (maxid + 1) / BlockSize;
+                count = (maxid + 1) % BlockSize > 0 ? count + 1 : count;
+                for (int i = 0; i < count; i++)
                 {
-                    int start = getAddress(i * BlockSize);
-                    int end = getAddress(i * BlockSize + BlockSize);
+                    int start = getAddress(i * BlockSize,false);
+                    int end = getAddress(i * BlockSize + BlockSize -1,true);
 
                     mBlockChangeds.Add(i, new BlockItem() { Id = i, StartAddress = start, EndAddress = end });
                 }
@@ -464,7 +490,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="maxid"></param>
         /// <param name="getAddress"></param>
-        public void UpdateBlock(int maxid, Func<int, int> getAddress)
+        public void UpdateBlock(int maxid, Func<int,bool, int> getAddress)
         {
             lock (mBlockChangeds)
             {
@@ -472,8 +498,8 @@ namespace Cdy.Tag
                 count = maxid % BlockSize > 0 ? count + 1 : count;
                 for (int i = 0; i <= count; i++)
                 {
-                    int start = getAddress(i * BlockSize);
-                    int end = getAddress(i * BlockSize + BlockSize);
+                    int start = getAddress(i * BlockSize,false);
+                    int end = getAddress(i * BlockSize + BlockSize,true);
                     if (!mBlockChangeds.ContainsKey(i))
                     {
                         mBlockChangeds.Add(i, new BlockItem() { Id = i, StartAddress = start, EndAddress = end });

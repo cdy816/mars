@@ -32,7 +32,7 @@ namespace Cdy.Tag
 
     RegionHead:          PreDataRegion(8) + NextDataRegion(8) + Datatime(8)+file duration(4)+ block duration(4)+Time tick duration(4)  + tagcount(4)
     DataBlockPoint Area: [ID]+[block Point]
-    [block point]:       [[tag1 block1 point,tag2 block1 point,....][tag1 block2 point(12),tag2 block2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
+    [block point]:       [[tag1 block1 point,tag2 block1 point,....][tag1 block2 point(12),tag2 block2 point(12),...].....]   以时间单位对变量的数据区指针进行组织,
     [tag block point]:   offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
     DataBlock Area:      [[tag1 block1 size + compressType+ tag1 data block1][tag2 block1 size + compressType+ tag2 data block1]....][[tag1 block2 size + compressType+ tag1 data block2][tag2 block2 size + compressType+ tag2 data block2]....]....
     */
@@ -40,7 +40,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class DataFileInfo4
+    public class DataFileInfo4 : IDataFile
     {
 
         #region ... Variables  ...
@@ -59,6 +59,11 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         private int mRegionCount = 0;
+
+        /// <summary>
+        /// 单个历史文件记录的变量个数
+        /// </summary>
+        public const int PageFileTagCount = 100000;
 
         #endregion ...Variables...
 
@@ -550,7 +555,8 @@ namespace Cdy.Tag
             foreach (var vv in data)
             {
                 var index = vv.Value.Item2;
-                DeCompressDataBlockValue<T>(vv.Key, vv.Value.Item1, timetick, type, res, new Func<byte, object>((tp) => {
+                
+                DeCompressDataBlockValue<T>(vv.Key, vv.Value.Item1, timetick, type, res, new Func<byte,Dictionary<string,object>, object>((tp,ctx) => {
 
                     object oval = null;
                     int ttick = 0;
@@ -611,7 +617,7 @@ namespace Cdy.Tag
             int index = 0;
             using (var data = ReadTagDataBlock(datafile,tid, offset, dataTime, out timetick, out index))
             {
-                return DeCompressDataBlockValue<T>(data, dataTime, timetick, type, new Func<byte, object>((tp) => {
+                return DeCompressDataBlockValue<T>(data, dataTime, timetick, type, new Func<byte,Dictionary<string,object>, object>((tp,ctx) => {
                     TagHisValue<T> oval = TagHisValue<T>.Empty;
                     int ttick = 0;
                     int dindex = index;
@@ -684,18 +690,20 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        private static object DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type,Func<byte,object> ReadOtherDatablockAction)
+        private static object DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type,Func<byte,QueryContext,object> ReadOtherDatablockAction)
         {
             //MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
             ctype = GetCompressType(ctype, out byte tagtype);
+            QueryContext ctx = new QueryContext();
+            ctx.Add("hasnext", false);
             var tp = CompressUnitManager2.Manager.GetCompress(ctype);
             if (tp != null)
             {
                 if (!CheckTagTypeChanged<T>(tagtype))
                 {
-                    return tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                    return tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction,ctx);
                 }
                 else
                 {
@@ -704,45 +712,45 @@ namespace Cdy.Tag
                     switch (tpp)
                     {
                         case TagType.Bool:
-                            return tp.DeCompressValue<bool>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<bool>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.Byte:
-                            return tp.DeCompressValue<byte>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<byte>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.Short:
-                            return tp.DeCompressValue<short>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<short>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.UShort:
-                            return tp.DeCompressValue<ushort>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<ushort>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.Int:
-                            return tp.DeCompressValue<int>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<int>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.UInt:
-                            return tp.DeCompressValue<uint>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<uint>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.Long:
-                            return tp.DeCompressValue<long>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<long>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.ULong:
-                            return tp.DeCompressValue<ulong>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<ulong>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.DateTime:
-                            return tp.DeCompressValue<DateTime>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<DateTime>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.Float:
-                            return tp.DeCompressValue<float>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<float>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.Double:
-                            return tp.DeCompressValue<double>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<double>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.String:
-                            return tp.DeCompressValue<string>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<string>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.IntPoint:
-                            return tp.DeCompressValue<IntPointData>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<IntPointData>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.IntPoint3:
-                            return tp.DeCompressValue<IntPoint3Data>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<IntPoint3Data>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.UIntPoint:
-                            return tp.DeCompressValue<UIntPointData>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<UIntPointData>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.UIntPoint3:
-                            return tp.DeCompressValue<UIntPoint3Data>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<UIntPoint3Data>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.LongPoint:
-                            return tp.DeCompressValue<LongPointData>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<LongPointData>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.ULongPoint:
-                            return tp.DeCompressValue<ULongPointData>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<ULongPointData>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.LongPoint3:
-                            return tp.DeCompressValue<LongPoint3Data>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<LongPoint3Data>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                         case TagType.ULongPoint3:
-                            return tp.DeCompressValue<ULongPoint3Data>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction);
+                            return tp.DeCompressValue<ULongPoint3Data>(memory, 1, datatime, timeTick, type, ReadOtherDatablockAction, ctx);
                     }
                 }
             }
@@ -758,8 +766,11 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<T> result, Func<byte, object> ReadOtherDatablockAction)
+        private static void DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<T> result, Func<byte, QueryContext, object> ReadOtherDatablockAction)
         {
+            QueryContext ctx = new QueryContext();
+            ctx.Add("hasnext", false);
+
             //MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
             var ctype = memory.ReadByte();
@@ -769,7 +780,7 @@ namespace Cdy.Tag
             {
                 if (!CheckTagTypeChanged<T>(tagtype))
                 {
-                    tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type, result, ReadOtherDatablockAction);
+                    tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type, result, ReadOtherDatablockAction, ctx);
                 }
                 else
                 {
@@ -781,7 +792,7 @@ namespace Cdy.Tag
                     {
                         case TagType.Bool:
                             var htmp = new HisQueryResult<bool>(600);
-                            tp.DeCompressValue<bool>(memory, 1, datatime, timeTick, type, htmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<bool>(memory, 1, datatime, timeTick, type, htmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < htmp.Count; i++)
                             {
                                 var bval = htmp.GetTargetValue(htmp.GetValue(i, out time, out qu));
@@ -790,7 +801,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.Byte:
                             var btmp = new HisQueryResult<byte>(600);
-                            tp.DeCompressValue<byte>(memory, 1, datatime, timeTick, type, btmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<byte>(memory, 1, datatime, timeTick, type, btmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < btmp.Count; i++)
                             {
                                 var bval = btmp.GetTargetValue(btmp.GetValue(i, out time, out qu));
@@ -799,7 +810,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.Short:
                             var stmp = new HisQueryResult<short>(600);
-                            tp.DeCompressValue<short>(memory, 1, datatime, timeTick, type, stmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<short>(memory, 1, datatime, timeTick, type, stmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < stmp.Count; i++)
                             {
                                 var bval = stmp.GetTargetValue(stmp.GetValue(i, out time, out qu));
@@ -808,7 +819,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.UShort:
                             var ustmp = new HisQueryResult<ushort>(600);
-                            tp.DeCompressValue<ushort>(memory, 1, datatime, timeTick, type, ustmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<ushort>(memory, 1, datatime, timeTick, type, ustmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < ustmp.Count; i++)
                             {
                                 var bval = ustmp.GetTargetValue(ustmp.GetValue(i, out time, out qu));
@@ -817,7 +828,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.Int:
                             var itmp = new HisQueryResult<int>(600);
-                            tp.DeCompressValue<int>(memory, 1, datatime, timeTick, type, itmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<int>(memory, 1, datatime, timeTick, type, itmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < itmp.Count; i++)
                             {
                                 var bval = itmp.GetTargetValue(itmp.GetValue(i, out time, out qu));
@@ -826,7 +837,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.UInt:
                             var uitmp = new HisQueryResult<uint>(600);
-                            tp.DeCompressValue<uint>(memory, 1, datatime, timeTick, type, uitmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<uint>(memory, 1, datatime, timeTick, type, uitmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < uitmp.Count; i++)
                             {
                                 var bval = uitmp.GetTargetValue(uitmp.GetValue(i, out time, out qu));
@@ -835,7 +846,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.Long:
                             var ltmp = new HisQueryResult<long>(600);
-                            tp.DeCompressValue<long>(memory, 1, datatime, timeTick, type, ltmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<long>(memory, 1, datatime, timeTick, type, ltmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < ltmp.Count; i++)
                             {
                                 var bval = ltmp.GetTargetValue(ltmp.GetValue(i, out time, out qu));
@@ -844,7 +855,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.ULong:
                             var ultmp = new HisQueryResult<ulong>(600);
-                            tp.DeCompressValue<ulong>(memory, 1, datatime, timeTick, type, ultmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<ulong>(memory, 1, datatime, timeTick, type, ultmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < ultmp.Count; i++)
                             {
                                 var bval = ultmp.GetTargetValue(ultmp.GetValue(i, out time, out qu));
@@ -853,7 +864,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.DateTime:
                             var dttmp = new HisQueryResult<DateTime>(600);
-                            tp.DeCompressValue<DateTime>(memory, 1, datatime, timeTick, type, dttmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<DateTime>(memory, 1, datatime, timeTick, type, dttmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < dttmp.Count; i++)
                             {
                                 var bval = dttmp.GetTargetValue(dttmp.GetValue(i, out time, out qu));
@@ -862,7 +873,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.Float:
                             var ftmp = new HisQueryResult<float>(600);
-                            tp.DeCompressValue<float>(memory, 1, datatime, timeTick, type, ftmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<float>(memory, 1, datatime, timeTick, type, ftmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < ftmp.Count; i++)
                             {
                                 var bval = ftmp.GetTargetValue(ftmp.GetValue(i, out time, out qu));
@@ -871,7 +882,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.Double:
                             var dtmp = new HisQueryResult<double>(600);
-                            tp.DeCompressValue<double>(memory, 1, datatime, timeTick, type, dtmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<double>(memory, 1, datatime, timeTick, type, dtmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < dtmp.Count; i++)
                             {
                                 var bval = dtmp.GetTargetValue(dtmp.GetValue(i, out time, out qu));
@@ -880,7 +891,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.String:
                             var sstmp = new HisQueryResult<string>(600);
-                            tp.DeCompressValue<string>(memory, 1, datatime, timeTick, type, sstmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<string>(memory, 1, datatime, timeTick, type, sstmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < sstmp.Count; i++)
                             {
                                 var bval = sstmp.GetTargetValue(sstmp.GetValue(i, out time, out qu));
@@ -889,7 +900,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.IntPoint:
                             var iptmp = new HisQueryResult<IntPointData>(600);
-                            tp.DeCompressValue<IntPointData>(memory, 1, datatime, timeTick, type, iptmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<IntPointData>(memory, 1, datatime, timeTick, type, iptmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < iptmp.Count; i++)
                             {
                                 var bval = iptmp.GetTargetValue(iptmp.GetValue(i, out time, out qu));
@@ -898,7 +909,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.IntPoint3:
                             var ip3tmp = new HisQueryResult<IntPoint3Data>(600);
-                            tp.DeCompressValue<IntPoint3Data>(memory, 1, datatime, timeTick, type, ip3tmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<IntPoint3Data>(memory, 1, datatime, timeTick, type, ip3tmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < ip3tmp.Count; i++)
                             {
                                 var bval = ip3tmp.GetTargetValue(ip3tmp.GetValue(i, out time, out qu));
@@ -907,7 +918,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.UIntPoint:
                             var uptmp = new HisQueryResult<UIntPointData>(600);
-                            tp.DeCompressValue<UIntPointData>(memory, 1, datatime, timeTick, type, uptmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<UIntPointData>(memory, 1, datatime, timeTick, type, uptmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < uptmp.Count; i++)
                             {
                                 var bval = uptmp.GetTargetValue(uptmp.GetValue(i, out time, out qu));
@@ -916,7 +927,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.UIntPoint3:
                             var uip3tmp = new HisQueryResult<UIntPoint3Data>(600);
-                            tp.DeCompressValue<UIntPoint3Data>(memory, 1, datatime, timeTick, type, uip3tmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<UIntPoint3Data>(memory, 1, datatime, timeTick, type, uip3tmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < uip3tmp.Count; i++)
                             {
                                 var bval = uip3tmp.GetTargetValue(uip3tmp.GetValue(i, out time, out qu));
@@ -925,7 +936,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.LongPoint:
                             var liptmp = new HisQueryResult<LongPointData>(600);
-                            tp.DeCompressValue<LongPointData>(memory, 1, datatime, timeTick, type, liptmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<LongPointData>(memory, 1, datatime, timeTick, type, liptmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < liptmp.Count; i++)
                             {
                                 var bval = liptmp.GetTargetValue(liptmp.GetValue(i, out time, out qu));
@@ -934,7 +945,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.ULongPoint:
                             var uliptmp = new HisQueryResult<ULongPointData>(600);
-                            tp.DeCompressValue<ULongPointData>(memory, 1, datatime, timeTick, type, uliptmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<ULongPointData>(memory, 1, datatime, timeTick, type, uliptmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < uliptmp.Count; i++)
                             {
                                 var bval = uliptmp.GetTargetValue(uliptmp.GetValue(i, out time, out qu));
@@ -943,7 +954,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.LongPoint3:
                             var lip3tmp = new HisQueryResult<LongPoint3Data>(600);
-                            tp.DeCompressValue<LongPoint3Data>(memory, 1, datatime, timeTick, type, lip3tmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<LongPoint3Data>(memory, 1, datatime, timeTick, type, lip3tmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < lip3tmp.Count; i++)
                             {
                                 var bval = lip3tmp.GetTargetValue(lip3tmp.GetValue(i, out time, out qu));
@@ -952,7 +963,7 @@ namespace Cdy.Tag
                             break;
                         case TagType.ULongPoint3:
                             var ulip3tmp = new HisQueryResult<ULongPoint3Data>(600);
-                            tp.DeCompressValue<ULongPoint3Data>(memory, 1, datatime, timeTick, type, ulip3tmp, ReadOtherDatablockAction);
+                            tp.DeCompressValue<ULongPoint3Data>(memory, 1, datatime, timeTick, type, ulip3tmp, ReadOtherDatablockAction, ctx);
                             for (int i = 0; i < ulip3tmp.Count; i++)
                             {
                                 var bval = ulip3tmp.GetTargetValue(ulip3tmp.GetValue(i, out time, out qu));
@@ -979,7 +990,7 @@ namespace Cdy.Tag
             {
                 if (!CheckTagTypeChanged<T>(tagtype))
                 {
-                    return tp.DeCompressRawValue<T>(memory, 1, readValueType);
+                    return tp.DeCompressRawValue<T>(memory, 1, readValueType,null);
                 }
                 else
                 {
@@ -1566,7 +1577,7 @@ namespace Cdy.Tag
             ReadRegionHead(datafile, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
             //var blockIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
 
-            var dindex = tid % tagCount;
+            var dindex = tid % DataFileInfo4.PageFileTagCount;
 
             int blockcount = fileDuration * 60 / blockDuration;
 
@@ -1609,7 +1620,7 @@ namespace Cdy.Tag
 
             //var dindex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
             ReadRegionHead(datafile, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
-            var dindex = tid % tagCount;
+            var dindex = tid % DataFileInfo4.PageFileTagCount;
 
             int blockIndex = index;
 
@@ -1651,13 +1662,15 @@ namespace Cdy.Tag
             //var tagIndex = datafile.ReadTagIndexInDataPointer(tid, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
             
             ReadRegionHead(datafile, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
-            var tagIndex = tid % tagCount;
+            var tagIndex = tid % DataFileInfo4.PageFileTagCount;
+
+          
 
             Dictionary<long, MarshalMemoryBlock> rtmp = new Dictionary<long, MarshalMemoryBlock>();
 
             Dictionary<MarshalMemoryBlock, Tuple<List<DateTime>,int>> re = new Dictionary<MarshalMemoryBlock, Tuple<List<DateTime>, int>>();
 
-            if (tagCount == 0) return re;
+            if (tagCount == 0 || tagIndex>=tagCount) return re;
 
             int blockcount = fileDuration * 60 / blockDuration;
 
@@ -1770,11 +1783,14 @@ namespace Cdy.Tag
             DateTime time;
 
 
+
             ReadRegionHead(datafile,  offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
 
             if (tagCount == 0) yield return null;
 
-            var tagIndex = tid % tagCount;
+            var tagIndex = tid % DataFileInfo4.PageFileTagCount;
+
+            if(tagIndex>=tagCount) yield return null;
 
             int blockcount = fileDuration * 60 / blockDuration;
 

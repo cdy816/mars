@@ -70,6 +70,8 @@ namespace DBInStudio.Desktop
 
         private SecurityTreeItemViewModel securityModel = new SecurityTreeItemViewModel();
 
+        private ComplexTagClassRoot mClassModel = new ComplexTagClassRoot();
+
         private ViewModelBase mContentViewModel;
 
         private bool mIsCanOperate = true;
@@ -109,6 +111,14 @@ namespace DBInStudio.Desktop
 
             mContentViewModel = infoModel;
 
+            DevelopServiceHelper.Helper.OfflineCallBack = new Action(() => {
+
+                MessageBox.Show(Res.Get("serveroffline"));
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Logout();
+                });
+            });
         }
 
         
@@ -116,21 +126,48 @@ namespace DBInStudio.Desktop
 
         #region ... Properties ...
 
-        public ICommand StartMonitorCommand
+        /// <summary>
+        /// 
+        /// </summary>
+        public string MonitorString
         {
             get
             {
-                if(mStartMonitorCommand==null)
-                {
-                    mStartMonitorCommand = new RelayCommand(() => {
-
-                        (ContentViewModel as TagGroupDetailViewModel).StartMonitCommand.Execute(null);
-
-                    }, () => { return IsDatabaseRunning && (ContentViewModel is TagGroupDetailViewModel) && !(ContentViewModel as TagGroupDetailViewModel).IsMonitMode; });
-                }
-                return mStartMonitorCommand;
+                return ((ContentViewModel as TagGroupDetailViewModel)!=null && (ContentViewModel as TagGroupDetailViewModel).IsMonitMode)?Res.Get("Stop"): Res.Get("Monitor");
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Visibility MonitorVisibily
+        {
+            get
+            {
+                return (ContentViewModel is TagGroupDetailViewModel) ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public ICommand StartMonitorCommand
+        //{
+        //    get
+        //    {
+        //        if(mStartMonitorCommand==null)
+        //        {
+        //            mStartMonitorCommand = new RelayCommand(() => {
+
+        //                (ContentViewModel as TagGroupDetailViewModel).StartMonitCommand.Execute(null);
+
+        //                OnPropertyChanged("MonitorString");
+
+        //            }, () => { return IsDatabaseRunning; });
+        //        }
+        //        return mStartMonitorCommand;
+        //    }
+        //}
 
         /// <summary>
         /// 
@@ -198,6 +235,19 @@ namespace DBInStudio.Desktop
                 {
                     mStopCommand = new RelayCommand(() => {
                         IsDatabaseRunning = !DevelopServiceHelper.Helper.StopDatabase(mDatabase);
+
+                        //try
+                        //{
+                        //    if (((ContentViewModel as TagGroupDetailViewModel) != null && (ContentViewModel as TagGroupDetailViewModel).IsMonitMode))
+                        //    {
+                        //        (ContentViewModel as TagGroupDetailViewModel).StartMonitCommand.Execute(null);
+                        //    }
+                        //}
+                        //catch
+                        //{
+
+                        //}
+
                     },()=> { return mIsDatabaseRunning&& !string.IsNullOrEmpty(mDatabase); });
                 }
                 return mStopCommand;
@@ -397,6 +447,8 @@ namespace DBInStudio.Desktop
                 {
                     mContentViewModel = value;
                     OnPropertyChanged("ContentViewModel");
+                    OnPropertyChanged("MonitorVisibily");
+                    OnPropertyChanged("MonitorString");
                 }
             }
         }
@@ -731,14 +783,20 @@ namespace DBInStudio.Desktop
                 }
 
                 this.TagGroup.Add(sec);
-                dbitem.Children.Add(mRootTagGroupModel);
-                mRootTagGroupModel.Database = mDatabase;
 
-                dbitem.Children.Add(securityModel);
-                securityModel.Database = mDatabase;
-                securityModel.Init();
+                FillDatabaseViewModel(dbitem);
 
-                dbitem.Children.Add(new DatabaseSettingViewModel() { Database = this.Database });
+                //dbitem.Children.Add(mRootTagGroupModel);
+                //mRootTagGroupModel.Database = mDatabase;
+
+                //dbitem.Children.Add(mClassModel);
+                //mClassModel.Database = mDatabase;
+
+                //dbitem.Children.Add(securityModel);
+                //securityModel.Database = mDatabase;
+                //securityModel.Init();
+
+                //dbitem.Children.Add(new DatabaseSettingViewModel() { Database = this.Database });
 
 
                 Task.Run(() => {
@@ -904,13 +962,20 @@ namespace DBInStudio.Desktop
             }
 
             this.TagGroup.Add(sec);
-            dbitem.Children.Add(mRootTagGroupModel);
-            mRootTagGroupModel.Database = mDatabase;
-            dbitem.Children.Add(securityModel);
-            securityModel.Database = mDatabase;
-            securityModel.Init();
 
-            dbitem.Children.Add(new DatabaseSettingViewModel() { Database = this.Database });
+            FillDatabaseViewModel(dbitem);
+
+            //dbitem.Children.Add(mRootTagGroupModel);
+            //mRootTagGroupModel.Database = mDatabase;
+
+            //dbitem.Children.Add(mClassModel);
+            //mClassModel.Database = mDatabase;
+
+            //dbitem.Children.Add(securityModel);
+            //securityModel.Database = mDatabase;
+            //securityModel.Init();
+
+            //dbitem.Children.Add(new DatabaseSettingViewModel() { Database = this.Database });
 
             Task.Run(() => {
                 TagViewModel.Drivers = DevelopServiceHelper.Helper.GetRegistorDrivers(mDatabase);
@@ -951,13 +1016,19 @@ namespace DBInStudio.Desktop
                     }
 
                     this.TagGroup.Add(sec);
-                    dbitem.Children.Add(mRootTagGroupModel);
-                    mRootTagGroupModel.Database = mDatabase;
-                    dbitem.Children.Add(securityModel);
-                    securityModel.Database = mDatabase;
-                    securityModel.Init();
 
-                    dbitem.Children.Add(new DatabaseSettingViewModel() { Database = this.Database });
+                    FillDatabaseViewModel(dbitem);
+                    //dbitem.Children.Add(mRootTagGroupModel);
+                    //mRootTagGroupModel.Database = mDatabase;
+
+                    //dbitem.Children.Add(mClassModel);
+                    //mClassModel.Database = mDatabase;
+
+                    //dbitem.Children.Add(securityModel);
+                    //securityModel.Database = mDatabase;
+                    //securityModel.Init();
+
+                    //dbitem.Children.Add(new DatabaseSettingViewModel() { Database = this.Database });
 
                     Task.Run(() => {
                         TagViewModel.Drivers = DevelopServiceHelper.Helper.GetRegistorDrivers(mDatabase);
@@ -1017,6 +1088,75 @@ namespace DBInStudio.Desktop
             ContentViewModel = infoModel;
             Database = string.Empty;
             StopCheckDatabaseRunning();
+            OnPropertyChanged("MainwindowTitle");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void CheckAutoLogin()
+        {
+            if(!string.IsNullOrEmpty(AutoLogin.Database) && !string.IsNullOrEmpty(AutoLogin.HostIP) &&!string.IsNullOrEmpty(AutoLogin.UserName))
+            {
+                ProcessAutoLogin();
+            }
+        }
+
+        private void ProcessAutoLogin()
+        {
+            LoginViewModel login = new LoginViewModel() { Server = AutoLogin.HostIP,UserName = AutoLogin.UserName,Password=AutoLogin.Password};
+            if(login.Login())
+            {
+                if (!DevelopServiceHelper.Helper.CheckOpenDatabase(AutoLogin.Database))
+                {
+                    MessageBox.Show(string.Format(Res.Get("opendatabasefailed"), AutoLogin.Database));
+                }
+                else
+                {
+                    this.TagGroup.Clear();
+
+                    CurrentUserManager.Manager.UserName = login.UserName;
+                    Database = AutoLogin.Database;
+                    ServerHelper.Helper.Database = Database;
+
+                    OnPropertyChanged("MainwindowTitle");
+                    OnPropertyChanged("UserName");
+                    IsLogin = true;
+
+                    var dbitem = new DatabaseViewModel() { Name = mDatabase, IsSelected = true, IsExpanded = true };
+                    this.TagGroup.Add(dbitem);
+
+                    var sec = new ServerSecurityTreeViewModel();
+                    sec.Children.Add(new ServerUserEditorTreeViewModel());
+
+                    if (DevelopServiceHelper.Helper.IsAdmin())
+                    {
+                        sec.Children.Add(new ServerUserManagerTreeViewModel());
+                    }
+
+                    this.TagGroup.Add(sec);
+
+                    FillDatabaseViewModel(dbitem);
+                    //dbitem.Children.Add(mRootTagGroupModel);
+                    //mRootTagGroupModel.Database = mDatabase;
+
+                    //dbitem.Children.Add(mClassModel);
+                    //mClassModel.Database = mDatabase;
+
+                    //dbitem.Children.Add(securityModel);
+                    //securityModel.Database = mDatabase;
+                    //securityModel.Init();
+
+                    //dbitem.Children.Add(new DatabaseSettingViewModel() { Database = this.Database });
+
+                    Task.Run(() => {
+                        TagViewModel.Drivers = DevelopServiceHelper.Helper.GetRegistorDrivers(mDatabase);
+                        QueryGroups();
+                    });
+
+                    StartCheckDatabaseRunning();
+                }
+            }
         }
 
         /// <summary>
@@ -1052,13 +1192,19 @@ namespace DBInStudio.Desktop
                     }
 
                     this.TagGroup.Add(sec);
-                    dbitem.Children.Add(mRootTagGroupModel);
-                    mRootTagGroupModel.Database = mDatabase;
-                    dbitem.Children.Add(securityModel);
-                    securityModel.Database = mDatabase;
-                    securityModel.Init();
 
-                    dbitem.Children.Add(new DatabaseSettingViewModel() { Database = this.Database });
+                    FillDatabaseViewModel(dbitem);
+                    //dbitem.Children.Add(mRootTagGroupModel);
+                    //mRootTagGroupModel.Database = mDatabase;
+
+                    //dbitem.Children.Add(mClassModel);
+                    //mClassModel.Database = mDatabase;
+
+                    //dbitem.Children.Add(securityModel);
+                    //securityModel.Database = mDatabase;
+                    //securityModel.Init();
+
+                
 
                     Task.Run(() => {
                         TagViewModel.Drivers = DevelopServiceHelper.Helper.GetRegistorDrivers(mDatabase);
@@ -1069,6 +1215,27 @@ namespace DBInStudio.Desktop
                 }
             }
         }
+
+        private void FillDatabaseViewModel(DatabaseViewModel dbitem)
+        {
+            dbitem.Children.Add(mRootTagGroupModel);
+            mRootTagGroupModel.Database = mDatabase;
+
+            dbitem.Children.Add(mClassModel);
+            mClassModel.Database = mDatabase;
+
+            dbitem.Children.Add(securityModel);
+            securityModel.Database = mDatabase;
+            securityModel.Init();
+
+            dbitem.Children.Add(new DatabaseSettingViewModel() { Database = this.Database });
+
+
+            Task.Run(() => {
+                QueryTagClass();
+            });
+        }
+
 
         /// <summary>
         /// 
@@ -1091,6 +1258,35 @@ namespace DBInStudio.Desktop
                     });
                 }
             }
+        }
+
+        private void QueryTagClass()
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                this.mClassModel.Children.Clear();
+            });
+            var vv = DevelopServiceHelper.Helper.QueryTagClass(this.mDatabase);
+            if (vv != null && vv.Count != 0)
+            {
+                foreach (var vvv in vv)
+                {
+                    Application.Current?.Dispatcher.Invoke(() =>
+                    {
+                        ComplextTagClass groupViewModel = new ComplextTagClass() { mName = vvv.Item1, Database = mDatabase, Parent = mClassModel, mDescription = vvv.Item2 };
+                        mClassModel.Children.Add(groupViewModel);
+                        mClassModel.UpdateTagType();
+                    });
+                }
+            }
+            else
+            {
+                Application.Current?.Dispatcher.Invoke(() =>
+                {
+                    mClassModel.UpdateTagType();
+                });
+            }
+
         }
 
         /// <summary>

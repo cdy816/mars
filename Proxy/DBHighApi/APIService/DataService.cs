@@ -31,6 +31,11 @@ namespace DBHighApi.Api
         /// <summary>
         /// 
         /// </summary>
+        public const byte SetTagValueCallBack = 30;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public const byte RealDataPushFun = 12;
 
 
@@ -68,6 +73,8 @@ namespace DBHighApi.Api
 
         private bool mIsRunning = false;
 
+        private int mPort = -1;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -90,6 +97,12 @@ namespace DBHighApi.Api
         /// 
         /// </summary>
         public override string Name => "ConsumeDataService";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsPause { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -97,14 +110,34 @@ namespace DBHighApi.Api
 
         public override void Start(int port)
         {
-            mHisProcess = new HisDataServerProcess() { Parent = this };
-            mRealProcess = new RealDataServerProcess() { Parent = this };
-            mInfoProcess = new TagInfoServerProcess() { Parent = this };
-            mHisProcess.Start();
-            mRealProcess.Start();
-            mInfoProcess.Start();
-            base.Start(port);
+            if (mPort != port)
+            {
+                if (mPort != -1)
+                    Stop();
+
+
+                mHisProcess = new HisDataServerProcess() { Parent = this };
+                mRealProcess = new RealDataServerProcess() { Parent = this };
+                mInfoProcess = new TagInfoServerProcess() { Parent = this };
+                mHisProcess.Start();
+                mRealProcess.Start();
+                mInfoProcess.Start();
+                base.Start(port);
+            }
+            Pause(false);
+            mPort = port;
             mIsRunning = true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public void Pause(bool value)
+        {
+            mHisProcess.IsPause = value;
+            mRealProcess.IsPause = value;
+            mInfoProcess.IsPause = value;
         }
 
         ///// <summary>
@@ -150,6 +183,8 @@ namespace DBHighApi.Api
                     mInfoProcess = null;
                 }
             }
+
+            mPort = -1;
         }
 
         private ByteBuffer GetAsyncData()
@@ -170,12 +205,18 @@ namespace DBHighApi.Api
             this.RegistorFunCallBack(ApiFunConst.HisDataRequestFun, HisDataRequest);
         }
 
+        private object mLocker = new object();
+
         /// <summary>
         /// 
         /// </summary>
         public void PushRealDatatoClient(string clientId,byte[] value)
         {
-            this.SendData(clientId, Api.ApiFunConst.RealDataPushFun, value,value.Length);
+            lock (mLocker)
+            {
+                if (value != null)
+                    this.SendData(clientId, Api.ApiFunConst.RealDataPushFun, value, value.Length);
+            }
         }
 
         /// <summary>
@@ -185,7 +226,11 @@ namespace DBHighApi.Api
         /// <param name="value"></param>
         public void PushRealDatatoClient(string clientId, ByteBuffer value)
         {
-            this.SendDataToClient(clientId, value);
+            lock (mLocker)
+            {
+                if (value != null)
+                    this.SendDataToClient(clientId, value);
+            }
         }
 
         /// <summary>
@@ -196,7 +241,11 @@ namespace DBHighApi.Api
         /// <param name="value"></param>
         public void AsyncCallback(string clientId,byte fun, byte[] value,int len)
         {
-            this.SendData(clientId, fun, value, len);
+            lock (mLocker)
+            {
+                if (value != null)
+                    this.SendData(clientId, fun, value, len);
+            }
 
         }
 
@@ -207,7 +256,11 @@ namespace DBHighApi.Api
         /// <param name="data"></param>
         public void AsyncCallback(string clientId, ByteBuffer data)
         {
-            this.SendDataToClient(clientId, data);
+            lock (mLocker)
+            {
+                if (data != null)
+                    this.SendDataToClient(clientId, data);
+            }
         }
 
         /// <summary>
@@ -219,7 +272,11 @@ namespace DBHighApi.Api
         /// <param name="len"></param>
         public void AsyncCallback(string clientId, byte fun, IntPtr value, int len)
         {
-            this.SendData(clientId, fun, value, len);
+            lock (mLocker)
+            {
+                if (value != IntPtr.Zero)
+                    this.SendData(clientId, fun, value, len);
+            }
         }
 
         /// <summary>

@@ -169,6 +169,85 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        private void StartLocalApi()
+        {
+            try
+            {
+                string spath = System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location);
+
+                if (mDatabase.Setting.EnableWebApi)
+                {
+                    if (!CheckProcessExist("DbWebApi"))
+                    {
+                        string sfile = System.IO.Path.Combine(spath, "DbWebApi", "DbWebApi");
+                        StartProcess(sfile);
+                    }
+                }
+
+                if (mDatabase.Setting.EnableGrpcApi)
+                {
+                    if (!CheckProcessExist("DBGrpcApi"))
+                    {
+                        string sfile = System.IO.Path.Combine(spath, "DBGrpcApi");
+                        StartProcess(sfile);
+                    }
+                }
+
+                if (mDatabase.Setting.EnableHighApi)
+                {
+                    if (!CheckProcessExist("DBHighApi"))
+                    {
+                        string sfile = System.IO.Path.Combine(spath, "DBHighApi");
+                        StartProcess(sfile);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        private bool CheckProcessExist(string name)
+        {
+            return Process.GetProcessesByName(name).Length > 0;
+        }
+
+        private void StartProcess(string file)
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                if (System.IO.File.Exists(file + ".exe"))
+                {
+                    var vfile = file;
+                    ProcessStartInfo pinfo = new ProcessStartInfo();
+                    pinfo.FileName = vfile + ".exe";
+                    pinfo.Arguments = "/m";
+                    pinfo.RedirectStandardOutput = false;
+                    pinfo.RedirectStandardInput = false;
+                    pinfo.UseShellExecute = true;
+                    Process.Start(pinfo);
+                }
+            }
+            else
+            {
+                if (System.IO.File.Exists(file + ".dll"))
+                {
+                    ProcessStartInfo info = new ProcessStartInfo("dotnet", $"{file}.dll /m") { RedirectStandardOutput = false, RedirectStandardInput = false, RedirectStandardError = false, UseShellExecute = true };
+                    Process.Start(info);
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         public void Init()
         {
            
@@ -475,7 +554,7 @@ namespace Cdy.Tag
                     //如果变量内容有变动,或者变量有被删除，则需要暂停,将已经记录的数据进行保存到磁盘
                     DriverManager.Manager.Pause();
                     //Thread.Sleep(100);
-                    hisEnginer.Stop();
+                    hisEnginer.Stop(false);
                     compressEnginer.Stop();
 
                 }
@@ -556,6 +635,9 @@ namespace Cdy.Tag
 
                 DriverManager.Manager.NotifyHisTagChanged(htmp.Select(e => e.Id), changedhistag.Select(e => e.Id), mRemovedHisTags.Select(e => (int)e));
 
+
+                StartLocalApi();
+
                 LoggerService.Service.Info("ReStartDatabase", "热启动数据库完成", ConsoleColor.DarkYellow);
             }
             catch(Exception ex)
@@ -612,7 +694,7 @@ namespace Cdy.Tag
                 ServiceLocator.Locator.Registor<ITagHisValueProduct>(hisEnginer);
 
                 //初始化从内存中查询数据的服务
-                HisDataMemoryQueryService3.Service.HisEnginer = hisEnginer;
+                //HisDataMemoryQueryService3.Service.HisEnginer = hisEnginer;
                 ServiceLocator.Locator.Registor<IHisQueryFromMemory>(HisDataMemoryQueryService3.Service);
 
 
@@ -731,6 +813,7 @@ namespace Cdy.Tag
                 DriverManager.Manager.Start();
             }
 
+            StartLocalApi();
             mIsStarted = true;
             LoggerService.Service.Info("Runner", " 数据库 " + database + " 启动完成");
         }
@@ -762,7 +845,7 @@ namespace Cdy.Tag
         {
             try
             {
-                hisEnginer.Stop();
+                hisEnginer.Stop(false);
                 compressEnginer.Stop();
                 seriseEnginer.Stop();
                 DriverManager.Manager.Stop();
@@ -802,7 +885,7 @@ namespace Cdy.Tag
             LoggerService.Service.EnableLogger = true;
 
             DBRuntime.Api.DataService.Service.Stop();
-            hisEnginer.Stop();
+            hisEnginer.Stop(true);
             DriverManager.Manager.Stop();
             compressEnginer.Stop();
             seriseEnginer.Stop();

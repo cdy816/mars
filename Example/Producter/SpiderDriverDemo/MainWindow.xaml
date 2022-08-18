@@ -6,27 +6,50 @@
         xmlns:local="clr-namespace:SpiderDriverDemo"
         mc:Ignorable="d"
         Title="SpiderSim" Height="353" Width="634">
-    <Grid>
-        <Button x:Name="Start" Content="实时数据" HorizontalAlignment="Left" Margin="502,33,0,0" VerticalAlignment="Top" Width="107" Click="Start_Click"/>
-        <Label Content="IP:" HorizontalAlignment="Left" Margin="31,33,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="ipt" HorizontalAlignment="Left" Margin="106,38,0,0" Text="127.0.0.1" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
-        <Label Content="Port:" HorizontalAlignment="Left" Margin="256,33,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="portt" HorizontalAlignment="Left" Margin="317,35,0,0" Text="8800" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
-        <Label Content="Count:" HorizontalAlignment="Left" Margin="30,78,0,0" VerticalAlignment="Top"/>
-        <Label Content="Sin:" HorizontalAlignment="Left" Margin="30,118,0,0" VerticalAlignment="Top"/>
-        <Label Content="Cos:" HorizontalAlignment="Left" Margin="31,156,0,0" VerticalAlignment="Top"/>
-        <Label Content="Bool:" HorizontalAlignment="Left" Margin="31,199,0,0" VerticalAlignment="Top"/>
-        <Label Content="DateTime:" HorizontalAlignment="Left" Margin="18,238,0,0" VerticalAlignment="Top"/>
-        <Label Content="{Binding CountValue}" HorizontalAlignment="Left" Margin="102,87,0,0" VerticalAlignment="Top" Width="106"/>
-        <Label Content="{Binding SimValue}" HorizontalAlignment="Left" Margin="102,127,0,0" VerticalAlignment="Top" Width="106"/>
-        <Label Content="{Binding CosValue}" HorizontalAlignment="Left" Margin="102,164,0,0" VerticalAlignment="Top" Width="106"/>
-        <Label Content="{Binding BoolValue}" HorizontalAlignment="Left" Margin="102,207,0,0" VerticalAlignment="Top" Width="106"/>
-        <Label Content="{Binding DateTimeValue}" HorizontalAlignment="Left" Margin="102,247,0,0" VerticalAlignment="Top" Width="136"/>
-        <Button x:Name="hisDataWrite" Content="手动历史数据写入" HorizontalAlignment="Left" Margin="502,178,0,0" VerticalAlignment="Top" Width="107" Click="hisDataWrite_Click"/>
-        <Button x:Name="HisStart" Content="实时历史数据" HorizontalAlignment="Left" Margin="502,100,0,0" VerticalAlignment="Top" Width="107" Click="HisStart_Click"/>
-        <Label x:Name="fshs" Content="发送耗时:" HorizontalAlignment="Left" Margin="16,292,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="Hid" HorizontalAlignment="Left" Margin="502,147,0,0" Text="1" TextWrapping="Wrap" VerticalAlignment="Top" Width="107"/>
-        <Button x:Name="StartPushOnly" Content="单向传输实时数据" HorizontalAlignment="Left" Margin="502,66,0,0" VerticalAlignment="Top" Width="107" Click="StartPushOnly_Click"/>
+    <TabControl>
+        <TabItem Header="批量写入">
+            <Grid>
+                <Button x:Name="Start" Content="实时数据" HorizontalAlignment="Left" Margin="502,33,0,0" VerticalAlignment="Top" Width="107" Click="Start_Click"/>
+                <Label Content="IP:" HorizontalAlignment="Left" Margin="31,33,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="ipt" HorizontalAlignment="Left" Margin="106,38,0,0" Text="127.0.0.1" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+                <Label Content="Port:" HorizontalAlignment="Left" Margin="256,33,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="portt" HorizontalAlignment="Left" Margin="317,35,0,0" Text="8800" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+                <Label Content="Count:" HorizontalAlignment="Left" Margin="30,78,0,0" VerticalAlignment="Top"/>
+                <Label Content="Sin:" HorizontalAlignment="Left" Margin="30,118,0,0" VerticalAlignment="Top"/>
+                <Label Content="Cos:" HorizontalAlignment="Left" Margin="31,156,0,0" VerticalAlignment="Top"/>
+                <Label Content="Bool:" HorizontalAlignment="Left" Margin="31,199,0,0" VerticalAlignment="Top"/>
+                <Label Content="DateTime:" HorizontalAlignment="Left" Margin="18,238,0,0" VerticalAlignment="Top"/>
+                <Label Content="{Binding CountValue}" HorizontalAlignment="Left" Margin="102,87,0,0" VerticalAlignment="Top" Width="106"/>
+                <Label Content="{Binding SimValue}" HorizontalAlignment="Left" Margin="102,127,0,0" VerticalAlignment="Top" Width="106"/>
+                <Label Content="{Binding CosValue}" HorizontalAlignment="Left" Margin="102,164,0,0" VerticalAlignment="Top" Width="106"/>
+                <Label Content="{Binding BoolValue}" HorizontalAlignment="Left" Margin="102,207,0,0" VerticalAlignment="Top" Width="106"/>
+                <Label Content="{Binding DateTimeValue}" HorizontalAlignment="Left" Margin="102,247,0,0" VerticalAlignment="Top" Width="136"/>
+                <Button x:Name="hisDataWrite" Content="手动历史数据写入" HorizontalAlignment="Left" Margin="502,178,0,0" VerticalAlignment="Top" Width="107" Click="hisDataWrite_Click"/>
+                <Button x:Name="HisStart" Content="实时历史数据" HorizontalAlignment="Left" Margin="502,100,0,0" VerticalAlignment="Top" Width="107" Click="HisStart_Click"/>
+                <Label x:Name="fshs" Content="发送耗时:" HorizontalAlignment="Left" Margin="16,292,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="Hid" HorizontalAlignment="Left" Margin="502,147,0,0" Text="1" TextWrapping="Wrap" VerticalAlignment="Top" Width="107"/>
+                <Button x:Name="StartPushOnly" Content="单向传输实时数据" HorizontalAlignment="Left" Margin="502,66,0,0" VerticalAlignment="Top" Width="107" Click="StartPushOnly_Click"/>
 
-    </Grid>
+            </Grid>
+        </TabItem>
+        <TabItem Header="历史数据手动写入">
+            <Grid>
+                <DatePicker x:Name="hisdate" HorizontalAlignment="Left" Margin="82,129,0,0" VerticalAlignment="Top" Width="120"/>
+                <Label Content="时间：" HorizontalAlignment="Left" Margin="18,128,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="histime" HorizontalAlignment="Left" Margin="219,132,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120"/>
+                <Label Content="IP:" HorizontalAlignment="Left" Margin="16,20,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="ipt2" HorizontalAlignment="Left" Margin="82,24,0,0" Text="127.0.0.1" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+                <Label Content="Port:" HorizontalAlignment="Left" Margin="241,20,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="port2" HorizontalAlignment="Left" Margin="302,22,0,0" Text="8800" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
+                <Button x:Name="hisconn" Content="连接" HorizontalAlignment="Left" Margin="456,22,0,0" VerticalAlignment="Top" Width="73" Click="hisconn_Click"/>
+                <Button x:Name="hisset" Content="历史数据写入" HorizontalAlignment="Left" Margin="82,229,0,0" VerticalAlignment="Top" Width="96" Click="hisset_Click"/>
+                <Label Content="值：" HorizontalAlignment="Left" Margin="18,171,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="hisval" HorizontalAlignment="Left" Margin="82,175,0,0" TextWrapping="Wrap" Text="0.1" VerticalAlignment="Top" Width="120"/>
+                <Label Content="变量ID：" HorizontalAlignment="Left" Margin="18,87,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="histag" HorizontalAlignment="Left" Margin="82,91,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+
+            </Grid>
+        </TabItem>
+    </TabControl>
+
 </Window>

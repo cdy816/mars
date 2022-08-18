@@ -781,7 +781,7 @@ namespace HisDataTools.ViewModel
 
            
 
-            OpMessage = string.Format(Res.Get("OpMsgFormate"), result.Count, sw.ElapsedMilliseconds);
+        
 
             CurveEntitySource entity = new CurveEntitySource();
             entity.Text = this.SelectTag;
@@ -798,14 +798,17 @@ namespace HisDataTools.ViewModel
             List<HisDataPoint> ltmp = new List<HisDataPoint>();
 
             int i = 0;
-            for (i=0;i<result.Count;i++)
+            //for (i=0;i<result.Count;i++)
+            foreach(var vv in result.ListAvaiableValues())
             {
-                object value;
-                DateTime time;
-                byte qu = 0;
-                value = result.GetValue(i, out time, out qu);
+                object value=vv.Value;
+                DateTime time = vv.Time;
+                byte qu = vv.Quality;
+                //value = result.GetValue(i, out time, out qu);
                 vtmps.Add(time, new Tuple<object, int>(value, qu));
+                i++;
             }
+            OpMessage = string.Format(Res.Get("OpMsgFormate"), i,result.Count, sw.ElapsedMilliseconds);
             i = 0;
             foreach (var vv in times)
             {
@@ -816,6 +819,10 @@ namespace HisDataTools.ViewModel
                 {
                     value = vtmps[vv].Item1;
                     qu = (byte)vtmps[vv].Item2;
+                }
+                else
+                {
+                    continue;
                 }
 
                 minx = minx > i ? i : minx;
@@ -892,7 +899,6 @@ namespace HisDataTools.ViewModel
             var result = HisDataManager.Manager.GetQueryService(mDatabase).ReadAllValue<T>(id, sTime, eTime);
             sw.Stop();
 
-            OpMessage = string.Format(Res.Get("OpMsgFormate"), result.Count, sw.ElapsedMilliseconds);
 
             //Debug.Print("查询耗时:" + sw.ElapsedMilliseconds);
 
@@ -908,17 +914,19 @@ namespace HisDataTools.ViewModel
 
             List<HisDataPoint> ltmp = new List<HisDataPoint>();
 
-            for (int i = 0; i < result.Count; i++)
+            //for (int i = 0; i < result.Count; i++)
+            int i = 0;
+            foreach(var value in result.ListAvaiableValues())
             {
-                object value;
-                DateTime time;
-                byte qu = 0;
-                value = result.GetValue(i, out time, out qu);
+                //object value;
+                DateTime time = value.Time;
+                byte qu = value.Quality;
+                //value = result.GetValue(i, out time, out qu);
 
                 minx = minx > i ? i : minx;
                 maxx = maxx < i ? i : maxx;
 
-                double dtmp = ConvertValue(value);
+                double dtmp = ConvertValue(value.Value);
 
                 miny = miny > dtmp ? dtmp : miny;
                 maxy =maxy < dtmp ? dtmp : maxy;
@@ -929,10 +937,13 @@ namespace HisDataTools.ViewModel
                 point.Text = time.ToString("dd HH:mm:ss");
                 entity.Source.Add(point);
 
-                ltmp.Add(new HisDataPoint() { DateTime = time, Quality = qu, Value = value });
+                ltmp.Add(new HisDataPoint() { DateTime = time, Quality = qu, Value = value.Value });
+                i++;
                /// mDatas.Add(new HisDataPoint() { DateTime = time, Quality = qu, Value = value });
             }
             Datas = ltmp;
+
+            OpMessage = string.Format(Res.Get("OpMsgFormate"), ltmp.Count, result.Count, sw.ElapsedMilliseconds);
 
             List<SplitItem> yitems = new List<SplitItem>(5);
 
@@ -946,7 +957,7 @@ namespace HisDataTools.ViewModel
             ChartSource = new List<ICurveEntitySource>() { entity };
 
             var dval = (maxy - miny) / 5;
-            for (int i = 1; i <= 5; i++)
+            for (i = 1; i <= 5; i++)
             {
                 yitems.Add(new SplitItem() { SpliteType = SplitItemType.Normal, Text = (miny + i * dval).ToString("f2"), IsShowText = true, Value = miny + i * dval, Color = System.Windows.Media.Brushes.SkyBlue });
             }
@@ -964,7 +975,7 @@ namespace HisDataTools.ViewModel
             var result = HisDataManager.Manager.GetQueryService(mDatabase).ReadNumberStatistics(id, sTime, eTime);
             sw.Stop();
 
-            OpMessage = string.Format(Res.Get("OpMsgFormate"), result.Count, sw.ElapsedMilliseconds);
+           
 
             //Debug.Print("查询耗时:" + sw.ElapsedMilliseconds);
 
@@ -988,6 +999,9 @@ namespace HisDataTools.ViewModel
 
                 ltmp.Add(new StatisticsHisDataPoint() { DateTime = time, AvgValue=avgvalue,MaxValue=maxvalue,MinValue=minvalue,MaxValueTime=maxvaluetime,MinValueTime=minvaluetime });
             }
+
+            OpMessage = string.Format(Res.Get("OpMsgFormate"), ltmp.Count,result.Count, sw.ElapsedMilliseconds);
+
             StatisticsDatas = ltmp;
 
             result.Dispose();

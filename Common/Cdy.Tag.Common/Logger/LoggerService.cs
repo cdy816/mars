@@ -42,6 +42,12 @@ namespace Cdy.Tag
         {
             mLogger = ServiceLocator.Locator.Resolve<ILog>();
             EnableLogger = true;
+
+        }
+
+        static LoggerService()
+        {
+            Name = System.Reflection.Assembly.GetEntryAssembly().GetName().Name;
         }
 
         #endregion ...Constructor...
@@ -52,6 +58,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public bool EnableLogger { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static string LogPath = "";
+
+        /// <summary>
+        /// 名称
+        /// </summary>
+        public static string Name = "";
 
         #endregion ...Properties...
 
@@ -74,18 +90,33 @@ namespace Cdy.Tag
         {
             lock (mLockObj)
             {
+                CheckStartRecord();
                 if (EnableLogger)
                     mLogger?.Debug(name, msg);
+                else
+                {
+                    Record(name, msg);
+                }
             }
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="msg"></param>
+        /// <param name="parameter"></param>
         public void Debug(string name, string msg, object parameter)
         {
             lock (mLockObj)
             {
+                CheckStartRecord();
                 if (EnableLogger)
                     mLogger?.Debug(name, msg,parameter);
+                else
+                {
+                    Record(name, msg);
+                }
             }
         }
 
@@ -98,8 +129,13 @@ namespace Cdy.Tag
         {
             lock (mLockObj)
             {
+                CheckStartRecord();
                 if (EnableLogger)
                     mLogger?.Warn(name, msg);
+                else
+                {
+                    Record(name, msg);
+                }
             }
         }
 
@@ -112,8 +148,13 @@ namespace Cdy.Tag
         {
             lock (mLockObj)
             {
+                CheckStartRecord();
                 if (EnableLogger)
                     mLogger?.Erro(name, msg);
+                else
+                {
+                    Record(name, msg);
+                }
             }
         }
 
@@ -126,8 +167,13 @@ namespace Cdy.Tag
         {
             lock (mLockObj)
             {
+                CheckStartRecord();
                 if (EnableLogger)
                     mLogger?.Info(name, msg);
+                else
+                {
+                    Record(name, msg);
+                }
             }
         }
 
@@ -141,9 +187,44 @@ namespace Cdy.Tag
         {
             lock (mLockObj)
             {
+                CheckStartRecord();
                 if (EnableLogger)
-                    mLogger?.Info(name, msg,parameter);
+                {
+                    mLogger?.Info(name, msg, parameter);
+                }
+                else
+                {
+                    Record(name, msg);
+                }
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="msg"></param>
+        public void Record(string name,string msg)
+        {
+            lock (mLockObj)
+            {
+                CheckStartRecord();
+                mLogger?.Record(name, msg);
+            }
+        }
+        
+        private void CheckStartRecord()
+        {
+            if (mLogger != null && !mLogger.IsRecordStart)
+                mLogger.StartRecord();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Stop()
+        {
+            mLogger?.StopRecord();
         }
 
         #endregion ...Methods...

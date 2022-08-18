@@ -1,0 +1,623 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AbsoluteValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>添加</value>
+  </data>
+  <data name="AddDatabase" xml:space="preserve">
+    <value>添加数据库</value>
+  </data>
+  <data name="AddTagFail" xml:space="preserve">
+    <value>Add tag {0} failed!</value>
+  </data>
+  <data name="Add_Tooltip" xml:space="preserve">
+    <value>添加数据库</value>
+  </data>
+  <data name="Alarm" xml:space="preserve">
+    <value>报警</value>
+  </data>
+  <data name="AllGroup" xml:space="preserve">
+    <value>所有组</value>
+  </data>
+  <data name="Analysis" xml:space="preserve">
+    <value>曲线分析</value>
+  </data>
+  <data name="Append" xml:space="preserve">
+    <value>追加</value>
+  </data>
+  <data name="Bad" xml:space="preserve">
+    <value>坏</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="CancelSave" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="CancelSave_Tooltip" xml:space="preserve">
+    <value>放弃改变的内容</value>
+  </data>
+  <data name="canceltosavemsg" xml:space="preserve">
+    <value>you will be lost all data you have modify. To continue?</value>
+  </data>
+  <data name="Circle" xml:space="preserve">
+    <value>周期</value>
+  </data>
+  <data name="CompressType" xml:space="preserve">
+    <value>压缩类型</value>
+  </data>
+  <data name="Convert" xml:space="preserve">
+    <value>转换</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>拷贝</value>
+  </data>
+  <data name="CPU" xml:space="preserve">
+    <value>CPU</value>
+  </data>
+  <data name="Custom" xml:space="preserve">
+    <value>自定义</value>
+  </data>
+  <data name="CustomDataPathTooltip" xml:space="preserve">
+    <value>Relative database path or absolute path</value>
+  </data>
+  <data name="Database" xml:space="preserve">
+    <value>数据库</value>
+  </data>
+  <data name="databaseexist" xml:space="preserve">
+    <value>The database {0} already exists
+
+!</value>
+  </data>
+  <data name="databaseSelect" xml:space="preserve">
+    <value>数据库选择</value>
+    <comment>List database View Title</comment>
+  </data>
+  <data name="DeadAreaCompress" xml:space="preserve">
+    <value>死区</value>
+  </data>
+  <data name="DeadAreaType" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="DeadAreaValue" xml:space="preserve">
+    <value>死区</value>
+  </data>
+  <data name="Default" xml:space="preserve">
+    <value>缺省</value>
+  </data>
+  <data name="Desc" xml:space="preserve">
+    <value>描述</value>
+  </data>
+  <data name="DetailList" xml:space="preserve">
+    <value>详情列表</value>
+  </data>
+  <data name="Disk" xml:space="preserve">
+    <value>磁盘</value>
+  </data>
+  <data name="DotnetVersion" xml:space="preserve">
+    <value>DotNet版本</value>
+  </data>
+  <data name="Driver" xml:space="preserve">
+    <value>驱动</value>
+  </data>
+  <data name="EnableApi" xml:space="preserve">
+    <value>Access api</value>
+  </data>
+  <data name="EnableWrite" xml:space="preserve">
+    <value>EnableWrite</value>
+  </data>
+  <data name="EnableZipFile" xml:space="preserve">
+    <value>Enable double compression</value>
+  </data>
+  <data name="EndPort" xml:space="preserve">
+    <value>End port</value>
+  </data>
+  <data name="EndTime" xml:space="preserve">
+    <value>结束时间</value>
+  </data>
+  <data name="erro" xml:space="preserve">
+    <value>erro</value>
+  </data>
+  <data name="Export" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="FindAvaiableId" xml:space="preserve">
+    <value>Reset id</value>
+  </data>
+  <data name="FindAvaiableIdTooltip" xml:space="preserve">
+    <value>Find the smallest unused ID and set it to the tag.The ID is used as the record identifier of historical records. Resetting the ID may cause confusion of historical data.</value>
+  </data>
+  <data name="FittingType" xml:space="preserve">
+    <value>拟合方式 </value>
+  </data>
+  <data name="FittingValue" xml:space="preserve">
+    <value>拟合值</value>
+  </data>
+  <data name="funTitle" xml:space="preserve">
+    <value>Conversion formula</value>
+  </data>
+  <data name="Good" xml:space="preserve">
+    <value>好</value>
+  </data>
+  <data name="Group" xml:space="preserve">
+    <value>组</value>
+  </data>
+  <data name="GrpcApi" xml:space="preserve">
+    <value>Grpc Api</value>
+  </data>
+  <data name="HighApi" xml:space="preserve">
+    <value>私有 Api</value>
+  </data>
+  <data name="HisDataKeepTime" xml:space="preserve">
+    <value>Historical data retention time</value>
+  </data>
+  <data name="HisDataViewer" xml:space="preserve">
+    <value>历史数据查看</value>
+  </data>
+  <data name="HisTagViewer" xml:space="preserve">
+    <value>历史数据浏览</value>
+  </data>
+  <data name="HisValueQueryType" xml:space="preserve">
+    <value>历史数据查询方式 </value>
+  </data>
+  <data name="HotReRun_Tooltip" xml:space="preserve">
+    <value>热重启</value>
+  </data>
+  <data name="Id" xml:space="preserve">
+    <value>Id</value>
+  </data>
+  <data name="IDResetStartId" xml:space="preserve">
+    <value>Start search ID</value>
+  </data>
+  <data name="IDResetWarnning" xml:space="preserve">
+    <value>Warning: The ID is used as the record identifier of historical records. Resetting the ID may cause confusion of historical data.</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="ImportErroMsg" xml:space="preserve">
+    <value>Some erro has happened,do you see erro.txt for detail?</value>
+  </data>
+  <data name="ImportMode" xml:space="preserve">
+    <value>Import mode</value>
+  </data>
+  <data name="Init" xml:space="preserve">
+    <value>Init</value>
+  </data>
+  <data name="IsAdmin" xml:space="preserve">
+    <value>Admin</value>
+  </data>
+  <data name="KeepTimeUnit" xml:space="preserve">
+    <value>(Day)</value>
+  </data>
+  <data name="Keyword" xml:space="preserve">
+    <value>关键字</value>
+  </data>
+  <data name="Link" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="Log" xml:space="preserve">
+    <value>日志</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>登录</value>
+    <comment>登录</comment>
+  </data>
+  <data name="LoginFailed" xml:space="preserve">
+    <value>登录失败!</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>登出</value>
+  </data>
+  <data name="LogType" xml:space="preserve">
+    <value>日志类型</value>
+  </data>
+  <data name="LosslessCompress" xml:space="preserve">
+    <value>无损</value>
+  </data>
+  <data name="MachineName" xml:space="preserve">
+    <value>机器名称</value>
+  </data>
+  <data name="Manager" xml:space="preserve">
+    <value>管理</value>
+  </data>
+  <data name="Manager_Tooltip" xml:space="preserve">
+    <value>编辑数据库</value>
+  </data>
+  <data name="Manual" xml:space="preserve">
+    <value>手动</value>
+  </data>
+  <data name="MarsTitle" xml:space="preserve">
+    <value>欢迎来到Mars实时物联数据库</value>
+  </data>
+  <data name="MaxValue" xml:space="preserve">
+    <value>最大值</value>
+  </data>
+  <data name="MaxValueCountPersecond" xml:space="preserve">
+    <value>每秒记录的数量</value>
+  </data>
+  <data name="Memory" xml:space="preserve">
+    <value>内存</value>
+  </data>
+  <data name="MinValue" xml:space="preserve">
+    <value>最小值</value>
+  </data>
+  <data name="Modify" xml:space="preserve">
+    <value>修改</value>
+  </data>
+  <data name="Monitor" xml:space="preserve">
+    <value>监视</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="Network" xml:space="preserve">
+    <value>网络</value>
+  </data>
+  <data name="New" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="NewDatabase" xml:space="preserve">
+    <value>New database</value>
+  </data>
+  <data name="NewDatabaseFailed" xml:space="preserve">
+    <value>New database failed!</value>
+  </data>
+  <data name="NoneCompress" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="Null" xml:space="preserve">
+    <value>空</value>
+  </data>
+  <data name="offline" xml:space="preserve">
+    <value>(离线)</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="OriginalValue" xml:space="preserve">
+    <value>原始值</value>
+  </data>
+  <data name="OsType" xml:space="preserve">
+    <value>系统类型</value>
+  </data>
+  <data name="OSVersion" xml:space="preserve">
+    <value>系统版本</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>密码</value>
+  </data>
+  <data name="PasswordConfirm" xml:space="preserve">
+    <value>密码确认</value>
+  </data>
+  <data name="Paste" xml:space="preserve">
+    <value>粘贴</value>
+  </data>
+  <data name="PercentValue" xml:space="preserve">
+    <value>百分比</value>
+  </data>
+  <data name="Precision" xml:space="preserve">
+    <value>小数位</value>
+  </data>
+  <data name="ProcessCount" xml:space="preserve">
+    <value>处理器个数</value>
+  </data>
+  <data name="Quality" xml:space="preserve">
+    <value>质量</value>
+  </data>
+  <data name="Query" xml:space="preserve">
+    <value>查询</value>
+  </data>
+  <data name="QueryToNow" xml:space="preserve">
+    <value>查询到当前</value>
+  </data>
+  <data name="Read" xml:space="preserve">
+    <value>读</value>
+  </data>
+  <data name="ReadWrite" xml:space="preserve">
+    <value>读写</value>
+  </data>
+  <data name="ReadWriteMode" xml:space="preserve">
+    <value>读写模式</value>
+  </data>
+  <data name="Receive" xml:space="preserve">
+    <value>接收</value>
+  </data>
+  <data name="Record" xml:space="preserve">
+    <value>记录</value>
+  </data>
+  <data name="RecordType" xml:space="preserve">
+    <value>记录类型</value>
+  </data>
+  <data name="refresh" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="Registor" xml:space="preserve">
+    <value>寄存器</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="RemoveConfirm" xml:space="preserve">
+    <value>你是否确认要删除 {0} ?</value>
+  </data>
+  <data name="RemoveConfirmMsg" xml:space="preserve">
+    <value>确定要删除{0}?</value>
+  </data>
+  <data name="ReName" xml:space="preserve">
+    <value>重命名</value>
+  </data>
+  <data name="Replace" xml:space="preserve">
+    <value>替换</value>
+  </data>
+  <data name="ReplaceAll" xml:space="preserve">
+    <value>全部替换</value>
+  </data>
+  <data name="ReRun" xml:space="preserve">
+    <value>热重启</value>
+  </data>
+  <data name="SampleDuration" xml:space="preserve">
+    <value>取样时间间隔 </value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="Savefailed" xml:space="preserve">
+    <value>save failed!</value>
+  </data>
+  <data name="saveprompt" xml:space="preserve">
+    <value>Data is changed,do you want to save?</value>
+  </data>
+  <data name="SaveSucessful" xml:space="preserve">
+    <value>save sucessfull!</value>
+  </data>
+  <data name="Security" xml:space="preserve">
+    <value>Security</value>
+  </data>
+  <data name="SelectAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="SelectDatabase" xml:space="preserve">
+    <value>Select a database</value>
+    <comment>List database View head</comment>
+  </data>
+  <data name="SelectGroup" xml:space="preserve">
+    <value>Selected group</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>发送</value>
+  </data>
+  <data name="ServerBackupDataPath" xml:space="preserve">
+    <value>History backup path</value>
+  </data>
+  <data name="ServerIp" xml:space="preserve">
+    <value>服务器地址</value>
+  </data>
+  <data name="serveroffline" xml:space="preserve">
+    <value>服务器离线</value>
+  </data>
+  <data name="ServerPort" xml:space="preserve">
+    <value>服务端口</value>
+  </data>
+  <data name="ServerPrimaryDataPath" xml:space="preserve">
+    <value>History data path</value>
+  </data>
+  <data name="ServerSecurity" xml:space="preserve">
+    <value>ServerSecurity</value>
+  </data>
+  <data name="ServerSetting" xml:space="preserve">
+    <value>Server setting</value>
+  </data>
+  <data name="SetDescription" xml:space="preserve">
+    <value>SetDescription</value>
+  </data>
+  <data name="Setting" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="SlopeAreaValue" xml:space="preserve">
+    <value>Slope zone</value>
+  </data>
+  <data name="SlopeCompress" xml:space="preserve">
+    <value>斜率</value>
+  </data>
+  <data name="Start" xml:space="preserve">
+    <value>启动</value>
+  </data>
+  <data name="StartPort" xml:space="preserve">
+    <value>Start port</value>
+  </data>
+  <data name="StartTime" xml:space="preserve">
+    <value>开始时间</value>
+  </data>
+  <data name="StartValue" xml:space="preserve">
+    <value>StartValue</value>
+  </data>
+  <data name="Start_Tooltip" xml:space="preserve">
+    <value>启动数据库</value>
+  </data>
+  <data name="Stop" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="Stop_Tooltip" xml:space="preserve">
+    <value>停止数据库</value>
+  </data>
+  <data name="Tag" xml:space="preserve">
+    <value>变量</value>
+  </data>
+  <data name="TagCount" xml:space="preserve">
+    <value>变量个数</value>
+  </data>
+  <data name="TagExportComplete" xml:space="preserve">
+    <value>Tag export complete!</value>
+  </data>
+  <data name="TagFilter" xml:space="preserve">
+    <value>过滤条件</value>
+  </data>
+  <data name="TagGroup" xml:space="preserve">
+    <value>变量组</value>
+  </data>
+  <data name="Time" xml:space="preserve">
+    <value>时间</value>
+  </data>
+  <data name="Timer" xml:space="preserve">
+    <value>时间</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Mars 数据库运行管理</value>
+  </data>
+  <data name="TotalDisk" xml:space="preserve">
+    <value>磁盘总量</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="UpdateTagFail" xml:space="preserve">
+    <value>Update tag {0} failed!</value>
+  </data>
+  <data name="UsedDisk" xml:space="preserve">
+    <value>已用磁盘</value>
+  </data>
+  <data name="User" xml:space="preserve">
+    <value>用户</value>
+  </data>
+  <data name="UserList" xml:space="preserve">
+    <value>用户列表</value>
+  </data>
+  <data name="UserName" xml:space="preserve">
+    <value>用户名</value>
+  </data>
+  <data name="UseTls" xml:space="preserve">
+    <value>UseTls</value>
+  </data>
+  <data name="Value" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="ValueChanged" xml:space="preserve">
+    <value>值改变</value>
+  </data>
+  <data name="WebApi" xml:space="preserve">
+    <value>Web Api</value>
+  </data>
+  <data name="Write" xml:space="preserve">
+    <value>写</value>
+  </data>
+</root>

@@ -89,9 +89,9 @@ namespace Cdy.Tag
             if (mProcesser.ContainsKey(name))
             {
                 var pp = mProcesser[name];
+                mProcesser.Remove(name);
                 pp.Close();
                 pp.Dispose();
-                mProcesser.Remove(name);
             }
         }
 

@@ -38,11 +38,48 @@ namespace DbInRunWebApi.Model
         /// 值
         /// </summary>
         public object Value { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Name { get; set; }
         #endregion ...Properties...
 
         #region ... Methods    ...
 
+        #endregion ...Methods...
 
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+
+
+    public class RealValueCollection:RealValue
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<RealValue> SubValues { get; set; }
+        #endregion ...Properties...
+
+        #region ... Methods    ...
 
         #endregion ...Methods...
 
@@ -72,6 +109,11 @@ namespace DbInRunWebApi.Model
         #region ... Properties ...
 
         /// <summary>
+        /// 
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
         /// 质量戳
         /// </summary>
         public byte Quality { get; set; }
@@ -85,6 +127,41 @@ namespace DbInRunWebApi.Model
         #region ... Methods    ...
 
 
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class RealValueAndQualityCollection : RealValueAndQuality
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<RealValue> SubValues { get; set; }
+        #endregion ...Properties...
+
+        #region ... Methods    ...
 
         #endregion ...Methods...
 
@@ -254,7 +331,7 @@ namespace DbInRunWebApi.Model
         /// <summary>
         /// 实时值集合
         /// </summary>
-        public List<RealValue> Datas { get; set; }
+        public List<object> Datas { get; set; }
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -289,7 +366,7 @@ namespace DbInRunWebApi.Model
         /// <summary>
         /// 实时值集合
         /// </summary>
-        public List<RealValueAndQuality> Datas { get; set; }
+        public List<object> Datas { get; set; }
         #endregion ...Properties...
 
         #region ... Methods    ...

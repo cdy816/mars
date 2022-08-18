@@ -75,7 +75,7 @@
                     <Button.ContentTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <Image Source="/Image/登录.png" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                                <!--<Image Source="/Image/登录.png" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"/>-->
                                 <TextBlock Text="{local:ResMarker Open}" VerticalAlignment="Center" Margin="5,0"/>
                             </StackPanel>
                         </DataTemplate>

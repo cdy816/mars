@@ -55,6 +55,8 @@ namespace Cdy.Tag
 
         private ValueChangedNotifyProcesser mValueChangedNotifier;
 
+        private int mId = 30;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -69,10 +71,20 @@ namespace Cdy.Tag
         {
             resetEvent = new ManualResetEvent(false);
             closedEvent = new ManualResetEvent(false);
+            mId++;
         }
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Id
+        {
+            get { return mId; }
+            set { mId = value; }
+        }
 
         /// <summary>
         /// 
@@ -138,14 +150,16 @@ namespace Cdy.Tag
                     try
                     {
                         mChangedTags[ids[i]] = true;
+                        //if (ids[i]==0)
+                        //{
+                        //    LoggerService.Service.Info("ValueChangedMemoryCacheProcesser3", "tag0 changed!");
+                        //}
                     }
                     catch
                     {
 
                     }
                 }
-                
-                //LoggerService.Service.Info("TagChanged", "变化变量数:"+ids.Length);
             }),null,new Func<IEnumerable<int>>(() => { return  mTags.Keys; }),RealDataNotifyType.Tag);
 
             foreach(var vv in mTags.Keys)
@@ -169,8 +183,11 @@ namespace Cdy.Tag
         {
             mIsClosed = true;
             try{
-                resetEvent.Set();
-                closedEvent.WaitOne();
+                if (mRecordThread != null && mRecordThread.IsAlive)
+                {
+                    resetEvent.Set();
+                    closedEvent.WaitOne();
+                }
                 //Clear();
                 mIsStarted = false;
             }
@@ -259,18 +276,24 @@ namespace Cdy.Tag
 
                     try
                     {
+                        //var dnow = DateTime.UtcNow;
                         lock (mLockObj2)
                         {
-                            int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
                             if (mChangedTags.Count > 0)
                             {
+                                var log = LogStorageManager.Instance.GetSystemLog(mLastUpdateTime, mId);
+                                int tim = (int)((mLastUpdateTime - HisRunTag.StartTime).TotalMilliseconds / HisEnginer3.MemoryTimeTick);
+
                                 foreach (var vv in mChangedTags)
                                 {
                                     if (vv.Value)
                                     {
-                                        mTags[vv.Key].UpdateChangedValue3(tim);
-
-                                        mChangedTags[vv.Key] = false;
+                                        var res = !mTags[vv.Key].UpdateChangedValue3(tim, log);
+                                        //if (res && vv.Key==0)
+                                        //{
+                                        //    LoggerService.Service.Warn("ValueChangedMemoryCacheProcesser", "Value not changed!");
+                                        //}
+                                        mChangedTags[vv.Key] = res;
                                     }
                                 }
                             }

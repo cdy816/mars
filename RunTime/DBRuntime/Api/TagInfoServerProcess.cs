@@ -35,7 +35,7 @@ namespace DBRuntime.Api
 
         public const byte SyncSecuritySetting = 32;
 
-       
+        public const byte Hart = byte.MaxValue;
 
         private List<string> mClients = new List<string>();
 
@@ -68,7 +68,13 @@ namespace DBRuntime.Api
         /// <param name="data"></param>
         protected unsafe override void ProcessSingleData(string client, ByteBuffer data)
         {
+            if (data.RefCount == 0)
+            {
+                return;
+            }
+
             var mm = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.ITagManager>();
+
             byte sfun = data.ReadByte();
             switch (sfun)
             {
@@ -112,7 +118,7 @@ namespace DBRuntime.Api
                     loginId = data.ReadLong();
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
-                        Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, Runner3.CurrentDatabase + "," + Runner3.CurrentDatabaseVersion + "," + Runner3.CurrentDatabaseLastUpdateTime));
+                        Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, Runner4.CurrentDatabase + "," + Runner4.CurrentDatabaseVersion + "," + Runner4.CurrentDatabaseLastUpdateTime));
                     }
                     break;
                 case SyncRealTagConfig:
@@ -136,9 +142,12 @@ namespace DBRuntime.Api
                     loginId = data.ReadLong();
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
-                        var vss = (Cdy.Tag.ServiceLocator.Locator.Resolve<IHisTagQuery>() as HisEnginer3).HisTagManager.SeriseToStream();
+                        var vss = (Cdy.Tag.ServiceLocator.Locator.Resolve<IHisTagQuery>() as HisEnginer4).HisTagManager.SeriseToStream();
                         Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.SyncHisTagConfig, vss));
                     }
+                    break;
+                case Hart:
+                    //心跳不做处理
                     break;
             }
             base.ProcessSingleData(client, data);

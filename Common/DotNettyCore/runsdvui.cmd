@@ -1,2 +1,0 @@
-cd /d "C:\Users\cdy81\source\repos\mars\Common\DotNettyCore" &msbuild "DotNettyCore.csproj" /t:sdvViewer /p:configuration="Debug" /p:platform="Any CPU" /p:SolutionDir="C:\Users\cdy81\source\repos\mars" 
-exit %errorlevel% 

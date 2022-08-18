@@ -1759,7 +1759,7 @@ namespace SpiderDriver.ClientApi
         /// 设置变量的历史值
         /// </summary>
         /// <param name="id">Id</param>
-        /// <param name="values">值</param>
+        /// <param name="values">值,时间戳为UTC时间</param>
         /// <param name="timeout">超时</param>
         /// <returns></returns>
         public bool SetTagHisValue(int id, TagValueAndType values,  int timeout = 5000)
@@ -1802,7 +1802,7 @@ namespace SpiderDriver.ClientApi
         /// 设置变量的历史值
         /// </summary>
         /// <param name="id">Id</param>
-        /// <param name="values">值</param>
+        /// <param name="values">值,时间戳为UTC时间</param>
         /// <param name="timeout">超时</param>
         /// <returns></returns>
         public bool SetTagHisValue2(string tagName, TagValueAndType values)

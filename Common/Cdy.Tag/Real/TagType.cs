@@ -96,7 +96,15 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        ULongPoint3
+        ULongPoint3,
+        /// <summary>
+        /// 复合自定义类型
+        /// </summary>
+        Complex,
+        ///// <summary>
+        ///// 复合自定义类型类型
+        ///// </summary>
+        //ClassComplex
     }
 
     public static class TagTypeExtends
@@ -134,6 +142,8 @@ namespace Cdy.Tag
                     return new Cdy.Tag.ULongTag();
                 case Cdy.Tag.TagType.UShort:
                     return new Cdy.Tag.UShortTag();
+                case TagType.Complex:
+                    return new Cdy.Tag.ComplexTag();
             }
             return null;
         }

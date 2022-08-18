@@ -94,7 +94,7 @@ namespace DBRuntime.RDDC
         /// <param name="datas"></param>
         protected override void ProcessData(byte fun, ByteBuffer datas)
         {
-            datas.IncRef();
+            //datas.IncRef();
             //收到异步请求回调数据
             switch (fun)
             {
@@ -132,7 +132,7 @@ namespace DBRuntime.RDDC
             }
             finally
             {
-
+              
             }
             return null;
         }
@@ -159,7 +159,7 @@ namespace DBRuntime.RDDC
                 }
                 finally
                 {
-
+                    mWorkStateData?.UnlockAndReturn();
                 }
             }
 
@@ -188,7 +188,7 @@ namespace DBRuntime.RDDC
                 }
                 finally
                 {
-
+                    mWorkStateData?.UnlockAndReturn();
                 }
             }
             return null;
@@ -216,7 +216,7 @@ namespace DBRuntime.RDDC
                 }
                 finally
                 {
-
+                    mWorkStateData?.UnlockAndReturn();
                 }
             }
             return false;
@@ -245,7 +245,7 @@ namespace DBRuntime.RDDC
                 }
                 finally
                 {
-
+                    mWorkStateData?.UnlockAndReturn();
                 }
             }
             return false;

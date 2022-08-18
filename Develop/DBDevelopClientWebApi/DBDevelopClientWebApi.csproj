@@ -8,11 +8,12 @@
     <PackageProjectUrl>https://github.com/cdy816/mars</PackageProjectUrl>
     <Description>DBDevelop Server WebApi SDK</Description>
     <Copyright />
-    <Version>1.0.1</Version>
+    <Version>1.0.4</Version>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
   <ItemGroup>

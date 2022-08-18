@@ -1973,6 +1973,10 @@ namespace Cdy.Tag
                     }
                     else
                     {
+                        if (mDCompress.VarintMemory == null || mDCompress.VarintMemory.DataBuffer == null)
+                        {
+                            mDCompress.VarintMemory = mVarintMemory;
+                        }
                         mDCompress.CheckAndResizeTo(count);
                     }
 
@@ -1988,6 +1992,10 @@ namespace Cdy.Tag
                     }
                     else
                     {
+                        if (mFCompress.VarintMemory == null || mFCompress.VarintMemory.DataBuffer == null)
+                        {
+                            mFCompress.VarintMemory = mVarintMemory;
+                        }
                         mFCompress.CheckAndResizeTo(count);
                     }
                     cval = CompressValues<float>(source, count * tlen + sourceAddr, count, tims, type);

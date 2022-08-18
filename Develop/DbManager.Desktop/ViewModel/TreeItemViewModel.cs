@@ -105,6 +105,7 @@ namespace DBInStudio.Desktop
                     if(OnRename(oldName, value))
                     {
                         mName = value;
+                        OnRenamed();
                     }
                 }
                 OnPropertyChanged("Name");
@@ -225,7 +226,7 @@ namespace DBInStudio.Desktop
         /// <summary>
         /// 
         /// </summary>
-        public virtual string FullName { get { return Parent != null ? Parent.FullName + "." + this.Name : this.Name; } }
+        public virtual string FullName { get { return Parent != null && !string.IsNullOrEmpty(Parent.FullName)? Parent.FullName + "." + this.Name : this.Name; } }
 
         #endregion ...Properties...
 
@@ -323,6 +324,14 @@ namespace DBInStudio.Desktop
         public virtual bool OnRename(string oldName, string newName)
         {
             return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public virtual void OnRenamed()
+        {
+
         }
 
         #endregion ...Methods...

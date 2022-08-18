@@ -27,6 +27,8 @@ namespace DBInStudio.Desktop.ViewModel
         static ConvertEditViewModel()
         {
             ValueConvertManager.manager.Registor(new LinerConvert());
+            ValueConvertManager.manager.Registor(new BitConvert());
+            ValueConvertManager.manager.Registor(new StringFormatConvert());
         }
 
         /// <summary>
@@ -34,7 +36,6 @@ namespace DBInStudio.Desktop.ViewModel
         /// </summary>
         public ConvertEditViewModel()
         {
-            Init();
             DefaultWidth = 400;
             DefaultHeight = 200;
         }
@@ -66,12 +67,26 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
+      
+
         /// <summary>
         /// 
         /// </summary>
-        private void Init()
+        public void Init(Cdy.Tag.Tagbase tag)
         {
             mItems.Add(new LinearConvertViewModel() { Model = new LinerConvert() });
+            mItems.Add(new BitConvertViewModel() { Model = new BitConvert() });
+            mItems.Add(new StringFormatConvertViewModel() { Model = new StringFormatConvert() });
+
+            foreach(var vv in mItems.ToArray())
+            {
+                if(!vv.Model.SupportTag(tag))
+                {
+                    mItems.Remove(vv);
+                }
+            }
+
+            if(mItems.Count>0)
             CurrentSelectModel = mItems.First();
         }
 
@@ -101,6 +116,8 @@ namespace DBInStudio.Desktop.ViewModel
         /// 
         /// </summary>
         public string Name { get { return Model.Name; } }
+
+        public string DisplayName { get { return Res.Get(Name); } }
 
         /// <summary>
         /// 
@@ -155,6 +172,51 @@ namespace DBInStudio.Desktop.ViewModel
         }
     }
 
+    public class BitConvertViewModel : ConvertViewModel
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public byte Index
+        {
+            get
+            {
+                return (Model as BitConvert).Index;
+            }
+            set
+            {
+                var mm = Model as BitConvert;
+                if (mm.Index != value)
+                {
+                    mm.Index = value;
+                    OnPropertyChanged("Index");
+                }
+            }
+        }
 
+    }
 
+    public class StringFormatConvertViewModel : ConvertViewModel
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Format
+        {
+            get
+            {
+                return (Model as StringFormatConvert).Format;
+            }
+            set
+            {
+                var mm = Model as StringFormatConvert;
+                if (mm.Format != value)
+                {
+                    mm.Format = value;
+                    OnPropertyChanged("Format");
+                }
+            }
+        }
+
+    }
 }

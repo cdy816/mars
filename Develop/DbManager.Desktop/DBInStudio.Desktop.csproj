@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <AssemblyName>DBInStudio</AssemblyName>
     <SignAssembly>false</SignAssembly>
@@ -29,8 +29,11 @@
     <None Remove="Image\cancel.png" />
     <None Remove="Image\cancelSave.png" />
     <None Remove="Image\cellselect.png" />
+    <None Remove="Image\class.png" />
     <None Remove="Image\close.png" />
+    <None Remove="Image\codetags.png" />
     <None Remove="Image\database-add.png" />
+    <None Remove="Image\database.png" />
     <None Remove="Image\export.png" />
     <None Remove="Image\export2.png" />
     <None Remove="Image\hidden.png" />
@@ -60,6 +63,7 @@
     <None Remove="Image\stop.png" />
     <None Remove="Image\stop2.png" />
     <None Remove="Image\Switch.png" />
+    <None Remove="Image\tag.png" />
     <None Remove="Image\user.png" />
     <None Remove="Image\UserSettings.png" />
     <None Remove="Image\wait.png" />
@@ -81,16 +85,15 @@
     <Resource Include="Image\cancel.png" />
     <Resource Include="Image\cancelSave.png" />
     <Resource Include="Image\cellselect.png" />
+    <Resource Include="Image\class.png" />
     <Resource Include="Image\close.png" />
+    <Resource Include="Image\codetags.png" />
     <Resource Include="Image\database-add.png" />
+    <Resource Include="Image\database.png" />
     <Resource Include="Image\export.png" />
-    <Resource Include="Image\export2.png" />
     <Resource Include="Image\hidden.png" />
     <Resource Include="Image\huoxing.jpg" />
     <Resource Include="Image\import.png" />
-    <Resource Include="Image\import2.png" />
-    <Resource Include="Image\Load.gif" />
-    <Resource Include="Image\Load2.gif" />
     <Resource Include="Image\log-out.png" />
     <Resource Include="Image\max.png" />
     <Resource Include="Image\minus.png" />
@@ -111,6 +114,7 @@
     <Resource Include="Image\stop.png" />
     <Resource Include="Image\stop2.png" />
     <Resource Include="Image\Switch.png" />
+    <Resource Include="Image\tag.png" />
     <Resource Include="Image\user.png" />
     <Resource Include="Image\UserSettings.png" />
     <Resource Include="Image\wait.png" />
@@ -129,6 +133,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -140,6 +149,26 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="View\StringFormatConvertView.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="View\BitConvertView.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+    </Page>
+    <Page Update="View\TagClassDetailView.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+    </Page>
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

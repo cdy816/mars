@@ -16,6 +16,7 @@ using Cdy.Tag;
 using System.Runtime.InteropServices;
 using Cheetah;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DBHighApi.Api
 {
@@ -68,6 +69,16 @@ namespace DBHighApi.Api
 
         //
         public const byte RequestFindNumberTagMinValue = 10;
+
+        /// <summary>
+        /// 修改历史数据
+        /// </summary>
+        public const byte ModifyHisData = 16;
+
+        /// <summary>
+        /// 删除历史数据
+        /// </summary>
+        public const byte DeleteHisData = 17;
 
         #endregion ...Variables...
 
@@ -138,6 +149,12 @@ namespace DBHighApi.Api
                     case RequestCalTagValueKeepTime:
                         ProcessCalTagValueKeepTime(client, data);
                         break;
+                    case ModifyHisData:
+                         ProcessModifyHisData(client, data);
+                        break;
+                    case DeleteHisData:
+                        ProcessDeleteHisData(client, data);
+                        break;
                 }
             }
             else
@@ -181,9 +198,21 @@ namespace DBHighApi.Api
             DateTime eTime = new DateTime(data.ReadLong());
 
             ByteBuffer re  = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryAllHisValue(id, sTime, eTime);
-            re.UnLock();
-            Parent.AsyncCallback(clientId, re);
-            
+
+            if (re != null)
+            {
+                var ree = Parent.Allocate(ApiFunConst.HisDataRequestFun, (int)(re.WriteIndex));
+                int icount = (int)(re.WriteIndex - re.ReadIndex);
+                re.CopyTo(ree, re.ReadIndex, 1, icount);
+                re.UnlockAndReturn();
+                ree.WriteIndex += icount;
+                Parent.AsyncCallback(clientId, ree);
+            }
+            else
+            {
+                var ree = Parent.Allocate(ApiFunConst.HisDataRequestFun, 1);
+                Parent.AsyncCallback(clientId, ree);
+            }
         }
 
         /// <summary>
@@ -198,8 +227,23 @@ namespace DBHighApi.Api
             DateTime eTime = new DateTime(data.ReadLong());
 
             ByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryStatisticsHisValueByMemory(id, sTime, eTime);
-            re.UnLock();
-            Parent.AsyncCallback(clientId, re);
+            //re.UnLock();
+            //Parent.AsyncCallback(clientId, re);
+
+            if (re != null)
+            {
+                var ree = Parent.Allocate(ApiFunConst.HisDataRequestFun, (int)(re.WriteIndex));
+                int icount = (int)(re.WriteIndex - re.ReadIndex);
+                re.CopyTo(ree, re.ReadIndex, 1, icount);
+                re.UnlockAndReturn();
+                ree.WriteIndex += icount;
+                Parent.AsyncCallback(clientId, ree);
+            }
+            else
+            {
+                var ree = Parent.Allocate(ApiFunConst.HisDataRequestFun, 1);
+                Parent.AsyncCallback(clientId, ree);
+            }
         }
 
         /// <summary>
@@ -218,8 +262,23 @@ namespace DBHighApi.Api
                 times.Add(new DateTime(data.ReadLong()));
             }
             ByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData(id, times, type);
-            re.UnLock();
-            Parent.AsyncCallback(clientId, re);
+
+            if (re != null)
+            {
+                var ree = Parent.Allocate(ApiFunConst.HisDataRequestFun, (int)(re.WriteIndex));
+                int icount = (int)(re.WriteIndex - re.ReadIndex);
+                re.CopyTo(ree, re.ReadIndex, 1, icount);
+                re.UnlockAndReturn();
+                ree.WriteIndex += icount;
+                Parent.AsyncCallback(clientId, ree);
+            }
+            else
+            {
+                var ree = Parent.Allocate(ApiFunConst.HisDataRequestFun, 1);
+                Parent.AsyncCallback(clientId, ree);
+            }
+            //re.UnLock();
+            //Parent.AsyncCallback(clientId, re);
         }
 
         /// <summary>
@@ -237,8 +296,23 @@ namespace DBHighApi.Api
                 times.Add(new DateTime(data.ReadLong()));
             }
             ByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryStatisticsHisDataByMemory(id, times);
-            re.UnLock();
-            Parent.AsyncCallback(clientId, re);
+
+            if (re != null)
+            {
+                var ree = Parent.Allocate(ApiFunConst.HisDataRequestFun, (int)(re.WriteIndex));
+                int icount = (int)(re.WriteIndex - re.ReadIndex);
+                re.CopyTo(ree, re.ReadIndex, 1, icount);
+                re.UnlockAndReturn();
+                ree.WriteIndex += icount;
+                Parent.AsyncCallback(clientId, ree);
+            }
+            else
+            {
+                var ree = Parent.Allocate(ApiFunConst.HisDataRequestFun, 1);
+                Parent.AsyncCallback(clientId, ree);
+            }
+            //re.UnLock();
+            //Parent.AsyncCallback(clientId, re);
         }
 
         /// <summary>
@@ -255,8 +329,22 @@ namespace DBHighApi.Api
             TimeSpan ts = new TimeSpan(data.ReadLong());
 
             ByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisData(id, stime,etime,ts, type);
-            re.UnLock();
-            Parent.AsyncCallback(clientId, re);
+            //re.UnLock();
+            //Parent.AsyncCallback(clientId, re);
+            if (re != null)
+            {
+                var ree = Parent.Allocate(ApiFunConst.HisDataRequestFun, (int)(re.WriteIndex));
+                int icount = (int)(re.WriteIndex - re.ReadIndex);
+                re.CopyTo(ree, re.ReadIndex, 1, icount);
+                re.UnlockAndReturn();
+                ree.WriteIndex += icount;
+                Parent.AsyncCallback(clientId, ree);
+            }
+            else
+            {
+                var ree = Parent.Allocate(ApiFunConst.HisDataRequestFun, 1);
+                Parent.AsyncCallback(clientId, ree);
+            }
         }
 
 
@@ -572,6 +660,8 @@ namespace DBHighApi.Api
             Parent.AsyncCallback(clientId, re);
         }
 
+        
+
         /// <summary>
         /// 
         /// </summary>
@@ -716,6 +806,171 @@ namespace DBHighApi.Api
             }
             Parent.AsyncCallback(clientId, re);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="data"></param>
+        public unsafe void ProcessModifyHisData(string clientId, ByteBuffer data)
+        {
+            int id = data.ReadInt();
+            string user = data.ReadString();
+            string msg = data.ReadString();
+            TagType tp = (TagType)data.ReadByte();
+            int count = data.ReadInt();
+            List<TagHisValue<object>> values = new List<TagHisValue<object>>();
+
+            switch (tp)
+            {
+                case TagType.Bool:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add( new TagHisValue<object>() { Time = data.ReadDateTime(), Value = data.ReadByte() > 0, Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.Byte:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = data.ReadByte(), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.UShort:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = data.ReadUShort(), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.Short:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = data.ReadShort(), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.Int:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = data.ReadInt(), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.UInt:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = data.ReadUInt(), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.Long:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = data.ReadLong(), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.ULong:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = data.ReadULong(), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.Double:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = data.ReadDouble(), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.Float:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = data.ReadFloat(), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.String:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = data.ReadString(), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.DateTime:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = data.ReadDateTime(), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.IntPoint:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = new IntPointData(data.ReadInt(), data.ReadInt()), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.UIntPoint:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = new UIntPointData(data.ReadUInt(), data.ReadUInt()), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.IntPoint3:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = new IntPoint3Data(data.ReadInt(), data.ReadInt(), data.ReadInt()), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.UIntPoint3:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = new UIntPoint3Data(data.ReadUInt(), data.ReadUInt(), data.ReadUInt()), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.LongPoint:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = new LongPointData(data.ReadLong(), data.ReadLong()), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.LongPoint3:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = new LongPoint3Data(data.ReadLong(), data.ReadLong(), data.ReadLong()), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.ULongPoint:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = new ULongPointData(data.ReadULong(), data.ReadULong()), Quality = data.ReadByte() });
+                    }
+                    break;
+                case TagType.ULongPoint3:
+                    for (int i = 0; i < count; i++)
+                    {
+                        values.Add(new TagHisValue<object>() { Time = data.ReadDateTime(), Value = new ULongPoint3Data(data.ReadULong(), data.ReadULong(), data.ReadULong()), Quality = data.ReadByte() });
+                        // hp.AppendPatchValue(data.ReadDateTime(), new ULongPoint3Data(data.ReadULong(), data.ReadULong(), data.ReadULong()), data.ReadByte());
+                    }
+                    break;
+            }
+
+
+            bool bval = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.ModifyHisValue(id,tp,user,msg,values);
+            ByteBuffer re = Parent.Allocate(ApiFunConst.HisDataRequestFun, 20);
+            re.Write((byte)ModifyHisData);
+            re.WriteByte((bval) ? (byte)1 : (byte)0);
+
+            Parent.AsyncCallback(clientId, re);
+
+        }
+
+
+        public unsafe void ProcessDeleteHisData(string clientId, ByteBuffer data)
+        {
+            int id = data.ReadInt();
+            string user = data.ReadString();
+            string msg = data.ReadString();
+            DateTime stime =data.ReadDateTime();
+            DateTime etime =data.ReadDateTime();
+            bool bval = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.DeleteHisValue(id,  user, msg, stime,etime);
+            ByteBuffer re = Parent.Allocate(ApiFunConst.HisDataRequestFun, 20);
+            re.Write((byte)DeleteHisData);
+            re.WriteByte((bval) ? (byte)1 : (byte)0);
+            Parent.AsyncCallback(clientId, re);
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

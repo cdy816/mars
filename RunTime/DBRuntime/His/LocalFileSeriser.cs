@@ -504,11 +504,6 @@ namespace Cdy.Tag
         public override void Dispose()
         {
             Close();
-            if(mStream!=null)
-            {
-                mStream.DisposeAsync();
-                mStream = null;
-            }
         }
 
         /// <summary>
@@ -708,6 +703,17 @@ namespace Cdy.Tag
             return mStream != null;
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="buffer"></param>
+        /// <param name="bufferStart"></param>
+        /// <param name="len"></param>
+        public override void ReadBytes(long start, byte[] buffer, int bufferStart, int len)
+        {
+            mStream.Position = start;
+            mStream.Read(buffer, bufferStart, len);
+        }
     }
 }

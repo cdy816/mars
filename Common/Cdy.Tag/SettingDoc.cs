@@ -38,6 +38,32 @@ namespace Cdy.Tag
         /// </summary>
         public int RealDataServerPort { get; set; } = 14330;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool EnableWebApi { get; set; } = true;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool EnableGrpcApi { get; set; } = false;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool EnableHighApi { get; set; } = false;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool EnableOpcServer { get; set; } = false;
+
+
+        /// <summary>
+        /// 历史数据工作模式
+        /// </summary>
+        public HisWorkMode HisWorkMode { get; set; } = HisWorkMode.Initiative;
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -47,5 +73,19 @@ namespace Cdy.Tag
         #region ... Interfaces ...
 
         #endregion ...Interfaces...
+    }
+    /// <summary>
+    /// 工作模式
+    /// </summary>
+    public enum HisWorkMode
+    {
+        /// <summary>
+        /// 主动
+        /// </summary>
+        Initiative,
+        /// <summary>
+        /// 被动
+        /// </summary>
+        Passive
     }
 }

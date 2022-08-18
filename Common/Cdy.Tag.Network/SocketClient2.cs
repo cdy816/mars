@@ -119,7 +119,14 @@ namespace Cdy.Tag
             if(data.WriteIndex>data.ReadIndex)
             {
                 byte fun = data.ReadByte();
-                ProcessData(fun, data);
+                try
+                {
+                    ProcessData(fun, data);
+                }
+                catch(Exception ex)
+                {
+                    LoggerService.Service.Info("SocketClient", $"{ex.Message}");
+                }
             }
         }
 

@@ -56,6 +56,18 @@ namespace Cdy.Tag
         }
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="data"></param>
+        public ProtoMemory(byte[] data,int offset)
+        {
+            mDataBuffer = data;
+            //position = 0;
+            outputStream = new Google.Protobuf.CodedOutputStream(mDataBuffer);
+            inputStream = new Google.Protobuf.CodedInputStream(mDataBuffer,offset,mDataBuffer.Length-offset);
+        }
+
         #endregion ...Constructor...
 
         #region ... Properties ...

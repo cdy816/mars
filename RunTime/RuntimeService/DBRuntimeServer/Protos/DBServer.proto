@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+option csharp_namespace = "DBRuntimeServer";
+
+package DBRuntimeServer;
+
+// The DBServer service definition.
+service DBServer {
+  
+	rpc ListDatabase(CommonRequest) returns (ListDatabaseResponse);
+
+	rpc CheckDatabaseIsRunning(DatabaseCommonRequest) returns (CheckDatabaseIsRunningResponse);
+
+	rpc CheckApiIsRunning(DatabaseApiRequest) returns (CheckDatabaseIsRunningResponse);
+
+	rpc GetDatabseSetting(DatabaseCommonRequest) returns (GetDatabseSettingResponse);
+
+	rpc GetDisk(DatabaseCommonRequest) returns (GetDiskResponse);
+
+	rpc StartDatabse(DatabaseCommonRequest) returns (StartDatabseResponse);
+
+	rpc HotStartDatabse(DatabaseCommonRequest) returns (StartDatabseResponse);
+
+	rpc StopDatabse(DatabaseCommonRequest) returns (StartDatabseResponse);
+}
+
+message CommonRequest
+{
+	string Token=1;
+}
+
+//
+message ListDatabaseResponse
+{
+	repeated string Databases=1;
+}
+
+message DatabaseCommonRequest
+{
+	string Token=1;
+	string Database=2;
+}
+
+message DatabaseApiRequest
+{
+	string Token=1;
+	string Database=2;
+	string Api=3;
+}
+
+//
+message CheckDatabaseIsRunningResponse
+{
+	bool IsRunning=1;
+}
+
+message GetDatabseSettingResponse
+{
+	repeated ApiInfo Apis=1;
+	bool Result=2;
+}
+
+message StartDatabseResponse
+{
+	bool Result=1;
+}
+
+message ApiInfo
+{
+	string Name=1;
+	int32 Port=2;
+}
+
+message GetDiskResponse
+{
+	repeated DiskInfo Disks=1;
+	bool Result=2;
+}
+
+message DiskInfo
+{
+	string Label=1;
+	string Total=2;
+	string Used=3;
+	string UsedFor=5;
+}
+

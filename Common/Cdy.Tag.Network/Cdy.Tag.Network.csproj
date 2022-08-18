@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cheetah" Version="0.7.2" />
+    <PackageReference Include="Cheetah" Version="0.7.8" />
   </ItemGroup>
 
   <ItemGroup>

@@ -88,7 +88,8 @@ namespace DBHighApi
             }
             else
             {
-                DataService.Service.Stop();
+                DataService.Service.Pause(true);
+                //DataService.Service.Stop();
             }
         }
 

@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "DBRuntimeServer": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\cdy81\\Dev\\Gitee\\Output\\DBGuardian.exe"
+    }
+  }
+}

@@ -632,6 +632,12 @@ namespace Cdy.Tag.Driver
         void SetTagQuality(Tagbase tag, byte quality, DateTime time);
         #endregion
 
+        /// <summary>
+        /// 通过变量的连接地址匹配指定字符串获取变量实例
+        /// </summary>
+        /// <param name="address">连接地址</param>
+        /// <returns></returns>
+        List<Tagbase> GetTagByLinkAddressStartHeadString(string address);
 
         /// <summary>
         /// 通过变量的连接地址获取变量实例
@@ -646,6 +652,13 @@ namespace Cdy.Tag.Driver
         /// <param name="address">连接地址</param>
         /// <returns></returns>
         List<int> GetTagIdsByLinkAddress(string address);
+
+        /// <summary>
+        /// 根据变量的名称获取ID
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        List<int?> GetTagIdByName(List<string> name);
 
         /// <summary>
         /// 通过变量ID获取变量实例

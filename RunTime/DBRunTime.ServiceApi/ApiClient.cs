@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -137,6 +138,24 @@ namespace DBRunTime.ServiceApi
 
 
         public const byte AysncReturn = byte.MaxValue;
+
+
+        public const byte Hart = byte.MaxValue;
+
+
+        /// <summary>
+        /// 修改历史数据
+        /// </summary>
+        public const byte ModifyHisData = 6;
+
+        /// <summary>
+        /// 删除历史数据
+        /// </summary>
+        public const byte DeleteHisData = 7;
+
+        public const byte SetRealDataToLastData = 120;
+
+        public const byte RequestComplexTagRealValue = 14;
     }
 
     public class ApiClient : SocketClient2
@@ -154,21 +173,27 @@ namespace DBRunTime.ServiceApi
 
         //private ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
 
-        private ByteBuffer mHisRequreData;
+        //private ByteBuffer mHisRequreData;
 
         private ManualResetEvent realRequreEvent = new ManualResetEvent(false);
 
         private ManualResetEvent realSetRequreEvent = new ManualResetEvent(false);
 
+        private ManualResetEvent realResetRequreEvent = new ManualResetEvent(false);
+
         private ByteBuffer mRealRequreData;
 
         private ByteBuffer mRealSetResponseData;
+
+        private ByteBuffer mRealResetResponseData;
 
         private object mHisDataLock = new object();
 
         private object mRealDataLock = new object();
 
         private object mRealSetDataLock = new object();
+
+        private object mRealResetDataLock = new object();
 
         private object mLoginLock = new object();
 
@@ -180,6 +205,10 @@ namespace DBRunTime.ServiceApi
         public delegate void ProcessDataPushDelegate(ByteBuffer datas);
 
         private int mHisRequreCount = 0;
+
+        private int mRealRequerCount = 0;
+
+        private object mRealDataLocker = new object();
 
         #endregion ...Variables...
 
@@ -215,6 +244,8 @@ namespace DBRunTime.ServiceApi
 
         public Dictionary<int, Action<ByteBuffer>> mHisDataCallBack = new Dictionary<int, Action<ByteBuffer>>();
 
+        public Dictionary<int, Action<ByteBuffer>> mRealDataCallBack = new Dictionary<int,Action<ByteBuffer>>();
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -239,14 +270,23 @@ namespace DBRunTime.ServiceApi
         /// <param name="datas"></param>
         protected override void ProcessData(byte fun, Cheetah.ByteBuffer datas)
         {
-
+            //LoggerService.Service.Warn("ApiClient", $"收到服务器数据 {fun} 数据大小:{datas.ReadableCount}");
             if (fun == ApiFunConst.RealDataPushFun)
             {
+                //Stopwatch sw = Stopwatch.StartNew();
+                //sw.Start();
                 ProcessDataPush?.Invoke(datas);
+                //sw.Stop();
+                
+                //if(sw.ElapsedMilliseconds > 100)
+                //{
+                //    LoggerService.Service.Warn("ApiClient", $"数据推送处理耗时{sw.ElapsedMilliseconds}");
+                //}
             }
             else if (fun == ApiFunConst.AysncReturn)
             {
                 //收到异步请求回调数据
+                datas.UnlockAndReturn();
                 return;
             }
             else
@@ -258,16 +298,22 @@ namespace DBRunTime.ServiceApi
                         mInfoRequreData?.UnlockAndReturn();
                         mInfoRequreData = datas;
                         infoRequreEvent.Set();
+                        //LoggerService.Service.Info("",$" 收到Info数据ID {mInfoRequreData.Id}");
                         break;
                     case ApiFunConst.RealDataRequestFun:
-                        mRealRequreData?.UnlockAndReturn();
-                        mRealRequreData = datas;
-                        this.realRequreEvent.Set();
+                    case ApiFunConst.RequestComplexTagRealValue:
+                        var rid = datas.ReadInt();
+                        ProcessRealDataCallBack(rid, datas);
                         break;
                     case ApiFunConst.RealDataSetFun:
                         mRealSetResponseData?.UnlockAndReturn();
                         mRealSetResponseData = datas;
                         this.realSetRequreEvent.Set();
+                        break;
+                    case ApiFunConst.SetRealDataToLastData:
+                        mRealResetResponseData?.UnlockAndReturn();
+                        mRealResetResponseData = datas;
+                        realResetRequreEvent.Set();
                         break;
                     case ApiFunConst.HisDataRequestFun:
                         //mHisRequreData?.UnlockAndReturn();
@@ -296,6 +342,7 @@ namespace DBRunTime.ServiceApi
                         ProcessTagInfoNotify(datas);
                         break;
                     default:
+                        datas?.UnlockAndReturn();
                         Debug.Print("DbClient ProcessData Invailed data");
                         break;
                 }
@@ -320,6 +367,35 @@ namespace DBRunTime.ServiceApi
                 {
                     mHisRequreData.UnlockAndReturn();
                 }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="mHisRequreData"></param>
+        private void ProcessRealDataCallBack(int id, ByteBuffer mHisRequreData)
+        {
+            Stopwatch sw = Stopwatch.StartNew();
+            sw.Start();
+            lock (mRealDataCallBack)
+            {
+                if (mRealDataCallBack.ContainsKey(id))
+                {
+                    mRealDataCallBack[id].Invoke(mHisRequreData);
+                    mRealDataCallBack.Remove(id);
+                }
+                else
+                {
+                    mHisRequreData.UnlockAndReturn();
+                }
+            }
+            sw.Stop();
+
+            if (sw.ElapsedMilliseconds > 100)
+            {
+                LoggerService.Service.Warn("ApiClient", $"ProcessRealDataCallBack 处理耗时： {sw.ElapsedMilliseconds}");
             }
         }
 
@@ -355,8 +431,14 @@ namespace DBRunTime.ServiceApi
 
             lock (mLoginLock)
             {
-                if (IsLogin) return true;
+                LoggerService.Service.Info("Api Client", "Login");
 
+                if (IsLogin) return true;
+                if(mInfoRequreData!=null)
+                {
+                    mInfoRequreData.UnlockAndReturn();
+                    mInfoRequreData = null;
+                }
                 mUser = username;
                 mPass = password;
                 int size = username.Length + password.Length + 9;
@@ -364,25 +446,54 @@ namespace DBRunTime.ServiceApi
                 mb.Write(ApiFunConst.Login);
                 mb.Write(username);
                 mb.Write(password);
-                SendData(mb);
-                if (infoRequreEvent.WaitOne(timeount) && mInfoRequreData != null && (mInfoRequreData.WriteIndex - mInfoRequreData.ReadIndex) > 4)
-                {
 
-                    try
+                infoRequreEvent.Reset();
+                SendData(mb);
+
+                if (infoRequreEvent.WaitOne(timeount))
+                {
+                    if (mInfoRequreData != null && (mInfoRequreData.WriteIndex - mInfoRequreData.ReadIndex) > 4)
                     {
-                        LoginId = mInfoRequreData.ReadLong();
-                        return IsLogin;
+                        try
+                        {
+                            LoginId = mInfoRequreData.ReadLong();
+                            return IsLogin;
+                        }
+                        finally
+                        {
+                            mInfoRequreData?.UnlockAndReturn();
+                            mInfoRequreData = null;
+                        }
                     }
-                    finally
+                    else
                     {
-                        mInfoRequreData?.UnlockAndReturn();
+                        LoggerService.Service.Info("ApiClient", $"登录数据无效!");
                     }
+                }
+                else
+                {
+                    LoggerService.Service.Info("ApiClient", $"登录超时!");
                 }
                 //mInfoRequreData?.Release();
                 LoginId = -1;
                 return IsLogin;
             }
         }
+
+        /// <summary>
+        /// 心跳处理
+        /// </summary>
+        public void Hart()
+        {
+            //LoggerService.Service.Info("Api Client", "Hart");
+            int size = 2;
+            var mb = GetBuffer(ApiFunConst.TagInfoRequest, size);
+            mb.Write(ApiFunConst.Hart);
+            mb.Write(byte.MaxValue);
+            SendData(mb);
+        }
+
+        private object mSyncLocker = new object();
 
         /// <summary>
         /// 
@@ -392,45 +503,118 @@ namespace DBRunTime.ServiceApi
         public string GetRealdatabase(int timeout = 50000)
         {
             string filename = string.Empty;
-            var mb = GetBuffer(ApiFunConst.TagInfoRequest, 1 + 9);
-            mb.Write(ApiFunConst.SyncRealTagConfig);
-            mb.Write(LoginId);
-            this.SyncDataEvent.Reset();
-            SendData(mb);
-
-            if (SyncDataEvent.WaitOne(timeout))
+            LoggerService.Service.Info("Api Client", "GetRealdatabase");
+            lock (mSyncLocker)
             {
-                try
+                if(mRealSyncData != null)
                 {
-                    if ((this.mRealSyncData.WriteIndex - mRealSyncData.ReadIndex) > 0)
+                    mRealSyncData.UnlockAndReturn();
+                    mRealSyncData = null;
+                }
+
+                var mb = GetBuffer(ApiFunConst.TagInfoRequest, 1 + 9);
+                mb.Write(ApiFunConst.SyncRealTagConfig);
+                mb.Write(LoginId);
+                this.SyncDataEvent.Reset();
+                SendData(mb);
+
+                if (SyncDataEvent.WaitOne(timeout))
+                {
+                    try
                     {
-                        try
+                        if ((this.mRealSyncData.WriteIndex - mRealSyncData.ReadIndex) > 0)
                         {
-                            System.IO.MemoryStream ms = new System.IO.MemoryStream();
+                            try
+                            {
+                                System.IO.MemoryStream ms = new System.IO.MemoryStream();
 
-                            ms.Write(this.mRealSyncData.ReadBytes((int)(this.mRealSyncData.WriteIndex - mRealSyncData.ReadIndex)));
-                            ms.Position = 0;
-                            System.IO.Compression.GZipStream gzip = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionMode.Decompress);
-                            filename = System.IO.Path.GetTempFileName();
-                            var sfile = System.IO.File.Open(filename, System.IO.FileMode.OpenOrCreate);
-                            gzip.CopyTo(sfile);
-                            sfile.Close();
+                                ms.Write(this.mRealSyncData.ReadBytes((int)(this.mRealSyncData.WriteIndex - mRealSyncData.ReadIndex)));
+                                ms.Position = 0;
+                                System.IO.Compression.GZipStream gzip = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionMode.Decompress);
+                                filename = System.IO.Path.GetTempFileName();
+                                var sfile = System.IO.File.Open(filename, System.IO.FileMode.OpenOrCreate);
+                                gzip.CopyTo(sfile);
+                                sfile.Close();
 
-                            ms.Dispose();
-                            gzip.Dispose();
-                            return filename;
+                                ms.Dispose();
+                                gzip.Dispose();
+                                return filename;
+                            }
+                            catch (Exception ex)
+                            {
+                                LoggerService.Service.Warn("ApiClient", "GetRealdatabase: " + ex.Message + "  " + ex.StackTrace);
+                            }
+
                         }
-                        catch
-                        {
-
-                        }
-
+                    }
+                    finally
+                    {
+                        mRealSyncData?.UnlockAndReturn();
+                        mRealSyncData = null;
                     }
                 }
-                finally
+            }
+
+            return filename;
+        }
+
+        /// <summary>
+        /// 获取历史数据库配置
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public string GetHisdatabase(int timeout = 50000)
+        {
+            string filename = string.Empty;
+            LoggerService.Service.Info("Api Client", "GetHisdatabase");
+            lock (mSyncLocker)
+            {
+                if (mRealSyncData != null)
                 {
-                    mRealSyncData?.UnlockAndReturn();
+                    mRealSyncData.UnlockAndReturn();
                     mRealSyncData = null;
+                }
+
+                var mb = GetBuffer(ApiFunConst.TagInfoRequest, 1 + 9);
+                mb.Write(ApiFunConst.SyncHisTagConfig);
+                mb.Write(LoginId);
+                this.SyncDataEvent.Reset();
+                SendData(mb);
+
+                if (SyncDataEvent.WaitOne(timeout))
+                {
+                    try
+                    {
+                        if ((this.mRealSyncData.WriteIndex - mRealSyncData.ReadIndex) > 0)
+                        {
+                            try
+                            {
+                                System.IO.MemoryStream ms = new System.IO.MemoryStream();
+
+                                ms.Write(this.mRealSyncData.ReadBytes((int)(this.mRealSyncData.WriteIndex - mRealSyncData.ReadIndex)));
+                                ms.Position = 0;
+                                System.IO.Compression.GZipStream gzip = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionMode.Decompress);
+                                filename = System.IO.Path.GetTempFileName();
+                                var sfile = System.IO.File.Open(filename, System.IO.FileMode.OpenOrCreate);
+                                gzip.CopyTo(sfile);
+                                sfile.Close();
+
+                                ms.Dispose();
+                                gzip.Dispose();
+                                return filename;
+                            }
+                            catch(Exception ex)
+                            {
+                                LoggerService.Service.Warn("ApiClient", "GetHisdatabase: " + ex.Message+"  "+ex.StackTrace);
+                            }
+
+                        }
+                    }
+                    finally
+                    {
+                        mRealSyncData?.UnlockAndReturn();
+                        mRealSyncData = null;
+                    }
                 }
             }
 
@@ -445,46 +629,56 @@ namespace DBRunTime.ServiceApi
         public string GetSecuritySetting(int timeout = 50000)
         {
             string filename = string.Empty;
-            var mb = GetBuffer(ApiFunConst.TagInfoRequest, 1 + 9);
-            mb.Write(ApiFunConst.SyncSecuritySetting);
-            mb.Write(LoginId);
-            this.SyncDataEvent.Reset();
-            SendData(mb);
-
-            if (SyncDataEvent.WaitOne(timeout))
+            LoggerService.Service.Info("Api Client", "GetSecuritySetting");
+            lock (mSyncLocker)
             {
-                try
+                if (mRealSyncData != null)
                 {
-                    if (this.mRealSyncData.WriteIndex - mRealSyncData.ReadIndex > 0)
-                    {
-                        try
-                        {
-                            System.IO.MemoryStream ms = new System.IO.MemoryStream();
-
-                            ms.Write(this.mRealSyncData.ReadBytes((int)(this.mRealSyncData.WriteIndex - mRealSyncData.ReadIndex)));
-                            ms.Position = 0;
-                            System.IO.Compression.GZipStream gzip = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionMode.Decompress);
-                            filename = System.IO.Path.GetTempFileName();
-                            var sfile = System.IO.File.Open(filename, System.IO.FileMode.OpenOrCreate);
-                            gzip.CopyTo(sfile);
-                            sfile.Close();
-
-                            ms.Dispose();
-                            gzip.Dispose();
-                            return filename;
-                        }
-                        catch
-                        {
-
-                        }
-                    }
-                }
-                finally
-                {
-                    mRealSyncData?.UnlockAndReturn();
+                    mRealSyncData.UnlockAndReturn();
                     mRealSyncData = null;
                 }
 
+                var mb = GetBuffer(ApiFunConst.TagInfoRequest, 1 + 9);
+                mb.Write(ApiFunConst.SyncSecuritySetting);
+                mb.Write(LoginId);
+                this.SyncDataEvent.Reset();
+                SendData(mb);
+
+                if (SyncDataEvent.WaitOne(timeout))
+                {
+                    try
+                    {
+                        if (this.mRealSyncData.WriteIndex - mRealSyncData.ReadIndex > 0)
+                        {
+                            try
+                            {
+                                System.IO.MemoryStream ms = new System.IO.MemoryStream();
+
+                                ms.Write(this.mRealSyncData.ReadBytes((int)(this.mRealSyncData.WriteIndex - mRealSyncData.ReadIndex)));
+                                ms.Position = 0;
+                                System.IO.Compression.GZipStream gzip = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionMode.Decompress);
+                                filename = System.IO.Path.GetTempFileName();
+                                var sfile = System.IO.File.Open(filename, System.IO.FileMode.OpenOrCreate);
+                                gzip.CopyTo(sfile);
+                                sfile.Close();
+
+                                ms.Dispose();
+                                gzip.Dispose();
+                                return filename;
+                            }
+                            catch (Exception ex)
+                            {
+                                LoggerService.Service.Warn("ApiClient", "GetSecuritySetting: " + ex.Message + "  " + ex.StackTrace);
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        mRealSyncData?.UnlockAndReturn();
+                        mRealSyncData = null;
+                    }
+
+                }
             }
             return filename;
         }
@@ -498,27 +692,42 @@ namespace DBRunTime.ServiceApi
         public Dictionary<string, int> GetTagIds(List<string> tagNames, int timeout = 5000)
         {
             Dictionary<string, int> re = new Dictionary<string, int>();
-
-            var mb = GetBuffer(ApiFunConst.TagInfoRequest, tagNames.Count * 24 + 1 + 9);
-            mb.Write(ApiFunConst.GetTagIdByNameFun);
-            mb.Write(LoginId);
-            mb.Write(tagNames.Count);
-            foreach (var vv in tagNames)
+            LoggerService.Service.Info("Api Client", "GetTagIds");
+            lock (mLoginLock)
             {
-                mb.Write(vv);
-            }
-            infoRequreEvent.Reset();
-            SendData(mb);
-
-            if (infoRequreEvent.WaitOne(timeout))
-            {
-                for (int i = 0; i < tagNames.Count; i++)
+                if (mInfoRequreData != null)
                 {
-                    if (mInfoRequreData.WriteIndex - mInfoRequreData.ReadIndex > 0)
-                        re.Add(tagNames[i], mInfoRequreData.ReadInt());
+                    mInfoRequreData.UnlockAndReturn();
+                    mInfoRequreData = null;
                 }
-                mInfoRequreData?.UnlockAndReturn();
-                mInfoRequreData = null;
+
+                var mb = GetBuffer(ApiFunConst.TagInfoRequest, tagNames.Count * 24 + 1 + 9);
+                mb.Write(ApiFunConst.GetTagIdByNameFun);
+                mb.Write(LoginId);
+                mb.Write(tagNames.Count);
+                foreach (var vv in tagNames)
+                {
+                    mb.Write(vv);
+                }
+                infoRequreEvent.Reset();
+                SendData(mb);
+
+                if (infoRequreEvent.WaitOne(timeout))
+                {
+                    try
+                    {
+                        for (int i = 0; i < tagNames.Count; i++)
+                        {
+                            if (mInfoRequreData.WriteIndex - mInfoRequreData.ReadIndex > 0)
+                                re.Add(tagNames[i], mInfoRequreData.ReadInt());
+                        }
+                    }
+                    finally
+                    {
+                        mInfoRequreData?.UnlockAndReturn();
+                        mInfoRequreData = null;
+                    }
+                }
             }
 
             return re;
@@ -532,30 +741,44 @@ namespace DBRunTime.ServiceApi
         /// <returns></returns>
         public string GetRunnerDatabase(int timeout = 5000)
         {
-            CheckLogin();
-            if (IsLogin)
+            LoggerService.Service.Info("Api Client", "GetRunnerDatabase");
+
+            if (!CheckLogin()) return String.Empty;
+            lock (mLoginLock)
             {
-                var mb = GetBuffer(ApiFunConst.TagInfoRequest, 8 + 1);
-                mb.Write(ApiFunConst.GetRunnerDatabase);
-                mb.Write(LoginId);
-                infoRequreEvent.Reset();
-                SendData(mb);
-
-                if (infoRequreEvent.WaitOne(timeout))
+                if (mInfoRequreData != null)
                 {
-                    try
-                    {
-                        return mInfoRequreData.ReadString();
-                    }
-                    finally
-                    {
-                        mInfoRequreData.UnlockAndReturn();
-                        mInfoRequreData = null;
-                    }
+                    mInfoRequreData.UnlockAndReturn();
+                    mInfoRequreData = null;
+                }
 
+                if (IsLogin)
+                {
+                    var mb = GetBuffer(ApiFunConst.TagInfoRequest, 8 + 1);
+                    mb.Write(ApiFunConst.GetRunnerDatabase);
+                    mb.Write(LoginId);
+                    infoRequreEvent.Reset();
+                    SendData(mb);
+
+                    if (infoRequreEvent.WaitOne(timeout))
+                    {
+                        try
+                        {
+                            return mInfoRequreData.ReadString();
+                        }
+                        catch(Exception ex)
+                        {
+                            LoggerService.Service.Info("Api Client", $"GetRunnerDatabase {mInfoRequreData.Id} {ex.Message}");
+                        }
+                        finally
+                        {
+                            mInfoRequreData.UnlockAndReturn();
+                            mInfoRequreData = null;
+                        }
+
+                    }
                 }
             }
-
             return string.Empty;
         }
 
@@ -575,12 +798,13 @@ namespace DBRunTime.ServiceApi
         {
             lock (mRealDataLock)
             {
-                CheckLogin();
+                if (!CheckLogin()) return false;
                 var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
                 mb.Write(ApiFunConst.RegistorValueCallback);
                 mb.Write(this.LoginId);
                 mb.Write(minid);
                 mb.Write(maxid);
+                
                 this.realRequreEvent.Reset();
                 SendData(mb);
 
@@ -597,8 +821,53 @@ namespace DBRunTime.ServiceApi
                     }
                 }
             }
-            return true;
+            return false;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private int GetRealRequreId()
+        {
+            lock (mRealDataLock)
+            {
+                var vid = mHisRequreCount;
+                mHisRequreCount++;
+                return vid;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="callback"></param>
+        private void RegistorRealDataCallback(int id,Action<ByteBuffer> callback)
+        {
+            lock (mRealDataLock)
+            {
+                mRealDataCallBack.Add(id, callback);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="callback"></param>
+        private void UnRegistorRealDataCallback(int id)
+        {
+            lock (mRealDataLock)
+            {
+                if(mRealDataCallBack.ContainsKey(id))
+                {
+                    mRealDataCallBack.Remove(id);
+                }
+            }
+        }
+
+        //private ManualResetEvent mRegistorTagBlockValueCallBackEvent = new ManualResetEvent(false);
 
         /// <summary>
         /// 
@@ -609,29 +878,54 @@ namespace DBRunTime.ServiceApi
         {
             lock (mRealDataLock)
             {
-                CheckLogin();
-                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8);
+                if (!CheckLogin()) return false;
+
+                var vid = GetRealRequreId();
+                //ByteBuffer re=null;
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8+4);
                 mb.Write(ApiFunConst.BlockValueChangeNotify);
                 mb.Write(this.LoginId);
-                this.realRequreEvent.Reset();
-                SendData(mb);
+                mb.Write(vid);
 
-                if (realRequreEvent.WaitOne(timeout))
+                var buffer = SendAndWait(vid,mb,timeout);
+
+                if (buffer != null)
                 {
                     try
                     {
-                        return mRealRequreData.ReadByte() > 0;
+                        return buffer.ReadByte() > 0;
                     }
                     finally
                     {
-                        mRealRequreData?.UnlockAndReturn();
-                        mRealRequreData = null;
+                        buffer.UnlockAndReturn();
                     }
-
                 }
+
+                //mRegistorTagBlockValueCallBackEvent.Reset();
+                //RegistorRealDataCallback(vid, (data) => { 
+                //    re= data;
+                //    mRegistorTagBlockValueCallBackEvent.Set();
+                //});
+                ////this.realRequreEvent.Reset();
+
+                //SendData(mb);
+
+                //if (mRegistorTagBlockValueCallBackEvent.WaitOne(timeout))
+                //{
+                //    try
+                //    {
+                //        return re?.ReadByte() > 0;
+                //    }
+                //    finally
+                //    {
+                //        re?.UnlockAndReturn();
+                //        re = null;
+                //    }
+
+                //}
             }
 
-            return true;
+            return false;
         }
 
         /// <summary>
@@ -643,29 +937,57 @@ namespace DBRunTime.ServiceApi
         {
             lock (mRealDataLock)
             {
-                CheckLogin();
-                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
+                if (!CheckLogin()) return false;
+
+                var vid = GetRealRequreId();
+                ByteBuffer re = null;
+
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8+4);
                 mb.Write(ApiFunConst.ResetValueChangeNotify);
                 mb.Write(this.LoginId);
-                realRequreEvent.Reset();
-                SendData(mb);
+                mb.Write(vid);
 
-                if (realRequreEvent.WaitOne(timeout))
+                var buffer = SendAndWait(vid, mb, timeout);
+
+                if (buffer != null)
                 {
                     try
                     {
-                        return mRealRequreData.ReadByte() > 0;
+                        return buffer.ReadByte() > 0;
                     }
                     finally
                     {
-                        mRealRequreData?.UnlockAndReturn();
-                        mRealRequreData = null;
+                        buffer.UnlockAndReturn();
                     }
                 }
+
+                //mRegistorTagBlockValueCallBackEvent.Reset();
+                //RegistorRealDataCallback(vid, (data) => {
+                //    re = data;
+                //    mRegistorTagBlockValueCallBackEvent.Set();
+                //});
+
+                ////realRequreEvent.Reset();
+                //SendData(mb);
+
+                //if (mRegistorTagBlockValueCallBackEvent.WaitOne(timeout))
+                //{
+                //    try
+                //    {
+                //        return re?.ReadByte() > 0;
+                //    }
+                //    finally
+                //    {
+                //        re?.UnlockAndReturn();
+                //        re = null;
+                //    }
+                //}
             }
 
-            return true;
+            return false;
         }
+
+        
 
         /// <summary>
         /// 
@@ -675,32 +997,26 @@ namespace DBRunTime.ServiceApi
         {
             lock (mRealDataLock)
             {
-                CheckLogin();
-                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + ids.Count * 4);
+                if (!CheckLogin()) return null;
+
+                var vid = GetRealRequreId();
+
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + ids.Count * 4+4);
                 mb.Write(ApiFunConst.RequestRealData);
                 mb.Write(this.LoginId);
+                mb.Write(vid);
+
                 mb.Write(ids.Count);
+             
                 for (int i = 0; i < ids.Count; i++)
                 {
                     mb.Write(ids[i]);
                 }
-                realRequreEvent.Reset();
-                SendData(mb);
-
-                try
-                {
-                    if (realRequreEvent.WaitOne(timeout))
-                    {
-                        return mRealRequreData;
-                    }
-                }
-                finally
-                {
-                    mRealRequreData = null;
-                }
+                return SendAndWait(vid, mb, timeout);
             }
-            return null;
         }
+
+
 
         /// <summary>
         /// 
@@ -712,31 +1028,56 @@ namespace DBRunTime.ServiceApi
         {
             lock (mRealDataLock)
             {
-                CheckLogin();
-                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + ids.Count * 4);
+                if (!CheckLogin()) return null;
+                var vid = GetRealRequreId();
+
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + ids.Count * 4 + 4);
                 mb.Write(ApiFunConst.RequestRealDataByMemoryCopy);
                 mb.Write(this.LoginId);
+                mb.Write(vid);
                 mb.Write(ids.Count);
+
                 for (int i = 0; i < ids.Count; i++)
                 {
                     mb.Write(ids[i]);
                 }
-                realRequreEvent.Reset();
-                SendData(mb);
-
-                try
-                {
-                    if (realRequreEvent.WaitOne(timeout))
-                    {
-                        return mRealRequreData;
-                    }
-                }
-                finally
-                {
-                    mRealRequreData = null;
-                }
+                return SendAndWait(vid, mb, timeout);
             }
 
+        }
+
+        private ByteBuffer SendAndWait(int vid,ByteBuffer mb,int timeout)
+        {
+            ByteBuffer re=null;
+            ManualResetEvent mGetRealDataCallBackEvent = new ManualResetEvent(false);
+            try
+            {
+                RegistorRealDataCallback(vid, (data) =>
+                {
+                    re = data;
+                    if(!mGetRealDataCallBackEvent.SafeWaitHandle.IsClosed)
+                    mGetRealDataCallBackEvent.Set();
+                    else
+                    {
+                        data?.UnlockAndReturn();
+                    }
+                });
+                SendData(mb);
+
+                if (mGetRealDataCallBackEvent.WaitOne(timeout))
+                {
+                    return re;
+                }
+                else
+                {
+                    re?.UnlockAndReturn();
+                }
+            }
+            finally
+            {
+                UnRegistorRealDataCallback(vid);
+                mGetRealDataCallBackEvent.Dispose();
+            }
             return null;
         }
 
@@ -751,28 +1092,41 @@ namespace DBRunTime.ServiceApi
         {
             lock (mRealDataLock)
             {
-                CheckLogin();
-                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8);
+                if (!CheckLogin()) return null;
+
+                var vid = GetRealRequreId();
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8+4);
                 mb.Write(ApiFunConst.RequestRealData2);
                 mb.Write(this.LoginId);
+                mb.Write(vid);
                 mb.Write(ids);
                 mb.Write(ide);
-                realRequreEvent.Reset();
-                SendData(mb);
 
-                try
-                {
-                    if (realRequreEvent.WaitOne(timeout))
-                    {
-                        return mRealRequreData;
-                    }
-                }
-                finally
-                {
-                    mRealRequreData = null;
-                }
+               return SendAndWait(vid,mb,timeout);
             }
-            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public ByteBuffer GetComplexTagRealData(int ids, int timeout = 5000)
+        {
+            lock (mRealDataLock)
+            {
+                if (!CheckLogin()) return null;
+
+                var vid = GetRealRequreId();
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 8 + 4);
+                mb.Write(ApiFunConst.RequestComplexTagRealValue);
+                mb.Write(this.LoginId);
+                mb.Write(vid);
+                mb.Write(ids);
+
+                return SendAndWait(vid, mb, timeout);
+            }
         }
 
         /// <summary>
@@ -786,32 +1140,44 @@ namespace DBRunTime.ServiceApi
         {
             lock (mRealDataLock)
             {
-                CheckLogin();
+                if (!CheckLogin()) return null;
+                var vid = GetRealRequreId();
+
                 var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 4);
                 mb.Write(ApiFunConst.RealMemorySync);
                 mb.Write(this.LoginId);
+                mb.Write(vid);
                 mb.Write((endaddress - startaddress));
                 mb.Write(startaddress);
-                realRequreEvent.Reset();
-                SendData(mb);
-                if (realRequreEvent.WaitOne(timeout))
-                {
-                    if (mRealRequreData.WriteIndex - mRealRequreData.ReadIndex == (endaddress - startaddress))
-                        try
-                        {
-                            return mRealRequreData;
-                        }
-                        finally
-                        {
-                            mRealRequreData = null;
-                        }
-                    else
-                        return null;
-                }
-                else
-                {
-                    return null;
-                }
+
+                return SendAndWait(vid, mb, timeout);
+                //realRequreEvent.Reset();
+                //SendData(mb);
+                //if (realRequreEvent.WaitOne(timeout))
+                //{
+                //    if (mRealRequreData.WriteIndex - mRealRequreData.ReadIndex == (endaddress - startaddress))
+                //    {
+                //        try
+                //        {
+                //            lock (mRealDataLocker)
+                //            {
+                //                var vre = mRealRequreData;
+                //                vre.IncRef();
+                //                mRealRequreData = null;
+                //                return vre;
+                //            }
+                //        }
+                //        catch
+                //        {
+
+                //        }
+                //    }
+                //   return null;
+                //}
+                //else
+                //{
+                //    return null;
+                //}
             }
         }
 
@@ -826,30 +1192,34 @@ namespace DBRunTime.ServiceApi
         {
             lock (mRealDataLock)
             {
-                CheckLogin();
+                if (!CheckLogin()) return null;
+                var vid = GetRealRequreId();
+
                 var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + (ide - ids) * 4);
                 mb.Write(ApiFunConst.RequestRealData2ByMemoryCopy);
                 mb.Write(this.LoginId);
+                mb.Write(vid);
+
                 mb.Write(ids);
                 mb.Write(ide);
-                realRequreEvent.Reset();
-                SendData(mb);
+                return SendAndWait(vid,mb, timeout);
+                //realRequreEvent.Reset();
+                //SendData(mb);
 
-                if (realRequreEvent.WaitOne(timeout))
-                {
-                    try
-                    {
-                        return mRealRequreData;
-                    }
-                    finally
-                    {
-                        mRealRequreData = null;
-                    }
-                }
+                //if (realRequreEvent.WaitOne(timeout))
+                //{
+                //    lock (mRealDataLocker)
+                //    {
+                //        var vre = mRealRequreData;
+                //        vre.IncRef();
+                //        mRealRequreData = null;
+                //        return vre;
+                //    }
+                //}
             }
             //mRealRequreData?.ReleaseBuffer();
 
-            return null;
+            //return null;
         }
 
         /// <summary>
@@ -862,7 +1232,7 @@ namespace DBRunTime.ServiceApi
         {
             lock (mRealSetDataLock)
             {
-                CheckLogin();
+                if (!CheckLogin()) return false;
                 var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 30);
                 mb.Write(ApiFunConst.SetDataValue);
                 mb.Write(this.LoginId);
@@ -982,7 +1352,7 @@ namespace DBRunTime.ServiceApi
         {
             lock (mRealSetDataLock)
             {
-                CheckLogin();
+                if (!CheckLogin()) return false;
                 var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 30);
                 mb.Write(ApiFunConst.SetDataValue);
                 mb.Write(this.LoginId);
@@ -1085,17 +1455,61 @@ namespace DBRunTime.ServiceApi
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="valueType"></param>
+        /// <param name="value"></param>
+        public bool ResetTagToLastValue(int id, int timeout = 5000)
+        {
+            lock (mRealResetDataLock)
+            {
+                if (!CheckLogin()) return false;
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 30);
+                mb.Write(ApiFunConst.SetRealDataToLastData);
+                mb.Write(this.LoginId);
+                mb.Write(id);
+                realResetRequreEvent.Reset();
+                SendData(mb);
+
+                if (realResetRequreEvent.WaitOne(timeout))
+                {
+                    if (this.mRealResetResponseData.WriteIndex - mRealResetResponseData.ReadIndex > 0)
+                    {
+                        try
+                        {
+                            return mRealResetResponseData.ReadByte() > 0;
+                        }
+                        finally
+                        {
+                            mRealResetResponseData?.UnlockAndReturn();
+                            mRealResetResponseData = null;
+                        }
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
 
         #endregion
 
 
-        private void CheckLogin()
+        private bool CheckLogin()
         {
             if (LoginId <= 0)
             {
                 Login(mUser, mPass);
             }
+            return IsLogin;
         }
+
+
 
         #region HisData
 
@@ -1114,7 +1528,7 @@ namespace DBRunTime.ServiceApi
             {
                 vid = mHisRequreCount;
                 mHisRequreCount++;
-                CheckLogin();
+                if (!CheckLogin()) return null;
             }
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
             mb.Write(ApiFunConst.RequestAllHisData);
@@ -1188,7 +1602,7 @@ namespace DBRunTime.ServiceApi
             {
                 vid = mHisRequreCount;
                 mHisRequreCount++;
-                CheckLogin();
+                if (!CheckLogin()) return null;
             }
 
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
@@ -1261,7 +1675,7 @@ namespace DBRunTime.ServiceApi
             {
                 vid = mHisRequreCount;
                 mHisRequreCount++;
-                CheckLogin();
+                if (!CheckLogin()) return null;
             }
 
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + times.Count * 8 + 5 + 4);
@@ -1339,7 +1753,7 @@ namespace DBRunTime.ServiceApi
             {
                 vid = mHisRequreCount;
                 mHisRequreCount++;
-                CheckLogin();
+                if (!CheckLogin()) return null;
             }
 
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + times.Count * 8 + 5 + 4);
@@ -1433,7 +1847,7 @@ namespace DBRunTime.ServiceApi
             {
                 vid = mHisRequreCount;
                 mHisRequreCount++;
-                CheckLogin();
+                if (!CheckLogin()) return null;
             }
 
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 24 + 5 + 4);
@@ -1524,7 +1938,7 @@ namespace DBRunTime.ServiceApi
             {
                 vid = mHisRequreCount;
                 mHisRequreCount++;
-                CheckLogin();
+                if (!CheckLogin()) return new Tuple<DateTime, object>(DateTime.MinValue, 0);
             }
 
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
@@ -1607,7 +2021,7 @@ namespace DBRunTime.ServiceApi
             {
                 vid = mHisRequreCount;
                 mHisRequreCount++;
-                CheckLogin();
+                if (!CheckLogin()) return red;
             }
 
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
@@ -1691,7 +2105,7 @@ namespace DBRunTime.ServiceApi
             {
                 vid = mHisRequreCount;
                 mHisRequreCount++;
-                CheckLogin();
+                if (!CheckLogin()) return double.MinValue;
             }
 
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
@@ -1769,7 +2183,7 @@ namespace DBRunTime.ServiceApi
             {
                 vid = mHisRequreCount;
                 mHisRequreCount++;
-                CheckLogin();
+                if (!CheckLogin()) return new Tuple<double, List<DateTime>>(double.MinValue, red);
             }
 
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
@@ -1856,7 +2270,7 @@ namespace DBRunTime.ServiceApi
             {
                 vid = mHisRequreCount;
                 mHisRequreCount++;
-                CheckLogin();
+                if (!CheckLogin()) return double.MinValue;
             }
 
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
@@ -1934,7 +2348,7 @@ namespace DBRunTime.ServiceApi
             {
                 vid = mHisRequreCount;
                 mHisRequreCount++;
-                CheckLogin();
+                if (!CheckLogin()) return DateTime.MinValue;
             }
 
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
@@ -2025,7 +2439,7 @@ namespace DBRunTime.ServiceApi
             {
                 vid = mHisRequreCount;
                 mHisRequreCount++;
-                CheckLogin();
+                if (!CheckLogin()) return red;
             }
 
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
@@ -2120,7 +2534,7 @@ namespace DBRunTime.ServiceApi
             {
                 vid = mHisRequreCount;
                 mHisRequreCount++;
-                CheckLogin();
+                if (!CheckLogin()) return double.MinValue;
             }
 
             var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 4);
@@ -2184,6 +2598,253 @@ namespace DBRunTime.ServiceApi
                     }
                 }
                 return double.MinValue;
+            }
+            finally
+            {
+                hisRequreEvent.Dispose();
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool ModifyHisValue(int id,TagType type,string user,string msg ,IEnumerable<TagHisValue<object>> values, int timeout = 60000)
+        {
+            var vid = 0;
+            ByteBuffer re = null;
+            lock (mHisDataLock)
+            {
+                vid = mHisRequreCount;
+                mHisRequreCount++;
+                if (!CheckLogin()) return false;
+            }
+
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 13+user.Length*2+2+msg.Length*2+2+values.Count()*34+4+4+1);
+            mb.Write(ApiFunConst.ModifyHisData);
+            mb.Write(this.LoginId);
+            mb.Write(id);
+            mb.Write(user);
+            mb.Write(msg);
+            mb.Write((byte)type);
+            mb.Write(values.Count());
+            mb.Write(vid);
+
+            foreach (var vv in values)
+            {
+                mb.Write(vv.Time);
+                switch (type)
+                {
+                    case TagType.Bool:
+                        mb.Write(Convert.ToByte(Convert.ToBoolean(vv.Value)));
+                        break;
+                    case TagType.Byte:
+                        mb.Write(Convert.ToByte(vv.Value));
+                        break;
+                    case TagType.UShort:
+                        mb.Write(Convert.ToUInt16(vv.Value));
+                        break;
+                    case TagType.Short:
+                        mb.Write(Convert.ToInt16(vv.Value));
+                        break;
+                    case TagType.Int:
+                        mb.Write(Convert.ToInt32(vv.Value));
+                        break;
+                    case TagType.UInt:
+                        mb.Write(Convert.ToUInt32(vv.Value));
+                        break;
+                    case TagType.Long:
+                        mb.Write(Convert.ToInt64(vv.Value));
+                        break;
+                    case TagType.ULong:
+                        mb.Write(Convert.ToUInt64(vv.Value));
+                        break;
+                    case TagType.Double:
+                        mb.Write(Convert.ToDouble(vv.Value));
+                        break;
+                    case TagType.Float:
+                        mb.Write(Convert.ToSingle(vv.Value));
+                        break;
+                    case TagType.String:
+                        mb.Write(Convert.ToString(vv.Value));
+                        break;
+                    case TagType.DateTime:
+                        mb.Write(Convert.ToDateTime(vv.Value).Ticks);
+                        break;
+                    case TagType.IntPoint:
+                        IntPointData ip = (IntPointData)vv.Value;
+                        mb.Write(ip.X);
+                        mb.Write(ip.Y);
+                        break;
+                    case TagType.UIntPoint:
+                        UIntPointData uip = (UIntPointData)vv.Value;
+                        mb.Write(uip.X);
+                        mb.Write(uip.Y);
+                        break;
+                    case TagType.IntPoint3:
+                        IntPoint3Data ip3 = (IntPoint3Data)vv.Value;
+                        mb.Write(ip3.X);
+                        mb.Write(ip3.Y);
+                        mb.Write(ip3.Z);
+                        break;
+                    case TagType.UIntPoint3:
+                        UIntPoint3Data uip3 = (UIntPoint3Data)vv.Value;
+                        mb.Write(uip3.X);
+                        mb.Write(uip3.Y);
+                        mb.Write(uip3.Z);
+                        break;
+                    case TagType.LongPoint:
+                        LongPointData lip = (LongPointData)vv.Value;
+                        mb.Write(lip.X);
+                        mb.Write(lip.Y);
+                        break;
+                    case TagType.LongPoint3:
+                        LongPoint3Data lip3 = (LongPoint3Data)vv.Value;
+                        mb.Write(lip3.X);
+                        mb.Write(lip3.Y);
+                        mb.Write(lip3.Z);
+                        break;
+                    case TagType.ULongPoint:
+                        LongPointData ulip = (LongPointData)vv.Value;
+                        mb.Write(ulip.X);
+                        mb.Write(ulip.Y);
+                        break;
+                    case TagType.ULongPoint3:
+                        LongPoint3Data ulip3 = (LongPoint3Data)vv.Value;
+                        mb.Write(ulip3.X);
+                        mb.Write(ulip3.Y);
+                        mb.Write(ulip3.Z);
+                        break;
+                }
+                mb.WriteByte(vv.Quality);
+
+            }
+
+            ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
+            hisRequreEvent.Reset();
+
+            lock (mHisDataCallBack)
+            {
+                mHisDataCallBack.Add(vid, (data) =>
+                {
+                    re = data;
+                    try
+                    {
+                        hisRequreEvent.Set();
+                    }
+                    catch
+                    {
+                        data?.UnlockAndReturn();
+                    }
+                });
+            }
+            SendData(mb);
+            try
+            {
+                if (hisRequreEvent.WaitOne(timeout) && re != null && re.WriteIndex - re.ReadIndex > 1)
+                {
+                    return re.ReadByte()>0;
+                }
+                else
+                {
+                    lock (mHisDataCallBack)
+                    {
+                        if (mHisDataCallBack.ContainsKey(vid))
+                        {
+                            mHisDataCallBack.Remove(vid);
+                        }
+                        else
+                        {
+                            return re.ReadByte()>0;
+                        }
+                    }
+                }
+                return false;
+            }
+            finally
+            {
+                hisRequreEvent.Dispose();
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool DeleteHisValue(int id,  string user, string msg, DateTime stime,DateTime etime, int timeout = 60000)
+        {
+            var vid = 0;
+            ByteBuffer re = null;
+            lock (mHisDataLock)
+            {
+                vid = mHisRequreCount;
+                mHisRequreCount++;
+                if (!CheckLogin()) return false;
+            }
+
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 13 + user.Length * 2 + 2 + msg.Length * 2 + 2 + 16+ 4 + 4 + 1);
+            mb.Write(ApiFunConst.DeleteHisData);
+            mb.Write(this.LoginId);
+            mb.Write(id);
+            mb.Write(user);
+            mb.Write(msg);
+            mb.Write(stime);
+            mb.Write(etime);
+            mb.Write(vid);
+
+
+          
+
+            ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
+            hisRequreEvent.Reset();
+
+            lock (mHisDataCallBack)
+            {
+                mHisDataCallBack.Add(vid, (data) =>
+                {
+                    re = data;
+                    try
+                    {
+                        hisRequreEvent.Set();
+                    }
+                    catch
+                    {
+                        data?.UnlockAndReturn();
+                    }
+                });
+            }
+            SendData(mb);
+            try
+            {
+                if (hisRequreEvent.WaitOne(timeout) && re != null && re.WriteIndex - re.ReadIndex > 1)
+                {
+                    return re.ReadByte()>0;
+                }
+                else
+                {
+                    lock (mHisDataCallBack)
+                    {
+                        if (mHisDataCallBack.ContainsKey(vid))
+                        {
+                            mHisDataCallBack.Remove(vid);
+                        }
+                        else
+                        {
+                            return re.ReadByte()>0;
+                        }
+                    }
+                }
+                return false;
             }
             finally
             {

@@ -88,6 +88,14 @@ namespace HisDataTools.View
             {
                 return Res.Get("Init");
             }
+            else if (ival == (byte)QualityConst.Start)
+            {
+                return Res.Get("Start");
+            }
+            else if(ival == (short)QualityConst.Close)
+            {
+                return Res.Get("close");
+            }
             else if(ival>20&&ival<100)
             {
                 return Res.Get("bad");

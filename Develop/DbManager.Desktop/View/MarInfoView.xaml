@@ -12,12 +12,12 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBlock MouseEnter="TextBlock_MouseEnter" MouseLeave="TextBlock_MouseLeave" Opacity="0.1" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,20" Text="{Binding MarsTitle}" FontSize="56" TextWrapping="NoWrap" VerticalAlignment="Bottom"  FontFamily="Microsoft YaHei" FontWeight="Bold" >
+        <TextBlock MouseEnter="TextBlock_MouseEnter" MouseLeave="TextBlock_MouseLeave" Opacity="0.5" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,20" Text="{Binding MarsTitle}" FontSize="56" TextWrapping="NoWrap" VerticalAlignment="Bottom"  FontFamily="Microsoft YaHei" FontWeight="Bold" >
             <TextBlock.Effect>
                 <DropShadowEffect/>
             </TextBlock.Effect>
         </TextBlock>
-        <TextBlock MouseEnter="TextBlock_MouseEnter" MouseLeave="TextBlock_MouseLeave" Opacity="0.1" Foreground="White" HorizontalAlignment="Center" Margin="0,20,0,0" Text="{Binding TimeString}"  FontSize="56" TextWrapping="NoWrap" VerticalAlignment="Top" Grid.Row="1" FontFamily="Microsoft YaHei"  FontWeight="Bold">
+        <TextBlock MouseEnter="TextBlock_MouseEnter" MouseLeave="TextBlock_MouseLeave" Opacity="0.5" Foreground="White" HorizontalAlignment="Center" Margin="0,20,0,0" Text="{Binding TimeString}"  FontSize="56" TextWrapping="NoWrap" VerticalAlignment="Top" Grid.Row="1" FontFamily="Microsoft YaHei"  FontWeight="Bold">
             <TextBlock.Effect>
                 <DropShadowEffect/>
             </TextBlock.Effect>

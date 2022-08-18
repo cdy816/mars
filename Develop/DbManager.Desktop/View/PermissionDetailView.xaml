@@ -12,7 +12,7 @@
         <res:IndexConverter x:Key="ic" />
         <BooleanToVisibilityConverter x:Key="btv" />
     </UserControl.Resources>
-    <Grid>
+    <Grid Margin="0,5,0,1">
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
             <RowDefinition Height="*"/>
@@ -98,7 +98,7 @@
             </DataGrid.Columns>
         </DataGrid>
         <Border Grid.Row="2" Height="32" BorderThickness="0,1,0,0">
-            <StackPanel Orientation="Horizontal" Grid.Row="2" Height="32" VerticalAlignment="Bottom" Background="#1FFFFFFF">
+            <StackPanel Orientation="Horizontal" Grid.Row="2" Height="32" VerticalAlignment="Bottom" >
                 <Button BorderThickness="0,0,0,2" BorderBrush="Green" Content="{res:ResMarker Add}" Command="{Binding AddCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
                     <Button.ContentTemplate>
                         <DataTemplate>

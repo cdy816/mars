@@ -86,6 +86,13 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="parent"></param>
+        /// <returns></returns>
+        IEnumerable<string> GetTagGroup(string parent);
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
         byte[] SeriseToStream();
 

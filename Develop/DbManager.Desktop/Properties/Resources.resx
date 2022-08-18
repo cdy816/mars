@@ -135,6 +135,15 @@
   <data name="Append" xml:space="preserve">
     <value>Append</value>
   </data>
+  <data name="Bad" xml:space="preserve">
+    <value>Bad</value>
+  </data>
+  <data name="BitConvert" xml:space="preserve">
+    <value>fetch bit</value>
+  </data>
+  <data name="BitConvertTitle" xml:space="preserve">
+    <value>Bit index</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
@@ -149,6 +158,12 @@
   </data>
   <data name="Circle" xml:space="preserve">
     <value>Circle</value>
+  </data>
+  <data name="ComplexTagClass" xml:space="preserve">
+    <value>ComplexTagClass</value>
+  </data>
+  <data name="ComplexTagClassInfo" xml:space="preserve">
+    <value />
   </data>
   <data name="CompressType" xml:space="preserve">
     <value>CompressType</value>
@@ -195,6 +210,9 @@
   <data name="Driver" xml:space="preserve">
     <value>Driver</value>
   </data>
+  <data name="EnableApi" xml:space="preserve">
+    <value>Access api</value>
+  </data>
   <data name="EnableWrite" xml:space="preserve">
     <value>EnableWrite</value>
   </data>
@@ -207,8 +225,14 @@
   <data name="erro" xml:space="preserve">
     <value>erro</value>
   </data>
+  <data name="exampleTitle" xml:space="preserve">
+    <value>example</value>
+  </data>
   <data name="Export" xml:space="preserve">
     <value>Export</value>
+  </data>
+  <data name="Express" xml:space="preserve">
+    <value>Express</value>
   </data>
   <data name="FindAvaiableId" xml:space="preserve">
     <value>Reset id</value>
@@ -219,8 +243,17 @@
   <data name="funTitle" xml:space="preserve">
     <value>Conversion formula</value>
   </data>
+  <data name="Good" xml:space="preserve">
+    <value>Good</value>
+  </data>
   <data name="Group" xml:space="preserve">
     <value>Group</value>
+  </data>
+  <data name="GrpcApi" xml:space="preserve">
+    <value>Grpc Api</value>
+  </data>
+  <data name="HighApi" xml:space="preserve">
+    <value>Private Api</value>
   </data>
   <data name="HisDataKeepTime" xml:space="preserve">
     <value>Historical data retention time</value>
@@ -246,6 +279,9 @@
   <data name="ImportMode" xml:space="preserve">
     <value>Import mode</value>
   </data>
+  <data name="Init" xml:space="preserve">
+    <value>Init</value>
+  </data>
   <data name="IsAdmin" xml:space="preserve">
     <value>Admin</value>
   </data>
@@ -254,6 +290,9 @@
   </data>
   <data name="Keyword" xml:space="preserve">
     <value>Keyword</value>
+  </data>
+  <data name="Linear" xml:space="preserve">
+    <value>Linear</value>
   </data>
   <data name="Link" xml:space="preserve">
     <value>Link</value>
@@ -310,8 +349,14 @@
   <data name="NoneCompress" xml:space="preserve">
     <value>None</value>
   </data>
+  <data name="Null" xml:space="preserve">
+    <value>Null</value>
+  </data>
   <data name="OK" xml:space="preserve">
     <value>OK</value>
+  </data>
+  <data name="OpcServer" xml:space="preserve">
+    <value>Opc Server</value>
   </data>
   <data name="opendatabasefailed" xml:space="preserve">
     <value>Open database {0} failed!</value>
@@ -380,7 +425,10 @@
     <value>Replace</value>
   </data>
   <data name="ReplaceAll" xml:space="preserve">
-    <value>Replace all</value>
+    <value>Add after overall deletion</value>
+  </data>
+  <data name="ReplaceExist" xml:space="preserve">
+    <value>Replace  tags that already exist</value>
   </data>
   <data name="ReRun" xml:space="preserve">
     <value>ReRun</value>
@@ -396,6 +444,9 @@
   </data>
   <data name="SaveSucessful" xml:space="preserve">
     <value>save sucessfull!</value>
+  </data>
+  <data name="ScriptEditHead" xml:space="preserve">
+    <value>Four operations are performed between multiple variables, for example: (Tag.tag1+Tag.tag2)/Tag.tag3</value>
   </data>
   <data name="Security" xml:space="preserve">
     <value>Security</value>
@@ -415,6 +466,9 @@
   </data>
   <data name="ServerIp" xml:space="preserve">
     <value>Server Ip</value>
+  </data>
+  <data name="serveroffline" xml:space="preserve">
+    <value>Server is offline</value>
   </data>
   <data name="ServerPort" xml:space="preserve">
     <value>ServerPort</value>
@@ -452,6 +506,9 @@
   <data name="StartPort" xml:space="preserve">
     <value>Start port</value>
   </data>
+  <data name="StartValue" xml:space="preserve">
+    <value>StartValue</value>
+  </data>
   <data name="Start_Tooltip" xml:space="preserve">
     <value>Run database</value>
   </data>
@@ -460,6 +517,12 @@
   </data>
   <data name="Stop_Tooltip" xml:space="preserve">
     <value>Stop databse</value>
+  </data>
+  <data name="StringFormat" xml:space="preserve">
+    <value>string format</value>
+  </data>
+  <data name="StringFormatTitle" xml:space="preserve">
+    <value>The format string</value>
   </data>
   <data name="Switch" xml:space="preserve">
     <value>Switch</value>
@@ -505,6 +568,9 @@
   </data>
   <data name="ValueChanged" xml:space="preserve">
     <value>ValueChanged</value>
+  </data>
+  <data name="WebApi" xml:space="preserve">
+    <value>Web Api</value>
   </data>
   <data name="Write" xml:space="preserve">
     <value>Write</value>

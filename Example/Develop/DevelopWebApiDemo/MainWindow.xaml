@@ -20,6 +20,13 @@
         <Button x:Name="getDatabase" Content="获取数据库" HorizontalAlignment="Left" Margin="23,9,0,0" VerticalAlignment="Top" Width="72" Click="getDatabase_Click"  Grid.Row="1"/>
         <ComboBox SelectionChanged="databaseList_SelectionChanged" x:Name="databaseList" HorizontalAlignment="Left" Margin="109,8,0,0" Grid.Row="1" VerticalAlignment="Top" Width="518"/>
         <ComboBox x:Name="taglist"  HorizontalAlignment="Left" Margin="109,84,0,0" Grid.Row="1" VerticalAlignment="Top" Width="518"/>
+        <Button x:Name="newdtag" Content="新建Double变量" HorizontalAlignment="Left" Margin="109,148,0,0" Grid.Row="1" VerticalAlignment="Top" Click="newdtag_Click"/>
+        <TextBox x:Name="dtagname" HorizontalAlignment="Left" Margin="299,148,0,0" Grid.Row="1" TextWrapping="Wrap" Text="dtag1" VerticalAlignment="Top" Width="172"/>
+        <Label Content="变量名称:" HorizontalAlignment="Left" Margin="219,145,0,0" Grid.Row="1" VerticalAlignment="Top"/>
+        <Button x:Name="newitag" Content="新建Int变量" HorizontalAlignment="Left" Margin="109,0,0,0" Grid.Row="1" VerticalAlignment="Center" Click="newitag_Click"/>
+        <TextBox x:Name="itagname" HorizontalAlignment="Left" Margin="299,0,0,0" Grid.Row="1" TextWrapping="Wrap" Text="itag1" VerticalAlignment="Center" Width="172"/>
+        <Label Content="变量名称:" HorizontalAlignment="Left" Margin="219,0,0,0" Grid.Row="1" VerticalAlignment="Center"/>
+        <Button x:Name="saveb" Content="数据库保存" HorizontalAlignment="Left" Margin="109,264,0,0" Grid.Row="1" VerticalAlignment="Top" Click="saveb_Click" Height="39" Width="94"/>
 
     </Grid>
 </Window>

@@ -323,7 +323,7 @@ namespace DirectAccessDriver.ClientApi
                 mb.Write(password);
                 infoRequreEvent.Reset();
                 SendData(mb);
-                if (infoRequreEvent.WaitOne(timeount) && mInfoRequreData.Count > 0)
+                if (infoRequreEvent.WaitOne(timeount))
                 {
                     while (mInfoRequreData.Count > 0)
                     {
@@ -696,6 +696,95 @@ namespace DirectAccessDriver.ClientApi
         /// <param name="value"></param>
         /// <param name="quality"></param>
         /// <param name="re"></param>
+        private void SetTagValueToBuffer(TagType type, object value,DateTime time, byte quality, ByteBuffer re)
+        {
+            re.Write((byte)type);
+            re.Write(time.Ticks);
+            switch (type)
+            {
+                case TagType.Bool:
+                    re.Write(Convert.ToByte(value));
+                    break;
+                case TagType.Byte:
+                    re.Write(Convert.ToByte(value));
+                    break;
+                case TagType.Short:
+                    re.Write(Convert.ToInt16(value));
+                    break;
+                case TagType.UShort:
+                    re.Write(Convert.ToUInt16(value));
+                    break;
+                case TagType.Int:
+                    re.Write(Convert.ToInt32(value));
+                    break;
+                case TagType.UInt:
+                    re.Write(Convert.ToInt32(value));
+                    break;
+                case TagType.Long:
+                case TagType.ULong:
+                    re.Write(Convert.ToInt64(value));
+                    break;
+                case TagType.Float:
+                    re.Write(Convert.ToSingle(value));
+                    break;
+                case TagType.Double:
+                    re.Write(Convert.ToDouble(value));
+                    break;
+                case TagType.String:
+                    string sval = value.ToString();
+                    //re.WriteInt(sval.Length);
+                    re.Write(sval, Encoding.Unicode);
+                    break;
+                case TagType.DateTime:
+                    re.Write(((DateTime)value).ToBinary());
+                    break;
+                case TagType.IntPoint:
+                    re.Write(((IntPointData)value).X);
+                    re.Write(((IntPointData)value).Y);
+                    break;
+                case TagType.UIntPoint:
+                    re.Write((int)((UIntPointData)value).X);
+                    re.Write((int)((UIntPointData)value).Y);
+                    break;
+                case TagType.IntPoint3:
+                    re.Write(((IntPoint3Data)value).X);
+                    re.Write(((IntPoint3Data)value).Y);
+                    re.Write(((IntPoint3Data)value).Z);
+                    break;
+                case TagType.UIntPoint3:
+                    re.Write((int)((UIntPoint3Data)value).X);
+                    re.Write((int)((UIntPoint3Data)value).Y);
+                    re.Write((int)((UIntPoint3Data)value).Z);
+                    break;
+                case TagType.LongPoint:
+                    re.Write(((LongPointData)value).X);
+                    re.Write(((LongPointData)value).Y);
+                    break;
+                case TagType.ULongPoint:
+                    re.Write((long)((ULongPointData)value).X);
+                    re.Write((long)((ULongPointData)value).Y);
+                    break;
+                case TagType.LongPoint3:
+                    re.Write(((LongPoint3Data)value).X);
+                    re.Write(((LongPoint3Data)value).Y);
+                    re.Write(((LongPoint3Data)value).Z);
+                    break;
+                case TagType.ULongPoint3:
+                    re.Write((long)((ULongPoint3Data)value).X);
+                    re.Write((long)((ULongPoint3Data)value).Y);
+                    re.Write((long)((ULongPoint3Data)value).Z);
+                    break;
+            }
+            re.WriteByte(quality);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <param name="re"></param>
         private void SetTagValueToBuffer2(TagType type, object value, byte quality, ByteBuffer re)
         {
             switch (type)
@@ -845,7 +934,7 @@ namespace DirectAccessDriver.ClientApi
             {
                 try
                 {
-                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 0;
                 }
                 catch
                 {
@@ -908,7 +997,50 @@ namespace DirectAccessDriver.ClientApi
             {
                 try
                 {
-                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 0;
+                }
+                catch
+                {
+                    mRealRequreData?.UnlockAndReturn();
+
+                }
+
+            }
+
+
+            return false;
+        }
+
+
+        /// <summary>
+        /// 设置一组变量的实时同时对于驱动记录类型的变量,记录到历史
+        /// 对于历史,记录类型为驱动时起作用
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool SetTagRealAndHisValueWithTimer(List<RealTagValueWithTimer> values, int timeout = 5000)
+        {
+            CheckLogin();
+            if (mIsRealDataBusy) return false;
+
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * 40);
+            mb.Write(ApiFunConst.SetTagRealAndHisValueWithTimeFun);
+            mb.Write(this.mLoginId);
+            mb.Write(values.Count);
+            foreach (var vv in values)
+            {
+                mb.Write(vv.Id);
+                SetTagValueToBuffer((TagType)vv.ValueType, vv.Value,vv.Time, vv.Quality, mb);
+            }
+            realRequreEvent.Reset();
+            SendData(mb);
+
+            if (realRequreEvent.WaitOne(timeout))
+            {
+                try
+                {
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 0;
                 }
                 catch
                 {
@@ -944,6 +1076,33 @@ namespace DirectAccessDriver.ClientApi
             {
                 mb.Write(vv.Id);
                 SetTagValueToBuffer((TagType)vv.ValueType, vv.Value, vv.Quality, mb);
+            }
+            SendData(mb);
+            return IsConnected;
+        }
+
+
+        /// <summary>
+        /// 设置一组变量的实时同时对于驱动记录类型的变量,记录到历史
+        /// 对于历史,记录类型为驱动时起作用
+        /// 用于数据单向传输
+        /// </summary>
+        /// <param name="values">ID，值类型，值，质量</param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool SetTagRealAndHisValueWithTimer2(List<RealTagValueWithTimer> values)
+        {
+            if (mIsRealDataBusy) return false;
+
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * (32 + 8 + 64) + 64);
+            mb.Write(ApiFunConst.SetTagRealAndHisValueTimerWithUserFun);
+            mb.Write(this.mUser);
+            mb.Write(this.mPass);
+            mb.Write(values.Count);
+            foreach (var vv in values)
+            {
+                mb.Write(vv.Id);
+                SetTagValueToBuffer((TagType)vv.ValueType, vv.Value,vv.Time, vv.Quality, mb);
             }
             SendData(mb);
             return IsConnected;
@@ -1025,13 +1184,54 @@ namespace DirectAccessDriver.ClientApi
             {
                 try
                 {
-                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 0;
                 }
                 finally
                 {
                     mRealRequreData?.UnlockAndReturn();
                 }
             }
+            return false;
+        }
+
+        /// <summary>
+        /// 设置一组变量的实时值和质量戳
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool SetTagValueTimerAndQuality(List<RealTagValueWithTimer> values, int timeout = 5000)
+        {
+            CheckLogin();
+            if (mIsRealDataBusy) return false;
+
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * 40);
+            mb.Write(ApiFunConst.SetTagValueTimeAndQualityFun);
+            mb.Write(this.mLoginId);
+            mb.Write(values.Count);
+            foreach (var vv in values)
+            {
+                mb.Write(vv.Id);
+                SetTagValueToBuffer((TagType)vv.ValueType, vv.Value,vv.Time, vv.Quality, mb);
+            }
+            realRequreEvent.Reset();
+            SendData(mb);
+
+            if (realRequreEvent.WaitOne(timeout))
+            {
+                try
+                {
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 0;
+                }
+                catch
+                {
+                    mRealRequreData?.UnlockAndReturn();
+
+                }
+
+            }
+
+
             return false;
         }
 
@@ -1137,7 +1337,7 @@ namespace DirectAccessDriver.ClientApi
             {
                 try
                 {
-                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 0;
                 }
                 catch
                 {
@@ -1254,7 +1454,7 @@ namespace DirectAccessDriver.ClientApi
             {
                 try
                 {
-                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 0;
                 }
                 finally
                 {
@@ -1289,7 +1489,7 @@ namespace DirectAccessDriver.ClientApi
             {
                 try
                 {
-                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 0;
                 }
                 finally
                 {
@@ -1318,7 +1518,7 @@ namespace DirectAccessDriver.ClientApi
             {
                 try
                 {
-                    return mRealRequreData != null && mRealRequreData.ReadableCount > 1;
+                    return mRealRequreData != null && mRealRequreData.ReadableCount > 0;
                 }
                 catch
                 {

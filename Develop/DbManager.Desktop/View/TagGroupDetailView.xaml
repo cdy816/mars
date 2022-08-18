@@ -4,15 +4,21 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DBInStudio.Desktop"
+             xmlns:view="clr-namespace:DBInStudio.Desktop.View"
              mc:Ignorable="d"  Foreground="{DynamicResource Window.Forground}"
              d:DesignHeight="450" d:DesignWidth="1024" x:Name="tgd" Background="#7F000000">
     <UserControl.Resources>
         <local:IndexConverter x:Key="ic" />
         <BooleanToVisibilityConverter x:Key="btv" />
+        <local:BoolInvertToVisiableConvert x:Key="bivc" />
         <local:BoolInvertConvert x:Key="biv" />
         <local:DoubleValueConvert x:Key="dvc" />
         <local:MutiNumberValueConvert x:Key="mvc" />
-        
+        <local:FloatNumberValueConvert x:Key="fnvc" />
+        <view:QualityValueConvert x:Key="qvc" />
+
+        <view:DriverDisplayConvert x:Key="ddc" />
+
         <ContextMenu x:Key="ctxmenu">
             <MenuItem Header="{local:ResMarker Add}" Command="{Binding AddCommand}" />
             <MenuItem Header="{local:ResMarker Remove}" Command="{Binding RemoveCommand}" />
@@ -25,13 +31,379 @@
             <MenuItem Header="{local:ResMarker Export}" Command="{Binding ExportCommand}" />
             <Separator/>
             <MenuItem Header="{local:ResMarker FindAvaiableId}" Command="{Binding FindAvaiableIdCommand}" ToolTip="{local:ResMarker FindAvaiableIdTooltip}" />
-            
+
         </ContextMenu>
 
-        
+        <view:DataGridDetailSelect x:Key="dgd" />
+
+        <view:DataGridDetailSelect x:Key="dgdr" ReadOnly="True"  />
+
+        <DataTemplate x:Key="normalTemplate">
+            <Grid  Margin="10,4" Visibility="{Binding HasHisTag,Converter={StaticResource btv}}" Height="36">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{local:ResMarker RecordType,:}" Foreground="{DynamicResource Window.Forground}" VerticalAlignment="Center" />
+                <ComboBox Margin="4,0" Grid.Column="1" Width="160" VerticalAlignment="Center"  SelectedIndex="{Binding RecordType,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding RecordTypeList}">
+
+                </ComboBox>
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Grid Margin="4,0"  Visibility="{Binding IsTimerRecord,Converter={StaticResource btv}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker Circle,:}" VerticalAlignment="Center" />
+                        <TextBox Height="20" CaretBrush="White"  Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="8,0" Grid.Column="1" Width="60" Text="{Binding CompressCircle,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Margin="2,0,5,0" Foreground="{DynamicResource Window.Forground}" Text="ms" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Grid Margin="4,0"  Visibility="{Binding IsDriverRecord,Converter={StaticResource btv}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker MaxValueCountPersecond,:}" VerticalAlignment="Center" />
+                        <TextBox  Height="20" CaretBrush="White"  Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="8,0" Grid.Column="1" Width="60" Text="{Binding MaxValueCountPerSecond,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker CompressType,:}"  VerticalAlignment="Center"/>
+                    <ComboBox  Background="#1FFFFFFF"  Margin="8,0" Width="160" VerticalAlignment="Center" ItemsSource="{Binding CompressTypeList}" SelectedIndex="{Binding CompressType,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <ContentControl  VerticalAlignment="Center" Content="{Binding CompressParameterModel}" HorizontalAlignment="Stretch" />
+                </StackPanel>
+
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="normalReadOnlyTemplate">
+            <Grid  Margin="10,4" Visibility="{Binding HasHisTag,Converter={StaticResource btv}}" Height="36">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{local:ResMarker RecordType,:}" Foreground="{DynamicResource Window.Forground}" VerticalAlignment="Center" />
+                <ComboBox IsReadOnly="True" IsEnabled="False" Margin="4,0" Grid.Column="1" Width="160" VerticalAlignment="Center"  SelectedIndex="{Binding RecordType,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding RecordTypeList}">
+
+                </ComboBox>
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Grid Margin="4,0"  Visibility="{Binding IsTimerRecord,Converter={StaticResource btv}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker Circle,:}" VerticalAlignment="Center" />
+                        <TextBox  Height="20"  IsReadOnly="True"  CaretBrush="White"  Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="8,0" Grid.Column="1" Width="60" Text="{Binding CompressCircle,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Margin="2,0,5,0" Foreground="{DynamicResource Window.Forground}" Text="ms" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Grid Margin="4,0"  Visibility="{Binding IsDriverRecord,Converter={StaticResource btv}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker MaxValueCountPersecond,:}" VerticalAlignment="Center" />
+                        <TextBox  Height="20"  IsReadOnly="True"  CaretBrush="White"  Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="8,0" Grid.Column="1" Width="60" Text="{Binding MaxValueCountPerSecond,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker CompressType,:}"  VerticalAlignment="Center"/>
+                    <ComboBox IsEnabled="False" IsReadOnly="True"  Background="#1FFFFFFF"  Margin="8,0" Width="160" VerticalAlignment="Center" ItemsSource="{Binding CompressTypeList}" SelectedIndex="{Binding CompressType,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <ContentControl  VerticalAlignment="Center" Content="{Binding CompressParameterModel}" HorizontalAlignment="Stretch" />
+                </StackPanel>
+
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="complexTemplate">
+
+            <DataGrid  MinHeight="64" HorizontalAlignment="Left"   Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor,AncestorType=DataGridDetailsPresenter}}" RowDetailsTemplateSelector="{StaticResource dgdr}" Background="#0FFFFFFF"  SelectedCellsChanged="DataGrid_SelectedCellsChanged"  RowHeaderWidth="10"  Style="{DynamicResource DataGridStyle1}" ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}" CellStyle="{DynamicResource DataGridCellStyle2}" RowHeaderStyle="{DynamicResource DataGridRowHeaderStyle2}" RowStyle="{DynamicResource DataGridRowStyle1}" ScrollViewer.CanContentScroll="True" ContextMenu="{StaticResource ctxmenu}" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,-1" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SubItems}"   BorderThickness="0,1,0,1"  >
+
+                <!--<DataGrid.RowHeaderTemplate>
+                    <DataTemplate>
+                        <TextBlock  DataContext="{Binding DataContext,RelativeSource={RelativeSource AncestorType=DataGridRow}}" Foreground="{DynamicResource Window.Forground}" HorizontalAlignment="Center" VerticalAlignment="Center" >
+                            <TextBlock.Text>
+                                <MultiBinding Converter="{StaticResource ic}">
+                                    <Binding />
+                                    <Binding Path="DataContext.SubItems" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type DataGrid}}" />
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </DataTemplate>
+                </DataGrid.RowHeaderTemplate>-->
+
+                <DataGrid.Columns>
+
+                    <DataGridTemplateColumn IsReadOnly="True" Width="Auto" MinWidth="40"  >
+                        <DataGridTemplateColumn.Header>
+                            <TextBlock Text="ID" Margin="12,0,0,0" HorizontalAlignment="Center" TextAlignment="Center" VerticalAlignment="Center" />
+                        </DataGridTemplateColumn.Header>
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock HorizontalAlignment="Stretch" TextAlignment="Center" Foreground="{DynamicResource Window.Forground}" Text="{Binding Id}" VerticalAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn IsReadOnly="True" Header="{local:ResMarker Name}" Width="100" >
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}" Text="{Binding Name}" VerticalAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <TextBox Margin="0,0"  Loaded="TextBox_Loaded"  CaretBrush="White" Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" Padding="3,0" BorderThickness="0" Text="{Binding Name,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn IsReadOnly="True" Header="{local:ResMarker Type}" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}" Text="{Binding TypeString}" VerticalAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <ComboBox  VerticalContentAlignment="Center" Padding="5,0" Margin="0" Background="#1FFFFFFF"  BorderThickness="0" SelectionChanged="Type_SelectionChanged" ItemsSource="{Binding TagTypeList}" SelectedIndex="{Binding Type,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn IsReadOnly="True" Header="{local:ResMarker ReadWriteMode}" MinWidth="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}" VerticalAlignment="Center" >
+                                    <TextBlock.Text>
+                                        <MultiBinding Converter="{StaticResource ddc}">
+                                            <Binding Path="ReadWriteModeString" />
+                                            <Binding />
+                                            <Binding Path="IsComplexTag" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <ComboBox  VerticalContentAlignment="Center" Padding="5,0" Margin="0" Background="#1FFFFFFF"  BorderThickness="0" SelectionChanged="Type_SelectionChanged" ItemsSource="{Binding ReadWriteModeList}" SelectedIndex="{Binding ReadWriteMode,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn IsReadOnly="True" Header="{local:ResMarker Convert}" MinWidth="100" >
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Visibility="{Binding IsComplexTag,Converter={StaticResource bivc}}"  Margin="5,0" Foreground="{DynamicResource Window.Forground}"  VerticalAlignment="Center" >
+                                    <TextBlock.Text>
+                                        <MultiBinding Converter="{StaticResource ddc}">
+                                            <Binding Path="ConvertString" />
+                                            <Binding />
+                                            <Binding Path="IsComplexTag" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Foreground="{DynamicResource Window.Forground}" Margin="5,0" Text="{Binding ConvertString}" VerticalAlignment="Center" MinWidth="60" />
+                                    <Button Grid.Column="1" Margin="4,0" Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" Content="..." VerticalAlignment="Center" VerticalContentAlignment="Top" Command="{Binding ConvertEditCommand}" Width="24" />
+                                    <Button Grid.Column="2" Margin="4,0" Command="{Binding ConvertRemoveCommand}" BorderThickness="0"  Background="Transparent" >
+                                        <Button.ContentTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" Margin="0">
+                                                    <Image Source="/Image/close.png" Height="12" RenderOptions.BitmapScalingMode="NearestNeighbor" Margin="0,0,4,0"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </Button.ContentTemplate>
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn IsReadOnly="True" Header="{local:ResMarker MaxValue}" MinWidth="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  IsEnabled="{Binding IsNumberTag}" VerticalAlignment="Center" >
+                                    <TextBlock.Text>
+                                        <MultiBinding Converter="{StaticResource mvc}">
+                                            <Binding Path="MaxValue" />
+                                            <Binding />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <TextBox   Padding="3,0"   IsReadOnly="{Binding IsNumberTag,Converter={StaticResource biv}}" Loaded="TextBox_Loaded"  CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding MaxValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}"  IsEnabled="{Binding IsNumberTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn IsReadOnly="True" Header="{local:ResMarker MinValue}" MinWidth="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  IsEnabled="{Binding IsNumberTag}"  VerticalAlignment="Center" >
+                                    <TextBlock.Text>
+                                        <MultiBinding Converter="{StaticResource mvc}">
+                                            <Binding Path="MinValue" />
+                                            <Binding />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <TextBox Padding="3,0"  IsReadOnly="{Binding IsNumberTag,Converter={StaticResource biv}}"  Loaded="TextBox_Loaded" CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}"  IsEnabled="{Binding IsNumberTag}" Text="{Binding MinValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn IsReadOnly="True" Header="{local:ResMarker Precision}" MinWidth="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  IsEnabled="{Binding IsFloatingTag}" VerticalAlignment="Center" >
+                                    <TextBlock.Text>
+                                        <MultiBinding Converter="{StaticResource mvc}">
+                                            <Binding Path="Precision" />
+                                            <Binding />
+                                            <Binding Path="IsFloatingTag" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <TextBox  IsReadOnly="{Binding IsFloatingTag,Converter={StaticResource biv}}" Padding="3,0"   Loaded="TextBox_Loaded" CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding Precision,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsFloatingTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn IsReadOnly="True" Header="{local:ResMarker Record}" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Visibility="{Binding IsComplexTag,Converter={StaticResource bivc}}">
+                                    <CheckBox IsHitTestVisible="False" Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" BorderBrush="{DynamicResource Window.Forground}"  VerticalAlignment="Center" IsChecked="{Binding HasHisTag,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="5,0" />
+                                    <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{Binding RecordTypeString}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="{local:ResMarker Driver}" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Foreground="{DynamicResource Window.Forground}" Margin="5,0"  VerticalAlignment="Center" >
+                                    <TextBlock.Text>
+                                        <MultiBinding Converter="{StaticResource ddc}">
+                                            <Binding Path="DriverName" />
+                                            <Binding />
+                                            <Binding Path="IsComplexTag" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <ComboBox   Padding="5,0" Loaded="ComboBox_Loaded" Background="#1FFFFFFF"  SelectionChanged="Type_SelectionChanged"  Margin="0" VerticalContentAlignment="Center" BorderThickness="0" ItemsSource="{Binding DriverList}" IsEditable="False" SelectedItem="{Binding DriverName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="{local:ResMarker Registor}" Width="*"  CellEditingTemplateSelector="{DynamicResource rgs}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Foreground="{DynamicResource Window.Forground}" Margin="5,0"  VerticalAlignment="Center" TextTrimming="CharacterEllipsis" >
+                                    <TextBlock.Text>
+                                        <MultiBinding Converter="{StaticResource ddc}">
+                                            <Binding Path="RegistorName" />
+                                            <Binding />
+                                            <Binding Path="IsComplexTag" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <!--<DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <ComboBox  Padding="5,0" Loaded="ComboBox_Loaded" Background="#1FFFFFFF" SelectionChanged="Type_SelectionChanged"  Margin="0" VerticalContentAlignment="Center" BorderThickness="0" ItemsSource="{Binding RegistorList}"  IsEditable="True" Text="{Binding RegistorName,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>-->
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn IsReadOnly="True" Header="{local:ResMarker Desc}" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Foreground="{DynamicResource Window.Forground}" Margin="5,0" Text="{Binding Desc}" VerticalAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <TextBox  Loaded="TextBox_Loaded"  CaretBrush="White" Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" Margin="0,0" Padding="3,0" BorderThickness="0" Text="{Binding Desc,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+
+                </DataGrid.Columns>
+
+            </DataGrid>
+
+        </DataTemplate>
+
+
+        <Style x:Key="DataGridRowStyle2" TargetType="{x:Type DataGridRow}" BasedOn="{StaticResource DataGridRowStyle1}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsComplexTag}" Value="True">
+                    <Setter Property="DetailsTemplate" Value="{DynamicResource complexTemplate}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsComplexTag}" Value="False">
+                    <Setter Property="DetailsTemplate" Value="{DynamicResource normalTemplate}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <DataTemplate x:Key="comboEdit">
+            <ComboBox Visibility="{Binding IsComplexTag,Converter={StaticResource bivc}}" Padding="5,0" Loaded="ComboBox_Loaded" Background="#1FFFFFFF" SelectionChanged="Type_SelectionChanged"  Margin="0" VerticalContentAlignment="Center" BorderThickness="0" ItemsSource="{Binding RegistorList}"  IsEditable="True" Text="{Binding RegistorName,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" />
+        </DataTemplate>
+
+        <view:RegsitorEditSelect x:Key="rgs" />
+
+        <DataTemplate x:Key="advanceEdit">
+            <Grid  HorizontalAlignment="Stretch" Visibility="{Binding IsComplexTag,Converter={StaticResource bivc}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox BorderThickness="0" Padding="2,0,0,0" Text="{Binding RegistorName,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalContentAlignment="Center" CaretBrush="White"  Margin="0,0,5,0" />
+                <Button Grid.Column="1" Content="…" VerticalContentAlignment="Top" Command="{Binding AdvanceEditCommand}" Width="30"  VerticalAlignment="Center"/>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="noneEdit">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding RegistorName,Mode=TwoWay,UpdateSourceTrigger=LostFocus}"  Margin="5,0" VerticalAlignment="Center" />
+            </StackPanel>
+        </DataTemplate>
+
     </UserControl.Resources>
     <Grid Background="Transparent">
-        
+
         <Grid.RowDefinitions>
             <RowDefinition Height="89" MaxHeight="89" />
             <RowDefinition Height="*" />
@@ -44,6 +416,7 @@
             </Grid.RowDefinitions>
             <Label Background="#1FFFFFFF"  Foreground="{DynamicResource Window.Forground}" Content="{local:ResMarker TagFilter}" VerticalContentAlignment="Center"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
             <Grid Grid.Row="1"  TextElement.FontSize="12" Name="fg" Height="60" >
+
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
@@ -91,12 +464,13 @@
                         <Image Height="16" Source="/Image/cellselect.png" />
                     </ToggleButton>
                 </StackPanel>
-                
+
 
             </Grid>
         </Grid>
         <GridSplitter HorizontalAlignment="Stretch" Height="5" VerticalAlignment="Bottom" Background="Transparent" />
-        <DataGrid x:Name="dg" Grid.Row="1"  SelectedCellsChanged="DataGrid_SelectedCellsChanged"  RowHeaderWidth="36" SelectionUnit="{Binding SelectMode}" Style="{DynamicResource DataGridStyle1}" ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}" CellStyle="{DynamicResource DataGridCellStyle1}" RowHeaderStyle="{DynamicResource DataGridRowHeaderStyle1}" RowStyle="{DynamicResource DataGridRowStyle1}" ScrollViewer.CanContentScroll="True" ContextMenu="{StaticResource ctxmenu}" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,0" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"   BorderThickness="0,1,0,1" Background="Transparent" >
+        <DataGrid x:Name="dg" Grid.Row="1"  SelectedCellsChanged="DataGrid_SelectedCellsChanged"  RowHeaderWidth="36" SelectionUnit="{Binding SelectMode}" Style="{DynamicResource DataGridStyle1}" ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}" CellStyle="{DynamicResource DataGridCellStyle1}" RowHeaderStyle="{DynamicResource DataGridRowHeaderStyle1}" RowStyle="{DynamicResource DataGridRowStyle2}" ScrollViewer.CanContentScroll="True" ContextMenu="{StaticResource ctxmenu}" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,0" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"   BorderThickness="0,1,0,1" Background="Transparent" >
+
             <DataGrid.InputBindings>
                 <KeyBinding Command="{Binding CopyCommand}" Key="C" Modifiers="Ctrl" />
                 <KeyBinding Command="{Binding CellCopyCommand}" Key="C" Modifiers="Alt" />
@@ -119,10 +493,9 @@
                     </TextBlock>
                 </DataTemplate>
             </DataGrid.RowHeaderTemplate>
-
             <DataGrid.Columns>
 
-                <DataGridTemplateColumn  IsReadOnly="True" Width="Auto" MinWidth="40"  >
+                <DataGridTemplateColumn x:Name="idc" IsReadOnly="True" Width="Auto" MinWidth="40"  >
                     <DataGridTemplateColumn.Header>
                         <TextBlock Text="ID" Margin="12,0,0,0" HorizontalAlignment="Center" TextAlignment="Center" VerticalAlignment="Center" />
                     </DataGridTemplateColumn.Header>
@@ -133,7 +506,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="{local:ResMarker Name}" Width="100" >
+                <DataGridTemplateColumn Header="{local:ResMarker Name}" MinWidth="100" Width="*" >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}" Text="{Binding Name}" VerticalAlignment="Center" />
@@ -145,7 +518,6 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
-
 
                 <DataGridTemplateColumn Header="{local:ResMarker Type}" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
@@ -163,12 +535,20 @@
                 <DataGridTemplateColumn Header="{local:ResMarker ReadWriteMode}" MinWidth="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}" Text="{Binding ReadWriteModeString}" VerticalAlignment="Center" />
+                            <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  VerticalAlignment="Center" >
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource ddc}">
+                                        <Binding Path="ReadWriteModeString" />
+                                        <Binding />
+                                        <Binding Path="IsComplexTag" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <ComboBox  VerticalContentAlignment="Center" Padding="5,0" Margin="0" Background="#1FFFFFFF"  BorderThickness="0" SelectionChanged="Type_SelectionChanged" ItemsSource="{Binding ReadWriteModeList}" SelectedIndex="{Binding ReadWriteMode,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
+                            <ComboBox Visibility="{Binding IsComplexTag,Converter={StaticResource bivc}}" VerticalContentAlignment="Center" Padding="5,0" Margin="0" Background="#1FFFFFFF"  BorderThickness="0" SelectionChanged="Type_SelectionChanged" ItemsSource="{Binding ReadWriteModeList}" SelectedIndex="{Binding ReadWriteMode,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -176,12 +556,20 @@
                 <DataGridTemplateColumn  Header="{local:ResMarker Convert}" MinWidth="100" >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock  Margin="5,0" Foreground="{DynamicResource Window.Forground}" Text="{Binding ConvertString}" VerticalAlignment="Center" />
+                            <TextBlock Visibility="{Binding IsComplexTag,Converter={StaticResource bivc}}"  Margin="5,0" Foreground="{DynamicResource Window.Forground}"  VerticalAlignment="Center" >
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource ddc}">
+                                        <Binding Path="ConvertString" />
+                                        <Binding />
+                                        <Binding Path="IsComplexTag" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <Grid Margin="0,0">
+                            <Grid Margin="0,0" Visibility="{Binding IsComplexTag,Converter={StaticResource bivc}}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto"/>
@@ -203,7 +591,7 @@
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="{local:ResMarker MaxValue}" MinWidth="100"  IsReadOnly="{Binding IsNumberTag,Converter={StaticResource biv}}">
+                <DataGridTemplateColumn Header="{local:ResMarker MaxValue}" MinWidth="100"  >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  IsEnabled="{Binding IsNumberTag}" VerticalAlignment="Center" >
@@ -211,6 +599,7 @@
                                     <MultiBinding Converter="{StaticResource mvc}">
                                         <Binding Path="MaxValue" />
                                         <Binding />
+                                        <Binding Path="IsNumberTag" />
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
@@ -218,12 +607,12 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox   Padding="3,0"  Loaded="TextBox_Loaded"  CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding MaxValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}"  IsEnabled="{Binding IsNumberTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            <TextBox Visibility="{Binding IsComplexTag,Converter={StaticResource bivc}}" IsReadOnly="{Binding IsNumberTag,Converter={StaticResource biv}}"  Padding="3,0"  Loaded="TextBox_Loaded"  CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding MaxValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}"  IsEnabled="{Binding IsNumberTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="{local:ResMarker MinValue}" MinWidth="100" IsReadOnly="{Binding IsNumberTag,Converter={StaticResource biv}}">
+                <DataGridTemplateColumn Header="{local:ResMarker MinValue}" MinWidth="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  IsEnabled="{Binding IsNumberTag}"  VerticalAlignment="Center" >
@@ -231,6 +620,7 @@
                                     <MultiBinding Converter="{StaticResource mvc}">
                                         <Binding Path="MinValue" />
                                         <Binding />
+                                        <Binding Path="IsNumberTag" />
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
@@ -238,20 +628,28 @@
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox Padding="3,0"   Loaded="TextBox_Loaded" CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}"  IsEnabled="{Binding IsNumberTag}" Text="{Binding MinValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            <TextBox Padding="3,0" Visibility="{Binding IsComplexTag,Converter={StaticResource bivc}}"  IsReadOnly="{Binding IsNumberTag,Converter={StaticResource biv}}"  Loaded="TextBox_Loaded" CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}"  IsEnabled="{Binding IsNumberTag}" Text="{Binding MinValue,Mode=TwoWay,UpdateSourceTrigger=LostFocus,Converter={StaticResource dvc}}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="{local:ResMarker Precision}" MinWidth="100" IsReadOnly="{Binding IsFloatingTag,Converter={StaticResource biv}}">
+                <DataGridTemplateColumn Header="{local:ResMarker Precision}" MinWidth="100" >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}" Text="{Binding Precision}" IsEnabled="{Binding IsFloatingTag}" VerticalAlignment="Center" />
+                            <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  IsEnabled="{Binding IsFloatingTag}" VerticalAlignment="Center" >
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource fnvc}">
+                                        <Binding Path="Precision" />
+                                        <Binding />
+                                        <Binding Path="IsFloatingTag" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox  Padding="3,0"   Loaded="TextBox_Loaded" CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding Precision,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsFloatingTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            <TextBox  Padding="3,0" Visibility="{Binding IsComplexTag,Converter={StaticResource bivc}}" IsReadOnly="{Binding IsFloatingTag,Converter={StaticResource biv}}"  Loaded="TextBox_Loaded" CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding Precision,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding IsFloatingTag}" VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -259,7 +657,7 @@
                 <DataGridTemplateColumn Header="{local:ResMarker Record}" Width="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsComplexTag,Converter={StaticResource bivc}}">
                                 <CheckBox Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" BorderBrush="{DynamicResource Window.Forground}"  VerticalAlignment="Center" IsChecked="{Binding HasHisTag,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="5,0" />
                                 <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{Binding RecordTypeString}" VerticalAlignment="Center" />
                             </StackPanel>
@@ -269,29 +667,39 @@
                 <DataGridTemplateColumn Header="{local:ResMarker Driver}" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Foreground="{DynamicResource Window.Forground}" Margin="5,0" Text="{Binding DriverName}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{DynamicResource Window.Forground}" Margin="5,0"  VerticalAlignment="Center" >
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource ddc}">
+                                        <Binding Path="DriverName" />
+                                        <Binding />
+                                        <Binding Path="IsComplexTag" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <ComboBox   Padding="5,0" Loaded="ComboBox_Loaded" Background="#1FFFFFFF"  SelectionChanged="Type_SelectionChanged"  Margin="0" VerticalContentAlignment="Center" BorderThickness="0" ItemsSource="{Binding DriverList}" IsEditable="False" SelectedItem="{Binding DriverName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
+                            <ComboBox Visibility="{Binding IsComplexTag,Converter={StaticResource bivc}}"  Padding="5,0" Loaded="ComboBox_Loaded" Background="#1FFFFFFF"  SelectionChanged="Type_SelectionChanged"  Margin="0" VerticalContentAlignment="Center" BorderThickness="0" ItemsSource="{Binding DriverList}" IsEditable="False" SelectedItem="{Binding DriverName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{local:ResMarker Registor}" Width="*">
+                <DataGridTemplateColumn Header="{local:ResMarker Registor}" Width="*" CellEditingTemplateSelector="{StaticResource rgs}">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Foreground="{DynamicResource Window.Forground}" Margin="5,0" Text="{Binding RegistorName}" VerticalAlignment="Center" />
+                            <TextBlock Foreground="{DynamicResource Window.Forground}" Margin="5,0"  VerticalAlignment="Center" TextTrimming="CharacterEllipsis" >
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource ddc}">
+                                        <Binding Path="RegistorName" />
+                                        <Binding />
+                                        <Binding Path="IsComplexTag" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
-                    <DataGridTemplateColumn.CellEditingTemplate>
-                        <DataTemplate>
-                            <ComboBox  Padding="5,0" Loaded="ComboBox_Loaded" Background="#1FFFFFFF" SelectionChanged="Type_SelectionChanged"  Margin="0" VerticalContentAlignment="Center" BorderThickness="0" ItemsSource="{Binding RegistorList}"  IsEditable="True" Text="{Binding RegistorName,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellEditingTemplate>
-                </DataGridTemplateColumn>
 
-                <!--<DataGridTextColumn Header="{local:ResMarker Desc}" Width="*" Binding="{Binding Desc,Mode=TwoWay}" />-->
+                </DataGridTemplateColumn>
 
                 <DataGridTemplateColumn Header="{local:ResMarker Desc}" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
@@ -306,62 +714,7 @@
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="{local:ResMarker Value}" Width="Auto" MinWidth="60">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Foreground="{DynamicResource Window.Forground}" Margin="5,0" Text="{Binding Value}" VerticalAlignment="Center" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
-                <DataGridTemplateColumn Header="{local:ResMarker Quality}" Width="Auto"  MinWidth="60">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Foreground="{DynamicResource Window.Forground}" Margin="5,0" Text="{Binding Quality}" VerticalAlignment="Center" />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
             </DataGrid.Columns>
-            <DataGrid.RowDetailsTemplate>
-                <DataTemplate>
-                    <Grid  Margin="10,4" Visibility="{Binding HasHisTag,Converter={StaticResource btv}}" Height="36">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="{local:ResMarker RecordType,:}" Foreground="{DynamicResource Window.Forground}" VerticalAlignment="Center" />
-                        <ComboBox Margin="4,0" Grid.Column="1" Width="160" VerticalAlignment="Center"  SelectedIndex="{Binding RecordType,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding RecordTypeList}">
-                            
-                        </ComboBox>
-                        <StackPanel Grid.Column="2" Orientation="Horizontal">
-                            <Grid Margin="4,0"  Visibility="{Binding IsTimerRecord,Converter={StaticResource btv}}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker Circle,:}" VerticalAlignment="Center" />
-                                <TextBox  CaretBrush="White"  Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="8,0" Grid.Column="1" Width="60" Text="{Binding CompressCircle,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
-                            </Grid>
-
-                            <Grid Margin="4,0"  Visibility="{Binding IsDriverRecord,Converter={StaticResource btv}}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker MaxValueCountPersecond,:}" VerticalAlignment="Center" />
-                                <TextBox  CaretBrush="White"  Background="#1FFFFFFF" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="8,0" Grid.Column="1" Width="60" Text="{Binding MaxValueCountPerSecond,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
-                            </Grid>
-
-                            <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{local:ResMarker CompressType,:}"  VerticalAlignment="Center"/>
-                            <ComboBox  Background="#1FFFFFFF"  Margin="8,0" Width="160" VerticalAlignment="Center" ItemsSource="{Binding CompressTypeList}" SelectedIndex="{Binding CompressType,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
-                            <ContentControl  VerticalAlignment="Center" Content="{Binding CompressParameterModel}" HorizontalAlignment="Stretch" />
-                        </StackPanel>
-
-                    </Grid>
-                </DataTemplate>
-            </DataGrid.RowDetailsTemplate>
         </DataGrid>
         <StackPanel Grid.Row="2" Orientation="Horizontal" Grid.Column="1" Height="32" VerticalAlignment="Bottom"  Background="#07FFFFFF">
             <Button  BorderBrush="Green"  BorderThickness="0,0,0,2"  Content="{local:ResMarker Add}" Command="{Binding AddCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" Padding="0">
@@ -406,7 +759,7 @@
                 </Button.ContentTemplate>
             </Button>
         </StackPanel>
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Grid.Column="1" Height="32" HorizontalAlignment="Right" VerticalAlignment="Bottom" >
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Grid.Column="1" Height="32" HorizontalAlignment="Right" VerticalAlignment="Bottom"  Margin="5,0">
             <Label VerticalAlignment="Center" Content="{local:ResMarker TagCount,:}" Foreground="{DynamicResource Window.Forground}"/>
             <Label VerticalAlignment="Center" Content="{Binding TagCount}" Foreground="{DynamicResource Window.Forground}"/>
         </StackPanel>

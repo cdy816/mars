@@ -34,6 +34,7 @@ message TagBase
 	string MaxValue=9;
 	string MinValue=10;
 	string Precision=11;
+	string SubTags=12;
 }
 
 //

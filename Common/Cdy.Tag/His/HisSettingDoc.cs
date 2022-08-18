@@ -74,7 +74,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public int KeepNoZipFileDays { get; set; } = -1;
+        public double KeepNoZipFileDays { get; set; } = -1;
 
         #endregion ...Properties...
 
@@ -151,7 +151,7 @@ namespace Cdy.Tag
 
             if (element.Attribute("KeepNoZipFileDays") != null)
             {
-                re.KeepNoZipFileDays = int.Parse(element.Attribute("KeepNoZipFileDays").Value);
+                re.KeepNoZipFileDays = double.Parse(element.Attribute("KeepNoZipFileDays").Value);
             }
 
             return re;

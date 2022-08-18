@@ -16,6 +16,11 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public static TagHisValue<T> Empty = new TagHisValue<T>() { Quality = byte.MaxValue,Time=DateTime.MinValue };
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static TagHisValue<T> MinValue = new TagHisValue<T> { Quality = byte.MinValue,Time=DateTime.MinValue };
         
         #endregion ...Variables...
 
@@ -46,9 +51,22 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public bool IsEmpty()
         {
             return this.Time == DateTime.MinValue && this.Quality == byte.MaxValue;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool IsMin()
+        {
+            return this.Time == DateTime.MinValue && this.Quality == byte.MinValue;
         }
 
         #endregion ...Methods...

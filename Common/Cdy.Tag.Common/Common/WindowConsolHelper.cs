@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -36,6 +37,19 @@ namespace Cdy.Tag
         [DllImport("User32.dll", EntryPoint = "ShowWindow")]   //
         private static extern bool ShowWindow(IntPtr hWnd, int type);
 
+        [DllImport("user32.dll")]
+        static extern bool EnableMenuItem(IntPtr hMenu, uint uIDEnableItem, uint uEnable);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr RemoveMenu(IntPtr hMenu, uint nPosition, uint wFlags);
+
+        internal const uint SC_CLOSE = 0xF060;
+        internal const uint MF_GRAYED = 0x00000001;
+        internal const uint MF_BYCOMMAND = 0x00000000;
+
         public static void DisbleQuickEditMode()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -46,6 +60,23 @@ namespace Cdy.Tag
                 mode &= ~ENABLE_QUICK_EDIT_MODE;//移除快速编辑模式
                 mode &= ~ENABLE_INSERT_MODE;      //移除插入模式
                 SetConsoleMode(hStdin, mode);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static void DiableCloseMenu()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                IntPtr hMenu = Process.GetCurrentProcess().MainWindowHandle;
+                if (hMenu != IntPtr.Zero)
+                {
+                    IntPtr hSystemMenu = GetSystemMenu(hMenu, false);
+                    EnableMenuItem(hSystemMenu, SC_CLOSE, MF_GRAYED);
+                    RemoveMenu(hSystemMenu, SC_CLOSE, MF_BYCOMMAND);
+                }
             }
         }
 

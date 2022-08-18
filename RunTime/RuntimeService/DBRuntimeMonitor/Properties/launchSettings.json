@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DBRuntimeMonitor": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\chongdaoyang.JIUSIYI\\source\\repos\\Dev\\mars\\Output\\DBRuntimeMonitor.exe"
+    }
+  }
+}

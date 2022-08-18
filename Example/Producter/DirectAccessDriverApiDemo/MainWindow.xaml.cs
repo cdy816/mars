@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -99,7 +100,12 @@ namespace DirectAccessDriverApiDemo
 
                 var rds = mProxy.GetDriverRecordTypeTagIds();
 
-                itmsg.Text = $"变量个数:{ mTagids.Count } 变量ID  Min:{mTagids.Values.Min() }   Max:{mTagids.Values.Max()}  驱动记录类型的变量个数:{rds.Count}";
+                if(mTagids.Count>0)
+                {
+                    htagname.ItemsSource = mTagids.Keys;
+                    itmsg.Text = $"变量个数:{mTagids.Count} 变量ID  Min:{mTagids.Values.Min()}   Max:{mTagids.Values.Max()}  驱动记录类型的变量个数:{rds.Count}";
+                }
+               
             }
             catch(Exception ex)
             {
@@ -117,16 +123,18 @@ namespace DirectAccessDriverApiDemo
             try
             {
                 int sname = mTagids[htagname.Text];
-                DateTime stime = DateTime.Parse(htimestart.Text);
-                DateTime etime = DateTime.Parse(htimeend.Text);
+                DateTime stime = DateTime.Parse(htimestart.Text).ToUniversalTime();
+                DateTime etime = DateTime.Parse(htimeend.Text).ToUniversalTime();
                 int spen = int.Parse(htimspan.Text);
                 Dictionary<DateTime, double> values = new Dictionary<DateTime, double>();
-                Random rd = new Random((int)DateTime.Now.Ticks);
+                //Random rd = new Random((int)DateTime.Now.Ticks);
+                int i = 0;
                 DateTime dt = stime;
                 while (dt <= etime)
                 {
-                    values.Add(dt, rd.NextDouble());
+                    values.Add(dt, i);
                     dt = dt.AddSeconds(spen);
+                    i++;
                 }
 
                 DirectAccessDriver.ClientApi.HisDataBuffer hbuffer = new DirectAccessDriver.ClientApi.HisDataBuffer();
@@ -261,8 +269,8 @@ namespace DirectAccessDriverApiDemo
                 int sid = int.Parse(htagnames.Text);
                 int eid = int.Parse(htagnamee.Text);
 
-                DateTime stime = DateTime.Parse(htimestart.Text);
-                DateTime etime = DateTime.Parse(htimeend.Text);
+                DateTime stime = DateTime.Parse(htimestart.Text).ToUniversalTime();
+                DateTime etime = DateTime.Parse(htimeend.Text).ToUniversalTime();
                 int spen = int.Parse(htimspan.Text);
                 Dictionary<DateTime, double> values = new Dictionary<DateTime, double>();
                 Random rd = new Random((int)DateTime.Now.Ticks);
@@ -294,6 +302,80 @@ namespace DirectAccessDriverApiDemo
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void settagvaluetime_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (tagmodsel.IsChecked.Value)
+                {
+                    int id = mTagids[rtname.Text];
+                    double dval = double.Parse(rtval.Text);
+                    mProxy.SetTagRealAndHisValueWithTimer(new List<RealTagValueWithTimer>() { new RealTagValueWithTimer() { Id = id, Value = dval, ValueType = 8, Quality = 0,Time = DateTime.UtcNow } });
+                }
+                else
+                {
+                    DirectAccessDriver.ClientApi.RealDataBuffer rbuffer = new DirectAccessDriver.ClientApi.RealDataBuffer();
+                    double dval = double.Parse(rtval.Text);
+                    for (int i = int.Parse(rtsid.Text); i <= int.Parse(rteid.Text); i++)
+                    {
+                        rbuffer.AppendValue(i, dval, 0);
+                    }
+                    mProxy.SetTagValueAndQuality(rbuffer);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void settagvaluetime2_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (tagmodsel.IsChecked.Value)
+                {
+                    int id = mTagids[rtname.Text];
+                    double dval = double.Parse(rtval.Text);
+                    mProxy.SetTagValueTimerAndQuality(new List<RealTagValueWithTimer>() { new RealTagValueWithTimer() { Id = id, Value = dval, ValueType = 8, Quality = 0, Time = DateTime.UtcNow } });
+                }
+                else
+                {
+                    DirectAccessDriver.ClientApi.RealDataBuffer rbuffer = new DirectAccessDriver.ClientApi.RealDataBuffer();
+                    double dval = double.Parse(rtval.Text);
+                    for (int i = int.Parse(rtsid.Text); i <= int.Parse(rteid.Text); i++)
+                    {
+                        rbuffer.AppendValue(i, dval, 0);
+                    }
+                    mProxy.SetTagValueAndQuality(rbuffer);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void SettagvalueforScan_Click(object sender, RoutedEventArgs e)
+        {
+            if (tagmodsel.IsChecked.Value)
+            {
+                int id = mTagids[rtname.Text];
+
+                Task.Run(() => { 
+                
+                    while(true)
+                    {
+                        DateTime dt = DateTime.Now;
+                        mProxy.SetTagRealAndHisValueWithTimer(new List<RealTagValueWithTimer>() { new RealTagValueWithTimer() { Id = id, Value = dt.Second, ValueType = 8, Quality = 0, Time = DateTime.UtcNow.AddSeconds(10) } }) ;
+                        Thread.Sleep(1000);
+                    }
+                
+                });
+
             }
         }
     }

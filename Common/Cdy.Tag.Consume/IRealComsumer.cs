@@ -61,6 +61,35 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         /// <returns></returns>
         object GetTagValue(string name, out byte quality, out DateTime time, out byte valueType);
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        bool IsComplexTag(int id);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        bool IsComplexTag(string name);
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="res"></param>
+        void GetComplexTagValue(int id, List<RealTagValueWithTimer> res);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="res"></param>
+        void GetComplexTagValue(string name, List<RealTagValueWithTimer> res);
 
         /// <summary>
         /// 设置变量的值

@@ -72,6 +72,11 @@ namespace Cdy.Tag.Driver
         /// </summary>
         string[] Registors { get; }
 
+        /// <summary>
+        /// 编辑类型
+        /// </summary>
+        string EditType { get; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...

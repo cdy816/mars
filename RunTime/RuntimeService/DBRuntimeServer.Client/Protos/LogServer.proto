@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+option csharp_namespace = "DBRuntimeServer";
+
+package DBRuntimeServer;
+
+// The LogServer service definition.
+service LogServer {
+ 
+rpc GetLog(GetLogRequest) returns (GetLogResponse);
+
+rpc GetLog2(GetLogRequest2) returns (GetLogResponse);
+
+}
+
+message GetLogResponse{
+	bytes msg=1;
+	bool result=2;
+}
+
+message GetLogRequest{
+	string Token=1;
+	string Database=2;
+	string LogType=3;
+	string StartTime=4;
+}
+
+
+message GetLogRequest2{
+	string Token=1;
+	string Database=2;
+	string LogType=3;
+	string StartTime=4;
+	string EndTime=5;
+	
+}

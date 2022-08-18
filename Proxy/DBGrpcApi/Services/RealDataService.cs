@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Cdy.Tag;
 using Grpc.Core;
@@ -73,11 +74,20 @@ namespace DBGrpcApi
                         byte quality;
                         DateTime time;
                         byte tagtype = 0;
-                        var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
-                        if (val != null)
-                            response.Values.Add(new ValueQualityTime() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype,Time=time.ToBinary()});
+                        if (service.IsComplexTag(ids[i].Value))
+                        {
+                            List<RealTagValueWithTimer> res = new List<RealTagValueWithTimer>();
+                            service.GetComplexTagValue(ids[i].Value, res);
+                            response.Values.Add(new ValueQualityTime() { Id = i, ValueType = (byte)TagType.Complex, Quality = 0, Value = FormateToString(res) });
+                        }
                         else
-                            response.Values.Add(new ValueQualityTime() { Id = i, Quality = (byte)QualityConst.Null, Value = "", ValueType = tagtype, Time = 0 });
+                        {
+                            var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
+                            if (val != null)
+                                response.Values.Add(new ValueQualityTime() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype, Time = time.ToBinary() });
+                            else
+                                response.Values.Add(new ValueQualityTime() { Id = i, Quality = (byte)QualityConst.Null, Value = "", ValueType = tagtype, Time = 0 });
+                        }
                     }
                 }
                 return Task.FromResult(response);
@@ -105,11 +115,21 @@ namespace DBGrpcApi
                     byte quality;
                     DateTime time;
                     byte tagtype = 0;
-                    var val = service.GetTagValue(request.Ids[i], out quality, out time, out tagtype);
-                    if(val!=null)
-                    response.Values.Add(new ValueQualityTime() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype, Time = time.ToBinary() });
+
+                    if (service.IsComplexTag(request.Ids[i]))
+                    {
+                        List<RealTagValueWithTimer> res = new List<RealTagValueWithTimer>();
+                        service.GetComplexTagValue(request.Ids[i], res);
+                        response.Values.Add(new ValueQualityTime() { Id = request.Ids[i], ValueType = (byte)TagType.Complex, Quality = 0, Value = FormateToString(res) });
+                    }
                     else
-                        response.Values.Add(new ValueQualityTime() { Id = i, Quality = (byte)QualityConst.Null, Value = "", ValueType = tagtype, Time = 0 });
+                    {
+                        var val = service.GetTagValue(request.Ids[i], out quality, out time, out tagtype);
+                        if (val != null)
+                            response.Values.Add(new ValueQualityTime() { Id = request.Ids[i], Quality = quality, Value = val.ToString(), ValueType = tagtype, Time = time.ToBinary() });
+                        else
+                            response.Values.Add(new ValueQualityTime() { Id = request.Ids[i], Quality = (byte)QualityConst.Null, Value = "", ValueType = tagtype, Time = 0 });
+                    }
                 }
                 return Task.FromResult(response);
             }
@@ -139,11 +159,21 @@ namespace DBGrpcApi
                         byte quality;
                         DateTime time;
                         byte tagtype = 0;
-                        var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
-                        if (val != null)
-                            response.Values.Add(new ValueAndQuality() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype });
+                        if (service.IsComplexTag(ids[i].Value))
+                        {
+                            List<RealTagValueWithTimer> res = new List<RealTagValueWithTimer>();
+                            service.GetComplexTagValue(ids[i].Value, res);
+                            response.Values.Add(new ValueAndQuality() { Id = i, ValueType = (byte)TagType.Complex, Quality = 0, Value = FormateToString(res) });
+                        }
                         else
-                            response.Values.Add(new ValueAndQuality() { Id = i, Quality = (int)QualityConst.Null, Value = "", ValueType = tagtype });
+                        {
+
+                            var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
+                            if (val != null)
+                                response.Values.Add(new ValueAndQuality() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype });
+                            else
+                                response.Values.Add(new ValueAndQuality() { Id = i, Quality = (int)QualityConst.Null, Value = "", ValueType = tagtype });
+                        }
                     }
                 }
                 return Task.FromResult(response);
@@ -152,6 +182,21 @@ namespace DBGrpcApi
             {
                 return Task.FromResult(new GetRealValueAndQualityReply() { Result = false });
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="vals"></param>
+        /// <returns></returns>
+        private string FormateToString(List<RealTagValueWithTimer> vals)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (RealTagValueWithTimer val in vals)
+            {
+                sb.Append($"{val.Id}:{val.ValueType}:{val.Value}:{val.Quality}:{val.Time.ToBinary()};");
+            }
+            return sb.ToString();
         }
 
         /// <summary>
@@ -172,11 +217,20 @@ namespace DBGrpcApi
                     DateTime time;
                     byte tagtype = 0;
                     var vid = request.Ids[i];
-                    var val = service.GetTagValue(vid, out quality, out time, out tagtype);
-                    if (val != null)
-                        response.Values.Add(new ValueAndQuality() { Id = i, Quality = quality, Value = val.ToString(), ValueType = tagtype });
+                    if (service.IsComplexTag(vid))
+                    {
+                        List<RealTagValueWithTimer> res = new List<RealTagValueWithTimer>();
+                        service.GetComplexTagValue(vid, res);
+                        response.Values.Add(new ValueAndQuality() { Id = vid, ValueType = (byte)TagType.Complex, Quality = 0, Value = FormateToString(res) });
+                    }
                     else
-                        response.Values.Add(new ValueAndQuality() { Id = i, Quality = (int)QualityConst.Null, Value = "", ValueType = tagtype });
+                    {
+                        var val = service.GetTagValue(vid, out quality, out time, out tagtype);
+                        if (val != null)
+                            response.Values.Add(new ValueAndQuality() { Id = vid, Quality = quality, Value = val.ToString(), ValueType = tagtype });
+                        else
+                            response.Values.Add(new ValueAndQuality() { Id = vid, Quality = (int)QualityConst.Null, Value = "", ValueType = tagtype });
+                    }
                 }
                 return Task.FromResult(response);
             }
@@ -206,11 +260,20 @@ namespace DBGrpcApi
                         byte quality;
                         DateTime time;
                         byte tagtype = 0;
-                        var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
-                        if(val!=null)
-                        response.Values.Add(new ValueOnly() { Id = i, Value = val.ToString(), ValueType = tagtype });
+                        if (service.IsComplexTag(ids[i].Value))
+                        {
+                            List<RealTagValueWithTimer> res = new List<RealTagValueWithTimer>();
+                            service.GetComplexTagValue(ids[i].Value, res);
+                            response.Values.Add(new ValueOnly() { Id = i, ValueType = (byte)TagType.Complex,Value = FormateToString(res) });
+                        }
                         else
-                            response.Values.Add(new ValueOnly() { Id = i, Value = "", ValueType = tagtype });
+                        {
+                            var val = service.GetTagValue(ids[i].Value, out quality, out time, out tagtype);
+                            if (val != null)
+                                response.Values.Add(new ValueOnly() { Id = i, Value = val.ToString(), ValueType = tagtype });
+                            else
+                                response.Values.Add(new ValueOnly() { Id = i, Value = "", ValueType = tagtype });
+                        }
                     }
                 }
                 return Task.FromResult(response);
@@ -240,11 +303,20 @@ namespace DBGrpcApi
                     DateTime time;
                     byte tagtype = 0;
                     var vid = request.Ids[i];
-                    var val = service.GetTagValue(vid, out quality, out time, out tagtype);
-                    if (val != null)
-                        response.Values.Add(new ValueOnly() { Id = vid, Value = val.ToString(), ValueType = tagtype });
+                    if (service.IsComplexTag(vid))
+                    {
+                        List<RealTagValueWithTimer> res = new List<RealTagValueWithTimer>();
+                        service.GetComplexTagValue(vid, res);
+                        response.Values.Add(new ValueOnly() { Id = vid, ValueType = (byte)TagType.Complex, Value = FormateToString(res) });
+                    }
                     else
-                        response.Values.Add(new ValueOnly() { Id = vid, Value = "", ValueType = tagtype });
+                    {
+                        var val = service.GetTagValue(vid, out quality, out time, out tagtype);
+                        if (val != null)
+                            response.Values.Add(new ValueOnly() { Id = vid, Value = val.ToString(), ValueType = tagtype });
+                        else
+                            response.Values.Add(new ValueOnly() { Id = vid, Value = "", ValueType = tagtype });
+                    }
                 }
                 return Task.FromResult(response);
             }

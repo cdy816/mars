@@ -16,6 +16,7 @@ using System.Threading;
 using System.Security.Cryptography;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 namespace Cdy.Tag
 {
@@ -150,6 +151,10 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public string DatabasePath { get; set; }
 
 
         #endregion ...Properties...
@@ -264,6 +269,325 @@ namespace Cdy.Tag
                 }
             }
 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private string GetCachFileName()
+        {
+            if (!string.IsNullOrEmpty(DatabasePath))
+            {
+                return System.IO.Path.Combine(DatabasePath, mConfigDatabase.Name+".rdch");
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 从磁盘文件加载到内存，用于初始值等于退出时的值
+        /// </summary>
+        public void LoadDataCach()
+        {
+            try
+            {
+                string sfile = GetCachFileName();
+                if (!string.IsNullOrEmpty(sfile) && System.IO.File.Exists(sfile))
+                {
+
+                    MarshalFixedMemoryBlock mmb = sfile.LoadMarshalFixedFromFile();
+
+                    var tagcount = mmb.ReadInt(8);
+                    for (int i = 0; i < tagcount; i++)
+                    {
+                        var vid = mmb.ReadInt();
+                        var time = mmb.ReadDateTime();
+                        var quality = mmb.ReadByte();
+                        var type = (TagType)mmb.ReadByte();
+                        object val = null;
+                        switch (type)
+                        {
+                            case TagType.Bool:
+                            case TagType.Byte:
+                                val = mmb.ReadByte();
+                                break;
+                            case TagType.Short:
+                                val = mmb.ReadShort();
+                                break;
+                            case TagType.UShort:
+                                val = mmb.ReadUShort();
+                                break;
+                            case TagType.Int:
+                                val = mmb.ReadInt();
+                                break;
+                            case TagType.UInt:
+                                val = mmb.ReadUInt();
+                                break;
+                            case TagType.Long:
+                                val = mmb.ReadLong();
+                                break;
+                            case TagType.ULong:
+                                val = mmb.ReadULong();
+                                break;
+                            case TagType.Float:
+                                val = mmb.ReadFloat();
+                                break;
+                            case TagType.Double:
+                                val = mmb.ReadDouble();
+                                break;
+                            case TagType.String:
+                                val = mmb.ReadString();
+                                break;
+                            case TagType.DateTime:
+                                val = mmb.ReadDateTime();
+                                break;
+                            case TagType.IntPoint:
+                                val = new IntPointData(mmb.ReadInt(), mmb.ReadInt());
+                                break;
+                            case TagType.UIntPoint:
+                                val = new UIntPointData(mmb.ReadUInt(), mmb.ReadUInt());
+                                break;
+                            case TagType.IntPoint3:
+                                val = new IntPoint3Data(mmb.ReadInt(), mmb.ReadInt(), mmb.ReadInt());
+                                break;
+                            case TagType.UIntPoint3:
+                                val = new UIntPoint3Data(mmb.ReadUInt(), mmb.ReadUInt(), mmb.ReadUInt());
+                                break;
+                            case TagType.LongPoint:
+                                val = new LongPointData(mmb.ReadLong(), mmb.ReadLong());
+                                break;
+                            case TagType.ULongPoint:
+                                val = new ULongPointData(mmb.ReadULong(), mmb.ReadULong());
+                                break;
+                            case TagType.LongPoint3:
+                                val = new LongPoint3Data(mmb.ReadLong(), mmb.ReadLong(), mmb.ReadLong());
+                                break;
+                            case TagType.ULongPoint3:
+                                val = new ULongPoint3Data(mmb.ReadULong(), mmb.ReadULong(), mmb.ReadULong());
+                                break;
+                        }
+                        try
+                        {
+                            if (mConfigDatabase.Tags.ContainsKey(vid))
+                            {
+                                var tag = mConfigDatabase.Tags[vid];
+                                switch (type)
+                                {
+                                    case TagType.Bool:
+                                        SetBoolTagValue(tag, val, quality, time);
+                                        break;
+                                    case TagType.Byte:
+                                        SetByteTagValue(tag, val, quality, time);
+                                        break;
+                                    case TagType.Short:
+                                        SetShortTagValue(tag, val, quality, time);
+                                        break;
+                                    case TagType.UShort:
+                                        SetUShortTagValue(tag, val, quality, time);
+                                        break;
+                                    case TagType.Int:
+                                        SetIntTagValue(tag, val, quality, time);
+                                        break;
+                                    case TagType.UInt:
+                                        SetUIntTagValue(tag, val, quality, time);
+                                        break;
+                                    case TagType.Long:
+                                        SetLongTagValue(tag, val, quality, time);
+                                        break;
+                                    case TagType.ULong:
+                                        SetULongTagValue(tag, val, quality, time);
+                                        break;
+                                    case TagType.Float:
+                                        SetFloatTagValue(tag, val, quality, time);
+                                        break;
+                                    case TagType.Double:
+                                        SetDoubleTagValue(tag, val, quality, time);
+                                        break;
+                                    case TagType.String:
+                                        SetSrtingTagValue(tag, val == null ? "" : val.ToString(), quality, time);
+                                        break;
+                                    case TagType.DateTime:
+                                        SetDateTimeTagValue(tag, Convert.ToDateTime(val), quality, time);
+                                        break;
+                                    case TagType.IntPoint:
+                                        var ipp = (IntPointData)val;
+                                        SetPointValue(tag, quality, time, ipp.X, ipp.Y);
+                                        break;
+                                    case TagType.UIntPoint:
+                                        var uipp = (UIntPointData)val;
+                                        SetPointValue(tag, quality, time, uipp.X, uipp.Y);
+                                        break;
+                                    case TagType.IntPoint3:
+                                        var ipp3 = (IntPoint3Data)val;
+                                        SetPointValue(tag, quality, time, ipp3.X, ipp3.Y, ipp3.Z);
+                                        break;
+                                    case TagType.UIntPoint3:
+                                        var uipp3 = (UIntPoint3Data)val;
+                                        SetPointValue(tag, quality, time, uipp3.X, uipp3.Y, uipp3.Z);
+                                        break;
+                                    case TagType.LongPoint:
+                                        var lpp = (LongPointData)val;
+                                        SetPointValue(tag, quality, time, lpp.X, lpp.Y);
+                                        break;
+                                    case TagType.ULongPoint:
+                                        var ulpp = (ULongPointData)val;
+                                        SetPointValue(tag, quality, time, ulpp.X, ulpp.Y);
+                                        break;
+                                    case TagType.LongPoint3:
+                                        var lpp3 = (LongPoint3Data)val;
+                                        SetPointValue(tag, quality, time, lpp3.X, lpp3.Y, lpp3.Z);
+                                        break;
+                                    case TagType.ULongPoint3:
+                                        var ulpp3 = (ULongPoint3Data)val;
+                                        SetPointValue(tag, quality, time, ulpp3.X, ulpp3.Y, ulpp3.Z);
+                                        break;
+
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            LoggerService.Service.Warn("RealEnginer", $" LoadDataCach {ex.Message} {ex.StackTrace} ");
+                        }
+                    }
+
+                    mmb.Dispose();
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("RealEnginer", $"加载上次退出时实时数据缓存出错： {ex.Message} {ex.StackTrace} ");
+            }
+        }
+
+        /// <summary>
+        /// 将当前内存缓冲到磁盘文件
+        /// </summary>
+        public void CachDataToDisk()
+        {
+            try
+            {
+                using (MarshalFixedMemoryBlock mmb = new MarshalFixedMemoryBlock(mUsedSize + mConfigDatabase.Tags.Count * 5 + 12))
+                {
+                    //to do fill
+                    mmb.Position = 0;
+                    mmb.Write((long)0);
+                    mmb.Write(mConfigDatabase.Tags.Count);
+                    foreach (var vv in mConfigDatabase.Tags)
+                    {
+                        if (vv.Value is ComplexTag) continue;
+
+                        mmb.Write(vv.Key);
+                        var val = GetTagValue(vv.Value, out byte quality, out DateTime time);
+                        mmb.Write(time);
+                        mmb.Write(quality);
+                        mmb.Write((byte)vv.Value.Type);
+                        switch (vv.Value.Type)
+                        {
+                            case TagType.Bool:
+                                mmb.Write(Convert.ToByte(val));
+                                break;
+                            case TagType.Byte:
+                                mmb.Write(Convert.ToByte(val));
+                                break;
+                            case TagType.UShort:
+                                mmb.Write(Convert.ToUInt16(val));
+                                break;
+                            case TagType.Short:
+                                mmb.Write(Convert.ToInt16(val));
+                                break;
+                            case TagType.Int:
+                                mmb.Write(Convert.ToInt32(val));
+                                break;
+                            case TagType.UInt:
+                                mmb.Write(Convert.ToUInt32(val));
+                                break;
+                            case TagType.Long:
+                                mmb.Write(Convert.ToInt64(val));
+                                break;
+                            case TagType.ULong:
+                                mmb.Write(Convert.ToUInt64(val));
+                                break;
+                            case TagType.Float:
+                                mmb.Write(Convert.ToSingle(val));
+                                break;
+                            case TagType.Double:
+                                mmb.Write(Convert.ToDouble(val));
+                                break;
+                            case TagType.DateTime:
+                                mmb.Write(Convert.ToDateTime(val));
+                                break;
+                            case TagType.String:
+                                mmb.Write(Convert.ToString(val));
+                                break;
+                            case TagType.IntPoint:
+                                IntPointData ipd = (IntPointData)val;
+                                mmb.Write(ipd.X);
+                                mmb.Write(ipd.Y);
+                                break;
+                            case TagType.UIntPoint:
+                                UIntPointData uipd = (UIntPointData)val;
+                                mmb.Write(uipd.X);
+                                mmb.Write(uipd.Y);
+                                break;
+                            case TagType.IntPoint3:
+                                IntPoint3Data ipd3 = (IntPoint3Data)val;
+                                mmb.Write(ipd3.X);
+                                mmb.Write(ipd3.Y);
+                                mmb.Write(ipd3.Z);
+                                break;
+                            case TagType.UIntPoint3:
+                                UIntPoint3Data uipd3 = (UIntPoint3Data)val;
+                                mmb.Write(uipd3.X);
+                                mmb.Write(uipd3.Y);
+                                mmb.Write(uipd3.Z);
+                                break;
+                            case TagType.LongPoint:
+                                LongPointData lpd = (LongPointData)val;
+                                mmb.Write(lpd.X);
+                                mmb.Write(lpd.Y);
+                                break;
+                            case TagType.ULongPoint:
+                                ULongPointData ulpd = (ULongPointData)val;
+                                mmb.Write(ulpd.X);
+                                mmb.Write(ulpd.Y);
+                                break;
+                            case TagType.LongPoint3:
+                                LongPoint3Data lpd3 = (LongPoint3Data)val;
+                                mmb.Write(lpd3.X);
+                                mmb.Write(lpd3.Y);
+                                mmb.Write(lpd3.Z);
+                                break;
+                            case TagType.ULongPoint3:
+                                ULongPoint3Data ulpd3 = (ULongPoint3Data)val;
+                                mmb.Write(ulpd3.X);
+                                mmb.Write(ulpd3.Y);
+                                mmb.Write(ulpd3.Z);
+                                break;
+                            case TagType.Complex:
+                                break;
+                        }
+                    }
+                    long ltmp = mmb.Position;
+                    mmb.WriteLong(0, ltmp);
+
+                    using (System.IO.UnmanagedMemoryStream ums = new System.IO.UnmanagedMemoryStream((byte*)mmb.Buffers, ltmp))
+                    {
+                        using (var vff = System.IO.File.Open(GetCachFileName(), System.IO.FileMode.Create, System.IO.FileAccess.ReadWrite, System.IO.FileShare.ReadWrite))
+                        {
+                            ums.CopyTo(vff);
+                        }
+                    }
+
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("RealEnginer", $"将实时内存数据存盘出错： {ex.Message} {ex.StackTrace} ");
+            }
         }
 
         /// <summary>
@@ -420,15 +744,39 @@ namespace Cdy.Tag
                 //通知接口，变量发生了改变
                 foreach (var vv in ComsumerValueChangedNotifyManager.Manager.ListNotifiers())
                 {
-                    vv.UpdateBlock(mConfigDatabase.MaxId, (id) =>
+                    vv.UpdateBlock(mConfigDatabase.MaxId, (id, isnext) =>
                     {
-                        var itmp = (int)GetDataAddr(id);
+                        var itmp = 0;
+                        if (isnext)
+                        {
+                            itmp = (int)GetNextAddr(id);
+                        }
+                        else
+                        {
+                            itmp = (int)GetLastAddr(id);
+                        }
                         if (itmp < 0)
-                            return (int)(mIdAndAddr.Last().Value);
+                        {
+                            var vtag = GetTagById(mIdAndAddr.Last().Key);
+                            if (vtag != null)
+                                return (int)(mIdAndAddr.Last().Value + vtag.ValueSize);
+                            else
+                            {
+                                return (int)mUsedSize;
+                            }
+                        }
                         else
                         {
                             return itmp;
                         }
+
+                        //var itmp = (int)GetDataAddr(id);
+                        //if (itmp < 0)
+                        //    return (int)(mIdAndAddr.Last().Value);
+                        //else
+                        //{
+                        //    return itmp;
+                        //}
                     });
                 }
             }
@@ -606,7 +954,7 @@ namespace Cdy.Tag
                         var re = ReadValueAndConvertTo(oldtag.Type, tag.Type, oldtag.ValueAddress, out DateTime time, out byte quality);
                         
                         mIdAndAddr[tag.Id] = tag.ValueAddress;
-                        mConfigDatabase.Update(tag);
+                        mConfigDatabase.UpdateForRuntime(tag);
                         UnLock();
                         SetTagValue(tag, re, time, quality);
 
@@ -614,16 +962,16 @@ namespace Cdy.Tag
                     else if (mIdAndAddr.ContainsKey(tag.Id))
                     {
                         tag.ValueAddress = mIdAndAddr[tag.Id];
-                        mConfigDatabase.Update(tag);
+                        mConfigDatabase.UpdateForRuntime(tag);
                     }
                     else
                     {
-                        mConfigDatabase.Update(tag);
+                        mConfigDatabase.UpdateForRuntime(tag);
                     }
                 }
                 else
                 {
-                    mConfigDatabase.Update(tag);
+                    mConfigDatabase.UpdateForRuntime(tag);
                 }
             }
             catch(Exception ex)
@@ -1649,7 +1997,7 @@ namespace Cdy.Tag
         //        {
         //            UpdateByteValueTimeByAddr(addr,time);
         //        }
-                
+
         //    }
         //}
 
@@ -2448,7 +2796,7 @@ namespace Cdy.Tag
         //    }
         //}
 
-        
+
 
         ///// <summary>
         ///// 
@@ -2518,6 +2866,7 @@ namespace Cdy.Tag
         /// <param name="addr"></param>
         /// <param name="encoding"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ReadStringValueByAddr(long addr)
         {
             int len = MemoryHelper.ReadByte((sbyte*)mMHandle, addr);
@@ -2548,6 +2897,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte ReadByteValueByAddr(long addr)
         {
             return MemoryHelper.ReadByte(mMHandle, addr);
@@ -2572,6 +2922,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int ReadIntValueByAddr(long addr)
         {
             return MemoryHelper.ReadInt32(mMHandle, addr);
@@ -2597,6 +2948,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public uint ReadUIntValueByAddr(long addr)
         {
             return MemoryHelper.ReadUInt32(mMHandle, addr);
@@ -2621,6 +2973,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public short ReadShortValueByAddr(long addr)
         {
             return MemoryHelper.ReadShort(mMHandle, addr);
@@ -2647,6 +3000,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ushort ReadUShortValueByAddr(long addr)
         {
             return MemoryHelper.ReadUShort(mMHandle, addr);
@@ -2671,6 +3025,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long ReadInt64ValueByAddr(long addr)
         {
             return MemoryHelper.ReadInt64(mMHandle, addr);
@@ -2695,6 +3050,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ulong ReadUInt64ValueByAddr(long addr)
         {
             return MemoryHelper.ReadUInt64(mMHandle, addr);
@@ -2719,6 +3075,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double ReadDoubleValueByAddr(long addr)
         {
             return MemoryHelper.ReadDouble(mMHandle, addr);
@@ -2743,6 +3100,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float ReadFloatValueByAddr(long addr)
         {
             return MemoryHelper.ReadFloat(mMHandle, addr);
@@ -2767,6 +3125,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DateTime ReadDateTimeValueByAddr(long addr)
         {
             return MemoryHelper.ReadDateTime(mMHandle, addr);
@@ -2805,6 +3164,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IntPointData ReadIntPointValueByAddr(long addr)
         {
             return new IntPointData(MemoryHelper.ReadInt32(mMHandle, addr), MemoryHelper.ReadInt32(mMHandle, addr + 4));
@@ -2845,6 +3205,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public UIntPointData ReadUIntPointValueByAddr(long addr)
         {
             return new UIntPointData(MemoryHelper.ReadUInt32(mMHandle, addr), MemoryHelper.ReadUInt32(mMHandle, addr + 4));
@@ -2885,6 +3246,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IntPoint3Data ReadIntPoint3ValueByAddr(long addr)
         {
             return new IntPoint3Data(MemoryHelper.ReadInt32(mMHandle, addr), MemoryHelper.ReadInt32(mMHandle, addr + 4), MemoryHelper.ReadInt32(mMHandle, addr + 8));
@@ -2923,6 +3285,12 @@ namespace Cdy.Tag
             return new UIntPoint3Data(MemoryHelper.ReadUInt32(mMHandle, addr), MemoryHelper.ReadUInt32(mMHandle, addr + 4), MemoryHelper.ReadUInt32(mMHandle, addr + 8));
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public UIntPoint3Data ReadUIntPoint3ValueByAddr(long addr)
         {
             return new UIntPoint3Data(MemoryHelper.ReadUInt32(mMHandle, addr), MemoryHelper.ReadUInt32(mMHandle, addr + 4), MemoryHelper.ReadUInt32(mMHandle, addr + 8));
@@ -2954,6 +3322,7 @@ namespace Cdy.Tag
         /// <param name="quality"></param>
         /// <param name="time"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public LongPointData ReadLongPointValueByAddr(long addr, out byte quality, out DateTime time)
         {
             time = MemoryHelper.ReadDateTime(mMHandle, addr + 16);
@@ -2966,6 +3335,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public LongPointData ReadLongPointValueByAddr(long addr)
         {
             return new LongPointData(MemoryHelper.ReadInt64(mMHandle, addr), MemoryHelper.ReadInt64(mMHandle, addr + 8));
@@ -3006,6 +3376,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ULongPointData ReadULongPointValueByAddr(long addr)
         {
             return new ULongPointData(MemoryHelper.ReadUInt64(mMHandle, addr), MemoryHelper.ReadUInt64(mMHandle, addr + 8));
@@ -3042,6 +3413,12 @@ namespace Cdy.Tag
         }
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addr"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public LongPoint3Data ReadLongPoint3ValueByAddr(long addr)
         {
             return new LongPoint3Data(MemoryHelper.ReadInt64(mMHandle, addr), MemoryHelper.ReadInt64(mMHandle, addr + 8), MemoryHelper.ReadInt64(mMHandle, addr + 16));
@@ -3084,6 +3461,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="addr"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ULongPoint3Data ReadULongPoint3ValueByAddr(long addr)
         {
             return new ULongPoint3Data(MemoryHelper.ReadUInt64(mMHandle, addr), MemoryHelper.ReadUInt64(mMHandle, addr + 8), MemoryHelper.ReadUInt64(mMHandle, addr + 16));
@@ -3717,6 +4095,69 @@ namespace Cdy.Tag
             return -1;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public long GetLastAddr(int id)
+        {
+            int i = 0;
+            foreach(var vv  in mIdAndAddr)
+            {
+                
+                if(vv.Key==id)
+                {
+                    return vv.Value;
+                }
+                else if(vv.Key>id)
+                {
+                    return mIdAndAddr.ElementAt(i).Value;
+                }
+                i++;
+            }
+            return -1;
+        }
+
+        public long GetNextAddr(int id)
+        {
+            int i = 0;
+            foreach (var vv in mIdAndAddr)
+            {
+                if (vv.Key>=id && mIdAndAddr.Count>i)
+                {
+                    return mIdAndAddr.ElementAt(i).Value;
+                }
+                i++;
+            }
+            return mUsedSize+1;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public long GetDataAddrByCount(int count)
+        {
+            try
+            {
+                if (count >= mIdAndAddr.Count)
+                {
+                    return -1;
+                }
+                else
+                {
+                    return mIdAndAddr.ElementAt(count).Value;
+                }
+            }
+            catch
+            {
+                return -1;
+            }
+            
+        }
+
         #endregion
 
         #endregion ...Methods...
@@ -3755,6 +4196,23 @@ namespace Cdy.Tag
             else
             {
                 return new List<int>();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public List<Tagbase> GetTagByLinkAddressStartHeadString(string address)
+        {
+            if (mConfigDatabase != null)
+            {
+                return mConfigDatabase.GetTagIdsByLinkAddressStartHeadString(address);
+            }
+            else
+            {
+                return new List<Tagbase>();
             }
         }
 
@@ -3838,7 +4296,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="qulity"></param>
         /// <param name="time"></param>
-        public void SetBoolTagValue(Tagbase tag,bool value,byte qulity,DateTime time)
+        public void SetBoolTagValue(Tagbase tag,object value,byte qulity,DateTime time)
         {
             Take();
             try
@@ -3850,7 +4308,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    btmp = value;
+                    btmp = Convert.ToBoolean(value);
                 }
 
                 if (ReadByteValueByAddr(tag.ValueAddress) != (btmp ? (byte)1 : (byte)0))
@@ -3877,7 +4335,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="qulity"></param>
         /// <param name="time"></param>
-        public void SetByteTagValue(Tagbase tag, byte value, byte qulity, DateTime time)
+        public void SetByteTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
 
@@ -3887,15 +4345,34 @@ namespace Cdy.Tag
 
                 byte btmp = 0;
 
-                if (tag.Conveter != null)
+                try
                 {
+                    if (tag.Conveter != null)
+                    {
 
-                    btmp = Convert.ToByte(tag.Conveter.ConvertTo(value));
+                        btmp = Convert.ToByte(tag.Conveter.ConvertTo(value));
+                    }
+                    else
+                    {
+                        btmp = Convert.ToByte(value);
+                    }
                 }
-                else
+                catch(System.OverflowException eex)
                 {
-                    btmp = value;
+                    LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + eex.Message);
+                    long ltmp = Convert.ToInt64(value);
+                    if (ltmp > byte.MaxValue)
+                    {
+                        btmp = byte.MaxValue;
+                        qulity = (byte)QualityConst.AboveUpperLimit;
+                    }
+                    else
+                    {
+                        btmp = byte.MinValue;
+                        qulity = (byte)QualityConst.BelowLowerLimit;
+                    }
                 }
+
                 if (vtag != null)
                 {
                     if (ReadByteValueByAddr(tag.ValueAddress) != btmp)
@@ -3922,7 +4399,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="qulity"></param>
         /// <param name="time"></param>
-        public void SetShortTagValue(Tagbase tag, short value, byte qulity, DateTime time)
+        public void SetShortTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
             try
@@ -3930,14 +4407,32 @@ namespace Cdy.Tag
                 var vtag = tag as NumberTagBase;
 
                 short btmp = 0;
-                if (tag.Conveter != null)
+                try
                 {
+                    if (tag.Conveter != null)
+                    {
 
-                    btmp = Convert.ToInt16(tag.Conveter.ConvertTo(value));
+                        btmp = Convert.ToInt16(tag.Conveter.ConvertTo(value));
+                    }
+                    else
+                    {
+                        btmp = Convert.ToInt16(value);
+                    }
                 }
-                else
+                catch(System.OverflowException exx)
                 {
-                    btmp = value;
+                    LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + exx.Message);
+                    long ltmp = Convert.ToInt64(value);
+                    if (ltmp > short.MaxValue)
+                    {
+                        btmp = short.MaxValue;
+                        qulity = (byte)QualityConst.AboveUpperLimit;
+                    }
+                    else
+                    {
+                        btmp = short.MinValue;
+                        qulity = (byte)QualityConst.BelowLowerLimit;
+                    }
                 }
                 if (vtag != null)
                 {
@@ -3965,7 +4460,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="qulity"></param>
         /// <param name="time"></param>
-        public void SetUShortTagValue(Tagbase tag, ushort value, byte qulity, DateTime time)
+        public void SetUShortTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
             try
@@ -3973,14 +4468,32 @@ namespace Cdy.Tag
                 var vtag = tag as NumberTagBase;
 
                 ushort btmp = 0;
-                if (tag.Conveter != null)
+                try
                 {
+                    if (tag.Conveter != null)
+                    {
 
-                    btmp = Convert.ToUInt16(tag.Conveter.ConvertTo(value));
+                        btmp = Convert.ToUInt16(tag.Conveter.ConvertTo(value));
+                    }
+                    else
+                    {
+                        btmp = Convert.ToUInt16(value);
+                    }
                 }
-                else
+                catch (System.OverflowException exx)
                 {
-                    btmp = value;
+                    LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + exx.Message);
+                    long ltmp = Convert.ToInt64(value);
+                    if (ltmp > ushort.MaxValue)
+                    {
+                        btmp = ushort.MaxValue;
+                        qulity = (byte)QualityConst.AboveUpperLimit;
+                    }
+                    else
+                    {
+                        btmp = ushort.MinValue;
+                        qulity = (byte)QualityConst.BelowLowerLimit;
+                    }
                 }
                 if (vtag != null)
                 {
@@ -4008,7 +4521,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="qulity"></param>
         /// <param name="time"></param>
-        public void SetIntTagValue(Tagbase tag, int value, byte qulity, DateTime time)
+        public void SetIntTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
             try
@@ -4016,14 +4529,32 @@ namespace Cdy.Tag
                 var vtag = tag as NumberTagBase;
 
                 int btmp = 0;
-                if (tag.Conveter != null)
+                try
                 {
+                    if (tag.Conveter != null)
+                    {
 
-                    btmp = Convert.ToInt32(tag.Conveter.ConvertTo(value));
+                        btmp = Convert.ToInt32(tag.Conveter.ConvertTo(value));
+                    }
+                    else
+                    {
+                        btmp = Convert.ToInt32(value);
+                    }
                 }
-                else
+                catch(System.OverflowException exx)
                 {
-                    btmp = value;
+                    LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + exx.Message);
+                    long ltmp = Convert.ToInt64(value);
+                    if (ltmp > int.MaxValue)
+                    {
+                        btmp = int.MaxValue;
+                        qulity = (byte)QualityConst.AboveUpperLimit;
+                    }
+                    else
+                    {
+                        btmp = int.MinValue;
+                        qulity = (byte)QualityConst.BelowLowerLimit;
+                    }
                 }
                 if (vtag != null)
                 {
@@ -4051,7 +4582,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="qulity"></param>
         /// <param name="time"></param>
-        public void SetUIntTagValue(Tagbase tag, uint value, byte qulity, DateTime time)
+        public void SetUIntTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
             try
@@ -4059,14 +4590,32 @@ namespace Cdy.Tag
                 var vtag = tag as NumberTagBase;
 
                 uint btmp = 0;
-                if (tag.Conveter != null)
+                try
                 {
+                    if (tag.Conveter != null)
+                    {
 
-                    btmp = Convert.ToUInt32(tag.Conveter.ConvertTo(value));
+                        btmp = Convert.ToUInt32(tag.Conveter.ConvertTo(value));
+                    }
+                    else
+                    {
+                        btmp = Convert.ToUInt32(value);
+                    }
                 }
-                else
+                catch(System.OverflowException exx)
                 {
-                    btmp = value;
+                    LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + exx.Message);
+                    long ltmp = Convert.ToInt64(value);
+                    if (ltmp > uint.MaxValue)
+                    {
+                        btmp = uint.MaxValue;
+                        qulity = (byte)QualityConst.AboveUpperLimit;
+                    }
+                    else
+                    {
+                        btmp = uint.MinValue;
+                        qulity = (byte)QualityConst.BelowLowerLimit;
+                    }
                 }
                 if (vtag != null)
                 {
@@ -4094,7 +4643,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="qulity"></param>
         /// <param name="time"></param>
-        public void SetLongTagValue(Tagbase tag, long value, byte qulity, DateTime time)
+        public void SetLongTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
             try
@@ -4102,15 +4651,25 @@ namespace Cdy.Tag
                 var vtag = tag as NumberTagBase;
 
                 long btmp = 0;
-                if (tag.Conveter != null)
+                try
                 {
+                    if (tag.Conveter != null)
+                    {
 
-                    btmp = Convert.ToInt64(tag.Conveter.ConvertTo(value));
+                        btmp = Convert.ToInt64(tag.Conveter.ConvertTo(value));
+                    }
+                    else
+                    {
+                        btmp = Convert.ToInt64(value);
+                    }
                 }
-                else
+                catch(System.OverflowException exx)
                 {
-                    btmp = value;
+                    LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + exx.Message);
+                    btmp = long.MaxValue;
+                    qulity = (byte)QualityConst.AboveUpperLimit;
                 }
+
                 if (vtag != null)
                 {
                     if (ReadInt64ValueByAddr(tag.ValueAddress) != btmp)
@@ -4137,7 +4696,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="qulity"></param>
         /// <param name="time"></param>
-        public void SetULongTagValue(Tagbase tag, ulong value, byte qulity, DateTime time)
+        public void SetULongTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
             try
@@ -4145,14 +4704,23 @@ namespace Cdy.Tag
                 var vtag = tag as NumberTagBase;
 
                 ulong btmp = 0;
-                if (tag.Conveter != null)
+                try
                 {
+                    if (tag.Conveter != null)
+                    {
 
-                    btmp = Convert.ToUInt64(tag.Conveter.ConvertTo(value));
+                        btmp = Convert.ToUInt64(tag.Conveter.ConvertTo(value));
+                    }
+                    else
+                    {
+                        btmp = Convert.ToUInt64(value);
+                    }
                 }
-                else
+                catch(System.OverflowException exx)
                 {
-                    btmp = value;
+                    LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + exx.Message);
+                    btmp = 0;
+                    qulity = (byte)QualityConst.BelowLowerLimit;
                 }
                 if (vtag != null)
                 {
@@ -4180,7 +4748,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="qulity"></param>
         /// <param name="time"></param>
-        public void SetDoubleTagValue(Tagbase tag, double value, byte qulity, DateTime time)
+        public void SetDoubleTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
             try
@@ -4189,7 +4757,7 @@ namespace Cdy.Tag
 
                 if (vtag != null)
                 {
-                    double btmp = tag.Conveter != null ? Math.Round(Convert.ToDouble(tag.Conveter.ConvertTo(value)), vtag.Precision) : Math.Round(value, vtag.Precision);
+                    double btmp = tag.Conveter != null ? Math.Round(Convert.ToDouble(tag.Conveter.ConvertTo(value)), vtag.Precision) : Math.Round(Convert.ToDouble(value), vtag.Precision);
                     //double btmp = value;
                     if (ReadDoubleValueByAddr(tag.ValueAddress) != btmp)
                     {
@@ -4215,7 +4783,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="qulity"></param>
         /// <param name="time"></param>
-        public void SetFloatTagValue(Tagbase tag, float value, byte qulity, DateTime time)
+        public void SetFloatTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
             try
@@ -4223,15 +4791,34 @@ namespace Cdy.Tag
                 var vtag = tag as FloatingTagBase;
 
                 float btmp = 0;
-                if (tag.Conveter != null)
+                try
                 {
+                    if (tag.Conveter != null)
+                    {
+                        btmp = (float)Math.Round(Convert.ToSingle(tag.Conveter.ConvertTo(value)), vtag.Precision);
+                    }
+                    else
+                    {
+                        btmp = (float)Math.Round(Convert.ToSingle(value), vtag.Precision);
+                    }
+                }
+                catch(System.OverflowException exx)
+                {
+                    LoggerService.Service.Warn("RealEnginer", "SetTag " + tag.FullName + " at value " + value.ToString() + " " + exx.Message);
 
-                    btmp = (float)Math.Round(Convert.ToSingle(tag.Conveter.ConvertTo(value)), vtag.Precision);
+                    double dtmp = Convert.ToDouble(value);
+                    if (dtmp > float.MaxValue)
+                    {
+                        qulity = (byte)QualityConst.AboveUpperLimit;
+                        btmp = float.MaxValue;
+                    }
+                    else
+                    {
+                        qulity = (byte)QualityConst.BelowLowerLimit;
+                        btmp = float.MinValue;
+                    }
                 }
-                else
-                {
-                    btmp = (float)Math.Round(value, vtag.Precision);
-                }
+
                 if (vtag != null)
                 {
                     if (ReadFloatValueByAddr(tag.ValueAddress) != btmp)
@@ -4258,7 +4845,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="qulity"></param>
         /// <param name="time"></param>
-        public void SetSrtingTagValue(Tagbase tag, string value, byte qulity, DateTime time)
+        public void SetSrtingTagValue(Tagbase tag, object value, byte qulity, DateTime time)
         {
             Take();
             try
@@ -4270,7 +4857,7 @@ namespace Cdy.Tag
                 }
                 else
                 {
-                    btmp = value;
+                    btmp = Convert.ToString(value);
                 }
 
                 if (ReadStringValueByAddr(tag.ValueAddress) != btmp)
@@ -4604,40 +5191,40 @@ namespace Cdy.Tag
                 switch (tag.Type)
                 {
                     case TagType.Bool:
-                        SetBoolTagValue(tag, Convert.ToBoolean(values[i]), (byte)QualityConst.Good, time);
+                        SetBoolTagValue(tag, values[i], (byte)QualityConst.Good, time);
                         break;
                     case TagType.Byte:
-                        SetByteTagValue(tag,Convert.ToByte(values[i]), (byte)QualityConst.Good, time);
+                        SetByteTagValue(tag, values[i], (byte)QualityConst.Good, time);
                         break;
                     case TagType.DateTime:
                         SetDateTimeTagValue(tag, Convert.ToDateTime(values[i]), (byte)QualityConst.Good, time);
                         break;
                     case TagType.Double:
-                        SetDoubleTagValue(tag, Convert.ToDouble(values[i]), (byte)QualityConst.Good, time);
+                        SetDoubleTagValue(tag, values[i], (byte)QualityConst.Good, time);
                         break;
                     case TagType.Float:
-                        SetFloatTagValue(tag, Convert.ToSingle(values[i]), (byte)QualityConst.Good, time);
+                        SetFloatTagValue(tag, values[i], (byte)QualityConst.Good, time);
                         break;
                     case TagType.Int:
-                        SetIntTagValue(tag, Convert.ToInt32(values[i]), (byte)QualityConst.Good, time);
+                        SetIntTagValue(tag, values[i], (byte)QualityConst.Good, time);
                         break;
                     case TagType.Long:
-                        SetLongTagValue(tag, Convert.ToInt64(values[i]), (byte)QualityConst.Good, time);
+                        SetLongTagValue(tag, values[i], (byte)QualityConst.Good, time);
                         break;
                     case TagType.Short:
-                        SetShortTagValue(tag,Convert.ToInt16(values[i]), (byte)QualityConst.Good, time);
+                        SetShortTagValue(tag, values[i], (byte)QualityConst.Good, time);
                         break;
                     case TagType.String:
-                        SetSrtingTagValue(tag,Convert.ToString(values[i]), (byte)QualityConst.Good, time);
+                        SetSrtingTagValue(tag, values[i], (byte)QualityConst.Good, time);
                         break;
                     case TagType.UInt:
-                        SetUIntTagValue(tag,Convert.ToUInt32(values[i]), (byte)QualityConst.Good, time);
+                        SetUIntTagValue(tag, values[i], (byte)QualityConst.Good, time);
                         break;
                     case TagType.ULong:
-                        SetULongTagValue(tag, Convert.ToUInt64(values[i]), (byte)QualityConst.Good, time);
+                        SetULongTagValue(tag, values[i], (byte)QualityConst.Good, time);
                         break;
                     case TagType.UShort:
-                        SetUShortTagValue(tag,Convert.ToUInt16(values[i]), (byte)QualityConst.Good, time);
+                        SetUShortTagValue(tag, values[i], (byte)QualityConst.Good, time);
                         break;
                 }
             }
@@ -4765,40 +5352,40 @@ namespace Cdy.Tag
                 switch (tag.Type)
                 {
                     case TagType.Bool:
-                        SetBoolTagValue(tag, Convert.ToBoolean(value), quality, time);
+                        SetBoolTagValue(tag, value, quality, time);
                         break;
                     case TagType.Byte:
-                        SetByteTagValue(tag, Convert.ToByte(value), quality, time);
+                        SetByteTagValue(tag, value, quality, time);
                         break;
                     case TagType.DateTime:
                         SetDateTimeTagValue(tag, Convert.ToDateTime(value), quality, time);
                         break;
                     case TagType.Double:
-                        SetDoubleTagValue(tag, Convert.ToDouble(value), quality, time);
+                        SetDoubleTagValue(tag, value, quality, time);
                         break;
                     case TagType.Float:
-                        SetFloatTagValue(tag, Convert.ToSingle(value), quality, time);
+                        SetFloatTagValue(tag, value, quality, time);
                         break;
                     case TagType.Int:
-                        SetIntTagValue(tag, Convert.ToInt32(value), quality, time);
+                        SetIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.Long:
-                        SetLongTagValue(tag, Convert.ToInt64(value), quality, time);
+                        SetLongTagValue(tag, value, quality, time);
                         break;
                     case TagType.Short:
-                        SetShortTagValue(tag, Convert.ToInt16(value), quality, time);
+                        SetShortTagValue(tag, value, quality, time);
                         break;
                     case TagType.String:
-                        SetSrtingTagValue(tag, Convert.ToString(value), quality, time);
+                        SetSrtingTagValue(tag, value, quality, time);
                         break;
                     case TagType.UInt:
-                        SetUIntTagValue(tag, Convert.ToUInt32(value), quality, time);
+                        SetUIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.ULong:
-                        SetULongTagValue(tag, Convert.ToUInt64(value), quality, time);
+                        SetULongTagValue(tag, value, quality, time);
                         break;
                     case TagType.UShort:
-                        SetUShortTagValue(tag, Convert.ToUInt16(value), quality, time);
+                        SetUShortTagValue(tag, value, quality, time);
                         break;
                     case TagType.IntPoint:
                         var val = (IntPointData)((object)value);
@@ -5439,10 +6026,10 @@ namespace Cdy.Tag
         /// 通知值改变了
         /// </summary>
         /// <param name="id"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void NotifyValueChangedToConsumer(int id)
         {
             ComsumerValueChangedNotifyManager.Manager.UpdateValue(id);
-            //ComsumerValueChangedNotifyManager.Manager.NotifyChanged();
         }
 
         /// <summary>
@@ -5452,7 +6039,6 @@ namespace Cdy.Tag
         private void NotifyValueChangedToConsumer(IEnumerable<int> ids)
         {
             ComsumerValueChangedNotifyManager.Manager.UpdateValue(ids);
-            //ComsumerValueChangedNotifyManager.Manager.NotifyChanged();
         }
 
         #endregion
@@ -5481,14 +6067,36 @@ namespace Cdy.Tag
             
             if(type == RealDataNotifyType.Block || type == RealDataNotifyType.All)
             {
-                re.BuildBlock(mConfigDatabase.MaxId, (id) => {
-                    var itmp = (int)GetDataAddr(id);
+                re.BuildBlock(mConfigDatabase.MaxId, (id,isnext) => {
+                    var itmp = 0;
+                    if (isnext)
+                    {
+                        itmp = (int)GetNextAddr(id);
+                    }
+                    else
+                    {
+                        itmp = (int)GetLastAddr(id);
+                    }
                     if (itmp < 0)
-                        return (int)(mIdAndAddr.Last().Value);
+                    {
+                        var vtag = GetTagById(mIdAndAddr.Last().Key);
+                        if (vtag != null)
+                            return (int)(mIdAndAddr.Last().Value + vtag.ValueSize);
+                        else
+                        {
+                            return (int)mUsedSize;
+                        }
+                    }
                     else
                     {
                         return itmp;
                     }
+                    //if (itmp < 0)
+                    //    return (int)(mIdAndAddr.Last().Value);
+                    //else
+                    //{
+                    //    return itmp;
+                    //}
                 });
             }
 
@@ -5695,10 +6303,111 @@ namespace Cdy.Tag
                 case TagType.UShort:
                     re = (ushort)ReadShortValueByAddr(tag.ValueAddress);
                     break;
+                case TagType.Complex:
+                    break;
             }
 
-            if (tag.Conveter != null) return tag.Conveter.ConvertBackTo(re); else return re;
+            if (tag.Conveter != null && !(tag is ComplexTag)) return tag.Conveter.ConvertBackTo(re); else return re;
 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="res"></param>
+        public void GetComplexTagValue(int id, List<RealTagValueWithTimer> res)
+        {
+            Take();
+            var tag = mConfigDatabase?.GetTagById(id);
+            if (tag == null) return;
+
+            List<RealTagValueWithTimer> vals = new List<RealTagValueWithTimer>();
+            if (tag is ComplexTag)
+            {
+                foreach(var vv in (tag as ComplexTag).Tags)
+                {
+                    if (tag is ComplexTag)
+                    {
+                        GetComplexTagValue(vv.Value.Id, res);
+                    }
+                    else
+                    {
+                        var val = GetTagValue(vv.Value.Id, out byte quality, out DateTime time, out byte valuetype);
+                        res.Add(new RealTagValueWithTimer() { Id = vv.Value.Id, Value = val, Quality = quality, Time = time, ValueType = valuetype });
+                    }
+                }
+            }
+            else
+            {
+                var val = GetTagValue(tag.Id, out byte quality, out DateTime time, out byte valuetype);
+                res.Add(new RealTagValueWithTimer() { Id = tag.Id, Value = val, Quality = quality, Time = time, ValueType = valuetype });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="res"></param>
+        public void GetComplexTagValue(string name, List<RealTagValueWithTimer> res)
+        {
+            Take();
+            var tag = mConfigDatabase?.GetTagByName(name);
+            if (tag == null) return;
+
+            List<RealTagValueWithTimer> vals = new List<RealTagValueWithTimer>();
+            if (tag is ComplexTag)
+            {
+                foreach (var vv in (tag as ComplexTag).Tags)
+                {
+                    if (tag is ComplexTag)
+                    {
+                        GetComplexTagValue(vv.Value.Id, res);
+                    }
+                    else
+                    {
+                        var val = GetTagValue(vv.Value.Id, out byte quality, out DateTime time, out byte valuetype);
+                        res.Add(new RealTagValueWithTimer() { Id = vv.Value.Id, Value = val, Quality = quality, Time = time, ValueType = valuetype });
+                    }
+                }
+            }
+            else
+            {
+                var val = GetTagValue(tag.Id, out byte quality, out DateTime time, out byte valuetype);
+                res.Add(new RealTagValueWithTimer() { Id = tag.Id, Value = val, Quality = quality, Time = time, ValueType = valuetype });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool IsComplexTag(int id)
+        {
+            var tag = mConfigDatabase?.GetTagById(id);
+            if (tag == null) return false;
+            else
+            {
+                return tag is ComplexTag;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool IsComplexTag(string name)
+        {
+            var tag = mConfigDatabase?.GetTagByName(name);
+            if (tag == null) return false;
+            else
+            {
+                return tag is ComplexTag;
+            }
         }
 
         /// <summary>
@@ -6789,40 +7498,40 @@ namespace Cdy.Tag
                 switch (tag.Type)
                 {
                     case TagType.Bool:
-                        SetBoolTagValue(tag, value>0, quality, time);
+                        SetBoolTagValue(tag, value, quality, time);
                         break;
                     case TagType.Byte:
-                        SetByteTagValue(tag, Convert.ToByte(value), quality, time);
+                        SetByteTagValue(tag, value, quality, time);
                         break;
                     case TagType.DateTime:
                         //SetDateTimeTagValue(tag, Convert.ToDateTime(value), quality, time);
                         return false;
                     case TagType.Double:
-                        SetDoubleTagValue(tag, Convert.ToDouble(value), quality, time);
+                        SetDoubleTagValue(tag, value, quality, time);
                         break;
                     case TagType.Float:
-                        SetFloatTagValue(tag, Convert.ToSingle(value), quality, time);
+                        SetFloatTagValue(tag, value, quality, time);
                         break;
                     case TagType.Int:
-                        SetIntTagValue(tag, Convert.ToInt32(value), quality, time);
+                        SetIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.Long:
-                        SetLongTagValue(tag, Convert.ToInt64(value), quality, time);
+                        SetLongTagValue(tag, value, quality, time);
                         break;
                     case TagType.Short:
-                        SetShortTagValue(tag, Convert.ToInt16(value), quality, time);
+                        SetShortTagValue(tag, value, quality, time);
                         break;
                     case TagType.String:
-                        SetSrtingTagValue(tag, Convert.ToString(value), quality, time);
+                        SetSrtingTagValue(tag, value, quality, time);
                         break;
                     case TagType.UInt:
-                        SetUIntTagValue(tag, Convert.ToUInt32(value), quality, time);
+                        SetUIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.ULong:
-                        SetULongTagValue(tag, Convert.ToUInt64(value), quality, time);
+                        SetULongTagValue(tag, value, quality, time);
                         break;
                     case TagType.UShort:
-                        SetUShortTagValue(tag, Convert.ToUInt16(value), quality, time);
+                        SetUShortTagValue(tag, value, quality, time);
                         break;
                 }
             }
@@ -6849,40 +7558,40 @@ namespace Cdy.Tag
                 switch (tag.Type)
                 {
                     case TagType.Bool:
-                        SetBoolTagValue(tag, value > 0, quality, time);
+                        SetBoolTagValue(tag, value, quality, time);
                         break;
                     case TagType.Byte:
-                        SetByteTagValue(tag, Convert.ToByte(value), quality, time);
+                        SetByteTagValue(tag, value, quality, time);
                         break;
                     case TagType.DateTime:
                         //SetDateTimeTagValue(tag, Convert.ToDateTime(value), quality, time);
                         return false;
                     case TagType.Double:
-                        SetDoubleTagValue(tag, Convert.ToDouble(value), quality, time);
+                        SetDoubleTagValue(tag, value, quality, time);
                         break;
                     case TagType.Float:
-                        SetFloatTagValue(tag, Convert.ToSingle(value), quality, time);
+                        SetFloatTagValue(tag, value, quality, time);
                         break;
                     case TagType.Int:
-                        SetIntTagValue(tag, Convert.ToInt32(value), quality, time);
+                        SetIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.Long:
-                        SetLongTagValue(tag, Convert.ToInt64(value), quality, time);
+                        SetLongTagValue(tag, value, quality, time);
                         break;
                     case TagType.Short:
-                        SetShortTagValue(tag, Convert.ToInt16(value), quality, time);
+                        SetShortTagValue(tag, value, quality, time);
                         break;
                     case TagType.String:
-                        SetSrtingTagValue(tag, Convert.ToString(value), quality, time);
+                        SetSrtingTagValue(tag, value, quality, time);
                         break;
                     case TagType.UInt:
-                        SetUIntTagValue(tag, Convert.ToUInt32(value), quality, time);
+                        SetUIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.ULong:
-                        SetULongTagValue(tag, Convert.ToUInt64(value), quality, time);
+                        SetULongTagValue(tag, value, quality, time);
                         break;
                     case TagType.UShort:
-                        SetUShortTagValue(tag, Convert.ToUInt16(value), quality, time);
+                        SetUShortTagValue(tag, value, quality, time);
                         break;
                 }
 
@@ -6910,40 +7619,40 @@ namespace Cdy.Tag
                 switch (tag.Type)
                 {
                     case TagType.Bool:
-                        SetBoolTagValue(tag, value > 0, quality, time);
+                        SetBoolTagValue(tag, value, quality, time);
                         break;
                     case TagType.Byte:
-                        SetByteTagValue(tag, Convert.ToByte(value), quality, time);
+                        SetByteTagValue(tag, value, quality, time);
                         break;
                     case TagType.DateTime:
                         //SetDateTimeTagValue(tag, Convert.ToDateTime(value), quality, time);
                         return false;
                     case TagType.Double:
-                        SetDoubleTagValue(tag, Convert.ToDouble(value), quality, time);
+                        SetDoubleTagValue(tag, value, quality, time);
                         break;
                     case TagType.Float:
-                        SetFloatTagValue(tag, Convert.ToSingle(value), quality, time);
+                        SetFloatTagValue(tag, value, quality, time);
                         break;
                     case TagType.Int:
-                        SetIntTagValue(tag, Convert.ToInt32(value), quality, time);
+                        SetIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.Long:
-                        SetLongTagValue(tag, Convert.ToInt64(value), quality, time);
+                        SetLongTagValue(tag, value, quality, time);
                         break;
                     case TagType.Short:
-                        SetShortTagValue(tag, Convert.ToInt16(value), quality, time);
+                        SetShortTagValue(tag, value, quality, time);
                         break;
                     case TagType.String:
-                        SetSrtingTagValue(tag, Convert.ToString(value), quality, time);
+                        SetSrtingTagValue(tag, value, quality, time);
                         break;
                     case TagType.UInt:
-                        SetUIntTagValue(tag, Convert.ToUInt32(value), quality, time);
+                        SetUIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.ULong:
-                        SetULongTagValue(tag, Convert.ToUInt64(value), quality, time);
+                        SetULongTagValue(tag, value, quality, time);
                         break;
                     case TagType.UShort:
-                        SetUShortTagValue(tag, Convert.ToUInt16(value), quality, time);
+                        SetUShortTagValue(tag, value, quality, time);
                         break;
                 }
 
@@ -6971,40 +7680,40 @@ namespace Cdy.Tag
                 switch (tag.Type)
                 {
                     case TagType.Bool:
-                        SetBoolTagValue(tag, value > 0, quality, time);
+                        SetBoolTagValue(tag, value, quality, time);
                         break;
                     case TagType.Byte:
-                        SetByteTagValue(tag, Convert.ToByte(value), quality, time);
+                        SetByteTagValue(tag, value, quality, time);
                         break;
                     case TagType.DateTime:
                         //SetDateTimeTagValue(tag, Convert.ToDateTime(value), quality, time);
                         return false;
                     case TagType.Double:
-                        SetDoubleTagValue(tag, Convert.ToDouble(value), quality, time);
+                        SetDoubleTagValue(tag, value, quality, time);
                         break;
                     case TagType.Float:
-                        SetFloatTagValue(tag, Convert.ToSingle(value), quality, time);
+                        SetFloatTagValue(tag, value, quality, time);
                         break;
                     case TagType.Int:
-                        SetIntTagValue(tag, Convert.ToInt32(value), quality, time);
+                        SetIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.Long:
-                        SetLongTagValue(tag, Convert.ToInt64(value), quality, time);
+                        SetLongTagValue(tag, value, quality, time);
                         break;
                     case TagType.Short:
-                        SetShortTagValue(tag, Convert.ToInt16(value), quality, time);
+                        SetShortTagValue(tag, value, quality, time);
                         break;
                     case TagType.String:
-                        SetSrtingTagValue(tag, Convert.ToString(value), quality, time);
+                        SetSrtingTagValue(tag, value, quality, time);
                         break;
                     case TagType.UInt:
-                        SetUIntTagValue(tag, Convert.ToUInt32(value), quality, time);
+                        SetUIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.ULong:
-                        SetULongTagValue(tag, Convert.ToUInt64(value), quality, time);
+                        SetULongTagValue(tag, value, quality, time);
                         break;
                     case TagType.UShort:
-                        SetUShortTagValue(tag, Convert.ToUInt16(value), quality, time);
+                        SetUShortTagValue(tag, value, quality, time);
                         break;
                 }
 
@@ -7032,40 +7741,40 @@ namespace Cdy.Tag
                 switch (tag.Type)
                 {
                     case TagType.Bool:
-                        SetBoolTagValue(tag, value > 0, quality, time);
+                        SetBoolTagValue(tag, value, quality, time);
                         break;
                     case TagType.Byte:
-                        SetByteTagValue(tag, Convert.ToByte(value), quality, time);
+                        SetByteTagValue(tag, value, quality, time);
                         break;
                     case TagType.DateTime:
                         //SetDateTimeTagValue(tag, Convert.ToDateTime(value), quality, time);
                         return false;
                     case TagType.Double:
-                        SetDoubleTagValue(tag, Convert.ToDouble(value), quality, time);
+                        SetDoubleTagValue(tag, value, quality, time);
                         break;
                     case TagType.Float:
-                        SetFloatTagValue(tag, Convert.ToSingle(value), quality, time);
+                        SetFloatTagValue(tag, value, quality, time);
                         break;
                     case TagType.Int:
-                        SetIntTagValue(tag, Convert.ToInt32(value), quality, time);
+                        SetIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.Long:
-                        SetLongTagValue(tag, Convert.ToInt64(value), quality, time);
+                        SetLongTagValue(tag, value, quality, time);
                         break;
                     case TagType.Short:
-                        SetShortTagValue(tag, Convert.ToInt16(value), quality, time);
+                        SetShortTagValue(tag, value, quality, time);
                         break;
                     case TagType.String:
-                        SetSrtingTagValue(tag, Convert.ToString(value), quality, time);
+                        SetSrtingTagValue(tag, value, quality, time);
                         break;
                     case TagType.UInt:
-                        SetUIntTagValue(tag, Convert.ToUInt32(value), quality, time);
+                        SetUIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.ULong:
-                        SetULongTagValue(tag, Convert.ToUInt64(value), quality, time);
+                        SetULongTagValue(tag, value, quality, time);
                         break;
                     case TagType.UShort:
-                        SetUShortTagValue(tag, Convert.ToUInt16(value), quality, time);
+                        SetUShortTagValue(tag, value, quality, time);
                         break;
                 }
 
@@ -7094,40 +7803,40 @@ namespace Cdy.Tag
                 switch (tag.Type)
                 {
                     case TagType.Bool:
-                        SetBoolTagValue(tag, value > 0, quality, time);
+                        SetBoolTagValue(tag, value, quality, time);
                         break;
                     case TagType.Byte:
-                        SetByteTagValue(tag, Convert.ToByte(value), quality, time);
+                        SetByteTagValue(tag, value, quality, time);
                         break;
                     case TagType.DateTime:
                         SetDateTimeTagValue(tag,DateTime.FromBinary(value), quality, time);
                         break;
                     case TagType.Double:
-                        SetDoubleTagValue(tag, Convert.ToDouble(value), quality, time);
+                        SetDoubleTagValue(tag, value, quality, time);
                         break;
                     case TagType.Float:
-                        SetFloatTagValue(tag, Convert.ToSingle(value), quality, time);
+                        SetFloatTagValue(tag, value, quality, time);
                         break;
                     case TagType.Int:
-                        SetIntTagValue(tag, Convert.ToInt32(value), quality, time);
+                        SetIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.Long:
-                        SetLongTagValue(tag, Convert.ToInt64(value), quality, time);
+                        SetLongTagValue(tag, value, quality, time);
                         break;
                     case TagType.Short:
-                        SetShortTagValue(tag, Convert.ToInt16(value), quality, time);
+                        SetShortTagValue(tag, value, quality, time);
                         break;
                     case TagType.String:
-                        SetSrtingTagValue(tag, Convert.ToString(value), quality, time);
+                        SetSrtingTagValue(tag, value, quality, time);
                         break;
                     case TagType.UInt:
-                        SetUIntTagValue(tag, Convert.ToUInt32(value), quality, time);
+                        SetUIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.ULong:
-                        SetULongTagValue(tag, Convert.ToUInt64(value), quality, time);
+                        SetULongTagValue(tag, value, quality, time);
                         break;
                     case TagType.UShort:
-                        SetUShortTagValue(tag, Convert.ToUInt16(value), quality, time);
+                        SetUShortTagValue(tag, value, quality, time);
                         break;
                 }
 
@@ -7155,40 +7864,40 @@ namespace Cdy.Tag
                 switch (tag.Type)
                 {
                     case TagType.Bool:
-                        SetBoolTagValue(tag, value > 0, quality, time);
+                        SetBoolTagValue(tag, value, quality, time);
                         break;
                     case TagType.Byte:
-                        SetByteTagValue(tag, Convert.ToByte(value), quality, time);
+                        SetByteTagValue(tag, value, quality, time);
                         break;
                     case TagType.DateTime:
                         SetDateTimeTagValue(tag, DateTime.FromBinary((long)value), quality, time);
                         break;
                     case TagType.Double:
-                        SetDoubleTagValue(tag, Convert.ToDouble(value), quality, time);
+                        SetDoubleTagValue(tag, value, quality, time);
                         break;
                     case TagType.Float:
-                        SetFloatTagValue(tag, Convert.ToSingle(value), quality, time);
+                        SetFloatTagValue(tag, value, quality, time);
                         break;
                     case TagType.Int:
-                        SetIntTagValue(tag, Convert.ToInt32(value), quality, time);
+                        SetIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.Long:
-                        SetLongTagValue(tag, Convert.ToInt64(value), quality, time);
+                        SetLongTagValue(tag, value, quality, time);
                         break;
                     case TagType.Short:
-                        SetShortTagValue(tag, Convert.ToInt16(value), quality, time);
+                        SetShortTagValue(tag, value, quality, time);
                         break;
                     case TagType.String:
-                        SetSrtingTagValue(tag, Convert.ToString(value), quality, time);
+                        SetSrtingTagValue(tag, value, quality, time);
                         break;
                     case TagType.UInt:
-                        SetUIntTagValue(tag, Convert.ToUInt32(value), quality, time);
+                        SetUIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.ULong:
-                        SetULongTagValue(tag, Convert.ToUInt64(value), quality, time);
+                        SetULongTagValue(tag, value, quality, time);
                         break;
                     case TagType.UShort:
-                        SetUShortTagValue(tag, Convert.ToUInt16(value), quality, time);
+                        SetUShortTagValue(tag, value, quality, time);
                         break;
                 }
 
@@ -7216,39 +7925,39 @@ namespace Cdy.Tag
                 switch (tag.Type)
                 {
                     case TagType.Bool:
-                        SetBoolTagValue(tag, value > 0, quality, time);
+                        SetBoolTagValue(tag, value, quality, time);
                         break;
                     case TagType.Byte:
-                        SetByteTagValue(tag, Convert.ToByte(value), quality, time);
+                        SetByteTagValue(tag, value, quality, time);
                         break;
                     case TagType.DateTime:
                         return false;
                     case TagType.Double:
-                        SetDoubleTagValue(tag, Convert.ToDouble(value), quality, time);
+                        SetDoubleTagValue(tag, value, quality, time);
                         break;
                     case TagType.Float:
-                        SetFloatTagValue(tag, Convert.ToSingle(value), quality, time);
+                        SetFloatTagValue(tag, value, quality, time);
                         break;
                     case TagType.Int:
-                        SetIntTagValue(tag, Convert.ToInt32(value), quality, time);
+                        SetIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.Long:
-                        SetLongTagValue(tag, Convert.ToInt64(value), quality, time);
+                        SetLongTagValue(tag, value, quality, time);
                         break;
                     case TagType.Short:
-                        SetShortTagValue(tag, Convert.ToInt16(value), quality, time);
+                        SetShortTagValue(tag, value, quality, time);
                         break;
                     case TagType.String:
-                        SetSrtingTagValue(tag, Convert.ToString(value), quality, time);
+                        SetSrtingTagValue(tag, value, quality, time);
                         break;
                     case TagType.UInt:
-                        SetUIntTagValue(tag, Convert.ToUInt32(value), quality, time);
+                        SetUIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.ULong:
-                        SetULongTagValue(tag, Convert.ToUInt64(value), quality, time);
+                        SetULongTagValue(tag, value, quality, time);
                         break;
                     case TagType.UShort:
-                        SetUShortTagValue(tag, Convert.ToUInt16(value), quality, time);
+                        SetUShortTagValue(tag, value, quality, time);
                         break;
                 }
 
@@ -7272,14 +7981,20 @@ namespace Cdy.Tag
             {
                 Take();
                 if (tag.ReadWriteType == ReadWriteMode.Write) return true;
+
+                //if(tag.Id==0)
+                //{
+                //    LoggerService.Service.Info("RealEnginer", $"driver set tag value{ value }");
+                //}
+
                 //DateTime time = DateTime.UtcNow;
                 switch (tag.Type)
                 {
                     case TagType.Bool:
-                        SetBoolTagValue(tag, value > 0, quality, time);
+                        SetBoolTagValue(tag, value, quality, time);
                         break;
                     case TagType.Byte:
-                        SetByteTagValue(tag, Convert.ToByte(value), quality, time);
+                        SetByteTagValue(tag, value, quality, time);
                         break;
                     case TagType.DateTime:
                         return false;
@@ -7287,28 +8002,28 @@ namespace Cdy.Tag
                         SetDoubleTagValue(tag, value, quality, time);
                         break;
                     case TagType.Float:
-                        SetFloatTagValue(tag, Convert.ToSingle(value), quality, time);
+                        SetFloatTagValue(tag, value, quality, time);
                         break;
                     case TagType.Int:
-                        SetIntTagValue(tag, Convert.ToInt32(value), quality, time);
+                        SetIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.Long:
-                        SetLongTagValue(tag, Convert.ToInt64(value), quality, time);
+                        SetLongTagValue(tag, value, quality, time);
                         break;
                     case TagType.Short:
-                        SetShortTagValue(tag, Convert.ToInt16(value), quality, time);
+                        SetShortTagValue(tag, value, quality, time);
                         break;
                     case TagType.String:
-                        SetSrtingTagValue(tag, Convert.ToString(value), quality, time);
+                        SetSrtingTagValue(tag, value, quality, time);
                         break;
                     case TagType.UInt:
-                        SetUIntTagValue(tag, Convert.ToUInt32(value), quality, time);
+                        SetUIntTagValue(tag, value, quality, time);
                         break;
                     case TagType.ULong:
-                        SetULongTagValue(tag, Convert.ToUInt64(value), quality, time);
+                        SetULongTagValue(tag, value, quality, time);
                         break;
                     case TagType.UShort:
-                        SetUShortTagValue(tag, Convert.ToUInt16(value), quality, time);
+                        SetUShortTagValue(tag, value, quality, time);
                         break;
                 }
 
@@ -7354,7 +8069,7 @@ namespace Cdy.Tag
                     case TagType.Short:
                         return false;
                     case TagType.String:
-                        SetSrtingTagValue(tag, Convert.ToString(value), quality, time);
+                        SetSrtingTagValue(tag, value, quality, time);
                         break;
                     case TagType.UInt:
                         return false;
@@ -7389,7 +8104,7 @@ namespace Cdy.Tag
                 switch (tag.Type)
                 {
                     case TagType.Bool:
-                        SetBoolTagValue(tag, !string.IsNullOrEmpty(value), quality, time);
+                        SetBoolTagValue(tag, value, quality, time);
                         break;
                     case TagType.Byte:
                         SetByteTagValue(tag, byte.Parse(value), quality, time);
@@ -7608,6 +8323,8 @@ namespace Cdy.Tag
             }
             return true;
         }
+
+
 
         #endregion ...Interfaces...
     }

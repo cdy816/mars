@@ -19,6 +19,7 @@ namespace Cdy.Tag
     {
         private byte mLastValue = byte.MinValue;
         private byte mTmpValue = 0;
+        
 
         /// <summary>
         /// 
@@ -31,12 +32,13 @@ namespace Cdy.Tag
         /// <param name="startMemory"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
+        public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset, int tim)
         {
             mTmpValue = MemoryHelper.ReadByte(startMemory, offset);
-            if (mTmpValue != mLastValue || mLastValue == byte.MinValue)
+            if ((mTmpValue != mLastValue || mLastValue == byte.MinValue)&& Math.Abs(tim - mLastTime) > 0.1)
             {
                 mLastValue = mTmpValue;
+                mLastTime = tim;
                 return true;
             }
             else

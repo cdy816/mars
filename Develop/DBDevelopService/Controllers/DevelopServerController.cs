@@ -18,6 +18,11 @@ namespace DBDevelopService.Controllers
         /// </summary>
         public const int PageCount = 500;
 
+        /// <summary>
+        /// 登录
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         // POST api/<controller>
         [HttpPost]
         public object Login([FromBody]LoginMessage value)
@@ -26,7 +31,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 登出
         /// </summary>
         /// <param name="mLoginId"></param>
         /// <returns></returns>
@@ -81,7 +86,7 @@ namespace DBDevelopService.Controllers
         #region database
 
         /// <summary>
-        /// 
+        /// 新建数据库
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -108,7 +113,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 枚举数据库
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -152,7 +157,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 运行数据库
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -167,7 +172,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 停止运行
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -182,12 +187,12 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 重新运行
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public object ReRun(WebApiDatabaseRequest request)
+        public object ReRun([FromBody] WebApiDatabaseRequest request)
         {
             if (!IsAdmin(request.Id))
             {
@@ -197,12 +202,12 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 数据库是否运行
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public object IsDatabaseRunning(WebApiDatabaseRequest request)
+        public object IsDatabaseRunning([FromBody] WebApiDatabaseRequest request)
         {
             if (!SecurityManager.Manager.CheckKeyAvaiable(request.Id))
             {
@@ -212,12 +217,12 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 数据库是否变脏
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public object IsDatabaseDirty(WebApiDatabaseRequest request)
+        public object IsDatabaseDirty([FromBody] WebApiDatabaseRequest request)
         {
             if (!SecurityManager.Manager.CheckKeyAvaiable(request.Id))
             {
@@ -236,7 +241,7 @@ namespace DBDevelopService.Controllers
 
 
         /// <summary>
-        /// 
+        /// 获取变量组
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -267,13 +272,13 @@ namespace DBDevelopService.Controllers
 
 
         /// <summary>
-        /// 
+        /// 添加变量组
         /// </summary>
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
         [HttpPost]
-        public object AddTagGroup(WebApiAddGroupRequest request)
+        public object AddTagGroup([FromBody] WebApiAddGroupRequest request)
         {
             if (!CheckLoginId(request.Id, request.Database))
             {
@@ -311,12 +316,12 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 修改变量组描述
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public object  UpdateGroupDescription(WebApiUpdateGroupDescriptionRequest request)
+        public object  UpdateGroupDescription([FromBody] WebApiUpdateGroupDescriptionRequest request)
         {
             if (!CheckLoginId(request.Id, request.Database))
             {
@@ -337,12 +342,12 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 删除变量组
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public object RemoveTagGroup(WebApiRemoveGroupRequest request)
+        public object RemoveTagGroup([FromBody] WebApiRemoveGroupRequest request)
         {
             if (!CheckLoginId(request.Id, request.Database))
             {
@@ -362,12 +367,12 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 变量组重命名
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public object RenameTagGroup(WebApiRenameGroupRequest request)
+        public object RenameTagGroup([FromBody] WebApiRenameGroupRequest request)
         {
             if (!CheckLoginId(request.Id, request.Database))
             {
@@ -387,12 +392,12 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 移动变量组
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public object MoveTagGroup(WebApiMoveTagGroupRequest request)
+        public object MoveTagGroup([FromBody] WebApiMoveTagGroupRequest request)
         {
             if (!CheckLoginId(request.Id, request.Database))
             {
@@ -493,7 +498,72 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 获取所有变量的ID和名称
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object GetAllTagNames([FromBody] WebApiDatabaseRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if(db!=null)
+            {
+                lock (db)
+                {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
+                    Dictionary<int, string> tags = new Dictionary<int, string>();
+                    foreach (var vtag in db.RealDatabase.Tags)
+                    {
+                        tags.Add(vtag.Key, vtag.Value.FullName);
+                    }
+                    return new ResultResponse() { Result = tags };
+                }
+            }
+            return new ResultResponse() { ErroMsg = "数据库不存在", HasErro = true };
+        }
+
+        /// <summary>
+        /// 获取某个变量所有变量的名称
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object GetAllTagNamesByGroup([FromBody] WebApiGetTagByGroupRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            ResultResponse rr = new ResultResponse();
+            if (db!=null)
+            {
+                lock(db)
+                {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
+                    Dictionary<int, string> tags = new Dictionary<int, string>();
+                    var res = db.RealDatabase.ListAllTags().Where(e => e.Group == request.GroupName);
+                    if (res != null && res.Count() > 0)
+                    {
+                        foreach (var vtag in res)
+                        {
+                            tags.Add(vtag.Id, vtag.Name);
+                        }
+                    }
+                    rr.Result = tags;
+                    return rr;
+                }
+            }
+            return new ResultResponse() { ErroMsg = "数据库不存在", HasErro = true };
+        }
+
+
+        /// <summary>
+        /// 获取组内的变量
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -548,9 +618,47 @@ namespace DBDevelopService.Controllers
             return new GetTagsByGroupResponse() { Result = re, TotalPages = totalpage };
         }
 
+        /// <summary>
+        /// 获取组内的所有变量
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object GetAllTagByGroup([FromBody] WebApiGetTagByGroupRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                lock (db)
+                {
+                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
+                    List<WebApiTag> re = new List<WebApiTag>();
+                    var res = db.RealDatabase.ListAllTags().Where(e => e.Group == request.GroupName);
+                    foreach (var vv in res)
+                    {
+                        WebApiTag tag = new WebApiTag() { RealTag = WebApiRealTag.CreatFromTagbase(vv) };
+
+                        if (db.HisDatabase.HisTags.ContainsKey(vv.Id))
+                        {
+                            var vvv = db.HisDatabase.HisTags[vv.Id];
+                            tag.HisTag = vvv;
+                        }
+
+                        re.Add(tag);
+                    }
+                    return new ResultResponse() { Result = re };
+                }
+            }
+            return new ResultResponse() { ErroMsg = "数据库不存在", HasErro = true };
+        }
+
 
         /// <summary>
-        /// 
+        /// 删除变量
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -580,7 +688,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 添加变量
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -602,21 +710,27 @@ namespace DBDevelopService.Controllers
                         DbManager.Instance.CheckAndContinueLoadDatabase(db);
                         foreach (var vv in request.Tags)
                         {
+                            var vrtag = vv.RealTag.ConvertToTagbase();
                             if (vv.RealTag.Id < 0)
                             {
-                                db.RealDatabase.Append(vv.RealTag.ConvertToTagbase());
+                                if (!db.RealDatabase.NamedTags.ContainsKey(vrtag.FullName))
+                                {
+                                    db.RealDatabase.Append(vrtag);
+                                }
                             }
                             else
                             {
-                                db.RealDatabase.AddOrUpdate(vv.RealTag.ConvertToTagbase());
+                                db.RealDatabase.AddOrUpdate(vrtag);
                             }
 
                             var vtag = vv.HisTag;
-                            if (vtag.Id != int.MaxValue)
+                            vtag.Id = vrtag.Id;
+
+                            if (vtag.Id != int.MaxValue && vtag.Id>-1)
                             {
-                                db.HisDatabase.AddOrUpdate(vv.HisTag);
+                                db.HisDatabase.AddOrUpdate(vtag);
                             }
-                            ids.Add(vv.RealTag.Id);
+                            ids.Add(vrtag.Id);
                         }                       
                         return new ResultResponse() { Result = ids }; ;
                     }
@@ -630,7 +744,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 更新历史变量
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -662,7 +776,7 @@ namespace DBDevelopService.Controllers
 
 
         /// <summary>
-        /// 
+        /// 更新实时变量
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -709,7 +823,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 导入
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -792,12 +906,12 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 保存
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public object Save(WebApiDatabaseRequest request)
+        public object Save([FromBody] WebApiDatabaseRequest request)
         {
             if (!CheckLoginId(request.Id, request.Database))
             {
@@ -817,12 +931,12 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 撤销更改
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public object Cancel(WebApiDatabaseRequest request)
+        public object Cancel([FromBody] WebApiDatabaseRequest request)
         {
             if (!CheckLoginId(request.Id, request.Database))
             {
@@ -836,12 +950,12 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 获取实时数据服务端口
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public object GetRealDataServerPortRequest(WebApiDatabaseRequest request)
+        public object GetRealDataServerPortRequest([FromBody] WebApiDatabaseRequest request)
         {
             if (!CheckLoginId(request.Id, request.Database))
             {
@@ -856,12 +970,12 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 更新实时数据服务端口
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public object UpdateRealDataServerPortRequest(WebApiUpdateRealDataServerPortRequest request)
+        public object UpdateRealDataServerPortRequest([FromBody] WebApiUpdateRealDataServerPortRequest request)
         {
             if (!CheckLoginId(request.Id, request.Database))
             {
@@ -877,12 +991,12 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 获取历史数据配置
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public object GetDatabaseHisSetting(WebApiDatabaseRequest request)
+        public object GetDatabaseHisSetting([FromBody] WebApiDatabaseRequest request)
         {
             if (!CheckLoginId(request.Id, request.Database))
             {
@@ -897,12 +1011,12 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 更新历史数据配置
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        public object UpdateDatabaseHisSetting(WebApiHisSettingUpdateRequest request)
+        public object UpdateDatabaseHisSetting([FromBody] WebApiHisSettingUpdateRequest request)
         {
             if (!CheckLoginId(request.Id, request.Database))
             {
@@ -925,7 +1039,7 @@ namespace DBDevelopService.Controllers
         #region database user
 
         /// <summary>
-        /// 
+        /// 添加数据库用户组
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -948,7 +1062,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 获取数据库用户组
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -972,7 +1086,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 移动数据库用户组
         /// </summary>
         /// <param name="request"></param>
         /// <param name="context"></param>
@@ -1003,7 +1117,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 删除数据库用户组
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1027,7 +1141,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 重命名用户组
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1054,7 +1168,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 获取数据库用户组内的用户
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1081,7 +1195,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 新建数据库用户
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1102,7 +1216,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 更新数据库用户
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1134,7 +1248,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 修改数据库用户密码
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1158,7 +1272,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 删除数据库用户
         /// </summary>
         /// <param name="request"></param>
         /// <param name="context"></param>
@@ -1185,7 +1299,7 @@ namespace DBDevelopService.Controllers
 
 
         /// <summary>
-        /// 
+        /// 新建数据库权限
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1207,7 +1321,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 删除数据库权限
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1230,7 +1344,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 更新数据库权限
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1267,7 +1381,7 @@ namespace DBDevelopService.Controllers
         #region System User
 
         /// <summary>
-        /// 
+        /// 新建开发服务器用户
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1285,7 +1399,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 重命名开发用户
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1303,7 +1417,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 修改开发用户密码
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1328,7 +1442,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 更新开发用户
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1352,7 +1466,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 更新开发用户密码
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1373,7 +1487,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 枚举开发用户
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1397,7 +1511,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 删除开发用户
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -1418,7 +1532,7 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
-        /// 
+        /// 重置变量ID
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>

@@ -27,7 +27,7 @@ namespace Cdy.Tag
     public abstract class Tagbase
     {
         private string mFullName;
-        private string mGroup;
+        private string mGroup="";
         /// <summary>
         /// 编号
         /// </summary>
@@ -49,13 +49,18 @@ namespace Cdy.Tag
         public string FullName
         {
             get { return mFullName; }
-            private set { mFullName = value; }
+            set { mFullName = value; }
         }
 
         /// <summary>
         /// 组
         /// </summary>
         public string Group { get { return mGroup; } set { mGroup = value; UpdateFullName(); } }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Parent { get; set; } = "";
 
         /// <summary>
         /// 描述
@@ -90,15 +95,18 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public void UpdateFullName()
+        public virtual void UpdateFullName()
         {
-            if(string.IsNullOrEmpty(Group))
+            if (string.IsNullOrEmpty(Parent))
             {
-                mFullName = Name;
-            }
-            else
-            {
-                mFullName = Group + "." + Name;
+                if (string.IsNullOrEmpty(Group))
+                {
+                    mFullName = Name;
+                }
+                else
+                {
+                    mFullName = Group + "." + Name;
+                }
             }
         }
 
@@ -121,6 +129,23 @@ namespace Cdy.Tag
         public override int GetHashCode()
         {
             return base.GetHashCode();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        public virtual void CloneTo(Tagbase tag)
+        {
+            tag.Name = this.Name;
+            tag.Id=this.Id;
+            tag.Conveter = this.Conveter;
+            tag.ReadWriteType = this.ReadWriteType;
+            tag.ValueAddress = this.ValueAddress;
+            tag.Desc = this.Desc;
+            tag.Group=this.Group;
+            tag.LinkAddress = this.LinkAddress;
+
         }
     }
 
@@ -177,6 +202,18 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        public override void CloneTo(Tagbase tag)
+        {
+            base.CloneTo(tag);
+            (tag as NumberTagBase).MaxValue = this.MaxValue;
+            (tag as NumberTagBase).MinValue = this.MinValue;
+        }
+
+
         public override bool Equals(object obj)
         {
             var target = obj as NumberTagBase;
@@ -227,6 +264,12 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
+        public override void CloneTo(Tagbase tag)
+        {
+            base.CloneTo(tag);
+            (tag as FloatingTagBase).Precision = this.Precision;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -269,6 +312,15 @@ namespace Cdy.Tag
             xe.SetAttributeValue("Type", (int)tag.Type);
             xe.SetAttributeValue("Group", tag.Group);
             xe.SetAttributeValue("Desc", tag.Desc);
+            xe.SetAttributeValue("Parent", tag.Parent);
+            if(!string.IsNullOrEmpty(tag.FullName))
+            xe.SetAttributeValue("FullName", tag.FullName);
+
+            if(!tag.LinkAddress.Contains(":"))
+            {
+                tag.LinkAddress=tag.LinkAddress+":";
+            }
+
             xe.SetAttributeValue("LinkAddress", tag.LinkAddress);
             xe.SetAttributeValue("ReadWriteType", (int)tag.ReadWriteType);
             if(tag.Conveter!=null)
@@ -284,6 +336,35 @@ namespace Cdy.Tag
             {
                 xe.SetAttributeValue("Precision", (tag as FloatingTagBase).Precision);
             }
+
+            if(tag is ComplexTag)
+            {
+                foreach(var vv in (tag as ComplexTag).Tags)
+                {
+                    xe.Add(vv.Value.SaveToXML());
+                }
+                xe.SetAttributeValue("LinkComplexClass", (tag as ComplexTag).LinkComplexClass);
+            }
+
+            //if (tag is ComplexClassTag)
+            //{
+            //    XElement real = new XElement("Real");
+            //    foreach (var vv in (tag as ComplexClassTag).Tags)
+            //    {
+            //        real.Add(vv.Value.SaveToXML());
+            //    }
+            //    xe.Add(real);
+
+            //    XElement his = new XElement("His");
+            //    foreach (var vv in (tag as ComplexClassTag).HisTags)
+            //    {
+            //        real.Add(vv.Value.SaveToXML());
+            //    }
+            //    xe.Add(his);
+
+            //    xe.SetAttributeValue("LinkComplexClass", (tag as ComplexTag).LinkComplexClass);
+            //}
+
             return xe;
         }
 
@@ -354,15 +435,23 @@ namespace Cdy.Tag
                 case TagType.ULongPoint3:
                     re = new ULongPoint3Tag();
                     break;
+                case TagType.Complex:
+                    re = new ComplexTag();
+                    break;
+                //case TagType.ClassComplex:
+                //    re = new ComplexClassTag();
+                //    break;
             }
+
             re.Id = int.Parse(xe.Attribute("Id").Value);
             re.Name = xe.Attribute("Name").Value;
             re.Group = xe.Attribute("Group")!=null? xe.Attribute("Group").Value:"";
             re.Desc = xe.Attribute("Desc") != null ? xe.Attribute("Desc").Value : "";
             re.LinkAddress = xe.Attribute("LinkAddress") != null ? xe.Attribute("LinkAddress").Value : "";
+            re.Parent = xe.Attribute("Parent") != null ? xe.Attribute("Parent").Value : "";
+            re.FullName = xe.Attribute("FullName") != null ? xe.Attribute("FullName").Value : re.FullName;
 
-            
-            if(xe.Attribute("Conveter") !=null)
+            if (xe.Attribute("Conveter") !=null)
             {
                 var vres= xe.Attribute("Conveter").Value;
                 string[] sval = vres.Split(new char[] { ':' });
@@ -396,6 +485,48 @@ namespace Cdy.Tag
                     (re as FloatingTagBase).Precision = byte.Parse(xe.Attribute("Precision").Value);
                 }
             }
+
+            if (re is ComplexTag)
+            {
+                var ctag = re as ComplexTag;
+                foreach (var vv in xe.Elements())
+                {
+                    var vtag = vv.LoadTagFromXML();
+                    if (!ctag.Tags.ContainsKey(vtag.Id))
+                        ctag.Tags.Add(vtag.Id, vtag);
+                }
+
+                if(xe.Attribute("LinkComplexClass")!=null)
+                {
+                    ctag.LinkComplexClass = xe.Attribute("LinkComplexClass").Value;
+                }
+            }
+
+            //if(re is ComplexClassTag)
+            //{
+            //    var ctag = re as ComplexClassTag;
+            //    if (xe.Attribute("LinkComplexClass") != null)
+            //    {
+            //        ctag.LinkComplexClass = xe.Attribute("LinkComplexClass").Value;
+            //    }
+            //    if(xe.Element("Real") !=null)
+            //    {
+            //        foreach (var vv in xe.Element("Real").Elements())
+            //        {
+            //            var vtag = vv.LoadTagFromXML();
+            //            if (!ctag.Tags.ContainsKey(vtag.Id))
+            //                ctag.Tags.Add(vtag.Id, vtag);
+            //        }
+
+            //        foreach (var vv in xe.Element("His").Elements())
+            //        {
+            //            var vtag = vv.LoadHisTagFromXML();
+            //            if (!ctag.HisTags.ContainsKey(vtag.Id))
+            //                ctag.HisTags.Add(vtag.Id, vtag);
+            //        }
+            //    }
+            //}
+
             return re;
         }
 

@@ -221,7 +221,7 @@ namespace Cdy.Tag
                     emptys.ReadIndex = 0;
 
                     //写入质量戳
-                    var cqus = CompressQulitys(source, count * (tlen + 1) + sourceAddr, count, emptys);
+                    var cqus = CompressQualitys(source, count * (tlen + 1) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -250,7 +250,7 @@ namespace Cdy.Tag
                     emptys2.ReadIndex = 0;
 
                     //写入质量戳
-                    cqus = CompressQulitys(source, count * (tlen + 1) + sourceAddr, count, emptys2);
+                    cqus = CompressQualitys(source, count * (tlen + 1) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -276,7 +276,7 @@ namespace Cdy.Tag
                     rsize += ures.Length;
                     //质量戳
                     emptys2.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 2) + sourceAddr, count, emptys2);
+                    cqus = CompressQualitys(source, count * (tlen + 2) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -302,7 +302,7 @@ namespace Cdy.Tag
                     rsize += res.Length;
 
                     emptys2.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 2) + sourceAddr, count, emptys2);
+                    cqus = CompressQualitys(source, count * (tlen + 2) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -328,7 +328,7 @@ namespace Cdy.Tag
                     rsize += uires.Length;
                     //质量
                     emptys2.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 4) + sourceAddr, count, emptys2);
+                    cqus = CompressQualitys(source, count * (tlen + 4) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -353,7 +353,7 @@ namespace Cdy.Tag
                     rsize += ires.Length;
                     emptys2.ReadIndex = 0;
                     //质量
-                    cqus = CompressQulitys(source, count * (tlen + 4) + sourceAddr, count, emptys2);
+                    cqus = CompressQualitys(source, count * (tlen + 4) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -378,7 +378,7 @@ namespace Cdy.Tag
                     rsize += ulres.Length;
                     //质量
                     emptys2.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys2);
+                    cqus = CompressQualitys(source, count * (tlen + 8) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -403,7 +403,7 @@ namespace Cdy.Tag
                     rsize += lres.Length;
                     //质量
                     emptys2.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys2);
+                    cqus = CompressQualitys(source, count * (tlen + 8) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -429,7 +429,7 @@ namespace Cdy.Tag
                     rsize += dres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -443,6 +443,10 @@ namespace Cdy.Tag
                     }
                     else
                     {
+                        if (mDCompress.VarintMemory == null || mDCompress.VarintMemory.DataBuffer == null)
+                        {
+                            mDCompress.VarintMemory = mVarintMemory;
+                        }
                         mDCompress.CheckAndResizeTo(count);
                     }
 
@@ -469,7 +473,7 @@ namespace Cdy.Tag
                     rsize += ddres.Length;
                     //质量
                     emptys2.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys2);
+                    cqus = CompressQualitys(source, count * (tlen + 8) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -491,6 +495,10 @@ namespace Cdy.Tag
                     }
                     else
                     {
+                        if (mFCompress.VarintMemory == null || mFCompress.VarintMemory.DataBuffer == null)
+                        {
+                            mFCompress.VarintMemory = mVarintMemory;
+                        }
                         mFCompress.CheckAndResizeTo(count);
                     }
 
@@ -511,7 +519,7 @@ namespace Cdy.Tag
                     rsize += fres.Length;
                     //质量
                     emptys2.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 4) + sourceAddr, count, emptys2);
+                    cqus = CompressQualitys(source, count * (tlen + 4) + sourceAddr, count, emptys2);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -541,7 +549,7 @@ namespace Cdy.Tag
                     rsize += 4;
                     rsize += sres.Length;
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(qus, emptys);
+                    cqus = CompressQualitys(qus, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -565,7 +573,7 @@ namespace Cdy.Tag
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -589,7 +597,7 @@ namespace Cdy.Tag
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 8) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -613,7 +621,7 @@ namespace Cdy.Tag
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 16) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 16) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -637,7 +645,7 @@ namespace Cdy.Tag
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 16) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 16) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -662,7 +670,7 @@ namespace Cdy.Tag
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 12) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 12) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -686,7 +694,7 @@ namespace Cdy.Tag
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 12) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 12) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -710,7 +718,7 @@ namespace Cdy.Tag
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 24) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 24) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;
@@ -734,7 +742,7 @@ namespace Cdy.Tag
                     rsize += ipres.Length;
                     //质量
                     emptys.ReadIndex = 0;
-                    cqus = CompressQulitys(source, count * (tlen + 24) + sourceAddr, count, emptys);
+                    cqus = CompressQualitys(source, count * (tlen + 24) + sourceAddr, count, emptys);
                     target.Write(cqus.Length);
                     target.Write(cqus);
                     rsize += 4;

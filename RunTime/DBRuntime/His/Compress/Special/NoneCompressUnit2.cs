@@ -479,6 +479,28 @@ namespace Cdy.Tag
         /// <param name="target"></param>
         /// <param name="targetAddr"></param>
         /// <param name="size"></param>
+        /// <returns></returns>
+        public override long CompressWithNoStatistic(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size)
+        {
+            target.WriteDatetime(targetAddr, this.StartTime);
+            target.Write((int)(size - this.QulityOffset));//写入值的个数
+            target.Write((int)TimeTick);//写入时间间隔
+            target.WriteByte((byte)(source as HisDataMemoryBlock).TimeLen);//写入时间字段长度
+
+            if (size > 0)
+                source.CopyTo(target, sourceAddr, targetAddr + 17, size);
+
+            return size + 17;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="target"></param>
+        /// <param name="targetAddr"></param>
+        /// <param name="size"></param>
         /// <param name="statisticTarget"></param>
         /// <param name="statisticAddr"></param>
         /// <returns></returns>
@@ -1071,11 +1093,12 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public bool? DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public bool? DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
+           
             using (HisQueryResult<bool> re = new HisQueryResult<bool>(1))
             {
-                var count = DeCompressBoolValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                var count = DeCompressBoolValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction,context);
                 if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
@@ -1097,7 +1120,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result, Func<byte, object> ReadOtherDatablockAction)
+        public  int DeCompressBoolValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<bool> result,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             DateTime stime;
             int valuecount = 0;
@@ -1129,7 +1152,7 @@ namespace Cdy.Tag
                 //如果读取的时间小于，当前数据段的起始时间
 
                 //var val = (TagHisValue<bool>)ReadOtherDatablockAction(0);
-                var vtmp = ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0,context);
                 TagHisValue<bool>? val = vtmp != null ? (TagHisValue<bool>)vtmp : null;
 
                 var valtmp = source.ReadByte(valaddr + findex) > 0;
@@ -1286,12 +1309,12 @@ namespace Cdy.Tag
                 }
             }
 
-            if (greatlast.Count() > 0)
+            if (greatlast.Count() > 0 &&!((bool)context["hasnext"]))
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
                 //var val = (TagHisValue<bool>)ReadOtherDatablockAction(1);
-                var vtmp = ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1,context);
                 TagHisValue<bool>? val = vtmp != null ? (TagHisValue<bool>)vtmp : null;
 
                 var valtmp = source.ReadByte(valaddr + flast) > 0;
@@ -1394,11 +1417,11 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  byte? DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public  byte? DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             using (HisQueryResult<byte> re = new HisQueryResult<byte>(1))
             {
-                var count = DeCompressByteValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                var count = DeCompressByteValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction,context);
                 if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
@@ -1419,7 +1442,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result, Func<byte, object> ReadOtherDatablockAction)
+        public  int DeCompressByteValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<byte> result,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             DateTime stime;
             int valuecount = 0;
@@ -1449,7 +1472,7 @@ namespace Cdy.Tag
                 //如果读取的时间小于，当前数据段的起始时间
 
                 //var val = (TagHisValue<byte>)ReadOtherDatablockAction(0);
-                var vtmp = ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0,context);
                 TagHisValue<byte>? val = vtmp != null ? (TagHisValue<byte>)vtmp : null;
                 var valtmp = source.ReadByte(valaddr + findex);
 
@@ -1641,12 +1664,12 @@ namespace Cdy.Tag
                 }
             }
 
-            if (greatlast.Count() > 0)
+            if (greatlast.Count() > 0 && !((bool)context["hasnext"]))
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
                 //var val = (TagHisValue<byte>)ReadOtherDatablockAction(1);
-                var vtmp = ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1,context);
                 TagHisValue<byte>? val = vtmp != null ? (TagHisValue<byte>)vtmp : null;
                 var valtmp = source.ReadByte(valaddr + flast);
                 foreach (var vtime in greatlast)
@@ -1724,6 +1747,7 @@ namespace Cdy.Tag
                     }
                 }
             }
+           // FillFirstLastValue<byte>(val)
             return count;
         }
 
@@ -1736,11 +1760,11 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  DateTime? DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public  DateTime? DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             using (HisQueryResult<DateTime> re = new HisQueryResult<DateTime>(1))
             {
-                var count = DeCompressDateTimeValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                var count = DeCompressDateTimeValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction,context);
                 if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
@@ -1761,7 +1785,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result, Func<byte, object> ReadOtherDatablockAction)
+        public  int DeCompressDateTimeValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<DateTime> result,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             DateTime stime;
             int valuecount = 0;
@@ -1793,7 +1817,7 @@ namespace Cdy.Tag
                 //如果读取的时间小于，当前数据段的起始时间
 
                 //var val = (TagHisValue<DateTime>)ReadOtherDatablockAction(0);
-                var vtmp = ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0,context);
                 TagHisValue<DateTime>? val = vtmp != null ? (TagHisValue<DateTime>)vtmp : null;
 
                 var valtmp = source.ReadDateTime(valaddr + findex * 8);
@@ -1951,12 +1975,12 @@ namespace Cdy.Tag
                 }
             }
 
-            if (greatlast.Count() > 0)
+            if (greatlast.Count() > 0&& !((bool)context["hasnext"]))
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
                 //var val = (TagHisValue<DateTime>)ReadOtherDatablockAction(1);
-                var vtmp = ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1,context);
                 TagHisValue<DateTime>? val = vtmp != null ? (TagHisValue<DateTime>)vtmp : null;
                 var valtmp = source.ReadDateTime(valaddr + flast * 8);
                 foreach (var vtime in greatlast)
@@ -2035,11 +2059,11 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  double? DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public  double? DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             using (HisQueryResult<double> re = new HisQueryResult<double>(1))
             {
-                var count = DeCompressDoubleValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                var count = DeCompressDoubleValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction,context);
                 if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
@@ -2061,7 +2085,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<double> result, Func<byte, object> ReadOtherDatablockAction)
+        public  int DeCompressDoubleValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<double> result,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             DateTime stime;
             int valuecount = 0;
@@ -2094,7 +2118,7 @@ namespace Cdy.Tag
                 //如果读取的时间小于，当前数据段的起始时间
 
                 //var val = (TagHisValue<double>)ReadOtherDatablockAction(0);
-                var vtmp = ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0,context);
                 TagHisValue<double>? val = vtmp != null ? (TagHisValue<double>)vtmp : null;
 
                 var valtmp = source.ReadDouble(valaddr + findex * 8);
@@ -2291,12 +2315,12 @@ namespace Cdy.Tag
                 }
             }
 
-            if (greatlast.Count() > 0)
+            if (greatlast.Count() > 0&& !((bool)context["hasnext"]))
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
                 //var val = (TagHisValue<double>)ReadOtherDatablockAction(1);
-                var vtmp = ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1,context);
                 TagHisValue<double>? val = vtmp != null ? (TagHisValue<double>)vtmp : null;
                 var valtmp = source.ReadDouble(valaddr + flast * 8);
                 foreach (var vtime in greatlast)
@@ -2386,11 +2410,11 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="ReadOtherDatablockAction"></param>
         /// <returns></returns>
-        public  float? DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public  float? DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             using (HisQueryResult<float> re = new HisQueryResult<float>(1))
             {
-                var count = DeCompressFloatValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                var count = DeCompressFloatValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction,context);
                 if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
@@ -2412,7 +2436,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<float> result, Func<byte, object> ReadOtherDatablockAction)
+        public  int DeCompressFloatValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<float> result,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             DateTime stime;
             int valuecount = 0;
@@ -2441,7 +2465,7 @@ namespace Cdy.Tag
                 //如果读取的时间小于，当前数据段的起始时间
 
                 //var val = (TagHisValue<float>)ReadOtherDatablockAction(0);
-                var vtmp = ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0,context);
                 TagHisValue<float>? val = vtmp != null ? (TagHisValue<float>)vtmp : null;
 
                 var valtmp = source.ReadFloat(valaddr + findex * 4);
@@ -2634,11 +2658,11 @@ namespace Cdy.Tag
                     icount = icount1;
                 }
             }
-            if (greatlast.Count() > 0)
+            if (greatlast.Count() > 0&& !((bool)context["hasnext"]))
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var vtmp = ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1,context);
                 TagHisValue<float>? val = vtmp != null ? (TagHisValue<float>)vtmp : null;
                 var valtmp = source.ReadFloat(valaddr + flast * 4);
                 foreach (var vtime in greatlast)
@@ -2727,11 +2751,11 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  int? DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public  int? DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             using (HisQueryResult<int> re = new HisQueryResult<int>(1))
             {
-                var count = DeCompressIntValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                var count = DeCompressIntValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction,context);
                 if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
@@ -2753,7 +2777,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<int> result, Func<byte, object> ReadOtherDatablockAction)
+        public  int DeCompressIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<int> result,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             DateTime stime;
             int valuecount = 0;
@@ -2780,7 +2804,7 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var vtmp = ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0,context);
                 TagHisValue<int>? val = vtmp != null ? (TagHisValue<int>)vtmp : null;
                 var valtmp = source.ReadInt(valaddr + findex * 4);
 
@@ -2971,11 +2995,11 @@ namespace Cdy.Tag
                 }
             }
 
-            if (greatlast.Count() > 0)
+            if (greatlast.Count() > 0 && !((bool)context["hasnext"]))
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var vtmp = ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1,context);
                 TagHisValue<int>? val = vtmp != null ? (TagHisValue<int>)vtmp : null;
                 var valtmp = source.ReadInt(valaddr + flast * 4);
                 foreach (var vtime in greatlast)
@@ -3064,11 +3088,11 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  long? DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public  long? DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             using (HisQueryResult<long> re = new HisQueryResult<long>(1))
             {
-                var count = DeCompressLongValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                var count = DeCompressLongValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction,context);
                 if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
@@ -3090,7 +3114,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<long> result, Func<byte, object> ReadOtherDatablockAction)
+        public  int DeCompressLongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<long> result,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             DateTime stime;
             int valuecount = 0;
@@ -3119,7 +3143,7 @@ namespace Cdy.Tag
                 //如果读取的时间小于，当前数据段的起始时间
 
                 //var val = (TagHisValue<long>)ReadOtherDatablockAction(0);
-                var vtmp = ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0,context);
                 TagHisValue<long>? val = vtmp != null ? (TagHisValue<long>)vtmp : null;
                 var valtmp = source.ReadLong(valaddr + findex * 8);
 
@@ -3314,11 +3338,11 @@ namespace Cdy.Tag
                 }
             }
 
-            if (greatlast.Count() > 0)
+            if (greatlast.Count() > 0&& !((bool)context["hasnext"]))
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var vtmp = ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1,context);
                 TagHisValue<long>? val = vtmp != null ? (TagHisValue<long>)vtmp : null;
                 var valtmp = source.ReadLong(valaddr + flast * 8);
                 foreach (var vtime in greatlast)
@@ -3407,11 +3431,11 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  short? DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public  short? DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             using (HisQueryResult<short> re = new HisQueryResult<short>(1))
             {
-                var count = DeCompressShortValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                var count = DeCompressShortValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction,context);
                 if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
@@ -3460,7 +3484,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public int DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<short> result, Func<byte, object> ReadOtherDatablockAction)
+        public int DeCompressShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<short> result,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
 
             DateTime stime;
@@ -3488,7 +3512,7 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var vtmp = ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0,context);
                 TagHisValue<short>? val = vtmp != null ? (TagHisValue<short>)vtmp : null;
                 var valtmp = source.ReadShort(valaddr + findex * 2);
 
@@ -3683,11 +3707,11 @@ namespace Cdy.Tag
                 }
             }
 
-            if (greatlast.Count() > 0)
+            if (greatlast.Count() > 0 && !((bool)context["hasnext"]))
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var vtmp = ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1,context);
                 TagHisValue<short>? val = vtmp != null ? (TagHisValue<short>)vtmp : null;
                 var valtmp = source.ReadShort(valaddr + flast * 2);
                 foreach (var vtime in greatlast)
@@ -3779,11 +3803,11 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  string DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public  string DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             using (HisQueryResult<string> re = new HisQueryResult<string>(1))
             {
-                var count = DeCompressStringValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                var count = DeCompressStringValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction,context);
                 if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
@@ -3805,7 +3829,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<string> result, Func<byte, object> ReadOtherDatablockAction)
+        public  int DeCompressStringValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<string> result,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
 
             DateTime stime;
@@ -3844,7 +3868,7 @@ namespace Cdy.Tag
                 //如果读取的时间小于，当前数据段的起始时间
 
                 //var val = (TagHisValue<string>)ReadOtherDatablockAction(0);
-                var vtmp = ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0,context);
                 TagHisValue<string>? val = vtmp != null ? (TagHisValue<string>)vtmp : null;
 
                 var valtmp = dtmp[findex];
@@ -3999,11 +4023,11 @@ namespace Cdy.Tag
                 }
             }
 
-            if (greatlast.Count() > 0)
+            if (greatlast.Count() > 0&& !((bool)context["hasnext"]))
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var vtmp = ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1,context);
                 TagHisValue<string>? val = vtmp != null ? (TagHisValue<string>)vtmp : null;
                 var valtmp = dtmp[flast];
                 foreach (var vtime in greatlast)
@@ -4083,11 +4107,11 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  uint? DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public  uint? DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             using (HisQueryResult<uint> re = new HisQueryResult<uint>(1))
             {
-                var count = DeCompressUIntValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                var count = DeCompressUIntValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction,context);
                 if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
@@ -4109,7 +4133,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result, Func<byte, object> ReadOtherDatablockAction)
+        public  int DeCompressUIntValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<uint> result,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             DateTime stime;
             int valuecount = 0;
@@ -4136,7 +4160,7 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var vtmp = ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0,context);
                 TagHisValue<uint>? val = vtmp != null ? (TagHisValue<uint>)vtmp : null;
                 var valtmp = source.ReadUInt(valaddr + findex * 4);
                 //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
@@ -4328,11 +4352,11 @@ namespace Cdy.Tag
                 }
             }
 
-            if (greatlast.Count() > 0)
+            if (greatlast.Count() > 0&& !((bool)context["hasnext"]))
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var vtmp = ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1,context);
                 TagHisValue<uint>? val = vtmp != null ? (TagHisValue<uint>)vtmp : null;
                 var valtmp = source.ReadUInt(valaddr + flast * 4);
                 foreach (var vtime in greatlast)
@@ -4423,11 +4447,11 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  ulong? DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public  ulong? DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             using (HisQueryResult<ulong> re = new HisQueryResult<ulong>(1))
             {
-                var count = DeCompressULongValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                var count = DeCompressULongValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction,context);
                 if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
@@ -4449,7 +4473,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result, Func<byte, object> ReadOtherDatablockAction)
+        public  int DeCompressULongValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ulong> result,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             DateTime stime;
             int valuecount = 0;
@@ -4477,7 +4501,7 @@ namespace Cdy.Tag
                 //如果读取的时间小于，当前数据段的起始时间
 
                 //var val = (TagHisValue<long>)ReadOtherDatablockAction(0);
-                var vtmp = ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0,context);
                 TagHisValue<ulong>? val = vtmp != null ? (TagHisValue<ulong>)vtmp : null;
                 var valtmp = source.ReadULong(valaddr + findex * 8);
 
@@ -4672,11 +4696,11 @@ namespace Cdy.Tag
                 }
             }
 
-            if (greatlast.Count() > 0)
+            if (greatlast.Count() > 0&& !((bool)context["hasnext"]))
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var vtmp = ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1,context);
                 TagHisValue<ulong>? val = vtmp != null ? (TagHisValue<ulong>)vtmp : null;
                 var valtmp = source.ReadULong(valaddr + flast * 8);
                 foreach (var vtime in greatlast)
@@ -4766,11 +4790,11 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  ushort? DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public  ushort? DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             using (HisQueryResult<ushort> re = new HisQueryResult<ushort>(1))
             {
-                var count = DeCompressUShortValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                var count = DeCompressUShortValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction,context);
                 if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
@@ -4793,7 +4817,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result, Func<byte, object> ReadOtherDatablockAction)
+        public  int DeCompressUShortValue(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<ushort> result,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             DateTime stime;
             int valuecount = 0;
@@ -4820,7 +4844,7 @@ namespace Cdy.Tag
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var vtmp = ReadOtherDatablockAction(0);
+                var vtmp = ReadOtherDatablockAction(0,context);
                 TagHisValue<ushort>? val = vtmp != null ? (TagHisValue<ushort>)vtmp : null;
                 var valtmp = source.ReadUShort(valaddr + findex * 2);
                 //如果为空值，则说明跨数据文件了，则取第一个有效值用作前一个值
@@ -5012,11 +5036,11 @@ namespace Cdy.Tag
                 }
             }
 
-            if (greatlast.Count() > 0)
+            if (greatlast.Count() > 0&& !((bool)context["hasnext"]))
             {
                 //如果读取的时间小于，当前数据段的起始时间
 
-                var vtmp = ReadOtherDatablockAction(1);
+                var vtmp = ReadOtherDatablockAction(1,context);
                 TagHisValue<ushort>? val = vtmp != null ? (TagHisValue<ushort>)vtmp : null;
                 var valtmp = source.ReadUShort(valaddr + flast * 2);
                 foreach (var vtime in greatlast)
@@ -5171,7 +5195,7 @@ namespace Cdy.Tag
         /// <param name="sourceAddr"></param>
         /// <param name="tp"></param>
         /// <returns></returns>
-        public override TagHisValue<T> DeCompressRawValue<T>(MarshalMemoryBlock source, int sourceAddr, byte tp)
+        public override TagHisValue<T> DeCompressRawValue<T>(MarshalMemoryBlock source, int sourceAddr, byte tp,QueryContext context)
         {
             DateTime time;
 
@@ -5194,7 +5218,12 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i--)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close )
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<bool>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i]>0 });
                         }
@@ -5204,7 +5233,11 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i++)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<bool>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i]>0 });
                         }
@@ -5226,7 +5259,11 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i--)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<byte>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5236,7 +5273,12 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i++)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<byte>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5259,7 +5301,11 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i--)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<short>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5269,7 +5315,11 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i++)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<short>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5292,7 +5342,11 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i--)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<ushort>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5302,7 +5356,11 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i++)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<ushort>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5325,7 +5383,12 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i--)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<int>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5335,7 +5398,12 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i++)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<int>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5358,7 +5426,12 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i--)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<uint>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5368,7 +5441,12 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i++)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<uint>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5391,7 +5469,12 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i--)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<long>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5401,7 +5484,12 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i++)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close )
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<long>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5424,7 +5512,12 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i--)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<ulong>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5434,7 +5527,12 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i++)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close )
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<ulong>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5457,7 +5555,12 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i--)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close )
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<DateTime>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5467,7 +5570,12 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i++)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<DateTime>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5490,7 +5598,12 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i--)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<double>() { Quality = qq[i], Time = qs[i].Item1, Value = vals.Span[i] });
                         }
@@ -5500,7 +5613,12 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i++)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<double>() { Quality = qq[i], Time = qs[i].Item1, Value = vals.Span[i] });
                         }
@@ -5523,7 +5641,12 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i--)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<double>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5533,7 +5656,12 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i++)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<double>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5562,7 +5690,12 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i--)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close )
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<string>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5572,7 +5705,12 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i++)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<string>() { Quality = qq[i], Time = qs[i].Item1, Value = vals[i] });
                         }
@@ -5595,7 +5733,11 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i=i-2)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<IntPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new IntPointData(vals[i-1], vals[i])});
                         }
@@ -5605,7 +5747,12 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i=i+2)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<IntPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new IntPointData(vals[i], vals[i + 1]) });
                         }
@@ -5628,7 +5775,12 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i = i - 2)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<UIntPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new UIntPointData(vals[i - 1], vals[i]) });
                         }
@@ -5638,7 +5790,11 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i = i + 2)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<UIntPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new UIntPointData(vals[i], vals[i + 1]) });
                         }
@@ -5661,7 +5817,11 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i = i - 3)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<IntPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new IntPoint3Data(vals[i - 2], vals[i - 1], vals[i]) });
                         }
@@ -5671,7 +5831,11 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i = i + 3)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<IntPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new IntPoint3Data(vals[i], vals[i + 1], vals[i + 2]) });
                         }
@@ -5694,7 +5858,11 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i = i - 3)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<UIntPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new UIntPoint3Data(vals[i - 2], vals[i - 1], vals[i]) });
                         }
@@ -5704,7 +5872,11 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i = i + 3)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<UIntPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new UIntPoint3Data(vals[i], vals[i + 1], vals[i + 2]) });
                         }
@@ -5727,7 +5899,11 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i = i - 2)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<LongPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new LongPointData(vals[i - 1], vals[i]) });
                         }
@@ -5737,7 +5913,11 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i = i + 2)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<LongPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new LongPointData(vals[i], vals[i + 1]) });
                         }
@@ -5759,7 +5939,11 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i = i - 2)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<ULongPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new ULongPointData(vals[i - 1], vals[i]) });
                         }
@@ -5769,7 +5953,11 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i = i + 2)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<ULongPointData>() { Quality = qq[i], Time = qs[i].Item1, Value = new ULongPointData(vals[i], vals[i + 1]) });
                         }
@@ -5790,7 +5978,11 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i = i - 3)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<LongPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new LongPoint3Data(vals[i - 2], vals[i - 1], vals[i]) });
                         }
@@ -5800,7 +5992,11 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i = i + 3)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<LongPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new LongPoint3Data(vals[i], vals[i + 1], vals[i + 2]) });
                         }
@@ -5821,7 +6017,11 @@ namespace Cdy.Tag
                     //读最后一个
                     for (int i = valuecount - 1; i >= 0; i = i - 3)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i] < 100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<ULongPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new ULongPoint3Data(vals[i - 2], vals[i - 1], vals[i]) });
                         }
@@ -5831,7 +6031,11 @@ namespace Cdy.Tag
                 {
                     for (int i = 0; i < valuecount; i = i + 3)
                     {
-                        if (qs[i].Item2)
+                        if (qq[i] == (byte)QualityConst.Close)
+                        {
+                            return TagHisValue<T>.MinValue;
+                        }
+                        if (qs[i].Item2 && qq[i]<100)
                         {
                             return (TagHisValue<T>)((object)new TagHisValue<ULongPoint3Data>() { Quality = qq[i], Time = qs[i].Item1, Value = new ULongPoint3Data(vals[i], vals[i + 1], vals[i + 2]) });
                         }
@@ -5853,67 +6057,68 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override object DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public override object DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type,  Func<byte, QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
+           
             if (typeof(T) == typeof(bool))
             {
-                return ((object)DeCompressBoolValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
+                return ((object)DeCompressBoolValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction, context));
             }
             else if (typeof(T) == typeof(byte))
             {
-                return ((object)DeCompressByteValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
+                return ((object)DeCompressByteValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction, context));
 
             }
             else if (typeof(T) == typeof(short))
             {
-                return ((object)DeCompressShortValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
+                return ((object)DeCompressShortValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction, context));
 
             }
             else if (typeof(T) == typeof(ushort))
             {
-                return ((object)DeCompressUShortValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
+                return ((object)DeCompressUShortValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction, context));
 
             }
             else if (typeof(T) == typeof(int))
             {
-                return ((object)DeCompressIntValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
+                return ((object)DeCompressIntValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction, context));
 
             }
             else if (typeof(T) == typeof(uint))
             {
-                return ((object)DeCompressUIntValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
+                return ((object)DeCompressUIntValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction, context));
 
             }
             else if (typeof(T) == typeof(long))
             {
-                return ((object)DeCompressLongValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
+                return ((object)DeCompressLongValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction, context));
 
             }
             else if (typeof(T) == typeof(ulong))
             {
-                return ((object)DeCompressULongValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
+                return ((object)DeCompressULongValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction, context));
 
             }
             else if (typeof(T) == typeof(double))
             {
-                return DeCompressDoubleValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction);
+                return DeCompressDoubleValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction, context);
             }
             else if (typeof(T) == typeof(float))
             {
-                return DeCompressFloatValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction);
+                return DeCompressFloatValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction, context);
             }
             else if (typeof(T) == typeof(DateTime))
             {
-                return ((object)DeCompressDateTimeValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
+                return ((object)DeCompressDateTimeValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction, context));
 
             }
             else if (typeof(T) == typeof(string))
             {
-                return ((object)DeCompressStringValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction));
+                return ((object)DeCompressStringValue(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction, context));
             }
             else
             {
-                return DeCompressPointValue<T>(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction);
+                return DeCompressPointValue<T>(source, sourceAddr, time, timeTick, type, ReadOtherDatablockAction, context);
             }
         }
 
@@ -5928,67 +6133,67 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result, Func<byte, object> ReadOtherDatablockAction)
+        public override int DeCompressValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result, Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             if (typeof(T) == typeof(bool))
             {
-                return DeCompressBoolValue(source, sourceAddr, time, timeTick,type, result as HisQueryResult<bool>, ReadOtherDatablockAction);
+                return DeCompressBoolValue(source, sourceAddr, time, timeTick,type, result as HisQueryResult<bool>, ReadOtherDatablockAction, context);
             }
             else if (typeof(T) == typeof(byte))
             {
-                return DeCompressByteValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<byte>, ReadOtherDatablockAction);
+                return DeCompressByteValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<byte>, ReadOtherDatablockAction, context);
 
             }
             else if (typeof(T) == typeof(short))
             {
-                return DeCompressShortValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<short>, ReadOtherDatablockAction);
+                return DeCompressShortValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<short>, ReadOtherDatablockAction, context);
 
             }
             else if (typeof(T) == typeof(ushort))
             {
-                return DeCompressUShortValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<ushort>, ReadOtherDatablockAction);
+                return DeCompressUShortValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<ushort>, ReadOtherDatablockAction, context);
 
             }
             else if (typeof(T) == typeof(int))
             {
-                return DeCompressIntValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<int>, ReadOtherDatablockAction);
+                return DeCompressIntValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<int>, ReadOtherDatablockAction, context);
 
             }
             else if (typeof(T) == typeof(uint))
             {
-                return DeCompressUIntValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<uint>, ReadOtherDatablockAction);
+                return DeCompressUIntValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<uint>, ReadOtherDatablockAction, context);
 
             }
             else if (typeof(T) == typeof(long))
             {
-                return DeCompressLongValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<long>, ReadOtherDatablockAction);
+                return DeCompressLongValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<long>, ReadOtherDatablockAction, context);
 
             }
             else if (typeof(T) == typeof(ulong))
             {
-                return DeCompressULongValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<ulong>, ReadOtherDatablockAction);
+                return DeCompressULongValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<ulong>, ReadOtherDatablockAction, context);
 
             }
             else if (typeof(T) == typeof(DateTime))
             {
-                return DeCompressDateTimeValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<DateTime>, ReadOtherDatablockAction);
+                return DeCompressDateTimeValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<DateTime>, ReadOtherDatablockAction, context);
 
             }
             else if (typeof(T) == typeof(string))
             {
-                return DeCompressStringValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<string>, ReadOtherDatablockAction);
+                return DeCompressStringValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<string>, ReadOtherDatablockAction, context);
             }
             else if (typeof(T) == typeof(double))
             {
-                return DeCompressDoubleValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<double>, ReadOtherDatablockAction);
+                return DeCompressDoubleValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<double>, ReadOtherDatablockAction, context);
             }
             else if (typeof(T) == typeof(float))
             {
-                return DeCompressFloatValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<float>, ReadOtherDatablockAction);
+                return DeCompressFloatValue(source, sourceAddr, time, timeTick, type, result as HisQueryResult<float>, ReadOtherDatablockAction, context);
             }
             else
             {
-                return DeCompressPointValue(source, sourceAddr, time,timeTick,type, result, ReadOtherDatablockAction);
+                return DeCompressPointValue(source, sourceAddr, time,timeTick,type, result, ReadOtherDatablockAction, context);
             }
 
         }
@@ -6184,11 +6389,11 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public  T DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type, Func<byte, object> ReadOtherDatablockAction)
+        public  T DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime time, int timeTick, QueryValueMatchType type,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             using (HisQueryResult<T> re = new HisQueryResult<T>(1))
             {
-                var count = DeCompressPointValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction);
+                var count = DeCompressPointValue(source, sourceAddr, new List<DateTime>() { time }, timeTick, type, re, ReadOtherDatablockAction,context);
                 if (count > 0 && re.GetQuality(0) != (byte)QualityConst.Null)
                 {
                     return re.GetValue(0);
@@ -6211,7 +6416,7 @@ namespace Cdy.Tag
         /// <param name="type"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public  int DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result, Func<byte, object> ReadOtherDatablockAction)
+        public  int DeCompressPointValue<T>(MarshalMemoryBlock source, int sourceAddr, List<DateTime> time, int timeTick, QueryValueMatchType type, HisQueryResult<T> result,  Func<byte,QueryContext, object> ReadOtherDatablockAction, QueryContext context)
         {
             DateTime stime;
             int valuecount = 0;
@@ -6238,7 +6443,7 @@ namespace Cdy.Tag
                 if (lowfirst.Count() > 0)
                 {
                     //var val = (TagHisValue<T>)ReadOtherDatablockAction(0);
-                    var vtmp = ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new IntPointData(source.ReadInt(valaddr + findex * 4), source.ReadInt(valaddr + (findex + 1) * 4));
 
@@ -6412,11 +6617,11 @@ namespace Cdy.Tag
                     }
                 }
 
-                if (greatlast.Count() > 0)
+                if (greatlast.Count() > 0&& !((bool)context["hasnext"]))
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var vtmp = ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new IntPointData(source.ReadInt(valaddr + flast * 4), source.ReadInt(valaddr + (flast + 1) * 4));
 
@@ -6495,7 +6700,7 @@ namespace Cdy.Tag
                 var qq = source.ReadBytes(qs.Count * (timelen + 12) + 17 + sourceAddr, qs.Count);
                 if (lowfirst.Count() > 0)
                 {
-                    var vtmp = ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new IntPoint3Data(source.ReadInt(valaddr + findex * 4), source.ReadInt(valaddr + (findex + 1) * 4), source.ReadInt(valaddr + (findex + 2) * 4));
@@ -6684,11 +6889,11 @@ namespace Cdy.Tag
                     }
                 }
 
-                if (greatlast.Count() > 0)
+                if (greatlast.Count() > 0 && !((bool)context["hasnext"]))
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var vtmp = ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new IntPoint3Data(source.ReadInt(valaddr + flast * 4), source.ReadInt(valaddr + (flast + 1) * 4), source.ReadInt(valaddr + (flast + 2) * 4));
                     foreach (var time1 in greatlast)
@@ -6766,7 +6971,7 @@ namespace Cdy.Tag
                 var qq = source.ReadBytes(qs.Count * (timelen + 12) + 17 + sourceAddr, qs.Count);
                 if (lowfirst.Count() > 0)
                 {
-                    var vtmp = ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new UIntPoint3Data(source.ReadUInt(valaddr + findex * 4), source.ReadUInt(valaddr + (findex + 1) * 4), source.ReadUInt(valaddr + (findex + 2) * 4));
@@ -6954,11 +7159,11 @@ namespace Cdy.Tag
                     }
                 }
 
-                if (greatlast.Count() > 0)
+                if (greatlast.Count() > 0 && !((bool)context["hasnext"]))
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var vtmp = ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new UIntPoint3Data(source.ReadUInt(valaddr + flast * 4), source.ReadUInt(valaddr + (flast + 1) * 4), source.ReadUInt(valaddr + (flast + 2) * 4));
                     foreach (var time1 in greatlast)
@@ -7036,7 +7241,7 @@ namespace Cdy.Tag
                 var qq = source.ReadBytes(qs.Count * (timelen + 8) + 17 + sourceAddr, qs.Count);
                 if (lowfirst.Count() > 0)
                 {
-                    var vtmp = ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new UIntPointData(source.ReadUInt(valaddr + findex * 4), source.ReadUInt(valaddr + (findex + 1) * 4));
@@ -7211,11 +7416,11 @@ namespace Cdy.Tag
                     }
                 }
 
-                if (greatlast.Count() > 0)
+                if (greatlast.Count() > 0 && !((bool)context["hasnext"]))
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var vtmp = ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new UIntPointData(source.ReadUInt(valaddr + flast * 4), source.ReadUInt(valaddr + (flast + 1) * 4));
                     foreach (var time1 in greatlast)
@@ -7293,7 +7498,7 @@ namespace Cdy.Tag
                 var qq = source.ReadBytes(qs.Count * (timelen + 16) + 17 + sourceAddr, qs.Count);
                 if (lowfirst.Count() > 0)
                 {
-                    var vtmp = ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new LongPointData(source.ReadLong(valaddr + findex * 8), source.ReadLong(valaddr + (findex + 1) * 8));
@@ -7467,11 +7672,11 @@ namespace Cdy.Tag
                     }
                 }
 
-                if (greatlast.Count() > 0)
+                if (greatlast.Count() > 0 && !((bool)context["hasnext"]))
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var vtmp = ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new LongPointData(source.ReadLong(valaddr + flast * 8), source.ReadLong(valaddr + (flast + 1) * 8));
                     foreach (var time1 in greatlast)
@@ -7549,7 +7754,7 @@ namespace Cdy.Tag
                 var qq = source.ReadBytes(qs.Count * (timelen + 16) + 17 + sourceAddr, qs.Count);
                 if (lowfirst.Count() > 0)
                 {
-                    var vtmp = ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new ULongPointData(source.ReadULong(valaddr + findex * 8), source.ReadULong(valaddr + (findex + 1) * 8));
@@ -7722,11 +7927,11 @@ namespace Cdy.Tag
                         }
                     }
                 }
-                if (greatlast.Count() > 0)
+                if (greatlast.Count() > 0 && !((bool)context["hasnext"]))
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var vtmp = ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new ULongPointData(source.ReadULong(valaddr + flast * 8), source.ReadULong(valaddr + (flast + 1) * 8));
 
@@ -7807,7 +8012,7 @@ namespace Cdy.Tag
                 var qq = source.ReadBytes(qs.Count * (timelen + 24) + 17 + sourceAddr, qs.Count);
                 if (lowfirst.Count() > 0)
                 {
-                    var vtmp = ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new LongPoint3Data(source.ReadLong(valaddr + findex * 8), source.ReadLong(valaddr + (findex + 1) * 8), source.ReadLong(valaddr + (findex + 2) * 8));
@@ -7994,11 +8199,11 @@ namespace Cdy.Tag
                         }
                     }
                 }
-                if (greatlast.Count() > 0)
+                if (greatlast.Count() > 0 && !((bool)context["hasnext"]))
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var vtmp = ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new LongPoint3Data(source.ReadLong(valaddr + flast * 8), source.ReadLong(valaddr + (flast + 1) * 8), source.ReadLong(valaddr + (flast + 2) * 8));
                     foreach (var time1 in greatlast)
@@ -8076,7 +8281,7 @@ namespace Cdy.Tag
                 var qq = source.ReadBytes(qs.Count * (timelen + 24) + 17 + sourceAddr, qs.Count);
                 if (lowfirst.Count() > 0)
                 {
-                    var vtmp = ReadOtherDatablockAction(0);
+                    var vtmp = ReadOtherDatablockAction(0,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
 
                     var valtmp = new ULongPoint3Data(source.ReadULong(valaddr + findex * 8), source.ReadULong(valaddr + (findex + 1) * 8), source.ReadULong(valaddr + (findex + 2) * 8));
@@ -8263,11 +8468,11 @@ namespace Cdy.Tag
                         }
                     }
                 }
-                if (greatlast.Count() > 0)
+                if (greatlast.Count() > 0 && !((bool)context["hasnext"]))
                 {
                     //如果读取的时间小于，当前数据段的起始时间
 
-                    var vtmp = ReadOtherDatablockAction(1);
+                    var vtmp = ReadOtherDatablockAction(1,context);
                     TagHisValue<T>? val = vtmp != null ? (TagHisValue<T>)vtmp : null;
                     var valtmp = new ULongPoint3Data(source.ReadULong(valaddr + flast * 8), source.ReadULong(valaddr + (flast + 1) * 8), source.ReadULong(valaddr + (flast + 2) * 8));
                     foreach (var time1 in greatlast)

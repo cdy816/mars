@@ -54,6 +54,16 @@ namespace DBRuntime.Api
         /// </summary>
         public const byte RequestValueStatistics = 5;
 
+        /// <summary>
+        /// 修改历史数据
+        /// </summary>
+        public const byte ModifyHisData= 6;
+
+        /// <summary>
+        /// 删除历史数据
+        /// </summary>
+        public const byte DeleteHisData = 7;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -113,6 +123,12 @@ namespace DBRuntime.Api
                             break;
                         case RequestValueStatistics:
                             Task.Run(() => { ProcessRequestValueStatistics(client, data); data.UnlockAndReturn(); });
+                            break;
+                        case ModifyHisData:
+                            Task.Run(() => { ProcessModifyHisData(client, data); data.UnlockAndReturn(); });
+                            break;
+                        case DeleteHisData:
+                            Task.Run(() => { ProcessDeleteHisData(client, data); data.UnlockAndReturn(); });
                             break;
                         default:
                             data.UnlockAndReturn();
@@ -651,7 +667,12 @@ namespace DBRuntime.Api
             }
             else
             {
-                Parent.AsyncCallback(clientId, FunId, new byte[1], 0);
+                re = Parent.Allocate(FunId, 5 + 4);
+                re.Write(cid);
+                re.Write(0);
+                re.Write(0);
+                Parent.AsyncCallback(clientId, re);
+                //Parent.AsyncCallback(clientId, FunId, new byte[1], 0);
             }
         }
 
@@ -772,7 +793,12 @@ namespace DBRuntime.Api
             }
             else
             {
-                Parent.AsyncCallback(clientId, FunId, new byte[1], 0);
+                //Parent.AsyncCallback(clientId, FunId, new byte[1], 0);
+                re = Parent.Allocate(FunId, 5 + 4);
+                re.Write(cid);
+                re.Write(0);
+                re.Write(0);
+                Parent.AsyncCallback(clientId, re);
             }
         }
 
@@ -832,7 +858,7 @@ namespace DBRuntime.Api
                         re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<string>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.UInt:
-                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<bool>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<uint>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.ULong:
                         re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ulong>(id, times, type));
@@ -869,12 +895,522 @@ namespace DBRuntime.Api
             }
             else
             {
-                Parent.AsyncCallback(clientId, FunId, new byte[1], 0);
+                re = Parent.Allocate(FunId, 5 + 4);
+                re.Write(cid);
+                re.Write(0);
+                re.Write(0);
+                Parent.AsyncCallback(clientId, re);
             }
         }
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="data"></param>
+        private void ProcessModifyHisData(string clientId,ByteBuffer data)
+        {
+            //Id,User,Msg
+            int id = data.ReadInt();
+            string user =data.ReadString();
+            string msg = data.ReadString();
+            TagType tp = (TagType)data.ReadByte();
 
+            int count = data.ReadInt();
+            int cid = data.ReadInt();
+            var hp = ServiceLocator.Locator.Resolve<IHisDataPatch>();
+
+            var re = Parent.Allocate(FunId, 5);
+            re.Write(cid);
+         
+            
+
+            if (hp != null)
+            {
+                var tags = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
+                if (tags != null && tags.Type == tp)
+                {
+                    switch (tp)
+                    {
+                        case TagType.Bool:
+                            HisQueryResult<bool> datas = new HisQueryResult<bool>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = data.ReadByte() > 0;
+                                var qua = data.ReadByte();
+
+                                datas.Add(bval,vtime,qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<bool>(id,datas,user,msg);
+                            data.Dispose();
+                            break;
+                        case TagType.Byte:
+                            HisQueryResult<byte> bdatas = new HisQueryResult<byte>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = data.ReadByte();
+                                var qua = data.ReadByte();
+
+                                bdatas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<byte>(id, bdatas, user, msg);
+                            data.Dispose();
+                            break;
+                        case TagType.UShort:
+                            HisQueryResult<ushort> usdatas = new HisQueryResult<ushort>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = data.ReadUShort();
+                                var qua = data.ReadByte();
+
+                                usdatas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<ushort>(id, usdatas, user, msg);
+                            data.Dispose();
+                            break;
+                        case TagType.Short:
+                            HisQueryResult<short> sdatas = new HisQueryResult<short>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = data.ReadShort();
+                                var qua = data.ReadByte();
+
+                                sdatas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<short>(id, sdatas, user, msg);
+                            data.Dispose();
+                            break;
+                        case TagType.Int:
+                            HisQueryResult<int> idatas = new HisQueryResult<int>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = data.ReadInt();
+                                var qua = data.ReadByte();
+
+                                idatas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<int>(id, idatas, user, msg);
+                            data.Dispose();
+
+                            break;
+                        case TagType.UInt:
+                            HisQueryResult<uint> uidatas = new HisQueryResult<uint>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = data.ReadUInt();
+                                var qua = data.ReadByte();
+
+                                uidatas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<uint>(id, uidatas, user, msg);
+                            data.Dispose();
+                            break;
+                        case TagType.Long:
+                            HisQueryResult<long> ldatas = new HisQueryResult<long>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = data.ReadLong();
+                                var qua = data.ReadByte();
+
+                                ldatas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<long>(id, ldatas, user, msg);
+                            data.Dispose();
+                            break;
+                        case TagType.ULong:
+                            HisQueryResult<ulong> uldatas = new HisQueryResult<ulong>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = data.ReadULong();
+                                var qua = data.ReadByte();
+
+                                uldatas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<ulong>(id, uldatas, user, msg);
+                            data.Dispose();
+                            break;
+                        case TagType.String:
+                            HisQueryResult<string> ssdatas = new HisQueryResult<string>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = data.ReadString();
+                                var qua = data.ReadByte();
+
+                                ssdatas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<string>(id, ssdatas, user, msg);
+                            data.Dispose();
+                            break;
+                        case TagType.DateTime:
+                            HisQueryResult<DateTime> ddatas = new HisQueryResult<DateTime>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = data.ReadDateTime();
+                                var qua = data.ReadByte();
+
+                                ddatas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<DateTime>(id, ddatas, user, msg);
+                            data.Dispose();
+                            break;
+                        case TagType.Double:
+                            HisQueryResult<double> dddatas = new HisQueryResult<double>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = data.ReadDouble();
+                                var qua = data.ReadByte();
+
+                                dddatas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<double>(id, dddatas, user, msg);
+                            data.Dispose();
+                            break;
+                        case TagType.Float:
+                            HisQueryResult<float> fdatas = new HisQueryResult<float>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = data.ReadFloat();
+                                var qua = data.ReadByte();
+
+                                fdatas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<float>(id, fdatas, user, msg);
+                            data.Dispose();
+                            break;
+                        case TagType.IntPoint:
+                            HisQueryResult<IntPointData> ipdatas = new HisQueryResult<IntPointData>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = new IntPointData(data.ReadInt(), data.ReadInt());
+                                var qua = data.ReadByte();
+
+                                ipdatas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<IntPointData>(id, ipdatas, user, msg);
+                            data.Dispose();
+                            break;
+                        case TagType.UIntPoint:
+                            HisQueryResult<UIntPointData> uipdatas = new HisQueryResult<UIntPointData>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = new UIntPointData(data.ReadUInt(), data.ReadUInt());
+                                var qua = data.ReadByte();
+
+                                uipdatas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<UIntPointData>(id, uipdatas, user, msg);
+                            data.Dispose();
+
+                            break;
+                        case TagType.IntPoint3:
+                            HisQueryResult<IntPoint3Data> ip3datas = new HisQueryResult<IntPoint3Data>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = new IntPoint3Data(data.ReadInt(), data.ReadInt(), data.ReadInt());
+                                var qua = data.ReadByte();
+
+                                ip3datas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<IntPoint3Data>(id, ip3datas, user, msg);
+                            data.Dispose();
+
+                            break;
+                        case TagType.UIntPoint3:
+                            HisQueryResult<UIntPoint3Data> uip3datas = new HisQueryResult<UIntPoint3Data>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = new UIntPoint3Data(data.ReadUInt(), data.ReadUInt(), data.ReadUInt());
+                                var qua = data.ReadByte();
+
+                                uip3datas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<UIntPoint3Data>(id, uip3datas, user, msg);
+                            data.Dispose();
+
+                            break;
+                        case TagType.LongPoint:
+                            HisQueryResult<LongPointData> lipdatas = new HisQueryResult<LongPointData>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = new LongPointData(data.ReadLong(), data.ReadLong());
+                                var qua = data.ReadByte();
+
+                                lipdatas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<LongPointData>(id, lipdatas, user, msg);
+                            data.Dispose();
+
+                            break;
+                        case TagType.LongPoint3:
+                            HisQueryResult<LongPoint3Data> lipdatas3 = new HisQueryResult<LongPoint3Data>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = new LongPoint3Data(data.ReadLong(), data.ReadLong(), data.ReadLong());
+                                var qua = data.ReadByte();
+
+                                lipdatas3.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<LongPoint3Data>(id, lipdatas3, user, msg);
+                            data.Dispose();
+
+                            break;
+                        case TagType.ULongPoint:
+                            HisQueryResult<ULongPointData> ulipdatas = new HisQueryResult<ULongPointData>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = new ULongPointData(data.ReadULong(), data.ReadULong());
+                                var qua = data.ReadByte();
+
+                                ulipdatas.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<ULongPointData>(id, ulipdatas, user, msg);
+                            data.Dispose();
+                            break;
+                        case TagType.ULongPoint3:
+                            HisQueryResult<ULongPoint3Data> ulipdatas3 = new HisQueryResult<ULongPoint3Data>(count);
+                            for (int i = 0; i < count; i++)
+                            {
+                                var vtime = data.ReadDateTime().ToUniversalTime();
+                                var bval = new ULongPoint3Data(data.ReadULong(), data.ReadULong(), data.ReadULong());
+                                var qua = data.ReadByte();
+
+                                ulipdatas3.Add(bval, vtime, qua);
+                            }
+                            ServiceLocator.Locator.Resolve<IHisQuery>().ModifyHisData<ULongPoint3Data>(id, ulipdatas3, user, msg);
+                            data.Dispose();
+                            break;
+                    }
+
+
+                    re.Write((byte)1);
+                    Parent.AsyncCallback(clientId, re);
+                }
+                else
+                {
+                    re.Write((byte)0);
+                    Parent.AsyncCallback(clientId, re);
+                }
+            }
+            else
+            {
+                re.Write((byte)0);
+                Parent.AsyncCallback(clientId, re);
+            }
+
+            
+        }
+
+        private object GetLastValue(int id,TagType type,DateTime sTime,DateTime eTime,out byte quality)
+        {
+            switch (type)
+            {
+                case Cdy.Tag.TagType.Bool:
+                    return ProcessDataQuery<bool>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.Byte:
+                    return ProcessDataQuery<byte>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.DateTime:
+                    return ProcessDataQuery<DateTime>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.Double:
+                    return ProcessDataQuery<double>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.Float:
+                    return ProcessDataQuery<float>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.Int:
+                    return ProcessDataQuery<int>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.Long:
+                    return ProcessDataQuery<long>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.Short:
+                    return ProcessDataQuery<short>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.String:
+                    return ProcessDataQuery<string>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.UInt:
+                    return ProcessDataQuery<bool>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.ULong:
+                    return ProcessDataQuery<ulong>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.UShort:
+                    return ProcessDataQuery<ushort>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.IntPoint:
+                    return ProcessDataQuery<IntPointData>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.UIntPoint:
+                    return ProcessDataQuery<UIntPointData>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.IntPoint3:
+                    return ProcessDataQuery<IntPoint3Data>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.UIntPoint3:
+                    return ProcessDataQuery<UIntPoint3Data>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.LongPoint:
+                    return ProcessDataQuery<LongPointData>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.ULongPoint:
+                    return ProcessDataQuery<ULongPointData>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.LongPoint3:
+                    return ProcessDataQuery<LongPoint3Data>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.ULongPoint3:
+                    return ProcessDataQuery<ULongPoint3Data>(id, sTime, eTime).GetLastValue(out quality);
+            }
+            quality = (byte)QualityConst.Null;
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="type"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        private object GetLastAvaiableData(int id,TagType type,DateTime time,out byte quality)
+        {
+            object re = null;
+            DateTime stime;
+            DateTime etime=time;
+            DateTime sttime = time.AddDays(-1);
+
+            do
+            {
+                stime = etime.AddMinutes(-5);
+                 re = GetLastValue(id,type,stime,etime,out  quality);
+                if(re!=null)
+                {
+                    return re;
+                }
+                etime = stime;
+            }
+            while(re== null&& etime> sttime);
+
+            quality = (byte)QualityConst.Null;
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="data"></param>
+        private void ProcessDeleteHisData(string clientId,ByteBuffer data)
+        {
+            int id = data.ReadInt();
+            string user = data.ReadString();
+            string msg = data.ReadString();
+            DateTime stime = data.ReadDateTime().ToUniversalTime();
+            DateTime etime = data.ReadDateTime().ToUniversalTime();
+
+            int cid = data.ReadInt();
+            var re = Parent.Allocate(FunId, 5);
+            re.Write(cid);
+
+            var hp = ServiceLocator.Locator.Resolve<IHisDataPatch>();
+            if(hp != null)
+            {
+                var tags = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
+                if(tags != null)
+                {
+                    switch (tags.Type)
+                    {
+                        case Cdy.Tag.TagType.Bool:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<bool>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.Byte:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<byte>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.DateTime:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<DateTime>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.Double:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<double>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.Float:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<float>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.Int:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<int>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.Long:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<long>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.Short:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<short>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.String:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<string>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.UInt:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<uint>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.ULong:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<ulong>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.UShort:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<ushort>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.IntPoint:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<IntPointData>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.UIntPoint:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<UIntPointData>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.IntPoint3:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<IntPoint3Data>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.UIntPoint3:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<UIntPoint3Data>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.LongPoint:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<LongPointData>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.ULongPoint:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<ULongPointData>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.LongPoint3:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<LongPoint3Data>(id, stime, etime, user, msg);
+                            break;
+                        case Cdy.Tag.TagType.ULongPoint3:
+                            ServiceLocator.Locator.Resolve<IHisQuery>().DeleteHisData<ULongPoint3Data>(id, stime, etime, user, msg);
+                            break;
+                    }
+                    
+
+                    re.Write((byte)1);
+                    Parent.AsyncCallback(clientId, re);
+                }
+                else
+                {
+                    re.Write((byte)0);
+                    Parent.AsyncCallback(clientId, re);
+                }
+            }
+            else
+            {
+                re.Write((byte)0);
+                Parent.AsyncCallback(clientId, re);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="stime"></param>
+        /// <param name="etime"></param>
+        /// <returns></returns>
         private HisQueryResult<T> ProcessDataQuery<T>(int id, DateTime stime, DateTime etime)
         {
             return ServiceLocator.Locator.Resolve<IHisQuery>().ReadAllValue<T>(id, stime, etime);
@@ -1310,6 +1846,7 @@ namespace DBRuntime.Api
             }
         }
 
+       
 
         #endregion ...Methods...
 

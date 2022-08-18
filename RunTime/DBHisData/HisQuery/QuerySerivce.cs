@@ -23,6 +23,22 @@ namespace Cdy.Tag
 
         StatisticsFileHelper statisticsHelper;
 
+
+        //private Dictionary<string,object> mFileLastValueCach = new Dictionary<string,object>();
+        
+        //private Dictionary<string, object> mFileFirstValueCach = new Dictionary<string, object>();
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int FileDuration { get; set; } = 4;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int BlockDuration { get; set; } = 5;
+
         /// <summary>
         /// 
         /// </summary>
@@ -61,6 +77,171 @@ namespace Cdy.Tag
             return mMemoryService != null;
         }
 
+
+        ///// <summary>
+        ///// 读取某个时间之前的第一个有效值
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="id"></param>
+        ///// <param name="datetime"></param>
+        ///// <returns></returns>
+        //public object ReadLastAvaiableValue<T>(int id,DateTime datetime,QueryContext context)
+        //{
+        //    object tobj=null;
+        //    string tmp = Database + ((int)(id / 100000)).ToString("X3") + "{0}{1}{2}04{3}.dbd2";
+
+        //    //var dtt = context.LastTime.Date.AddHours((int)(context.LastTime.Hour / FileDuration) * FileDuration);
+        //    //if(dtt == datetime)
+        //    //{
+        //    //    return context.LastValue;
+        //    //}
+
+        //    //从当前文件文件中读取
+        //    string sfile = DataFileInfo5Extend.ListDataFile2(datetime, tmp);
+        //    if(!string.IsNullOrEmpty(sfile))
+        //    {
+        //        var obj = context.GetLastFileKeyHisValueRegistor(sfile);
+        //        if(obj != null)
+        //        {
+        //            TagHisValue<T> tt = (TagHisValue<T>)obj;
+        //            if(!tt.IsEmpty())
+        //            return obj;
+        //        }
+        //        else
+        //        {
+        //            DataFileInfo5 dfile = new DataFileInfo5() { FileName = sfile, IsZipFile = sfile.EndsWith(DataFileManager.ZipDataFile2Extends) };
+        //            using (var dsf = dfile.GetFileSeriser())
+        //            {
+        //                for (int i = 47; i >= 0; i--)
+        //                {
+        //                    tobj = dfile.ReadLastAvaiableValue2<T>(dsf, id, i, context, out bool needcancel);
+        //                    if (tobj != null)
+        //                    {
+        //                        break;
+        //                    }
+        //                    else if (needcancel)
+        //                    {
+        //                        break;
+        //                    }
+        //                }
+        //            }
+        //            if (tobj != null)
+        //            {
+        //                context.RegistorLastFileKeyHisValue<T>(sfile, tobj);
+        //                return obj;
+        //            }
+        //            else
+        //            {
+        //                context.RegistorLastFileKeyHisValue<T>(sfile, TagHisValue<T>.Empty);
+        //            }
+        //        }
+        //    }
+
+        //    //从之前的文件中读取
+        //    foreach (var vv in DataFileInfo5Extend.ListPreviewDataFiles2(datetime,tmp))
+        //    {
+        //        var obj = context.GetLastFileKeyHisValueRegistor(vv);
+        //        if (obj != null)
+        //        {
+        //            TagHisValue<T> tt = (TagHisValue<T>)obj;
+        //            if(tt.IsEmpty())
+        //            {
+        //                continue;
+        //            }
+        //            else
+        //            {
+        //                return obj;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            DataFileInfo5 dfile = new DataFileInfo5() { FileName = vv, IsZipFile = vv.EndsWith(DataFileManager.ZipDataFile2Extends) };
+        //            using (var dsf = dfile.GetFileSeriser())
+        //            {
+        //                for (int i = 47; i >= 0; i--)
+        //                {
+        //                    tobj = dfile.ReadLastAvaiableValue2<T>(dsf, id, i, context, out bool needcancel);
+        //                    if (tobj != null)
+        //                    {
+        //                        break;
+        //                    }
+        //                    else if (needcancel)
+        //                    {
+        //                        break;
+        //                    }
+        //                }
+        //            }
+        //            if(tobj!=null)
+        //            {
+        //                context.RegistorLastFileKeyHisValue<T>(vv,tobj);
+        //            }
+        //            else
+        //            {
+        //                context.RegistorLastFileKeyHisValue<T>(vv,TagHisValue<T>.Empty);
+        //            }
+        //        }
+                
+
+        //    }
+        //    return tobj;
+        //}
+
+        ///// <summary>
+        ///// 读取某个时间之后的第一个有效值
+        ///// </summary>
+        ///// <param name="id"></param>
+        ///// <param name="datetime"></param>
+        ///// <returns></returns>
+        //public object ReadFirstAvaiableValue<T>(int id,DateTime datetime,QueryContext context)
+        //{
+        //    object tobj = null;
+        //    string tmp = Database + ((int)(id / 100000)).ToString("X3") + "{0}{1}{2}04{3}.dbd2";
+        //    foreach (var vv in DataFileInfo5Extend.ListNextDataFiles2(datetime, tmp))
+        //    {
+        //        var obj = context.GetFirstFileKeyHisValueRegistor(vv);
+        //        if (obj != null)
+        //        {
+        //            TagHisValue<T> tt = (TagHisValue<T>)obj;
+        //            if (tt.IsEmpty())
+        //            {
+        //                continue;
+        //            }
+        //            else
+        //            {
+        //                return obj;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            DataFileInfo5 dfile = new DataFileInfo5() { FileName = vv, IsZipFile = vv.EndsWith(DataFileManager.ZipDataFile2Extends) };
+        //            using (var dsf = dfile.GetFileSeriser())
+        //            {
+        //                for (int i = 0; i <= 47; i++)
+        //                {
+        //                    tobj = dfile.ReadFirstAvaiableValue2<T>(dsf, id, i, context, out bool needcancel);
+        //                    if (tobj != null)
+        //                    {
+        //                        break;
+        //                    }
+        //                    else if (needcancel)
+        //                    {
+        //                        break;
+        //                    }
+        //                }
+        //            }
+        //            if (tobj != null)
+        //            {
+        //                context.RegistorFirstFileKeyHisValue<T>(vv, tobj);
+        //            }
+        //            else
+        //            {
+        //                context.RegistorFirstFileKeyHisValue<T>(vv, TagHisValue<T>.Empty);
+        //            }
+        //        }
+        //    }
+        //    return tobj;
+        //}
+
         /// <summary>
         /// 
         /// </summary>
@@ -85,14 +266,36 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValueByUTCTime<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
         {
+            Stopwatch sw = Stopwatch.StartNew();
+            sw.Start();
+
+            QueryContext ctx = new QueryContext();
+
+            ctx.Add("IHisQuery", this);
+
+            SortedDictionary<DateTime, int> mtimes = new SortedDictionary<DateTime, int>();
+
+            int i = 0;
+            foreach (var item in times)
+            {
+                mtimes.Add(item, i);
+                i++;
+            }
+
+            long ttmp0 = sw.ElapsedMilliseconds;
+
+            result.TimeIndex = mtimes;
+            result.FillDatetime();
+            result.FillQuality();
+
             List<DateTime> ltmp = new List<DateTime>();
             List<DateTime> mMemoryTimes = new List<DateTime>();
             //判断数据是否在内存中
             if (IsCanQueryFromMemory())
             {
-                foreach(var vv in times)
+                foreach (var vv in times)
                 {
-                    if(!mMemoryService.CheckTime(id,vv))
+                    if (!mMemoryService.CheckTime(id, vv))
                     {
                         ltmp.Add(vv);
                     }
@@ -107,10 +310,12 @@ namespace Cdy.Tag
                 ltmp.AddRange(times);
             }
 
+            long ttmp1 = sw.ElapsedMilliseconds;
+
             List<DateTime> mLogTimes = new List<DateTime>();
             var vfiles = GetFileManager().GetDataFiles(ltmp, mLogTimes, id);
 
-            DataFileInfo4 mPreFile = null;
+            IDataFile mPreFile = null;
 
             List<DateTime> mtime = new List<DateTime>();
 
@@ -121,12 +326,18 @@ namespace Cdy.Tag
                 {
                     if (mPreFile != null)
                     {
+                        ctx.CurrentFile = mPreFile.FileName;
+
                         if (mPreFile is HisDataFileInfo4)
                         {
                             (mPreFile as HisDataFileInfo4).Read(id, mtime, type, result);
                         }
-                        else
-                            mPreFile.Read<T>(id, mtime, type, result);
+                        else if (mPreFile is DataFileInfo4)
+                            (mPreFile as DataFileInfo4).Read<T>(id, mtime, type, result);
+                        else if (mPreFile is DataFileInfo5)
+                        {
+                            (mPreFile as DataFileInfo5).Read(id, mtime, type, result,ctx);
+                        }
                         mPreFile = null;
                         mtime.Clear();
                     }
@@ -136,9 +347,15 @@ namespace Cdy.Tag
                 {
                     if (mPreFile != null)
                     {
+                        ctx.CurrentFile = mPreFile.FileName;
+
                         if (mPreFile is HisDataFileInfo4) (mPreFile as HisDataFileInfo4).Read(id, mtime, type, result);
-                        else
-                            mPreFile.Read<T>(id, mtime, type, result);
+                        else if (mPreFile is DataFileInfo4)
+                            (mPreFile as DataFileInfo4).Read<T>(id, mtime, type, result);
+                        else if (mPreFile is DataFileInfo5)
+                        {
+                            (mPreFile as DataFileInfo5).Read<T>(id, mtime, type, result, ctx);
+                        }
                     }
                     mPreFile = vv.Value;
                     mtime.Clear();
@@ -151,31 +368,342 @@ namespace Cdy.Tag
             }
             if (mPreFile != null)
             {
+                ctx.CurrentFile = mPreFile.FileName;
+
                 if (mPreFile is HisDataFileInfo4) (mPreFile as HisDataFileInfo4).Read(id, mtime, type, result);
-                else
-                    mPreFile.Read<T>(id, mtime, type, result);
+                else if (mPreFile is DataFileInfo4)
+                    (mPreFile as DataFileInfo4).Read<T>(id, mtime, type, result);
+                else if (mPreFile is DataFileInfo5)
+                {
+                    (mPreFile as DataFileInfo5).Read<T>(id, mtime, type, result, ctx);
+                }
             }
+
+            long ttmp2 = sw.ElapsedMilliseconds;
 
             if (IsCanQueryFromMemory())
             {
                 //从内存中读取数据
-                ReadFromMemory(id, mMemoryTimes, type, result);
+                ReadFromMemory(id, mMemoryTimes, type, result,ctx,out DateTime dnow);
 
-                if(mLogTimes.Count>0)
-                {
-                    foreach(var vv in mLogTimes)
-                    {
-                        result.Add(default(T), vv, (byte)QualityConst.Null);
-                    }
-                }
-
+                //FillNoneValues(id,mLogTimes,type,result,ctx,dnow);
             }
-            else
+            //else
             {
-                //从日志文件中读取数据
-                ReadLogFile(id, mLogTimes, type, result);
+                //填充空的数据
+                FillNoneValue(id, mLogTimes, type, result);
             }
+            sw.Stop();
+            LoggerService.Service.Info("QueryService", $"ReadValueByUTCTime 读取 {times.Count()} 个历史数据耗时 初始化:{ttmp1} 从文件读取:{ ttmp2-ttmp1} 从内存读取,填充空值:{sw.ElapsedMilliseconds - ttmp2} 总耗时:{ sw.ElapsedMilliseconds} ms ");
         }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="id"></param>
+        ///// <param name="times"></param>
+        ///// <param name="type"></param>
+        ///// <param name="result"></param>
+        //public  void FillNoneValues<T>(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result,QueryContext context,DateTime timelimit)
+        //{
+        //    if (times.Count > 0)
+        //    {
+        //        SortedDictionary<DateTime, List<DateTime>> dtmps = new SortedDictionary<DateTime, List<DateTime>>();
+
+        //        foreach (DateTime dt in times)
+        //        {
+        //            var dtt = dt.Date.AddHours((int)(dt.Hour / FileDuration) * FileDuration);
+        //            if (dtmps.ContainsKey(dtt))
+        //            {
+        //                dtmps[dtt].Add(dt);
+        //            }
+        //            else
+        //            {
+        //                dtmps.Add(dtt, new List<DateTime>() { dt });
+        //            }
+        //        }
+
+        //        foreach (var vv in dtmps)
+        //        {
+        //            if (type == QueryValueMatchType.Previous)
+        //            {
+        //                var vobj = ReadLastAvaiableValue<T>(id, vv.Key,context);
+        //                if (vobj != null)
+        //                {
+        //                    TagHisValue<T> hval = (TagHisValue<T>)vobj;
+        //                    if(hval.Quality == (byte)QualityConst.Close)
+        //                    {
+        //                        foreach (var vvv in vv.Value)
+        //                        {
+        //                            result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                        }
+        //                    }
+        //                    else
+        //                    {
+        //                        foreach (var vvv in vv.Value)
+        //                        {
+        //                            if(vvv<=timelimit)
+        //                            result.Add(hval.Value, vvv, hval.Quality);
+        //                            else
+        //                            {
+        //                                result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                            }
+        //                        }
+        //                    }
+                            
+        //                }
+        //                else
+        //                {
+        //                    foreach (var vvv in vv.Value)
+        //                    {
+        //                        result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                    }
+        //                }
+        //            }
+        //            else if (type == QueryValueMatchType.After)
+        //            {
+        //                var vobj = ReadFirstAvaiableValue<T>(id, vv.Key, context);
+        //                if (vobj != null)
+        //                {
+        //                    TagHisValue<T> hval = (TagHisValue<T>)vobj;
+        //                    foreach (var vvv in vv.Value)
+        //                    {
+        //                        if (vvv <= timelimit)
+        //                            result.Add(hval.Value, vvv, hval.Quality);
+        //                        else
+        //                            result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                    }
+        //                }
+        //                else
+        //                {
+        //                    foreach (var vvv in vv.Value)
+        //                    {
+        //                        result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                    }
+        //                }
+        //            }
+        //            else if (type == QueryValueMatchType.Closed)
+        //            {
+        //                var pobj = ReadLastAvaiableValue<T>(id, vv.Key, context);
+        //                var nobj = ReadFirstAvaiableValue<T>(id, vv.Key, context);
+        //                if (pobj != null && nobj != null)
+        //                {
+        //                    TagHisValue<T> hval = (TagHisValue<T>)pobj;
+        //                    TagHisValue<T> nval = (TagHisValue<T>)nobj;
+
+        //                    if (hval.Quality == (byte)QualityConst.Close)
+        //                    {
+        //                        foreach (var vvv in vv.Value)
+        //                        {
+        //                            if(vvv<= timelimit)
+        //                            result.Add(nval.Value, vvv, nval.Quality);
+        //                            else
+        //                            result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                        }
+        //                    }
+        //                    else
+        //                    {
+        //                        foreach (var vvv in vv.Value)
+        //                        {
+        //                            if (vvv <= timelimit)
+        //                            {
+        //                                if ((vvv - hval.Time).TotalMinutes > (nval.Time - vvv).TotalMinutes)
+        //                                {
+        //                                    result.Add(nval.Value, vvv, nval.Quality);
+        //                                }
+        //                                else
+        //                                {
+        //                                    result.Add(hval.Value, vvv, hval.Quality);
+        //                                }
+        //                            }
+        //                            else
+        //                            {
+        //                                result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //                else if (pobj != null)
+        //                {
+        //                    TagHisValue<T> hval = (TagHisValue<T>)pobj;
+        //                    foreach (var vvv in vv.Value)
+        //                    {
+        //                        if (vvv <= timelimit)
+        //                            result.Add(hval.Value, vvv, hval.Quality);
+        //                        else
+        //                        {
+        //                            result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                        }
+        //                    }
+        //                }
+        //                else if (nobj != null)
+        //                {
+        //                    TagHisValue<T> hval = (TagHisValue<T>)nobj;
+        //                    foreach (var vvv in vv.Value)
+        //                    {
+        //                        if (vvv <= timelimit)
+        //                            result.Add(hval.Value, vvv, hval.Quality);
+        //                        else
+        //                            result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                    }
+        //                }
+        //                else
+        //                {
+        //                    foreach (var vvv in vv.Value)
+        //                    {
+        //                        result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                    }
+        //                }
+        //            }
+        //            else if (type == QueryValueMatchType.Linear)
+        //            {
+        //                var pobj = ReadLastAvaiableValue<T>(id, vv.Key, context);
+        //                var nobj = ReadFirstAvaiableValue<T>(id, vv.Key, context);
+        //                if (pobj != null && nobj != null)
+        //                {
+        //                    TagHisValue<T> hval = (TagHisValue<T>)pobj;
+        //                    TagHisValue<T> nval = (TagHisValue<T>)nobj;
+        //                    var tval = (nval.Time - hval.Time).TotalSeconds;
+
+        //                    if (typeof(T) == typeof(bool) || typeof(T) == typeof(string) || typeof(T) == typeof(DateTime))
+        //                    {
+        //                        foreach (var vvv in vv.Value)
+        //                        {
+        //                            var ppval = (vvv - hval.Time).TotalMilliseconds;
+        //                            var ffval = (nval.Time - vvv).TotalMilliseconds;
+        //                            if (vvv <= timelimit)
+        //                            {
+        //                                if (ppval < ffval)
+        //                                {
+        //                                    result.Add(hval.Value, vvv, hval.Quality);
+        //                                }
+        //                                else
+        //                                {
+        //                                    result.Add(nval.Value, vvv, nval.Quality);
+        //                                }
+        //                            }
+        //                            else
+        //                            {
+        //                                result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                            }
+        //                        }
+        //                    }
+        //                    else
+        //                    {
+        //                        if ((!IsBadQuality(hval.Quality)) && (!IsBadQuality(nval.Quality)))
+        //                        {
+        //                            foreach (var vvv in vv.Value)
+        //                            {
+        //                                if (vvv > timelimit)
+        //                                {
+        //                                    result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                                    continue;
+        //                                }
+        //                                    var pval1 = (hval.Time - vvv).TotalMilliseconds;
+        //                                var tval1 = (nval.Time - vvv).TotalMilliseconds;
+        //                                var sval1 = hval.Value;
+        //                                var sval2 = nval.Value;
+
+        //                                var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+        //                                string tname = typeof(T).Name;
+        //                                //if (vv <= dnow)
+        //                                {
+        //                                    switch (tname)
+        //                                    {
+        //                                        case "Byte":
+        //                                            result.Add((byte)val1, vvv, 0);
+        //                                            break;
+        //                                        case "Int16":
+        //                                            result.Add((short)val1, vvv, 0);
+        //                                            break;
+        //                                        case "UInt16":
+        //                                            result.Add((ushort)val1, vvv, 0);
+        //                                            break;
+        //                                        case "Int32":
+        //                                            result.Add((int)val1, vvv, 0);
+        //                                            break;
+        //                                        case "UInt32":
+        //                                            result.Add((uint)val1, vvv, 0);
+        //                                            break;
+        //                                        case "Int64":
+        //                                            result.Add((long)val1, vvv, 0);
+        //                                            break;
+        //                                        case "UInt64":
+        //                                            result.Add((ulong)val1, vvv, 0);
+        //                                            break;
+        //                                        case "Double":
+        //                                            result.Add((double)val1, vvv, 0);
+        //                                            break;
+        //                                        case "Single":
+        //                                            result.Add((float)val1, vvv, 0);
+        //                                            break;
+        //                                    }
+        //                                }
+
+        //                            }
+        //                        }
+        //                        else if (!IsBadQuality(hval.Quality))
+        //                        {
+        //                            foreach (var vvv in vv.Value)
+        //                            {
+        //                                if (vvv > timelimit)
+        //                                {
+        //                                    result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                                    continue;
+        //                                }
+        //                                result.Add(hval.Value, vvv, hval.Quality);
+        //                            }
+        //                        }
+        //                        else if (!IsBadQuality(nval.Quality))
+        //                        {
+        //                            foreach (var vvv in vv.Value)
+        //                            {
+        //                                if (vvv > timelimit)
+        //                                {
+        //                                    result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                                    continue;
+        //                                }
+        //                                result.Add(nval.Value, vvv, nval.Quality);
+        //                            }
+        //                        }
+        //                        else
+        //                        {
+        //                            foreach (var vvv in vv.Value)
+        //                            {
+        //                                result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                            }
+        //                        }
+
+        //                    }
+        //                }
+        //                else
+        //                {
+        //                    foreach (var vvv in vv.Value)
+        //                    {
+        //                        result.Add(default(T), vvv, (byte)QualityConst.Null);
+        //                    }
+        //                }
+        //            }
+        //        }
+
+        //        //foreach(var vv in mLogTimes)
+        //        //{
+        //        //    result.Add(default(T), vv, (byte)QualityConst.Null);
+        //        //}
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="qa"></param>
+        ///// <returns></returns>
+        //public static bool IsBadQuality(byte qa)
+        //{
+        //    return qa >= (byte)QualityConst.Bad && qa <= (byte)QualityConst.Bad + 20;
+        //}
 
         /// <summary>
         /// 
@@ -184,9 +712,11 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        private void ReadFromMemory<T>(int id,List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
+        private void ReadFromMemory<T>(int id,List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result,QueryContext context,out DateTime timelimite)
         {
-            mMemoryService?.ReadValue(id, times, type, result);
+            DateTime dt = DateTime.Now;
+            mMemoryService?.ReadValue<T>(id, times, type, result,context,out dt);
+            timelimite = dt;
         }
 
         /// <summary>
@@ -196,48 +726,70 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         /// <param name="mLogTimes"></param>
         /// <param name="result"></param>
-        private void ReadLogFile<T>(int id,List<DateTime> mLogTimes, QueryValueMatchType type, HisQueryResult<T> result)
+        private void FillNoneValue<T>(int id, List<DateTime> mTimes, QueryValueMatchType type, HisQueryResult<T> result)
         {
-            if (mLogTimes.Count > 0)
+            if (mTimes.Count > 0)
             {
-                List<DateTime> mtime = new List<DateTime>();
-                var lfiles = GetFileManager().GetLogDataFiles(mLogTimes);
-
-                LogFileInfo mPlFile = null;
-
-                foreach (var vv in lfiles)
+                foreach (var vv in mTimes)
                 {
-                    if (vv.Value == null)
-                    {
-                        if (mPlFile != null)
-                        {
-                            mPlFile.Read<T>(id, mtime, type, result);
-                            mPlFile = null;
-                            mtime.Clear();
-                        }
-                        result.Add(default(T), vv.Key, (byte)QualityConst.Null);
-                    }
-                    else if (vv.Value != mPlFile)
-                    {
-                        if (mPlFile != null)
-                        {
-                            mPlFile.Read<T>(id, mtime, type, result);
-                        }
-                        mPlFile = vv.Value;
-                        mtime.Clear();
-                        mtime.Add(vv.Key);
-                    }
-                    else
-                    {
-                        mtime.Add(vv.Key);
-                    }
-                }
-                if (mPlFile != null)
-                {
-                    mPlFile.Read<T>(id, mtime, type, result);
+                    result.Add(default(T), vv, (byte)QualityConst.Null);
                 }
             }
         }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="id"></param>
+        ///// <param name="mLogTimes"></param>
+        ///// <param name="result"></param>
+        //private void ReadLogFile<T>(int id, List<DateTime> mLogTimes, QueryValueMatchType type, HisQueryResult<T> result)
+        //{
+        //    if (mLogTimes.Count > 0)
+        //    {
+        //        List<DateTime> mtime = new List<DateTime>();
+        //        var lfiles = GetFileManager().GetLogDataFiles(mLogTimes);
+
+        //        LogFileInfo mPlFile = null;
+        //        DateTime dnow = DateTime.UtcNow;
+        //        foreach (var vv in lfiles)
+        //        {
+        //            if (vv.Key > dnow)
+        //            {
+        //                break;
+        //            }
+        //            if (vv.Value == null)
+        //            {
+        //                if (mPlFile != null)
+        //                {
+        //                    mPlFile.Read<T>(id, mtime, type, result);
+        //                    mPlFile = null;
+        //                    mtime.Clear();
+        //                }
+        //                result.Add(default(T), vv.Key, (byte)QualityConst.Null);
+        //            }
+        //            else if (vv.Value != mPlFile)
+        //            {
+        //                if (mPlFile != null)
+        //                {
+        //                    mPlFile.Read<T>(id, mtime, type, result);
+        //                }
+        //                mPlFile = vv.Value;
+        //                mtime.Clear();
+        //                mtime.Add(vv.Key);
+        //            }
+        //            else
+        //            {
+        //                mtime.Add(vv.Key);
+        //            }
+        //        }
+        //        if (mPlFile != null)
+        //        {
+        //            mPlFile.Read<T>(id, mtime, type, result);
+        //        }
+        //    }
+        //}
 
 
 
@@ -333,7 +885,8 @@ namespace Cdy.Tag
                         {
                             (e as HisDataFileInfo4).ReadAllValue(id, startTime, endTime, result);
                         }
-                        else { e.ReadAllValue(id, sstart, eend, result); }
+                        else if (e is DataFileInfo4) { (e as DataFileInfo4).ReadAllValue(id, sstart, eend, result); }
+                        else if (e is DataFileInfo5) { (e as DataFileInfo5).ReadAllValue(id, sstart, eend, result); }
                     }
 
                     //从日志文件中读取数据
@@ -998,6 +1551,15 @@ namespace Cdy.Tag
             return re;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="qa"></param>
+        /// <returns></returns>
+        protected bool IsBadQuality(byte qa)
+        {
+            return (qa >= (byte)QualityConst.Bad && qa <= (byte)QualityConst.Bad + 20) || qa == (byte)QualityConst.Close;
+        }
 
         /// <summary>
         /// 
@@ -1006,7 +1568,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         bool IsGoodQuality(byte qu)
         {
-            return qu == 0 || qu == 100;
+            return !IsBadQuality(qu);
         }
 
         #endregion
@@ -1155,7 +1717,156 @@ namespace Cdy.Tag
             return tim;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="values"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        public void ModifyHisData<T>(int id, HisQueryResult<T> values, string user, string msg)
+        {
+            Dictionary<DataFileInfo5,List<DateTime>> dic = new Dictionary<DataFileInfo5,List<DateTime>>();
+            Dictionary<DateTime,List<DateTime>> dic2 = new Dictionary<DateTime, List<DateTime>>();
 
+            DateTime stime=DateTime.MinValue, etime=DateTime.MinValue;
+
+            for(int i=0;i< values.Count; i++)
+            {
+                var vv = values.GetValue(i,out DateTime time,out byte qua);
+
+                if(i==0) stime = time;
+                else if(i == values.Count-1)
+                {
+                    etime = time;
+                }
+
+                var vdata = new DateTime(time.Year, time.Month, time.Day, ((int)(time.Hour / FileDuration))*FileDuration, 0, 0);
+                if (dic2.ContainsKey(vdata))
+                {
+                    dic2[vdata].Add(time);
+                }
+                else
+                {
+                    dic2.Add(vdata, new List<DateTime>() { time });
+                }
+            }
+
+            foreach(var vdata in dic2)
+            {
+                var vfile = ServiceLocator.Locator.Resolve<IHisDataManagerService>().GetHisFileName(id, vdata.Key);
+
+                if (!System.IO.File.Exists(vfile))
+                {
+                    var vv = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(vfile), System.IO.Path.GetFileNameWithoutExtension(vfile))+ DataFileManager.ZipDataFile2Extends;
+                    if (System.IO.File.Exists(vv))
+                    {
+                        vfile = vv;
+                    }
+                }
+
+                var vdd = new DateTime(vdata.Key.Year, vdata.Key.Month, vdata.Key.Day, ((int)(vdata.Key.Hour / FileDuration)) * FileDuration, 0, 0);
+                dic.Add(new DataFileInfo5() { FileName = vfile,Duration = new TimeSpan(this.FileDuration,0,0),FileDuration = FileDuration,BlockDuration = BlockDuration, StartTime= vdd, IsZipFile = System.IO.Path.GetExtension(vfile) == DataFileManager.ZipDataFile2Extends },vdata.Value);
+            }
+
+            foreach(var vdata in dic)
+            {
+                vdata.Key.ModifyHisData<T>(id, stime, etime, values);
+            }
+            
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="starttime"></param>
+        /// <param name="endtime"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        public void DeleteHisData<T>(int id, DateTime starttime, DateTime endtime, string user, string msg)
+        {
+            Dictionary<DataFileInfo5, Tuple<DateTime,DateTime>> dic = new Dictionary<DataFileInfo5, Tuple<DateTime, DateTime>>();
+
+            Dictionary<DateTime, DateTime> dic2 = new Dictionary<DateTime, DateTime>();
+            DateTime dtmp = starttime;
+            while(dtmp<endtime)
+            {
+                var vdata = new DateTime(dtmp.Year, dtmp.Month, dtmp.Day, ((int)(dtmp.Hour / FileDuration))*FileDuration, 0, 0);
+                var edata = vdata.AddHours(FileDuration);
+                if(edata>endtime)
+                {
+                    dic2.Add(dtmp, endtime);
+                    break;
+                }
+                else
+                {
+                    dic2.Add(dtmp, edata);
+                }
+                dtmp = edata;
+            }
+
+            foreach (var vdata in dic2)
+            {
+                var vfile = ServiceLocator.Locator.Resolve<IHisDataManagerService>().GetHisFileName(id, vdata.Key);
+
+                if(!System.IO.File.Exists(vfile))
+                {
+                    var vv = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(vfile), System.IO.Path.GetFileNameWithoutExtension(vfile)) + DataFileManager.ZipDataFile2Extends;
+                    if (System.IO.File.Exists(vv))
+                    {
+                        vfile = vv;
+                    }
+                }
+
+                if (System.IO.File.Exists(vfile))
+                {
+                    var vdd = new DateTime(vdata.Key.Year, vdata.Key.Month, vdata.Key.Day, ((int)(vdata.Key.Hour / FileDuration)) * FileDuration, 0, 0);
+                    dic.Add(new DataFileInfo5() { FileName = vfile, Duration = new TimeSpan(this.FileDuration, 0, 0), StartTime = vdd, IsZipFile = System.IO.Path.GetExtension(vfile) == DataFileManager.ZipDataFile2Extends }, new Tuple<DateTime, DateTime>(vdata.Key,vdata.Value));
+                }
+            }
+
+            foreach (var vdata in dic)
+            {
+                vdata.Key.DeleteHisData<T>(id,vdata.Value.Item1,vdata.Value.Item2);
+            }
+        }
+
+        /// <summary>
+        /// 读取文件的第一个值
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="time"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public object ReadFileFirstValue<T>(int id,DateTime time,QueryContext context)
+        {
+            var vfile = GetFileManager().GetDataFile(time, id);
+            if(vfile!=null && vfile is DataFileInfo5)
+            {
+                return (vfile as DataFileInfo5).ReadFileFirstAvaiableValue<T>(id, context);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 读取文件的最后一个记录值
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="time"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public object ReadFileLastValue<T>(int id, DateTime time, QueryContext context)
+        {
+            var vfile = GetFileManager().GetDataFile(time, id);
+            if (vfile != null && vfile is DataFileInfo5)
+            {
+                return (vfile as DataFileInfo5).ReadFileLastAvaiableValue<T>(id, context);
+            }
+            return null;
+        }
 
         #endregion
     }

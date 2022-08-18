@@ -749,6 +749,7 @@ namespace DBRuntime.His
         /// <param name="values"></param>
         /// <param name="valueOffset"></param>
         /// <param name="len"></param>
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteBytesDirect(long address, long offset, IntPtr values, int valueOffset, int len)
         {
             Buffer.MemoryCopy((void*)(values + valueOffset), (void*)(new IntPtr(address + offset)), len, len);
@@ -771,6 +772,7 @@ namespace DBRuntime.His
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteByteDirect(long address, long offset, byte value)
         {
             MemoryHelper.WriteByte((void*)new IntPtr(address), offset, value);
@@ -823,6 +825,7 @@ namespace DBRuntime.His
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="value"></param>
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteUShortDirect(long address, long offset, ushort value)
         {
             MemoryHelper.WriteUShort((void*)new IntPtr(address), offset, value);

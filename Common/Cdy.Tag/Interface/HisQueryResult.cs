@@ -8,6 +8,7 @@
 //==============================================================
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -118,7 +119,10 @@ namespace Cdy.Tag
             }
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        public SortedDictionary<DateTime,int> TimeIndex { get; set; }
 
 
         #endregion ...Properties...
@@ -165,6 +169,8 @@ namespace Cdy.Tag
            // handle = (void*)System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(mDataBuffer, 0);
             mLimite = count;
             mSize = csize;
+
+            new Span<byte>((void*)handle,csize).Clear();
         }
 
         /// <summary>
@@ -531,115 +537,291 @@ namespace Cdy.Tag
         public void Add(object value,DateTime time,byte qulity)
         {
 
-            if(mCount>=mLimite)
+            //if(time.Date == DateTime.MinValue.Date)
+            //{
+            //    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time + new StackTrace().ToString());
+            //}
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
+                if (TimeIndex.ContainsKey(time))
+                {
+                    //if (TimeIndex[time] >= mLimite)
+                    //{
+                    //    int newCount = (int)(mCount * 1.2);
+                    //    Resize(newCount);
+                    //    mLimite = newCount;
+                    //}
+
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:"+time);
+                }
+            }
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+
+                switch (mDataType)
+                {
+                    case 0:
+                        Marshal.WriteByte(handle + mPosition, (byte)(Convert.ToBoolean(value) ? 1 : 0));
+                        mPosition++;
+                        break;
+                    case 1:
+                        Marshal.WriteByte(handle + mPosition, Convert.ToByte(value));
+                        //mDataBuffer[mPosition] = (byte)value;
+                        mPosition++;
+                        break;
+                    case 2:
+                        MemoryHelper.WriteShort((void*)handle, mPosition, Convert.ToInt16(value));
+                        mPosition += 2;
+                        break;
+                    case 3:
+                        MemoryHelper.WriteUShort((void*)handle, mPosition, Convert.ToUInt16(value));
+                        mPosition += 2;
+                        break;
+                    case 4:
+                        MemoryHelper.WriteInt32((void*)handle, mPosition, Convert.ToInt32(value));
+                        mPosition += 4;
+                        break;
+                    case 5:
+                        MemoryHelper.WriteUInt32((void*)handle, mPosition, Convert.ToUInt32(value));
+                        mPosition += 4;
+                        break;
+                    case 6:
+                        MemoryHelper.WriteInt64((void*)handle, mPosition, Convert.ToInt64(value));
+                        mPosition += 8;
+                        break;
+                    case 7:
+                        MemoryHelper.WriteUInt64((void*)handle, mPosition, Convert.ToUInt64(value));
+                        mPosition += 8;
+                        break;
+                    case 8:
+                        MemoryHelper.WriteFloat((void*)handle, mPosition, Convert.ToSingle(value));
+                        mPosition += 4;
+                        break;
+                    case 9:
+                        MemoryHelper.WriteDouble((void*)handle, mPosition, Convert.ToDouble(value));
+                        mPosition += 8;
+                        break;
+                    case 10:
+                        try
+                        {
+                            MemoryHelper.WriteDateTime((void*)handle, mPosition, Convert.ToDateTime(value));
+                        }
+                        catch
+                        {
+
+                        }
+                        mPosition += 8;
+                        break;
+                    case 11:
+
+                        var old = mPosition;
+                        //mPosition = indx * 256;
+
+                        var sdata = Encoding.Unicode.GetBytes((string)value);
+                        MemoryHelper.WriteByte((void*)handle, mPosition, (byte)sdata.Length);
+                        mPosition++;
+
+                        Marshal.Copy(sdata, 0, handle + mPosition, sdata.Length);
+                        mPosition = old + 256;
+                        //mPosition += sdata.Length;
+                        break;
+                    case 12:
+                        Add((IntPointData)value, time, qulity);
+                        return;
+                    case 13:
+                        Add((UIntPointData)value, time, qulity);
+                        return;
+                    case 14:
+                        Add((IntPoint3Data)value, time, qulity);
+                        return;
+                    case 15:
+                        Add((UIntPoint3Data)value, time, qulity);
+                        return;
+                    case 16:
+                        Add((LongPointData)value, time, qulity);
+                        return;
+                    case 17:
+                        Add((ULongPointData)value, time, qulity);
+                        return;
+                    case 18:
+                        Add((LongPoint3Data)value, time, qulity);
+                        return;
+                    case 19:
+                        Add((ULongPoint3Data)value, time, qulity);
+                        return;
+                }
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                Marshal.WriteByte(handle + mCount + mQulityAddr, (byte)qulity);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                mCount++;
+                LastTime = time;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="indx"></param>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        public void Insert(int indx, object value, DateTime time, byte qulity)
+        {
+
+            if (indx >= mLimite)
+            {
+                int newCount = (int)(indx * 1.2);
                 Resize(newCount);
                 mLimite = newCount;
             }
 
-            switch(mDataType)
+            switch (mDataType)
             {
                 case 0:
-                    Marshal.WriteByte(handle + mPosition, (byte)(Convert.ToBoolean(value)?1:0));
-                    mPosition++;
+                    Marshal.WriteByte(handle + indx, (byte)(Convert.ToBoolean(value) ? 1 : 0));
+                    mPosition = indx + 1;
                     break;
                 case 1:
-                    Marshal.WriteByte(handle+mPosition,Convert.ToByte(value));
+                    Marshal.WriteByte(handle + indx, Convert.ToByte(value));
                     //mDataBuffer[mPosition] = (byte)value;
-                    mPosition++;
+                    mPosition = indx + 1;
                     break;
                 case 2:
-                    MemoryHelper.WriteShort((void*)handle, mPosition, Convert.ToInt16(value));
-                    mPosition+=2;
+                    MemoryHelper.WriteShort((void*)handle, indx * 2, Convert.ToInt16(value));
+                    mPosition = indx * 2 + 2;
                     break;
                 case 3:
-                    MemoryHelper.WriteUShort((void*)handle, mPosition, Convert.ToUInt16(value));
-                    mPosition += 2;
+                    MemoryHelper.WriteUShort((void*)handle, indx * 2, Convert.ToUInt16(value));
+                    mPosition = indx * 2 + 2;
                     break;
                 case 4:
-                    MemoryHelper.WriteInt32((void*)handle, mPosition, Convert.ToInt32(value));
-                    mPosition += 4;
+                    MemoryHelper.WriteInt32((void*)handle, indx * 4, Convert.ToInt32(value));
+                    mPosition = indx * 4 + 4;
                     break;
                 case 5:
-                    MemoryHelper.WriteUInt32((void*)handle, mPosition, Convert.ToUInt32(value));
-                    mPosition += 4;
+                    MemoryHelper.WriteUInt32((void*)handle, indx * 4, Convert.ToUInt32(value));
+                    mPosition = indx * 4 + 4;
                     break;
                 case 6:
-                    MemoryHelper.WriteInt64((void*)handle, mPosition, Convert.ToInt64(value));
-                    mPosition += 8;
+                    MemoryHelper.WriteInt64((void*)handle, indx * 8, Convert.ToInt64(value));
+                    mPosition = indx * 8 + 8;
                     break;
                 case 7:
-                    MemoryHelper.WriteUInt64((void*)handle, mPosition, Convert.ToUInt64(value));
-                    mPosition += 8;
+                    MemoryHelper.WriteUInt64((void*)handle, indx * 8, Convert.ToUInt64(value));
+                    mPosition = indx * 8 + 8;
                     break;
                 case 8:
-                    MemoryHelper.WriteFloat((void*)handle, mPosition, Convert.ToSingle(value));
-                    mPosition += 4;
+                    MemoryHelper.WriteFloat((void*)handle, indx * 4, Convert.ToSingle(value));
+                    mPosition = indx * 4 + 4;
                     break;
                 case 9:
-                    MemoryHelper.WriteDouble((void*)handle, mPosition,Convert.ToDouble(value));
-                    mPosition += 8;
+                    MemoryHelper.WriteDouble((void*)handle, indx * 8, Convert.ToDouble(value));
+                    mPosition = indx * 8 + 8;
                     break;
                 case 10:
                     try
                     {
-                        MemoryHelper.WriteDateTime((void*)handle, mPosition, Convert.ToDateTime(value));
+                        MemoryHelper.WriteDateTime((void*)handle, indx * 8, Convert.ToDateTime(value));
                     }
                     catch
                     {
 
                     }
-                    mPosition += 8;
+                    mPosition = indx * 8 + 8;
                     break;
                 case 11:
+
+                    mPosition = indx * 256;
 
                     var sdata = Encoding.Unicode.GetBytes((string)value);
                     MemoryHelper.WriteByte((void*)handle, mPosition, (byte)sdata.Length);
                     mPosition++;
 
-                    Marshal.Copy(sdata, 0, handle+ mPosition, sdata.Length);
-                    mPosition += sdata.Length;
+                    Marshal.Copy(sdata, 0, handle + mPosition, sdata.Length);
+
+                    mPosition = indx * 256 + 256;
+                    //mPosition += sdata.Length;
                     break;
                 case 12:
+                    mPosition = indx * 8;
                     Add((IntPointData)value, time, qulity);
                     return;
                 case 13:
+                    mPosition = indx * 8;
                     Add((UIntPointData)value, time, qulity);
                     return;
                 case 14:
+                    mPosition = indx * 12;
                     Add((IntPoint3Data)value, time, qulity);
                     return;
                 case 15:
+                    mPosition = indx * 12;
                     Add((UIntPoint3Data)value, time, qulity);
                     return;
                 case 16:
+                    mPosition = indx * 16;
                     Add((LongPointData)value, time, qulity);
                     return;
                 case 17:
+                    mPosition = indx * 16;
                     Add((ULongPointData)value, time, qulity);
                     return;
                 case 18:
+                    mPosition = indx * 24;
                     Add((LongPoint3Data)value, time, qulity);
                     return;
                 case 19:
+                    mPosition = indx * 24;
                     Add((ULongPoint3Data)value, time, qulity);
                     return;
             }
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            Marshal.WriteByte(handle + mCount + mQulityAddr, (byte)qulity);
+            MemoryHelper.WriteDateTime((void*)handle, indx * 8 + mTimeAddr, time);
+            Marshal.WriteByte(handle + indx + mQulityAddr, (byte)qulity);
             // mDataBuffer[mCount + mQulityAddr] = qulity;
             mCount++;
+            LastTime = LastTime < time ? time : LastTime;
         }
+
+        public void FillDatetime()
+        {
+            foreach(var vv in TimeIndex)
+            {
+                MemoryHelper.WriteDateTime((void*)handle, vv.Value * 8 + mTimeAddr, vv.Key);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void FillQuality()
+        {
+            for(int i=0;i< mLimite; i++)
+            {
+                Marshal.WriteByte(handle + i + mQulityAddr, (byte)QualityConst.Null);
+            }
+        }
+
+        public DateTime LastTime { get; set; }
 
         /// <summary>
         /// 将UTC时间转换成本地时间
         /// </summary>
         public HisQueryResult<T> ConvertUTCTimeToLocal()
         {
-            for(int i=0;i<mCount;i++)
+            for (int i = 0; i < mCount; i++)
             {
-                MemoryHelper.WriteDateTime((void*)handle, i * 8 + mTimeAddr, MemoryHelper.ReadDateTime((void*)handle,i*8+mTimeAddr).ToLocalTime());
+                var vv = MemoryHelper.ReadDateTime((void*)handle, i * 8 + mTimeAddr);
+                MemoryHelper.WriteDateTime((void*)handle, i * 8 + mTimeAddr, vv.ToLocalTime());
             }
             return this;
         }
@@ -653,21 +835,37 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void Add(bool value, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
 
-            Marshal.WriteByte(handle + mPosition, (byte)(value ? 1 : 0));
+                Marshal.WriteByte(handle + mPosition, (byte)(value ? 1 : 0));
 
-          //  mDataBuffer[mPosition] = (byte)(value ? 1 : 0);
-            mPosition++;
-            MemoryHelper.WriteDateTime((void*)(handle),mCount * 8 + mTimeAddr, time);
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-          //  mDataBuffer[mCount + mQulityAddr] = qulity;
-            mCount++;
+                //  mDataBuffer[mPosition] = (byte)(value ? 1 : 0);
+                mPosition++;
+                MemoryHelper.WriteDateTime((void*)(handle), mCount * 8 + mTimeAddr, time);
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                LastTime = time;
+
+                //  mDataBuffer[mCount + mQulityAddr] = qulity;
+                mCount++;
+            }
         }
 
         /// <summary>
@@ -678,119 +876,224 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void Add(byte value, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            Marshal.WriteByte(handle + mPosition, value);
-            // mDataBuffer[mPosition] = value;
-            mPosition++;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            // mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                Marshal.WriteByte(handle + mPosition, value);
+                // mDataBuffer[mPosition] = value;
+                mPosition++;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
 
         public void Add(short value, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteShort((void*)handle, mPosition, value);
-            mPosition += 2;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            // mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteShort((void*)handle, mPosition, value);
+                mPosition += 2;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
         public void Add(ushort value, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteUShort((void*)handle, mPosition, value);
-            mPosition += 2;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            //   mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteUShort((void*)handle, mPosition, value);
+                mPosition += 2;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                //   mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
         public void Add(int value, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteInt32((void*)handle, mPosition, value);
-            mPosition += 4;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            // mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteInt32((void*)handle, mPosition, value);
+                mPosition += 4;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
 
         public void Add(uint value, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteUInt32((void*)handle, mPosition, value);
-            mPosition += 4;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            // mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteUInt32((void*)handle, mPosition, value);
+                mPosition += 4;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
 
         public void Add(long value, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteInt64((void*)handle, mPosition, value);
-            mPosition += 8;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            //mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteInt64((void*)handle, mPosition, value);
+                mPosition += 8;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                //mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
 
         public void Add(ulong value, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteUInt64((void*)handle, mPosition, value);
-            mPosition += 8;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            // mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteUInt64((void*)handle, mPosition, value);
+                mPosition += 8;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
         /// <summary>
@@ -801,18 +1104,33 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void Add(float value, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteFloat((void*)handle, mPosition, value);
-            mPosition += 4;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            //mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteFloat((void*)handle, mPosition, value);
+                mPosition += 4;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                //mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
         /// <summary>
@@ -823,18 +1141,33 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void Add(double value, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteDouble((void*)handle, mPosition, value);
-            mPosition += 8;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            // mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteDouble((void*)handle, mPosition, value);
+                mPosition += 8;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
         /// <summary>
@@ -845,18 +1178,33 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void Add(DateTime value, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteDateTime((void*)handle, mPosition, value);
-            mPosition += 8;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            // mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteDateTime((void*)handle, mPosition, value);
+                mPosition += 8;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
         /// <summary>
@@ -867,23 +1215,40 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void Add(string value, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            var sdata = Encoding.Unicode.GetBytes((string)value);
-            MemoryHelper.WriteByte((void*)handle, mPosition, (byte)sdata.Length);
-            mPosition++;
-            Marshal.Copy(sdata, 0, handle + mPosition, sdata.Length);
-            //System.Buffer.BlockCopy(sdata, 0, mDataBuffer, mPosition, sdata.Length);
-            mPosition +=sdata.Length;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                var sdata = Encoding.Unicode.GetBytes((string)value);
+                MemoryHelper.WriteByte((void*)handle, mPosition, (byte)sdata.Length);
+                mPosition++;
+                Marshal.Copy(sdata, 0, handle + mPosition, sdata.Length);
+                //System.Buffer.BlockCopy(sdata, 0, mDataBuffer, mPosition, sdata.Length);
+                // mPosition += sdata.Length;
 
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            //mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+                mPosition += 255;
+
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                //mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
         /// <summary>
@@ -895,20 +1260,35 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void AddPoint(int x,int y,DateTime time,byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time],new IntPointData(x,y), time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteInt32((void*)handle, mPosition, x);
-            mPosition += 4;
-            MemoryHelper.WriteInt32((void*)handle, mPosition, y);
-            mPosition += 4;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            // mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteInt32((void*)handle, mPosition, x);
+                mPosition += 4;
+                MemoryHelper.WriteInt32((void*)handle, mPosition, y);
+                mPosition += 4;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
         /// <summary>
@@ -919,7 +1299,19 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void Add(IntPointData value, DateTime time, byte qulity)
         {
-            AddPoint(value.X, value.Y, time, qulity);
+            if (TimeIndex != null)
+            {
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
+            }
+            else
+                AddPoint(value.X, value.Y, time, qulity);
         }
 
         /// <summary>
@@ -932,22 +1324,37 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void AddPoint(int x, int y,int z, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time],new IntPoint3Data(x,y,z), time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteInt32((void*)handle, mPosition, x);
-            mPosition += 4;
-            MemoryHelper.WriteInt32((void*)handle, mPosition, y);
-            mPosition += 4;
-            MemoryHelper.WriteInt32((void*)handle, mPosition, z);
-            mPosition += 4;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            // mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteInt32((void*)handle, mPosition, x);
+                mPosition += 4;
+                MemoryHelper.WriteInt32((void*)handle, mPosition, y);
+                mPosition += 4;
+                MemoryHelper.WriteInt32((void*)handle, mPosition, z);
+                mPosition += 4;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
         /// <summary>
@@ -958,7 +1365,19 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void Add(IntPoint3Data value, DateTime time, byte qulity)
         {
-            AddPoint(value.X, value.Y, value.Z, time, qulity);
+            if (TimeIndex != null)
+            {
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
+            }
+            else
+                AddPoint(value.X, value.Y, value.Z, time, qulity);
         }
 
         /// <summary>
@@ -970,20 +1389,35 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void AddPoint(uint x, uint y, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], new UIntPointData(x,y), time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteUInt32((void*)handle, mPosition, x);
-            mPosition += 4;
-            MemoryHelper.WriteUInt32((void*)handle, mPosition, y);
-            mPosition += 4;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            // mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteUInt32((void*)handle, mPosition, x);
+                mPosition += 4;
+                MemoryHelper.WriteUInt32((void*)handle, mPosition, y);
+                mPosition += 4;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
         /// <summary>
@@ -994,7 +1428,19 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void Add(UIntPointData value, DateTime time, byte qulity)
         {
-            AddPoint(value.X, value.Y, time, qulity);
+            if (TimeIndex != null)
+            {
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
+            }
+            else
+                AddPoint(value.X, value.Y, time, qulity);
         }
 
         /// <summary>
@@ -1007,22 +1453,37 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void AddPoint(uint x, uint y, uint z, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], new UIntPoint3Data(x,y,z), time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteUInt32((void*)handle, mPosition, x);
-            mPosition += 4;
-            MemoryHelper.WriteUInt32((void*)handle, mPosition, y);
-            mPosition += 4;
-            MemoryHelper.WriteUInt32((void*)handle, mPosition, z);
-            mPosition += 4;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            // mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteUInt32((void*)handle, mPosition, x);
+                mPosition += 4;
+                MemoryHelper.WriteUInt32((void*)handle, mPosition, y);
+                mPosition += 4;
+                MemoryHelper.WriteUInt32((void*)handle, mPosition, z);
+                mPosition += 4;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
         /// <summary>
@@ -1033,7 +1494,19 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void Add(UIntPoint3Data value, DateTime time, byte qulity)
         {
-            AddPoint(value.X, value.Y, value.Z, time, qulity);
+            if (TimeIndex != null)
+            {
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
+            }
+            else
+                AddPoint(value.X, value.Y, value.Z, time, qulity);
         }
 
         /// <summary>
@@ -1045,20 +1518,35 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void AddPoint(long x, long y, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], new LongPointData(x,y), time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteInt64((void*)handle, mPosition, x);
-            mPosition += 8;
-            MemoryHelper.WriteInt64((void*)handle, mPosition, y);
-            mPosition += 8;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            // mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteInt64((void*)handle, mPosition, x);
+                mPosition += 8;
+                MemoryHelper.WriteInt64((void*)handle, mPosition, y);
+                mPosition += 8;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
         /// <summary>
@@ -1069,27 +1557,54 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void Add(LongPointData value, DateTime time, byte qulity)
         {
-            AddPoint(value.X, value.Y,  time, qulity);
+            if (TimeIndex != null)
+            {
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
+            }
+            else
+                AddPoint(value.X, value.Y,  time, qulity);
         }
 
         public void AddPoint(long x, long y, long z, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], new LongPoint3Data(x,y,z), time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteInt64((void*)handle, mPosition, x);
-            mPosition += 8;
-            MemoryHelper.WriteInt64((void*)handle, mPosition, y);
-            mPosition += 8;
-            MemoryHelper.WriteInt64((void*)handle, mPosition, z);
-            mPosition += 8;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            // mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteInt64((void*)handle, mPosition, x);
+                mPosition += 8;
+                MemoryHelper.WriteInt64((void*)handle, mPosition, y);
+                mPosition += 8;
+                MemoryHelper.WriteInt64((void*)handle, mPosition, z);
+                mPosition += 8;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
         /// <summary>
@@ -1100,7 +1615,19 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void Add(LongPoint3Data value, DateTime time, byte qulity)
         {
-            AddPoint(value.X, value.Y, value.Z, time, qulity);
+            if (TimeIndex != null)
+            {
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
+            }
+            else
+                AddPoint(value.X, value.Y, value.Z, time, qulity);
         }
 
         /// <summary>
@@ -1112,20 +1639,35 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void AddPoint(ulong x, ulong y, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], new ULongPointData(x,y), time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteUInt64((void*)handle, mPosition, x);
-            mPosition += 8;
-            MemoryHelper.WriteUInt64((void*)handle, mPosition, y);
-            mPosition += 8;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            // mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteUInt64((void*)handle, mPosition, x);
+                mPosition += 8;
+                MemoryHelper.WriteUInt64((void*)handle, mPosition, y);
+                mPosition += 8;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
 
@@ -1137,7 +1679,19 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void Add(ULongPointData value, DateTime time, byte qulity)
         {
-            AddPoint(value.X, value.Y, time, qulity);
+            if (TimeIndex != null)
+            {
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
+            }
+            else
+                AddPoint(value.X, value.Y, time, qulity);
         }
 
         /// <summary>
@@ -1150,22 +1704,37 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void AddPoint(ulong x, ulong y, ulong z, DateTime time, byte qulity)
         {
-            if (mCount >= mLimite)
+            if (TimeIndex != null)
             {
-                int newCount = (int)(mCount * 1.2);
-                Resize(newCount);
-                mLimite = newCount;
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], new ULongPoint3Data(x,y,z), time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
             }
-            MemoryHelper.WriteUInt64((void*)handle, mPosition, x);
-            mPosition += 8;
-            MemoryHelper.WriteUInt64((void*)handle, mPosition, y);
-            mPosition += 8;
-            MemoryHelper.WriteUInt64((void*)handle, mPosition, z);
-            mPosition += 8;
-            MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
-            // mDataBuffer[mCount + mQulityAddr] = qulity;
-            Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
-            mCount++;
+            else
+            {
+                if (mCount >= mLimite)
+                {
+                    int newCount = (int)(mCount * 1.2);
+                    Resize(newCount);
+                    mLimite = newCount;
+                }
+                MemoryHelper.WriteUInt64((void*)handle, mPosition, x);
+                mPosition += 8;
+                MemoryHelper.WriteUInt64((void*)handle, mPosition, y);
+                mPosition += 8;
+                MemoryHelper.WriteUInt64((void*)handle, mPosition, z);
+                mPosition += 8;
+                MemoryHelper.WriteDateTime((void*)handle, mCount * 8 + mTimeAddr, time);
+                // mDataBuffer[mCount + mQulityAddr] = qulity;
+                Marshal.WriteByte(handle + mCount + mQulityAddr, qulity);
+                mCount++;
+                LastTime = time;
+            }
         }
 
 
@@ -1177,7 +1746,19 @@ namespace Cdy.Tag
         /// <param name="qulity"></param>
         public void Add(ULongPoint3Data value, DateTime time, byte qulity)
         {
-            AddPoint(value.X, value.Y, value.Z, time, qulity);
+            if (TimeIndex != null)
+            {
+                if (TimeIndex.ContainsKey(time))
+                {
+                    Insert(TimeIndex[time], value, time, qulity);
+                }
+                else
+                {
+                    LoggerService.Service.Warn("HisQueryResult", "添加无效无效时间:" + time);
+                }
+            }
+            else
+                AddPoint(value.X, value.Y, value.Z, time, qulity);
         }
 
         /// <summary>
@@ -1225,25 +1806,10 @@ namespace Cdy.Tag
                     break;
                 case 11:
 
-                    if(mStringCach!=null)
-                    {
-                        re =mStringCach[index];
-                    }
-                    else
-                    {
-                        mStringCach = new List<string>(mCount);
-                        int cc = 0;
-                        int pos = 0;
-                        int len = 0;
-                        while (cc<this.mCount)
-                        {
-                            len = MemoryHelper.ReadByte((void*)handle, pos);
-                            mStringCach.Add(new string((sbyte*)handle, pos + 1, len, Encoding.Unicode));
-                            pos += len + 1;
-                            cc++;
-                        }
-                        re = mStringCach[index];
-                    }
+                    var pos = index * 256;
+                    var len = MemoryHelper.ReadByte((void*)handle, pos);
+                    re = new string((sbyte*)handle, pos + 1, len, Encoding.Unicode);
+                    
                     break;
                 case 12:
                     var x = MemoryHelper.ReadInt32((void*)handle, index * 8);
@@ -1320,25 +1886,28 @@ namespace Cdy.Tag
                     break;
                 case 11:
 
-                    if (mStringCach != null)
-                    {
-                         re = mStringCach[index];
-                    }
-                    else
-                    {
-                        mStringCach = new List<string>(mCount);
-                        int cc = 0;
-                        int pos = 0;
-                        int len = 0;
-                        while (cc < this.mCount)
-                        {
-                            len = MemoryHelper.ReadByte((void*)handle, pos);
-                            mStringCach.Add(new string((sbyte*)handle, pos + 1, len, Encoding.Unicode));
-                            pos += len + 1;
-                            cc++;
-                        }
-                        re = mStringCach[index];
-                    }
+                    var pos = index * 256;
+                    var len = MemoryHelper.ReadByte((void*)handle, pos);
+                    re = new string((sbyte*)handle, pos + 1, len, Encoding.Unicode);
+                    //if (mStringCach != null)
+                    //{
+                    //     re = mStringCach[index];
+                    //}
+                    //else
+                    //{
+                    //    mStringCach = new List<string>(mCount);
+                    //    int cc = 0;
+                    //    int pos = 0;
+                    //    int len = 0;
+                    //    while (cc < this.mCount)
+                    //    {
+                    //        len = MemoryHelper.ReadByte((void*)handle, pos);
+                    //        mStringCach.Add(new string((sbyte*)handle, pos + 1, len, Encoding.Unicode));
+                    //        pos += len + 1;
+                    //        cc++;
+                    //    }
+                    //    re = mStringCach[index];
+                    //}
 
                     break;
                 case 12:
@@ -1372,9 +1941,65 @@ namespace Cdy.Tag
             time = MemoryHelper.ReadDateTime((void*)handle, index * 8 + mTimeAddr);
             qulity = MemoryHelper.ReadByte((void*)handle, mQulityAddr + index);
 
-           
+            if(time.Date == DateTime.MinValue.Date)
+            {
+                Console.WriteLine("invaild value.");
+            }
 
             return (T)re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public DateTime GetTime(int id)
+        {
+            return MemoryHelper.ReadDateTime((void*)handle, id * 8 + mTimeAddr);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public IEnumerable<TagHisValue<T>> ListAvaiableValues()
+        {
+            int count = this.Count;
+            for(int i=0;i<count;i++)
+            {
+                var val = GetValue(i, out DateTime time, out byte qua);
+                if(qua!= (byte)QualityConst.Null)
+                {
+                    yield return new TagHisValue<T>() { Value = val,Quality=qua,Time=time };
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<DateTime> ListAllTimes()
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                yield return GetTime(i);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<byte> ListAllQualitys()
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                yield return GetQuality(i);
+            }
         }
 
         /// <summary>
@@ -1385,6 +2010,49 @@ namespace Cdy.Tag
         public byte GetQuality(int index)
         {
             return MemoryHelper.ReadByte((void*)handle, mQulityAddr + index);
+        }
+
+        public bool IsGoodQuality(byte quality)
+        {
+            return quality < (byte)QualityConst.Bad && quality >= ((byte)QualityConst.Bad + 20);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public object GetLastAvaiableValue(out byte quality)
+        {
+            if(Count>0)
+            {
+                for(int i=Count-1; i>=0; i--)
+                {
+                    var qq = GetQuality(i);
+                   if (IsGoodQuality(qq))
+                    {
+                        quality = qq;
+                        return GetValue(i);
+                    }
+                }
+            }
+            quality = (byte)QualityConst.Null;
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public object GetLastValue(out byte quality)
+        {
+            if (Count > 0)
+            {
+                quality = GetQuality(Count - 1);
+                GetValue(Count - 1);
+            }
+            quality = (byte)QualityConst.Null;
+            return null;
         }
 
         /// <summary>

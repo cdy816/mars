@@ -30,11 +30,11 @@
                 <Grid Background="#FFE5E5E5">
                     <Label Content="写入实时值:" HorizontalAlignment="Left" Margin="10,27,0,0" VerticalAlignment="Top"/>
                     <Label Content="变量名称" HorizontalAlignment="Left" Margin="213,27,0,0" VerticalAlignment="Top"/>
-                    <TextBox x:Name="rtname" IsEnabled="{Binding IsChecked, ElementName=tagmodsel}" HorizontalAlignment="Left" Margin="289,31,0,0" Text="TextBox" TextWrapping="Wrap" VerticalAlignment="Top" Width="371"/>
+                    <TextBox x:Name="rtname" IsEnabled="{Binding IsChecked, ElementName=tagmodsel}" HorizontalAlignment="Left" Margin="289,31,0,0" Text="" TextWrapping="Wrap" VerticalAlignment="Top" Width="371"/>
                     <Label Content="变量值" HorizontalAlignment="Left" Margin="98,111,0,0" VerticalAlignment="Top"/>
                     <TextBox x:Name="rtval" HorizontalAlignment="Left" Margin="216,116,0,0" Text="0" TextWrapping="Wrap" VerticalAlignment="Top" Width="89"/>
-                    <Button x:Name="settagvalueb" Content="写入" HorizontalAlignment="Left" Margin="98,173,0,0" VerticalAlignment="Top" Width="105" Click="settagvalueb_Click"/>
-                    <Button x:Name="settagvalb2" Content="写入2" ToolTip="写入实时值，对于记录类型为驱动类型的，同时进行历史记录" HorizontalAlignment="Left" Margin="98,212,0,0" VerticalAlignment="Top" Width="105" Click="settagvalb2_Click"/>
+                    <Button x:Name="settagvalueb" Content="实时写入" HorizontalAlignment="Left" Margin="98,173,0,0" VerticalAlignment="Top" Width="105" Click="settagvalueb_Click"/>
+                    <Button x:Name="settagvalb2" Content="实时历史写入2" ToolTip="写入实时值，对于记录类型为驱动类型的，同时进行历史记录" HorizontalAlignment="Left" Margin="98,212,0,0" VerticalAlignment="Top" Width="105" Click="settagvalb2_Click"/>
                     <RadioButton x:Name="tagmodsel" IsChecked="True" Content="单个变量" GroupName="gg" HorizontalAlignment="Left" Margin="98,33,0,0" VerticalAlignment="Top"/>
                     <RadioButton x:Name="matag" Content="多个变量" GroupName="gg" HorizontalAlignment="Left" Margin="98,68,0,0" VerticalAlignment="Top"/>
                     <Label Content="变量开始Id" HorizontalAlignment="Left" Margin="213,61,0,0" VerticalAlignment="Top"/>
@@ -49,13 +49,16 @@
                     <TextBox x:Name="valchangemsg" HorizontalAlignment="Left" Margin="102,375,0,0" Text="" TextWrapping="Wrap" VerticalAlignment="Top" Width="543" Height="124"/>
                     <Label Content="值改变通知消息" HorizontalAlignment="Left" Margin="98,345,0,0" VerticalAlignment="Top"/>
                     <Button x:Name="settagvaluebonedirection" Content="通过变量名称写入值" HorizontalAlignment="Left" Margin="230,173,0,0" VerticalAlignment="Top" Width="167" Click="settagvaluebonedirection_Click"/>
+                    <Button x:Name="settagvaluetime" Content="带时间戳写入实时历史" HorizontalAlignment="Left" Margin="431,173,0,0" VerticalAlignment="Top" Width="146" Click="settagvaluetime_Click"/>
+                    <Button x:Name="settagvaluetime2" Content="带时间戳写入实时" HorizontalAlignment="Left" Margin="600,173,0,0" VerticalAlignment="Top" Width="105" Click="settagvaluetime2_Click"/>
+                    <Button x:Name="SettagvalueforScan" Content="循环写入实时历史" HorizontalAlignment="Left" Margin="600,243,0,0" VerticalAlignment="Top" Width="105" Click="SettagvalueforScan_Click"/>
                 </Grid>
             </TabItem>
             <TabItem Header="历史数据">
                 <Grid Background="#FFE5E5E5">
                     <Label Content="写入一段历史值:" HorizontalAlignment="Left" Margin="10,18,0,0" VerticalAlignment="Top"/>
                     <Label Content="变量名称" HorizontalAlignment="Left" Margin="115,167,0,0" VerticalAlignment="Top"/>
-                    <TextBox x:Name="htagname" HorizontalAlignment="Left" Margin="180,171,0,0" Text="TextBox" TextWrapping="Wrap" VerticalAlignment="Top" Width="231"/>
+                    <ComboBox x:Name="htagname" HorizontalAlignment="Left" Margin="180,171,0,0" Text="" IsEditable="True"  VerticalAlignment="Top" Width="231"/>
                     <Label Content="开始时间" HorizontalAlignment="Left" Margin="114,18,0,0" VerticalAlignment="Top"/>
                     <TextBox x:Name="htimestart" HorizontalAlignment="Left" Margin="180,22,0,0" Text="TextBox" TextWrapping="Wrap" VerticalAlignment="Top" Width="231"/>
                     <Label Content="结束时间" HorizontalAlignment="Left" Margin="114,69,0,0" VerticalAlignment="Top"/>

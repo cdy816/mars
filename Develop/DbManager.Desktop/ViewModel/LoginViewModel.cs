@@ -169,7 +169,7 @@ namespace DBInStudio.Desktop.ViewModel
         /// 
         /// </summary>
         /// <returns></returns>
-        private bool Login()
+        public bool Login()
         {
             try
             {

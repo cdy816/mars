@@ -8,6 +8,7 @@
 //==============================================================
 
 using Cdy.Tag;
+using Cheetah;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -111,7 +112,8 @@ namespace DBRuntime.RDDC
                     {
                         var size = block.ReadInt();
                         Marshal.Copy(block.StartMemory + (int)block.ReadIndex, (realenginer as RealEnginer).Memory, 0, size);
-                       
+
+                        block.UnlockAndReturn();
                         //Buffer.BlockCopy(block.Array, block.ArrayOffset + block.ReaderIndex, (realenginer as RealEnginer).Memory, 0, size);
                     }
                 }

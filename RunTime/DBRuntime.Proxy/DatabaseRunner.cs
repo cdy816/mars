@@ -30,7 +30,7 @@ namespace DBRuntime.Proxy
 
         private RealDatabase mRealDatabase;
 
-        //private HisDatabase mHisDatabase;
+        private HisDatabase mHisDatabase;
 
         private SecurityRunner mSecurityRunner;
 
@@ -61,6 +61,8 @@ namespace DBRuntime.Proxy
         public event IsReadyDelegate IsReadyEvent;
 
         public event EventHandler ValueUpdateEvent;
+
+        private string mAppName = "";
 
         #endregion ...Variables...
 
@@ -127,7 +129,9 @@ namespace DBRuntime.Proxy
             string spath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(sfileName), "Config");
             sfileName = System.IO.Path.Combine(spath, System.IO.Path.GetFileNameWithoutExtension(sfileName) + ".cfg");
 
-            if(System.IO.File.Exists(sfileName))
+            mAppName = System.IO.Path.GetFileNameWithoutExtension(sfileName);
+
+            if (System.IO.File.Exists(sfileName))
             {
                 XElement xe = XElement.Load(sfileName);
                 if (xe.Element("ProxyClient") == null)
@@ -232,13 +236,23 @@ namespace DBRuntime.Proxy
                 {
                     try
                     {
-                        string sname = mProxy.GetRunnerDatabase();
-                        if (!string.IsNullOrEmpty(sname))
+                        if (mProxy.CheckLogin())
                         {
-                            CheckAndLoadDatabase(sname);
+                            string sname = mProxy.GetRunnerDatabase();
+                            if (!string.IsNullOrEmpty(sname))
+                            {
+                                CheckAndLoadDatabase(sname);
+                            }
+                            else
+                            {
+                                Thread.Sleep(1000);
+                                resetEvent.Set();
+                                continue;
+                            }
                         }
                         else
                         {
+                            LoggerService.Service.Warn("DatabaseRunner", "登录失败!");
                             Thread.Sleep(1000);
                             resetEvent.Set();
                             continue;
@@ -272,6 +286,10 @@ namespace DBRuntime.Proxy
             try
             {
                 string[] sbase = database.Split(new char[] { ',' });
+
+                LoggerService.LogPath = System.IO.Path.Combine(PathHelper.helper.GetDatabasePath(sbase[0]), "Log");
+                //LoggerService.Name = mAppName;
+
                 if (!string.IsNullOrEmpty(sbase[0]) && !string.IsNullOrEmpty(sbase[1]))
                     Load(sbase[0], sbase[1] + sbase[2]);
 
@@ -308,17 +326,21 @@ namespace DBRuntime.Proxy
                 LoggerService.Service.Info("DatabaseRunner", "开始从本地加载数据库:" + mDatabaseName);
                 var mDatabase = new RealDatabaseSerise().LoadByName(mDatabaseName);
 
+                var mhd = new HisDatabaseSerise().LoadByName(mDatabaseName);
+
                 string skey = mDatabase.Version + mDatabase.UpdateTime;
 
                 if (skey != checkKey)
                 {
                     LoggerService.Service.Warn("Proxy", "代理使用的数据库和服务器使用的数据库不一致,将从网络进行加载");
                     this.mRealDatabase = mProxy.LoadRealDatabase();
+                    this.mHisDatabase = mProxy.LoadHisDatabase();
                     mSecurityRunner = new SecurityRunner() { Document = mProxy.LoadSecurity() };
                 }
                 else
                 {
                     this.mRealDatabase = mDatabase;
+                    this.mHisDatabase = mhd;
                     mSecurityRunner = new SecurityRunner() { Document = new SecuritySerise().LoadByName(mDatabaseName) };
                 }
                 LoggerService.Service.Info("DatabaseRunner", "从本地加载数据库完成");
@@ -327,6 +349,7 @@ namespace DBRuntime.Proxy
             {
                 LoggerService.Service.Info("DatabaseRunner", "开始从远程加载数据库:" + mDatabaseName);
                 this.mRealDatabase = mProxy.LoadRealDatabase();
+                this.mHisDatabase = mProxy.LoadHisDatabase();
                 mSecurityRunner = new SecurityRunner() { Document = mProxy.LoadSecurity() };
                 LoggerService.Service.Info("DatabaseRunner", "从远程加载数据库完成");
             }
@@ -466,8 +489,8 @@ namespace DBRuntime.Proxy
             ServiceLocator.Locator.Registor<IRealDataNotifyForProducter>(realEnginer);
             ServiceLocator.Locator.Registor<IRealTagConsumer>(realEnginer);
             ServiceLocator.Locator.Registor<ITagManager>(mRealDatabase);
-            //ServiceLocator.Locator.Registor<IHisTagQuery>(mHisDatabase);
-            
+            ServiceLocator.Locator.Registor<IHisTagQuery>(new HisDataQueryService() { Database = mHisDatabase });
+
             ServiceLocator.Locator.Registor<IRuntimeSecurity>(mSecurityRunner);
         }
 
@@ -500,4 +523,30 @@ namespace DBRuntime.Proxy
 
         #endregion ...Interfaces...
     }
+
+    public class HisDataQueryService : IHisTagQuery
+    {
+        public HisDatabase Database { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public HisTag GetHisTagById(int id)
+        {
+            return Database.GetHisTagById(id);
+        }
+
+        public IEnumerable<HisTag> ListAllDriverRecordTags()
+        {
+            return Database.ListAllDriverRecordTags();
+        }
+
+        public IEnumerable<HisTag> ListAllTags()
+        {
+            return Database.ListAllTags();
+        }
+    }
+
 }

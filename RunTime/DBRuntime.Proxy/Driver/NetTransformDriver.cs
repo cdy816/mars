@@ -104,7 +104,13 @@ namespace DBRuntime.Proxy
             {
                 if (WorkMode == NetTransformWorkMode.Push)
                 {
-                    resetEvent.WaitOne();
+                    if(!resetEvent.WaitOne(5000))
+                    {
+                        //防止长时间不通信，导致服务器断线不知道
+                        Client.Hart();
+                        continue;
+                    }
+                    
                     if (mIsClosed) break;
                     resetEvent.Reset();
                     if (mCachDatas != null)
@@ -137,16 +143,23 @@ namespace DBRuntime.Proxy
         private void ProcessBufferData(ByteBuffer block)
         {
 
-            if (block == null) return;
-            var vtp = block.ReadByte();
-            if (vtp == RealDataBlockPush)
+            if (block == null || block.Length==0) return;
+            try
             {
-                //LoggerService.Service.Info("ProcessBufferData", "block data");
-                ProcessBlockBufferData(block);
+                var vtp = block.ReadByte();
+                if (vtp == RealDataBlockPush)
+                {
+                    //LoggerService.Service.Info("ProcessBufferData", "block data");
+                    ProcessBlockBufferData(block);
+                }
+                else if (vtp == RealDataPush)
+                {
+                    ProcessSingleBufferDataByMemoryCopy(block);
+                }
             }
-            else if (vtp == RealDataPush)
+            catch
             {
-                ProcessSingleBufferDataByMemoryCopy(block);
+                block.UnlockAndReturn();
             }
         }
 
@@ -159,11 +172,17 @@ namespace DBRuntime.Proxy
             var realenginer = (ServiceLocator.Locator.Resolve<IRealTagConsumer>() as RealEnginer);
 
             if (realenginer == null || realenginer.Memory == null) return;
+            var time = block.ReadDateTime();
 
             var start = block.ReadInt();
             var size = block.ReadInt();
-            //LoggerService.Service.Info("ProcessBlockBufferData", "block start" +start +", size:"+size);
 
+#if DEBUG
+            if((DateTime.Now - time).TotalSeconds >30)
+            {
+               LoggerService.Service.Info("ProcessBlockBufferData", time.ToString("yyyy-MM-dd HH:mm:ss.fff") +"block start" + start + ", size:" + size);
+            }
+#endif
             try
             {
                 if (realenginer.Memory!=null &&(start + size < realenginer.Memory.Length))
@@ -183,7 +202,8 @@ namespace DBRuntime.Proxy
 
             }
             block.ReadIndex += size;
-            block.UnlockAndReturn();
+            RelaseBlock(block);
+            //block.UnlockAndReturn();
             //block.SetReaderIndex(block.ReaderIndex + size);
             //block.ReleaseBuffer();
 
@@ -226,7 +246,7 @@ namespace DBRuntime.Proxy
                     }
                 }
             }
-            block.UnlockAndReturn();
+            RelaseBlock(block);
         }
 
         private void ProcessSingleBufferData(ByteBuffer block)
@@ -309,6 +329,20 @@ namespace DBRuntime.Proxy
                 var time = new DateTime(block.ReadLong());
                 var qua = block.ReadByte();
                 mServier.SetTagValue(vid,ref value, time, qua);
+            }
+
+            RelaseBlock(block);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="block"></param>
+        private void RelaseBlock(ByteBuffer block)
+        {
+            while (block.RefCount > 0)
+            {
+                block.DecRef();
             }
             block.UnlockAndReturn();
         }
@@ -475,7 +509,7 @@ namespace DBRuntime.Proxy
             return true;
         }
 
-        #endregion ...Methods...
+#endregion ...Methods...
 
         #region ... Interfaces ...
 

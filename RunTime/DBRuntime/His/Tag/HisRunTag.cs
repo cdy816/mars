@@ -9,6 +9,7 @@
 using DBRuntime.His;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Cdy.Tag
@@ -22,7 +23,7 @@ namespace Cdy.Tag
         #region ... Variables  ...
 
         //private byte[] headBytes;
-
+        protected int mLastTime = -10;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -36,6 +37,7 @@ namespace Cdy.Tag
         public HisRunTag()
         {
             ValueSnape = GC.AllocateArray<byte>(SizeOfValue, true);
+            LastValue= GC.AllocateArray<byte>(SizeOfValue, true);
         }
 
         #endregion ...Constructor...
@@ -162,6 +164,26 @@ namespace Cdy.Tag
         public byte QulitySnape { get; set; }
 
         /// <summary>
+        /// 
+        /// </summary>
+        public DateTime SnapeTime { get; set; }
+
+        /// <summary>
+        /// 最后记录的质量
+        /// </summary>
+        public byte LastQuality { get; set; } = (byte)QualityConst.Null;
+
+        /// <summary>
+        /// 最后记录的值
+        /// </summary>
+        public byte[] LastValue { get; set; }
+
+        /// <summary>
+        /// 最后记录的时间
+        /// </summary>
+        public DateTime LastTime { get; set; }
+
+        /// <summary>
         /// 数据精度
         /// </summary>
         public int Precision { get; set; }
@@ -197,106 +219,112 @@ namespace Cdy.Tag
         /// <summary>
         /// 执行快照
         /// </summary>
-        public void Snape()
+        public void Snape(DateTime time)
         {
+            SnapeTime = time;
             System.Runtime.InteropServices.Marshal.Copy(RealMemoryPtr + RealValueAddr, ValueSnape, 0, SizeOfValue);
             // QulitySnape = RealMemoryAddr[RealValueAddr + SizeOfValue + 8];
             QulitySnape = MemoryHelper.ReadByte((void*)(RealMemoryPtr), RealValueAddr + SizeOfValue + 8);
         }
 
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="tim"></param>
+        //[Obsolete]
+        //public void UpdateValue(int count,int tim)
+        //{
+        //    var vcount = count > MaxCount ? MaxCount : count;
+        //    Count = vcount;
+
+        //    //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
+        //    //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
+        //    HisAddr.WriteUShortDirect(TimerValueStartAddr + vcount * 2, (ushort)(tim));
+
+        //    //写入数值
+        //    HisAddr.WriteBytesDirect(HisValueStartAddr + vcount * SizeOfValue, RealMemoryPtr, RealValueAddr, SizeOfValue);
+
+        //    //更新质量戳
+        //    // HisAddr.WriteByteDirect(HisQulityStartAddr + vcount, RealMemoryAddr[RealValueAddr + SizeOfValue + 8]);
+        //    HisAddr.WriteByteDirect(HisQulityStartAddr + vcount, MemoryHelper.ReadByte((void*)(RealMemoryPtr), RealValueAddr + SizeOfValue + 8));
+        //}
+
+        ///// <summary>
+        ///// 更新历史数据到缓存中
+        ///// </summary>
+        //[Obsolete]
+        //public void UpdateValue(int tim)
+        //{
+        //    UpdateValue(Count, tim);
+        //    Count = ++Count > MaxCount ? MaxCount : Count;
+        //}
+
         /// <summary>
-        /// 
+        /// 检查值是否发生改变
         /// </summary>
-        /// <param name="tim"></param>
-        [Obsolete]
-        public void UpdateValue(int count,int tim)
-        {
-            var vcount = count > MaxCount ? MaxCount : count;
-            Count = vcount;
-
-            //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
-            //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
-            HisAddr.WriteUShortDirect(TimerValueStartAddr + vcount * 2, (ushort)(tim));
-
-            //写入数值
-            HisAddr.WriteBytesDirect(HisValueStartAddr + vcount * SizeOfValue, RealMemoryPtr, RealValueAddr, SizeOfValue);
-
-            //更新质量戳
-            // HisAddr.WriteByteDirect(HisQulityStartAddr + vcount, RealMemoryAddr[RealValueAddr + SizeOfValue + 8]);
-            HisAddr.WriteByteDirect(HisQulityStartAddr + vcount, MemoryHelper.ReadByte((void*)(RealMemoryPtr), RealValueAddr + SizeOfValue + 8));
-        }
-
-        /// <summary>
-        /// 更新历史数据到缓存中
-        /// </summary>
-        [Obsolete]
-        public void UpdateValue(int tim)
-        {
-            UpdateValue(Count, tim);
-            Count = ++Count > MaxCount ? MaxCount : Count;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <param name="startMemory"></param>
+        /// <param name="offset"></param>
+        /// <param name="time"></param>
         /// <returns></returns>
-        public virtual bool CheckValueChangeToLastRecordValue(void* startMemory,long offset)
+       
+        public virtual bool CheckValueChangeToLastRecordValue(void* startMemory,long offset,int time)
         {
             return true;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="count"></param>
-        /// <param name="tim"></param>
-        [Obsolete]
-        public virtual void UpdateValue2(int count, int tim)
-        {
-            var vcount = count > MaxCount ? MaxCount : count;
-            Count = vcount;
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="count"></param>
+        ///// <param name="tim"></param>
+        //[Obsolete]
+        //public virtual void UpdateValue2(int count, int tim)
+        //{
+        //    var vcount = count > MaxCount ? MaxCount : count;
+        //    Count = vcount;
 
-            //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
-            //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
-            HisValueMemoryStartAddr.WriteUShortDirect((int)(HisValueMemoryStartAddr.TimerAddress + vcount * 2), (ushort)(tim));
+        //    //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
+        //    //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
+        //    HisValueMemoryStartAddr.WriteUShortDirect((int)(HisValueMemoryStartAddr.TimerAddress + vcount * 2), (ushort)(tim));
 
-            //写入数值
-            HisValueMemoryStartAddr.WriteBytesDirect((int)(HisValueMemoryStartAddr.ValueAddress + vcount * SizeOfValue), RealMemoryPtr, RealValueAddr, SizeOfValue);
+        //    //写入数值
+        //    HisValueMemoryStartAddr.WriteBytesDirect((int)(HisValueMemoryStartAddr.ValueAddress + vcount * SizeOfValue), RealMemoryPtr, RealValueAddr, SizeOfValue);
                        
-            //更新质量戳
-            //HisValueMemoryStartAddr.WriteByteDirect((int)(HisValueMemoryStartAddr.QualityAddress + vcount), RealMemoryAddr[RealValueAddr + SizeOfValue + 8]);
-            HisValueMemoryStartAddr.WriteByteDirect((int)(HisValueMemoryStartAddr.QualityAddress + vcount), MemoryHelper.ReadByte((void*)(RealMemoryPtr), RealValueAddr + SizeOfValue + 8));
-        }
+        //    //更新质量戳
+        //    //HisValueMemoryStartAddr.WriteByteDirect((int)(HisValueMemoryStartAddr.QualityAddress + vcount), RealMemoryAddr[RealValueAddr + SizeOfValue + 8]);
+        //    HisValueMemoryStartAddr.WriteByteDirect((int)(HisValueMemoryStartAddr.QualityAddress + vcount), MemoryHelper.ReadByte((void*)(RealMemoryPtr), RealValueAddr + SizeOfValue + 8));
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="tim"></param>
-        [Obsolete]
-        public void UpdateValue2(int tim)
-        {
-            UpdateValue2(Count, tim);
-            Count = ++Count > MaxCount ? MaxCount : Count;
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="tim"></param>
+        //[Obsolete]
+        //public void UpdateValue2(int tim)
+        //{
+        //    UpdateValue2(Count, tim);
+        //    Count = ++Count > MaxCount ? MaxCount : Count;
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="tim"></param>
-        [Obsolete]
-        public void UpdateChangedValue(int tim)
-        {
-            if (CheckValueChangeToLastRecordValue((void*)RealMemoryPtr , RealValueAddr))
-            {
-                UpdateValue2(tim);
-            }
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="tim"></param>
+        //[Obsolete]
+        //public void UpdateChangedValue(int tim)
+        //{
+        //    if (CheckValueChangeToLastRecordValue((void*)RealMemoryPtr , RealValueAddr))
+        //    {
+        //        UpdateValue2(tim);
+        //    }
+        //}
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="count"></param>
         /// <param name="tim"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual void UpdateValue3(int count, int tim)
         {
             var vcount = count > MaxCount ? MaxCount : count;
@@ -312,6 +340,108 @@ namespace Cdy.Tag
             //更新质量戳
             CurrentDataMemory.WriteByteDirect(CurrentMemoryPointer, (int)(HisQulityStartAddr + vcount), MemoryHelper.ReadByte((void*)(RealMemoryPtr), RealValueAddr + SizeOfValue + 8));
             // CurrentDataMemory.WriteByteDirect(CurrentMemoryPointer, (int)(HisQulityStartAddr + vcount), RealMemoryAddr[RealValueAddr + SizeOfValue + 8]);
+
+            //记录到最后的时间
+            System.Runtime.InteropServices.Marshal.Copy(RealMemoryPtr + RealValueAddr, LastValue, 0, SizeOfValue);
+            LastQuality = MemoryHelper.ReadByte((void*)(RealMemoryPtr), RealValueAddr + SizeOfValue + 8);
+            LastTime = HisRunTag.StartTime.AddMilliseconds(tim * HisEnginer3.MemoryTimeTick);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="count"></param>
+        /// <param name="tim"></param>
+        /// <param name="log"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public virtual void UpdateValue3(int count, int tim,LogRegion log)
+        {
+            var vcount = count > MaxCount ? MaxCount : count;
+            Count = vcount;
+
+            System.Runtime.InteropServices.Marshal.Copy(RealMemoryPtr + RealValueAddr, LastValue, 0, SizeOfValue);
+
+            //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
+            //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
+            CurrentDataMemory.WriteUShortDirect(CurrentMemoryPointer, (int)(TimerValueStartAddr + vcount * 2), (ushort)(tim));
+
+            //写入数值
+            // CurrentDataMemory.WriteBytesDirect(CurrentMemoryPointer, (int)(HisValueStartAddr + vcount * SizeOfValue), RealMemoryPtr, RealValueAddr, SizeOfValue);
+            CurrentDataMemory.WriteBytesDirect(CurrentMemoryPointer, (int)(HisValueStartAddr + vcount * SizeOfValue), LastValue, 0, SizeOfValue);
+
+            //更新质量戳
+            CurrentDataMemory.WriteByteDirect(CurrentMemoryPointer, (int)(HisQulityStartAddr + vcount), MemoryHelper.ReadByte((void*)(RealMemoryPtr), RealValueAddr + SizeOfValue + 8));
+            // CurrentDataMemory.WriteByteDirect(CurrentMemoryPointer, (int)(HisQulityStartAddr + vcount), RealMemoryAddr[RealValueAddr + SizeOfValue + 8]);
+
+            //记录到最后的时间
+            //System.Runtime.InteropServices.Marshal.Copy(RealMemoryPtr + RealValueAddr, LastValue, 0, SizeOfValue);
+            LastQuality = MemoryHelper.ReadByte((void*)(RealMemoryPtr), RealValueAddr + SizeOfValue + 8);
+            LastTime = HisRunTag.StartTime.AddMilliseconds(tim * HisEnginer3.MemoryTimeTick);
+
+            //if(Id==0)
+            //{
+            //    LoggerService.Service.Info("HisRunTag",$" **********************************tag0 value :{BitConverter.ToDouble(LastValue)} time:{tim} count: {count}**********************************");
+            //}
+
+            //记录到数据队列中
+            log?.Append(TagType, Id, LastTime, LastQuality, LastValue);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="tim"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UpdateValue(HisRunTag tag,int tim)
+        {
+            var vcount = tag.Count > tag.MaxCount ? tag.MaxCount : tag.Count;
+            tag.Count = vcount;
+
+            //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
+            //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
+            CurrentDataMemory.WriteUShortDirect(tag.CurrentMemoryPointer, (int)(tag.TimerValueStartAddr + vcount * 2), (ushort)(tim));
+
+            //写入数值
+            CurrentDataMemory.WriteBytesDirect(tag.CurrentMemoryPointer, (int)(tag.HisValueStartAddr + vcount * tag.SizeOfValue), tag.RealMemoryPtr, tag.RealValueAddr, tag.SizeOfValue);
+
+            //更新质量戳
+            CurrentDataMemory.WriteByteDirect(tag.CurrentMemoryPointer, (int)(tag.HisQulityStartAddr + vcount), MemoryHelper.ReadByte((void*)(tag.RealMemoryPtr), tag.RealValueAddr + tag.SizeOfValue + 8));
+
+            tag.Count = ++tag.Count > tag.MaxCount ? tag.MaxCount : tag.Count;
+
+            //记录到最后的时间
+            System.Runtime.InteropServices.Marshal.Copy(tag.RealMemoryPtr + tag.RealValueAddr, tag.LastValue, 0, tag.SizeOfValue);
+            tag.LastQuality = MemoryHelper.ReadByte((void*)(tag.RealMemoryPtr), tag.RealValueAddr + tag.SizeOfValue + 8);
+            tag.LastTime = HisRunTag.StartTime.AddMilliseconds(tim * HisEnginer3.MemoryTimeTick);
+
+        }
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UpdateValue(HisRunTag tag, int tim,LogRegion log)
+        {
+            var vcount = tag.Count > tag.MaxCount ? tag.MaxCount : tag.Count;
+            tag.Count = vcount;
+
+            //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
+            //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
+            CurrentDataMemory.WriteUShortDirect(tag.CurrentMemoryPointer, (int)(tag.TimerValueStartAddr + vcount * 2), (ushort)(tim));
+
+            //写入数值
+            CurrentDataMemory.WriteBytesDirect(tag.CurrentMemoryPointer, (int)(tag.HisValueStartAddr + vcount * tag.SizeOfValue), tag.RealMemoryPtr, tag.RealValueAddr, tag.SizeOfValue);
+
+            //更新质量戳
+            CurrentDataMemory.WriteByteDirect(tag.CurrentMemoryPointer, (int)(tag.HisQulityStartAddr + vcount), MemoryHelper.ReadByte((void*)(tag.RealMemoryPtr), tag.RealValueAddr + tag.SizeOfValue + 8));
+
+            tag.Count = ++tag.Count > tag.MaxCount ? tag.MaxCount : tag.Count;
+
+            //记录到最后的时间
+            System.Runtime.InteropServices.Marshal.Copy(tag.RealMemoryPtr + tag.RealValueAddr, tag.LastValue, 0, tag.SizeOfValue);
+            tag.LastQuality = MemoryHelper.ReadByte((void*)(tag.RealMemoryPtr), tag.RealValueAddr + tag.SizeOfValue + 8);
+            tag.LastTime = HisRunTag.StartTime.AddMilliseconds(tim * HisEnginer3.MemoryTimeTick);
+
+            log?.Append(tag.TagType, tag.Id, tag.LastTime, tag.LastQuality, tag.LastValue);
         }
 
         /// <summary>
@@ -328,12 +458,57 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="tim"></param>
-        public void UpdateChangedValue3(int tim)
+        public bool UpdateChangedValue3(int tim)
         {
-            if (CheckValueChangeToLastRecordValue((void*)RealMemoryPtr, RealValueAddr))
+            if (CheckValueChangeToLastRecordValue((void*)RealMemoryPtr, RealValueAddr,tim))
             {
-                UpdateValue3(tim);
+                UpdateValue3(Count, tim);
+                Count = ++Count > MaxCount ? MaxCount : Count;
+                return true;
+                //UpdateValue3(tim);
             }
+            return false;
+        }
+
+
+        /// <summary>
+        /// 记录改变的值
+        /// </summary>
+        /// <param name="tim"></param>
+        /// <param name="log"></param>
+        /// <returns></returns>
+        public bool UpdateChangedValue3(int tim,LogRegion log)
+        {
+            if (CheckValueChangeToLastRecordValue((void*)RealMemoryPtr, RealValueAddr, tim))
+            {
+                UpdateValue3(Count, tim, log);
+                Count = ++Count > MaxCount ? MaxCount : Count;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="tim"></param>
+        public static void UpdateChangedValue(HisRunTag tag, int tim)
+        {
+            var vcount = tag.Count > tag.MaxCount ? tag.MaxCount : tag.Count;
+            tag.Count = vcount;
+
+            //数据内容: 时间戳(time1+time2+...) +数值区(value1+value2+...)+质量戳区(q1+q2+....)
+            //实时数据内存结构为:实时值+时间戳+质量戳，时间戳2个字节，质量戳1个字节
+            CurrentDataMemory.WriteUShortDirect(tag.CurrentMemoryPointer, (int)(tag.TimerValueStartAddr + vcount * 2), (ushort)(tim));
+
+            //写入数值
+            CurrentDataMemory.WriteBytesDirect(tag.CurrentMemoryPointer, (int)(tag.HisValueStartAddr + vcount * tag.SizeOfValue), tag.RealMemoryPtr, tag.RealValueAddr, tag.SizeOfValue);
+
+            //更新质量戳
+            CurrentDataMemory.WriteByteDirect(tag.CurrentMemoryPointer, (int)(tag.HisQulityStartAddr + vcount), MemoryHelper.ReadByte((void*)(tag.RealMemoryPtr), tag.RealValueAddr + tag.SizeOfValue + 8));
+
+            tag.Count = ++tag.Count > tag.MaxCount ? tag.MaxCount : tag.Count;
         }
 
         /// <summary>

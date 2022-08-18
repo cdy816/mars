@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Common\Cdy.Tag.Common\Cdy.Tag.Common.csproj" />
+    <ProjectReference Include="..\..\Common\Cdy.Tag\Cdy.Tag.csproj" />
   </ItemGroup>
 
 </Project>

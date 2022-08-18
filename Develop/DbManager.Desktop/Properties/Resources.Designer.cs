@@ -19,7 +19,7 @@ namespace DBInStudio.Desktop.Properties {
     // 类通过类似于 ResGen 或 Visual Studio 的工具自动生成的。
     // 若要添加或移除成员，请编辑 .ResX 文件，然后重新运行 ResGen
     // (以 /str 作为命令选项)，或重新生成 VS 项目。
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -115,6 +115,33 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Bad 的本地化字符串。
+        /// </summary>
+        internal static string Bad {
+            get {
+                return ResourceManager.GetString("Bad", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 fetch bit 的本地化字符串。
+        /// </summary>
+        internal static string BitConvert {
+            get {
+                return ResourceManager.GetString("BitConvert", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Bit index 的本地化字符串。
+        /// </summary>
+        internal static string BitConvertTitle {
+            get {
+                return ResourceManager.GetString("BitConvertTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Cancel 的本地化字符串。
         /// </summary>
         internal static string Cancel {
@@ -156,6 +183,24 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Circle {
             get {
                 return ResourceManager.GetString("Circle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 ComplexTagClass 的本地化字符串。
+        /// </summary>
+        internal static string ComplexTagClass {
+            get {
+                return ResourceManager.GetString("ComplexTagClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似  的本地化字符串。
+        /// </summary>
+        internal static string ComplexTagClassInfo {
+            get {
+                return ResourceManager.GetString("ComplexTagClassInfo", resourceCulture);
             }
         }
         
@@ -288,6 +333,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Access api 的本地化字符串。
+        /// </summary>
+        internal static string EnableApi {
+            get {
+                return ResourceManager.GetString("EnableApi", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 EnableWrite 的本地化字符串。
         /// </summary>
         internal static string EnableWrite {
@@ -324,11 +378,29 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 example 的本地化字符串。
+        /// </summary>
+        internal static string exampleTitle {
+            get {
+                return ResourceManager.GetString("exampleTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Export 的本地化字符串。
         /// </summary>
         internal static string Export {
             get {
                 return ResourceManager.GetString("Export", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Express 的本地化字符串。
+        /// </summary>
+        internal static string Express {
+            get {
+                return ResourceManager.GetString("Express", resourceCulture);
             }
         }
         
@@ -360,11 +432,38 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Good 的本地化字符串。
+        /// </summary>
+        internal static string Good {
+            get {
+                return ResourceManager.GetString("Good", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Group 的本地化字符串。
         /// </summary>
         internal static string Group {
             get {
                 return ResourceManager.GetString("Group", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Grpc Api 的本地化字符串。
+        /// </summary>
+        internal static string GrpcApi {
+            get {
+                return ResourceManager.GetString("GrpcApi", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Private Api 的本地化字符串。
+        /// </summary>
+        internal static string HighApi {
+            get {
+                return ResourceManager.GetString("HighApi", resourceCulture);
             }
         }
         
@@ -441,6 +540,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Init 的本地化字符串。
+        /// </summary>
+        internal static string Init {
+            get {
+                return ResourceManager.GetString("Init", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Admin 的本地化字符串。
         /// </summary>
         internal static string IsAdmin {
@@ -464,6 +572,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Keyword {
             get {
                 return ResourceManager.GetString("Keyword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Linear 的本地化字符串。
+        /// </summary>
+        internal static string Linear {
+            get {
+                return ResourceManager.GetString("Linear", resourceCulture);
             }
         }
         
@@ -630,11 +747,29 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Null 的本地化字符串。
+        /// </summary>
+        internal static string Null {
+            get {
+                return ResourceManager.GetString("Null", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 OK 的本地化字符串。
         /// </summary>
         internal static string OK {
             get {
                 return ResourceManager.GetString("OK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Opc Server 的本地化字符串。
+        /// </summary>
+        internal static string OpcServer {
+            get {
+                return ResourceManager.GetString("OpcServer", resourceCulture);
             }
         }
         
@@ -837,11 +972,20 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
-        ///   查找类似 Replace all 的本地化字符串。
+        ///   查找类似 Add after overall deletion 的本地化字符串。
         /// </summary>
         internal static string ReplaceAll {
             get {
                 return ResourceManager.GetString("ReplaceAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Replace  tags that already exist 的本地化字符串。
+        /// </summary>
+        internal static string ReplaceExist {
+            get {
+                return ResourceManager.GetString("ReplaceExist", resourceCulture);
             }
         }
         
@@ -887,6 +1031,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string SaveSucessful {
             get {
                 return ResourceManager.GetString("SaveSucessful", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Four operations are performed between multiple variables, for example: (Tag.tag1+Tag.tag2)/Tag.tag3 的本地化字符串。
+        /// </summary>
+        internal static string ScriptEditHead {
+            get {
+                return ResourceManager.GetString("ScriptEditHead", resourceCulture);
             }
         }
         
@@ -941,6 +1094,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string ServerIp {
             get {
                 return ResourceManager.GetString("ServerIp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Server is offline 的本地化字符串。
+        /// </summary>
+        internal static string serveroffline {
+            get {
+                return ResourceManager.GetString("serveroffline", resourceCulture);
             }
         }
         
@@ -1062,6 +1224,15 @@ namespace DBInStudio.Desktop.Properties {
         }
         
         /// <summary>
+        ///   查找类似 StartValue 的本地化字符串。
+        /// </summary>
+        internal static string StartValue {
+            get {
+                return ResourceManager.GetString("StartValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Stop 的本地化字符串。
         /// </summary>
         internal static string Stop {
@@ -1076,6 +1247,24 @@ namespace DBInStudio.Desktop.Properties {
         internal static string Stop_Tooltip {
             get {
                 return ResourceManager.GetString("Stop_Tooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 string format 的本地化字符串。
+        /// </summary>
+        internal static string StringFormat {
+            get {
+                return ResourceManager.GetString("StringFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The format string 的本地化字符串。
+        /// </summary>
+        internal static string StringFormatTitle {
+            get {
+                return ResourceManager.GetString("StringFormatTitle", resourceCulture);
             }
         }
         
@@ -1211,6 +1400,15 @@ namespace DBInStudio.Desktop.Properties {
         internal static string ValueChanged {
             get {
                 return ResourceManager.GetString("ValueChanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Web Api 的本地化字符串。
+        /// </summary>
+        internal static string WebApi {
+            get {
+                return ResourceManager.GetString("WebApi", resourceCulture);
             }
         }
         

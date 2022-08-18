@@ -1817,7 +1817,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="file"></param>
         /// <returns></returns>
-        public static MarshalFixedMemoryBlock LoadDumpFromFile(this string file)
+        public static MarshalFixedMemoryBlock LoadMarshalFixedFromFile(this string file)
         {
             if(System.IO.File.Exists(file))
             {
@@ -1832,6 +1832,7 @@ namespace Cdy.Tag
                         block.WriteBytes(block.Position, bvals, 0, len);
                     }
                     while (len > 0);
+                    return block;
                 }
             }
             return null;

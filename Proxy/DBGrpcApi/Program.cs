@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -35,21 +36,43 @@ namespace DBGrpcApi
 
         public static void Main(string[] args)
         {
-            Port = ReadServerPort();
-            Console.Title = "DBGrpcApi";
-            if (args.Contains("/m"))
+            try
             {
-                WindowConsolHelper.MinWindow("DBGrpcApi");
-            }
-            foreach(var vv in args)
-            {
-                if(vv!="/m")
+                Port = ReadServerPort();
+                Console.Title = "DBGrpcApi";
+                if (args.Contains("/m"))
                 {
-                    Startup.Server = vv;
-                    break;
+                    WindowConsolHelper.MinWindow("DBGrpcApi");
                 }
+                foreach (var vv in args)
+                {
+                    if (vv != "/m")
+                    {
+                        Startup.Server = vv;
+                        break;
+                    }
+                }
+                CreateHostBuilder(args).Build().Run();
             }
-            CreateHostBuilder(args).Build().Run();
+            catch(Exception ex)
+            {
+                if (ex.Message.Contains("dev-certs"))
+                {
+                    EnableDevCerts();
+                    Console.Write("    由于安装证书需要，请重新启动服务程序!      ",ConsoleColor.Yellow);
+                }
+                else
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                Console.WriteLine("  输入任意字符串退出.  ");
+                Console.ReadLine();
+            }
+        }
+
+        private static void EnableDevCerts()
+        {
+            Process.Start(new ProcessStartInfo() { FileName = "dotnet", Arguments = "dev-certs https --trust" });
         }
 
         /// <summary>

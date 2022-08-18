@@ -8,6 +8,7 @@
 //==============================================================
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Cdy.Tag
@@ -25,6 +26,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteByte(void* ptr, long ofs, byte val)
         {
             try
@@ -44,6 +46,27 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        /// <exception cref="AccessViolationException"></exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void WriteBytes(void* ptr, long ofs, byte[] val)
+        {
+            try
+            {
+                System.Runtime.InteropServices.Marshal.Copy(val,0,((IntPtr)ptr+(int)ofs),val.Length);
+            }
+            catch (NullReferenceException)
+            {
+                throw new AccessViolationException();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="ofs"></param>
+        /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteShort(void* ptr, long ofs, short val)
         {
             try
@@ -75,6 +98,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteShortReverse(void* ptr, long ofs, short val)
         {
             try
@@ -98,6 +122,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteUShort(void* ptr, long ofs, ushort val)
         {
             try
@@ -129,6 +154,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteUShortReverse(void* ptr, long ofs, ushort val)
         {
             try
@@ -152,6 +178,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteInt32(void* ptr, long ofs, int val)
         {
             try
@@ -185,6 +212,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteInt32Reverse(void* ptr, long ofs, int val)
         {
             try
@@ -210,6 +238,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteUInt32(void* ptr, long ofs, uint val)
         {
             try
@@ -243,6 +272,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteUInt32Reverse(void* ptr, long ofs, uint val)
         {
             try
@@ -268,6 +298,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteFloat(void* ptr, long ofs, float val)
         {
             try
@@ -300,6 +331,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteFloatReverse(void* ptr, long ofs, float val)
         {
             try
@@ -325,6 +357,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteInt64(void* ptr, long ofs, Int64 val)
         {
             try
@@ -362,6 +395,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteInt64Reverse(void* ptr, long ofs, Int64 val)
         {
             try
@@ -391,6 +425,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteUInt64(void* ptr, long ofs, UInt64 val)
         {
             try
@@ -428,6 +463,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteUInt64Reverse(void* ptr, long ofs, UInt64 val)
         {
             try
@@ -457,6 +493,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteDouble(void* ptr, long ofs, double val)
         {
             try
@@ -494,6 +531,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteDoubleReverse(void* ptr, long ofs, double val)
         {
             try
@@ -520,8 +558,22 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="ofs"></param>
+        /// <param name="val"></param>
+        public static unsafe void WriteString(void* ptr,long ofs,string val)
+        {
+            var bts = Encoding.UTF8.GetBytes(val);
+            WriteUShort(ptr,ofs,(ushort)bts.Length);
+            WriteBytes(ptr,2,bts);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="date"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe byte[] GetBytes(DateTime date)
         {
             byte[] bval = new byte[8];
@@ -533,9 +585,39 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public static unsafe string ReadString(void* ptr,long offset)
+        {
+            var len = ReadUShort(ptr, offset);
+            if(len>0)
+            {
+                var byts = System.Buffers.ArrayPool<byte>.Shared.Rent(len);
+                try
+                {
+                  
+                    ReadBytes(ptr, offset, byts, len);
+                    return Encoding.UTF8.GetString(byts, 0, len);
+                }
+                finally
+                {
+                    System.Buffers.ArrayPool<byte>.Shared.Return(byts);
+                }
+            }
+            else
+            {
+                return String.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="value"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe DateTime ReadDateTime(byte[] value, int offset = 0)
         {
             
@@ -549,6 +631,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteDateTime(void* ptr, long ofs, DateTime val)
         {
             try
@@ -586,6 +669,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void WriteDateTimeReverse(void* ptr, long ofs, DateTime val)
         {
             try
@@ -615,6 +699,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe int ReadInt32(void* ptr, long ofs)
         {
             try
@@ -652,6 +737,7 @@ namespace Cdy.Tag
         /// <param name="sourceoffset"></param>
         /// <param name="targetoffset"></param>
         /// <param name="size"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void MemoryCopy(IntPtr source,int sourceoffset, IntPtr target, int targetoffset,int size)
         {
             Buffer.MemoryCopy((void*)(source + sourceoffset), (void*)(target+ targetoffset), size, size);
@@ -674,6 +760,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe uint ReadUInt32(void* ptr, long ofs)
         {
             try
@@ -731,6 +818,8 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <returns></returns>
+        /// 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe float ReadFloat(void* ptr, long ofs)
         {
             try
@@ -767,6 +856,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe short ReadShort(void* ptr, long ofs)
         {
             try
@@ -800,6 +890,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe ushort ReadUShort(void* ptr, long ofs)
         {
             try
@@ -833,6 +924,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe byte ReadByte(void* ptr, long ofs)
         {
             try
@@ -847,6 +939,17 @@ namespace Cdy.Tag
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pts"></param>
+        /// <param name="ofs"></param>
+        /// <returns></returns>
+        public static unsafe void ReadBytes(void* pts,long ofs, byte[] byts,int len)
+        {
+            System.Runtime.InteropServices.Marshal.Copy((IntPtr)pts,byts,(int)ofs,len);
+        }
+
 
         /// <summary>
         /// 
@@ -854,6 +957,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe long ReadInt64(void* ptr, long ofs)
         {
             try
@@ -889,7 +993,7 @@ namespace Cdy.Tag
             }
         }
 
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe ulong ReadUInt64(void* ptr, long ofs)
         {
             try
@@ -931,6 +1035,7 @@ namespace Cdy.Tag
         /// <param name="value"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe double ReadDouble(byte[] value)
         {
 
@@ -943,6 +1048,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe double ReadDouble(void* ptr, long ofs)
         {
             try
@@ -984,6 +1090,7 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe DateTime ReadDateTime(void* ptr, long ofs)
         {
             try

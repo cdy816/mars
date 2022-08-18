@@ -25,7 +25,7 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <RadioButton BorderBrush="{DynamicResource Window.Forground}" Background="{x:Null}" Foreground="{DynamicResource Window.Forground}"  Content="{res:ResMarker Replace}" GroupName="gg" IsChecked="{Binding IsReplace,Mode=TwoWay}" HorizontalAlignment="Center" Margin="0,0,0,0"  VerticalAlignment="Center"/>
+        <RadioButton BorderBrush="{DynamicResource Window.Forground}" Background="{x:Null}" Foreground="{DynamicResource Window.Forground}"  Content="{res:ResMarker ReplaceExist}" GroupName="gg" IsChecked="{Binding IsReplace,Mode=TwoWay}" HorizontalAlignment="Center" Margin="0,0,0,0"  VerticalAlignment="Center"/>
         <RadioButton BorderBrush="{DynamicResource Window.Forground}" Background="{x:Null}" Foreground="{DynamicResource Window.Forground}" Content="{res:ResMarker ReplaceAll}" GroupName="gg" IsChecked="{Binding IsReplaceMode,Mode=TwoWay}" HorizontalAlignment="Center"  VerticalAlignment="Center" Grid.Column="1"/>
         <RadioButton BorderBrush="{DynamicResource Window.Forground}" Background="{x:Null}" Foreground="{DynamicResource Window.Forground}" Content="{res:ResMarker Append}" GroupName="gg"  IsChecked="{Binding IsAddMode,Mode=TwoWay}"  HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,0" Grid.Column="2"/>
     </Grid>

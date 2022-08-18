@@ -78,6 +78,31 @@ namespace DBRuntime.His
         /// </summary>
         public int TimeUnit { get; set; }
 
+        /// <summary>
+        /// 最后的值
+        /// </summary>
+        public object LastValue { get; set; }
+
+        /// <summary>
+        /// 最后的时间
+        /// </summary>
+        public byte LastQuality { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public byte PreQuality { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public object PreValue { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime PreTime { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...

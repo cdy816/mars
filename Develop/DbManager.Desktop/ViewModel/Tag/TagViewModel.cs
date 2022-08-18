@@ -15,6 +15,8 @@ using System.Windows.Input;
 using DBDevelopClientApi;
 using DBInStudio.Desktop.ViewModel;
 using Cdy.Tag;
+using System.Threading.Tasks;
+using System.Windows;
 
 namespace DBInStudio.Desktop
 {
@@ -29,6 +31,7 @@ namespace DBInStudio.Desktop
         private Cdy.Tag.HisTag mHisTagMode;
 
         public static string[] mTagTypeList;
+        public static string[] mTagTypeList2;
         public static string[] mRecordTypeList;
         public static string[] mCompressTypeList;
         public static string[] mReadWriteModeList;
@@ -36,7 +39,7 @@ namespace DBInStudio.Desktop
         /// <summary>
         /// 
         /// </summary>
-        public static Dictionary<string, string[]> Drivers;
+        public static Dictionary<string,Tuple<string[],string>> Drivers;
 
         private string mDriverName;
         private string mRegistorName;
@@ -51,10 +54,16 @@ namespace DBInStudio.Desktop
 
         private ICommand mConvertRemoveCommand;
 
+        private ICommand mAdvanceEditCommand;
+
         private bool mIsSelected;
 
         private object mValue;
-        private byte mQuality;
+        private byte mQuality= 63;
+
+        private System.Collections.ObjectModel.ObservableCollection<TagViewModel> mSubItems = new System.Collections.ObjectModel.ObservableCollection<TagViewModel>();
+
+        private string mRegistorEditType = "";
 
         #endregion ...Variables...
 
@@ -71,7 +80,7 @@ namespace DBInStudio.Desktop
             InitEnumType();
             mCompressTypeList = new string[] 
             {
-                Res.Get("NoneCompress"),
+                //Res.Get("NoneCompress"),
                 Res.Get("LosslessCompress"),
                 Res.Get("DeadAreaCompress"),
                 Res.Get("SlopeCompress")
@@ -85,7 +94,7 @@ namespace DBInStudio.Desktop
 
         public TagViewModel(Cdy.Tag.Tagbase realTag, Cdy.Tag.HisTag histag)
         {
-            this.mRealTagMode = realTag;
+            this.RealTagMode = realTag;
             this.HisTagMode = histag;
             CheckLinkAddress();
         }
@@ -93,6 +102,22 @@ namespace DBInStudio.Desktop
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public TagViewModel Parent { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public System.Collections.ObjectModel.ObservableCollection<TagViewModel> SubItems
+        {
+            get
+            {
+                return mSubItems;
+            }
+        }
 
         /// <summary>
         /// 
@@ -106,8 +131,31 @@ namespace DBInStudio.Desktop
         { 
             get { return mIsSelected; } 
             set 
-            { 
-                mIsSelected = value; 
+            {
+                if (mIsSelected != value)
+                {
+                    mIsSelected = value;
+
+                    if (this.mRealTagMode is ComplexTag)
+                    {
+                        if (mIsSelected)
+                        {
+                            QuerySubTags();
+                        }
+                        else
+                        {
+                            CheckUpdateSubTags();
+                            Application.Current?.Dispatcher.Invoke(new Action(() =>
+                            {
+                                mSubItems.Clear();
+                            }));
+                        }
+                    }
+                    if(!value)
+                    {
+                        UpdateTag(this);
+                    }
+                }
                 OnPropertyChanged("IsSelected"); 
             }
         }
@@ -151,6 +199,20 @@ namespace DBInStudio.Desktop
                 if (mRealTagMode != value)
                 {
                     mRealTagMode = value;
+
+                    var tmax = (int)TagType.ULongPoint3;
+                    if ((int)value.Type > tmax)
+                    {
+                        var cls = (mRealTagMode as ComplexTag).LinkComplexClass;
+                        if(mTagTypeList.Contains(cls))
+                        {
+                            mType = mTagTypeList.AsSpan().IndexOf(cls);
+                        }
+                    }
+                    else
+                    {
+                        mType = (int)value.Type;
+                    }
                 }
             }
         }
@@ -254,6 +316,17 @@ namespace DBInStudio.Desktop
         /// <summary>
         /// 
         /// </summary>
+        public string[] TagTypeList2
+        {
+            get
+            {
+                return mTagTypeList2;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public string[] ReadWriteModeList
         {
             get
@@ -305,6 +378,26 @@ namespace DBInStudio.Desktop
             }
         }
 
+        /// <summary>
+            /// 
+            /// </summary>
+        public string RegistorEditType
+        {
+            get
+            {
+                return mRegistorEditType;
+            }
+            set
+            {
+                if (mRegistorEditType != value)
+                {
+                    mRegistorEditType = value;
+                    OnPropertyChanged("RegistorEditType");
+                }
+            }
+        }
+
+
 
         /// <summary>
         /// 
@@ -324,7 +417,12 @@ namespace DBInStudio.Desktop
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsClassDefine { get; set; }
 
+        private int mType = 0;
 
         /// <summary>
         /// 类型
@@ -333,23 +431,58 @@ namespace DBInStudio.Desktop
         {
             get
             {
-                return mRealTagMode != null ? (int)mRealTagMode.Type : -1;
+                return mType;
             }
             set
             {
                 if (mRealTagMode != null && (int)mRealTagMode.Type != value)
                 {
-                    ChangeTagType((Cdy.Tag.TagType)value);
-                    IsChanged = true;
+                    var tmax = (int)TagType.ULongPoint3;
+                    bool ischg = false; 
+                    if (value > tmax)
+                    {
+                        if (CanChangedTypeDelegate==null || CanChangedTypeDelegate(Cdy.Tag.TagType.Complex, mTagTypeList[value]))
+                        {
+                            mType = value;
+                            ChangeTagType(Cdy.Tag.TagType.Complex);
+                            IsChanged = true;
+                            ischg = true;
+                        }
+                    }
+                    else
+                    {
+                        mType = value;
+                        ChangeTagType((Cdy.Tag.TagType)value);
+                        IsChanged = true;
+                        ischg = true;
+                    }
+
+                    if (ischg)
+                    {
+                        UpdateTag(this);
+
+                        if (this.RealTagMode is ComplexTag)
+                            QuerySubTags();
+                    }
+
                     OnPropertyChanged("Type");
                     OnPropertyChanged("TypeString");
                     OnPropertyChanged("IsNumberTag");
                     OnPropertyChanged("Precision");
                     OnPropertyChanged("MaxValue");
                     OnPropertyChanged("MinValue");
+                    OnPropertyChanged("IsComplexTag");
+                    OnPropertyChanged("RecordType");
+                    OnPropertyChanged("RecordTypeString");
+                    OnPropertyChanged("HasHisTag");
                 }
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsComplexTag { get { return mRealTagMode is ComplexTag; } }
 
         /// <summary>
         /// 
@@ -358,7 +491,7 @@ namespace DBInStudio.Desktop
         {
             get
             {
-                return mRealTagMode.Type.ToString();
+                return  (mRealTagMode is ComplexTag)?((mRealTagMode as ComplexTag).LinkComplexClass) : mRealTagMode.Type.ToString();
             }
         }
 
@@ -421,11 +554,13 @@ namespace DBInStudio.Desktop
                     LinkAddress = DriverName + ":" + RegistorName;
                     if(Drivers!=null&&Drivers.ContainsKey(mDriverName))
                     {
-                        RegistorList = Drivers[mDriverName];
+                        RegistorList = Drivers[mDriverName].Item1;
+                        RegistorEditType = Drivers[mDriverName].Item2;
                     }
                     else
                     {
                         RegistorList = null;
+                        RegistorEditType = "";
                     }
                     OnPropertyChanged("DriverName");
                     OnPropertyChanged("RegistorName");
@@ -466,7 +601,7 @@ namespace DBInStudio.Desktop
             }
             set
             {
-                if (mHasHisTag != value)
+                if (mHasHisTag != value&&!IsComplexTag)
                 {
                     mHasHisTag = value;
                     if(!value)
@@ -586,6 +721,7 @@ namespace DBInStudio.Desktop
                     mConvertEditCommand = new RelayCommand(() => {
 
                         ConvertEditViewModel cmm = new ConvertEditViewModel();
+                        cmm.Init(this.RealTagMode);
                         if (mRealTagMode.Conveter != null)
                             cmm.SetSelectConvert(mRealTagMode.Conveter.SeriseToString());
                         if(cmm.ShowDialog().Value)
@@ -688,8 +824,8 @@ namespace DBInStudio.Desktop
 
 
         /// <summary>
-            /// 
-            /// </summary>
+        /// 
+        /// </summary>
         public double MinValue
         {
             get
@@ -712,7 +848,7 @@ namespace DBInStudio.Desktop
         {
             get
             {
-                return mRealTagMode is Cdy.Tag.NumberTagBase;
+                return mRealTagMode!=null && mRealTagMode is Cdy.Tag.NumberTagBase;
             }
         }
 
@@ -744,7 +880,7 @@ namespace DBInStudio.Desktop
         {
             get
             {
-                return mRealTagMode is Cdy.Tag.FloatingTagBase;
+                return mRealTagMode!=null && mRealTagMode is Cdy.Tag.FloatingTagBase;
             }
         }
 
@@ -780,13 +916,14 @@ namespace DBInStudio.Desktop
         {
             get
             {
-                return mHisTagMode != null ? mHisTagMode.CompressType : -1;
+                return mHisTagMode != null ? mHisTagMode.CompressType-1 : -1;
             }
             set
             {
-                if (mHisTagMode != null && mHisTagMode.CompressType != value)
+                var val = value - 1;
+                if (mHisTagMode != null && mHisTagMode.CompressType != val)
                 {
-                    mHisTagMode.CompressType = value;
+                    mHisTagMode.CompressType = val;
                     IsChanged = true;
                     CheckRecordTypeParameterModel();
 
@@ -875,7 +1012,46 @@ namespace DBInStudio.Desktop
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public Func<string,bool> CheckAvaiableNameDelegate { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public Func<TagViewModel,bool> UpdateDelegate { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Func<TagType,string,bool> CanChangedTypeDelegate { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Func<string, List<TagViewModel>> QueryTagSubTagsDelegate { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand AdvanceEditCommand
+        {
+            get
+            {
+                if(mAdvanceEditCommand==null)
+                {
+                    mAdvanceEditCommand = new RelayCommand(() => {
+                        var cmd = ServiceLocator.Locator.Resolve(this.RegistorEditType+ "Command");
+                        if(cmd!=null && cmd is Func<string,string>)
+                        {
+                            RegistorName = (cmd as Func<string,string>)(this.RegistorName);
+                        }
+                    });
+                }
+                return mAdvanceEditCommand;
+            }
+        }
 
         #endregion ...Properties....
 
@@ -884,11 +1060,74 @@ namespace DBInStudio.Desktop
         /// <summary>
         /// 
         /// </summary>
+        public void CheckUpdateSubTags()
+        {
+            if (mSubItems.Count > 0)
+            {
+                foreach (var vv in mSubItems)
+                {
+                    UpdateTag(vv);
+                    if(vv.mRealTagMode is ComplexTag)
+                    {
+                        vv.CheckUpdateSubTags();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagmodel"></param>
+        private bool UpdateTag(TagViewModel tagmodel)
+        {
+            if(UpdateDelegate!=null)
+            {
+                return UpdateDelegate(tagmodel);
+            }
+            if (IsNew)
+            {
+                int id;
+                var re = DevelopServiceHelper.Helper.AddTag(Database, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(tagmodel.RealTagMode, tagmodel.HisTagMode), out id);
+                if (re)
+                {
+                    tagmodel.RealTagMode.Id = id;
+                    if (tagmodel.HisTagMode != null) tagmodel.HisTagMode.Id = id;
+                    tagmodel.IsChanged = false;
+                    tagmodel.IsNew = false;
+                }
+                return re;
+            }
+            else
+            {
+                if (tagmodel.IsChanged)
+                {
+                    var re = DevelopServiceHelper.Helper.UpdateTag(Database, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(tagmodel.RealTagMode, tagmodel.HisTagMode));
+                    if (re)
+                    {
+                        tagmodel.IsChanged = false;
+                    }
+                    return re;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
         private bool CheckAvaiableName(string name)
         {
-            return !name.Contains(".") && !DevelopServiceHelper.Helper.CheckTagNameExits(this.Database, this.Group, name);
+            if (CheckAvaiableNameDelegate == null)
+            {
+                return !name.Contains(".") && !DevelopServiceHelper.Helper.CheckTagNameExits(this.Database, this.Group, name);
+            }
+            else
+            {
+                return CheckAvaiableNameDelegate(name);
+            }
         }
 
         /// <summary>
@@ -926,6 +1165,8 @@ namespace DBInStudio.Desktop
             else
             {
                 string[] str = LinkAddress.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+                if (str.Length == 0) return;
+
                 mDriverName = str[0];
                 if(str.Length>1)
                 {
@@ -934,11 +1175,13 @@ namespace DBInStudio.Desktop
 
                 if (Drivers != null && Drivers.ContainsKey(mDriverName))
                 {
-                    RegistorList = Drivers[mDriverName];
+                    RegistorList = Drivers[mDriverName].Item1;
+                    RegistorEditType = Drivers[mDriverName].Item2;
                 }
                 else
                 {
                     RegistorList = null;
+                    RegistorEditType = "";
                 }
 
             }
@@ -949,9 +1192,27 @@ namespace DBInStudio.Desktop
         /// </summary>
         private static void InitEnumType()
         {
-            mTagTypeList = Enum.GetNames(typeof(Cdy.Tag.TagType));
+            var vlist = Enum.GetNames(typeof(Cdy.Tag.TagType)).ToList();
+            vlist.Remove("Complex");
+            //vlist.Remove("ClassComplex");
+            mTagTypeList2 =vlist.ToArray();
+            mTagTypeList = vlist.ToArray();
+
             mRecordTypeList = Enum.GetNames(typeof(Cdy.Tag.RecordType)).Select(e => Res.Get(e)).ToArray();
-            mReadWriteModeList = Enum.GetNames(typeof(Cdy.Tag.ReadWriteMode)).Select(e=>Res.Get(e)).ToArray();
+            mReadWriteModeList = Enum.GetNames(typeof(Cdy.Tag.ReadWriteMode)).Select(e => Res.Get(e)).ToArray();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ll"></param>
+        public static void UpdateTagType(List<string> ll)
+        {
+            var vlist = Enum.GetNames(typeof(Cdy.Tag.TagType)).ToList();
+            vlist.Remove("Complex");
+            //vlist.Remove("ClassComplex");
+            vlist.AddRange(ll);
+            mTagTypeList = vlist.ToArray();
         }
 
         /// <summary>
@@ -1104,6 +1365,21 @@ namespace DBInStudio.Desktop
                         mHisTagMode.TagType = Cdy.Tag.TagType.ULongPoint3;
                     }
                     break;
+                case TagType.Complex:
+                    ntag = new Cdy.Tag.ComplexTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group,LinkComplexClass = mTagTypeList[mType] };
+                    if (mHisTagMode != null)
+                    {
+                        HisTagMode = null;
+                        
+                    }
+                    break;
+                //case TagType.ClassComplex:
+                //    ntag = new Cdy.Tag.ComplexClassTag() { Id = this.mRealTagMode.Id, Name = mRealTagMode.Name, Desc = mRealTagMode.Desc, LinkAddress = mRealTagMode.LinkAddress, Group = mRealTagMode.Group, LinkComplexClass = mTagTypeList[mType] };
+                //    if (mHisTagMode != null)
+                //    {
+                //        HisTagMode = null;
+                //    }
+                //    break;
 
                 default:
                     break;
@@ -1302,6 +1578,43 @@ namespace DBInStudio.Desktop
             return new TagViewModel(ntag, htag) { Database = this.Database };
         }
 
+        private void QuerySubTags()
+        {
+            if (mSubItems.Count == 0)
+            {
+                Application.Current?.Dispatcher.Invoke(new Action(() => {
+                    mSubItems.Clear();
+                }));
+
+                Task.Run(() =>
+                {
+                    if (QueryTagSubTagsDelegate != null)
+                    {
+                        var res = QueryTagSubTagsDelegate((this.mRealTagMode as ComplexTag).LinkComplexClass);
+                        foreach (var vvv in res)
+                        {
+                            Application.Current?.Dispatcher.Invoke(new Action(() => {
+                                mSubItems.Add(vvv);
+                            }));
+                        }
+                    }
+                    else
+                    {
+                        Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> res = null;
+                        res = DevelopServiceHelper.Helper.QueryTagSubTags(this.Database, Id);
+                        foreach (var vvv in res)
+                        {
+                            TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2) { Database = Database };
+                            Application.Current?.Dispatcher.Invoke(new Action(() => {
+                                mSubItems.Add(model);
+                            }));
+                        }
+                    }
+                   
+                });
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -1340,6 +1653,17 @@ namespace DBInStudio.Desktop
             {
                 sb.Append(",");
             }
+            sb.Append(mRealTagMode.Parent+",");
+
+            if(mRealTagMode is ComplexTag)
+            {
+                sb.Append((mRealTagMode as ComplexTag).LinkComplexClass + ",");
+            }
+            else
+            {
+                sb.Append(",");
+            }
+
             if (this.mHisTagMode!=null)
             {
                 sb.Append(mHisTagMode.Type + ",");
@@ -1390,19 +1714,26 @@ namespace DBInStudio.Desktop
             {
                 (realtag as FloatingTagBase).Precision = byte.Parse(stmp[10]);
             }
-            if (stmp.Length > 11)
+            realtag.Parent = stmp[11];
+
+            if(realtag is ComplexTag)
+            {
+                (realtag as ComplexTag).LinkComplexClass = stmp[12];
+            }
+
+            if (stmp.Length > 13)
             {
                 Cdy.Tag.HisTag histag = new HisTag();
-                histag.Type = (Cdy.Tag.RecordType)Enum.Parse(typeof(Cdy.Tag.RecordType), stmp[11]);
+                histag.Type = (Cdy.Tag.RecordType)Enum.Parse(typeof(Cdy.Tag.RecordType), stmp[13]);
 
-                histag.Circle = int.Parse(stmp[12]);
-                histag.CompressType = int.Parse(stmp[13]);
+                histag.Circle = int.Parse(stmp[14]);
+                histag.CompressType = int.Parse(stmp[15]);
                 histag.Parameters = new Dictionary<string, double>();
                 histag.TagType = realtag.Type;
                 histag.Id = realtag.Id;
-                histag.MaxValueCountPerSecond = short.Parse(stmp[14]);
+                histag.MaxValueCountPerSecond = short.Parse(stmp[16]);
 
-                for (int i=15;i<stmp.Length;i++)
+                for (int i=17;i<stmp.Length;i++)
                 {
                     string skey = stmp[i];
                     if(string.IsNullOrEmpty(skey))

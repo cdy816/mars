@@ -16,6 +16,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Real\SpecialTags\ComplexClassTag.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Cdy.Tag.Common\Cdy.Tag.Common.csproj" />
   </ItemGroup>
 
@@ -29,7 +33,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).XML&quot; copy &quot;$(TargetDir)$(TargetName).XML&quot; &quot;$(SolutionDir)\Output\Xml&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).pdb&quot;  copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;copy &quot;$(TargetDir)Config\*.cfg&quot; &quot;$(SolutionDir)\Output\Config&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)zh-CN&quot;  copy &quot;$(TargetDir)zh-CN\*.dll&quot; &quot;$(SolutionDir)\Output\zh-CN&quot; /y&#xD;&#xA;" />
+    <Exec Command="md &quot;$(SolutionDir)Output&quot;&#xD;&#xA;md &quot;$(SolutionDir)Output\Config&quot;&#xD;&#xA;md &quot;$(SolutionDir)Output\zh-CN&quot;&#xD;&#xA;md &quot;$(SolutionDir)Output\runtimes&quot;&#xD;&#xA;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).XML&quot; copy &quot;$(TargetDir)$(TargetName).XML&quot; &quot;$(SolutionDir)\Output\Xml&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).pdb&quot;  copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;copy &quot;$(TargetDir)Config\*.cfg&quot; &quot;$(SolutionDir)\Output\Config&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)zh-CN&quot;  copy &quot;$(TargetDir)zh-CN\*.dll&quot; &quot;$(SolutionDir)\Output\zh-CN&quot; /y&#xD;&#xA;" />
   </Target>
 
 </Project>

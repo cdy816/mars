@@ -15,6 +15,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Cdy.Tag;
 using Cheetah;
 
@@ -77,7 +78,12 @@ namespace DBRuntime.Api
         /// 
         /// </summary>
         public const byte RealDataBlockPush = 1;
+
         public const byte RealDataPush = 0;
+
+        public const byte SetRealDataToLastData = 120;
+
+        public const byte RequestComplexTagRealValue = 14;
 
         private Dictionary<string,Tuple<HashSet<int>,bool>> mCallBackRegistorIds = new Dictionary<string, Tuple<HashSet<int>, bool>>();
 
@@ -131,6 +137,9 @@ namespace DBRuntime.Api
                 {
                     resetEvent.Set();
                 }
+
+                //LoggerService.Service.Info("", "数据准备好，可以推送数据!!!!!");
+
             }), null,RealDataNotifyType.Block);
             
         }
@@ -164,19 +173,28 @@ namespace DBRuntime.Api
                 switch (cmd)
                 {
                     case RequestRealData:
-                        ProcessGetRealData(client, data);
+                        int cid = data.ReadInt();
+                        ProcessGetRealData(client, data,cid);
                         break;
                     case RequestRealDataByMemoryCopy:
-                        ProcessGetRealDataByMemoryCopy(client, data);
+                        cid = data.ReadInt();
+                        ProcessGetRealDataByMemoryCopy(client, data,cid);
                         break;
                     case RequestRealData2:
-                        ProcessGetRealData2(client, data);
+                        cid = data.ReadInt();
+                        ProcessGetRealData2(client, data,cid);
+                        break;
+                    case RequestComplexTagRealValue:
+                        cid = data.ReadInt();
+                        ProcessComplexTagRealValue(client, data,cid);
                         break;
                     case RequestRealData2ByMemoryCopy:
-                        ProcessGetRealData2ByMemoryCopy(client, data);
+                        cid = data.ReadInt();
+                        ProcessGetRealData2ByMemoryCopy(client, data,cid);
                         break;
                     case RealMemorySync:
-                        ProcessRealMemorySync(client, data);
+                        cid = data.ReadInt();
+                        ProcessRealMemorySync(client, data,cid);
                         break;
                     case SetDataValue:
                         ProcessSetRealData(client, data);
@@ -185,10 +203,15 @@ namespace DBRuntime.Api
                         ProcessValueChangeNotify(client, data);
                         break;
                     case BlockValueChangeNotify:
-                        BlockProcessValueChangeNotify(client, data);
+                        cid = data.ReadInt();
+                        BlockProcessValueChangeNotify(client, data,cid);
                         break;
                     case ResetValueChangeNotify:
-                        ProcessResetValueChangedNotify(client, data);
+                        cid= data.ReadInt();
+                        ProcessResetValueChangedNotify(client, data,cid);
+                        break;
+                    case SetRealDataToLastData:
+                        Task.Run(() => { ProcessSetRealDataToLastData(client, data); data.UnlockAndReturn(); });
                         break;
                 }
             }
@@ -196,22 +219,26 @@ namespace DBRuntime.Api
             {
                 Parent.AsyncCallback(client, FunId, new byte[1], 0);
             }
+
+            if(cmd!= SetRealDataToLastData)
             base.ProcessSingleData(client, data);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="clientid"></param>
+        /// <param name="clientId"></param>
         /// <param name="block"></param>
-        private void ProcessRealMemorySync(string clientId, ByteBuffer block)
+        /// <param name="cid"></param>
+        private void ProcessRealMemorySync(string clientId, ByteBuffer block,int cid)
         {
             int size = block.ReadInt();
             int start = block.ReadInt();
             var cc = ServiceLocator.Locator.Resolve<IRealTagConsumer>() as RealEnginer;
            
             if (start >= cc.Memory.Length) return;
-            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, 0);
+            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, 4);
+            re.Write(cid);
             
             var ob = Parent.MemoryPool.GetBuffer();
             ob.IsPooled = false;
@@ -221,6 +248,11 @@ namespace DBRuntime.Api
         }
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
         private ByteBuffer[] GetBlockSendBuffer2(BlockItem item)
         {
             int start = item.StartAddress;
@@ -231,8 +263,9 @@ namespace DBRuntime.Api
             //var re = Unpooled.Buffer(10);
 
             //re.WriteByte(ApiFunConst.RealDataPushFun);
-            var re = Parent.Allocate(ApiFunConst.RealDataPushFun,  9);
+            var re = Parent.Allocate(ApiFunConst.RealDataPushFun,  9+8);
             re.Write(RealDataBlockPush);
+            re.Write(DateTime.Now);
             re.Write(start);
             re.Write(size);
             
@@ -332,26 +365,194 @@ namespace DBRuntime.Api
             Parent.AsyncCallback(clientid, ToByteBuffer(ApiFunConst.RealDataSetFun, (byte)1));
         }
 
+        private HisQueryResult<T> ProcessDataQuery<T>(int id, DateTime stime, DateTime etime)
+        {
+            return ServiceLocator.Locator.Resolve<IHisQuery>().ReadAllValue<T>(id, stime, etime);
+        }
+
+        private object GetLastValue(int id, TagType type, DateTime sTime, DateTime eTime, out byte quality)
+        {
+            switch (type)
+            {
+                case Cdy.Tag.TagType.Bool:
+                    return ProcessDataQuery<bool>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.Byte:
+                    return ProcessDataQuery<byte>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.DateTime:
+                    return ProcessDataQuery<DateTime>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.Double:
+                    return ProcessDataQuery<double>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.Float:
+                    return ProcessDataQuery<float>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.Int:
+                    return ProcessDataQuery<int>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.Long:
+                    return ProcessDataQuery<long>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.Short:
+                    return ProcessDataQuery<short>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.String:
+                    return ProcessDataQuery<string>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.UInt:
+                    return ProcessDataQuery<bool>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.ULong:
+                    return ProcessDataQuery<ulong>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.UShort:
+                    return ProcessDataQuery<ushort>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.IntPoint:
+                    return ProcessDataQuery<IntPointData>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.UIntPoint:
+                    return ProcessDataQuery<UIntPointData>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.IntPoint3:
+                    return ProcessDataQuery<IntPoint3Data>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.UIntPoint3:
+                    return ProcessDataQuery<UIntPoint3Data>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.LongPoint:
+                    return ProcessDataQuery<LongPointData>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.ULongPoint:
+                    return ProcessDataQuery<ULongPointData>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.LongPoint3:
+                    return ProcessDataQuery<LongPoint3Data>(id, sTime, eTime).GetLastValue(out quality);
+                case Cdy.Tag.TagType.ULongPoint3:
+                    return ProcessDataQuery<ULongPoint3Data>(id, sTime, eTime).GetLastValue(out quality);
+            }
+            quality = (byte)QualityConst.Null;
+            return null;
+        }
+
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="cc"></param>
-        /// <param name="re"></param>
-        private void ProcessRealDataByMemoryCopy(List<int> cc,ByteBuffer re)
+        /// <param name="id"></param>
+        /// <param name="type"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        private object GetLastAvaiableData(int id, TagType type, DateTime time, out byte quality)
         {
-            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
-            var tagservice = ServiceLocator.Locator.Resolve<ITagManager>();
+            object re = null;
+            DateTime stime;
+            DateTime etime = time;
+            DateTime sttime = time.AddDays(-1);
 
-            re.Write(cc.Count);
-            //int targetbaseoffset =  re.ArrayOffset + re.WriterIndex;
-            foreach(var vv in cc)
+            do
             {
-                var tag = tagservice.GetTagById(vv);
-                re.Write((service as RealEnginer).MemoryHandle + (int)tag.ValueAddress, tag.ValueSize);
+                stime = etime.AddMinutes(-5);
+                re = GetLastValue(id, type, stime, etime, out quality);
+                if (re != null)
+                {
+                    return re;
+                }
+                etime = stime;
+            }
+            while (re == null && etime > sttime);
 
-                //Marshal.Copy((service as RealEnginer).MemoryHandle+ (int)tag.ValueAddress, re.Array, targetbaseoffset, tag.ValueSize);
-                //re.SetWriterIndex(re.WriterIndex + tag.ValueSize);
-                //targetbaseoffset = re.ArrayOffset + re.WriterIndex;
+            quality = (byte)QualityConst.Null;
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientid"></param>
+        /// <param name="block"></param>
+        private void ProcessSetRealDataToLastData(string clientid,ByteBuffer block)
+        {
+            int id = block.ReadInt();
+            var tags = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
+            if(tags!=null)
+            {
+                var val = GetLastAvaiableData(id, tags.Type, DateTime.Now, out byte quality);
+                if (val == null) return;
+
+                switch (tags.Type)
+                {
+                    case Cdy.Tag.TagType.Bool:
+                        var bval = Convert.ToBoolean(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id,ref bval, quality);
+                        break;
+                    case Cdy.Tag.TagType.Byte:
+                        var bbval = Convert.ToByte(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref bbval, quality);
+                        break;
+                    case Cdy.Tag.TagType.DateTime:
+                        var dval = Convert.ToDateTime(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref dval, quality);
+                        break;
+                    case Cdy.Tag.TagType.Double:
+                        var ddval = Convert.ToDouble(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref ddval, quality);
+                        break;
+                    case Cdy.Tag.TagType.Float:
+                        var fval = Convert.ToSingle(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref fval, quality);
+                        break;
+                    case Cdy.Tag.TagType.Int:
+                        var ival = Convert.ToInt32(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref ival, quality);
+                        break;
+                    case Cdy.Tag.TagType.Long:
+                        var lval = Convert.ToInt64(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref lval, quality);
+                        break;
+                    case Cdy.Tag.TagType.Short:
+                        var sval = Convert.ToInt16(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref sval, quality);
+                        break;
+                    case Cdy.Tag.TagType.String:
+                        var ssval = Convert.ToString(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ssval, quality);
+                        break;
+                    case Cdy.Tag.TagType.UInt:
+                        var uival = Convert.ToUInt32(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref uival, quality);
+                        break;
+                    case Cdy.Tag.TagType.ULong:
+                        var ultmp = Convert.ToUInt64(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref ultmp, quality);
+                        break;
+                    case Cdy.Tag.TagType.UShort:
+                        var usval = Convert.ToUInt16(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref usval, quality);
+                        break;
+                    case Cdy.Tag.TagType.IntPoint:
+                        var ipval = (IntPointData)(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref ipval, quality);
+                        break;
+                    case Cdy.Tag.TagType.UIntPoint:
+                        var uipval = (UIntPointData)(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref uipval, quality);
+                        break;
+                    case Cdy.Tag.TagType.IntPoint3:
+                        var ip3val = (IntPoint3Data)(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref ip3val, quality);
+                        break;
+                    case Cdy.Tag.TagType.UIntPoint3:
+                        var uip3val = (UIntPoint3Data)(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref uip3val, quality);
+                        break;
+                    case Cdy.Tag.TagType.LongPoint:
+                        var lpval = (LongPointData)(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref lpval, quality);
+                        break;
+                    case Cdy.Tag.TagType.ULongPoint:
+                        var ulpval = (ULongPointData)(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref ulpval, quality);
+                        break;
+                    case Cdy.Tag.TagType.LongPoint3:
+                        var lp3val = (LongPoint3Data)(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref lp3val, quality);
+                        break;
+                    case Cdy.Tag.TagType.ULongPoint3:
+                        var ulp3val = (ULongPoint3Data)(val);
+                        ServiceLocator.Locator.Resolve<Cdy.Tag.Driver.IRealTagProduct>().SetTagValue(id, ref ulp3val, quality);
+                        break;
+                }
+
+                Parent.AsyncCallback(clientid, ToByteBuffer(SetRealDataToLastData, (byte)1));
+            }
+            else
+            {
+                Parent.AsyncCallback(clientid, ToByteBuffer(SetRealDataToLastData, (byte)0));
+
             }
         }
 
@@ -360,12 +561,35 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="cc"></param>
         /// <param name="re"></param>
-        private void ProcessRealData(List<int> cc,ByteBuffer re)
+        private void ProcessRealDataByMemoryCopy(int[] cc,int len,ByteBuffer re)
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
-            re.Write(cc.Count);
-            foreach (var vv in cc)
+            var tagservice = ServiceLocator.Locator.Resolve<ITagManager>();
+
+            re.Write(len);
+            //foreach(var vv in cc)
+            for(int i=0;i<len;i++)
             {
+                var vv = cc[i];
+                var tag = tagservice.GetTagById(vv);
+                re.Write((service as RealEnginer).MemoryHandle + (int)tag.ValueAddress, tag.ValueSize);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cc"></param>
+        /// <param name="re"></param>
+        private void ProcessRealData(int[] cc,int len,ByteBuffer re)
+        {
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+            re.Write(len);
+            DateTime tmp = DateTime.Now;
+            //foreach (var vv in cc)
+            for(int i = 0; i < len; i++)
+            {
+                var vv = cc[i];
                 byte qu, type;
                 DateTime time;
                 object value;
@@ -454,6 +678,13 @@ namespace DBRuntime.Api
                     re.Write(time.Ticks);
                     re.WriteByte(qu);
                 }
+                else
+                {
+                    re.WriteByte((byte)TagType.Byte);
+                    re.WriteByte(0);
+                    re.Write(tmp.Ticks);
+                    re.WriteByte((byte)QualityConst.Null);
+                }
             }
         }
 
@@ -461,18 +692,25 @@ namespace DBRuntime.Api
         /// 
         /// </summary>
         /// <param name="block"></param>
-        private void ProcessGetRealData(string clientId, ByteBuffer block)
+        private void ProcessGetRealData(string clientId, ByteBuffer block,int cid)
         {
             int count = block.ReadInt();
-            List<int> cc = new List<int>(count);
+            int[] cc = ArrayPool<int>.Shared.Rent(count);
+
+            //List<int> cc = new List<int>(count);
             for (int i = 0; i < count; i++)
             {
-                cc.Add(block.ReadInt());
+                cc[i] = block.ReadInt();
             }
-
-            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, count * 34);
-            ProcessRealData(cc, re);
+            //Stopwatch sw = new Stopwatch();
+            //sw.Start();
+            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, count * 34+4);
+            re.Write(cid);
+            ProcessRealData(cc, count, re);
             Parent.AsyncCallback(clientId, re);
+            ArrayPool<int>.Shared.Return(cc);
+            //sw.Stop();
+            //LoggerService.Service.Info("RealDataServer", $"ProcessGetRealData:{ sw.ElapsedMilliseconds}");
         }
 
         /// <summary>
@@ -480,18 +718,22 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="block"></param>
-        private void ProcessGetRealDataByMemoryCopy(string clientId, ByteBuffer block)
+        private void ProcessGetRealDataByMemoryCopy(string clientId, ByteBuffer block,int cid)
         {
             int count = block.ReadInt();
-            List<int> cc = new List<int>(count);
+            int[] cc = ArrayPool<int>.Shared.Rent(count);
+            //List<int> cc = new List<int>(count);
             for (int i = 0; i < count; i++)
             {
-                cc.Add(block.ReadInt());
+                cc[i] = block.ReadInt();
+                //cc.Add(block.ReadInt());
             }
 
-            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, count * 34);
-            ProcessRealDataByMemoryCopy(cc, re);
+            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, count * 34+4);
+            re.Write(cid);
+            ProcessRealDataByMemoryCopy(cc,count, re);
             Parent.AsyncCallback(clientId, re);
+            ArrayPool<int>.Shared.Return(cc);
         }
 
 
@@ -500,18 +742,126 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="block"></param>
-        private void ProcessGetRealData2(string clientId, ByteBuffer block)
+        private void ProcessGetRealData2(string clientId, ByteBuffer block,int cid)
         {
             int sid = block.ReadInt();
             int eid = block.ReadInt();
-            List<int> cc = new List<int>(eid - sid);
+            //List<int> cc = new List<int>(eid - sid);
+            var vcount = eid - sid;
+            int[] cc = ArrayPool<int>.Shared.Rent(vcount);
+            int j = 0;
             for (int i = sid; i <= eid; i++)
             {
-                cc.Add(i);
+                cc[j]=i;
+                j++;
             }
-            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, cc.Count * 34);
-            ProcessRealData(cc, re);
+            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, vcount * 34+4);
+            re.Write(cid);
+            ProcessRealData(cc,vcount, re);
             Parent.AsyncCallback(clientId, re);
+            ArrayPool<int>.Shared.Return(cc);
+        }
+
+        private void ProcessComplexTagRealValue(string clientId, ByteBuffer block, int cid)
+        {
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+
+            int vid = block.ReadInt();
+            List<RealTagValueWithTimer> res = new List<RealTagValueWithTimer>();
+            service.GetComplexTagValue(vid, res);
+
+            if (res.Count > 0)
+            {
+                var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, res.Count * 34 + 16 + 1);
+                re.Write(cid);
+                re.WriteByte(RequestComplexTagRealValue);
+                re.Write(res.Count);
+                foreach (var vv in res)
+                {
+                    re.Write(vv.Id);
+                    re.WriteByte(vv.ValueType);
+                    switch (vv.ValueType)
+                    {
+                        case (byte)TagType.Bool:
+                            re.Write(Convert.ToByte(vv.Value));
+                            break;
+                        case (byte)TagType.Byte:
+                            re.Write(Convert.ToByte(vv.Value));
+                            break;
+                        case (byte)TagType.Short:
+                            re.Write(Convert.ToInt16(vv.Value));
+                            break;
+                        case (byte)TagType.UShort:
+                            re.Write(Convert.ToUInt16(vv.Value));
+                            break;
+                        case (byte)TagType.Int:
+                            re.Write(Convert.ToInt32(vv.Value));
+                            break;
+                        case (byte)TagType.UInt:
+                            re.Write(Convert.ToInt32(vv.Value));
+                            break;
+                        case (byte)TagType.Long:
+                        case (byte)TagType.ULong:
+                            re.Write(Convert.ToInt64(vv.Value));
+                            break;
+                        case (byte)TagType.Float:
+                            re.Write(Convert.ToSingle(vv.Value));
+                            break;
+                        case (byte)TagType.Double:
+                            re.Write(Convert.ToDouble(vv.Value));
+                            break;
+                        case (byte)TagType.String:
+                            string sval = vv.Value.ToString();
+                            //re.Write(sval.Length);
+                            re.Write(sval, Encoding.Unicode);
+                            break;
+                        case (byte)TagType.DateTime:
+                            re.Write(((DateTime)vv.Value).Ticks);
+                            break;
+                        case (byte)TagType.IntPoint:
+                            re.Write(((IntPointData)vv.Value).X);
+                            re.Write(((IntPointData)vv.Value).Y);
+                            break;
+                        case (byte)TagType.UIntPoint:
+                            re.Write((int)((UIntPointData)vv.Value).X);
+                            re.Write((int)((UIntPointData)vv.Value).Y);
+                            break;
+                        case (byte)TagType.IntPoint3:
+                            re.Write(((IntPoint3Data)vv.Value).X);
+                            re.Write(((IntPoint3Data)vv.Value).Y);
+                            re.Write(((IntPoint3Data)vv.Value).Z);
+                            break;
+                        case (byte)TagType.UIntPoint3:
+                            re.Write((int)((UIntPoint3Data)vv.Value).X);
+                            re.Write((int)((UIntPoint3Data)vv.Value).Y);
+                            re.Write((int)((UIntPoint3Data)vv.Value).Z);
+                            break;
+                        case (byte)TagType.LongPoint:
+                            re.Write(((LongPointData)vv.Value).X);
+                            re.Write(((LongPointData)vv.Value).Y);
+                            break;
+                        case (byte)TagType.ULongPoint:
+                            re.Write((long)((ULongPointData)vv.Value).X);
+                            re.Write((long)((ULongPointData)vv.Value).Y);
+                            break;
+                        case (byte)TagType.LongPoint3:
+                            re.Write(((LongPoint3Data)vv.Value).X);
+                            re.Write(((LongPoint3Data)vv.Value).Y);
+                            re.Write(((LongPoint3Data)vv.Value).Z);
+                            break;
+                        case (byte)TagType.ULongPoint3:
+                            re.Write((long)((ULongPoint3Data)vv.Value).X);
+                            re.Write((long)((ULongPoint3Data)vv.Value).Y);
+                            re.Write((long)((ULongPoint3Data)vv.Value).Z);
+                            break;
+                    }
+
+                    re.Write(vv.Time.Ticks);
+                    re.WriteByte(vv.Quality);
+                }
+
+                Parent.AsyncCallback(clientId, re);
+            }
         }
 
         /// <summary>
@@ -519,17 +869,22 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="block"></param>
-        private void ProcessGetRealData2ByMemoryCopy(string clientId, ByteBuffer block)
+        private void ProcessGetRealData2ByMemoryCopy(string clientId, ByteBuffer block,int cid)
         {
             int sid = block.ReadInt();
             int eid = block.ReadInt();
-            List<int> cc = new List<int>(eid - sid);
+            var vcount = eid - sid;
+            var cc = ArrayPool<int>.Shared.Rent(vcount);
+            //List<int> cc = new List<int>(eid - sid);
+            int j = 0;
             for (int i = sid; i <= eid; i++)
             {
-                cc.Add(i);
+                cc[j]=(i);
+                j++;
             }
-            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, cc.Count * 34);
-            ProcessRealDataByMemoryCopy(cc, re);
+            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, vcount * 34+4);
+            re.Write((cid));
+            ProcessRealDataByMemoryCopy(cc, vcount, re);
             Parent.AsyncCallback(clientId, re);
         }
 
@@ -538,7 +893,7 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="block"></param>
-        private void BlockProcessValueChangeNotify(string clientId, ByteBuffer block)
+        private void BlockProcessValueChangeNotify(string clientId, ByteBuffer block,int cid)
         {
             try
             {
@@ -551,6 +906,10 @@ namespace DBRuntime.Api
                 {
                     mBlockCallBackRegistorIds.Add(clientId, true);
                 }
+
+                var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, 5);
+                re.Write((cid));
+                Parent?.AsyncCallback(clientId, re);
             }
             catch (Exception ex)
             {
@@ -606,8 +965,10 @@ namespace DBRuntime.Api
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="clientId"></param>
         /// <param name="block"></param>
-        private void ProcessResetValueChangedNotify(string clientId, ByteBuffer block)
+        /// <param name="cid"></param>
+        private void ProcessResetValueChangedNotify(string clientId, ByteBuffer block,int cid)
         {
             if (mCallBackRegistorIds.ContainsKey(clientId))
             {
@@ -617,6 +978,10 @@ namespace DBRuntime.Api
             {
                 mDataCounts.Remove(clientId);
             }
+
+            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, 5);
+            re.Write((cid));
+            Parent?.AsyncCallback(clientId, re);
         }
 
         ///// <summary>
@@ -786,11 +1151,11 @@ namespace DBRuntime.Api
 
                         foreach (var cb in clients)
                         {
-                            var buffer = Parent.Allocate(Api.ApiFunConst.RealDataPushFun, changtags.Item2 * 64+5);
+                            var buffer = Parent.Allocate(Api.ApiFunConst.RealDataPushFun, changtags.Item2 * 64 + 5);
                             buffer.Write(RealDataPush);
                             buffer.Write(0);
                             buffers.Add(cb.Key, buffer);
-                            mDataCounts[cb.Key]= 0;
+                            mDataCounts[cb.Key] = 0;
                         }
 
                         foreach (var vv in changtags.Item1)
@@ -817,6 +1182,9 @@ namespace DBRuntime.Api
                             //cb.Value.WriteInt(mDataCounts[cb.Key]);
                             //cb.Value.ResetWriterIndex();
 
+                            //防止数据积压
+                            while (Parent.GetBufferCount() > 10)
+                                Thread.Sleep(10);
                             Parent.PushRealDatatoClient(cb.Key, cb.Value);
                         }
                         buffers.Clear();
@@ -824,22 +1192,26 @@ namespace DBRuntime.Api
                         ArrayPool<int>.Shared.Return(changtags.Item1);
                     }
 
-                    if(mBlockCallBackRegistorIds.Count>0)
+                    if (mBlockCallBackRegistorIds.Count > 0)
                     {
                         //Stopwatch sw = new Stopwatch();
                         //sw.Start();
                         int count = 0;
                         BlockItem vv;
-                        while (mChangedBlocks.Count>0)
+                        while (mChangedBlocks.Count > 0)
                         {
                             lock (mChangedBlocks)
-                                 vv = mChangedBlocks.Dequeue();
+                                vv = mChangedBlocks.Dequeue();
                             if (vv == null) continue;
 
                             var buffer = GetBlockSendBuffer2(vv);
                             foreach (var vvb in mBlockCallBackRegistorIds.ToArray())
                             {
-                              //  buffer.Retain();
+                                //  buffer.Retain();
+                                //防止数据积压
+                                while (Parent.GetBufferCount() > 10) 
+                                    Thread.Sleep(10);
+
                                 Parent.PushRealDatatoClient(vvb.Key, buffer);
                                 //buffer.ReleaseBuffer();
                             }
@@ -848,7 +1220,7 @@ namespace DBRuntime.Api
                             //buffer.ReleaseBuffer();
                             count++;
                         }
-                        Thread.Sleep(10);
+                        //Thread.Sleep(10);
                         //sw.Stop();
                         //LoggerService.Service.Erro("RealDataServerProcess", "推送数据耗时" + sw.ElapsedMilliseconds + " 大小:" + count);
                     }
@@ -856,6 +1228,7 @@ namespace DBRuntime.Api
                     {
                         mChangedBlocks.Clear();
                     }
+                    Thread.Sleep(200);
                 }
                 catch(Exception ex)
                 {

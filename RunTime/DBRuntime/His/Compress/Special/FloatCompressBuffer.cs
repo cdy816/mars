@@ -124,7 +124,7 @@ namespace DBRuntime.His.Compress
             }
             else
             {
-                var val = (value - mLastValue);
+                var val = (float)Math.Round((value - mLastValue),mPrecision);
                 if(!CanDecompress(val))
                 {
                     mCanCompress = false;
@@ -198,7 +198,7 @@ namespace DBRuntime.His.Compress
             {
                 var val = memory.ReadFloat();
                 re.Add(val);
-                using (ProtoMemory vmemory = new ProtoMemory(values.AsSpan().Slice(9).ToArray()))
+                using (ProtoMemory vmemory = new ProtoMemory(values,9))
                 {
                     while (vmemory.ReadPosition < vmemory.DataBuffer.Length)
                     {

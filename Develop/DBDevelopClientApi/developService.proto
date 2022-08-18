@@ -118,11 +118,14 @@ service DevelopServer {
   rpc UpdateHisTag(UpdateHisTagRequestMessage) returns (BoolResultReplay);
 
 
-    //根据组获取变量
+  //根据组获取变量
   rpc GetTagByGroup(GetTagByGroupRequest) returns (GetTagMessageReply);
 
   //获取所有变量
   rpc GetAllTag(GetTagByGroupRequest) returns (GetTagMessageReply);
+
+  //获取复杂变量的包含的
+  rpc GetComplexSubTags(GetComplexSubTagsRequest) returns (GetTagMessageReply);
 
 
   //获取所有历史变量
@@ -166,7 +169,56 @@ service DevelopServer {
   //更新变量组描述信息
   rpc UpdateGroupDescription(UpdateGroupDescriptionRequest) returns (BoolResultReplay);
 
-  //保存
+ //获取变量类
+ rpc GetTagClass(GetRequest) returns (GetTagClassMessageReply);
+
+   //添加变量类
+ rpc AddTagClass(AddClassRequest) returns (AddClassReplay);
+
+   //重命名变量类
+ rpc RenameTagClass(RenameClassRequest) returns (BoolResultReplay);
+
+   //删除变量类
+ rpc RemoveTagClass(RemoveClassRequest) returns (BoolResultReplay);
+
+
+
+   //更新变量类描述信息
+ rpc UpdateTagClassDescription(UpdateClassDescriptionRequest) returns (BoolResultReplay);
+
+  //删除
+ rpc RemoveClassTag(RemoveClassTagMessageRequest) returns (BoolResultReplay);
+
+    //删除变量类历史配置
+ rpc RemoveClassHisTag(RemoveClassTagMessageRequest) returns (BoolResultReplay);
+
+  //添加
+ rpc AddClassTag(AddClassTagRequestMessage) returns (AddTagReplyMessage);
+
+  //获取类的变量
+ rpc GetTagByClass(GetTagByGroupRequest) returns (GetTagMessageReply);
+
+  //修改实时变量
+ rpc UpdateClassRealTag(UpdateClassRealTagRequestMessage) returns (BoolResultReplay);
+
+  //修改历史变量
+ rpc UpdateClassHisTag(UpdateClassHisTagRequestMessage) returns (BoolResultReplay);
+
+ //更新所有和变量类管理的变量
+ rpc UpdateLinkedClassTags(UpdateClassRequest) returns (BoolResultReplay);
+
+   //粘贴类
+  rpc PasteTagClass(PasteGroupRequest) returns (PasteGroupReplay);
+
+
+    //获取一个未被使用的名称
+  rpc GetAvaiableClassTagName(GetAvaiableClassTagNameRequest) returns (GetAvaiableTagNameReply);
+
+  //判断一个变量的名称可用
+  rpc CheckClassTagNameExist(GetAvaiableClassTagNameRequest) returns (BoolResultReplay);
+  
+
+ //保存
   rpc Save(GetRequest) returns (BoolResultReplay);
 
   //撤销
@@ -179,10 +231,10 @@ service DevelopServer {
   rpc GetRegisteDrivers(GetRequest) returns (GetRegisteDriversReplay);
 
   //Logout
-   rpc Logout(LogoutRequest) returns (BoolResultReplay);
+  rpc Logout(LogoutRequest) returns (BoolResultReplay);
 
       //打开数据库
-   rpc CheckOpenDatabase(DatabasesRequest) returns (BoolResultReplay);
+  rpc CheckOpenDatabase(DatabasesRequest) returns (BoolResultReplay);
 
    //启动数据库
    rpc Start(DatabasesRequest) returns (BoolResultReplay);
@@ -217,7 +269,14 @@ service DevelopServer {
    //重置变量ID
    rpc ResetTagId(ResetTagIdRequest) returns (ResetTagIdReplay);
 
+   //更新相关Proxy API配置
+   rpc UpdateProxyApiSetting(UpdateProxyApiSettingRequest) returns (BoolResultReplay);
+
+   //获取Proxy API配置
+   rpc GetProxyApiSetting(DatabasesRequest) returns (GetProxyApiSettingReply);
+
 }
+
 
 //重置变量ID
 message ResetTagIdRequest
@@ -278,7 +337,8 @@ message GetRegisteDriversReplay
 message Driver
 {
     string Name=1;
-    repeated string Registors=2;
+    string EditType=2;
+    repeated string Registors=3;
 }
 
 //获取数据权限列表
@@ -346,7 +406,7 @@ message ModifyDatabaseUserPasswordRequest
 message UpdateDatabaseUserRequest
 {
     string loginId=1;
-     string Database=2;
+    string Database=2;
     string userName=3;
     string Group=4;
     repeated string permission=5;
@@ -500,6 +560,16 @@ message AddTagRequestMessage
     HisTagMessage hisTag = 4;
 }
 
+
+message AddClassTagRequestMessage
+{
+    string loginId =1;
+    string Database=2;
+    string Classes=3;
+    RealTagMessage realTag = 4;
+    HisTagMessage hisTag = 5;
+}
+
 //
 message AddTagReplyMessage
 {
@@ -526,11 +596,27 @@ message ImportTagRequestReplyMessage
     string ErroMessage=3;
 }
 
+message UpdateClassRealTagRequestMessage
+{
+    string loginId=1;
+    string Database=2;
+    string Classes=3;
+    RealTagMessage tag = 4;
+}
+
 message UpdateRealTagRequestMessage
 {
     string loginId=1;
     string Database=2;
     RealTagMessage tag = 3;
+}
+
+message UpdateClassHisTagRequestMessage
+{
+    string loginId=1;
+    string Database=2;
+     string Classes=3;
+    HisTagMessage tag = 4;
 }
 
 message UpdateHisTagRequestMessage
@@ -572,6 +658,31 @@ message AddGroupReplay
     string Group=3;
 }
 
+//添加类
+message AddClassRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string Name=3;
+}
+
+//
+message UpdateClassRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string Name=3;
+}
+
+
+
+message AddClassReplay
+{
+    bool Result =1;
+    string ErroMessage=2;
+    string Group=3;
+}
+
 //通过名称删除用户
 message RemoveByNameRequest
 {
@@ -597,12 +708,36 @@ message RenameGroupRequest
     string NewName=4;
 }
 
+//
+message RenameClassRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string OldFullName=3;
+    string NewName=4;
+}
+
+message RemoveClassRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string Name=3;
+}
+
 //更新组的描述
 message UpdateGroupDescriptionRequest
 {
     string LoginId=1;
     string Database=2;
     string GroupName=3;
+    string Desc=4;
+}
+
+message UpdateClassDescriptionRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string Name=3;
     string Desc=4;
 }
 
@@ -629,6 +764,14 @@ message RemoveTagMessageRequest
     string LoginId=1;
      string Database=2;
     repeated int32 TagId=3;
+}
+
+message RemoveClassTagMessageRequest
+{
+    string LoginId=1;
+     string Database=2;
+     string Classes=3;
+    repeated int32 TagId=4;
 }
 
 //
@@ -662,11 +805,30 @@ message GetTagByGroupRequest
     repeated FilterMessageItem Filters=5;
 }
 
+message GetComplexSubTagsRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string TagFullName=3;
+    int32 TagId=4;
+    repeated FilterMessageItem Filters=5;
+}
+
+
 message GetAvaiableTagNameRequest
 {
     string LoginId=1;
     string Database=2;
     string Group=3;
+    string Name=4;
+}
+
+
+message GetAvaiableClassTagNameRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string Class=3;
     string Name=4;
 }
 
@@ -733,6 +895,13 @@ message GetTagGroupMessageReply
     repeated TagGroup Group=3;
 }
 
+message GetTagClassMessageReply
+{
+    bool Result =1;
+    string ErroMessage=2;
+    repeated TagClass Classes=3;
+}
+
 message GetGroupMessageReply
 {
     bool Result =1;
@@ -762,6 +931,8 @@ message RealTagMessage
   double MaxValue=9;
   double MinValue=10;
   int32 Precision=11;
+  string LinkComplexClass=12;
+  string Parent=13;
 }
 
 //历史变量定义
@@ -790,6 +961,12 @@ message TagGroup
     string Description=3;
 }
 
+message TagClass
+{
+    string Name=1;
+    string Description=3;
+}
+
 message Group
 {
     string Name=1;
@@ -804,7 +981,7 @@ message GetDatabaseHisSettingReplay
     string DataPath=3;
     string BackDataPath=4;
     int32 KeepTime=5;
-    int32 KeepNoZipFileDays=6;
+    double KeepNoZipFileDays=6;
 }
 
 //更新历史数据存放路径
@@ -815,5 +992,24 @@ message UpdateDatabaseHisSettingRequest
     string DataPath=3;
     string BackDataPath=4;
     int32 KeepTime=5;
-    int32 KeepNoZipFileDays=6;
+    double KeepNoZipFileDays=6;
+}
+
+message UpdateProxyApiSettingRequest
+{
+   string LoginId=1;
+   string Database=2;
+   bool WebApi=3;
+   bool GrpcApi=4;
+   bool HighApi=5;
+   bool OpcServer=6;
+}
+
+message GetProxyApiSettingReply
+{
+   bool Result =1;
+   bool WebApi=2;
+   bool GrpcApi=3;
+   bool HighApi=4;
+   bool OpcServer=5;
 }

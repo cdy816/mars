@@ -27,11 +27,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.17.3" />
+    <PackageReference Include="Google.Protobuf" Version="3.18.1" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).XML&quot; copy &quot;$(TargetDir)$(TargetName).XML&quot; &quot;$(SolutionDir)\Output\Xml&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).pdb&quot;  copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)\Output&quot; /y" />
+    <Exec Command="md &quot;$(SolutionDir)Output&quot;&#xD;&#xA;md &quot;$(SolutionDir)Output\Config&quot;&#xD;&#xA;md &quot;$(SolutionDir)Output\zh-CN&quot;&#xD;&#xA;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).XML&quot; copy &quot;$(TargetDir)$(TargetName).XML&quot; &quot;$(SolutionDir)\Output\Xml&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).pdb&quot;  copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)\Output&quot; /y" />
   </Target>
 
 </Project>

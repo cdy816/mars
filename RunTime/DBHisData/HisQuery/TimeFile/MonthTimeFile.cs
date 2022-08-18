@@ -100,7 +100,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="duration"></param>
         /// <param name="file"></param>
-        public void AddFile(DateTime startTime,TimeSpan duration, DataFileInfo4 file)
+        public void AddFile(DateTime startTime,TimeSpan duration, IDataFile file)
         {
             lock (this)
             {
@@ -150,7 +150,7 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="dateTime"></param>
         /// <returns></returns>
-        public DataFileInfo4 GetDataFile(DateTime dateTime)
+        public IDataFile GetDataFile(DateTime dateTime)
         {
             lock (this)
             {
@@ -174,11 +174,11 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
         /// <returns></returns>
-        public List<DataFileInfo4> GetDataFiles(DateTime startTime,DateTime endTime)
+        public List<IDataFile> GetDataFiles(DateTime startTime,DateTime endTime)
         {
             lock (this)
             {
-                List<DataFileInfo4> infos = new List<DataFileInfo4>();
+                List<IDataFile> infos = new List<IDataFile>();
 
                 DateTime stime = startTime;
                 foreach (var vv in mFileMaps)
@@ -198,7 +198,7 @@ namespace Cdy.Tag
         /// <param name="startTime"></param>
         /// <param name="span"></param>
         /// <returns></returns>
-        public List<DataFileInfo4> GetDataFiles(DateTime startTime,TimeSpan span)
+        public List<IDataFile> GetDataFiles(DateTime startTime,TimeSpan span)
         {
             return GetDataFiles(startTime, startTime + span);
         }
@@ -228,12 +228,12 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public DataFileInfo4 File1 { get; set; }
+        public IDataFile File1 { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public DataFileInfo4 File2 { get; set; }
+        public IDataFile File2 { get; set; }
     }
 
 }

@@ -107,11 +107,17 @@ namespace Cdy.Tag
                         if(!target.Tags.ContainsKey(tag.Id) || !tag.Equals(target.Tags[tag.Id]))
                         {
                             db.Tags.Add(tag.Id, tag);
+                            if (tag is ComplexTag)
+                                db.BuildComplexTagId(tag);
                         }
 
                         if(target.Tags.ContainsKey(tag.Id))
                         {
                             mRemovedIds.Remove(tag.Id);
+                            if(tag is ComplexTag)
+                            {
+                                RemoveComplexSubIds(tag as ComplexTag, mRemovedIds);
+                            }
                         }
                         
                     }
@@ -125,6 +131,26 @@ namespace Cdy.Tag
             this.Database = db;
             mRemoved = mRemovedIds;
             return db;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="mRemovedIds"></param>
+        private void RemoveComplexSubIds(ComplexTag tag, List<int> mRemovedIds)
+        {
+            foreach(var vv in tag.Tags)
+            {
+                if(mRemovedIds.Contains(vv.Key))
+                {
+                    mRemovedIds.Remove(vv.Key);
+                }
+                if(vv.Value is ComplexTag)
+                {
+                    RemoveComplexSubIds(vv.Value as ComplexTag,mRemovedIds);
+                }
+            }
         }
 
         /// <summary>
@@ -189,6 +215,8 @@ namespace Cdy.Tag
                     {
                         var tag = vv.LoadTagFromXML();
                         db.Tags.Add(tag.Id, tag);
+                        if(tag is ComplexTag)
+                        db.BuildComplexTagId(tag);
                     }
 
                     db.BuildNameMap();
@@ -244,7 +272,7 @@ namespace Cdy.Tag
             doc.SetAttributeValue("MaxId", Database.MaxId);
             doc.SetAttributeValue("TagCount", Database.Tags.Count);
             XElement xe = new XElement("Tags");
-            foreach(var vv in Database.Tags.Values)
+            foreach(var vv in Database.ListAllRootTags())
             {
                 xe.Add(vv.SaveToXML());
             }
@@ -281,7 +309,7 @@ namespace Cdy.Tag
             doc.SetAttributeValue("MaxId", Database.MaxId);
             doc.SetAttributeValue("TagCount", Database.Tags.Count);
             XElement xe = new XElement("Tags");
-            foreach (var vv in Database.Tags.Values)
+            foreach (var vv in Database.ListAllRootTags())
             {
                 xe.Add(vv.SaveToXML());
             }

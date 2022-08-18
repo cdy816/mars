@@ -142,10 +142,58 @@ namespace DbWebApi.Controllers
             {
                 return new LocalNumberTag().CloneFrom(tag);
             }
+            else if(tag is ComplexTag)
+            {
+                return new ComplexTagBase().CloneFrom(tag);
+            }
             else
             {
                 return new LocalTagBase().CloneFrom(tag);
             }
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class ComplexTagBase: LocalTagBase
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<LocalTagBase> Tags { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <returns></returns>
+        public override LocalTagBase CloneFrom(Tagbase tag)
+        {
+            base.CloneFrom(tag);
+            ComplexTag ntag = tag as ComplexTag;
+            LocalTagBase lb;
+            foreach (var vv in ntag.Tags)
+            {
+                if (tag is FloatingTagBase)
+                {
+                    lb = new LocalFloatTag().CloneFrom(vv.Value);
+                }
+                else if (tag is NumberTagBase)
+                {
+                    lb = new LocalNumberTag().CloneFrom(vv.Value);
+                }
+                else if (tag is ComplexTag)
+                {
+                    lb = new ComplexTagBase().CloneFrom(vv.Value);
+                }
+                else
+                {
+                    lb = new LocalTagBase().CloneFrom(vv.Value);
+                }
+                Tags.Add(lb);
+            }
+            return this;
         }
     }
 

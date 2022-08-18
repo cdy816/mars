@@ -70,6 +70,13 @@ namespace Cdy.Tag
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
+        bool FreshUserId(long id);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         DateTime GetLastAccessTime(string id);
 
         /// <summary>

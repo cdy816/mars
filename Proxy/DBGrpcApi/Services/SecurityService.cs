@@ -68,7 +68,7 @@ namespace DBGrpcApi
             try
             {
                 var dt = DateTime.FromBinary(request.Time);
-                if ((DateTime.UtcNow - dt).TotalSeconds > Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().TimeOut)
+                if ((DateTime.UtcNow - dt).TotalMinutes > Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>().TimeOut)
                 {
                     return Task.FromResult(new HartReply() { Result = false });
                 }

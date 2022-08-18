@@ -37,7 +37,7 @@ namespace DBInStudio.Desktop.ViewModel
 
         private int mKeepTime;
 
-        private int mKeepNoZipFileDays = -1;
+        private double mKeepNoZipFileDays = -1;
 
         #endregion ...Variables...
 
@@ -99,7 +99,7 @@ namespace DBInStudio.Desktop.ViewModel
         /// <summary>
         /// 
         /// </summary>
-        public int KeepNoZipFileDays
+        public double KeepNoZipFileDays
         {
             get
             {
@@ -235,7 +235,86 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
+        private bool mEnableWebApi;
+        private bool mEnableGrpcApi;
+        private bool mEnableHighApi;
+        private bool mEnableOpcServer;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool EnableWebApi
+        {
+            get
+            {
+                return mEnableWebApi;
+            }
+            set
+            {
+                if (mEnableWebApi != value)
+                {
+                    mEnableWebApi = value;
+                }
+                OnPropertyChanged("EnableWebApi");
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool EnableGrpcApi
+        {
+            get
+            {
+                return mEnableGrpcApi;
+            }
+            set
+            {
+                if (mEnableGrpcApi != value)
+                {
+                    mEnableGrpcApi = value;
+                }
+                OnPropertyChanged("EnableGrpcApi");
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool EnableHighApi
+        {
+            get
+            {
+                return mEnableHighApi;
+            }
+            set
+            {
+                if (mEnableHighApi != value)
+                {
+                    mEnableHighApi = value;
+                }
+                OnPropertyChanged("EnableHighApi");
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool EnableOpcServer
+        {
+            get
+            {
+                return mEnableOpcServer;
+            }
+            set
+            {
+                if (mEnableOpcServer != value)
+                {
+                    mEnableOpcServer = value;
+                }
+                OnPropertyChanged("EnableOpcServer");
+            }
+        }
 
         #endregion ...Properties...
 
@@ -261,6 +340,12 @@ namespace DBInStudio.Desktop.ViewModel
 
             KeepTime = setting.Item3;
             KeepNoZipFileDays = setting.Item4;
+
+            var apisetting = DevelopServiceHelper.Helper.GetApiSetting(this.Database);
+            EnableWebApi=apisetting.Item1;
+            EnableGrpcApi=apisetting.Item2;
+            EnableHighApi=apisetting.Item3;
+            EnableOpcServer = apisetting.Item4;
 
             foreach (var vv in dds)
             {
@@ -300,6 +385,7 @@ namespace DBInStudio.Desktop.ViewModel
             }
 
             DevelopServiceHelper.Helper.UpdateHisSetting(this.Database, DataPath, DataBackupPath, KeepTime,KeepNoZipFileDays);
+            DevelopServiceHelper.Helper.UpdateApiSetting(this.Database, EnableWebApi,EnableGrpcApi,EnableHighApi,EnableOpcServer);
         }
     }
 

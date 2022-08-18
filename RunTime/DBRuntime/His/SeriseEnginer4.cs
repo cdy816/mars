@@ -152,7 +152,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 保持历史文件不执行 Zip 压缩的时间
         /// </summary>
-        public static int KeepNoZipFileDays { get; set; } = -1;
+        public static double KeepNoZipFileDays { get; set; } = -1;
 
         /// <summary>
         /// 主历史记录路径

@@ -25,6 +25,9 @@ namespace SpiderDriverDemo
     public partial class MainWindow : Window,INotifyPropertyChanged
     {
         private SpiderDriver.ClientApi.DriverProxy driverProxy;
+
+        private SpiderDriver.ClientApi.DriverProxy mHisProxy;
+
         private Dictionary<int,Tuple<string,byte>> mAllId = new Dictionary<int, Tuple<string, byte>>();
 
         private SpiderDriver.ClientApi.RealDataBuffer rdb;
@@ -39,6 +42,7 @@ namespace SpiderDriverDemo
         {
             InitializeComponent();
             this.DataContext = this;
+            InitHis();
         }
 
         private void Start_Click(object sender, RoutedEventArgs e)
@@ -593,6 +597,41 @@ namespace SpiderDriverDemo
             mScanThread = new Thread(RealValueUpdateByNameThreadPro);
             mScanThread.IsBackground = true;
             mScanThread.Start();
+        }
+
+        private void InitHis()
+        {
+            histag.Text = "0";
+            histime.Text=DateTime.Now.TimeOfDay.ToString();
+            hisdate.SelectedDate = DateTime.Now.Date;
+            
+        }
+
+        private void hisconn_Click(object sender, RoutedEventArgs e)
+        {
+            mHisProxy = new SpiderDriver.ClientApi.DriverProxy();
+            mHisProxy.Open(this.ipt2.Text, int.Parse(port2.Text));
+
+            mHisProxy.Login("Admin", "Admin");
+
+            if(mHisProxy.IsLogin)
+            {
+                MessageBox.Show("登录成功!");
+            }
+            else
+            {
+                MessageBox.Show("登录失败!");
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void hisset_Click(object sender, RoutedEventArgs e)
+        {
+            mHisProxy.SetTagHisValue(int.Parse(histag.Text), new TagValueAndType() { Quality = 0, Time = hisdate.SelectedDate.Value.Add(TimeSpan.Parse(histime.Text)).ToUniversalTime(),Value=double.Parse(hisval.Text),ValueType = TagType.Double });
         }
     }
 }

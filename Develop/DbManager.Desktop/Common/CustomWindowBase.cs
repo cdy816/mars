@@ -87,9 +87,12 @@ namespace DBInStudio.Desktop
         private ContentControl mContentHost;
 
         private Grid mHead;
+        private Grid mMain;
 
         [DllImport("user32.dll")]
         internal static extern int SetWindowCompositionAttribute(IntPtr hwnd, ref WindowCompositionAttributeData data);
+
+        private Border mBorder;
 
         #endregion ...Variables...
 
@@ -270,6 +273,9 @@ namespace DBInStudio.Desktop
             mContentHost = this.GetTemplateChild("content_host") as ContentControl;
             mHead = this.GetTemplateChild("head") as Grid;
             mHead.MouseLeftButtonDown += MHead_MouseLeftButtonDown;
+
+            mMain = this.GetTemplateChild("main") as Grid;
+
             (this.GetTemplateChild("minB") as Button).Click += minB_Click;
             if(this.IsEnableMax)
             {
@@ -282,6 +288,28 @@ namespace DBInStudio.Desktop
            
             (this.GetTemplateChild("closeB") as Button).Click += closeB_Click;
 
+            mBorder = this.GetTemplateChild("bd") as Border;
+            if (mBorder != null)
+            {
+                mBorder.SizeChanged += MBorder_SizeChanged;
+                InitBd();
+            }
+
+        }
+
+        private void MBorder_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            mBorder.Clip = new System.Windows.Media.RectangleGeometry() { Rect = new Rect(1, 1, mBorder.ActualWidth - 2, mBorder.ActualHeight - 2), RadiusX = 5, RadiusY = 5 };
+        }
+
+        private void InitBd()
+        {
+            Border bd = new Border();
+            Grid.SetRowSpan(bd, 3);
+            bd.BorderThickness = new Thickness(2);
+            bd.BorderBrush = System.Windows.Media.Brushes.DarkGray;
+            bd.CornerRadius = new CornerRadius(5);
+            mMain.Children.Add(bd);
         }
 
         /// <summary>

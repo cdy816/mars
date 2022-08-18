@@ -46,7 +46,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 当前最大ID
         /// </summary>
-        public int MaxId { get; set; } = -1;
+        public int MaxId { get; set; } = 0;
 
         /// <summary>
         /// 最小ID
@@ -76,11 +76,17 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        public Database Owner { get; set; }
+
+        /// <summary>
+        /// 构建名字映射
+        /// </summary>
         public void BuildNameMap()
         {
             NamedTags.Clear();
             foreach(var vv in Tags)
             {
+                vv.Value.UpdateFullName();
                 if(!NamedTags.ContainsKey(vv.Value.FullName))
                 {
                     NamedTags.Add(vv.Value.FullName, vv.Value);
@@ -89,13 +95,37 @@ namespace Cdy.Tag
         }
 
         /// <summary>
-        /// 
+        /// 建立组间映射关系
         /// </summary>
         public void BuildGroupMap()
         {
             foreach(var vv in Groups)
             {
                 vv.Value.Tags.AddRange(Tags.Where(e => e.Value.Group == vv.Value.FullName).Select(e=>e.Value));
+            }
+        }
+
+        /// <summary>
+        /// 将复杂类型变量的子类型注册到根目录里
+        /// </summary>
+        /// <param name="tag"></param>
+        public void BuildComplexTagId(Tagbase tag)
+        {
+            if (tag is ComplexTag)
+            {
+                foreach (var vv in (tag as ComplexTag).Tags)
+                {
+                    if (!Tags.ContainsKey(vv.Key))
+                        Tags.Add(vv.Key, vv.Value);
+                    else
+                    {
+                        Tags[vv.Key] = vv.Value;
+                    }
+                    if (vv.Value is ComplexTag)
+                    {
+                        BuildComplexTagId(vv.Value);
+                    }
+                }
             }
         }
 
@@ -151,6 +181,16 @@ namespace Cdy.Tag
         public List<int> GetTagIdsByLinkAddress(string address)
         {
             return Tags.Values.Where(e => e.LinkAddress == address).Select(e => e.Id).ToList();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public List<Tagbase> GetTagIdsByLinkAddressStartHeadString(string address)
+        {
+            return Tags.Values.Where(e => e.LinkAddress.StartsWith(address)).ToList();
         }
 
         /// <summary>
@@ -229,6 +269,7 @@ namespace Cdy.Tag
             if (!Tags.ContainsKey(tag.Id))
             {
                 Tags.Add(tag.Id, tag);
+
                 CheckAndAddGroup(tag.Group)?.Tags.Add(tag);
                 MaxId = Math.Max(MaxId, tag.Id);
 
@@ -242,6 +283,8 @@ namespace Cdy.Tag
                 {
                     NamedTags[tag.FullName] = tag;
                 }
+               
+                UpdateComplextTag(null, tag);
                 IsDirty = true;
                 return true;
             }
@@ -255,6 +298,8 @@ namespace Cdy.Tag
                     NamedTags.Remove(vtag.FullName);
                 }
 
+                tag.UpdateFullName();
+
                 Tags[tag.Id] = tag;
 
                 if (!NamedTags.ContainsKey(tag.FullName))
@@ -265,6 +310,8 @@ namespace Cdy.Tag
                 {
                     NamedTags[tag.FullName] = tag;
                 }
+                
+                UpdateComplextTag(vtag, tag);
             }
             IsDirty = true;
 
@@ -281,14 +328,163 @@ namespace Cdy.Tag
         {
             if(Tags.ContainsKey(id))
             {
-                string sname = Tags[id].FullName;
+                tag.UpdateFullName();
+                var oldtag = Tags[id];
+
+              
+                string sname = oldtag.FullName;
+
                 if (sname != tag.FullName)
                 {
-                    NamedTags.Remove(sname);
+                    if (NamedTags.ContainsKey(sname))
+                        NamedTags.Remove(sname);
                     NamedTags.Add(tag.FullName, tag);
                 }
+                else
+                {
+                    NamedTags[tag.FullName] = tag;
+                }
+
+                if(!string.IsNullOrEmpty(tag.Parent))
+                {
+                    int pid = int.Parse(tag.Parent);
+                    if(Tags.ContainsKey(pid))
+                    {
+                        (Tags[pid] as ComplexTag).Update(tag);
+                    }
+                }
+
                 Tags[id] = tag;
+                if (oldtag.Type != tag.Type || ((oldtag is ComplexTag)&&(tag is ComplexTag) && (oldtag as ComplexTag).LinkComplexClass != (tag as ComplexTag).LinkComplexClass))
+                {
+                    UpdateComplextTag(oldtag, tag);
+                }
+                else if(tag is ComplexTag)
+                {
+                    (tag as ComplexTag).Tags.Clear();
+                    foreach(var vv in (oldtag as ComplexTag).Tags)
+                    {
+                        (tag as ComplexTag).Tags.Add(vv.Key, vv.Value);
+                    }
+                }
                 IsDirty = true;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        private void RemoveComplexTagSubTags(ComplexTag tag)
+        {
+            foreach (var vv in tag.Tags)
+            {
+                if (Tags.ContainsKey(vv.Key))
+                {
+                    Tags.Remove(vv.Key);
+                }
+                if(NamedTags.ContainsKey(vv.Value.FullName))
+                {
+                    NamedTags.Remove(vv.Value.FullName);
+                }
+                if(vv.Value is ComplexTag)
+                {
+                    RemoveComplexTagSubTags(vv.Value as ComplexTag);
+                }
+            }
+            tag.Tags.Clear();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="cls"></param>
+        private void AddComplexTagSubTags(ComplexTag tag,ComplexTagClass cls)
+        {
+            foreach(var vv in cls.Tags)
+            {
+                var vtag = vv.Value.Clone();
+                vtag.Id = MaxId++;
+                vtag.Parent = tag.Id.ToString();
+
+                if (!Tags.ContainsKey(vtag.Id))
+                {
+                    Tags.Add(vtag.Id, vtag);
+                }
+                else
+                {
+                    Tags[vtag.Id] = vtag;
+                }
+                
+                vtag.FullName = tag.FullName + "." + vtag.Name;
+
+                if(!this.NamedTags.ContainsKey(vtag.FullName))
+                {
+                    this.NamedTags.Add(vtag.FullName, vtag);
+                }
+                else
+                {
+                    this.NamedTags[vtag.FullName] = vtag;
+                }
+
+                tag.Tags.Add(vtag.Id, vtag);
+
+                var hstag = cls.HisTags.ContainsKey(vv.Key)?cls.HisTags[vv.Key].Clone():null;
+                if(hstag != null)
+                {
+                    hstag.Id=vtag.Id;
+                    Owner.HisDatabase.AddOrUpdate(hstag);
+                }
+               
+
+                if(vtag is ComplexTag)
+                {
+                    var cvtag = vtag as ComplexTag;
+                    if(cvtag!=null && !string.IsNullOrEmpty(cvtag.LinkComplexClass) && Owner!=null && Owner.ComplexTagClass.Class.ContainsKey(cvtag.LinkComplexClass))
+                    {
+                        AddComplexTagSubTags(cvtag, Owner.ComplexTagClass.Class[cvtag.LinkComplexClass]);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="oldtag"></param>
+        /// <param name="newtag"></param>
+        private void UpdateComplextTag(Tagbase oldtag, Tagbase newtag)
+        {
+            if ((oldtag is ComplexTag) && (newtag is ComplexTag))
+            {
+                if((oldtag as ComplexTag).LinkComplexClass != (newtag as ComplexTag).LinkComplexClass)
+                {
+                    RemoveComplexTagSubTags(oldtag as ComplexTag);
+                    ComplexTag ct = newtag as ComplexTag;
+                    if(ct!=null&&!string.IsNullOrEmpty(ct.LinkComplexClass))
+                    {
+                        if(Owner!=null&&Owner.ComplexTagClass.Class.ContainsKey(ct.LinkComplexClass))
+                        {
+                            AddComplexTagSubTags(newtag as ComplexTag, Owner.ComplexTagClass.Class[ct.LinkComplexClass]);
+                        }
+                    }
+                }
+            }
+            else if(oldtag is ComplexTag)
+            {
+                RemoveComplexTagSubTags(oldtag as ComplexTag);
+            }
+            else if(newtag is ComplexTag)
+            {
+                ComplexTag ct = newtag as ComplexTag;
+                if (ct != null && !string.IsNullOrEmpty(ct.LinkComplexClass))
+                {
+                    if (Owner != null && Owner.ComplexTagClass.Class.ContainsKey(ct.LinkComplexClass))
+                    {
+                        AddComplexTagSubTags(newtag as ComplexTag, Owner.ComplexTagClass.Class[ct.LinkComplexClass]);
+                    }
+                }
             }
         }
 
@@ -301,11 +497,38 @@ namespace Cdy.Tag
         {
             if(NamedTags.ContainsKey(sname))
             {
-                var vtag = NamedTags[sname];
-                var vid = vtag.Id;
+                tag.UpdateFullName();
+
+                var oldtag = NamedTags[sname];
+                var vid = oldtag.Id;
                 tag.Id = vid;
                 NamedTags[sname] = tag;
                 Tags[vid] = tag;
+               
+                //UpdateComplextTag(vtag, tag);
+
+                if (!string.IsNullOrEmpty(tag.Parent))
+                {
+                    int pid = int.Parse(tag.Parent);
+                    if (Tags.ContainsKey(pid))
+                    {
+                        (Tags[pid] as ComplexTag).Update(tag);
+                    }
+                }
+
+                if (oldtag.Type != tag.Type || ((oldtag is ComplexTag) && (tag is ComplexTag) && (oldtag as ComplexTag).LinkComplexClass != (tag as ComplexTag).LinkComplexClass))
+                {
+                    UpdateComplextTag(oldtag, tag);
+                }
+                else if (tag is ComplexTag)
+                {
+                    (tag as ComplexTag).Tags.Clear();
+                    foreach (var vv in (oldtag as ComplexTag).Tags)
+                    {
+                        (tag as ComplexTag).Tags.Add(vv.Key, vv.Value);
+                    }
+                }
+
                 IsDirty = true;
             }
         }
@@ -314,16 +537,18 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="tag"></param>
-        public void Update(Tagbase tag)
+        public void UpdateForRuntime(Tagbase tag)
         {
             if(Tags.ContainsKey(tag.Id))
             {
-                var oldname = Tags[tag.Id].FullName;
+                tag.UpdateFullName();
+
+                var oldtag = Tags[tag.Id];
+                var oldname = oldtag.FullName;
                 if(oldname!=tag.FullName)
                 {
                     if(NamedTags.ContainsKey(oldname))
                     NamedTags.Remove(oldname);
-
                     NamedTags.Add(tag.FullName, tag);
                 }
                 else
@@ -331,9 +556,165 @@ namespace Cdy.Tag
                     NamedTags[tag.FullName] = tag;
                 }
                 Tags[tag.Id] = tag;
+
                 IsDirty = true;
             }
         }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="head"></param>
+        /// <param name="names"></param>
+        private void ListAllTagNames(ComplexTag tag, string head, Dictionary<string, Tuple<int,string>> names)
+        {
+            foreach (var vv in tag.Tags)
+            {
+                string sname = !string.IsNullOrEmpty(head) ? head + "." + vv.Value.Name : vv.Value.Name;
+                names.Add(sname,new Tuple<int, string>(vv.Value.Id,vv.Value.LinkAddress));
+                if (vv.Value is ComplexTag)
+                {
+                    ListAllTagNames(vv.Value as ComplexTag, sname, names);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 重新根据变量类生产变量
+        /// </summary>
+        /// <param name="tag"></param>
+        public void ReCreatComplexTagChild(ComplexTag tag)
+        {
+            if(string.IsNullOrEmpty(tag.LinkComplexClass))
+            {
+                RemoveComplexTagSubTags(tag);
+            }
+            else
+            {
+                Dictionary<string, Tuple<int, string>> names = new Dictionary<string, Tuple<int, string>>();
+                ListAllTagNames(tag,"",names);
+                foreach(var vv in names)
+                {
+                    if(Tags.ContainsKey(vv.Value.Item1))
+                    {
+                        var vtag = Tags[vv.Value.Item1];
+                        Tags.Remove(vv.Value.Item1);
+                        if(NamedTags.ContainsKey(vtag.FullName))
+                        {
+                            NamedTags.Remove(vtag.FullName);
+                        }
+                    }
+
+                    if(Owner.HisDatabase.HisTags.ContainsKey(vv.Value.Item1))
+                    {
+                        Owner.HisDatabase.HisTags.Remove(vv.Value.Item1);
+                    }
+                }
+                tag.Tags.Clear();
+
+                var cls = Owner.ComplexTagClass.Class[tag.LinkComplexClass];
+
+                int id = 0;
+                foreach(var vv in cls.NamedTags)
+                {
+                    var vtag = vv.Value.Clone();
+
+                    if (names.ContainsKey(vv.Key))
+                    {
+                        id = names[vv.Key].Item1;
+                        vtag.LinkAddress = names[vv.Key].Item2;
+                    }
+                    else
+                    {
+                        id = MaxId++;
+                    }
+                    
+                    vtag.Id = id;
+                    vtag.Parent = tag.Id.ToString();
+                    tag.Tags.Add(id, vtag);
+                    Tags.Add(id, vtag);
+
+                    if(cls.HisTags.ContainsKey(vv.Value.Id))
+                    {
+                        var htag = cls.HisTags[vv.Value.Id].Clone();
+                        htag.Id = id;
+                        Owner.HisDatabase.HisTags.Add(id, htag);
+                    }
+
+                    if (vtag is ComplexTag)
+                    {
+                        ReCreatComplexTagChildInner(vtag as ComplexTag, vv.Key, names);
+                    }
+                }
+
+            }
+        }
+
+        private void ReCreatComplexTagChildInner(ComplexTag tag,string head, Dictionary<string, Tuple<int, string>> names)
+        {
+            int id = 0;
+
+            if (!Owner.ComplexTagClass.Class.ContainsKey(tag.LinkComplexClass)) return;
+
+            var cls = Owner.ComplexTagClass.Class[tag.LinkComplexClass];
+            tag.Tags.Clear();
+
+            //foreach (var vv in tag.Tags)
+            foreach (var vv in cls.Tags)
+            {
+                string stmp = head + "." + vv.Value.Name;
+
+                var vtag = vv.Value.Clone();
+
+                if (names.ContainsKey(stmp))
+                {
+                    id = names[stmp].Item1;
+                    vtag.LinkAddress = names[stmp].Item2;
+                }
+                else
+                {
+                    id = MaxId++;
+                }
+              
+                if (cls.HisTags.ContainsKey(vv.Value.Id))
+                {
+                    var htag = cls.HisTags[vv.Value.Id].Clone();
+                    htag.Id = id;
+                    Owner.HisDatabase.HisTags.Add(id, htag);
+                }
+                vtag.Id = id;
+                vtag.Parent = tag.Id.ToString();
+                tag.Tags.Add(id, vtag);
+
+                if (!NamedTags.ContainsKey(stmp))
+                {
+                    NamedTags.Add(stmp, vtag);
+                }
+                else
+                {
+                    NamedTags[stmp] = vtag;
+                }
+
+                if (!Tags.ContainsKey(id))
+                {
+                    Tags.Add(id, vtag);
+                }
+                else
+                {
+                    Tags[id] = vtag;
+                }
+
+                if(vtag is ComplexTag)
+                {
+                    ReCreatComplexTagChildInner(vtag as ComplexTag, stmp, names);
+                }
+
+            }
+        }
+
+
 
         /// <summary>
         /// 添加或更新
@@ -380,13 +761,26 @@ namespace Cdy.Tag
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="oldname"></param>
+        /// <param name="newname"></param>
+        public void ChangedComplexLinkClass(string oldname,string newname)
+        {
+            foreach(var vv in this.Tags.Where(e=>e.Value is ComplexTag && (e.Value as ComplexTag).LinkComplexClass==oldname))
+            {
+                (vv.Value as ComplexTag).LinkComplexClass = newname;
+            }
+        }
+
+        /// <summary>
         /// 追加新的变量
         /// </summary>
         /// <param name="tag"></param>
         /// <returns></returns>
         public bool Append(Tagbase tag)
         {
-            tag.Id = ++MaxId;
+            tag.Id = MaxId++;
             MinId = Math.Min(MinId, tag.Id);
             return Add(tag);
         }
@@ -402,6 +796,7 @@ namespace Cdy.Tag
             {
                 var tag = Tags[id];
                 Tags.Remove(id);
+
                 if(NamedTags.ContainsKey(tag.FullName))
                 {
                     NamedTags.Remove(tag.FullName);
@@ -417,6 +812,11 @@ namespace Cdy.Tag
 
                 if (MinId == id)
                     MinId = Tags.Keys.Count > 0 ? Tags.Keys.Min() : 0;
+
+                if(tag is ComplexTag)
+                {
+                    RemoveComplexTagSubTags(tag as ComplexTag);
+                }
 
                 IsDirty = true;
             }
@@ -453,7 +853,7 @@ namespace Cdy.Tag
             }
             else if(string.IsNullOrEmpty(group))
             {
-                return this.Tags.Values.Where(e => string.IsNullOrEmpty(e.Group)).ToList();
+                return this.Tags.Values.Where(e => string.IsNullOrEmpty(e.Group)&&string.IsNullOrEmpty(e.Parent)).ToList();
             }
             return new List<Tagbase>();
         }
@@ -471,7 +871,12 @@ namespace Cdy.Tag
                 foreach (var vvv in vv)
                 {
                     Tags.Remove(vvv.Id);
+
                     re.Add(vvv.Id);
+                    if(vvv is ComplexTag)
+                    {
+                        RemoveComplexTagSubTags(vvv as ComplexTag);
+                    }
                 }                
                 vv.Clear();
                 MinId = Tags.Keys.Count > 0 ? Tags.Keys.Min() : 0;
@@ -493,7 +898,12 @@ namespace Cdy.Tag
                 foreach (var vvv in vv)
                 {
                     Tags.Remove(vvv.Id);
+
                     re.Add(vvv.Id);
+                    if (vvv is ComplexTag)
+                    {
+                        RemoveComplexTagSubTags(vvv as ComplexTag);
+                    }
                 }
 
                 //获取改组的所有子组
@@ -505,6 +915,10 @@ namespace Cdy.Tag
                     {
                         Tags.Remove(vvv.Id);
                         re.Add(vvv.Id);
+                        if (vvv is ComplexTag)
+                        {
+                            RemoveComplexTagSubTags(vvv as ComplexTag);
+                        }
                     }
                     vvg.Tags.Clear();
                 }
@@ -785,11 +1199,38 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <returns></returns>
+        public IEnumerable<Tagbase> ListAllRootTags()
+        {
+            return Tags.Values.Where(e=>e.Parent=="");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<string> ListTagGroups()
         {
             var re = Groups.Keys.ToList();
             re.Add("");
             return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <returns></returns>
+        public IEnumerable<string> GetTagGroup(string parent)
+        {
+            
+            if (string.IsNullOrEmpty(parent))
+            {
+                return Groups.Where(e => e.Value.Parent == null).Select(e => e.Value.FullName);
+            }
+            else
+            {
+                return Groups.Where(e => e.Value.Parent!=null && e.Value.Parent.FullName==(parent)).Select(e => e.Value.FullName);
+            }
         }
 
         /// <summary>

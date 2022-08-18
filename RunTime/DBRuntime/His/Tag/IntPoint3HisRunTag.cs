@@ -21,16 +21,17 @@ namespace Cdy.Tag
         //private int xx = 0,yy,zz;
         public override byte SizeOfValue => 12;
 
-        public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
+        public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset, int tim)
         {
             var xx = MemoryHelper.ReadInt32(startMemory, offset);
             var yy = MemoryHelper.ReadInt32(startMemory, offset + 4);
             var zz = MemoryHelper.ReadInt32(startMemory, offset+8);
-            if(xx!=x||yy!=y||zz!=z || xx == int.MinValue)
+            if((xx!=x||yy!=y||zz!=z || xx == int.MinValue) && Math.Abs(tim - mLastTime) > 0.1)
             {
                 x = xx;
                 y = yy;
                 z = zz;
+                mLastTime = tim;
                 return true;
             }
             else

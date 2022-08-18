@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Cdy.Tag;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
@@ -146,9 +147,24 @@ namespace DBGrpcApi
             {
                 re.Precision = (tag as FloatingTagBase).Precision.ToString();
             }
+            re.SubTags = SaveToXML((tag as ComplexTag).Tags.Values).ToString();
             return re;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tags"></param>
+        /// <returns></returns>
+        private XElement SaveToXML(IEnumerable<Tagbase> tags)
+        {
+            XElement xx = new XElement("Tags");
+            foreach(var vv in tags)
+            {
+                xx.Add(vv.SaveToXML());
+            }
+            return xx;
+        }
 
 
     }

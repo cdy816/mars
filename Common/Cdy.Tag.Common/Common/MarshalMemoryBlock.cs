@@ -318,6 +318,10 @@ namespace Cdy.Tag
         public void ReAlloc2(long size)
         {
             mBufferItemSize = (int)size;
+            if(mBufferItemSize<0)
+            {
+                mBufferItemSize = (int)((size / 1024)+1)*256;
+            }
             ReAlloc(size);
         }
 
@@ -474,6 +478,7 @@ namespace Cdy.Tag
         /// <param name="position"></param>
         /// <param name="size"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool IsCrossDataBuffer(long position, int size)
         {
             return (position % mBufferItemSize) + size >= mBufferItemSize;
@@ -1725,6 +1730,7 @@ namespace Cdy.Tag
         /// <param name="offset"></param>
         /// <param name="len"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private byte[] ReadBytesInner(long offset,int len)
         {
             byte[] re = new byte[len];

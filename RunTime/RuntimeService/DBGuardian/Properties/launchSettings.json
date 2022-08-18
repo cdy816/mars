@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "配置文件 1": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\chongdaoyang.JIUSIYI\\source\\repos\\Dev\\mars\\Output\\DBGuardian.exe",
+      "commandLineArgs": "/m"
+    }
+  }
+}

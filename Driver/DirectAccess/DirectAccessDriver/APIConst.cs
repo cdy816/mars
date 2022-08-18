@@ -58,6 +58,16 @@ namespace DirectAccessDriver
         /// <summary>
         /// 
         /// </summary>
+        public const byte SetTagValueTimeAndQualityFun = 14;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte SetTagRealAndHisValueWithTimeFun = 15;
+
+        /// <summary>
+        /// 
+        /// </summary>
         public const byte PushDataChangedFun = 3;
 
         /// <summary>
@@ -120,6 +130,12 @@ namespace DirectAccessDriver
         /// 
         /// </summary>
         public const byte SetTagRealAndHisValueWithUserFun = 113;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte SetTagRealAndHisValueTimerWithUserFun = 114;
+
 
         /// <summary>
         /// 

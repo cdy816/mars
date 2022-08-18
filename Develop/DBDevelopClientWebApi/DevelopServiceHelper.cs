@@ -379,7 +379,7 @@ namespace DBDevelopClientWebApi
         }
 
         /// <summary>
-        /// 
+        /// 获取变量组
         /// </summary>
         /// <param name="database"></param>
         /// <returns></returns>
@@ -416,7 +416,82 @@ namespace DBDevelopClientWebApi
         }
 
         /// <summary>
-        /// 
+        /// 获取所有变量
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public Dictionary<int,string> GetAllTagNames(string database)
+        {
+            if (!string.IsNullOrEmpty(mLoginId))
+            {
+                try
+                {
+                    WebApiDatabaseRequest wr = new WebApiDatabaseRequest() { Database = database, Id = mLoginId };
+                    var sval = Post("GetAllTagNames", JsonConvert.SerializeObject(wr));
+                    var result = JsonConvert.DeserializeObject<ResultResponse<Dictionary<int,string>>>(sval);
+                    if (result.HasErro)
+                    {
+                        LastErroMessage = result.ErroMsg;
+                        return null;
+                    }
+                    else
+                    {
+                        return result.Result;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LastErroMessage = ex.Message;
+                    return null;
+                }
+            }
+            else
+            {
+                LastErroMessage = "未登录";
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 获取某个组下的所有变量的名称
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public Dictionary<int, string> GetAllTagNamesByGroup(string database,string group)
+        {
+            if (!string.IsNullOrEmpty(mLoginId))
+            {
+                try
+                {
+                    WebApiGetTagByGroupRequest wr = new WebApiGetTagByGroupRequest() { Database = database, Id = mLoginId,GroupName=group };
+                    var sval = Post("GetAllTagNamesByGroup", JsonConvert.SerializeObject(wr));
+                    var result = JsonConvert.DeserializeObject<ResultResponse<Dictionary<int, string>>>(sval);
+                    if (result.HasErro)
+                    {
+                        LastErroMessage = result.ErroMsg;
+                        return null;
+                    }
+                    else
+                    {
+                        return result.Result;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LastErroMessage = ex.Message;
+                    return null;
+                }
+            }
+            else
+            {
+                LastErroMessage = "未登录";
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 获取某个组下的变量，采用分页模式
         /// </summary>
         /// <param name="database"></param>
         /// <param name="group"></param>
@@ -463,6 +538,56 @@ namespace DBDevelopClientWebApi
                 return null;
             }
         }
+
+        /// <summary>
+        /// 获取某个组下的所有变量
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="group"></param>
+        /// <param name="pageIndex"></param>
+        /// <param name="mFilter"></param>
+        /// <returns></returns>
+        public List<Tuple<Tagbase, HisTag>> GetAllTagByGroup(string database, string group, int pageIndex, out int pageCount, Dictionary<string, string> mFilter = null)
+        {
+            if (!string.IsNullOrEmpty(mLoginId))
+            {
+                try
+                {
+                    WebApiGetTagByGroupRequest wr = new WebApiGetTagByGroupRequest() { Database = database, Id = mLoginId, GroupName = group, Index = pageIndex, Filters = mFilter };
+                    var sval = Post("GetAllTagByGroup", JsonConvert.SerializeObject(wr));
+                    var result = JsonConvert.DeserializeObject<GetTagsResponse<List<WebApiTag>>>(sval);
+                    if (result.HasErro)
+                    {
+                        LastErroMessage = result.ErroMsg;
+                        pageCount = 0;
+                        return null;
+                    }
+                    else
+                    {
+                        List<Tuple<Tagbase, HisTag>> re = new List<Tuple<Tagbase, HisTag>>();
+                        foreach (var vv in result.Result)
+                        {
+                            re.Add(new Tuple<Tagbase, HisTag>(vv.RealTag.ConvertToTagbase(), vv.HisTag));
+                        }
+                        pageCount = result.TotalPages;
+                        return re;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LastErroMessage = ex.Message;
+                    pageCount = 0;
+                    return null;
+                }
+            }
+            else
+            {
+                LastErroMessage = "未登录";
+                pageCount = 0;
+                return null;
+            }
+        }
+
 
         /// <summary>
         /// 

@@ -23,6 +23,11 @@ namespace SpiderDriver
         /// </summary>
         public string[] Registors => new string[0];
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public string EditType => "";
+
         private int mPort = 3600;
         private int mEndPort = 3600;
 

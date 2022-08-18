@@ -110,6 +110,62 @@ namespace Cdy.Tag
     }
 
     /// <summary>
+    /// 带时间戳的实时值
+    /// </summary>
+    public struct RealTagValueWithTimer
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public object Value { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime Time { get; set; }
+
+        /// <summary>
+        /// 值类型
+        /// <see cref="Cdy.Tag.TagType"/>
+        /// </summary>
+        public byte ValueType { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public byte Quality { get; set; }
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+    /// <summary>
     /// 
     /// </summary>
     public struct RealTagValue2
@@ -234,7 +290,7 @@ namespace Cdy.Tag
         #region ... Properties ...
 
         /// <summary>
-        /// 
+        ///  
         /// </summary>
         public DateTime Time { get; set; }
 

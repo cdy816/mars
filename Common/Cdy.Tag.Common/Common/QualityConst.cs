@@ -46,6 +46,17 @@ namespace Cdy.Tag
         ///  初始状态
         /// </summary>
         Init = 63,
+        
+        /// <summary>
+        /// 系统关闭
+        /// </summary>
+        Close=64,
+
+        /// <summary>
+        /// 起始值,用于系统第一次运行时，软件强制记录的值的标识
+        /// </summary>
+        Start=65,
+
         /// <summary>
         /// 无数据
         /// </summary>

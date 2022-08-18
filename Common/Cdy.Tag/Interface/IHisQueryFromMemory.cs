@@ -39,7 +39,7 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        void ReadValue<T>(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result);
+        void ReadValue<T>(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result,QueryContext context,out DateTime timelimit);
 
         /// <summary>
         /// 

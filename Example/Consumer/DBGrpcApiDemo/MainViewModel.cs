@@ -43,6 +43,8 @@ namespace DBGrpcApiDemo
 
         private ICommand mQueryHisDataCommand;
 
+        private ICommand mQueryRealCommand;
+
         private DateTime mStartTime = DateTime.Now.Date;
 
         private DateTime mEndTime;
@@ -67,6 +69,24 @@ namespace DBGrpcApiDemo
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand QueryRealCommand
+        {
+
+            get
+            {
+                if(mQueryRealCommand== null)
+                {
+                    mQueryRealCommand = new RelayCommand(() => {
+                        QueryRealValue();
+                    });
+                }
+                return mQueryRealCommand;
+            }
+        }
 
         /// <summary>
         /// 
@@ -370,6 +390,14 @@ namespace DBGrpcApiDemo
             for(int i=1;i<1000;i++)
             {
                 mTags.Add("Double.Double" + i,new TagItemInfo() { Id = i, Name= "Double.Double" + i,Value = "0" });
+            }
+        }
+
+        private void QueryRealValue()
+        {
+            if(clinet!=null)
+            {
+                var vals = clinet.ReadRealValueAndQuality(new List<string> { Id });
             }
         }
 

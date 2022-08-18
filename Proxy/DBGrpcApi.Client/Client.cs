@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Reflection;
+using System.Xml.Linq;
 
 namespace DBGrpcApi
 {
@@ -179,7 +180,7 @@ namespace DBGrpcApi
             {
                 if(mSecurityClient!=null && !string.IsNullOrEmpty(mLoginId))
                 {
-                    return mSecurityClient.Hart(new HartRequest() { Token = mLoginId }).Result;
+                    return mSecurityClient.Hart(new HartRequest() { Token = mLoginId,Time = DateTime.UtcNow.Ticks }).Result;
                 }
             }
             catch
@@ -286,8 +287,32 @@ namespace DBGrpcApi
                     return new ULongPoint3Data(ulong.Parse(ss[0]), ulong.Parse(ss[1]), ulong.Parse(ss[2]));
                 case TagType.UShort:
                     return ushort.Parse(value);
+                
+
             }
             return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="vals"></param>
+        /// <returns></returns>
+        private ComplexValues ParseComplexValues(string vals)
+        {
+            ComplexValues re = new ComplexValues();
+            foreach (var vv in vals.Split(";"))
+            {
+                if (string.IsNullOrEmpty(vv)) continue;
+                var vvv = vv.Split(":");
+                int id = int.Parse(vvv[0]);
+                byte valType = byte.Parse(vvv[1]);
+                var val = ConvertToValue(vvv[2], valType);
+                var qua = byte.Parse(vvv[3]);
+                var tim = DateTime.FromBinary(long.Parse(vvv[4]));
+                re.Add(id,new RealTagValueWithTimer() { Id = id, Quality = qua, Value = val, ValueType = valType,Time=tim });
+            }
+            return re;
         }
 
         /// <summary>
@@ -315,7 +340,14 @@ namespace DBGrpcApi
                             {
                                 sname = vv.Key + "." + sname;
                             }
-                            re.Add(sname, ConvertToValue(val.Value, val.ValueType));
+                            if (val.ValueType == (byte)TagType.Complex)
+                            {
+                                re.Add(sname, ParseComplexValues(val.Value));
+                            }
+                            else
+                            {
+                                re.Add(sname, ConvertToValue(val.Value, val.ValueType));
+                            }
                         }
                     }
                 }
@@ -347,7 +379,14 @@ namespace DBGrpcApi
                 {
                     foreach (var val in res.Values)
                     {
-                        re.Add(val.Id, ConvertToValue(val.Value, val.ValueType));
+                        if (val.ValueType == (byte)TagType.Complex)
+                        {
+                            re.Add(val.Id, ParseComplexValues(val.Value));
+                        }
+                        else
+                        {
+                            re.Add(val.Id, ConvertToValue(val.Value, val.ValueType));
+                        }
                     }
                 }
                 return re;
@@ -384,7 +423,14 @@ namespace DBGrpcApi
                             {
                                 sname = vv.Key + "." + sname;
                             }
-                            re.Add(sname, new Tuple<int, object>(val.Quality, ConvertToValue(val.Value, val.ValueType)));
+                            if (val.ValueType == (byte)TagType.Complex)
+                            {
+                                re.Add(sname, new Tuple<int, object>(val.Quality, ParseComplexValues(val.Value)));
+                            }
+                            else
+                            {
+                                re.Add(sname, new Tuple<int, object>(val.Quality, ConvertToValue(val.Value, val.ValueType)));
+                            }
                         }
                     }
                 }
@@ -416,7 +462,14 @@ namespace DBGrpcApi
                 {
                     foreach (var val in res.Values)
                     {
-                        re.Add(val.Id, new Tuple<int, object>(val.Quality, ConvertToValue(val.Value, val.ValueType)));
+                        if (val.ValueType == (byte)TagType.Complex)
+                        {
+                            re.Add(val.Id, new Tuple<int, object>(val.Quality, ParseComplexValues(val.Value)));
+                        }
+                        else
+                        {
+                            re.Add(val.Id, new Tuple<int, object>(val.Quality, ConvertToValue(val.Value, val.ValueType)));
+                        }
                     }
                 }
                 return re;
@@ -454,7 +507,14 @@ namespace DBGrpcApi
                             {
                                 sname = vv.Key + "." + sname;
                             }
-                            re.Add(sname, new Tuple<int, DateTime, object>(val.Quality,DateTime.FromBinary(val.Time), ConvertToValue(val.Value, val.ValueType)));
+                            if (val.ValueType == (byte)TagType.Complex)
+                            {
+                                re.Add(sname, new Tuple<int,DateTime, object>(val.Quality, DateTime.FromBinary(val.Time), ParseComplexValues(val.Value)));
+                            }
+                            else
+                            {
+                                re.Add(sname, new Tuple<int, DateTime, object>(val.Quality, DateTime.FromBinary(val.Time).ToLocalTime(), ConvertToValue(val.Value, val.ValueType)));
+                            }
                         }
                     }
                 }
@@ -486,7 +546,12 @@ namespace DBGrpcApi
                 {
                     foreach (var val in res.Values)
                     {
-                        re.Add(val.Id, new Tuple<int, DateTime,object>(val.Quality, DateTime.FromBinary(val.Time), ConvertToValue(val.Value, val.ValueType)));
+                        if (val.ValueType == (byte)TagType.Complex)
+                        {
+                            re.Add(val.Id, new Tuple<int, DateTime, object>(val.Quality, DateTime.FromBinary(val.Time), ParseComplexValues(val.Value)));
+                        }
+                        else
+                            re.Add(val.Id, new Tuple<int, DateTime,object>(val.Quality, DateTime.FromBinary(val.Time).ToLocalTime(), ConvertToValue(val.Value, val.ValueType)));
                     }
                 }
                 return re;
@@ -944,6 +1009,9 @@ namespace DBGrpcApi
                     (re as Cdy.Tag.ULongTag).MaxValue = double.Parse(tag.MaxValue);
                     (re as Cdy.Tag.ULongTag).MinValue = double.Parse(tag.MinValue);
                     break;
+                case TagType.Complex:
+                    re = new Cdy.Tag.ComplexTag();
+                    break;
             }
             if (re != null)
             {
@@ -953,6 +1021,32 @@ namespace DBGrpcApi
                 re.Desc = tag.Desc;
                 re.LinkAddress = tag.LinkAddress;
                 re.ReadWriteType = (ReadWriteMode)(Enum.Parse(typeof(ReadWriteMode), tag.ReadWriteType));
+
+                if((re is ComplexTag)&&!string.IsNullOrEmpty(tag.SubTags))
+                {
+                    ComplexTag ctag = re as ComplexTag;
+                    var dtags = DeseriseTags(tag.SubTags);
+                    foreach(var vv in dtags)
+                    {
+                        ctag.Tags.Add(vv.Id, vv);
+                    }
+                }
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="val"></param>
+        /// <returns></returns>
+        private List<Tagbase> DeseriseTags(string val)
+        {
+            List<Tagbase> re = new List<Tagbase>();
+            XElement xx = XElement.Parse(val);
+            foreach(var vv in xx.Elements())
+            {
+                re.Add(vv.LoadTagFromXML());
             }
             return re;
         }
@@ -975,6 +1069,10 @@ namespace DBGrpcApi
 
         #endregion ...Interfaces...
     }
+
+    public class ComplexValues : Dictionary<int, RealTagValueWithTimer>
+    { }
+
 
     /// <summary>
     /// 

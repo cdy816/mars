@@ -33,7 +33,7 @@ namespace Cdy.Tag
 
     RegionHead:          PreDataRegion(8) + NextDataRegion(8) + Datatime(8)+file duration(4)+ block duration(4)+Time tick duration(4)  + tagcount(4)
     DataBlockPoint Area: [ID]+[block Point]
-    [block point]:       [[tag1 block1 point,tag2 block1 point,....][tag1 block2 point(12),tag2 block2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
+    [block point]:       [[tag1 block1 point,tag2 block1 point,....][tag1 block2 point(12),tag2 block2 point(12),...].....]   以先时间后变量单位对变量的数据区指针进行组织,
     [tag block point]:   offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
     DataBlock Area:      [[tag1 block1 size + compressType+ tag1 data block1][tag2 block1 size + compressType+ tag2 data block1]....][[tag1 block2 size + compressType+ tag1 data block2][tag2 block2 size + compressType+ tag2 data block2]....]....
    */
@@ -52,7 +52,7 @@ namespace Cdy.Tag
 
     RegionHead:          PreDataRegionPoint(8) + NextDataRegionPoint(8) + Datatime(8) +file duration(4)+block duration(4)+Time tick duration(4)+ tagcount(4)
     DataBlockPoint Area: [ID]+[block Point]
-    [block point]:       [[tag1 block1 point(12),tag1 block2 point(12),....][tag2 block1 point(12),tag2 block2 point(12),...].....]   以时间单位对变量的数去区指针进行组织,
+    [block point]:       [[tag1 block1 point(12),tag1 block2 point(12),....][tag2 block1 point(12),tag2 block2 point(12),...].....]   以先变量后时间单位对变量的数据区指针进行组织,
     [tag block point]:   offset pointer(4)+ datablock area point(8)   offset pointer: bit 32 标识data block 类型,1:标识非压缩区域，0:压缩区域,bit1~bit31 偏移地址
     DataBlock Area:      [[tag1 block1 size + compressType + tag1 block1 data][tag1 block2 size + compressType+ tag1 block2 data]....][[tag2 block1 size + compressType+ tag2 block1 data][tag2 block2 size + compressType+ tag2 block2 data]....]....
     */
@@ -354,7 +354,7 @@ namespace Cdy.Tag
                 //foreach (var vtime in vv.Value.Item1)
                 //{
                 //    vv.Key.Position = 0;
-                    DeCompressDataBlockValue<T>(vv.Key, vv.Value.Item1, timetick, type, res, new Func<byte, object>((tp) =>
+                    DeCompressDataBlockValue<T>(vv.Key, vv.Value.Item1, timetick, type, res, new Func<byte, Dictionary<string, object>, object>((tp,ctx) =>
                     {
 
                         object oval = null;
@@ -413,7 +413,7 @@ namespace Cdy.Tag
             int index = 0;
             using (var data = ReadTagDataBlock(datafile,tid, offset, dataTime, out timetick, out index))
             {
-                return DeCompressDataBlockValue<T>(data, dataTime, timetick, type, new Func<byte, object>((tp) => {
+                return DeCompressDataBlockValue<T>(data, dataTime, timetick, type, new Func<byte, Dictionary<string, object>, object>((tp,ctx) => {
                     TagHisValue<T> oval = TagHisValue<T>.Empty;
                     int ttick = 0;
                     int dindex = index;
@@ -462,8 +462,11 @@ namespace Cdy.Tag
             //sw.Start();
             foreach (var vv in ReadTagDataBlock2(datafile,tid, offset, startTime, endTime))
             {
-                DeCompressDataBlockAllValue(vv.Item1, vv.Item2, vv.Item3, vv.Item4, result);
-                vv.Item1.Dispose();
+                if (vv != null)
+                {
+                    DeCompressDataBlockAllValue(vv.Item1, vv.Item2, vv.Item3, vv.Item4, result);
+                    vv.Item1.Dispose();
+                }
             }
             //sw.Stop();
             //Debug.WriteLine("Read all value:" + sw.ElapsedMilliseconds + " file:" + datafile.FileName);
@@ -483,7 +486,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        private static object DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type,Func<byte,object> ReadOtherDatablockAction)
+        private static object DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, DateTime datatime, int timeTick, QueryValueMatchType type, Func<byte, Dictionary<string, object>, object> ReadOtherDatablockAction)
         {
             //MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
@@ -491,7 +494,7 @@ namespace Cdy.Tag
             var tp = CompressUnitManager2.Manager.GetCompress(ctype);
             if (tp != null)
             {
-                return tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type,ReadOtherDatablockAction);
+                return tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type,ReadOtherDatablockAction,null);
             }
             return null;
         }
@@ -505,7 +508,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        private static void DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<T> result, Func<byte, object> ReadOtherDatablockAction)
+        private static void DeCompressDataBlockValue<T>(MarshalMemoryBlock memory, List<DateTime> datatime, int timeTick, QueryValueMatchType type, HisQueryResult<T> result, Func<byte,Dictionary<string,object>, object> ReadOtherDatablockAction)
         {
             //MarshalMemoryBlock target = new MarshalMemoryBlock(memory.Length);
             //读取压缩类型
@@ -513,7 +516,7 @@ namespace Cdy.Tag
             var tp = CompressUnitManager2.Manager.GetCompress(ctype);
             if (tp != null)
             {
-                tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type, result, ReadOtherDatablockAction);
+                tp.DeCompressValue<T>(memory, 1, datatime, timeTick, type, result, ReadOtherDatablockAction,null);
             }
         }
 
@@ -529,7 +532,7 @@ namespace Cdy.Tag
             var tp = CompressUnitManager2.Manager.GetCompress(ctype);
             if (tp != null)
             {
-               return  tp.DeCompressRawValue<T>(memory,1 ,readValueType);
+               return  tp.DeCompressRawValue<T>(memory,1 ,readValueType,null);
             }
             return TagHisValue<T>.Empty;
         }
@@ -982,13 +985,13 @@ namespace Cdy.Tag
 
             ReadRegionHead(datafile, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
 
-            var tagIndex = tid % tagCount;
+            var tagIndex = tid % DataFileInfo4.PageFileTagCount;
 
             Dictionary<long, MarshalMemoryBlock> rtmp = new Dictionary<long, MarshalMemoryBlock>();
 
             Dictionary<MarshalMemoryBlock, Tuple<List<DateTime>,int>> re = new Dictionary<MarshalMemoryBlock, Tuple<List<DateTime>, int>>();
 
-            if (tagCount == 0) return re;
+            if (tagCount == 0|| tagIndex>=tagCount) return re;
 
             int blockcount = fileDuration * 60 / blockDuration;
 
@@ -1150,7 +1153,9 @@ namespace Cdy.Tag
 
             ReadRegionHead(datafile, offset, out tagCount, out fileDuration, out blockDuration, out timetick, out blockpointer, out time);
 
-            var tagIndex = tid % tagCount;
+            var tagIndex = tid % DataFileInfo4.PageFileTagCount;
+
+            if (tagIndex >= tagCount) yield return null;
 
             int blockcount = fileDuration * 60 / blockDuration;
 

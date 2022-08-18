@@ -135,6 +135,15 @@
   <data name="Append" xml:space="preserve">
     <value>增加</value>
   </data>
+  <data name="Bad" xml:space="preserve">
+    <value>坏</value>
+  </data>
+  <data name="BitConvert" xml:space="preserve">
+    <value>取位</value>
+  </data>
+  <data name="BitConvertTitle" xml:space="preserve">
+    <value>取位序号</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>取消</value>
   </data>
@@ -149,6 +158,12 @@
   </data>
   <data name="Circle" xml:space="preserve">
     <value>周期</value>
+  </data>
+  <data name="ComplexTagClass" xml:space="preserve">
+    <value>变量类</value>
+  </data>
+  <data name="ComplexTagClassInfo" xml:space="preserve">
+    <value>变量类是对具有相关性的一组变量的抽象。通过变量类可以快速批量创建、维护一组相关变量；通过维护变量类，可以自动同步到以该类生成的变量。</value>
   </data>
   <data name="CompressType" xml:space="preserve">
     <value>压缩类型</value>
@@ -193,6 +208,9 @@
   <data name="Driver" xml:space="preserve">
     <value>驱动</value>
   </data>
+  <data name="EnableApi" xml:space="preserve">
+    <value>访问接口</value>
+  </data>
   <data name="EnableWrite" xml:space="preserve">
     <value>写可用</value>
   </data>
@@ -205,8 +223,14 @@
   <data name="erro" xml:space="preserve">
     <value>错误</value>
   </data>
+  <data name="exampleTitle" xml:space="preserve">
+    <value>示例</value>
+  </data>
   <data name="Export" xml:space="preserve">
     <value>导出</value>
+  </data>
+  <data name="Express" xml:space="preserve">
+    <value>表达式</value>
   </data>
   <data name="FindAvaiableId" xml:space="preserve">
     <value>重置Id</value>
@@ -217,8 +241,17 @@
   <data name="funTitle" xml:space="preserve">
     <value>转换公式</value>
   </data>
+  <data name="Good" xml:space="preserve">
+    <value>好</value>
+  </data>
   <data name="Group" xml:space="preserve">
     <value>组</value>
+  </data>
+  <data name="GrpcApi" xml:space="preserve">
+    <value>Grpc Api</value>
+  </data>
+  <data name="HighApi" xml:space="preserve">
+    <value>私有Api</value>
   </data>
   <data name="HisDataKeepTime" xml:space="preserve">
     <value>历史数据保留时间:</value>
@@ -244,6 +277,9 @@
   <data name="ImportMode" xml:space="preserve">
     <value>导入模式</value>
   </data>
+  <data name="Init" xml:space="preserve">
+    <value>初始值</value>
+  </data>
   <data name="IsAdmin" xml:space="preserve">
     <value>管理员</value>
   </data>
@@ -252,6 +288,9 @@
   </data>
   <data name="Keyword" xml:space="preserve">
     <value>关键字</value>
+  </data>
+  <data name="Linear" xml:space="preserve">
+    <value>线性转换</value>
   </data>
   <data name="Link" xml:space="preserve">
     <value>链接</value>
@@ -282,7 +321,7 @@
     <value>最大值</value>
   </data>
   <data name="MaxValueCountPersecond" xml:space="preserve">
-    <value>每秒记录最大值数量</value>
+    <value>每秒记录的数量</value>
   </data>
   <data name="MinValue" xml:space="preserve">
     <value>最小值</value>
@@ -308,8 +347,14 @@
   <data name="NoneCompress" xml:space="preserve">
     <value>无</value>
   </data>
+  <data name="Null" xml:space="preserve">
+    <value>空</value>
+  </data>
   <data name="OK" xml:space="preserve">
     <value>确定</value>
+  </data>
+  <data name="OpcServer" xml:space="preserve">
+    <value>Opc Server</value>
   </data>
   <data name="opendatabasefailed" xml:space="preserve">
     <value>打开数据库 {0} 失败!</value>
@@ -378,7 +423,10 @@
     <value>替换</value>
   </data>
   <data name="ReplaceAll" xml:space="preserve">
-    <value>替换全部</value>
+    <value>整体删除后再添加</value>
+  </data>
+  <data name="ReplaceExist" xml:space="preserve">
+    <value>替换已经存在变量</value>
   </data>
   <data name="ReRun" xml:space="preserve">
     <value>热重启</value>
@@ -394,6 +442,9 @@
   </data>
   <data name="SaveSucessful" xml:space="preserve">
     <value>保存成功!</value>
+  </data>
+  <data name="ScriptEditHead" xml:space="preserve">
+    <value>多个变量间进行四则运算，示例: (Tag.tag1+Tag.tag2)/Tag.tag3;整形变量取某一位:Tag.tag1[1]。</value>
   </data>
   <data name="Security" xml:space="preserve">
     <value>安全</value>
@@ -413,6 +464,9 @@
   </data>
   <data name="ServerIp" xml:space="preserve">
     <value>服务器IP</value>
+  </data>
+  <data name="serveroffline" xml:space="preserve">
+    <value>服务器离线</value>
   </data>
   <data name="ServerPort" xml:space="preserve">
     <value>服务端口</value>
@@ -450,6 +504,9 @@
   <data name="StartPort" xml:space="preserve">
     <value>开始服务端口</value>
   </data>
+  <data name="StartValue" xml:space="preserve">
+    <value>附加起始值</value>
+  </data>
   <data name="Start_Tooltip" xml:space="preserve">
     <value>运行数据库</value>
   </data>
@@ -458,6 +515,12 @@
   </data>
   <data name="Stop_Tooltip" xml:space="preserve">
     <value>停止数据库</value>
+  </data>
+  <data name="StringFormat" xml:space="preserve">
+    <value>字符串格式化</value>
+  </data>
+  <data name="StringFormatTitle" xml:space="preserve">
+    <value>格式字符串</value>
   </data>
   <data name="Switch" xml:space="preserve">
     <value>切换</value>
@@ -503,6 +566,9 @@
   </data>
   <data name="ValueChanged" xml:space="preserve">
     <value>值改变</value>
+  </data>
+  <data name="WebApi" xml:space="preserve">
+    <value>Web Api</value>
   </data>
   <data name="Write" xml:space="preserve">
     <value>写</value>

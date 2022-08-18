@@ -77,20 +77,20 @@ namespace DBRuntime.His
         {
             if (mFreePools.ContainsKey(size))
             {
-                var pp = mFreePools[size];
-                if (pp.Count > 0)
+                lock (mFreePools)
                 {
-                    lock (mFreePools)
+                    var pp = mFreePools[size];
+                    if (pp.Count > 0)
                     {
                         var bnb = pp.Dequeue();
                         return bnb;
                     }
-                }
-                else
-                {
-                    //Cdy.Tag.LoggerService.Service.Debug("ManualHisMemoryBlockPool", "New datablock 1 size:" + size);
-                    var bnb = NewBlock(size);
-                    return bnb;
+                    else
+                    {
+                        //Cdy.Tag.LoggerService.Service.Debug("ManualHisMemoryBlockPool", "New datablock 1 size:" + size);
+                        var bnb = NewBlock(size);
+                        return bnb;
+                    }
                 }
             }
             else

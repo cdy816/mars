@@ -24,12 +24,13 @@ namespace Cdy.Tag
         /// </summary>
         public override byte SizeOfValue => 4;
 
-        public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
+        public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset, int tim)
         {
             var mTmpValue = MemoryHelper.ReadInt32(startMemory, offset);
-            if (mTmpValue != mLastValue || mLastValue == int.MinValue)
+            if ((mTmpValue != mLastValue || mLastValue == int.MinValue) && Math.Abs(tim - mLastTime) > 0.1)
             {
                 mLastValue = mTmpValue;
+                mLastTime = tim;
                 return true;
             }
             else

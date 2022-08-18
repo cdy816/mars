@@ -94,6 +94,8 @@ namespace Cdy.Tag
         {
             //注册线性转换器
             ValueConvertManager.manager.Registor(new LinerConvert());
+            ValueConvertManager.manager.Registor(new BitConvert());
+            ValueConvertManager.manager.Registor(new StringFormatConvert());
         }
 
        

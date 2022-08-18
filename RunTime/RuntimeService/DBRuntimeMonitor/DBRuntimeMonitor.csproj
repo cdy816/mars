@@ -1,0 +1,105 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Image\mrdbm.ico</ApplicationIcon>
+	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Image\add.png" />
+    <None Remove="Image\cancel.png" />
+    <None Remove="Image\close.png" />
+    <None Remove="Image\database.png" />
+    <None Remove="Image\huoxing.jpg" />
+    <None Remove="Image\logs.png" />
+    <None Remove="Image\max.png" />
+    <None Remove="Image\minus.png" />
+    <None Remove="Image\modify.png" />
+    <None Remove="Image\mrdbm.ico" />
+    <None Remove="Image\ok.png" />
+    <None Remove="Image\refresh.png" />
+    <None Remove="Image\remove.png" />
+    <None Remove="Image\rerun.png" />
+    <None Remove="Image\show.png" />
+    <None Remove="Image\start.png" />
+    <None Remove="Image\stop.png" />
+    <None Remove="Image\systemmanager.png" />
+    <None Remove="Image\tags.png" />
+    <None Remove="Image\wait.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Proxy\DBHighApi.Client\DBHighApi.Client.csproj" />
+    <ProjectReference Include="..\DBRuntimeServer.Client\DBRuntimeServer.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Themes\ControlStyle.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+    </Page>
+    <Page Update="Themes\Generic.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+    </Page>
+    <Page Update="View\MarInfoView.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+    </Page>
+    <Page Update="View\TagGroupDetailView.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ScottPlot.WPF" Version="4.1.45" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Image\add.png" />
+    <Resource Include="Image\cancel.png" />
+    <Resource Include="Image\close.png" />
+    <Resource Include="Image\database.png" />
+    <Resource Include="Image\huoxing.jpg" />
+    <Resource Include="Image\logs.png" />
+    <Resource Include="Image\max.png" />
+    <Resource Include="Image\minus.png" />
+    <Resource Include="Image\modify.png" />
+    <Resource Include="Image\mrdbm.ico" />
+    <Resource Include="Image\ok.png" />
+    <Resource Include="Image\refresh.png" />
+    <Resource Include="Image\remove.png" />
+    <Resource Include="Image\rerun.png" />
+    <Resource Include="Image\show.png" />
+    <Resource Include="Image\start.png" />
+    <Resource Include="Image\stop.png" />
+    <Resource Include="Image\systemmanager.png" />
+    <Resource Include="Image\tags.png" />
+    <Resource Include="Image\wait.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.zh-CN.resx">
+      <LastGenOutput>Resources.ZH-cn.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).exe&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).runtimeconfig.json&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).XML&quot; copy &quot;$(TargetDir)$(TargetName).XML&quot; &quot;$(SolutionDir)\Output\Xml&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).pdb&quot;  copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)zh-CN&quot;  copy &quot;$(TargetDir)zh-CN\*.dll&quot; &quot;$(SolutionDir)\Output\zh-CN&quot; /y&#xD;&#xA;copy &quot;$(TargetDir)ScottPlot*.dll&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;" />
+  </Target>
+
+</Project>

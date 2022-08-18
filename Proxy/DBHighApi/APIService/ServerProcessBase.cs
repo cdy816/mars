@@ -33,7 +33,9 @@ namespace DBHighApi.Api
 
         private bool mIsClosed = false;
 
-        private object mLockObj = new object();
+        //private object mLockObj = new object();
+
+        private List<string> mClients = new List<string>();
 
         #endregion ...Variables...
 
@@ -56,7 +58,7 @@ namespace DBHighApi.Api
         /// </summary>
         public DataService Parent { get; set; }
 
-
+        public bool IsPause { get; set; }
 
         #endregion ...Properties...
 
@@ -103,17 +105,21 @@ namespace DBHighApi.Api
         {
             if (data != null)
             {
-                data.IncRef();
+                //data.IncRef();
                 if (mDatasCach.ContainsKey(client))
                 {
-                    mDatasCach[client].Enqueue(data);
+                    lock (mDatasCach)
+                        mDatasCach[client].Enqueue(data);
                 }
                 else
                 {
                     var vq = new Queue<ByteBuffer>();
                     vq.Enqueue(data);
-                    lock (mLockObj)
+                    lock (mDatasCach)
                         mDatasCach.Add(client, vq);
+
+                    lock (mClients)
+                        mClients.Add(client);
                 }
                 resetEvent.Set();
             }
@@ -124,24 +130,137 @@ namespace DBHighApi.Api
         /// </summary>
         private void DataProcess()
         {
+            //KeyValuePair<string, Queue<ByteBuffer>>[] vvv;
+            ByteBuffer bb;
+            string sname = "";
+            Queue<ByteBuffer> datas = null;
+
             while (!mIsClosed)
             {
                 resetEvent.WaitOne();
-                if (mIsClosed) return;
-                resetEvent.Reset();
-                lock (mDatasCach)
+                if (mIsClosed)
                 {
-                    var vvv = mDatasCach.ToArray();
-                    foreach (var vv in vvv)
+                    LoggerService.Service.Info("Api Service", $"server is Closed.");
+                    return;
+                }
+                resetEvent.Reset();
+
+                if (IsPause)
+                {
+                    lock (mDatasCach)
                     {
-                        while (vv.Value.Count > 0)
+                        foreach (var vv in mDatasCach)
                         {
-                            var dd = vv.Value.Dequeue();
-                            ProcessSingleData(vv.Key, dd);
+                            while (vv.Value.Count > 0)
+                            {
+                                lock (mDatasCach)
+                                {
+                                    bb = vv.Value.Dequeue();
+                                }
+                                bb.UnlockAndReturn();
+                            }
+                        }
+                        mDatasCach.Clear();
+                    }
+                    continue;
+                }
+                try
+                {
+                    for (int i = 0; i < mClients.Count; i++)
+                    {
+                        sname = "";
+                        datas = null;
+                        lock (mClients)
+                        {
+                            if (i < mClients.Count)
+                            {
+                                sname = mClients[i];
+                            }
+                        }
+
+                        if (!string.IsNullOrEmpty(sname))
+                        {
+                            lock (mDatasCach)
+                            {
+                                if (mDatasCach.ContainsKey(sname))
+                                {
+                                    datas = mDatasCach[sname];
+                                }
+                            }
+                            if (datas != null)
+                            {
+                                if (datas.Count > 5)
+                                {
+                                    LoggerService.Service.Warn("ServerProcess", $"{sname} {this.FunId} 数据积压 {datas.Count}");
+                                }
+
+                                while (datas.Count > 0)
+                                {
+                                    lock (mDatasCach)
+                                        bb = datas.Dequeue();
+                                    ProcessSingleData(sname, bb);
+                                }
+                            }
                         }
                     }
                 }
-                
+                catch (Exception ex)
+                {
+
+                }
+
+                //lock (mLockObj)
+                //{
+                //    vvv = mDatasCach.ToArray();
+                //}
+
+                //try
+                //{
+                  
+                //    foreach (var vv in vvv)
+                //    {
+                //        while (vv.Value.Count > 0)
+                //        {
+                //            lock (mLockObj)
+                //            {
+                //                bb = vv.Value.Dequeue();
+                //            }
+                //            ProcessSingleData(vv.Key, bb);
+                //        }
+                //    }
+                //}
+                //catch (Exception ex)
+                //{
+                //    LoggerService.Service.Info("Api Service", $"{ex.Message}  {ex.StackTrace}");
+                //}
+
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="client"></param>
+        public void RemoveClient(string client)
+        {
+            lock (mClients)
+            {
+                if (mClients.Contains(client))
+                {
+                    mClients.Remove(client);
+                }
+            }
+
+            lock (mDatasCach)
+            {
+                if (mDatasCach.ContainsKey(client))
+                {
+                    foreach (var vv in mDatasCach[client])
+                    {
+                        vv.UnlockAndReturn();
+                    }
+                    mDatasCach.Remove(client);
+                }
             }
         }
 
@@ -188,7 +307,7 @@ namespace DBHighApi.Api
         /// <param name="id"></param>
         public virtual void OnClientDisconnected(string id)
         {
-
+            RemoveClient(id);
         }
 
         #endregion ...Methods...

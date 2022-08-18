@@ -58,6 +58,13 @@ namespace Cdy.Tag
 
             Dbase.Security = new SecuritySerise().LoadByName(name);
 
+            Dbase.ComplexTagClass = new ComplexTagClassDocumentSerise().LoadByName(name);
+
+            Dbase.ComplexTagClass.Name = name;
+
+            Dbase.RealDatabase.Owner = Dbase;
+            Dbase.HisDatabase.Owner = Dbase;
+
             return Dbase;
         }
 
@@ -70,6 +77,11 @@ namespace Cdy.Tag
         {
             Dbase = LoadDatabaseSelf(PathHelper.helper.GetDataPath(name, name + ".db"));
             Dbase.Security = new SecuritySerise().LoadByName(name);
+            Dbase.ComplexTagClass = new ComplexTagClassDocumentSerise().LoadByName(name);
+            if(string.IsNullOrEmpty(Dbase.ComplexTagClass.Name))
+            {
+                Dbase.ComplexTagClass.Name = name;
+            }
             Dbase.RealDatabase = null;
             Dbase.HisDatabase = null;
             return Dbase;
@@ -83,6 +95,8 @@ namespace Cdy.Tag
         {
             Dbase.RealDatabase = new RealDatabaseSerise().LoadByName(name);
             Dbase.HisDatabase = new HisDatabaseSerise().LoadByName(name);
+            Dbase.RealDatabase.Owner = Dbase;
+            Dbase.HisDatabase.Owner = Dbase;
         }
 
         /// <summary>
@@ -97,6 +111,8 @@ namespace Cdy.Tag
             Dbase.Security = new SecuritySerise().LoadByName(name);
             Dbase.RealDatabase = new RealDatabaseSerise().LoadDifferenceByName(name, database.RealDatabase,out mRemovedRealTags);
             Dbase.HisDatabase = new HisDatabaseSerise().LoadDifferenceByName(name, database.HisDatabase,out mRemovedHisTags);
+            Dbase.RealDatabase.Owner = Dbase;
+            Dbase.HisDatabase.Owner = Dbase;
             return Dbase;
         }
 
@@ -113,6 +129,8 @@ namespace Cdy.Tag
             Dbase.Security = new SecuritySerise().LoadByName(name);
             Dbase.RealDatabase = new RealDatabaseSerise().LoadDifferenceByName(name, database,out mRemovedRealTags);
             Dbase.HisDatabase = new HisDatabaseSerise().LoadDifferenceByName(name, hiscompareaction);
+            Dbase.RealDatabase.Owner = Dbase;
+            Dbase.HisDatabase.Owner = Dbase;
             return Dbase;
         }
 
@@ -126,6 +144,8 @@ namespace Cdy.Tag
             Dbase = LoadDatabaseSelf(PathHelper.helper.GetDataPath(name, name + ".db"));
             Dbase.RealDatabase = new RealDatabaseSerise().LoadByName(name);
             Dbase.Security = new SecuritySerise().LoadByName(name);
+            Dbase.RealDatabase.Owner = Dbase;
+            
             return Dbase;
         }
 
@@ -191,6 +211,40 @@ namespace Cdy.Tag
             {
                 doc.RealDataServerPort = int.Parse(xe.Attribute("RealDataServerPort").Value);
             }
+
+            if (xe.Attribute("EnableWebApi") != null)
+            {
+                doc.EnableWebApi = bool.Parse(xe.Attribute("EnableWebApi").Value);
+            }
+
+            if (xe.Attribute("EnableGrpcApi") != null)
+            {
+                doc.EnableGrpcApi = bool.Parse(xe.Attribute("EnableGrpcApi").Value);
+            }
+
+            if (xe.Attribute("EnableHighApi") != null)
+            {
+                doc.EnableHighApi = bool.Parse(xe.Attribute("EnableHighApi").Value);
+            }
+
+            if (xe.Attribute("EnableOpcServer") != null)
+            {
+                doc.EnableOpcServer = bool.Parse(xe.Attribute("EnableOpcServer").Value);
+            }
+
+            if (xe.Attribute("WorkMode") != null)
+            {
+                if(xe.Attribute("WorkMode").Value.Length>2)
+                {
+                    doc.HisWorkMode = (HisWorkMode)Enum.Parse(typeof(HisWorkMode), xe.Attribute("WorkMode").Value);
+                }
+                else
+                {
+                    doc.HisWorkMode = (HisWorkMode)int.Parse(xe.Attribute("WorkMode").Value);
+                }
+               
+            }
+
             return doc;
         }
 
@@ -203,6 +257,11 @@ namespace Cdy.Tag
         {
             XElement xe = new XElement("Setting");
             xe.SetAttributeValue("RealDataServerPort", doc.RealDataServerPort);
+            xe.SetAttributeValue("EnableWebApi", doc.EnableWebApi);
+            xe.SetAttributeValue("EnableGrpcApi", doc.EnableGrpcApi);
+            xe.SetAttributeValue("EnableHighApi", doc.EnableHighApi);
+            xe.SetAttributeValue("EnableOpcServer", doc.EnableOpcServer);
+            xe.SetAttributeValue("WorkMode", (int)doc.HisWorkMode);
             return xe;
         }
 
@@ -216,6 +275,7 @@ namespace Cdy.Tag
             new RealDatabaseSerise() { Database = Dbase.RealDatabase }.Save();
             new HisDatabaseSerise() { Database = Dbase.HisDatabase }.Save();
             new SecuritySerise() { Document = Dbase.Security }.Save();
+            new ComplexTagClassDocumentSerise() { Document = Dbase.ComplexTagClass }.Save();
             SaveRDDCSecurity(Dbase.Name);
         }
 

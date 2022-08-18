@@ -132,6 +132,9 @@
   <data name="Chart" xml:space="preserve">
     <value>Chart</value>
   </data>
+  <data name="close" xml:space="preserve">
+    <value>close</value>
+  </data>
   <data name="DatabaseSelectTitle" xml:space="preserve">
     <value>Database select</value>
   </data>
@@ -181,7 +184,7 @@
     <value>Open</value>
   </data>
   <data name="OpMsgFormate" xml:space="preserve">
-    <value>Value count {0}/{1} ms</value>
+    <value>Value count {0}/{1} in {2} ms</value>
   </data>
   <data name="OriginalValue" xml:space="preserve">
     <value>Original</value>
@@ -197,6 +200,9 @@
   </data>
   <data name="SelectDatabase" xml:space="preserve">
     <value>Select a database</value>
+  </data>
+  <data name="Start" xml:space="preserve">
+    <value>Start</value>
   </data>
   <data name="StartTime" xml:space="preserve">
     <value>StartTime</value>

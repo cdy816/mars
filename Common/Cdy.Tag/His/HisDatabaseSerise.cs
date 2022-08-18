@@ -236,6 +236,10 @@ namespace Cdy.Tag
                     db.Setting = xe.Element("HisSetting").LoadHisSettingDocFromXML();
                 }
             }
+            else
+            {
+                db.Name = System.IO.Path.GetFileNameWithoutExtension(file);
+            }
             this.Database = db;
             return db;
         }

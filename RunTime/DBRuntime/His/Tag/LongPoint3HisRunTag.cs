@@ -26,16 +26,17 @@ namespace Cdy.Tag
         /// <param name="startMemory"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset)
+        public override unsafe bool CheckValueChangeToLastRecordValue(void* startMemory, long offset, int tim)
         {
             var xx = MemoryHelper.ReadInt64(startMemory, offset); 
             var yy = MemoryHelper.ReadInt64(startMemory, offset + 8); 
             var zz = MemoryHelper.ReadInt64(startMemory, offset + 16);
-            if (xx != x || yy != y || zz != z || xx == long.MinValue)
+            if ((xx != x || yy != y || zz != z || xx == long.MinValue) && Math.Abs(tim - mLastTime) > 0.1)
             {
                 x = xx;
                 y = yy;
                 z = zz;
+                mLastTime = tim;
                 return true;
             }
             else

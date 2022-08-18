@@ -139,7 +139,7 @@ namespace SpiderDriver
         /// <param name="data"></param>
         public virtual void ProcessData(string client, ByteBuffer data)
         {
-            data.IncRef();
+            //data.IncRef();
             if (mDatasCach.ContainsKey(client))
             {
                 mDatasCach[client].Enqueue(data);
@@ -184,6 +184,10 @@ namespace SpiderDriver
             {
                 if (mDatasCach.ContainsKey(client))
                 {
+                    foreach (var vv in mDatasCach[client])
+                    {
+                        vv.UnlockAndReturn();
+                    }
                     mDatasCach.Remove(client);
                 }
             }

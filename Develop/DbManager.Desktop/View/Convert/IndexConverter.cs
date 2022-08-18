@@ -81,6 +81,34 @@ namespace DBInStudio.Desktop
         #endregion ...Interfaces ...
 
     }
+    public class StringEmptyToVisiableConvert : IValueConverter
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="targetType"></param>
+        /// <param name="parameter"></param>
+        /// <param name="culture"></param>
+        /// <returns></returns>
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value==null || string.IsNullOrEmpty(value.ToString())?Visibility.Collapsed:Visibility.Visible;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="targetType"></param>
+        /// <param name="parameter"></param>
+        /// <param name="culture"></param>
+        /// <returns></returns>
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 
     public class BoolInvertConvert : IValueConverter
     {
@@ -181,7 +209,15 @@ namespace DBInStudio.Desktop
                 {
                     return double.MinValue;
                 }
-                return double.Parse(value.ToString());
+                if(double.TryParse(value.ToString(),out double reval))
+                {
+                    return reval;
+                }
+                else
+                {
+                    return 0;
+                }
+                
             }
         }
     }
@@ -193,7 +229,7 @@ namespace DBInStudio.Desktop
         {
             if (values != null)
             {
-                double dtmp = (double)(values[0]);
+                double dtmp = (double)(System.Convert.ToDouble(values[0]));
 
                 var tm = values[1] as TagViewModel;
 
@@ -249,6 +285,10 @@ namespace DBInStudio.Desktop
                     {
                         return "Max";
                     }
+                    else if(dtmp == ulong.MinValue)
+                    {
+                        return "Min";
+                    }
                     else
                     {
                         return dtmp.ToString();
@@ -284,8 +324,89 @@ namespace DBInStudio.Desktop
                         return dtmp.ToString();
                     }
                 }
+                else if (tm.RealTagMode.Type == Cdy.Tag.TagType.Short)
+                {
+                    if (dtmp == short.MaxValue)
+                    {
+                        return "Max";
+                    }
+                    else if (dtmp == short.MinValue)
+                    {
+                        return "Min";
+                    }
+                    else
+                    {
+                        return dtmp.ToString();
+                    }
+                }
+                else if (tm.RealTagMode.Type == Cdy.Tag.TagType.UShort)
+                {
+                    if (dtmp == ushort.MaxValue)
+                    {
+                        return "Max";
+                    }
+                    else if (dtmp == ushort.MinValue)
+                    {
+                        return "Min";
+                    }
+                    else
+                    {
+                        return dtmp.ToString();
+                    }
+                }
+                else if (tm.RealTagMode.Type == Cdy.Tag.TagType.Byte)
+                {
+                    if (dtmp == byte.MaxValue)
+                    {
+                        return "Max";
+                    }
+                    else if (dtmp == byte.MinValue)
+                    {
+                        return "Min";
+                    }
+                    else
+                    {
+                        return dtmp.ToString();
+                    }
+                }
+                else
+                {
+                    return "--";
+                }
 
-                return dtmp.ToString();
+            }
+            return "";
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class FloatNumberValueConvert : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values != null)
+            {
+                double dtmp = (double)(System.Convert.ToDouble(values[0]));
+
+                var tm = values[1] as TagViewModel;
+
+                if (tm.RealTagMode.Type == Cdy.Tag.TagType.Double)
+                {
+                    return dtmp.ToString();
+                }
+                else if (tm.RealTagMode.Type == Cdy.Tag.TagType.Float)
+                {
+                    return dtmp.ToString();
+                }
+               
+                else
+                {
+                    return "--";
+                }
 
             }
             return "";

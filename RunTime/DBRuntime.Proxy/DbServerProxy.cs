@@ -108,68 +108,68 @@ namespace DBRuntime.Proxy
 
         #region ... Methods    ...
 
-        /// <summary>
-        /// 
-        /// </summary>
-        private void ConnectProcess()
-        {
-            Thread.Sleep(1000);
-            if (dbClient.IsConnected)
-            {
-                IsConnected = dbClient.Login(UserName, Password);
-            }
-            else
-            {
-                dbClient.Open(mIp, mPort);
-            }
-            if (IsUseStandardHisDataServer)
-            {
-                if (!mHisClient.IsConnected)
-                {
-                    mHisClient.Open(mIp, mPort - 1);
-                }
-                else
-                {
-                    mHisClient.Login(UserName, Password);
-                }
-            }
-            resetEvent.Set();
-            //while (!mIsClosed)
-            //{
-            //    resetEvent.WaitOne();
-            //    if (mIsClosed) break;
-            //    if (!mIsConnected)
-            //    {
-            //        if (dbClient.IsConnected)
-            //        {
-            //            IsConnected = dbClient.Login(UserName, Password);
-            //        }
-            //        else if(dbClient.NeedReConnected)
-            //        {
-            //            dbClient.Connect(mIp, mPort);
-            //        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //private void ConnectProcess()
+        //{
+        //    Thread.Sleep(1000);
+        //    if (dbClient.IsConnected)
+        //    {
+        //        IsConnected = dbClient.Login(UserName, Password);
+        //    }
+        //    else
+        //    {
+        //        dbClient.Open(mIp, mPort);
+        //    }
+        //    if (IsUseStandardHisDataServer)
+        //    {
+        //        if (!mHisClient.IsConnected)
+        //        {
+        //            mHisClient.Open(mIp, mPort - 1);
+        //        }
+        //        else
+        //        {
+        //            mHisClient.Login(UserName, Password);
+        //        }
+        //    }
+        //    resetEvent.Set();
+        //    //while (!mIsClosed)
+        //    //{
+        //    //    resetEvent.WaitOne();
+        //    //    if (mIsClosed) break;
+        //    //    if (!mIsConnected)
+        //    //    {
+        //    //        if (dbClient.IsConnected)
+        //    //        {
+        //    //            IsConnected = dbClient.Login(UserName, Password);
+        //    //        }
+        //    //        else if(dbClient.NeedReConnected)
+        //    //        {
+        //    //            dbClient.Connect(mIp, mPort);
+        //    //        }
 
-            //        if (IsUseStandardHisDataServer)
-            //        {
-            //            if (mHisClient.IsConnected)
-            //            {
-            //                mHisClient.Login(UserName, Password);
-            //            }
-            //            else if (mHisClient.NeedReConnected)
-            //            {
-            //                mHisClient.Connect(mIp, mPort + 1);
-            //            }
-            //        }
+        //    //        if (IsUseStandardHisDataServer)
+        //    //        {
+        //    //            if (mHisClient.IsConnected)
+        //    //            {
+        //    //                mHisClient.Login(UserName, Password);
+        //    //            }
+        //    //            else if (mHisClient.NeedReConnected)
+        //    //            {
+        //    //                mHisClient.Connect(mIp, mPort + 1);
+        //    //            }
+        //    //        }
 
-            //        Thread.Sleep(1000);
-            //    }
-            //    else
-            //    {
-            //        resetEvent.Reset();
-            //    }
+        //    //        Thread.Sleep(1000);
+        //    //    }
+        //    //    else
+        //    //    {
+        //    //        resetEvent.Reset();
+        //    //    }
 
-            //}
-        }
+        //    //}
+        //}
 
         /// <summary>
         /// 
@@ -231,10 +231,10 @@ namespace DBRuntime.Proxy
                 else
                 {
                     IsConnected = true;
-                    if(!dbClient.IsLogin)
-                    {
-                        dbClient.Login(UserName, Password);
-                    }
+                    //if(!dbClient.IsLogin)
+                    //{
+                    //    dbClient.Login(UserName, Password);
+                    //}
                 }
 
             }
@@ -278,6 +278,15 @@ namespace DBRuntime.Proxy
             }
         }
 
+        public bool CheckLogin()
+        {
+            if(!dbClient.IsLogin && dbClient.IsConnected)
+            {
+                dbClient.Login(UserName, Password);
+            }
+            return dbClient.IsLogin;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -299,6 +308,27 @@ namespace DBRuntime.Proxy
                 try
                 {
                     return new RealDatabaseSerise().Load(sfile);
+                }
+                finally
+                {
+                    System.IO.File.Delete(sfile);
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 加载历史数据库
+        /// </summary>
+        /// <returns></returns>
+        public HisDatabase LoadHisDatabase()
+        {
+            string sfile = dbClient.GetHisdatabase();
+            if (System.IO.File.Exists(sfile))
+            {
+                try
+                {
+                    return new HisDatabaseSerise().Load(sfile);
                 }
                 finally
                 {
@@ -581,6 +611,20 @@ namespace DBRuntime.Proxy
             if (IsConnected)
             {
                 return this.mUsedHisClient.QueryAllHisValue(id, stime, etime);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 读取复杂变量的实时值
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public ByteBuffer GetComplexTagRealData(int id)
+        {
+            if (IsConnected)
+            {
+                return this.dbClient.GetComplexTagRealData(id);
             }
             return null;
         }
@@ -1049,6 +1093,56 @@ namespace DBRuntime.Proxy
                 return mUsedHisClient.FindNoNumberTagValueDuration(id, startTime, endTime, value);
             }
             return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="type"></param>
+        /// <param name="user"></param>
+        /// <param name="msg"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool ModifyHisValue(int id, TagType type, string user, string msg, IEnumerable<TagHisValue<object>> values)
+        {
+            if(IsConnected)
+            {
+                return mUsedHisClient.ModifyHisValue(id,type,user,msg,values);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="user"></param>
+        /// <param name="msg"></param>
+        /// <param name="stime"></param>
+        /// <param name="etime"></param>
+        /// <returns></returns>
+        public bool DeleteHisValue(int id, string user, string msg, DateTime stime, DateTime etime)
+        {
+            if (IsConnected)
+            {
+                return mUsedHisClient.DeleteHisValue(id,user,msg,stime,etime);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool SetRealTagToLastValue(int id)
+        {
+            if(IsConnected)
+            {
+                return dbClient.ResetTagToLastValue(id);
+            }
+            return false;
         }
 
         #region obslute QueryHisValue

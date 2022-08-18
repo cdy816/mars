@@ -37,7 +37,13 @@ namespace HighSpeedApiDemo
 
         private ICommand mSetTagValueCommand;
 
+        private ICommand mQueryComplexValueCommand;
+
         private List<int> mIds;
+
+        private List<int> mHours;
+
+        private List<int> mSeconds;
 
         #endregion ...Variables...
 
@@ -56,6 +62,20 @@ namespace HighSpeedApiDemo
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        public ICommand QueryComplexValueCommand
+        {
+            get
+            {
+                if(mQueryComplexValueCommand == null)
+                {
+                    mQueryComplexValueCommand = new RelayCommand(() => {
+                        QueryComplexRealValue();
+                    });
+                }
+                return mQueryComplexValueCommand;
+            }
+        }
 
         /// <summary>
         /// 
@@ -126,10 +146,36 @@ namespace HighSpeedApiDemo
         /// </summary>
         public int Id { get; set; }
 
+        private double mValue;
+
         /// <summary>
         /// Value
         /// </summary>
-        public double Value { get; set; }
+        public double Value { get { return mValue; } set { mValue = value;OnPropertyChanged("Value"); } }
+
+
+
+        private double mModifyValue;
+
+        public double ModifyValue { get { return mModifyValue; } set { mModifyValue = value;OnPropertyChanged("ModifyValue"); } }
+
+        private DateTime mModifyDate = DateTime.Now.Date;
+        public DateTime ModifyDate { get { return mModifyDate; } set { mModifyDate = value;OnPropertyChanged("ModifyDate"); } }
+
+        private int mModifyStartTime=0;
+
+        public int ModifyStartTime { get { return mModifyStartTime; } set { mModifyStartTime = value;OnPropertyChanged("ModifyStartTime"); } }
+
+        private int mModifyEndTime=1;
+        public int ModifyEndTime { get { return mModifyEndTime; } set { mModifyEndTime = value;OnPropertyChanged("ModifyEndTime"); } }
+
+
+        private int mModifyStartSecond = 0;
+
+        public int ModifyStartSecond { get { return mModifyStartSecond; } set { mModifyStartSecond = value; OnPropertyChanged("ModifyStartSecond"); } }
+
+        private int mModifyEndSecond = 60;
+        public int ModifyEndSecond { get { return mModifyEndSecond; } set { mModifyEndSecond = value; OnPropertyChanged("ModifyEndSecond"); } }
 
         /// <summary>
         /// 
@@ -149,6 +195,195 @@ namespace HighSpeedApiDemo
             }
         }
 
+        private ICommand mDeleteHisValueCommand;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand DeleteHisValueCommand
+        {
+            get
+            {
+                if (mDeleteHisValueCommand == null)
+                {
+                    mDeleteHisValueCommand = new RelayCommand(() => {
+                        DateTime stime = ModifyDate.AddHours(ModifyStartTime).AddMinutes(ModifyStartSecond);
+                        DateTime etime = ModifyDate.AddHours(ModifyEndTime).AddMinutes(ModifyEndSecond);
+                        clinet.DeleteHisValue(Id,"Admin","Admin message",stime,etime);
+                    });
+                }
+                return mDeleteHisValueCommand;
+            }
+        }
+
+        private ICommand mModifyHisValueCommand;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand ModifyHisValueCommand
+        {
+            get
+            {
+                if(mModifyHisValueCommand == null)
+                {
+                    mModifyHisValueCommand = new RelayCommand(() => {
+                        DateTime stime = ModifyDate.AddHours(ModifyStartTime).AddMinutes(ModifyStartSecond);
+                        DateTime etime = ModifyDate.AddHours(ModifyEndTime).AddMinutes(ModifyEndSecond);
+
+                        List<Cdy.Tag.TagHisValue<object>> vals = new List<Cdy.Tag.TagHisValue<object>>();
+                        DateTime stmp = stime;
+                        while(stmp<=etime)
+                        {
+                            vals.Add(new Cdy.Tag.TagHisValue<object>() { Quality=0,Time=stmp,Value = ModifyValue+1});
+                            stmp=stmp.AddSeconds(1);
+                        }
+
+                        clinet.ModifyHisData(Id,Cdy.Tag.TagType.Double, "Admin", "Admin message", vals);
+                    });
+                }
+                return mModifyHisValueCommand;
+            }
+        }
+
+
+        private ICommand mQueryAllValueCommand;
+
+        public ICommand QueryAllValueCommand
+        {
+            get
+            {
+                if (mQueryAllValueCommand == null)
+                {
+                    mQueryAllValueCommand = new RelayCommand(() =>
+                    {
+                        DateTime stime = ModifyDate.AddHours(ModifyStartTime).AddMinutes(ModifyStartSecond);
+                        DateTime etime = ModifyDate.AddHours(ModifyEndTime).AddMinutes(ModifyEndSecond);
+
+                        var vals = clinet.QueryAllHisValue<double>(Id,stime,etime);
+                        if(vals!=null)
+                        {
+                            StringBuilder sb = new StringBuilder(); 
+                            foreach(var val in vals.ListAvaiableValues())
+                            {
+                                sb.AppendLine($"{ val.Time } { val.Value } { val.Quality }");
+                            }
+                            ResultDialog rd = new ResultDialog();
+                            rd.Result = sb.ToString();
+                            rd.Show();
+                        }
+                    });
+                }
+                return mQueryAllValueCommand;
+            }
+        }
+
+        private ICommand mQueryHisValueCommand;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand QueryHisValueCommand
+        {
+            get
+            {
+                if(mQueryHisValueCommand == null)
+                {
+                    mQueryHisValueCommand = new RelayCommand(() => {
+                        DateTime stime = ModifyDate.AddHours(ModifyStartTime).AddMinutes(ModifyStartSecond);
+                        DateTime etime = ModifyDate.AddHours(ModifyEndTime).AddMinutes(ModifyEndSecond);
+
+
+                        List<DateTime> ltmp = new List<DateTime>();
+                        DateTime dtmp = stime;
+                        while (dtmp < etime)
+                        {
+                            ltmp.Add(dtmp);
+                            dtmp = dtmp.AddSeconds(10);
+                        }
+
+                        var vals = clinet.QueryHisValueForTimeSpan<double>(Id, stime, etime,new TimeSpan(0,0,10),Cdy.Tag.QueryValueMatchType.Previous);
+                        if (vals != null)
+                        {
+                            StringBuilder sb = new StringBuilder();
+                            foreach (var val in vals.ListAvaiableValues())
+                            {
+                                sb.AppendLine($"{ val.Time } { val.Value } { val.Quality }");
+                            }
+                            ResultDialog rd = new ResultDialog();
+                            rd.Result = sb.ToString();
+                            rd.Show();
+                        }
+                    });
+                }
+                return mQueryHisValueCommand;
+            }
+        }
+
+        private ICommand mQueryHisValue2Command;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand QueryHisValue2Command
+        {
+            get
+            {
+                if (mQueryHisValue2Command == null)
+                {
+                    mQueryHisValue2Command = new RelayCommand(() => {
+                        DateTime stime = ModifyDate.AddHours(ModifyStartTime).AddMinutes(ModifyStartSecond);
+                        DateTime etime = ModifyDate.AddHours(ModifyEndTime).AddMinutes(ModifyEndSecond);
+
+
+                        List<DateTime> ltmp = new List<DateTime>();
+                        DateTime dtmp = stime;
+                        while (dtmp < etime)
+                        {
+                            ltmp.Add(dtmp);
+                            dtmp = dtmp.AddSeconds(10);
+                        }
+
+                        var vals = clinet.QueryHisValueAtTimes<double>(Id, ltmp, Cdy.Tag.QueryValueMatchType.Previous);
+                        if (vals != null)
+                        {
+                            StringBuilder sb = new StringBuilder();
+                            foreach (var val in vals.ListAvaiableValues())
+                            {
+                                sb.AppendLine($"{ val.Time } { val.Value } { val.Quality }");
+                            }
+                            ResultDialog rd = new ResultDialog();
+                            rd.Result = sb.ToString();
+                            rd.Show();
+                        }
+                    });
+                }
+                return mQueryHisValue2Command;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<int> Hours
+        {
+            get
+            {
+                return mHours;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<int> Seconds
+        {
+            get
+            {
+                return mSeconds;
+            }
+        }
 
         #endregion ...Properties...
 
@@ -157,10 +392,35 @@ namespace HighSpeedApiDemo
         /// <summary>
         /// 
         /// </summary>
+        private void QueryComplexRealValue()
+        {
+            var vals = clinet.GetComplextTagRealData(Id,true);
+            if(vals != null)
+            {
+
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private void Init()
         {
+
+            mHours = new List<int>();
+            for(int i = 0; i < 24; i++)
+            {
+                mHours.Add(i);
+            }
+
+            mSeconds = new List<int>();
+            for(int i=0;i< 60;i++)
+            {
+                mSeconds.Add(i);
+            }
+
             mIds = new List<int>();
-            for(int i=1;i<100000;i++)
+            for(int i=1;i<=100000;i++)
             {
                 mTags.Add(new TagItemInfo() { Id = i, Value = "0" });
                 mIds.Add(i);
@@ -237,16 +497,16 @@ namespace HighSpeedApiDemo
             }
             Stopwatch sw = new Stopwatch();
             sw.Start();
-          
-            var vals = clinet.GetRealDataValueOnly(mIds,true);
+
+            var vals = clinet.GetRealDataValueOnly(mIds, true);
             sw.Stop();
             Debug.WriteLine($"time : { sw.ElapsedMilliseconds }");
             if (vals != null)
             {
                 for (int i = 0; i < 50000; i++)
                 {
-                    if(vals.ContainsKey(i))
-                    mTags[i].Value = vals[i]?.ToString();
+                    if (vals.ContainsKey(i))
+                        mTags[i].Value = vals[i]?.ToString();
                 }
             }
 
@@ -257,7 +517,7 @@ namespace HighSpeedApiDemo
             Debug.WriteLine($"time : { sw.ElapsedMilliseconds }");
             if (avals != null)
             {
-                for (int i = 0; i < 50000; i++)
+                for (int i = 50000; i < 100000; i++)
                 {
                     if (avals.ContainsKey(i))
                         mTags[i].Value = avals[i].Item1?.ToString();
@@ -265,19 +525,19 @@ namespace HighSpeedApiDemo
             }
 
 
-            sw.Restart();
+            //sw.Restart();
 
-            var aqvals = clinet.GetRealDataValueAndQualityOnly(mIds, true);
+            //var aqvals = clinet.GetRealDataValueAndQualityOnly(mIds, true);
             sw.Stop();
-            Debug.WriteLine($"time : { sw.ElapsedMilliseconds }");
-            if (aqvals != null)
-            {
-                for (int i = 0; i < 50000; i++)
-                {
-                    if (aqvals.ContainsKey(i))
-                        mTags[i].Value = aqvals[i].Item1?.ToString();
-                }
-            }
+            //Debug.WriteLine($"time : { sw.ElapsedMilliseconds }");
+            //if (aqvals != null)
+            //{
+            //    for (int i = 0; i < 50000; i++)
+            //    {
+            //        if (aqvals.ContainsKey(i))
+            //            mTags[i].Value = aqvals[i].Item1?.ToString();
+            //    }
+            //}
         }
 
         #endregion ...Methods...

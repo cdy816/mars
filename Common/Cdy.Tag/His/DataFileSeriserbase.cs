@@ -224,6 +224,16 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="start"></param>
+        /// <param name="buffer"></param>
+        /// <param name="bufferStart"></param>
+        /// <param name="len"></param>
+        /// <returns></returns>
+        public abstract void ReadBytes(long start,byte[] buffer,int bufferStart,int len);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
         /// <returns></returns>
         public abstract long ReadLong(long start);
 

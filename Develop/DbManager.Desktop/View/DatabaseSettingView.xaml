@@ -69,6 +69,7 @@
             <RowDefinition Height="36"/>
             <RowDefinition Height="36"/>
             <RowDefinition Height="36"/>
+            <RowDefinition Height="36"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Border Margin="5,0" Grid.ColumnSpan="2" BorderThickness="0,0,0,0.5" SnapsToDevicePixels="True" UseLayoutRounding="True" BorderBrush="{DynamicResource Window.Forground}">
@@ -92,7 +93,18 @@
 
         <TextBlock Text="{local:ResMarker EnableZipFile,:}" HorizontalAlignment="Left" Margin="10,0,10,0" Grid.Row="4" VerticalAlignment="Center"/>
         <CheckBox IsChecked="{Binding IsEnableZipFile,Mode=TwoWay}" Foreground="White"  Background="Transparent" BorderBrush="White" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Left"/>
-        <ListBox HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,10" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" Background="{x:Null}" BorderThickness="0" Grid.Row="5" Grid.ColumnSpan="2"  ItemsSource="{Binding Children}">
+
+        <TextBlock Text="{local:ResMarker EnableApi,:}" HorizontalAlignment="Left" Margin="10,0,10,0" Grid.Row="5" VerticalAlignment="Center"/>
+
+        <CheckBox IsChecked="{Binding EnableWebApi,Mode=TwoWay}" Content="{local:ResMarker WebApi}" Foreground="White" VerticalContentAlignment="Center" Background="Transparent" BorderBrush="White" Grid.Row="5" Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Left"/>
+
+        <CheckBox IsChecked="{Binding EnableGrpcApi,Mode=TwoWay}" Content="{local:ResMarker GrpcApi}" Foreground="White"  VerticalContentAlignment="Center"  Background="Transparent" BorderBrush="White" Grid.Row="5" Grid.Column="1" VerticalAlignment="Center" Margin="100,0,0,0" HorizontalAlignment="Left"/>
+
+        <CheckBox IsChecked="{Binding EnableHighApi,Mode=TwoWay}" Content="{local:ResMarker HighApi}" Foreground="White"   VerticalContentAlignment="Center"  Background="Transparent" BorderBrush="White" Grid.Row="5" Grid.Column="1" VerticalAlignment="Center" Margin="190,0,0,0" HorizontalAlignment="Left"/>
+
+        <CheckBox IsChecked="{Binding EnableOpcServer,Mode=TwoWay}" Content="{local:ResMarker OpcServer}" Foreground="White"   VerticalContentAlignment="Center"  Background="Transparent" BorderBrush="White" Grid.Row="5" Grid.Column="1" VerticalAlignment="Center" Margin="280,0,0,0" HorizontalAlignment="Left"/>
+        
+        <ListBox HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,10" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" Background="{x:Null}" BorderThickness="0" Grid.Row="6" Grid.ColumnSpan="2"  ItemsSource="{Binding Children}">
 
         </ListBox>
 

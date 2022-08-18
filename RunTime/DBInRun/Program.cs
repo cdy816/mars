@@ -22,8 +22,9 @@ namespace DBInRun
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
             AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
             WindowConsolHelper.DisbleQuickEditMode();
+            WindowConsolHelper.DiableCloseMenu();
 
-            Runner3.RunInstance.Init();
+            Runner4.RunInstance.Init();
 
             Console.WriteLine(Res.Get("WelcomeMsg"));
             PrintLogo();
@@ -45,12 +46,12 @@ namespace DBInRun
                     {
                         int.TryParse(args[2], out port);
                     }
-                    Cdy.Tag.Runner3.RunInstance.StartAsync(args[1], port);
+                    Cdy.Tag.Runner4.RunInstance.StartAsync(args[1], port);
                     stile = "DbInRun-" + args[1];
                 }
                 else
                 {
-                    Cdy.Tag.Runner3.RunInstance.Start();
+                    Cdy.Tag.Runner4.RunInstance.Start();
                     stile = "DbInRun-local";
                 }
 
@@ -105,9 +106,9 @@ namespace DBInRun
                 switch (scmd)
                 {
                     case "exit":
-                        if (Cdy.Tag.Runner3.RunInstance.IsStarted)
+                        if (Cdy.Tag.Runner4.RunInstance.IsStarted)
                         {
-                            Cdy.Tag.Runner3.RunInstance.Stop();
+                            Cdy.Tag.Runner4.RunInstance.Stop();
                         }
                         mIsClosed = true;
                         break;
@@ -116,13 +117,13 @@ namespace DBInRun
                         string dbname = "local";
                         if (cmd.Length > 1)
                         {
-                            Cdy.Tag.Runner3.RunInstance.StartAsync(cmd[1]);
+                            Cdy.Tag.Runner4.RunInstance.StartAsync(cmd[1]);
                             Console.Title = "DbInRun-" + cmd[1];
                             dbname = cmd[1];
                         }
                         else
                         {
-                            Cdy.Tag.Runner3.RunInstance.Start();
+                            Cdy.Tag.Runner4.RunInstance.Start();
                             Console.Title = "DbInRun-local";
                             dbname = "local";
                         }
@@ -131,7 +132,7 @@ namespace DBInRun
                         });
                         break;
                     case "stop":
-                        Cdy.Tag.Runner3.RunInstance.Stop();
+                        Cdy.Tag.Runner4.RunInstance.Stop(false);
                         break;
                     case "switch":
                         LoggerService.Service.EnableLogger = true;
@@ -140,14 +141,14 @@ namespace DBInRun
                             var cd = cmd[1].ToLower();
                             if (cd == "primary")
                             {
-                                if (!Cdy.Tag.Runner3.RunInstance.Switch(WorkState.Primary))
+                                if (!Cdy.Tag.Runner4.RunInstance.Switch(WorkState.Primary))
                                 {
                                     LoggerService.Service.Erro("RDDCManager", "Failed to switch to primary!");
                                 }
                             }
                             else if (cd == "standby")
                             {
-                                if (!Cdy.Tag.Runner3.RunInstance.Switch(WorkState.Standby))
+                                if (!Cdy.Tag.Runner4.RunInstance.Switch(WorkState.Standby))
                                 {
                                     LoggerService.Service.Erro("RDDCManager", "Failed to switch to standby!");
                                 }
@@ -157,13 +158,13 @@ namespace DBInRun
                     case "restart":
                         LoggerService.Service.EnableLogger = true;
                         Task.Run(() => {
-                            Cdy.Tag.Runner3.RunInstance.ReStartDatabase();
+                            Cdy.Tag.Runner4.RunInstance.ReStartDatabase();
                         });
                         break;
                     case "dynamicload":
                         LoggerService.Service.EnableLogger = true;
                         Task.Run(() => {
-                            Cdy.Tag.Runner3.RunInstance.DynamicLoadTags();
+                            Cdy.Tag.Runner4.RunInstance.DynamicLoadTags();
                         });
                         break;
                     case "list":
@@ -171,11 +172,11 @@ namespace DBInRun
                         break;
                     case "setdatapath":
                         if (cmd.Length > 1)
-                            SeriseEnginer4.HisDataPathPrimary = cmd[1];
+                            SeriseEnginer5.HisDataPathPrimary = cmd[1];
                         break;
                     case "setdatabackuppath":
                         if (cmd.Length > 1)
-                            SeriseEnginer4.HisDataPathBack = cmd[1];
+                            SeriseEnginer5.HisDataPathBack = cmd[1];
                         break;
                     case "h":
                         Console.WriteLine(GetHelpString());
@@ -229,17 +230,17 @@ namespace DBInRun
         /// <param name="e"></param>
         private static void CurrentDomain_ProcessExit(object sender, EventArgs e)
         {
-            if (Cdy.Tag.Runner3.RunInstance.IsStarted)
+            if (Cdy.Tag.Runner4.RunInstance.IsStarted)
             {
-                Cdy.Tag.Runner3.RunInstance.Stop();
+                Cdy.Tag.Runner4.RunInstance.Stop();
             }
         }
 
         private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
         {
-            if (Cdy.Tag.Runner3.RunInstance.IsStarted)
+            if (Cdy.Tag.Runner4.RunInstance.IsStarted)
             {
-                Cdy.Tag.Runner3.RunInstance.Stop();
+                Cdy.Tag.Runner4.RunInstance.Stop();
             }
             mIsClosed = true;
             e.Cancel = true;
@@ -265,9 +266,9 @@ namespace DBInRun
                                     var cmd = server.ReadByte();
                                     if (cmd == 0)
                                     {
-                                        if (Cdy.Tag.Runner3.RunInstance.IsStarted)
+                                        if (Cdy.Tag.Runner4.RunInstance.IsStarted)
                                         {
-                                            Cdy.Tag.Runner3.RunInstance.Stop();
+                                            Cdy.Tag.Runner4.RunInstance.Stop();
                                         }
                                         mIsClosed = true;
                                         server.WriteByte(1);
@@ -281,11 +282,11 @@ namespace DBInRun
                                     else if (cmd == 1)
                                     {
                                         Console.WriteLine("Start to restart database.......");
-                                        if (!Cdy.Tag.Runner3.RunInstance.IsRestartBusy)
+                                        if (!Cdy.Tag.Runner4.RunInstance.IsRestartBusy)
                                         {
                                             Task.Run(() =>
                                             {
-                                                Cdy.Tag.Runner3.RunInstance.ReStartDatabase();
+                                                Cdy.Tag.Runner4.RunInstance.ReStartDatabase();
                                             });
                                         }
                                         server.WriteByte(1);
@@ -297,16 +298,16 @@ namespace DBInRun
 
                                     }
                                 }
-                                catch(Exception eex)
+                                catch(Exception)
                                 {
                                     break;
                                 }
                             }
                         }
                     }
-                    catch(Exception ex)
+                    catch(Exception)
                     {
-                        Console.WriteLine(ex.Message);
+                        //Console.WriteLine(ex.Message);
                     }
                     
                 }

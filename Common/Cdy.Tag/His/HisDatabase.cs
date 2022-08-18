@@ -55,6 +55,11 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        public Database Owner { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="tag"></param>
         public void AddHisTags(HisTag tag)
         {
@@ -143,7 +148,7 @@ namespace Cdy.Tag
         {
             using (var ms = new System.IO.MemoryStream())
             {
-                using (System.IO.Compression.GZipStream gs = new System.IO.Compression.GZipStream(new System.IO.MemoryStream(), System.IO.Compression.CompressionLevel.Optimal))
+                using (System.IO.Compression.GZipStream gs = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionLevel.Optimal))
                 {
                     new HisDatabaseSerise() { Database = this }.Save(gs);
                     return ms.GetBuffer();

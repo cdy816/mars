@@ -20,7 +20,7 @@ namespace DirectAccessDriver
     /// <summary>
     /// 
     /// </summary>
-    public class Driver : Cdy.Tag.Driver.IProducterDriver
+    public class Driver : IProducterDriver
     {
         /// <summary>
         /// 
@@ -31,6 +31,11 @@ namespace DirectAccessDriver
         /// 
         /// </summary>
         public string[] Registors => new string[0];
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string EditType => "";
 
         private int mPort = 3600;
         private int mEndPort = 3600;
@@ -167,7 +172,13 @@ namespace DirectAccessDriver
             Load();
             mService = new List<DataService>();
 
-            var vdds = tagQuery.GetTagByLinkAddress(this.Name + ":");
+            var vdds = tagQuery.GetTagByLinkAddress(this.Name+":");
+
+            if(vdds==null || vdds.Count==0)
+            {
+               vdds = tagQuery.GetTagByLinkAddress(this.Name);
+            }
+
             foreach (var vv in vdds)
             {
                 if (!AllowTagNames.ContainsKey(vv.FullName))

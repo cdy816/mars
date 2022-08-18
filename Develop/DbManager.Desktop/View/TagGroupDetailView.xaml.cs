@@ -63,7 +63,7 @@ namespace DBInStudio.Desktop.View
                 if (mModel.CanContinueLoadData())
                     mModel.ContinueLoadData();
             }
-
+            
             //if ((e.ExtentHeight - e.VerticalOffset)<100 && e.ExtentHeight>0 && e.VerticalOffset>0)
             //{
             //    mModel.ContinueLoadData();
@@ -119,8 +119,134 @@ namespace DBInStudio.Desktop.View
         }
     }
 
-    
 
 
+    public class QualityValueConvert : IValueConverter
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="targetType"></param>
+        /// <param name="parameter"></param>
+        /// <param name="culture"></param>
+        /// <returns></returns>
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            int ival = System.Convert.ToInt32(value);
+            if (ival < 20)
+            {
+                return Res.Get("Good");
+            }
+            else if (ival == 63)
+            {
+                return Res.Get("Init");
+            }
+            else if (ival > 20 && ival < 100)
+            {
+                return Res.Get("Bad");
+            }
+            else if (ival > 100 && ival < 200)
+            {
+                return ival-100;
+            }
+            else if (ival == 255)
+            {
+                return Res.Get("Null");
+            }
+            else
+            {
+                return value;
+            }
+        }
 
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class DataGridDetailSelect:DataTemplateSelector
+    {
+        public bool ReadOnly { get; set; }=false;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="container"></param>
+        /// <returns></returns>
+        public override DataTemplate SelectTemplate(object item, DependencyObject container)
+        {
+            var vtag =  item as TagViewModel;
+            if(vtag.RealTagMode is Cdy.Tag.ComplexTag)
+            {
+                return (container as FrameworkElement).FindResource("complexTemplate") as DataTemplate;
+            }
+            else
+            {
+                if (ReadOnly)
+                {
+                    return (container as FrameworkElement).FindResource("normalReadOnlyTemplate") as DataTemplate;
+                }
+                else
+                {
+                    return (container as FrameworkElement).FindResource("normalTemplate") as DataTemplate;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class RegsitorEditSelect : DataTemplateSelector
+    {
+        public override DataTemplate SelectTemplate(object item, DependencyObject container)
+        {
+            var vtag = item as TagViewModel;
+            if (vtag != null)
+            {
+                if (vtag.RegistorEditType == "")
+                {
+                    return (container as FrameworkElement).FindResource("noneEdit") as DataTemplate;
+                }
+                else if (vtag.RegistorEditType == "List")
+                {
+                    return (container as FrameworkElement).FindResource("comboEdit") as DataTemplate;
+                }
+                else
+                {
+                    return (container as FrameworkElement).FindResource("advanceEdit") as DataTemplate;
+                }
+            }
+            else
+            {
+                return (container as FrameworkElement).FindResource("noneEdit") as DataTemplate;
+            }
+        }
+    }
+
+    public class DriverDisplayConvert : IMultiValueConverter
+    {
+
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (System.Convert.ToBoolean(values[2]))
+            {
+                return "--";
+            }
+            else
+            {
+                return values[0];
+            }
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

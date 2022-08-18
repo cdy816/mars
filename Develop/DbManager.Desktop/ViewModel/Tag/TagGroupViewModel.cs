@@ -91,10 +91,10 @@ namespace DBInStudio.Desktop
                     if (DevelopServiceHelper.Helper.UpdateGroupDescription(this.Database, this.FullName, value))
                     {
                         mDescription = value;
-                        IsDescriptionEdit = false;
                     }
                     OnPropertyChanged("Description");
                 }
+                IsDescriptionEdit = false;
             }
         }
 

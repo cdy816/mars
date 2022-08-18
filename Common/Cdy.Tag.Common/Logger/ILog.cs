@@ -61,5 +61,21 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         /// <param name="msg"></param>
         void Erro(string name, string msg);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="msg"></param>
+        void Record(string name, string msg);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        bool IsRecordStart { get; }
+
+        void StartRecord();
+
+        void StopRecord();
     }
 }

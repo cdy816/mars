@@ -5,19 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HighSpeedApiDemo"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="900">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
-            <RowDefinition Height="361*" />
-            <RowDefinition Height="42*"/>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="160"/>
         </Grid.RowDefinitions>
         <TextBlock Text="服务器地址:"  HorizontalAlignment="Left" VerticalAlignment="Center" Margin="6,0,0,0"/>
         <TextBox x:Name="ip" Width="200" HorizontalAlignment="Left" Margin="86,0,0,0" VerticalAlignment="Center" Text="{Binding Ip,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" />
-        <Button Content="Connect" HorizontalAlignment="Left" Margin="683,0,0,0" VerticalAlignment="Center" Command="{Binding ConnectCommand}"/>
-        <Button Content="Stop" HorizontalAlignment="Left" Margin="740,0,0,0" VerticalAlignment="Center" Width="50" Command="{Binding StopCommand}"/>
+        <Button Content="Connect" HorizontalAlignment="Right" Margin="0,0,108,0" VerticalAlignment="Center" Command="{Binding ConnectCommand}" Width="81"/>
+        <Button Content="Stop" HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Center" Width="93" Command="{Binding StopCommand}"/>
 
-        <DataGrid Grid.Row="1" IsReadOnly="True" ItemsSource="{Binding Tags}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" Margin="0,0,0,42" Grid.RowSpan="2">
+        <DataGrid Grid.Row="1" IsReadOnly="True" ItemsSource="{Binding Tags}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" Margin="0,0,0,0">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="32" />
                 <DataGridTemplateColumn Header="Value" Width="*">
@@ -29,11 +29,29 @@
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
-        <Label Content="变量ID:" HorizontalAlignment="Left" Margin="10,0,0,7" Grid.Row="2" VerticalAlignment="Bottom"/>
-        <TextBox HorizontalAlignment="Left" Margin="70,0,0,10" Grid.Row="2" Text="{Binding Id,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Bottom" Width="100"/>
-        <TextBox HorizontalAlignment="Left" Margin="259,0,0,10" Grid.Row="2" Text="{Binding Value,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Bottom" Width="100"/>
-        <Button Content="变量下发" HorizontalAlignment="Left" Margin="398,0,0,10" Grid.Row="2" VerticalAlignment="Bottom" Width="76" Command="{Binding SetTagValueCommand}"/>
-        <Label Content="变量值:" HorizontalAlignment="Left" Margin="206,0,0,7" Grid.Row="2" VerticalAlignment="Bottom"/>
+        <Label Content="变量ID:" HorizontalAlignment="Left" Margin="10,11,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Margin="70,16,0,0" Grid.Row="2" Text="{Binding Id,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Top" Width="100"/>
+        <TextBox HorizontalAlignment="Left" Margin="259,16,0,0" Grid.Row="2" Text="{Binding Value,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Top" Width="100"/>
+        <Button Content="变量下发" HorizontalAlignment="Left" Margin="398,14,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding SetTagValueCommand}"/>
+        <Label Content="变量值:" HorizontalAlignment="Left" Margin="206,11,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <DatePicker HorizontalAlignment="Left" Margin="70,47,0,0" SelectedDate="{Binding ModifyDate,Mode=TwoWay}" Grid.Row="2" VerticalAlignment="Top" Width="100"/>
+        <Label Content="日期:" HorizontalAlignment="Left" Margin="17,46,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <ComboBox HorizontalAlignment="Left" Margin="280,50,0,0" Grid.Row="2" Text="{Binding ModifyStartTime, Mode=TwoWay}" ItemsSource="{Binding Hours}" IsEditable="True" VerticalAlignment="Top" Width="79">
+
+        </ComboBox>
+        <Label Content="开始时间:" HorizontalAlignment="Left" Margin="213,46,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <ComboBox HorizontalAlignment="Left" Margin="570,48,0,0" Grid.Row="2" Text="{Binding ModifyEndTime, Mode=TwoWay}"  ItemsSource="{Binding Hours}" IsEditable="True" VerticalAlignment="Top" Width="75"/>
+        <Label Content="结束时间:" HorizontalAlignment="Left" Margin="501,47,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <Button Content="删除历史数据" HorizontalAlignment="Left" Margin="570,125,0,0" Grid.Row="2" VerticalAlignment="Top" Width="106" Command="{Binding DeleteHisValueCommand}"/>
+        <Label Content="变量值:" HorizontalAlignment="Left" Margin="219,80,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Margin="280,84,0,0" Grid.Row="2" Text="{Binding ModifyValue, Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Top" Width="79"/>
+        <Button Content="修改历史数据" HorizontalAlignment="Left" Margin="570,86,0,0" Grid.Row="2" VerticalAlignment="Top" Width="106" Command="{Binding ModifyHisValueCommand}"/>
+        <ComboBox HorizontalAlignment="Left" Margin="378,51,0,0" Grid.Row="2" Text="{Binding ModifyStartSecond, Mode=TwoWay}" ItemsSource="{Binding Seconds}" IsEditable="True" VerticalAlignment="Top" Width="65"/>
+        <ComboBox HorizontalAlignment="Left" Margin="663,47,0,0" Grid.Row="2" Text="{Binding ModifyEndSecond, Mode=TwoWay}" ItemsSource="{Binding Seconds}" IsEditable="True" VerticalAlignment="Top" Width="65"/>
+        <Button Content="查询历史数据(所有值)" HorizontalAlignment="Left" Margin="755,47,0,0" Grid.Row="2" VerticalAlignment="Top" Width="127" Command="{Binding QueryAllValueCommand}"/>
+        <Button Content="查询历史数据(时段)" HorizontalAlignment="Left" Margin="755,87,0,0" Grid.Row="2" VerticalAlignment="Top" Width="126" Command="{Binding QueryHisValueCommand}"/>
+        <Button Content="查询历史数据(时刻)" HorizontalAlignment="Left" Margin="755,125,0,0" Grid.Row="2" VerticalAlignment="Top" Width="127" Command="{Binding QueryHisValue2Command}"/>
+        <Button Content="读取复杂变量" HorizontalAlignment="Left" Margin="501,15,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding QueryComplexValueCommand}"/>
 
     </Grid>
 </Window>

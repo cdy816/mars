@@ -127,7 +127,7 @@
     <value>生成包括指定类型和数量的示例变量的数据库</value>
   </data>
   <data name="HelpMsg" xml:space="preserve">
-    <value>输入h获取命令帮助信息</value>
+    <value>输入h获取命令帮助信息。 运行情况下按Ctrl+C 退出。</value>
   </data>
   <data name="HMsg" xml:space="preserve">
     <value>显示命令列表</value>

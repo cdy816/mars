@@ -19,7 +19,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class DataFileManager
+    public class DataFileManager: IDataFileService
     {
 
         #region ... Variables  ...
@@ -45,6 +45,27 @@ namespace Cdy.Tag
         /// 数据文件扩展名
         /// </summary>
         public const string DataFileExtends = ".dbd";
+
+        /// <summary>
+        /// 数据文件扩展名
+        /// </summary>
+        public const string DataFile2Extends = ".dbd2";
+
+        /// <summary>
+        /// 压缩
+        /// </summary>
+        public const string ZipDataFile2Extends = ".zdbd2";
+
+        /// <summary>
+        /// 数据文件扩展名
+        /// </summary>
+        public const string DataMetaFile2Extends = ".dbm2";
+
+
+        /// <summary>
+        /// 数据文件扩展名
+        /// </summary>
+        public const string ZipDataMetaFile2Extends = ".zdbm2";
 
         /// <summary>
         /// 
@@ -99,6 +120,7 @@ namespace Cdy.Tag
         public DataFileManager(string dbname)
         {
             mDatabaseName = dbname;
+            ServiceLocator.Locator.Registor<IDataFileService>(this);
         }
 
         #endregion ...Constructor...
@@ -217,31 +239,31 @@ namespace Cdy.Tag
                 }
             }
 
-            //只有在不支持内存查询的情况，才需要监视日志文件
-            if (ServiceLocator.Locator.Resolve<IHisQueryFromMemory>() == null)
-            {
-                string logpath = GetPrimaryLogDataPath();
-                ScanLogFile(logpath);
+            ////只有在不支持内存查询的情况，才需要监视日志文件
+            //if (ServiceLocator.Locator.Resolve<IHisQueryFromMemory>() == null)
+            //{
+            //    string logpath = GetPrimaryLogDataPath();
+            //    ScanLogFile(logpath);
 
-                if (!System.IO.Directory.Exists(logpath))
-                {
-                    try
-                    {
-                        System.IO.Directory.CreateDirectory(logpath);
-                    }
-                    catch
-                    {
+            //    if (!System.IO.Directory.Exists(logpath))
+            //    {
+            //        try
+            //        {
+            //            System.IO.Directory.CreateDirectory(logpath);
+            //        }
+            //        catch
+            //        {
 
-                    }
-                }
+            //        }
+            //    }
 
-                if (System.IO.Directory.Exists(logpath))
-                {
-                    logDataWatcher = new System.IO.FileSystemWatcher(logpath);
-                    logDataWatcher.Changed += LogDataWatcher_Changed;
-                    logDataWatcher.EnableRaisingEvents = true;
-                }
-            }
+            //    if (System.IO.Directory.Exists(logpath))
+            //    {
+            //        logDataWatcher = new System.IO.FileSystemWatcher(logpath);
+            //        logDataWatcher.Changed += LogDataWatcher_Changed;
+            //        logDataWatcher.EnableRaisingEvents = true;
+            //    }
+            //}
 
             foreach (var vv in this.mTimeFileMaps)
             {
@@ -298,21 +320,21 @@ namespace Cdy.Tag
                     mResetCount++;
                 }
 
-                if(mLogFileCach.Count>0)
-                {
+                //if(mLogFileCach.Count>0)
+                //{
                    
-                    lock(mLocker)
-                    {
-                        ltmp = mLogFileCach.ToList();
-                        mLogFileCach.Clear();
-                    }
+                //    lock(mLocker)
+                //    {
+                //        ltmp = mLogFileCach.ToList();
+                //        mLogFileCach.Clear();
+                //    }
 
-                    foreach(var vv in ltmp)
-                    {
-                        LoggerService.Service.Info("DataFileMananger", "LogFile " + vv.Value + " add to FileCach！");
-                        ParseLogFile(vv.Key);
-                    }
-                }
+                //    foreach(var vv in ltmp)
+                //    {
+                //        LoggerService.Service.Info("DataFileMananger", "LogFile " + vv.Value + " add to FileCach！");
+                //        ParseLogFile(vv.Key);
+                //    }
+                //}
 
 
                 if(mHisFileCach.Count>0)
@@ -329,7 +351,7 @@ namespace Cdy.Tag
                         if (vv.Value == System.IO.WatcherChangeTypes.Created)
                         {
                             LoggerService.Service.Info("DataFileMananger", "HisDataFile " + vv.Key + " is Created & will be add to dataFileCach!");
-                            if (vifno.Extension == DataFileExtends)
+                            if ((vifno.Extension == DataFileExtends)||(vifno.Extension == DataFile2Extends))
                             {
                                 ParseFileName(vifno);
                             }
@@ -356,7 +378,7 @@ namespace Cdy.Tag
                             }
                             else
                             {
-                                if (vifno.Extension == DataFileExtends)
+                                if ((vifno.Extension == DataFileExtends) || (vifno.Extension == DataFile2Extends))
                                     ParseFileName(vifno);
                             }
                         }
@@ -413,7 +435,7 @@ namespace Cdy.Tag
                     if(!mHisFileCach.ContainsKey(e.FullPath))
                     {
                         var vifno = new System.IO.FileInfo(e.FullPath);
-                        if (vifno.Extension == DataFileExtends)
+                        if (vifno.Extension == DataFileExtends||vifno.Extension == DataFile2Extends)
                         {
                             mHisFileCach.Add(e.FullPath, e.ChangeType);
                         }
@@ -427,7 +449,7 @@ namespace Cdy.Tag
                     if (!mHisFileCach.ContainsKey(e.FullPath))
                     {
                         var vifno = new System.IO.FileInfo(e.FullPath);
-                        if (vifno.Extension == DataFileExtends)
+                        if (vifno.Extension == DataFileExtends || vifno.Extension == DataFile2Extends)
                         {
                             mHisFileCach.Add(e.FullPath, e.ChangeType);
                         }
@@ -478,13 +500,14 @@ namespace Cdy.Tag
             {
                 foreach (var vv in dir.GetFiles())
                 {
-                    if (vv.Extension == DataFileExtends || vv.Extension == HisDataFileExtends || vv.Extension == ZipHisDataFileExtends)
+                    if (vv.Extension == DataFileExtends || vv.Extension == HisDataFileExtends || vv.Extension == ZipHisDataFileExtends || vv.Extension == DataFile2Extends || vv.Extension == ZipDataFile2Extends)
                     {
                         ParseFileName(vv);
                     }
                 }
                 foreach (var vv in dir.GetDirectories())
                 {
+                    if(vv.Name!="tmp")
                     await Scan(vv.FullName);
                 }
             }
@@ -514,46 +537,80 @@ namespace Cdy.Tag
             }
         }
 
-        private DataFileInfo4 CheckAndGetDataFile(string file)
+        private DateTime ParseFileToTime(string file,out int id,out int hhspan)
         {
-            try
-            {
-            string sname = file.Replace(DataFileExtends, "");
+            string sname = System.IO.Path.GetFileNameWithoutExtension(file);
             string stime = sname.Substring(sname.Length - 12, 12);
             int yy = 0, mm = 0, dd = 0;
 
-            int id = -1;
+            id = -1;
+            hhspan = 0;
             int.TryParse(sname.Substring(sname.Length - 15, 3), out id);
 
             if (id == -1)
-                return null;
+                return DateTime.MinValue;
 
             if (!int.TryParse(stime.Substring(0, 4), out yy))
             {
-                return null;
+                return DateTime.MinValue;
             }
 
             if (!int.TryParse(stime.Substring(4, 2), out mm))
             {
-                return null;
+                return DateTime.MinValue;
             }
 
             if (!int.TryParse(stime.Substring(6, 2), out dd))
             {
-                return null;
+                return DateTime.MinValue;
             }
-            int hhspan = int.Parse(stime.Substring(8, 2));
+            hhspan = int.Parse(stime.Substring(8, 2));
 
             int hhind = int.Parse(stime.Substring(10, 2));
 
             int hh = hhspan * hhind;
 
+            return new DateTime(yy, mm, dd, hh, 0, 0);
+        }
 
-            DateTime startTime = new DateTime(yy, mm, dd, hh, 0, 0);
+        private IDataFile CheckAndGetDataFile(string file)
+        {
+            try
+            {
+                //string sname =  System.IO.Path.GetFileNameWithoutExtension(file);
+                //string stime = sname.Substring(sname.Length - 12, 12);
+                //int yy = 0, mm = 0, dd = 0;
+
+                //int id = -1;
+                //int.TryParse(sname.Substring(sname.Length - 15, 3), out id);
+
+                //if (id == -1)
+                //    return null;
+
+                //if (!int.TryParse(stime.Substring(0, 4), out yy))
+                //{
+                //    return null;
+                //}
+
+                //if (!int.TryParse(stime.Substring(4, 2), out mm))
+                //{
+                //    return null;
+                //}
+
+                //if (!int.TryParse(stime.Substring(6, 2), out dd))
+                //{
+                //    return null;
+                //}
+                //int hhspan = int.Parse(stime.Substring(8, 2));
+
+                //int hhind = int.Parse(stime.Substring(10, 2));
+
+                //int hh = hhspan * hhind;
+                DateTime startTime = ParseFileToTime(file,out int id,out int hhspan);
             
-                if (mTimeFileMaps.ContainsKey(id)&& mTimeFileMaps[id].ContainsKey(yy))
+                if (mTimeFileMaps.ContainsKey(id)&& mTimeFileMaps[id].ContainsKey(startTime.Year))
                 {
-                    return mTimeFileMaps[id][yy].GetDataFile(startTime);
+                    return mTimeFileMaps[id][startTime.Year].GetDataFile(startTime);
                 }
             }
             catch(Exception ex)
@@ -574,7 +631,7 @@ namespace Cdy.Tag
                 System.IO.FileInfo finfo = new FileInfo(fileName);
                 if (finfo != null)
                 {
-                    if (finfo.Extension == DataFileExtends || finfo.Extension == HisDataFileExtends || finfo.Extension == ZipHisDataFileExtends)
+                    if (finfo.Extension == DataFile2Extends || finfo.Extension == ZipDataFile2Extends || finfo.Extension == DataFileExtends || finfo.Extension == HisDataFileExtends || finfo.Extension == ZipHisDataFileExtends)
                     {
                         ParseFileName(finfo);
                     }
@@ -592,46 +649,49 @@ namespace Cdy.Tag
         /// <param name="filename"></param>
         private void CheckRemoveOldFile(string filename)
         {
-            string sname = filename.Replace(DataFileExtends, "").Replace(HisDataFileExtends, "");
-            string stime = sname.Substring(sname.Length - 12, 12);
-            int yy = 0, mm = 0, dd = 0;
+            //string sname = filename.Replace(DataFileExtends, "").Replace(HisDataFileExtends, "");
+            //string sname = System.IO.Path.GetFileNameWithoutExtension(filename);
+            //string stime = sname.Substring(sname.Length - 12, 12);
+            //int yy = 0, mm = 0, dd = 0;
 
-            int id = -1;
-            int.TryParse(sname.Substring(sname.Length - 15, 3), out id);
+            //int id = -1;
+            //int.TryParse(sname.Substring(sname.Length - 15, 3), out id);
 
-            if (id == -1)
-                return;
+            //if (id == -1)
+            //    return;
 
-            if (!int.TryParse(stime.Substring(0, 4), out yy))
-            {
-                return;
-            }
+            //if (!int.TryParse(stime.Substring(0, 4), out yy))
+            //{
+            //    return;
+            //}
 
-            if (!int.TryParse(stime.Substring(4, 2), out mm))
-            {
-                return;
-            }
+            //if (!int.TryParse(stime.Substring(4, 2), out mm))
+            //{
+            //    return;
+            //}
 
-            if (!int.TryParse(stime.Substring(6, 2), out dd))
-            {
-                return;
-            }
-            int hhspan = int.Parse(stime.Substring(8, 2));
+            //if (!int.TryParse(stime.Substring(6, 2), out dd))
+            //{
+            //    return;
+            //}
+            //int hhspan = int.Parse(stime.Substring(8, 2));
 
-            int hhind = int.Parse(stime.Substring(10, 2));
+            //int hhind = int.Parse(stime.Substring(10, 2));
 
-            int hh = hhspan * hhind;
+            //int hh = hhspan * hhind;
 
 
-            DateTime startTime = new DateTime(yy, mm, dd, hh, 0, 0);
+            //DateTime startTime = new DateTime(yy, mm, dd, hh, 0, 0);
+
+            DateTime startTime = ParseFileToTime(filename, out int id, out int hhspan);
 
             YearTimeFile yt = null;
 
             if (mTimeFileMaps.ContainsKey(id))
             {
-                if (mTimeFileMaps[id].ContainsKey(yy))
+                if (mTimeFileMaps[id].ContainsKey(startTime.Year))
                 {
-                    yt = mTimeFileMaps[id][yy];
+                    yt = mTimeFileMaps[id][startTime.Year];
                 }
             }
 
@@ -648,57 +708,61 @@ namespace Cdy.Tag
         /// <param name="fileName"></param>
         private void ParseFileName(System.IO.FileInfo file)
         {
-            string sname = file.Name.Replace(DataFileExtends, "").Replace(HisDataFileExtends, "").Replace(ZipHisDataFileExtends, "");
-            string stime = sname.Substring(sname.Length - 12, 12);
-            int yy=0, mm=0, dd=0;
+            // string sname = System.IO.Path.GetFileNameWithoutExtension(file.Name);
+            //// string sname = file.Name.Replace(DataFileExtends, "").Replace(HisDataFileExtends, "").Replace(ZipHisDataFileExtends, "").Replace(DataFile2Extends, "").Replace(ZipDataFile2Extends, "");
+            // string stime = sname.Substring(sname.Length - 12, 12);
+            // int yy=0, mm=0, dd=0;
 
-            int id = -1;
-            try
-            {
-                id = int.Parse(sname.Substring(sname.Length - 15, 3), System.Globalization.NumberStyles.HexNumber);
+            // int id = -1;
+            // try
+            // {
+            //     id = int.Parse(sname.Substring(sname.Length - 15, 3), System.Globalization.NumberStyles.HexNumber);
 
-                if (id <0)
-                    return;
-            }
-            catch
-            {
-                return;
-            }
+            //     if (id <0)
+            //         return;
+            // }
+            // catch
+            // {
+            //     return;
+            // }
 
-            if (!int.TryParse(stime.Substring(0, 4),out yy))
-            {
-                return;
-            }
+            // if (!int.TryParse(stime.Substring(0, 4),out yy))
+            // {
+            //     return;
+            // }
 
-            if (!int.TryParse(stime.Substring(4, 2), out mm))
-            {
-                return;
-            }
+            // if (!int.TryParse(stime.Substring(4, 2), out mm))
+            // {
+            //     return;
+            // }
 
-            if (!int.TryParse(stime.Substring(6, 2), out dd))
-            {
-                return;
-            }
-            int hhspan = int.Parse(stime.Substring(8, 2));
-            
-            int hhind = int.Parse(stime.Substring(10, 2));
+            // if (!int.TryParse(stime.Substring(6, 2), out dd))
+            // {
+            //     return;
+            // }
+            // int hhspan = int.Parse(stime.Substring(8, 2));
 
-            int hh = hhspan * hhind;
+            // int hhind = int.Parse(stime.Substring(10, 2));
 
+            // int hh = hhspan * hhind;
 
-            DateTime startTime = new DateTime(yy, mm, dd, hh, 0, 0);
+            DateTime startTime = ParseFileToTime(file.Name, out int id, out int hhspan);
 
-            YearTimeFile yt = new YearTimeFile() { TimeKey = yy };
+            int yy = startTime.Year;
+
+            //DateTime startTime = new DateTime(yy, mm, dd, hh, 0, 0);
+
+            YearTimeFile yt = new YearTimeFile() { TimeKey = startTime.Year };
            
             if(mTimeFileMaps.ContainsKey(id))
             {
-                if (mTimeFileMaps[id].ContainsKey(yy))
+                if (mTimeFileMaps[id].ContainsKey(startTime.Year))
                 {
-                    yt = mTimeFileMaps[id][yy];
+                    yt = mTimeFileMaps[id][startTime.Year];
                 }
                 else
                 {
-                    mTimeFileMaps[id].Add(yy, yt);
+                    mTimeFileMaps[id].Add(startTime.Year, yt);
                 }
             }
             else
@@ -713,7 +777,11 @@ namespace Cdy.Tag
             }
             else if (file.Extension==HisDataFileExtends || file.Extension== ZipHisDataFileExtends)
             {
-                yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new HisDataFileInfo4() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName, FId = mDatabaseName + id ,IsZipFile= file.Extension == ZipHisDataFileExtends });
+                yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new HisDataFileInfo4() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName, FId = mDatabaseName + id ,IsZipFile= (file.Extension == ZipHisDataFileExtends) });
+            }
+            else if (file.Extension == DataFile2Extends || file.Extension == ZipDataFile2Extends)
+            {
+                yt.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new DataFileInfo5() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName, FId = mDatabaseName + id, IsZipFile = (file.Extension == ZipDataFile2Extends) });
             }
         }
 
@@ -754,7 +822,7 @@ namespace Cdy.Tag
         /// <param name="time"></param>
         /// <param name="Id"></param>
         /// <returns></returns>
-        public DataFileInfo4 GetDataFile(DateTime time,int Id)
+        public IDataFile GetDataFile(DateTime time,int Id)
         {
             int id = Id / TagCountOneFile;
 
@@ -769,10 +837,6 @@ namespace Cdy.Tag
                 {
                     return mTimeFileMaps[id][time.Year].GetDataFile(time);
                 }
-                else
-                {
-                    return null;
-                }
             }
             return null;
         }
@@ -785,7 +849,7 @@ namespace Cdy.Tag
         /// <param name="endtime"></param>
         /// <param name="Id"></param>
         /// <returns></returns>
-        public List<DataFileInfo4> GetDataFiles(DateTime starttime, DateTime endtime, out Tuple<DateTime, DateTime> logFileTimes, int Id)
+        public List<IDataFile> GetDataFiles(DateTime starttime, DateTime endtime, out Tuple<DateTime, DateTime> logFileTimes, int Id)
         {
             DateTime dt = starttime;
             var vfiles = GetDataFiles(starttime, endtime - starttime, Id);
@@ -805,9 +869,9 @@ namespace Cdy.Tag
         /// <param name="span"></param>
         /// <param name="Id"></param>
         /// <returns></returns>
-        public List<DataFileInfo4> GetDataFiles(DateTime startTime, TimeSpan span, int Id)
+        public List<IDataFile> GetDataFiles(DateTime startTime, TimeSpan span, int Id)
         {
-            List<DataFileInfo4> re = new List<DataFileInfo4>();
+            List<IDataFile> re = new List<IDataFile>();
             int id = Id / TagCountOneFile;
             if (mTimeFileMaps.ContainsKey(id))
             {
@@ -839,9 +903,9 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="Id"></param>
         /// <returns></returns>
-        public SortedDictionary<DateTime, DataFileInfo4> GetDataFiles(List<DateTime> times, List<DateTime> logFileTimes,int Id)
+        public SortedDictionary<DateTime, IDataFile> GetDataFiles(List<DateTime> times, List<DateTime> logFileTimes,int Id)
         {
-            SortedDictionary<DateTime, DataFileInfo4> re = new SortedDictionary<DateTime, DataFileInfo4>();
+            SortedDictionary<DateTime, IDataFile> re = new SortedDictionary<DateTime, IDataFile>();
             foreach (var vv in times)
             {
                 if (CheckDataInLogFile(vv, Id))
@@ -898,10 +962,42 @@ namespace Cdy.Tag
             return re;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        public bool CheckHisFileExist(string filePath, out string realfilepath)
+        {
+            string sfile = System.IO.Path.Combine(GetPrimaryHisDataPath(), filePath);
+            if (File.Exists(sfile))
+            {
+                realfilepath = sfile;
+                return true;
+            }
+            if(!string.IsNullOrEmpty(BackHisDataPath))
+            {
+                sfile = System.IO.Path.Combine (GetBackHisDataPath(), filePath);
+                if(File.Exists(sfile))
+                {
+                    realfilepath=sfile;
+                    return true;
+                }
+            }
+            realfilepath = null;
+            return false;
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...
 
         #endregion ...Interfaces...
+    }
+
+    public interface IDataFileService
+    {
+        public bool CheckHisFileExist(string filePath,out string realfilepath);
+
     }
 }

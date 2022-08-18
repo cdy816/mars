@@ -41,7 +41,7 @@ namespace DBInStudio.Desktop.ViewModel
         /// </summary>
         public ImportModeSelectViewModel()
         {
-            DefaultWidth = 300;
+            DefaultWidth = 400;
             DefaultHeight = 60;
             Title = Res.Get("ImportMode");
         }

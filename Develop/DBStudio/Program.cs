@@ -781,15 +781,15 @@ namespace DBStudio
             sb.Append(mRealTagMode.Type + ",");
             sb.Append(mRealTagMode.LinkAddress + ",");
             sb.Append((int)mRealTagMode.ReadWriteType + ",");
-            if(mRealTagMode.Conveter!=null)
-            sb.Append(mRealTagMode.Conveter.SeriseToString() + ",");
+            if (mRealTagMode.Conveter != null)
+                sb.Append(mRealTagMode.Conveter.SeriseToString() + ",");
             else
             {
                 sb.Append(",");
             }
             if (mRealTagMode is NumberTagBase)
             {
-                sb.Append((mRealTagMode as  NumberTagBase).MaxValue.ToString() + ",");
+                sb.Append((mRealTagMode as NumberTagBase).MaxValue.ToString() + ",");
                 sb.Append((mRealTagMode as NumberTagBase).MinValue.ToString() + ",");
             }
             else
@@ -797,7 +797,7 @@ namespace DBStudio
                 sb.Append(",");
                 sb.Append(",");
             }
-            if(mRealTagMode is FloatingTagBase)
+            if (mRealTagMode is FloatingTagBase)
             {
                 sb.Append((mRealTagMode as FloatingTagBase).Precision + ",");
             }
@@ -805,7 +805,17 @@ namespace DBStudio
             {
                 sb.Append(",");
             }
-            
+            sb.Append(mRealTagMode.Parent + ",");
+
+            if (mRealTagMode is ComplexTag)
+            {
+                sb.Append((mRealTagMode as ComplexTag).LinkComplexClass + ",");
+            }
+            else
+            {
+                sb.Append(",");
+            }
+
             if (mHisTagMode != null)
             {
                 sb.Append(mHisTagMode.Type + ",");
@@ -841,12 +851,12 @@ namespace DBStudio
             realtag.Group = stmp[3];
             realtag.LinkAddress = stmp[5];
             realtag.ReadWriteType = (ReadWriteMode)(int.Parse(stmp[6]));
-            if(stmp[7]!=null)
+            if (stmp[7] != null)
             {
                 realtag.Conveter = stmp[7].DeSeriseToValueConvert();
             }
 
-            if(realtag is NumberTagBase)
+            if (realtag is NumberTagBase)
             {
                 (realtag as NumberTagBase).MaxValue = double.Parse(stmp[8], System.Globalization.NumberStyles.Any);
                 (realtag as NumberTagBase).MinValue = double.Parse(stmp[9], System.Globalization.NumberStyles.Any);
@@ -856,19 +866,26 @@ namespace DBStudio
             {
                 (realtag as FloatingTagBase).Precision = byte.Parse(stmp[10]);
             }
+            realtag.Parent = stmp[11];
 
-            if (stmp.Length > 11)
+            if (realtag is ComplexTag)
+            {
+                (realtag as ComplexTag).LinkComplexClass = stmp[12];
+            }
+
+            if (stmp.Length > 13)
             {
                 Cdy.Tag.HisTag histag = new HisTag();
-                histag.Type = (Cdy.Tag.RecordType)Enum.Parse(typeof(Cdy.Tag.RecordType), stmp[11]);
+                histag.Type = (Cdy.Tag.RecordType)Enum.Parse(typeof(Cdy.Tag.RecordType), stmp[13]);
 
-                histag.Circle = int.Parse(stmp[12]);
-                histag.CompressType = int.Parse(stmp[13]);
+                histag.Circle = int.Parse(stmp[14]);
+                histag.CompressType = int.Parse(stmp[15]);
                 histag.Parameters = new Dictionary<string, double>();
                 histag.TagType = realtag.Type;
                 histag.Id = realtag.Id;
-                histag.MaxValueCountPerSecond = short.Parse(stmp[14]);
-                for (int i = 15; i < stmp.Length; i++)
+                histag.MaxValueCountPerSecond = short.Parse(stmp[16]);
+
+                for (int i = 17; i < stmp.Length; i++)
                 {
                     string skey = stmp[i];
                     if (string.IsNullOrEmpty(skey))
@@ -1522,6 +1539,12 @@ namespace DBStudio
         {
             lock (mLockObj)
             {
+                if(IsDatabaseRun(name,out bool isdbrun))
+                {
+                    return true;
+                }
+                else if(!isdbrun) return false;
+
                 using (var client = new NamedPipeClientStream(".", name, PipeDirection.InOut))
                 {
                     try
@@ -1530,13 +1553,40 @@ namespace DBStudio
                         client.Close();
                         return true;
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        //Console.WriteLine("CheckStart " + name + "  failed." + ex.Message + "  " + ex.StackTrace);
                         return false;
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="isdbrun"></param>
+        /// <returns></returns>
+        public static bool IsDatabaseRun(string database, out bool isdbrun)
+        {
+            var pps = System.Diagnostics.Process.GetProcessesByName("DbInRun");
+            if (pps != null && pps.Length > 0)
+            {
+                foreach (var p in pps)
+                {
+                    if (string.Compare(p.MainWindowTitle, "DbInRun-" + database, true) == 0)
+                    {
+                        isdbrun = true;
+                        return true;
+                    }
+                }
+                isdbrun = true;
+            }
+            else
+            {
+                isdbrun = false;
+            }
+            return false;
         }
 
         /// <summary>

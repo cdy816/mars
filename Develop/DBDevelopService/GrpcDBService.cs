@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Http;
 using System.Threading;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 namespace DBDevelopService
 {
@@ -66,6 +67,7 @@ namespace DBDevelopService
             }
         }
 
+
         /// <summary>
         /// 
         /// </summary>
@@ -99,8 +101,22 @@ namespace DBDevelopService
             }
             catch(Exception ex)
             {
-                LoggerService.Service.Erro("GrpcDBService", ex.Message);
+                if(ex.Message.Contains("dev-certs"))
+                {
+                    EnableDevCerts();
+                    LoggerService.Service.Warn("GrpcDBService", "由于安装证书需要，请重新启动服务程序!");
+                }
+                else
+                {
+                    LoggerService.Service.Erro("GrpcDBService", ex.Message);
+                }
+                
             }
+        }
+
+        private void EnableDevCerts()
+        {
+            Process.Start(new ProcessStartInfo() { FileName = "dotnet", Arguments = "dev-certs https --trust" });
         }
 
         /// <summary>

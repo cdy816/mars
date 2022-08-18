@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+option csharp_namespace = "DBRuntimeServer";
+
+package DBRuntimeServer;
+
+// The greeting service definition.
+service MachineServer {
+
+rpc GetMachineInfo(GetLocalResourceRequest) returns (GetMachineInfoResponse);  
+
+rpc GetLocalResource(GetLocalResourceRequest) returns (GetLocalResourceResponse);  
+
+rpc Login(LoginRequest) returns (LoginResponse);
+
+rpc Logout(GetLocalResourceRequest) returns (BoolReponse);
+
+rpc Hart(GetLocalResourceRequest) returns (BoolReponse);
+
+rpc CheckProcessRun(CheckProcessRunRequest) returns (BoolReponse);
+
+}
+
+//
+message CheckProcessRunRequest
+{
+	string Token=1;
+	string ProcessName=2;
+}
+
+message GetMachineInfoResponse
+{
+	string OSVersion=1;
+	string DotnetVersion=2;
+	int32 ProcessCount=3;
+	int32 Is64Bit=4;
+	string MachineName=5;
+	bool result=6;
+}
+
+message GetLocalResourceResponse{
+	string CPU=1;
+	string MemoryUsed=2;
+	string MemoryTotal=3;
+	NetworkInfo Network=4;
+	bool result=5;
+}
+
+message NetworkInfo
+{
+	string Send=1;
+	string Receive=2;
+}
+
+message GetLocalResourceRequest{
+	string Token = 1;
+}
+
+message LoginRequest{
+	string Username=1;
+	string Password=2;
+	string Database=3;
+}
+
+message LoginResponse
+{
+	string Token=1;
+	int32 Timeout=2;
+}
+
+message BoolReponse
+{
+	bool Result=1;
+}

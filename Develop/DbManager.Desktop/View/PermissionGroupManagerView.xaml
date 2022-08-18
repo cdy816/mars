@@ -25,7 +25,7 @@
         <SolidColorBrush x:Key="Item.SelectedActive.Background" Color="#3D26A0DA"/>
         <SolidColorBrush x:Key="Item.SelectedActive.Border" Color="#FF26A0DA"/>
         <SolidColorBrush x:Key="Item.SelectedInactive.Background" Color="#3DDADADA"/>
-        <SolidColorBrush x:Key="Item.SelectedInactive.Border" Color="#FFDADADA"/>
+        <SolidColorBrush x:Key="Item.SelectedInactive.Border" Color="#1FDADADA"/>
         <Style x:Key="ListBoxItemContainerStyle1" TargetType="{x:Type ListBoxItem}">
             <Setter Property="SnapsToDevicePixels" Value="True"/>
             <Setter Property="Padding" Value="4,1"/>
@@ -34,7 +34,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="IsSelected" Value="{Binding IsSelected,Mode=TwoWay}"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -56,7 +56,7 @@
                                     <Condition Property="IsSelected" Value="True"/>
                                 </MultiTrigger.Conditions>
                                 <Setter Property="Background" TargetName="Bd" Value="#5FFFFFFF"/>
-                                <Setter Property="BorderBrush" TargetName="Bd" Value="{StaticResource Item.SelectedInactive.Border}"/>
+                                <Setter Property="BorderBrush" TargetName="Bd" Value="{StaticResource Item.SelectedActive.Border}"/>
                             </MultiTrigger>
                             <MultiTrigger>
                                 <MultiTrigger.Conditions>
@@ -74,30 +74,67 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <SolidColorBrush x:Key="ListBox.Static.Background" Color="#FFFFFFFF"/>
+        <SolidColorBrush x:Key="ListBox.Static.Border" Color="#FFABADB3"/>
+        <SolidColorBrush x:Key="ListBox.Disabled.Background" Color="#FFFFFFFF"/>
+        <SolidColorBrush x:Key="ListBox.Disabled.Border" Color="#FFD9D9D9"/>
+        <Style x:Key="ListBoxStyle1" TargetType="{x:Type ListBox}">
+            <Setter Property="Background" Value="{StaticResource ListBox.Static.Background}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource ListBox.Static.Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.CanContentScroll" Value="true"/>
+            <Setter Property="ScrollViewer.PanningMode" Value="Both"/>
+            <Setter Property="Stylus.IsFlicksEnabled" Value="False"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBox}">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="5" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" Padding="1" SnapsToDevicePixels="true">
+                            <ScrollViewer Focusable="false" Padding="{TemplateBinding Padding}">
+                                <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                            </ScrollViewer>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsGrouping" Value="true"/>
+                                    <Condition Property="VirtualizingPanel.IsVirtualizingWhenGrouping" Value="false"/>
+                                </MultiTrigger.Conditions>
+                                <Setter Property="ScrollViewer.CanContentScroll" Value="false"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
-    <Grid>
+    <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <ListBox Background="Transparent" SelectionMode="Extended" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" Grid.Row="1" Margin="9,6,0,12" HorizontalAlignment="Left" Width="300" ItemsSource="{Binding SelectGroups}">
+        <ListBox Style="{StaticResource ListBoxStyle1 }" Background="Transparent" SelectionMode="Extended" ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" Grid.Row="1" Margin="9,6,0,0" HorizontalAlignment="Left" Width="300" ItemsSource="{Binding SelectGroups}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Label Content="{Binding Name}"  Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <ListBox  Background="Transparent" SelectionMode="Extended"  ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}"  Grid.Row="1" Margin="408,6,0,12" HorizontalAlignment="Left" Width="300" ItemsSource="{Binding AllGroups}">
+        <ListBox  Style="{StaticResource ListBoxStyle1 }"   Background="Transparent" SelectionMode="Extended"  ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}"  Grid.Row="1" Margin="400,6,0,0" Width="300"  HorizontalAlignment="Left"  ItemsSource="{Binding AllGroups}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Label Content="{Binding Name}"  Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Button Style="{DynamicResource ButtonStyle1}" BorderThickness="0,0,0,2" BorderBrush="Green" Content="&lt;" Command="{Binding AddCommand}" HorizontalAlignment="Left" Margin="323,104,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top"/>
-        <Button Style="{DynamicResource ButtonStyle1}" BorderThickness="0,0,0,2" BorderBrush="Green" Content="&lt;&lt;" Command="{Binding AddAllCommand}" HorizontalAlignment="Left" Margin="323,146,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top" />
-        <Button Style="{DynamicResource ButtonStyle1}" BorderThickness="0,0,0,2" BorderBrush="IndianRed" Content="&gt;" Command="{Binding RemoveCommand}" HorizontalAlignment="Left" Margin="323,186,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top"/>
-        <Button Style="{DynamicResource ButtonStyle1}" BorderThickness="0,0,0,2" BorderBrush="IndianRed" Content="&gt;&gt;" Command="{Binding RemoveAllCommand}" HorizontalAlignment="Left" Margin="323,221,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top"/>
+        <Button Style="{DynamicResource ButtonStyle1}" BorderThickness="0,0,0,2" BorderBrush="Green" Content="&lt;" Command="{Binding AddCommand}" HorizontalAlignment="Left" Margin="320,104,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top"/>
+        <Button Style="{DynamicResource ButtonStyle1}" BorderThickness="0,0,0,2" BorderBrush="Green" Content="&lt;&lt;" Command="{Binding AddAllCommand}" HorizontalAlignment="Left" Margin="320,146,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top" />
+        <Button Style="{DynamicResource ButtonStyle1}" BorderThickness="0,0,0,2" BorderBrush="IndianRed" Content="&gt;" Command="{Binding RemoveCommand}" HorizontalAlignment="Left" Margin="320,186,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top"/>
+        <Button Style="{DynamicResource ButtonStyle1}" BorderThickness="0,0,0,2" BorderBrush="IndianRed" Content="&gt;&gt;" Command="{Binding RemoveAllCommand}" HorizontalAlignment="Left" Margin="320,221,0,0" Grid.Row="1" Width="70" VerticalAlignment="Top"/>
         <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{local:ResMarker SelectGroup}" HorizontalAlignment="Left" Margin="11,0,0,0" VerticalAlignment="Center"/>
         <Label Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" Content="{local:ResMarker AllGroup}" HorizontalAlignment="Left" Margin="410,0,0,0" VerticalAlignment="Center"/>
 

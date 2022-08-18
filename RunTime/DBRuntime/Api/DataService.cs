@@ -223,6 +223,7 @@ namespace DBRuntime.Api
         /// <param name="data"></param>
         public void AsyncCallback(string clientId, ByteBuffer data)
         {
+            //LoggerService.Service.Warn("DataService", $" Send data to client{clientId}  fun:{data.ReadByte(0)} ");
             this.SendDataToClient(clientId, data);
         }
 

@@ -14,6 +14,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Linq;
 
 namespace DBRuntime.Api
 {
@@ -31,6 +32,8 @@ namespace DBRuntime.Api
         private ManualResetEvent resetEvent;
 
         private bool mIsClosed = false;
+
+        private List<string> mClients = new List<string>();
 
         #endregion ...Variables...
 
@@ -108,9 +111,13 @@ namespace DBRuntime.Api
         /// <returns></returns>
         protected ByteBuffer ToByteBuffer(byte id,byte[] values)
         {
-            var re = Parent.Allocate(id, (int)values.Length);
-            re.Write(values, 0, (int)values.Length);
-            return re;
+            if (Parent != null)
+            {
+                var re = Parent.Allocate(id, (int)values.Length);
+                re.Write(values, 0, (int)values.Length);
+                return re;
+            }
+            return null;
         }
 
 
@@ -120,16 +127,24 @@ namespace DBRuntime.Api
         /// <param name="data"></param>
         public virtual void ProcessData(string client, ByteBuffer data)
         {
-            data.IncRef();
             if (mDatasCach.ContainsKey(client))
             {
-                mDatasCach[client].Enqueue(data);
+                lock (mDatasCach)
+                {
+                    mDatasCach[client].Enqueue(data);
+                   
+                }
             }
             else
             {
                 var vq = new Queue<ByteBuffer>();
                 vq.Enqueue(data);
-                mDatasCach.Add(client, vq);
+
+                lock (mDatasCach)
+                    mDatasCach.Add(client, vq);
+
+                lock (mClients)
+                    mClients.Add(client);
             }
             resetEvent.Set();
         }
@@ -139,6 +154,12 @@ namespace DBRuntime.Api
         /// </summary>
         private void DataProcess()
         {
+            //KeyValuePair<string, Queue<ByteBuffer>>[] vvv;
+            ByteBuffer bb;
+
+            string sname = "";
+            Queue<ByteBuffer> datas = null;
+
             while (!mIsClosed)
             {
                 resetEvent.WaitOne();
@@ -146,19 +167,90 @@ namespace DBRuntime.Api
                 resetEvent.Reset();
                 try
                 {
-                    foreach (var vv in mDatasCach)
+                    for (int i = 0; i < mClients.Count; i++)
                     {
-                        while (vv.Value.Count > 0)
+                        sname = "";
+                        datas = null;
+                        lock (mClients)
                         {
-                            var dd = vv.Value.Dequeue();
-                            if (dd != null)
-                                ProcessSingleData(vv.Key, dd);
+                            if (i < mClients.Count)
+                            {
+                                sname = mClients[i];
+                            }
+                        }
+
+                        if (!string.IsNullOrEmpty(sname))
+                        {
+                            lock (mDatasCach)
+                            {
+                                if (mDatasCach.ContainsKey(sname))
+                                {
+                                    datas = mDatasCach[sname];
+                                }
+                            }
+                            if (datas != null)
+                            {
+                                if (datas.Count > 5)
+                                {
+                                    LoggerService.Service.Warn("ServerProcess", $"{sname} {this.FunId} 数据积压 {datas.Count}");
+                                }
+
+                                while (datas.Count > 0)
+                                {
+                                    lock (mDatasCach)
+                                        bb = datas.Dequeue();
+                                    ProcessSingleData(sname, bb);
+                                }
+                            }
                         }
                     }
+                    //lock(mDatasCach)
+                    //{
+                    //    vvv = mDatasCach.ToArray();
+                    //}
+                    //foreach (var vv in mDatasCach.ToArray())
+                    //{
+                    //    while (vv.Value.Count > 0)
+                    //    {
+                    //        lock (mDatasCach)
+                    //        {
+                    //            bb = vv.Value.Dequeue();
+                    //        }
+                    //        if (bb != null)
+                    //            ProcessSingleData(vv.Key, bb);
+                    //    }
+                    //}
                 }
                 catch
                 {
 
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="client"></param>
+        public void RemoveClient(string client)
+        {
+            lock (mClients)
+            {
+                if (mClients.Contains(client))
+                {
+                    mClients.Remove(client);
+                }
+            }
+
+            lock (mDatasCach)
+            {
+                if (mDatasCach.ContainsKey(client))
+                {
+                    foreach (var vv in mDatasCach[client])
+                    {
+                        vv.UnlockAndReturn();
+                    }
+                    mDatasCach.Remove(client);
                 }
             }
         }
@@ -209,7 +301,7 @@ namespace DBRuntime.Api
         /// <param name="id"></param>
         public virtual void OnClientDisconnected(string id)
         {
-
+            RemoveClient(id);
         }
 
         #endregion ...Methods...

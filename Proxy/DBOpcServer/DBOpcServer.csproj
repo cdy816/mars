@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationIcon>mrdbopc.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="mrdbopc.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua" Version="1.4.370.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Cdy.Tag.Common\Cdy.Tag.Common.csproj" />
+    <ProjectReference Include="..\..\Common\Cdy.Tag\Cdy.Tag.csproj" />
+    <ProjectReference Include="..\..\RunTime\DBRuntime.Proxy\DBRuntime.Proxy.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Config\DBOpcServer.cfg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="CertificateStores\" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="md &quot;$(SolutionDir)Output\DbOpcServer&quot;&#xD;&#xA;xcopy &quot;$(TargetDir)*.*&quot; &quot;$(SolutionDir)Output\DbOpcServer&quot; /y /S" />
+  </Target>
+
+</Project>

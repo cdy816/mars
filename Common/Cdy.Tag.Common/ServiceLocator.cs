@@ -61,6 +61,10 @@ namespace Cdy.Tag
             {
                 mNamedService.Add(name, service);
             }
+            else
+            {
+                mNamedService[name] = service;
+            }
         }
 
 

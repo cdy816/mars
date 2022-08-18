@@ -327,5 +327,42 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="result"></param>
         NumberStatisticsQueryResult ReadNumberStatisticsByUTCTime(int id, IEnumerable<DateTime> times);
+
+        /// <summary>
+        /// 修改历史数据
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="values"></param>
+        void ModifyHisData<T>(int id, HisQueryResult<T> values,string user,string msg);
+
+        /// <summary>
+        /// 删除一段历史数据
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="starttime"></param>
+        /// <param name="endtime"></param>
+        void DeleteHisData<T>(int id,DateTime starttime,DateTime endtime, string user, string msg);
+
+        /// <summary>
+        /// 读取文件的第一个值
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="time"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        object ReadFileFirstValue<T>(int id, DateTime time, QueryContext context);
+
+        /// <summary>
+        /// 读取文件第一个值
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="time"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        object ReadFileLastValue<T>(int id, DateTime time, QueryContext context);
     }
 }

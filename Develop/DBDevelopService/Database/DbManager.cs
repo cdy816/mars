@@ -52,7 +52,10 @@ namespace DBDevelopService
                     string sname = new System.IO.DirectoryInfo(vv).Name;
 
                     Cdy.Tag.Database db = new Cdy.Tag.DatabaseSerise().Load(sname);
-                    if(!mDatabase.ContainsKey(db.Name))
+                    
+                    if (string.IsNullOrEmpty(db.Name)) continue;
+
+                    if (!mDatabase.ContainsKey(db.Name))
                     mDatabase.Add(db.Name, db);
                     else
                     {
@@ -77,6 +80,7 @@ namespace DBDevelopService
                     string sname = new System.IO.DirectoryInfo(vv).Name;
 
                     Cdy.Tag.Database db = new Cdy.Tag.DatabaseSerise().PartLoad(sname);
+                    if (string.IsNullOrEmpty(db.Name)) continue;
                     if (!mDatabase.ContainsKey(db.Name))
                         mDatabase.Add(db.Name, db);
                     else
@@ -118,7 +122,13 @@ namespace DBDevelopService
                     if (!mDatabase.ContainsKey(sname))
                     {
                         Cdy.Tag.Database db = new Cdy.Tag.DatabaseSerise().Load(sname);
-                        mDatabase.Add(db.Name, db);
+                        if (string.IsNullOrEmpty(db.Name)) continue;
+                        if (!mDatabase.ContainsKey(sname))
+                            mDatabase.Add(db.Name, db);
+                        else
+                        {
+                            mDatabase[sname] = db;
+                        }
                     }
                 }
             }
@@ -141,6 +151,9 @@ namespace DBDevelopService
                     if (sname == database)
                     {
                         Cdy.Tag.Database db = new Cdy.Tag.DatabaseSerise().Load(sname);
+
+                        if (string.IsNullOrEmpty(db.Name)) continue;
+
                         if (!mDatabase.ContainsKey(db.Name))
                             mDatabase.Add(db.Name, db);
                         else

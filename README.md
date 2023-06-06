@@ -76,7 +76,7 @@ Mars数据库可以在不同的场景下使用，作为纯后端库的实时库�
 2. [Mar数据库应用结构](https://my.oschina.net/u/3520380/blog/4288058)
 
 ## 版本
-[0.9 版本](https://gitee.com/chongdaoyang/mars/releases/V0.9)
+[1.0 版本](https://gitee.com/chongdaoyang/mars/releases/tag/V1.0)
 
 ## 路线图
 项目分成2个阶段：单机、分布式。
